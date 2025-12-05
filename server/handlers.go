@@ -131,7 +131,7 @@ func DashboardPage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	// Dashboard HTML is embedded or served from file
 	// For now, serve the static file
-	http.ServeFile(w, r, "dashboard.html")
+	http.ServeFile(w, r, "webpage/dashboard.html")
 }
 
 // LoginPage serves the login form.

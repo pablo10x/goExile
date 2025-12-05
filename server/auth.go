@@ -92,8 +92,8 @@ func (ss *SessionStore) CleanupExpiredSessions() {
 // GetAuthConfig returns the auth configuration based on environment.
 func GetAuthConfig() AuthConfig {
 	// Check if development mode
-	devMode := os.Getenv("DEV_MODE") != "" || os.Getenv("DEVELOPMENT") != ""
-
+	//devMode := os.Getenv("DEV_MODE") != "" || os.Getenv("DEVELOPMENT") != ""
+   devMode := true;
 	// If development mode is enabled, auth is required
 	if !devMode {
 		// Production: webpages disabled entirely
