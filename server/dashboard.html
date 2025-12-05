@@ -332,6 +332,46 @@
             transform: scale(0.98);
         }
 
+        .connection-online,
+        .connection-offline {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+            animation: pulse 2s infinite;
+        }
+
+        .connection-online {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .connection-offline {
+            background-color: #f8d7da;
+            color: #721c24;
+            animation: pulse-error 0.6s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+            }
+        }
+
+        @keyframes pulse-error {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+            }
+        }
+
         .last-updated {
             text-align: right;
             color: #999;
@@ -371,7 +411,10 @@
         </header>
 
         <div class="last-updated" id="lastUpdated">Last updated: Just now</div>
-        <button class="refresh-btn" onclick="refreshDashboard()">↻ Refresh Data</button>
+        <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+            <button class="refresh-btn" onclick="refreshDashboard()">↻ Refresh Data</button>
+            <span id="connectionIndicator" class="connection-online">🟢 Live</span>
+        </div>
 
         <div class="stats-row">
             <div class="stat-card">
@@ -443,17 +486,91 @@
     </div>
 
     <script>
-        // Fetch and update dashboard data
+        let ws = null;
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 10;
+        const reconnectDelay = 3000; // 3 seconds
+
+        // Connect to WebSocket
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws`;
+
+            ws = new WebSocket(wsUrl);
+
+            ws.addEventListener('open', () => {
+                console.log('WebSocket connected');
+                reconnectAttempts = 0;
+                updateConnectionStatus(true);
+            });
+
+            ws.addEventListener('message', (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.type === 'stats') {
+                        updateStats(data.payload);
+                    } else if (data.type === 'servers') {
+                        updateServersTable(data.payload);
+                    }
+
+                    updateLastUpdated();
+                } catch (error) {
+                    console.error('Failed to parse WebSocket message:', error);
+                }
+            });
+
+            ws.addEventListener('close', () => {
+                console.log('WebSocket disconnected');
+                updateConnectionStatus(false);
+                attemptReconnect();
+            });
+
+            ws.addEventListener('error', (error) => {
+                console.error('WebSocket error:', error);
+                updateConnectionStatus(false);
+            });
+        }
+
+        function attemptReconnect() {
+            if (reconnectAttempts < maxReconnectAttempts) {
+                reconnectAttempts++;
+                console.log(`Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`);
+                setTimeout(() => {
+                    connectWebSocket();
+                }, reconnectDelay);
+            } else {
+                console.error('Max reconnection attempts reached. Falling back to polling.');
+                startPolling();
+            }
+        }
+
+        function updateConnectionStatus(connected) {
+            const indicator = document.getElementById('connectionIndicator');
+            if (indicator) {
+                indicator.className = connected ? 'connection-online' : 'connection-offline';
+                indicator.textContent = connected ? '🟢 Live' : '🔴 Offline';
+            }
+        }
+
+        // Fallback: polling if WebSocket fails
+        let pollInterval = null;
+
+        function startPolling() {
+            console.log('Starting polling mode (3s interval)...');
+            pollInterval = setInterval(refreshDashboard, 3000);
+            refreshDashboard(); // Initial fetch
+        }
+
+        // Fetch and update dashboard data (fallback for polling)
         async function refreshDashboard() {
             try {
-                // Fetch stats from the /status endpoint
                 const statsResponse = await fetch('/api/stats');
                 if (statsResponse.ok) {
                     const stats = await statsResponse.json();
                     updateStats(stats);
                 }
 
-                // Fetch servers list
                 const serversResponse = await fetch('/api/servers');
                 if (serversResponse.ok) {
                     const servers = await serversResponse.json();
@@ -561,11 +678,11 @@
             return text.replace(/[&<>"']/g, m => map[m]);
         }
 
-        // Auto-refresh every 3 seconds
-        setInterval(refreshDashboard, 3000);
+        // Auto-refresh every 3 seconds (fallback)
+        // setInterval(refreshDashboard, 3000);
 
         // Initial load
-        refreshDashboard();
+        connectWebSocket();
     </script>
 </body>
 </html>

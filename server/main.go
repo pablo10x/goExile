@@ -53,6 +53,10 @@ func run() error {
 	// Print banner
 	PrintBanner()
 
+	// Initialize WebSocket hub
+	wsHub := NewWebSocketHub()
+	go wsHub.Run()
+
 	router := mux.NewRouter()
 
 	// Initialize DB (optional). Path can be configured with DB_PATH env var.
@@ -107,6 +111,7 @@ func run() error {
 	router.HandleFunc("/", DashboardPage).Methods("GET")
 	router.HandleFunc("/dashboard", DashboardPage).Methods("GET")
 	router.HandleFunc("/api/stats", StatsAPI).Methods("GET")
+	router.HandleFunc("/ws", wsHub.HandleWebSocket)
 
 	// Dashboard status endpoint (text format)
 	router.HandleFunc("/status", PrintStatus).Methods("GET")
