@@ -50,6 +50,9 @@ func main() {
 // and starts the HTTP server. The function blocks until the process receives
 // an interrupt signal, at which point it performs a graceful shutdown.
 func run() error {
+	// Print banner
+	PrintBanner()
+
 	router := mux.NewRouter()
 
 	// Initialize DB (optional). Path can be configured with DB_PATH env var.
@@ -61,7 +64,9 @@ func run() error {
 	dbConn, err = InitDB(dbPath)
 	if err != nil {
 		log.Printf("warning: failed to init DB (%s): %v — continuing without persistence", dbPath, err)
+		GlobalStats.SetDBConnected(false)
 	} else {
+		GlobalStats.SetDBConnected(true)
 		// Load existing servers from DB into in-memory registry
 		loaded, err := LoadServers(dbConn)
 		if err != nil {
@@ -85,6 +90,9 @@ func run() error {
 		}
 	}
 
+	// Print configuration
+	PrintConfig(8081, dbPath)
+
 	// Server registry routes
 	router.HandleFunc("/api/servers", RegisterServer).Methods("POST")
 	router.HandleFunc("/api/servers", ListServers).Methods("GET")
@@ -94,6 +102,14 @@ func run() error {
 
 	// Health check
 	router.HandleFunc("/health", Health).Methods("GET")
+
+	// Dashboard endpoints
+	router.HandleFunc("/", DashboardPage).Methods("GET")
+	router.HandleFunc("/dashboard", DashboardPage).Methods("GET")
+	router.HandleFunc("/api/stats", StatsAPI).Methods("GET")
+
+	// Dashboard status endpoint (text format)
+	router.HandleFunc("/status", PrintStatus).Methods("GET")
 
 	// Start cleanup goroutine
 	go registry.Cleanup(serverTTL, cleanupInterval)
@@ -105,7 +121,10 @@ func run() error {
 
 	// Run server in background so we can handle graceful shutdown and close DB
 	go func() {
-		log.Println("Starting game server registry on :8081")
+		log.Println("✓ Starting game server registry on :8081")
+		log.Println("🌐 Web Dashboard: http://localhost:8081")
+		log.Println("📊 API Stats: http://localhost:8081/api/stats")
+		log.Println("🏥 Health Check: http://localhost:8081/health")
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("listen: %v", err)
 		}
