@@ -133,3 +133,241 @@ func DashboardPage(w http.ResponseWriter, r *http.Request) {
 	// For now, serve the static file
 	http.ServeFile(w, r, "dashboard.html")
 }
+
+// LoginPage serves the login form.
+func LoginPage(w http.ResponseWriter, r *http.Request, authConfig AuthConfig) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	// Simple HTML login page with credentials displayed in dev mode
+	html := `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Server Registry - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 15px;
+            padding: 50px 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-title {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .login-subtitle {
+            font-size: 0.95em;
+            color: #666;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 30px;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-left: 4px solid #dc3545;
+            font-size: 0.9em;
+        }
+
+        .info-box {
+            background-color: #e7f3ff;
+            color: #004085;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-left: 4px solid #0066cc;
+            font-size: 0.85em;
+        }
+
+        .info-box strong {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .info-item {
+            margin: 5px 0;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-title">🎮 Game Server Registry</div>
+                <div class="login-subtitle">Admin Dashboard</div>
+            </div>
+
+            <div class="info-box">
+                <strong>📱 Development Mode - Default Credentials</strong>
+                <div class="info-item">📧 Email: ` + authConfig.Email + `</div>
+                <div class="info-item">🔐 Password: ` + authConfig.Password + `</div>
+            </div>
+
+            <form method="POST" action="/login">
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" name="email" class="form-input" placeholder="admin@example.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" name="password" class="form-input" placeholder="••••••••" required>
+                </div>
+
+                <button type="submit" class="login-btn">🔓 Login</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>`
+
+	w.Write([]byte(html))
+}
+
+// HandleLogin processes login requests.
+func HandleLogin(w http.ResponseWriter, r *http.Request, authConfig AuthConfig, sessionStore *SessionStore) {
+	if r.Method == http.MethodGet {
+		LoginPage(w, r, authConfig)
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Parse form data
+	email := r.FormValue("email")
+	password := r.FormValue("password")
+
+	// Validate credentials
+	if email == authConfig.Email && password == authConfig.Password {
+		// Create session
+		sessionID, err := sessionStore.CreateSession()
+		if err != nil {
+			http.Error(w, "Failed to create session", http.StatusInternalServerError)
+			return
+		}
+
+		// Set session cookie
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session",
+			Value:    sessionID,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   false, // Set to true in production with HTTPS
+			SameSite: http.SameSiteLaxMode,
+			MaxAge:   86400, // 24 hours
+		})
+
+		// Redirect to dashboard
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	// Invalid credentials - show login page with error
+	// For now, just redirect back to login
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}
+
+// HandleLogout revokes the session.
+func HandleLogout(w http.ResponseWriter, r *http.Request, sessionStore *SessionStore) {
+	cookie, err := r.Cookie("session")
+	if err == nil {
+		sessionStore.RevokeSession(cookie.Value)
+	}
+
+	// Clear the cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   -1,
+	})
+
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}

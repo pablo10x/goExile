@@ -53,6 +53,11 @@ func run() error {
 	// Print banner
 	PrintBanner()
 
+	// Initialize authentication
+	authConfig := GetAuthConfig()
+	sessionStore := NewSessionStore()
+	go sessionStore.CleanupExpiredSessions()
+
 	// Initialize WebSocket hub
 	wsHub := NewWebSocketHub()
 	go wsHub.Run()
@@ -97,7 +102,7 @@ func run() error {
 	// Print configuration
 	PrintConfig(8081, dbPath)
 
-	// Server registry routes
+	// Server registry API routes (no auth required)
 	router.HandleFunc("/api/servers", RegisterServer).Methods("POST")
 	router.HandleFunc("/api/servers", ListServers).Methods("GET")
 	router.HandleFunc("/api/servers/{id}", GetServer).Methods("GET")
@@ -107,13 +112,37 @@ func run() error {
 	// Health check
 	router.HandleFunc("/health", Health).Methods("GET")
 
-	// Dashboard endpoints
-	router.HandleFunc("/", DashboardPage).Methods("GET")
-	router.HandleFunc("/dashboard", DashboardPage).Methods("GET")
-	router.HandleFunc("/api/stats", StatsAPI).Methods("GET")
-	router.HandleFunc("/ws", wsHub.HandleWebSocket)
+	// Authentication routes
+	router.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		HandleLogin(w, r, authConfig, sessionStore)
+	}).Methods("GET", "POST")
 
-	// Dashboard status endpoint (text format)
+	router.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
+		HandleLogout(w, r, sessionStore)
+	}).Methods("GET")
+
+	// Dashboard endpoints (with auth middleware)
+	dashboardHandler := http.HandlerFunc(DashboardPage)
+	statsHandler := http.HandlerFunc(StatsAPI)
+	wsHandler := http.HandlerFunc(wsHub.HandleWebSocket)
+
+	if authConfig.Enabled {
+		// Require authentication in dev mode
+		router.Handle("/", AuthMiddleware(authConfig, sessionStore)(dashboardHandler))
+		router.Handle("/dashboard", AuthMiddleware(authConfig, sessionStore)(dashboardHandler))
+		router.Handle("/api/stats", AuthMiddleware(authConfig, sessionStore)(statsHandler))
+		router.Handle("/ws", AuthMiddleware(authConfig, sessionStore)(wsHandler))
+	} else {
+		// Production: disable web access entirely
+		router.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, "Web dashboard is disabled in production mode", http.StatusForbidden)
+		}))
+		router.Handle("/dashboard", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, "Web dashboard is disabled in production mode", http.StatusForbidden)
+		}))
+	}
+
+	// Dashboard status endpoint (text format) - no auth needed
 	router.HandleFunc("/status", PrintStatus).Methods("GET")
 
 	// Start cleanup goroutine
