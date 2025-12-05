@@ -1,0 +1,5 @@
+# Force LF in go files
+*.go text eol=lf
+
+# Auto detect text files and normalize
+* text=auto

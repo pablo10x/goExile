@@ -1,0 +1,42 @@
+# Binaries and build outputs
+/bin/
+/build/
+/dist/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+
+# Go specific
+/vendor/
+*.test
+*.out
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment and local data
+.env
+registry.db
+*.db
+*.sqlite
+server/registry.db
+
+# Dependency directories
+Godeps/
+
+# IDE specific
+*.iml
+
+# Ignore coverage and test cache
+coverage.out
+/coverage/
+
+# logs
+*.log
