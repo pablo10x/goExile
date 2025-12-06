@@ -1,0 +1,15 @@
+{
+  "name": "game-server-registry-dashboard",
+  "version": "1.0.0",
+  "description": "Modern dashboard for game server registry with Tailwind CSS",
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/input.css -o ./dist/output.css",
+    "watch:css": "tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
+    "dev": "npm run watch:css"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.3.0",
+    "postcss": "^8.4.24",
+    "autoprefixer": "^10.4.14"
+  }
+}
