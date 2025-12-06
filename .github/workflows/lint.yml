@@ -31,6 +31,7 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: Check gofmt
+        working-directory: ./server
         run: |
           UNFORMATTED=$(gofmt -l . | wc -l)
           if [ "$UNFORMATTED" -ne 0 ]; then
