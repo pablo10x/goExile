@@ -145,6 +145,10 @@ func run() error {
 	// Dashboard status endpoint (text format) - no auth needed
 	router.HandleFunc("/status", PrintStatus).Methods("GET")
 
+	// Serve static files (CSS, JS, etc.)
+	fs := http.FileServer(http.Dir("./webpage/dist"))
+	router.PathPrefix("/dist/").Handler(http.StripPrefix("/dist/", fs))
+
 	// Start cleanup goroutine
 	go registry.Cleanup(serverTTL, cleanupInterval)
 
