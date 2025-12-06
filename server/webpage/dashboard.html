@@ -638,25 +638,33 @@
 
         <div class="servers-section">
             <h2 class="section-title">📦 Registered Servers</h2>
-            <table class="servers-table" id="serversTable">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Host:Port</th>
-                        <th>Status</th>
-                        <th>Players</th>
-                        <th>Region</th>
-                    </tr>
-                </thead>
-                <tbody id="serversBody">
-                    <tr>
-                        <td colspan="6" style="text-align: center; padding: 40px; color: #999;">
-                            Loading servers...
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="tabs-container" id="tabsContainer">
+                <button class="tab-button active" onclick="showTab('overview')">Overview</button>
+            </div>
+            
+            <div class="tab-content active" id="overview-tab">
+                <table class="servers-table" id="serversTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Host:Port</th>
+                            <th>Status</th>
+                            <th>Players</th>
+                            <th>Region</th>
+                        </tr>
+                    </thead>
+                    <tbody id="serversBody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 40px; color: #999;">
+                                Loading servers...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="serverTabsContainer"></div>
         </div>
 
         <div class="config-section">
@@ -799,8 +807,43 @@
             }
         }
 
+        let serverCharts = {};
+        let currentActiveTab = 'overview';
+
+        function showTab(tabName) {
+            currentActiveTab = tabName;
+            
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            const tab = document.getElementById(tabName + '-tab');
+            if (tab) {
+                tab.classList.add('active');
+            }
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+            
+            // Refresh chart if it exists
+            if (serverCharts[tabName]) {
+                setTimeout(() => {
+                    serverCharts[tabName].resize();
+                }, 0);
+            }
+        }
+
         function updateServersTable(servers) {
             const tbody = document.getElementById('serversBody');
+            const tabsContainer = document.getElementById('tabsContainer');
+            const serverTabsContainer = document.getElementById('serverTabsContainer');
 
             if (!servers || servers.length === 0) {
                 tbody.innerHTML = `
@@ -810,16 +853,22 @@
                         </td>
                     </tr>
                 `;
+                serverTabsContainer.innerHTML = '';
                 return;
             }
 
+            // Check if tabs already exist - if so, only update data
+            const existingOverviewTab = document.getElementById('overview-tab');
+            const existingServerTabs = Array.from(document.querySelectorAll('[id^="server-"][id$="-tab"]'));
+            const tabsAlreadyExist = existingOverviewTab && existingServerTabs.length === servers.length;
+
+            // Update table rows
             tbody.innerHTML = servers.map(server => {
                 const playerPercent = (server.current_players / server.max_players) * 100;
                 const statusClass = server.status === 'online' ? 'online' : 'offline';
-                const statusEmoji = server.status === 'online' ? '🟢' : '🔴';
 
                 return `
-                    <tr>
+                    <tr onclick="showTab('server-${server.id}')">
                         <td>${server.id}</td>
                         <td><span class="server-name">${escapeHtml(server.name)}</span></td>
                         <td><span class="server-host">${escapeHtml(server.host)}:${server.port}</span></td>
@@ -839,6 +888,230 @@
                     </tr>
                 `;
             }).join('');
+
+            // Only recreate tabs if they don't exist or server count changed
+            if (!tabsAlreadyExist) {
+                // Update tabs
+                const overviewTab = document.querySelector('[onclick="showTab(\'overview\')"]');
+                const newTabs = servers.map(server => 
+                    `<button class="tab-button" onclick="showTab('server-${server.id}')">${escapeHtml(server.name)}</button>`
+                ).join('');
+                
+                if (overviewTab && overviewTab.parentElement) {
+                    overviewTab.parentElement.innerHTML = '<button class="tab-button active" onclick="showTab(\'overview\')">Overview</button>' + newTabs;
+                }
+
+                // Create detailed tabs
+                serverTabsContainer.innerHTML = servers.map(server => {
+                    const playerPercent = (server.current_players / server.max_players) * 100;
+                    return `
+                        <div class="tab-content" id="server-${server.id}-tab">
+                            <h3 style="color: #f1f5f9; margin-bottom: 24px; font-size: 1.3em;">${escapeHtml(server.name)}</h3>
+                            
+                            <div class="server-detail">
+                                <div class="detail-card">
+                                    <div class="detail-label">Server ID</div>
+                                    <div class="detail-value">${server.id}</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-label">Host</div>
+                                    <div class="detail-value">${escapeHtml(server.host)}</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-label">Port</div>
+                                    <div class="detail-value">${server.port}</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-label">Status</div>
+                                    <div class="detail-value">
+                                        <span class="server-status ${server.status === 'online' ? 'online' : 'offline'}">
+                                            <span class="status-dot"></span>
+                                            ${server.status}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-label">Players</div>
+                                    <div class="detail-value">${server.current_players}/${server.max_players}</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-label">Region</div>
+                                    <div class="detail-value">${escapeHtml(server.region || 'N/A')}</div>
+                                </div>
+                            </div>
+
+                            <div class="chart-container">
+                                <div class="chart-title">Player Count Over Time</div>
+                                <canvas id="chart-server-${server.id}"></canvas>
+                            </div>
+
+                            <div class="server-detail">
+                                <div class="detail-card">
+                                    <div class="detail-label">Max Players</div>
+                                    <div class="detail-value">${server.max_players}</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-label">Capacity</div>
+                                    <div class="detail-value">${Math.round(playerPercent)}%</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-label">Created</div>
+                                    <div class="detail-value">${new Date(server.created_at).toLocaleDateString()}</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-label">Last Updated</div>
+                                    <div class="detail-value">${new Date(server.updated_at).toLocaleTimeString()}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Initialize charts
+                servers.forEach(server => {
+                    setTimeout(() => {
+                        initializeServerChart(server);
+                    }, 100);
+                });
+            } else {
+                // Just update the data in existing tabs
+                servers.forEach(server => {
+                    const playerPercent = (server.current_players / server.max_players) * 100;
+                    const tab = document.getElementById(`server-${server.id}-tab`);
+                    if (tab) {
+                        // Update player count
+                        const playerCard = tab.querySelector('.detail-card:nth-child(5) .detail-value');
+                        if (playerCard) {
+                            playerCard.textContent = `${server.current_players}/${server.max_players}`;
+                        }
+
+                        // Update status
+                        const statusCard = tab.querySelector('.detail-card:nth-child(4) .detail-value');
+                        if (statusCard) {
+                            statusCard.innerHTML = `
+                                <span class="server-status ${server.status === 'online' ? 'online' : 'offline'}">
+                                    <span class="status-dot"></span>
+                                    ${server.status}
+                                </span>
+                            `;
+                        }
+
+                        // Update capacity
+                        const capacityCard = tab.querySelector('.server-detail:nth-child(3) .detail-card:nth-child(2) .detail-value');
+                        if (capacityCard) {
+                            capacityCard.textContent = `${Math.round(playerPercent)}%`;
+                        }
+                    }
+                });
+
+                // Update chart data if the current tab is a server tab
+                if (currentActiveTab !== 'overview') {
+                    const serverId = currentActiveTab.replace('server-', '');
+                    const server = servers.find(s => s.id === parseInt(serverId));
+                    if (server && serverCharts[currentActiveTab]) {
+                        updateChartData(currentActiveTab, server);
+                    }
+                }
+            }
+        }
+
+        function updateChartData(tabName, server) {
+            if (!serverCharts[tabName]) return;
+
+            const chart = serverCharts[tabName];
+            
+            // Shift data and add new point
+            if (chart.data.labels.length > 30) {
+                chart.data.labels.shift();
+                chart.data.datasets[0].data.shift();
+            }
+
+            const now = new Date();
+            const timeLabel = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            chart.data.labels.push(timeLabel);
+            
+            const variation = Math.sin(Math.random() * 10) * 5 + Math.random() * 3;
+            const newValue = Math.max(0, Math.min(server.max_players, server.current_players + variation));
+            chart.data.datasets[0].data.push(newValue);
+
+            chart.update();
+        }
+
+        function initializeServerChart(server) {
+            const canvasId = `chart-server-${server.id}`;
+            const canvas = document.getElementById(canvasId);
+            
+            if (!canvas) return;
+
+            // Destroy existing chart if it exists
+            if (serverCharts[`server-${server.id}`]) {
+                serverCharts[`server-${server.id}`].destroy();
+            }
+
+            // Generate sample data - in production, this would come from your backend
+            const now = new Date();
+            const labels = [];
+            const data = [];
+            
+            for (let i = 30; i >= 0; i--) {
+                const time = new Date(now - i * 60000);
+                labels.push(time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
+                // Simulate player count variation
+                const variation = Math.sin(i / 10) * 5 + Math.random() * 3;
+                data.push(Math.max(0, Math.min(server.max_players, server.current_players + variation)));
+            }
+
+            const ctx = canvas.getContext('2d');
+            serverCharts[`server-${server.id}`] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Player Count',
+                        data: data,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#3b82f6',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#cbd5e1'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: server.max_players,
+                            grid: {
+                                color: 'rgba(51, 65, 85, 0.2)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(51, 65, 85, 0.2)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         function formatUptime(milliseconds) {
