@@ -3,191 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Server Registry - Login</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .login-container {
-            width: 100%;
-            max-width: 450px;
-        }
-
-        .login-card {
-            background: white;
-            border-radius: 15px;
-            padding: 50px 40px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-
-        .login-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .login-title {
-            font-size: 2em;
-            color: #333;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-
-        .login-subtitle {
-            font-size: 0.95em;
-            color: #666;
-        }
-
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 0.9em;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1em;
-            transition: all 0.3s ease;
-            font-family: inherit;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .form-input::placeholder {
-            color: #999;
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 30px;
-        }
-
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-        }
-
-        .login-btn:active {
-            transform: translateY(0);
-        }
-
-        .error-message {
-            background-color: #f8d7da;
-            color: #721c24;
-            padding: 12px 15px;
-            border-radius: 8px;
-            margin-bottom: 25px;
-            border-left: 4px solid #dc3545;
-            font-size: 0.9em;
-        }
-
-        .info-box {
-            background-color: #e7f3ff;
-            color: #004085;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 25px;
-            border-left: 4px solid #0066cc;
-            font-size: 0.85em;
-        }
-
-        .info-box strong {
-            display: block;
-            margin-bottom: 8px;
-        }
-
-        .info-item {
-            margin: 5px 0;
-            font-family: 'Courier New', monospace;
-        }
-
-        @media (max-width: 480px) {
-            .login-card {
-                padding: 30px 20px;
-            }
-
-            .login-title {
-                font-size: 1.5em;
-            }
-
-            .form-group {
-                margin-bottom: 20px;
-            }
-        }
-    </style>
+    <title>Login - Server Registry</title>
+    <link rel="stylesheet" href="/dist/output.css">
 </head>
-<body>
-    <div class="login-container">
-        <div class="login-card">
-            <div class="login-header">
-                <div class="login-title">🎮 Game Server Registry</div>
-                <div class="login-subtitle">Admin Dashboard</div>
-            </div>
-
-            {{if .Error}}
-            <div class="error-message">
-                {{.Error}}
-            </div>
-            {{end}}
-
-            <div class="info-box">
-                <strong>Development Mode</strong>
-                <div class="info-item">📧 Email: <code>{{.Email}}</code></div>
-                <div class="info-item">🔐 Password: <code>{{.Password}}</code></div>
-            </div>
-
-            <form method="POST" action="/login">
-                <div class="form-group">
-                    <label class="form-label">Email Address</label>
-                    <input type="email" name="email" class="form-input" placeholder="admin@example.com" required autocomplete="email">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Password</label>
-                    <input type="password" name="password" class="form-input" placeholder="••••••••" required autocomplete="current-password">
-                </div>
-
-                <button type="submit" class="login-btn">🔓 Login</button>
-            </form>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-300 min-h-screen flex items-center justify-center px-4">
+    <div class="w-full max-w-md">
+        <!-- Logo/Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-slate-50 mb-2">Server Registry</h1>
+            <p class="text-slate-400">Development Mode Authentication</p>
         </div>
+
+        <!-- Login Card -->
+        <div class="card">
+            <div class="px-8 py-10">
+                <h2 class="text-2xl font-bold text-slate-50 mb-8 text-center">Sign In</h2>
+
+                <form id="loginForm" method="POST" action="/login">
+                    <!-- Email Field -->
+                    <div class="mb-6">
+                        <label for="email" class="block text-sm font-semibold text-slate-100 mb-3">Email Address</label>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            required
+                            placeholder="you@example.com"
+                            class="w-full px-4 py-3 bg-slate-700/30 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                        >
+                    </div>
+
+                    <!-- Password Field -->
+                    <div class="mb-8">
+                        <label for="password" class="block text-sm font-semibold text-slate-100 mb-3">Password</label>
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            required
+                            placeholder="••••••••"
+                            class="w-full px-4 py-3 bg-slate-700/30 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                        >
+                    </div>
+
+                    <!-- Error Message -->
+                    <div id="errorMessage" class="hidden mb-6 p-4 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-sm font-medium"></div>
+
+                    <!-- Submit Button -->
+                    <button
+                        type="submit"
+                        class="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-semibold rounded-lg transition transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                    >
+                        <span>→</span>
+                        <span>Sign In</span>
+                    </button>
+                </form>
+
+                <!-- Info Box -->
+                <div class="mt-8 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                    <p class="text-xs text-blue-400 font-semibold uppercase tracking-wider mb-2">Development Mode</p>
+                    <p class="text-sm text-slate-300">Use any email address to authenticate. This page is only available in development mode.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <p class="text-center text-slate-500 text-sm mt-8">
+            Server Registry v1.0
+        </p>
     </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        email: email,
+                        password: password
+                    })
+                });
+
+                if (response.ok) {
+                    window.location.href = '/dashboard';
+                } else if (response.status === 401) {
+                    errorMessage.textContent = 'Invalid email or password';
+                    errorMessage.classList.remove('hidden');
+                } else {
+                    errorMessage.textContent = 'An error occurred. Please try again.';
+                    errorMessage.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                errorMessage.textContent = 'Network error. Please try again.';
+                errorMessage.classList.remove('hidden');
+            }
+        });
+    </script>
 </body>
 </html>
