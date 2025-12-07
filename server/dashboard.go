@@ -3,55 +3,114 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"runtime"
 	"sync"
 	"time"
 )
+
+// ErrorLog represents a single error event.
+type ErrorLog struct {
+	Timestamp time.Time `json:"timestamp"`
+	Path      string    `json:"path"`
+	Status    int       `json:"status"`
+	Message   string    `json:"message"`
+	ClientIP  string    `json:"client_ip"`
+}
 
 // DashboardStats holds metrics for display.
 type DashboardStats struct {
 	mu              sync.RWMutex
 	TotalRequests   int64
 	TotalErrors     int64
-	ActiveServers   int
+	ActiveSpawners  int
+	BytesSent       int64
+	BytesReceived   int64
+	MemUsage        uint64 // in bytes
 	LastRequestTime time.Time
 	DBConnected     bool
 	Uptime          time.Duration
 	StartTime       time.Time
+	ErrorLogs       []ErrorLog
 }
 
 // GlobalStats is the global dashboard stats instance.
 var GlobalStats = &DashboardStats{
 	StartTime: time.Now(),
+	ErrorLogs: make([]ErrorLog, 0),
 }
 
-// RecordRequest increments the request counter.
-func (ds *DashboardStats) RecordRequest(statusCode int) {
+// RecordRequest increments the request counter and bandwidth stats.
+func (ds *DashboardStats) RecordRequest(statusCode int, bytesIn, bytesOut int64) {
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
 	ds.TotalRequests++
+	ds.BytesReceived += bytesIn
+	ds.BytesSent += bytesOut
 	if statusCode >= 400 {
 		ds.TotalErrors++
 	}
 	ds.LastRequestTime = time.Now()
 }
 
+// RecordError adds an error to the log.
+func (ds *DashboardStats) RecordError(path string, status int, message string, clientIP string) {
+	ds.mu.Lock()
+	defer ds.mu.Unlock()
+	
+	logEntry := ErrorLog{
+		Timestamp: time.Now(),
+		Path:      path,
+		Status:    status,
+		Message:   message,
+		ClientIP:  clientIP,
+	}
+	
+	// Prepend and keep last 50
+	ds.ErrorLogs = append([]ErrorLog{logEntry}, ds.ErrorLogs...)
+	if len(ds.ErrorLogs) > 50 {
+		ds.ErrorLogs = ds.ErrorLogs[:50]
+	}
+}
+
+// UpdateMemoryStats updates the memory usage stat.
+func (ds *DashboardStats) UpdateMemoryStats() {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	ds.mu.Lock()
+	ds.MemUsage = m.Alloc
+	ds.mu.Unlock()
+}
+
 // GetStats returns a snapshot of current stats.
-func (ds *DashboardStats) GetStats() (totalReq int64, totalErr int64, active int, dbOK bool, uptime time.Duration) {
+func (ds *DashboardStats) GetStats() (totalReq int64, totalErr int64, active int, dbOK bool, uptime time.Duration, mem uint64, tx, rx int64) {
 	ds.mu.RLock()
 	defer ds.mu.RUnlock()
 	totalReq = ds.TotalRequests
 	totalErr = ds.TotalErrors
-	active = ds.ActiveServers
+	active = ds.ActiveSpawners
 	dbOK = ds.DBConnected
 	uptime = time.Since(ds.StartTime)
+	mem = ds.MemUsage
+	tx = ds.BytesSent
+	rx = ds.BytesReceived
 	return
+}
+
+// GetErrors returns the list of recent errors.
+func (ds *DashboardStats) GetErrors() []ErrorLog {
+	ds.mu.RLock()
+	defer ds.mu.RUnlock()
+	// Return a copy to avoid races
+	logs := make([]ErrorLog, len(ds.ErrorLogs))
+	copy(logs, ds.ErrorLogs)
+	return logs
 }
 
 // UpdateActiveServers updates the active server count.
 func (ds *DashboardStats) UpdateActiveServers(count int) {
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
-	ds.ActiveServers = count
+	ds.ActiveSpawners = count
 }
 
 // SetDBConnected updates DB connection status.
@@ -65,7 +124,7 @@ func (ds *DashboardStats) SetDBConnected(connected bool) {
 func PrintBanner() {
 	banner := `
 ╔═══════════════════════════════════════════════════════════════╗
-║                 🎮 GAME SERVER REGISTRY 🎮                    ║
+║                 🎮 SPAWNER REGISTRY 🎮                        ║
 ║              xx             ║
 ╚═══════════════════════════════════════════════════════════════╝
 `
@@ -74,9 +133,10 @@ func PrintBanner() {
 
 // PrintStatus prints real-time server status.
 func PrintStatus(w http.ResponseWriter, r *http.Request) {
-	GlobalStats.RecordRequest(http.StatusOK)
+	// Simple record for status page itself
+	GlobalStats.RecordRequest(http.StatusOK, 0, 0)
 
-	totalReq, totalErr, active, dbOK, uptime := GlobalStats.GetStats()
+	totalReq, totalErr, active, dbOK, uptime, mem, tx, rx := GlobalStats.GetStats()
 
 	dbStatus := "✓ Connected"
 	if !dbOK {
@@ -85,13 +145,16 @@ func PrintStatus(w http.ResponseWriter, r *http.Request) {
 
 	status := fmt.Sprintf(`
 ╔════════════════════════════════════════════════════════════════╗
-║                    📊 SERVER STATUS 📊                         ║
+║                    📊 REGISTRY STATUS 📊                       ║
 ╠════════════════════════════════════════════════════════════════╣
 ║                                                                ║
 ║  🕐 Uptime:            %-42s║
-║  🖥️  Active Servers:    %-42d║
+║  🖥️  Active Spawners:   %-42d║
 ║  📡 Total Requests:    %-42d║
 ║  ⚠️  Errors:           %-42d║
+║  💾 Memory Usage:      %-42s║
+║  ⬆️  Tx:               %-42s║
+║  ⬇️  Rx:               %-42s║
 ║  🗄️  Database:         %-42s║
 ║                                                                ║
 ╚════════════════════════════════════════════════════════════════╝
@@ -100,11 +163,28 @@ func PrintStatus(w http.ResponseWriter, r *http.Request) {
 		active,
 		totalReq,
 		totalErr,
+		formatBytes(mem),
+		formatBytes(uint64(tx)),
+		formatBytes(uint64(rx)),
 		dbStatus,
 	)
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	fmt.Fprint(w, status)
+}
+
+// formatBytes formats bytes to human readable string
+func formatBytes(b uint64) string {
+	const unit = 1024
+	if b < unit {
+		return fmt.Sprintf("%d B", b)
+	}
+	div, exp := int64(unit), 0
+	for n := b / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB", float64(b)/float64(div), "KMGTPE"[exp])
 }
 
 // formatDuration formats duration in a readable way.
@@ -122,28 +202,28 @@ func formatDuration(d time.Duration) string {
 	return fmt.Sprintf("%ds", seconds)
 }
 
-// PrintServerList prints formatted server list.
-func PrintServerList(servers []*Server) string {
-	if len(servers) == 0 {
+// PrintSpawnerList prints formatted spawner list.
+func PrintSpawnerList(spawners []*Spawner) string {
+	if len(spawners) == 0 {
 		return `
 ╔════════════════════════════════════════════════════════════════╗
-║                      📦 SERVERS 📦                             ║
+║                      📦 SPAWNERS 📦                            ║
 ╠════════════════════════════════════════════════════════════════╣
-║  No servers registered yet.                                   ║
+║  No spawners registered yet.                                   ║
 ╚════════════════════════════════════════════════════════════════╝
 `
 	}
 
 	header := `
 ╔════════════════════════════════════════════════════════════════╗
-║                      📦 SERVERS 📦                             ║
+║                      📦 SPAWNERS 📦                            ║
 ╠════════════════════════════════════════════════════════════════╣
-║ ID   │ Name             │ Host:Port         │ Status   │ Players║
+║ ID   │ Region           │ Host:Port         │ Status   │ Inst.  ║
 ╠════════════════════════════════════════════════════════════════╣
 `
 
 	body := ""
-	for _, s := range servers {
+	for _, s := range spawners {
 		status := "🟢 Online"
 		if s.Status == "offline" {
 			status = "🔴 Offline"
@@ -151,11 +231,11 @@ func PrintServerList(servers []*Server) string {
 
 		body += fmt.Sprintf("║ %-4d │ %-16s │ %-17s │ %-8s │ %d/%d  ║\n",
 			s.ID,
-			truncate(s.Name, 16),
+			truncate(s.Region, 16),
 			fmt.Sprintf("%s:%d", s.Host, s.Port),
 			status,
-			s.CurrentPlayers,
-			s.MaxPlayers,
+			s.CurrentInstances,
+			s.MaxInstances,
 		)
 	}
 

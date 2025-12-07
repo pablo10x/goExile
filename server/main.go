@@ -1,11 +1,10 @@
-// Package main provides a lightweight HTTP-based game server registry.
+// Package main provides a lightweight HTTP-based spawner registry.
 //
-// The registry exposes a small REST API that allows game server instances
-// (for example, Unity servers) to register themselves, send periodic
-// heartbeats to indicate liveness, and be discovered by players. The
-// implementation uses an in-memory registry with an optional SQLite
-// persistence layer. A background cleanup goroutine removes servers
-// that have not heartbeated within the configured TTL.
+// The registry acts as the central authority for tracking active Spawners.
+// It exposes a REST API for:
+// - Spawner registration and heartbeats
+// - Dashboard monitoring (via WebSocket)
+// - Spawning new game instances (proxying to Spawners)
 package main
 
 import (
@@ -20,25 +19,21 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// Configuration constants used by the registry. These constants keep the
-// runtime behaviour simple and predictable for small deployments.
+// Configuration constants used by the registry.
 const (
-	// maxBodySize is the maximum size accepted for request bodies. This
-	// protects the server from large or inefficient payloads.
+	// maxBodySize is the maximum size accepted for request bodies.
 	maxBodySize = 1 << 20 // 1MB
 
 	// maxIDValue provides a sanity limit for parsed ID values.
 	maxIDValue = 1000000
 
-	// serverTTL defines how long a server is considered alive since its
-	// last heartbeat. Servers older than this are removed by cleanup.
+	// serverTTL defines how long a spawner is considered alive since its
+	// last heartbeat. Spawners older than this are removed by cleanup.
 	serverTTL = 60 * time.Second
 
 	// cleanupInterval is how frequently the cleanup loop runs.
 	cleanupInterval = 30 * time.Second
 )
-
-// (ErrorResponse moved to models.go)
 
 func main() {
 	if err := run(); err != nil {
@@ -46,28 +41,31 @@ func main() {
 	}
 }
 
-// run creates the router, wires handlers, optionally initializes persistence,
-// and starts the HTTP server. The function blocks until the process receives
-// an interrupt signal, at which point it performs a graceful shutdown.
+// run initializes and starts the registry server.
+// It handles database connection, route setup, background cleanup tasks,
+// and graceful shutdown.
 func run() error {
-	// Print banner
+	// 1. Print startup banner
 	PrintBanner()
 
-	// Initialize authentication
+	// 2. Initialize authentication & session management
 	authConfig := GetAuthConfig()
 	sessionStore := NewSessionStore()
 	go sessionStore.CleanupExpiredSessions()
 
-	// Initialize WebSocket hub
-	wsHub := NewWebSocketHub()
-	go wsHub.Run()
+	// 3. Initialize SSE hub for real-time dashboard updates
+	sseHub := NewSSEHub()
+	go sseHub.Run()
 
+	// 4. Initialize Router
 	router := mux.NewRouter()
 
-	// Initialize DB (optional). Path can be configured with DB_PATH env var.
+	// 5. Initialize Database (optional persistence)
+	// If DB_PATH is not set, defaults to "database/registry.db".
+	// Falls back to in-memory mode if DB connection fails.
 	dbPath := os.Getenv("DB_PATH")
 	if dbPath == "" {
-		dbPath = "registry.db"
+		dbPath = "database/registry.db"
 	}
 	var err error
 	dbConn, err = InitDB(dbPath)
@@ -76,17 +74,16 @@ func run() error {
 		GlobalStats.SetDBConnected(false)
 	} else {
 		GlobalStats.SetDBConnected(true)
-		// Load existing servers from DB into in-memory registry
-		loaded, err := LoadServers(dbConn)
+		// Load existing spawners from DB to restore state
+		loaded, err := LoadSpawners(dbConn)
 		if err != nil {
-			log.Printf("warning: failed to load servers from DB: %v", err)
+			log.Printf("warning: failed to load spawners from DB: %v", err)
 		} else {
-			// populate registry and ensure nextID is greater than any existing id
+			// Re-populate in-memory registry from DB records
 			maxID := registry.nextID - 1
 			registry.mu.Lock()
 			for i := range loaded {
 				s := loaded[i]
-				// copy into map
 				copyS := s
 				registry.items[copyS.ID] = &copyS
 				if copyS.ID > maxID {
@@ -95,24 +92,34 @@ func run() error {
 			}
 			registry.nextID = maxID + 1
 			registry.mu.Unlock()
-			log.Printf("loaded %d servers from DB, nextID=%d", len(loaded), registry.nextID)
+			log.Printf("loaded %d spawners from DB, nextID=%d", len(loaded), registry.nextID)
 		}
 	}
 
-	// Print configuration
+	// 6. Print configuration summary
 	PrintConfig(8081, dbPath)
 
-	// Server registry API routes (no auth required)
-	router.HandleFunc("/api/servers", RegisterServer).Methods("POST")
-	router.HandleFunc("/api/servers", ListServers).Methods("GET")
-	router.HandleFunc("/api/servers/{id}", GetServer).Methods("GET")
-	router.HandleFunc("/api/servers/{id}", DeleteServer).Methods("DELETE")
-	router.HandleFunc("/api/servers/{id}/heartbeat", HeartbeatServer).Methods("POST")
+	// 7. Define API Routes
+	// Spawner interactions (public/internal API) - Secured via API Key if set
+	apiRouter := router.PathPrefix("/api/spawners").Subrouter()
+	apiKey := os.Getenv("MASTER_API_KEY")
+	if apiKey != "" {
+		log.Println("🔒 API Key authentication enabled for Spawners")
+		apiRouter.Use(APIKeyMiddleware(apiKey))
+	}
 
-	// Health check
+	apiRouter.HandleFunc("", RegisterSpawner).Methods("POST")
+	apiRouter.HandleFunc("", ListSpawners).Methods("GET") // Maybe this should be public or auth? Keeping consistent
+	apiRouter.HandleFunc("/{id}", GetSpawner).Methods("GET")
+	apiRouter.HandleFunc("/{id}", DeleteSpawner).Methods("DELETE")
+	apiRouter.HandleFunc("/{id}/spawn", SpawnInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/heartbeat", HeartbeatSpawner).Methods("POST")
+	apiRouter.HandleFunc("/download", ServeGameServerFile).Methods("GET")
+
+	// Liveness check
 	router.HandleFunc("/health", Health).Methods("GET")
 
-	// Authentication routes
+	// Authentication endpoints
 	router.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		HandleLogin(w, r, authConfig, sessionStore)
 	}).Methods("GET", "POST")
@@ -121,19 +128,24 @@ func run() error {
 		HandleLogout(w, r, sessionStore)
 	}).Methods("GET")
 
-	// Dashboard endpoints (with auth middleware)
+	// Dashboard & UI endpoints (Protected by AuthMiddleware in dev/prod)
 	dashboardHandler := http.HandlerFunc(DashboardPage)
+	errorsPageHandler := http.HandlerFunc(ErrorsPage) // New page handler
+	usersHandler := http.HandlerFunc(UsersPage)
 	statsHandler := http.HandlerFunc(StatsAPI)
-	wsHandler := http.HandlerFunc(wsHub.HandleWebSocket)
+	errorsAPIHandler := http.HandlerFunc(ErrorsAPI) // New API handler
+	sseHandler := http.HandlerFunc(sseHub.HandleSSE)
 
 	if authConfig.Enabled {
-		// Require authentication in dev mode
 		router.Handle("/", AuthMiddleware(authConfig, sessionStore)(dashboardHandler))
 		router.Handle("/dashboard", AuthMiddleware(authConfig, sessionStore)(dashboardHandler))
+		router.Handle("/errors", AuthMiddleware(authConfig, sessionStore)(errorsPageHandler)) // Secure /errors
+		router.Handle("/users", AuthMiddleware(authConfig, sessionStore)(usersHandler))
 		router.Handle("/api/stats", AuthMiddleware(authConfig, sessionStore)(statsHandler))
-		router.Handle("/ws", AuthMiddleware(authConfig, sessionStore)(wsHandler))
+		router.Handle("/api/errors", AuthMiddleware(authConfig, sessionStore)(errorsAPIHandler)) // Secure /api/errors
+		router.Handle("/events", AuthMiddleware(authConfig, sessionStore)(sseHandler)) // Replaced /ws with /events
 	} else {
-		// Production: disable web access entirely
+		// Secure default: disable web dashboard if auth is somehow disabled in prod
 		router.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Web dashboard is disabled in production mode", http.StatusForbidden)
 		}))
@@ -142,24 +154,33 @@ func run() error {
 		}))
 	}
 
-	// Dashboard status endpoint (text format) - no auth needed
+	// CLI-friendly status endpoint
 	router.HandleFunc("/status", PrintStatus).Methods("GET")
 
-	// Serve static files (CSS, JS, etc.)
+	// Static assets
 	fs := http.FileServer(http.Dir("./webpage/dist"))
 	router.PathPrefix("/dist/").Handler(http.StripPrefix("/dist/", fs))
 
-	// Start cleanup goroutine
+	// 8. Start background cleanup
 	go registry.Cleanup(serverTTL, cleanupInterval)
 
+	// Start Memory Stats Ticker
+	go func() {
+		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+		for range ticker.C {
+			GlobalStats.UpdateMemoryStats()
+		}
+	}()
+
+	// 9. Start HTTP Server
 	srv := &http.Server{
 		Addr:    ":8081",
-		Handler: router,
+		Handler: StatsMiddleware(router),
 	}
 
-	// Run server in background so we can handle graceful shutdown and close DB
 	go func() {
-		log.Println("✓ Starting game server registry on :8081")
+		log.Println("✓ Starting spawner registry on :8081")
 		log.Println("🌐 Web Dashboard: http://localhost:8081")
 		log.Println("📊 API Stats: http://localhost:8081/api/stats")
 		log.Println("🏥 Health Check: http://localhost:8081/health")
@@ -168,7 +189,7 @@ func run() error {
 		}
 	}()
 
-	// Wait for termination signal
+	// 10. Graceful Shutdown
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 	<-stop

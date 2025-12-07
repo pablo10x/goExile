@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error Logs - Spawner Registry</title>
+    <link rel="stylesheet" href="/dist/output.css">
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-300 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-12">
+            <div>
+                <h1 class="text-4xl font-bold text-slate-50 -tracking-wide mb-2">Error Logs</h1>
+                <p class="text-slate-400">Recent Application Errors</p>
+            </div>
+            <div class="flex gap-3 items-center">
+                <a href="/dashboard" class="btn-secondary gap-2">
+                    <span>←</span>
+                    <span>Dashboard</span>
+                </a>
+                <button onclick="loadErrors()" class="btn-primary gap-2">
+                    <span>↻</span>
+                    <span>Refresh</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="card">
+            <div class="border-b border-slate-700 px-8 py-6">
+                <h2 class="text-2xl font-bold text-slate-50">⚠️ Recent Errors</h2>
+            </div>
+            <div class="p-0">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-800/50 border-b border-slate-700">
+                            <tr>
+                                <th class="text-left px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider w-48">Time</th>
+                                <th class="text-left px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider w-24">Status</th>
+                                <th class="text-left px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider w-32">Client IP</th>
+                                <th class="text-left px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider w-64">Path</th>
+                                <th class="text-left px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Message</th>
+                            </tr>
+                        </thead>
+                        <tbody id="errorsBody" class="divide-y divide-slate-700">
+                            <tr>
+                                <td colspan="5" class="px-6 py-8 text-center text-slate-500">Loading errors...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadErrors() {
+            try {
+                const response = await fetch('/api/errors');
+                if (!response.ok) throw new Error('Failed to fetch errors');
+                
+                const errors = await response.json();
+                const tbody = document.getElementById('errorsBody');
+                
+                if (errors.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-slate-500">No recent errors recorded</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = errors.map(err => `
+                    <tr class="hover:bg-slate-800/30 transition">
+                        <td class="px-6 py-4 font-mono text-slate-400 whitespace-nowrap">${new Date(err.timestamp).toLocaleString()}</td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500/10 text-red-400">
+                                ${err.status}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 font-mono text-slate-400">${escapeHtml(err.client_ip)}</td>
+                        <td class="px-6 py-4 font-mono text-slate-300 break-all">${escapeHtml(err.path)}</td>
+                        <td class="px-6 py-4 text-slate-200">${escapeHtml(err.message)}</td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading logs:', error);
+                document.getElementById('errorsBody').innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-red-400">Error loading logs: ${error.message}</td></tr>`;
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Load on start
+        loadErrors();
+        // Poll every 5s
+        setInterval(loadErrors, 5000);
+    </script>
+</body>
+</html>

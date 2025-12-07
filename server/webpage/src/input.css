@@ -12,6 +12,22 @@
     @apply translate-y-0;
   }
 
+  .btn-secondary {
+    @apply inline-flex items-center px-4 py-2 bg-slate-200 text-slate-800 font-semibold rounded-lg hover:bg-slate-300 transition-all duration-200 hover:-translate-y-0.5;
+  }
+
+  .btn-secondary:active {
+    @apply translate-y-0;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition-all duration-200 hover:-translate-y-0.5;
+  }
+
+  .btn-danger:active {
+    @apply translate-y-0;
+  }
+
   .card {
     @apply bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-lg shadow-sm hover:border-slate-600 hover:bg-gradient-to-br hover:from-slate-700 hover:to-slate-900 transition-all duration-300;
   }

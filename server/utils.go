@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"strconv"
 )
@@ -20,7 +21,21 @@ func writeJSON(w http.ResponseWriter, status int, data interface{}) {
 }
 
 // writeError sends a structured error response using ErrorResponse.
-func writeError(w http.ResponseWriter, status int, message string) {
+// It also records the error in the global dashboard stats.
+func writeError(w http.ResponseWriter, r *http.Request, status int, message string) {
+	path := "(unknown)"
+	clientIP := "(unknown)"
+	if r != nil {
+		path = r.URL.Path
+		// Strip port from RemoteAddr if present
+		host, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err == nil {
+			clientIP = host
+		} else {
+			clientIP = r.RemoteAddr
+		}
+	}
+	GlobalStats.RecordError(path, status, message, clientIP)
 	writeJSON(w, status, ErrorResponse{Error: message})
 }
 
