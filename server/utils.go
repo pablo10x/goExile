@@ -46,7 +46,7 @@ func parseID(idStr string) (int, error) {
 	if err != nil {
 		return 0, fmt.Errorf("invalid ID format")
 	}
-	if id < 1 || id > maxIDValue {
+	if id < 1 || id > MaxIDValue {
 		return 0, fmt.Errorf("ID out of valid range")
 	}
 	return id, nil

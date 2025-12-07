@@ -44,6 +44,8 @@ func NewManager(cfg *config.Config, logger *slog.Logger) *Manager {
 
 // Spawn starts a new game server instance.
 func (m *Manager) Spawn(ctx context.Context) (*Instance, error) {
+
+	fmt.Println("calling spawn")
 	m.mu.Lock()
 	defer m.mu.Unlock()
 

@@ -104,6 +104,7 @@ func SpawnInstance(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := parseID(vars["id"])
 	if err != nil {
+		fmt.Println("error parsing id")
 		writeError(w, r, http.StatusBadRequest, err.Error())
 		return
 	}

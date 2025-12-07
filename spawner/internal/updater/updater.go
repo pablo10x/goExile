@@ -80,7 +80,7 @@ func downloadFile(url, apiKey string, dest *os.File) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("server returned status: %s", resp.Status)
+		return fmt.Errorf("server returned status: %s %s", resp.Status,resp.Body)
 	}
 
 	_, err = io.Copy(dest, resp.Body)

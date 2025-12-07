@@ -103,6 +103,10 @@ func run() error {
 	// Spawner interactions (public/internal API) - Secured via API Key if set
 	apiRouter := router.PathPrefix("/api/spawners").Subrouter()
 	apiKey := os.Getenv("MASTER_API_KEY")
+	if apiKey == "" {
+		apiKey = "your_very_secret_master_api_key_here" // Default API key
+		log.Println("⚠️ MASTER_API_KEY not set, using default API key. Consider setting it in your environment.")
+	}
 	if apiKey != "" {
 		log.Println("🔒 API Key authentication enabled for Spawners")
 		apiRouter.Use(APIKeyMiddleware(apiKey))
@@ -143,7 +147,7 @@ func run() error {
 		router.Handle("/users", AuthMiddleware(authConfig, sessionStore)(usersHandler))
 		router.Handle("/api/stats", AuthMiddleware(authConfig, sessionStore)(statsHandler))
 		router.Handle("/api/errors", AuthMiddleware(authConfig, sessionStore)(errorsAPIHandler)) // Secure /api/errors
-		router.Handle("/events", AuthMiddleware(authConfig, sessionStore)(sseHandler)) // Replaced /ws with /events
+		router.Handle("/events", AuthMiddleware(authConfig, sessionStore)(sseHandler))           // Replaced /ws with /events
 	} else {
 		// Secure default: disable web dashboard if auth is somehow disabled in prod
 		router.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

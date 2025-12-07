@@ -1,105 +1,204 @@
-# Game Server Spawner
+# 🎮 Game Server Spawner
 
-A production-ready, lightweight, distributed infrastructure tool written in Go (Golang) to spawn "headless" Unity game server instances on demand.
+A production-ready, lightweight, and extensible service written in Go (Golang) designed to launch, monitor, and manage dedicated game server instances on a host machine. It communicates with a central Spawner Registry (Master Server) to report its status and request new game instances.
 
-## Features
+---
 
-- **Dynamic Spawning:** Launches Unity server instances on request.
-- **Port Management:** Automatically finds and assigns free TCP ports.
-- **Process Management:** Tracks running instances, supports graceful shutdown, and monitors process health.
-- **API Security:** Simple API Key authentication.
-- **Structured Logging:** Uses `log/slog` for JSON-formatted logs.
-- **Graceful Shutdown:** cleanly terminates all child game servers when the spawner stops.
+## 🚀 Features
 
-## Project Structure
+*   **Master Server Integration:**
+    *   Registers itself with the Master Server upon startup.
+    *   Sends periodic heartbeats with its current instance load and status.
+    *   Authenticates with the Master using an `X-API-Key` header.
+    *   Automatically downloads missing game server build files from the Master Server.
+*   **Dynamic Game Instance Management:**
+    *   Receives commands from the Master Server to spawn new game server instances.
+    *   Automatically finds and assigns available TCP ports within a configured range for each game instance.
+    *   Launches game servers as child processes and monitors their lifecycle.
+    *   Provides an API to list and stop individual game instances.
+*   **Robust Logging:** Uses structured logging (`log/slog`) with output directed to a `spawner.log` file, suitable for production environments.
+*   **Graceful Shutdown:** Ensures all running game server instances are terminated cleanly when the Spawner service itself shuts down.
 
-- `cmd/server/`: Entry point.
-- `internal/config/`: Configuration loading and validation.
-- `internal/game/`: Core logic for process management (spawn, stop, monitor).
-- `api/`: HTTP handlers and routing.
+---
 
-## Configuration
+## 🛠️ Getting Started
 
-The application is configured via environment variables or a `.env` file.
+### Prerequisites
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `REGION` | (Required) The region identifier (e.g., "EU", "US-East"). | - |
-| `GAME_BINARY_PATH` | (Required) Absolute path to the Unity server build. | - |
-| `GAME_DOWNLOAD_URL` | (Optional) URL to a ZIP file containing the game server. Used if binary is missing. | - |
-| `GAME_DOWNLOAD_TOKEN` | (Optional) Bearer token for downloading the game server (if URL is protected). | - |
-| `GAME_INSTALL_DIR` | (Optional) Directory to extract the downloaded ZIP to. | `./game_server` |
-| `SPAWNER_PORT` | The port this API listens on. | 8080 |
-| `MIN_GAME_PORT` | Start of the port range for game servers. | 7777 |
-| `MAX_GAME_PORT` | End of the port range. | 8000 |
+*   Go (version 1.20+)
+*   Git
+*   A compiled dedicated game server executable (e.g., a Unity headless build).
 
-### Example `.env`
+### 1. Clone the Repository
 
-```ini
-REGION=US_West
-GAME_BINARY_PATH=C:\Builds\MyGame\MyGame.exe
-SPAWNER_PORT=8080
-# Windows Example:
-# GAME_BINARY_PATH=C:/Builds/MyGame/MyGame.exe
-# Linux Example:
-# GAME_BINARY_PATH=/home/user/game/MyGame.x86_64
-# New Fields
-GAME_DOWNLOAD_URL=https://example.com/builds/latest_server.zip
-GAME_INSTALL_DIR=./game_server
-MIN_GAME_PORT=9000
-MAX_GAME_PORT=9100
+```bash
+git clone https://github.com/your-repo/goExile.git
+cd goExile
 ```
 
-## API Usage
+### 2. Prepare Game Server Files
 
-### Authentication
+*   Create a directory named `game_server` inside the `spawner/` folder.
+*   Place your compiled game server executable and all its required files (data, libraries, configs) into `spawner/game_server/`.
 
-If `SPAWNER_API_KEY` is set, include the header:
-`X-API-Key: secret_password_123`
+### 3. Configuration (`spawner/.env`)
+
+Create a `.env` file in the `spawner/` directory. This file will hold environment-specific settings crucial for the Spawner's operation.
+
+```ini
+# Spawner Host Region (e.g., "US-East", "Europe-West")
+REGION=Your_Region
+
+# Path to your Game Server Executable (relative to spawner/ or absolute)
+# Example for Windows: ./game_server/DedicatedServer.exe
+# Example for Linux:   ./game_server/DedicatedServer.x86_64
+GAME_BINARY_PATH=./game_server/DedicatedServer.exe
+
+# Directory where game server files are installed/extracted.
+# This should match where you placed your game server files.
+GAME_INSTALL_DIR=./game_server
+
+# Port for the Spawner's own internal API (used by Master to send commands)
+SPAWNER_PORT=8080
+
+# Port range for game server instances launched by this Spawner
+MIN_GAME_PORT=7777
+MAX_GAME_PORT=8000
+
+# Master Server URL and API Key
+# The Spawner will register and communicate with this Master.
+MASTER_URL=http://localhost:8081
+MASTER_API_KEY=your_very_secret_master_api_key_here
+```
+
+### 4. Build and Run
+
+Navigate to the `spawner/` directory and run:
+
+```bash
+cd spawner
+go mod tidy          # Download dependencies
+go run ./cmd/server  # Run the Spawner service
+```
+
+**Important:** For the Spawner to function correctly, ensure the Master Server is already running and accessible at the configured `MASTER_URL`.
+
+---
+
+## 🏗️ Architecture & Workflow
+
+### Startup Sequence
+
+1.  **Loads Configuration**: Reads settings from `.env` and environment variables.
+2.  **Validates Game Binary**: Checks if the `GAME_BINARY_PATH` exists.
+3.  **Automatic Download**: If the game binary is not found locally, the Spawner attempts to download `game_server.zip` from the configured `MASTER_URL/api/spawners/download` endpoint, using the `MASTER_API_KEY` for authentication.
+4.  **Registers with Master**: Sends a `POST` request to `MASTER_URL/api/spawners` to register itself, including its host, port, region, and instance capacity.
+5.  **Starts Heartbeat**: Initiates a background routine to send periodic heartbeats (`POST MASTER_URL/api/spawners/{id}/heartbeat`) to keep its registration active and update its current instance load.
+6.  **Starts API Server**: The Spawner's own API server begins listening on `SPAWNER_PORT` for commands from the Master.
+
+### Game Server Spawning
+
+1.  The Master Server (e.g., via the dashboard) sends a `POST` request to `SPAWNER_HOST:SPAWNER_PORT/spawn`.
+2.  The Spawner receives the request and:
+    *   Finds an available TCP port within its `MIN_GAME_PORT`-`MAX_GAME_PORT` range.
+    *   Launches your game server executable (`GAME_BINARY_PATH`) as a child process.
+    *   Passes command-line arguments, including the assigned port (e.g., `-port 7777`).
+    *   Registers the new game instance internally.
+3.  The Spawner's heartbeat automatically updates the Master Server with the new count of running game instances.
+
+---
+
+## 🔑 Spawner's Internal API
+
+The Spawner hosts its own API that the Master Server can call to manage game instances.
 
 ### Endpoints
 
-#### 1. Check Health
-`GET /health`
-Returns the status and region of the spawner.
+*   `POST /spawn`: Starts a new game server instance.
+*   `GET /instances`: Lists all game server instances currently running on this Spawner.
+*   `DELETE /instance/:id`: Stops a specific game server instance by its ID.
+*   `GET /health`: Checks the liveness of the Spawner service.
 
-#### 2. Spawn Server
-`POST /spawn`
-Starts a new game server instance.
-**Response:**
-```json
+---
+
+## 🎮 Unity Game Server Integration (FishNet Example)
+
+For your Unity game server to use the dynamic port assigned by the Spawner, its networking solution must be configured to read a command-line argument.
+
+**Example for FishNet (C# Script):**
+
+1.  Create a C# script (e.g., `SpawnerPortSetter.cs`) in your Unity project.
+2.  Attach this script to a GameObject in your server build scene.
+3.  Ensure your FishNet `NetworkManager` and its `Transport` are referenced in the script's Inspector fields.
+
+```csharp
+using FishNet.Managing;
+using FishNet.Transporting;
+using UnityEngine;
+using System;
+
+public class SpawnerPortSetter : MonoBehaviour
 {
-  "id": "US_West-9001",
-  "port": 9001,
-  "pid": 12345,
-  "status": "Running",
-  "region": "US_West",
-  "start_time": "2023-10-27T10:00:00Z"
+    [SerializeField] private NetworkManager _networkManager;
+    [SerializeField] private Transport _transport;
+    [SerializeField] private ushort _defaultPort = 7770; // Fallback port
+
+    void Awake()
+    {
+        if (_networkManager == null) _networkManager = FindObjectOfType<NetworkManager>();
+        if (_networkManager == null) { Debug.LogError("[SpawnerPortSetter] NetworkManager not found."); return; }
+
+        if (_transport == null) _transport = _networkManager.TransportManager.GetTransport(0);
+        if (_transport == null) { Debug.LogError("[SpawnerPortSetter] FishNet Transport not found."); return; }
+
+        int port = GetPortFromCommandLine(_defaultPort);
+        Debug.Log($"[SpawnerPortSetter] Setting Transport Port to: {port}");
+        _transport.SetPort((ushort)port); // Or cast and set directly: ((ToggledTransport)_transport).Port = (ushort)port;
+    }
+
+    private int GetPortFromCommandLine(ushort defaultPort)
+    {
+        string[] args = Environment.GetCommandLineArgs();
+        for (int i = 0; i < args.Length; i++)
+        {
+            if (args[i].ToLower() == "-port" && i + 1 < args.Length)
+            {
+                if (int.TryParse(args[i + 1], out int parsedPort))
+                {
+                    Debug.Log($"[SpawnerPortSetter] -port argument found: {parsedPort}");
+                    return parsedPort;
+                }
+            }
+        }
+        Debug.Log($"[SpawnerPortSetter] -port argument not found. Using default: {defaultPort}");
+        return defaultPort;
+    }
 }
 ```
 
-#### 3. List Instances
-`GET /instances`
-Returns a list of all currently running servers.
+The Spawner launches your game server with:
+`[GAME_BINARY_PATH] -batchmode -nographics -mode server -port [assigned_port]`
 
-#### 4. Stop Instance
-`DELETE /instance/:id`
-Stops the specified game server.
+---
 
-## Development
+## 🧪 Testing
 
-### Running locally
+To run tests for the Spawner module:
+
 ```bash
-go run cmd/server/main.go
+cd spawner
+go test ./... -v
 ```
 
-### Running Tests
-```bash
-go test ./...
-```
+---
 
-## Unity Integration
+## ⛔ Limitations & Future Enhancements
 
-Ensure your Unity Server build reads the `-port` command line argument.
-See `internal/game/manager.go` for the exact arguments passed:
-`-batchmode -nographics -mode server -port <port>`
+*   **No HTTPS:** All API communication is currently over HTTP. Implementing HTTPS for the Spawner's own API would be crucial for production security if exposed outside localhost.
+*   **Game Instance Details:** The Spawner's API provides basic instance details. More granular information (e.g., current player count per instance) would require deeper integration with the game server itself.
+*   **Resource Limits:** No CPU/memory limits are imposed on launched game server processes.
+*   **Advanced Orchestration:** Features like instance auto-scaling based on load, instance migration, or rolling updates are not implemented.
+
+---
+
+This `README.md` provides a comprehensive overview of the Game Server Spawner.

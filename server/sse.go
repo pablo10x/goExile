@@ -138,6 +138,7 @@ func (h *SSEHub) sendUpdate(client chan string, msgType string) {
 			"memory_usage":    mem,
 			"bytes_sent":      tx,
 			"bytes_received":  rx,
+			
 		}
 	} else if msgType == "spawners" {
 		payload = registry.List()
