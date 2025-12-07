@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -172,4 +173,27 @@ func DeleteSpawnerDB(db *sqlx.DB, id int) error {
 		return nil
 	}
 	return execWithRetry(do)
+}
+
+// GetSpawnerByID returns a single spawner by id.
+func GetSpawnerByID(db *sqlx.DB, id int) (*Spawner, error) {
+	var out *Spawner
+	do := func() error {
+		row := db.QueryRowx(`SELECT id, region, host, port, max_instances, current_instances, status, last_seen FROM spawners WHERE id = ?`, id)
+		var s Spawner
+		var lastSeenUnix int64
+		if err := row.Scan(&s.ID, &s.Region, &s.Host, &s.Port, &s.MaxInstances, &s.CurrentInstances, &s.Status, &lastSeenUnix); err != nil {
+			if err == sql.ErrNoRows {
+				return nil // Return nil if not found, handled by caller
+			}
+			return fmt.Errorf("scan spawner: %w", err)
+		}
+		s.LastSeen = time.Unix(lastSeenUnix, 0).UTC()
+		out = &s
+		return nil
+	}
+	if err := execWithRetry(do); err != nil {
+		return nil, err
+	}
+	return out, nil
 }

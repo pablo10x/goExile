@@ -35,18 +35,6 @@ func TestEnsureInstalled_AlreadyExists(t *testing.T) {
 	}
 }
 
-func TestEnsureInstalled_MissingNoURL(t *testing.T) {
-	cfg := &config.Config{
-		GameBinaryPath:  "/non/existent/path",
-		GameDownloadURL: "",
-	}
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
-
-	if err := EnsureInstalled(cfg, logger); err == nil {
-		t.Error("Expected error when binary missing and no URL, got nil")
-	}
-}
-
 func TestEnsureInstalled_DownloadAndUnzip(t *testing.T) {
 	// 1. Create a Zip file in memory
 	tmpZip, err := os.CreateTemp("", "source.zip")
@@ -67,11 +55,15 @@ func TestEnsureInstalled_DownloadAndUnzip(t *testing.T) {
 	zw.Close()
 	tmpZip.Close() // Close file so we can serve it
 
-	// 2. Start Mock Server
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// 2. Start Mock Master Server
+	masterServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/spawners/download" {
+			http.NotFound(w, r)
+			return
+		}
 		http.ServeFile(w, r, tmpZip.Name())
 	}))
-	defer server.Close()
+	defer masterServer.Close()
 
 	// 3. Setup Config
 	installDir, err := os.MkdirTemp("", "install_dir")
@@ -82,9 +74,9 @@ func TestEnsureInstalled_DownloadAndUnzip(t *testing.T) {
 
 	binPath := filepath.Join(installDir, "game.exe")
 	cfg := &config.Config{
-		GameBinaryPath:  binPath,
-		GameDownloadURL: server.URL,
-		GameInstallDir:  installDir,
+		GameBinaryPath: binPath,
+		GameInstallDir: installDir,
+		MasterURL:      masterServer.URL,
 	}
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
