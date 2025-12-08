@@ -27,6 +27,7 @@ registry.db
 *.db
 *.sqlite
 server/registry.db
+server/database/
 
 # Dependency directories
 Godeps/
@@ -40,3 +41,7 @@ coverage.out
 
 # logs
 *.log
+
+# Large binary files
+*.zip
+server/files/*.zip

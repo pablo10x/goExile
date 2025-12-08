@@ -31,3 +31,7 @@ go.work
 # Downloaded/Installed Game Servers
 game_server/
 *.zip
+
+# Spawned Instances and State
+instances/
+instances.json
