@@ -7,7 +7,7 @@ import (
 
 func TestConfig_Validate(t *testing.T) {
 	// Setup a temporary file for binary check
-	tmpFile, err := os.CreateTemp("", "game_binary")
+	tmpFile, err := os.CreateTemp("", "game_binary*.exe")
 	if err != nil {
 		t.Fatal(err)
 	}

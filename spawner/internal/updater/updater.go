@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"spawner/internal/config"
 	"strings"
 )
@@ -29,7 +30,7 @@ func EnsureInstalled(cfg *config.Config, logger *slog.Logger) error {
 	}
 
 	// 3. Download the zip file from Master Server
-	downloadURL := fmt.Sprintf("%s/api/spawners/download", cfg.MasterURL)
+	downloadURL := fmt.Sprintf("%s/api/spawners/download?os=%s", cfg.MasterURL, runtime.GOOS)
 	tmpFile, err := os.CreateTemp("", "gameserver-*.zip")
 	if err != nil {
 		return fmt.Errorf("failed to create temp file: %w", err)

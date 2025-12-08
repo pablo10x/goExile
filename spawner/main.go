@@ -49,6 +49,12 @@ func main() {
 	// 3. Initialize Game Manager
 	manager := game.NewManager(cfg, logger)
 
+	// 3.5 Restore previous instances
+	if err := manager.RestoreInstances(); err != nil {
+		logger.Error("Failed to restore instances", "error", err)
+		// We continue, assuming the state was empty or corrupt, starting fresh.
+	}
+
 	// 4. Register with Master Server
 	spawnerID := registerLoop(cfg, manager, logger)
 

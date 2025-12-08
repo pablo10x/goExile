@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"spawner/internal/config"
 	"sync"
 	"time"
@@ -18,9 +19,10 @@ type Instance struct {
 	ID        string    `json:"id"`
 	Port      int       `json:"port"`
 	ProcessID int       `json:"pid"`
-	Status    string    `json:"status"`
+	Status    string    `json:"status"` // "Running", "Stopped", "Error"
 	Region    string    `json:"region"`
 	StartTime time.Time `json:"start_time"`
+	Path      string    `json:"path"` // Path to this instance's directory
 
 	cmd *exec.Cmd // Private: command handle for process management
 }
@@ -35,17 +37,37 @@ type Manager struct {
 
 // NewManager creates a new game process manager.
 func NewManager(cfg *config.Config, logger *slog.Logger) *Manager {
-	return &Manager{
+	m := &Manager{
 		cfg:       cfg,
 		instances: make(map[string]*Instance),
 		logger:    logger,
 	}
+	return m
+}
+
+// RestoreInstances loads state from disk and restarts servers that should be running.
+func (m *Manager) RestoreInstances() error {
+	if err := m.LoadState(); err != nil {
+		return fmt.Errorf("failed to load state: %w", err)
+	}
+
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	for id, inst := range m.instances {
+		if inst.Status == "Running" {
+			m.logger.Info("Restoring instance", "id", id, "port", inst.Port)
+			if err := m.startProcess(inst); err != nil {
+				m.logger.Error("Failed to restore instance", "id", id, "error", err)
+				inst.Status = "Error"
+			}
+		}
+	}
+	return nil
 }
 
 // Spawn starts a new game server instance.
 func (m *Manager) Spawn(ctx context.Context) (*Instance, error) {
-
-	fmt.Println("calling spawn")
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -54,41 +76,96 @@ func (m *Manager) Spawn(ctx context.Context) (*Instance, error) {
 		return nil, fmt.Errorf("failed to allocate port: %w", err)
 	}
 
-	// Use CommandContext for better control (cancellation/timeout)
-	cmd := exec.CommandContext(ctx, m.cfg.GameBinaryPath,
-		"-batchmode",
-		"-nographics",
-		"-mode", "server",
-		"-port", fmt.Sprintf("%d", port),
-	)
-	
-	// Redirect stdout/stderr for debugging (or pipe to logger in future)
-	// For production, you might want to pipe this to a file or log collector.
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	id := fmt.Sprintf("%s-%d", m.cfg.Region, port)
+	instanceDir := filepath.Join(m.cfg.InstancesDir, id)
 
-	if err := cmd.Start(); err != nil {
-		return nil, fmt.Errorf("failed to start process: %w", err)
+	// Ensure instances directory exists
+	if err := os.MkdirAll(m.cfg.InstancesDir, 0755); err != nil {
+		return nil, fmt.Errorf("failed to create instances directory: %w", err)
 	}
 
-	id := fmt.Sprintf("%s-%d", m.cfg.Region, port)
+	// Copy game files to new instance directory
+	m.logger.Info("Creating instance directory...", "id", id, "dir", instanceDir)
+	if err := copyDir(m.cfg.GameInstallDir, instanceDir); err != nil {
+		return nil, fmt.Errorf("failed to copy game files: %w", err)
+	}
+
 	instance := &Instance{
 		ID:        id,
 		Port:      port,
-		ProcessID: cmd.Process.Pid,
 		Status:    "Running",
 		Region:    m.cfg.Region,
 		StartTime: time.Now(),
-		cmd:       cmd,
+		Path:      instanceDir,
+	}
+
+	if err := m.startProcess(instance); err != nil {
+		// Cleanup if start fails? 
+		// os.RemoveAll(instanceDir)
+		return nil, fmt.Errorf("failed to start process: %w", err)
 	}
 
 	m.instances[id] = instance
 	m.logger.Info("Spawned new game server", "id", id, "port", port, "pid", instance.ProcessID)
-
-	// Monitor process in background
-	go m.monitorInstance(id, cmd)
+	
+	if err := m.SaveState(); err != nil {
+		m.logger.Error("Failed to save state after spawn", "error", err)
+	}
 
 	return instance, nil
+}
+
+// startProcess constructs the command and starts the process for an instance.
+// It assumes the instance directory and files are already set up.
+func (m *Manager) startProcess(inst *Instance) error {
+	// Determine the binary path relative to the install dir
+	// We resolve absolute paths to ensure Rel works correctly regardless of how they are defined
+	absInstallDir, err := filepath.Abs(m.cfg.GameInstallDir)
+	if err != nil {
+		return fmt.Errorf("failed to resolve absolute install dir: %w", err)
+	}
+	absBinaryPath, err := filepath.Abs(m.cfg.GameBinaryPath)
+	if err != nil {
+		return fmt.Errorf("failed to resolve absolute binary path: %w", err)
+	}
+
+	relPath, err := filepath.Rel(absInstallDir, absBinaryPath)
+	if err != nil {
+		// Fallback: if paths are on different drives or unrelated, use the base name
+		m.logger.Warn("Could not determine relative binary path, using base name", "error", err)
+		relPath = filepath.Base(m.cfg.GameBinaryPath)
+	}
+	// If the binary is directly in the install dir, Rel returns ".", which we handle? 
+	// Actually Rel returns "server.exe" if it's inside.
+	
+	binaryPath := filepath.Join(inst.Path, relPath)
+
+	// Ensure binary is executable
+	_ = os.Chmod(binaryPath, 0755)
+
+	cmd := exec.Command(binaryPath,
+		"-batchmode",
+		"-nographics",
+		"-mode", "server",
+		"-port", fmt.Sprintf("%d", inst.Port),
+	)
+	
+	cmd.Dir = inst.Path
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+
+	inst.cmd = cmd
+	inst.ProcessID = cmd.Process.Pid
+	inst.Status = "Running"
+	
+	// Monitor in background
+	go m.monitorInstance(inst.ID, cmd)
+	
+	return nil
 }
 
 // monitorInstance waits for the process to exit and cleans up.
@@ -99,21 +176,26 @@ func (m *Manager) monitorInstance(id string, cmd *exec.Cmd) {
 	defer m.mu.Unlock()
 	
 	if instance, exists := m.instances[id]; exists {
-		instance.Status = "Stopped"
-		// We keep the instance in the map with 'Stopped' status or delete it?
-		// Usually, we might want to keep history or just delete. 
-		// For this simple spawner, let's remove it to free the port logically.
-		delete(m.instances, id)
-		
-		exitCode := 0
-		if err != nil {
-			var exitError *exec.ExitError
-			if errors.As(err, &exitError) {
-				exitCode = exitError.ExitCode()
+		// Only update if the command matches (handling restarts/race conditions)
+		if instance.cmd == cmd {
+			instance.Status = "Stopped"
+			instance.ProcessID = 0
+			instance.cmd = nil
+			
+			exitCode := 0
+			if err != nil {
+				var exitError *exec.ExitError
+				if errors.As(err, &exitError) {
+					exitCode = exitError.ExitCode()
+				}
+				m.logger.Warn("Game server exited with error", "id", id, "error", err, "exit_code", exitCode)
+			} else {
+				m.logger.Info("Game server stopped normally", "id", id)
 			}
-			m.logger.Warn("Game server exited with error", "id", id, "error", err, "exit_code", exitCode)
-		} else {
-			m.logger.Info("Game server stopped normally", "id", id)
+
+			if err := m.SaveState(); err != nil {
+				m.logger.Error("Failed to save state after instance stop", "error", err)
+			}
 		}
 	}
 }
@@ -128,13 +210,17 @@ func (m *Manager) StopInstance(id string) error {
 		return fmt.Errorf("instance not found")
 	}
 
+	if instance.Status != "Running" {
+		return fmt.Errorf("instance is not running")
+	}
+
 	if instance.cmd != nil && instance.cmd.Process != nil {
 		if err := instance.cmd.Process.Kill(); err != nil {
 			return fmt.Errorf("failed to kill process: %w", err)
 		}
 	}
 	
-	// monitorInstance will handle the cleanup
+	// monitorInstance will update status and save state
 	return nil
 }
 
@@ -150,8 +236,7 @@ func (m *Manager) Shutdown() {
 			_ = instance.cmd.Process.Kill()
 		}
 	}
-	// Clear map
-	m.instances = make(map[string]*Instance)
+	// We don't clear map here, so state persists
 }
 
 // GetInstance returns a copy of the instance status.
@@ -184,10 +269,9 @@ func (m *Manager) ListInstances() []Instance {
 }
 
 // findAvailablePort scans for an open TCP port.
-// Note: There is still a theoretical race condition here between finding and binding.
 func (m *Manager) findAvailablePort() (int, error) {
 	for port := m.cfg.MinGamePort; port <= m.cfg.MaxGamePort; port++ {
-		// 1. Check internal tracking
+		// 1. Check internal tracking (including stopped instances to reserve port)
 		portInUse := false
 		for _, inst := range m.instances {
 			if inst.Port == port {

@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -21,6 +23,8 @@ type Config struct {
 	MaxGamePort       int
 	MasterURL         string // URL of the Master Server (Registry)
 	MasterAPIKey      string // API Key for Master Server authentication
+	StateFilePath     string // Path to the JSON file storing instance state
+	InstancesDir      string // Directory where game server instances are spawned
 }
 
 // Load reads configuration from environment variables.
@@ -45,6 +49,8 @@ func Load() (*Config, error) {
 		MaxGamePort:       getEnvAsInt("MAX_GAME_PORT", 8000),
 		MasterURL:         getEnv("MASTER_URL", "http://localhost:8081"),
 		MasterAPIKey:      getEnv("MASTER_API_KEY", ""),
+		StateFilePath:     getEnv("STATE_FILE_PATH", "instances.json"),
+		InstancesDir:      getEnv("INSTANCES_DIR", "./instances"),
 	}
 
 	if err := conf.Validate(); err != nil {
@@ -62,6 +68,13 @@ func (c *Config) Validate() error {
 	}
 	if c.GameBinaryPath == "" {
 		return fmt.Errorf("GAME_BINARY_PATH is required")
+	}
+
+	// Adjust binary path for Windows if needed
+	if runtime.GOOS == "windows" {
+		if !strings.HasSuffix(strings.ToLower(c.GameBinaryPath), ".exe") {
+			c.GameBinaryPath += ".exe"
+		}
 	}
 	
 	// Check if binary exists
