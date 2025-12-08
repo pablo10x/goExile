@@ -96,6 +96,9 @@ func (c *Config) Validate() error {
 		}
 	}
 
+
+
+
 	if c.MinGamePort >= c.MaxGamePort {
 		return fmt.Errorf("MIN_GAME_PORT (%d) must be less than MAX_GAME_PORT (%d)", c.MinGamePort, c.MaxGamePort)
 	}

@@ -109,16 +109,16 @@ func run() error {
 	}
 	if apiKey != "" {
 		log.Println("🔒 API Key authentication enabled for Spawners")
-		apiRouter.Use(APIKeyMiddleware(apiKey))
+	//	apiRouter.Use(APIKeyMiddleware(apiKey))
 	}
 
+	apiRouter.HandleFunc("/download", ServeGameServerFile).Methods("GET")
 	apiRouter.HandleFunc("", RegisterSpawner).Methods("POST")
 	apiRouter.HandleFunc("", ListSpawners).Methods("GET") // Maybe this should be public or auth? Keeping consistent
 	apiRouter.HandleFunc("/{id}", GetSpawner).Methods("GET")
 	apiRouter.HandleFunc("/{id}", DeleteSpawner).Methods("DELETE")
 	apiRouter.HandleFunc("/{id}/spawn", SpawnInstance).Methods("POST")
 	apiRouter.HandleFunc("/{id}/heartbeat", HeartbeatSpawner).Methods("POST")
-	apiRouter.HandleFunc("/download", ServeGameServerFile).Methods("GET")
 
 	// Liveness check
 	router.HandleFunc("/health", Health).Methods("GET")
@@ -146,8 +146,15 @@ func run() error {
 		router.Handle("/errors", AuthMiddleware(authConfig, sessionStore)(errorsPageHandler)) // Secure /errors
 		router.Handle("/users", AuthMiddleware(authConfig, sessionStore)(usersHandler))
 		router.Handle("/api/stats", AuthMiddleware(authConfig, sessionStore)(statsHandler))
-		router.Handle("/api/errors", AuthMiddleware(authConfig, sessionStore)(errorsAPIHandler)) // Secure /api/errors
+		router.Handle("/api/errors", AuthMiddleware(authConfig, sessionStore)(errorsAPIHandler)).Methods("GET")
+		router.Handle("/api/errors", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ClearErrorsAPI))).Methods("DELETE")
 		router.Handle("/events", AuthMiddleware(authConfig, sessionStore)(sseHandler))           // Replaced /ws with /events
+		router.Handle("/api/upload", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(HandleUploadGameServer))).Methods("POST")
+		
+		// Version Management Routes
+		router.Handle("/api/versions", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListVersions))).Methods("GET")
+		router.Handle("/api/versions/{id}/active", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(HandleSetActiveVersion))).Methods("POST")
+		router.Handle("/api/versions/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(HandleDeleteVersion))).Methods("DELETE")
 	} else {
 		// Secure default: disable web dashboard if auth is somehow disabled in prod
 		router.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

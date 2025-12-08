@@ -58,6 +58,13 @@ func createTables(db *sqlx.DB) error {
 		current_instances INTEGER NOT NULL,
 		status TEXT,
 		last_seen INTEGER NOT NULL
+	);
+	CREATE TABLE IF NOT EXISTS server_versions (
+		id INTEGER PRIMARY KEY,
+		filename TEXT NOT NULL,
+		comment TEXT,
+		uploaded_at INTEGER NOT NULL,
+		is_active INTEGER DEFAULT 0
 	);`
 	_, err := db.Exec(q)
 	if err != nil {
@@ -196,4 +203,93 @@ func GetSpawnerByID(db *sqlx.DB, id int) (*Spawner, error) {
 		return nil, err
 	}
 	return out, nil
+}
+
+// -- Server Versions --
+
+func SaveServerVersion(db *sqlx.DB, v *GameServerVersion) error {
+	do := func() error {
+		_, err := db.Exec(`INSERT INTO server_versions (filename, comment, uploaded_at, is_active) VALUES (?, ?, ?, ?)`,
+			v.Filename, v.Comment, v.UploadedAt.Unix(), v.IsActive)
+		if err != nil {
+			return fmt.Errorf("insert version: %w", err)
+		}
+		return nil
+	}
+	return execWithRetry(do)
+}
+
+func ListServerVersions(db *sqlx.DB) ([]GameServerVersion, error) {
+	rows, err := db.Queryx(`SELECT id, filename, comment, uploaded_at, is_active FROM server_versions ORDER BY uploaded_at DESC`)
+	if err != nil {
+		return nil, fmt.Errorf("query versions: %w", err)
+	}
+	defer rows.Close()
+
+	var out []GameServerVersion
+	for rows.Next() {
+		var v GameServerVersion
+		var uploadedAtUnix int64
+		if err := rows.Scan(&v.ID, &v.Filename, &v.Comment, &uploadedAtUnix, &v.IsActive); err != nil {
+			return nil, fmt.Errorf("scan version: %w", err)
+		}
+		v.UploadedAt = time.Unix(uploadedAtUnix, 0).UTC()
+		out = append(out, v)
+	}
+	return out, nil
+}
+
+func SetActiveVersion(db *sqlx.DB, id int) error {
+	do := func() error {
+		tx, err := db.Begin()
+		if err != nil {
+			return err
+		}
+		defer tx.Rollback()
+
+		// Deactivate all
+		if _, err := tx.Exec(`UPDATE server_versions SET is_active = 0`); err != nil {
+			return err
+		}
+		// Activate target
+		if _, err := tx.Exec(`UPDATE server_versions SET is_active = 1 WHERE id = ?`, id); err != nil {
+			return err
+		}
+
+		return tx.Commit()
+	}
+	return execWithRetry(do)
+}
+
+func DeleteServerVersion(db *sqlx.DB, id int) (string, error) {
+	var filename string
+	do := func() error {
+		// Get filename first to return it (so caller can delete file)
+		if err := db.QueryRow(`SELECT filename FROM server_versions WHERE id = ?`, id).Scan(&filename); err != nil {
+			return err
+		}
+		if _, err := db.Exec(`DELETE FROM server_versions WHERE id = ?`, id); err != nil {
+			return err
+		}
+		return nil
+	}
+	if err := execWithRetry(do); err != nil {
+		return "", err
+	}
+	return filename, nil
+}
+
+func GetActiveServerVersion(db *sqlx.DB) (*GameServerVersion, error) {
+	var v GameServerVersion
+	var uploadedAtUnix int64
+	err := db.QueryRow(`SELECT id, filename, comment, uploaded_at, is_active FROM server_versions WHERE is_active = 1 LIMIT 1`).
+		Scan(&v.ID, &v.Filename, &v.Comment, &uploadedAtUnix, &v.IsActive)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	v.UploadedAt = time.Unix(uploadedAtUnix, 0).UTC()
+	return &v, nil
 }

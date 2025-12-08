@@ -106,6 +106,13 @@ func (ds *DashboardStats) GetErrors() []ErrorLog {
 	return logs
 }
 
+// ClearErrors empties the error log.
+func (ds *DashboardStats) ClearErrors() {
+	ds.mu.Lock()
+	defer ds.mu.Unlock()
+	ds.ErrorLogs = make([]ErrorLog, 0)
+}
+
 // UpdateActiveServers updates the active server count.
 func (ds *DashboardStats) UpdateActiveServers(count int) {
 	ds.mu.Lock()

@@ -142,12 +142,6 @@ func Health(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "healthy"})
 }
 
-// ServeGameServerFile serves the game_server.zip file to authenticated spawners.
-func ServeGameServerFile(w http.ResponseWriter, r *http.Request) {
-	// In a real app, verify file existence first to give a better error
-	http.ServeFile(w, r, "./files/game_server.zip")
-}
-
 // StatsAPI returns JSON statistics about the server for the dashboard.
 func StatsAPI(w http.ResponseWriter, r *http.Request) {
 	totalReq, totalErr, active, dbOK, uptime, mem, tx, rx := GlobalStats.GetStats()
@@ -170,6 +164,12 @@ func StatsAPI(w http.ResponseWriter, r *http.Request) {
 func ErrorsAPI(w http.ResponseWriter, r *http.Request) {
 	errors := GlobalStats.GetErrors()
 	writeJSON(w, http.StatusOK, errors)
+}
+
+// ClearErrorsAPI clears the error log.
+func ClearErrorsAPI(w http.ResponseWriter, r *http.Request) {
+	GlobalStats.ClearErrors()
+	writeJSON(w, http.StatusOK, map[string]string{"message": "Error log cleared"})
 }
 
 // DashboardPage serves the HTML dashboard.

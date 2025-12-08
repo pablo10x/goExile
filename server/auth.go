@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -134,7 +135,13 @@ func AuthMiddleware(authConfig AuthConfig, sessionStore *SessionStore) func(http
 				return
 			}
 
-			// No valid session; redirect to login
+			// No valid session
+			if strings.HasPrefix(r.URL.Path, "/api") {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+			
+			// Redirect to login for pages
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 		})
 	}
