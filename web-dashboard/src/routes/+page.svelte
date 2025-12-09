@@ -5,6 +5,7 @@
     import SpawnerTable from '$lib/components/SpawnerTable.svelte';
     import Drawer from '$lib/components/Drawer.svelte';
     import LogViewer from '$lib/components/LogViewer.svelte';
+    import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
     import { formatBytes, formatUptime } from '$lib/utils';
 
     let eventSource: EventSource | null = null;
@@ -14,6 +15,10 @@
     // Log Viewer State
     let isLogDrawerOpen = false;
     let selectedSpawnerId: number | null = null;
+
+    // Spawn Dialog State
+    let isSpawnDialogOpen = false;
+    let spawnTargetId: number | null = null;
 
     function connectSSE() {
         if (eventSource) eventSource.close();
@@ -70,22 +75,20 @@
         if (eventSource) eventSource.close();
     });
 
-    async function handleSpawn(event: CustomEvent<number>) {
-        const id = event.detail;
-        if (!confirm(`Are you sure you want to spawn an instance on Spawner #${id}?`)) return;
+    function openSpawnDialog(event: CustomEvent<number>) {
+        spawnTargetId = event.detail;
+        isSpawnDialogOpen = true;
+    }
+
+    async function executeSpawn() {
+        if (!spawnTargetId) return;
         
-        try {
-            const res = await fetch(`/api/spawners/${id}/spawn`, { method: 'POST' });
-            if (res.ok) {
-                // Optimistic update or wait for SSE? SSE is fast enough.
-                alert('Spawn request sent!');
-            } else {
-                const err = await res.json();
-                alert(`Failed: ${err.error || 'Unknown error'}`);
-            }
-        } catch (e) {
-            alert('Error sending spawn request');
+        const res = await fetch(`/api/spawners/${spawnTargetId}/spawn`, { method: 'POST' });
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || `Server returned ${res.status}`);
         }
+        // Success handled by Dialog closing
     }
 
     function handleViewLogs(event: CustomEvent<number>) {
@@ -166,7 +169,7 @@
     <div class="p-0">
         <SpawnerTable 
             spawners={$spawners} 
-            on:spawn={handleSpawn} 
+            on:spawn={openSpawnDialog} 
             on:viewLogs={handleViewLogs}
         />
     </div>
@@ -182,3 +185,12 @@
         <LogViewer spawnerId={selectedSpawnerId} />
     {/if}
 </Drawer>
+
+<!-- Spawn Confirmation Dialog -->
+<ConfirmDialog
+    bind:isOpen={isSpawnDialogOpen}
+    title="Spawn New Instance"
+    message={`Are you sure you want to spawn a new game server instance on Spawner #${spawnTargetId}?`}
+    confirmText="Spawn Server"
+    onConfirm={executeSpawn}
+/>
