@@ -51,16 +51,21 @@ func HeartbeatSpawner(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		CurrentInstances int    `json:"current_instances"`
-		MaxInstances     int    `json:"max_instances"`
-		Status           string `json:"status"`
+		CurrentInstances int     `json:"current_instances"`
+		MaxInstances     int     `json:"max_instances"`
+		Status           string  `json:"status"`
+		CpuUsage         float64 `json:"cpu_usage"`
+		MemUsed          uint64  `json:"mem_used"`
+		MemTotal         uint64  `json:"mem_total"`
+		DiskUsed         uint64  `json:"disk_used"`
+		DiskTotal        uint64  `json:"disk_total"`
 	}
 	if err := decodeJSON(r, &req); err != nil {
 		writeError(w, r, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	if err := registry.UpdateHeartbeat(id, req.CurrentInstances, req.MaxInstances, req.Status); err != nil {
+	if err := registry.UpdateHeartbeat(id, req.CurrentInstances, req.MaxInstances, req.Status, req.CpuUsage, req.MemUsed, req.MemTotal, req.DiskUsed, req.DiskTotal); err != nil {
 		writeError(w, r, http.StatusNotFound, err.Error())
 		return
 	}
@@ -176,6 +181,117 @@ func GetSpawnerLogs(w http.ResponseWriter, r *http.Request) {
 
 	body, _ := io.ReadAll(resp.Body)
 	
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(resp.StatusCode)
+	w.Write(body)
+}
+
+// ClearSpawnerLogs truncates the log file on a spawner.
+func ClearSpawnerLogs(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := parseID(vars["id"])
+	if err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	s, ok := registry.Get(id)
+	if !ok {
+		writeError(w, r, http.StatusNotFound, "spawner not found")
+		return
+	}
+
+	url := fmt.Sprintf("http://%s:%d/logs", s.Host, s.Port)
+	req, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		writeError(w, r, http.StatusInternalServerError, "failed to create request")
+		return
+	}
+
+	client := &http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
+		return
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(resp.StatusCode)
+	w.Write(body)
+}
+
+// ListSpawnerInstances fetches active game instances from a spawner.
+func ListSpawnerInstances(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := parseID(vars["id"])
+	if err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	s, ok := registry.Get(id)
+	if !ok {
+		writeError(w, r, http.StatusNotFound, "spawner not found")
+		return
+	}
+
+	url := fmt.Sprintf("http://%s:%d/instances", s.Host, s.Port)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		writeError(w, r, http.StatusInternalServerError, "failed to create request")
+		return
+	}
+
+	client := &http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
+		return
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(resp.StatusCode)
+	w.Write(body)
+}
+
+// StopSpawnerInstance stops a specific game instance on a spawner.
+func StopSpawnerInstance(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := parseID(vars["id"])
+	if err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	instanceID := vars["instance_id"]
+	if instanceID == "" {
+		writeError(w, r, http.StatusBadRequest, "missing instance_id")
+		return
+	}
+
+	s, ok := registry.Get(id)
+	if !ok {
+		writeError(w, r, http.StatusNotFound, "spawner not found")
+		return
+	}
+
+	url := fmt.Sprintf("http://%s:%d/instance/%s", s.Host, s.Port, instanceID)
+	req, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		writeError(w, r, http.StatusInternalServerError, "failed to create request")
+		return
+	}
+
+	client := &http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
+		return
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(resp.StatusCode)
 	w.Write(body)

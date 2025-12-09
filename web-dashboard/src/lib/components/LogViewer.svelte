@@ -25,6 +25,25 @@
         }
     }
 
+    async function clearLogs() {
+        if (!confirm('Are you sure you want to clear the logs? This action cannot be undone.')) return;
+        
+        loading = true;
+        try {
+            const res = await fetch(`/api/spawners/${spawnerId}/logs`, { method: 'DELETE' });
+            if (res.ok) {
+                logs = '';
+                await fetchLogs(); // Refresh to confirm empty
+            } else {
+                alert('Failed to clear logs');
+            }
+        } catch (e: any) {
+            alert(`Error: ${e.message}`);
+        } finally {
+            loading = false;
+        }
+    }
+
     onMount(() => {
         fetchLogs();
     });
@@ -35,13 +54,22 @@
         <div class="text-sm text-slate-400">
             Viewing logs for Spawner #{spawnerId}
         </div>
-        <button 
-            onclick={fetchLogs} 
-            disabled={loading}
-            class="px-3 py-1 bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 rounded text-xs font-semibold transition-colors disabled:opacity-50"
-        >
-            {loading ? 'Refreshing...' : 'Refresh Logs'}
-        </button>
+        <div class="flex gap-2">
+            <button 
+                onclick={clearLogs} 
+                disabled={loading}
+                class="px-3 py-1 bg-red-600/20 text-red-400 hover:bg-red-600/30 rounded text-xs font-semibold transition-colors disabled:opacity-50"
+            >
+                Clear Logs
+            </button>
+            <button 
+                onclick={fetchLogs} 
+                disabled={loading}
+                class="px-3 py-1 bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 rounded text-xs font-semibold transition-colors disabled:opacity-50"
+            >
+                {loading ? 'Refreshing...' : 'Refresh Logs'}
+            </button>
+        </div>
     </div>
 
     <div class="flex-1 bg-slate-950 rounded-lg border border-slate-800 p-4 overflow-hidden flex flex-col relative">

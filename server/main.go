@@ -117,6 +117,9 @@ func run() error {
 	apiRouter.HandleFunc("/{id}/spawn", SpawnInstance).Methods("POST")
 	apiRouter.HandleFunc("/{id}/heartbeat", HeartbeatSpawner).Methods("POST")
 	apiRouter.HandleFunc("/{id}/logs", GetSpawnerLogs).Methods("GET")
+	apiRouter.HandleFunc("/{id}/logs", ClearSpawnerLogs).Methods("DELETE")
+	apiRouter.HandleFunc("/{id}/instances", ListSpawnerInstances).Methods("GET")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id}", StopSpawnerInstance).Methods("DELETE")
 
 	// Liveness check
 	router.HandleFunc("/health", Health).Methods("GET")

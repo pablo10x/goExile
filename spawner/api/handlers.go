@@ -27,6 +27,7 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 	router.DELETE("/instance/:id", h.HandleStopInstance)
 	router.GET("/health", h.HandleHealth)
 	router.GET("/logs", h.HandleGetLogs)
+	router.DELETE("/logs", h.HandleClearLogs)
 }
 
 func (h *Handler) HandleHealth(c *gin.Context) {
@@ -49,6 +50,16 @@ func (h *Handler) HandleGetLogs(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"logs": string(content)})
+}
+
+func (h *Handler) HandleClearLogs(c *gin.Context) {
+	if err := os.Truncate("spawner.log", 0); err != nil {
+		h.logger.Error("Failed to clear logs", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to clear logs"})
+		return
+	}
+	h.logger.Info("Logs cleared by request")
+	c.JSON(http.StatusOK, gin.H{"message": "logs cleared"})
 }
 
 func (h *Handler) HandleSpawn(c *gin.Context) {
