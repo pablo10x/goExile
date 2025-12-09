@@ -76,20 +76,47 @@ func run() error {
 		if err != nil {
 			log.Printf("warning: failed to load spawners from DB: %v", err)
 		} else {
-			// Re-populate in-memory registry from DB records
+			// Re-populate in-memory registry from DB records, checking health
 			maxID := registry.nextID - 1
 			registry.mu.Lock()
+			
+			validCount := 0
+			removedCount := 0
+			client := &http.Client{Timeout: 2 * time.Second}
+
 			for i := range loaded {
 				s := loaded[i]
+				
+				// Health check
+				healthURL := fmt.Sprintf("http://%s:%d/health", s.Host, s.Port)
+				resp, err := client.Get(healthURL)
+				isHealthy := false
+				if err == nil {
+					if resp.StatusCode == http.StatusOK {
+						isHealthy = true
+					}
+					resp.Body.Close()
+				}
+
+				if !isHealthy {
+					log.Printf("⚠️ Spawner #%d (%s:%d) unresponsive at startup. Removing from DB.", s.ID, s.Host, s.Port)
+					if err := DeleteSpawnerDB(dbConn, s.ID); err != nil {
+						log.Printf("   -> Failed to delete from DB: %v", err)
+					}
+					removedCount++
+					continue
+				}
+
 				copyS := s
 				registry.items[copyS.ID] = &copyS
 				if copyS.ID > maxID {
 					maxID = copyS.ID
 				}
+				validCount++
 			}
 			registry.nextID = maxID + 1
 			registry.mu.Unlock()
-			log.Printf("loaded %d spawners from DB, nextID=%d", len(loaded), registry.nextID)
+			log.Printf("Startup: loaded %d active spawners, removed %d unresponsive.", validCount, removedCount)
 		}
 	}
 
