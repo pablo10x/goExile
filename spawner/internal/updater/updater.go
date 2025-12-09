@@ -16,9 +16,11 @@ import (
 // EnsureInstalled checks if the game binary exists. If not, it attempts to
 // download the server package from the Master Server.
 func EnsureInstalled(cfg *config.Config, logger *slog.Logger) error {
+	fullBinaryPath := filepath.Join(cfg.GameInstallDir, cfg.GameBinaryPath)
+
 	// 1. Check if binary already exists
-	if _, err := os.Stat(cfg.GameBinaryPath); err == nil {
-		logger.Info("Game binary found, skipping installation", "path", cfg.GameBinaryPath)
+	if _, err := os.Stat(fullBinaryPath); err == nil {
+		logger.Info("Game binary found, skipping installation", "path", fullBinaryPath)
 		return nil
 	}
 
@@ -51,12 +53,12 @@ func EnsureInstalled(cfg *config.Config, logger *slog.Logger) error {
 	}
 
 	// 5. Verify installation
-	if _, err := os.Stat(cfg.GameBinaryPath); err != nil {
-		return fmt.Errorf("installation completed but binary still missing at %s", cfg.GameBinaryPath)
+	if _, err := os.Stat(fullBinaryPath); err != nil {
+		return fmt.Errorf("installation completed but binary still missing at %s", fullBinaryPath)
 	}
 
 	// 6. Make executable
-	_ = os.Chmod(cfg.GameBinaryPath, 0755)
+	_ = os.Chmod(fullBinaryPath, 0755)
 
 	logger.Info("Game server downloaded and installed successfully")
 	return nil

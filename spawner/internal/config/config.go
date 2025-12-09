@@ -77,27 +77,15 @@ func (c *Config) Validate() error {
 		}
 	}
 	
-	// Check if binary exists
-	// Try original path
-	if _, err := os.Stat(c.GameBinaryPath); os.IsNotExist(err) {
-		// Try adding spawner/ prefix (if running from root)
-		altPath := filepath.Join("spawner", c.GameBinaryPath)
-		if _, err2 := os.Stat(altPath); err2 == nil {
-			c.GameBinaryPath = altPath // Update to working path
-		} else {
-			// If binary is missing, we MUST have a download URL to recover
-			if c.GameDownloadURL == "" {
-				return fmt.Errorf("GAME_BINARY_PATH does not exist: %s (and tried %s), and no GAME_DOWNLOAD_URL provided", c.GameBinaryPath, altPath)
-			}
-			// If we have a download URL, we also need an install directory
-			if c.GameInstallDir == "" {
-				return fmt.Errorf("GAME_INSTALL_DIR is required when downloading game server")
-			}
+	// Check if binary exists in the install directory
+	fullBinaryPath := filepath.Join(c.GameInstallDir, c.GameBinaryPath)
+	if _, err := os.Stat(fullBinaryPath); os.IsNotExist(err) {
+		// If binary is missing, we MUST have a master URL to recover (download)
+		if c.MasterURL == "" {
+			return fmt.Errorf("binary missing at %s and no MASTER_URL provided", fullBinaryPath)
 		}
+		// We can't validate much else if it's missing, we rely on Updater to fetch it
 	}
-
-
-
 
 	if c.MinGamePort >= c.MaxGamePort {
 		return fmt.Errorf("MIN_GAME_PORT (%d) must be less than MAX_GAME_PORT (%d)", c.MinGamePort, c.MaxGamePort)

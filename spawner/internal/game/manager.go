@@ -118,32 +118,20 @@ func (m *Manager) Spawn(ctx context.Context) (*Instance, error) {
 // startProcess constructs the command and starts the process for an instance.
 // It assumes the instance directory and files are already set up.
 func (m *Manager) startProcess(inst *Instance) error {
-	// Determine the binary path relative to the install dir
-	// We resolve absolute paths to ensure Rel works correctly regardless of how they are defined
-	absInstallDir, err := filepath.Abs(m.cfg.GameInstallDir)
-	if err != nil {
-		return fmt.Errorf("failed to resolve absolute install dir: %w", err)
-	}
-	absBinaryPath, err := filepath.Abs(m.cfg.GameBinaryPath)
+	// Construct absolute path to the binary within the instance directory
+	// We treat m.cfg.GameBinaryPath as relative to the instance root
+	binaryPath := filepath.Join(inst.Path, m.cfg.GameBinaryPath)
+	
+	// Resolve absolute path for the command execution to be safe
+	absBinaryPath, err := filepath.Abs(binaryPath)
 	if err != nil {
 		return fmt.Errorf("failed to resolve absolute binary path: %w", err)
 	}
 
-	relPath, err := filepath.Rel(absInstallDir, absBinaryPath)
-	if err != nil {
-		// Fallback: if paths are on different drives or unrelated, use the base name
-		m.logger.Warn("Could not determine relative binary path, using base name", "error", err)
-		relPath = filepath.Base(m.cfg.GameBinaryPath)
-	}
-	// If the binary is directly in the install dir, Rel returns ".", which we handle? 
-	// Actually Rel returns "server.exe" if it's inside.
-	
-	binaryPath := filepath.Join(inst.Path, relPath)
+	// Ensure binary is executable (no-op on Windows usually, but good practice)
+	_ = os.Chmod(absBinaryPath, 0755)
 
-	// Ensure binary is executable
-	_ = os.Chmod(binaryPath, 0755)
-
-	cmd := exec.Command(binaryPath,
+	cmd := exec.Command(absBinaryPath,
 		"-batchmode",
 		"-nographics",
 		"-mode", "server",
@@ -155,7 +143,7 @@ func (m *Manager) startProcess(inst *Instance) error {
 	cmd.Stderr = os.Stderr
 
 	if err := cmd.Start(); err != nil {
-		return err
+		return fmt.Errorf("failed to start process %s: %w", absBinaryPath, err)
 	}
 
 	inst.cmd = cmd
