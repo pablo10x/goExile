@@ -45,6 +45,11 @@ func InitDB(path string) (*sqlx.DB, error) {
 		return nil, err
 	}
 
+	// Ensure unique index exists (migration for existing DBs)
+	if _, err := db.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_spawners_host_port ON spawners(host, port)`); err != nil {
+		fmt.Printf("warning: failed to create unique index: %v\n", err)
+	}
+
 	return db, nil
 }
 
@@ -57,7 +62,8 @@ func createTables(db *sqlx.DB) error {
 		max_instances INTEGER NOT NULL,
 		current_instances INTEGER NOT NULL,
 		status TEXT,
-		last_seen INTEGER NOT NULL
+		last_seen INTEGER NOT NULL,
+		UNIQUE(host, port)
 	);
 	CREATE TABLE IF NOT EXISTS server_versions (
 		id INTEGER PRIMARY KEY,

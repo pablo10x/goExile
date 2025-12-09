@@ -3,6 +3,7 @@ package api
 import (
 	"log/slog"
 	"net/http"
+	"os"
 	"spawner/internal/config"
 	"spawner/internal/game"
 
@@ -25,6 +26,7 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 	router.GET("/instances", h.HandleListInstances)
 	router.DELETE("/instance/:id", h.HandleStopInstance)
 	router.GET("/health", h.HandleHealth)
+	router.GET("/logs", h.HandleGetLogs)
 }
 
 func (h *Handler) HandleHealth(c *gin.Context) {
@@ -33,6 +35,20 @@ func (h *Handler) HandleHealth(c *gin.Context) {
 		"region": h.config.Region,
 		"uptime": "OK", // Could add real uptime
 	})
+}
+
+func (h *Handler) HandleGetLogs(c *gin.Context) {
+	content, err := os.ReadFile("spawner.log")
+	if err != nil {
+		if os.IsNotExist(err) {
+			c.JSON(http.StatusOK, gin.H{"logs": ""})
+			return
+		}
+		h.logger.Error("Failed to read logs", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to read logs"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"logs": string(content)})
 }
 
 func (h *Handler) HandleSpawn(c *gin.Context) {

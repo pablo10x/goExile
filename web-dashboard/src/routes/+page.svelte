@@ -1,184 +1,184 @@
 <script lang="ts">
     import { onMount, onDestroy } from 'svelte';
     import { stats, spawners } from '$lib/stores';
+    import StatsCard from '$lib/components/StatsCard.svelte';
+    import SpawnerTable from '$lib/components/SpawnerTable.svelte';
+    import Drawer from '$lib/components/Drawer.svelte';
+    import LogViewer from '$lib/components/LogViewer.svelte';
+    import { formatBytes, formatUptime } from '$lib/utils';
 
-    let interval: ReturnType<typeof setInterval>;
+    let eventSource: EventSource | null = null;
+    let isConnected = false;
+    let connectionStatus = 'Connecting...';
+    
+    // Log Viewer State
+    let isLogDrawerOpen = false;
+    let selectedSpawnerId: number | null = null;
 
-    async function fetchData() {
+    function connectSSE() {
+        if (eventSource) eventSource.close();
+
+        eventSource = new EventSource('/events');
+
+        eventSource.onopen = () => {
+            isConnected = true;
+            connectionStatus = 'Live (SSE)';
+        };
+
+        eventSource.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'stats') {
+                    stats.set(data.payload);
+                } else if (data.type === 'spawners') {
+                    // Ensure payload is an array (handle map or array from server)
+                    const list = Array.isArray(data.payload) ? data.payload : Object.values(data.payload);
+                    spawners.set(list);
+                }
+            } catch (e) {
+                console.error('SSE Parse Error', e);
+            }
+        };
+
+        eventSource.onerror = () => {
+            isConnected = false;
+            connectionStatus = 'Reconnecting...';
+            // EventSource auto-reconnects, but we update UI
+        };
+    }
+
+    // Fallback initial fetch
+    async function initialFetch() {
         try {
             const [statsRes, spawnersRes] = await Promise.all([
                 fetch('/api/stats'),
                 fetch('/api/spawners')
             ]);
-
-            if (statsRes.ok) {
-                stats.set(await statsRes.json());
-            }
-            if (spawnersRes.ok) {
-                const data = await spawnersRes.json();
-                spawners.set(Object.values(data)); 
-            }
+            if (statsRes.ok) stats.set(await statsRes.json());
+            if (spawnersRes.ok) spawners.set(await spawnersRes.json());
         } catch (e) {
-            console.error('Failed to fetch data', e);
+            console.error('Initial fetch failed', e);
         }
     }
 
     onMount(() => {
-        fetchData();
-        interval = setInterval(fetchData, 2000);
+        initialFetch();
+        connectSSE();
     });
 
     onDestroy(() => {
-        clearInterval(interval);
+        if (eventSource) eventSource.close();
     });
 
-    async function spawnInstance(spawnerId: number) {
-        if (!confirm('Are you sure you want to spawn an instance?')) return;
+    async function handleSpawn(event: CustomEvent<number>) {
+        const id = event.detail;
+        if (!confirm(`Are you sure you want to spawn an instance on Spawner #${id}?`)) return;
+        
         try {
-            const res = await fetch(`/api/spawners/${spawnerId}/spawn`, { method: 'POST' });
+            const res = await fetch(`/api/spawners/${id}/spawn`, { method: 'POST' });
             if (res.ok) {
-                fetchData();
+                // Optimistic update or wait for SSE? SSE is fast enough.
                 alert('Spawn request sent!');
             } else {
-                alert('Failed to spawn instance');
+                const err = await res.json();
+                alert(`Failed: ${err.error || 'Unknown error'}`);
             }
         } catch (e) {
-            alert('Error spawning instance');
+            alert('Error sending spawn request');
         }
     }
 
-    function formatBytes(bytes: number) {
-        if (bytes === 0) return '0 B';
-        const k = 1024;
-        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    }
-
-    function formatUptime(ms: number) {
-        if (!ms) return '0s';
-        const s = Math.floor(ms / 1000);
-        const m = Math.floor(s / 60);
-        const h = Math.floor(m / 60);
-        return `${h}h ${m % 60}m ${s % 60}s`;
+    function handleViewLogs(event: CustomEvent<number>) {
+        selectedSpawnerId = event.detail;
+        isLogDrawerOpen = true;
     }
 </script>
 
-<div class="flex justify-between items-center mb-4 text-sm">
-    <div class="text-slate-400">Last updated: {new Date().toLocaleTimeString()}</div>
-    <div class="text-slate-500 font-mono text-xs">Live Update (2s)</div>
+<div class="flex justify-between items-center mb-6">
+    <div>
+        <h1 class="text-2xl font-bold text-slate-50">Dashboard</h1>
+        <div class="flex items-center gap-2 mt-1">
+            <div class={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`}></div>
+            <span class="text-xs font-mono text-slate-400">{connectionStatus}</span>
+        </div>
+    </div>
+    <div class="text-slate-500 text-sm">
+        {new Date().toLocaleDateString()}
+    </div>
 </div>
 
 <!-- Stats Grid -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-    <div class="stat-card border-t-2 border-t-blue-500">
-        <div class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">⏱️ Uptime</div>
-        <div class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            {formatUptime($stats.uptime)}
-        </div>
-    </div>
-    <div class="stat-card border-t-2 border-t-emerald-500">
-        <div class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">🖥️ Active Spawners</div>
-        <div class="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-            {$stats.active_spawners}
-        </div>
-    </div>
-    <div class="stat-card border-t-2 border-t-blue-500">
-        <div class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">📡 Requests</div>
-        <div class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            {$stats.total_requests}
-        </div>
-    </div>
-    <!-- Error card link could go here -->
-    <a href="/errors" class="stat-card border-t-2 border-t-red-500 hover:bg-slate-800 transition cursor-pointer">
-        <div class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">⚠️ Errors</div>
-        <div class="text-2xl font-bold bg-gradient-to-r from-red-400 to-pink-400 bg-clip-text text-transparent">
-            {$stats.total_errors}
-        </div>
+    <StatsCard 
+        title="⏱️ Uptime" 
+        value={formatUptime($stats.uptime)} 
+        borderColorClass="border-t-blue-500"
+    />
+    <StatsCard 
+        title="🖥️ Active Spawners" 
+        value={$stats.active_spawners} 
+        borderColorClass="border-t-emerald-500"
+        valueGradientClass="from-emerald-400 to-cyan-400"
+    />
+    <StatsCard 
+        title="📡 Requests" 
+        value={$stats.total_requests} 
+        borderColorClass="border-t-blue-500"
+    />
+    <a href="/errors" class="block transition hover:scale-[1.02]">
+        <StatsCard 
+            title="⚠️ Errors" 
+            value={$stats.total_errors} 
+            borderColorClass="border-t-red-500"
+            valueGradientClass="from-red-400 to-pink-400"
+        />
     </a>
-    
-    <div class="stat-card border-t-2 border-t-purple-500">
-        <div class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">💾 Memory</div>
-        <div class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">
-            {formatBytes($stats.memory_usage)}
-        </div>
-    </div>
-    
-    <div class="stat-card border-t-2 border-t-orange-500">
-        <div class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">⬆️ Tx / ⬇️ Rx</div>
-        <div class="text-lg font-bold text-slate-100">
-            <span class="text-orange-400">{formatBytes($stats.bytes_sent)}</span> / 
-            <span class="text-cyan-400">{formatBytes($stats.bytes_received)}</span>
-        </div>
-    </div>
+    <StatsCard 
+        title="💾 Memory" 
+        value={formatBytes($stats.memory_usage)} 
+        borderColorClass="border-t-purple-500"
+        valueGradientClass="from-purple-400 to-indigo-400"
+    />
+</div>
 
-    <div class="stat-card border-t-2 {$stats.db_connected ? 'border-t-emerald-500' : 'border-t-red-500'}">
-        <div class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">🗄️ Database</div>
-        <div class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            {$stats.db_connected ? '✓ Connected' : '✗ Disconnected'}
-        </div>
-    </div>
+<!-- Secondary Stats Row (Network & DB) -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <StatsCard 
+        title="⬆️ Tx / ⬇️ Rx" 
+        value="" 
+        subValue={`<span class="text-orange-400">${formatBytes($stats.bytes_sent)}</span> / <span class="text-cyan-400">${formatBytes($stats.bytes_received)}</span>`}
+        borderColorClass="border-t-orange-500"
+    />
+    <StatsCard 
+        title="🗄️ Database" 
+        value={$stats.db_connected ? '✓ Connected' : '✗ Disconnected'} 
+        borderColorClass={$stats.db_connected ? "border-t-emerald-500" : "border-t-red-500"}
+        valueGradientClass={$stats.db_connected ? "from-emerald-400 to-cyan-400" : "from-red-400 to-orange-400"}
+    />
 </div>
 
 <!-- Spawners Section -->
-<div class="card">
-    <div class="border-b border-slate-700 px-8 py-6">
-        <h2 class="text-2xl font-bold text-slate-50">📦 Registered Spawners</h2>
+<div class="card bg-slate-800/30 border border-slate-700/50">
+    <div class="border-b border-slate-700 px-6 py-4 flex justify-between items-center">
+        <h2 class="text-xl font-bold text-slate-50">📦 Registered Spawners</h2>
+        <span class="text-xs text-slate-500 uppercase tracking-widest font-semibold">Real-time</span>
     </div>
-
-    <div class="p-8">
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="border-b border-slate-700">
-                    <tr>
-                        <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">ID</th>
-                        <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Region</th>
-                        <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Address</th>
-                        <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
-                        <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Instances</th>
-                        <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="text-slate-300">
-                    {#each $spawners as spawner}
-                        {@const statusClass = spawner.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}
-                        {@const instancePercent = spawner.max_instances > 0 ? (spawner.current_instances / spawner.max_instances) * 100 : 0}
-                        
-                        <tr class="border-t border-slate-700 hover:bg-slate-800/50 transition">
-                            <td class="px-4 py-3 text-slate-400">#{spawner.id}</td>
-                            <td class="px-4 py-3 font-semibold text-slate-100">{spawner.region}</td>
-                            <td class="px-4 py-3 font-mono text-slate-400">{spawner.host}:{spawner.port}</td>
-                            <td class="px-4 py-3">
-                                <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold {statusClass}">
-                                    <span class="w-2 h-2 rounded-full bg-current"></span>
-                                    {spawner.status}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <div class="text-sm mb-2">{spawner.current_instances} / {spawner.max_instances}</div>
-                                <div class="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                                    <div class="h-full bg-gradient-to-r from-blue-500 to-purple-500" style="width: {instancePercent}%"></div>
-                                </div>
-                            </td>
-                            <td class="px-4 py-3">
-                                <button 
-                                    onclick={() => spawnInstance(spawner.id)}
-                                    class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-semibold"
-                                >
-                                    Spawn
-                                </button>
-                            </td>
-                        </tr>
-                    {/each}
-                    {#if $spawners.length === 0}
-                        <tr>
-                            <td colspan="6" class="px-4 py-8 text-center text-slate-500">
-                                No spawners registered.
-                            </td>
-                        </tr>
-                    {/if}
-                </tbody>
-            </table>
-        </div>
+    <div class="p-0">
+        <SpawnerTable 
+            spawners={$spawners} 
+            on:spawn={handleSpawn} 
+            on:viewLogs={handleViewLogs}
+        />
     </div>
 </div>
+
+<!-- Log Drawer -->
+<Drawer 
+    isOpen={isLogDrawerOpen} 
+    onClose={() => isLogDrawerOpen = false} 
+    title={`Spawner #${selectedSpawnerId} Logs`}
+>
+    {#if selectedSpawnerId}
+        <LogViewer spawnerId={selectedSpawnerId} />
+    {/if}
+</Drawer>

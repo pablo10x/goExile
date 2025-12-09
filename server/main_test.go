@@ -66,7 +66,7 @@ func TestRegisterAndGetSpawner(t *testing.T) {
 
 func TestHeartbeatUpdatesLastSeen(t *testing.T) {
 	resetRegistry()
-	id := registry.Register(&Spawner{Region: "hb", Host: "127.0.0.1", Port: 7777, MaxInstances: 4, CurrentInstances: 0, Status: "active"})
+	id, _ := registry.Register(&Spawner{Region: "hb", Host: "127.0.0.1", Port: 7777, MaxInstances: 4, CurrentInstances: 0, Status: "active"})
 	old := registry.items[id].LastSeen
 	// small sleep to ensure new timestamp is different
 	time.Sleep(10 * time.Millisecond)
@@ -115,7 +115,7 @@ func TestListSpawners(t *testing.T) {
 
 func TestDeleteSpawner(t *testing.T) {
 	resetRegistry()
-	id := registry.Register(&Spawner{Region: "to-delete", Host: "3.3.3.3", Port: 3333, MaxInstances: 4})
+	id, _ := registry.Register(&Spawner{Region: "to-delete", Host: "3.3.3.3", Port: 3333, MaxInstances: 4})
 
 	req := httptest.NewRequest("DELETE", "/api/spawners/"+strconv.Itoa(id), nil)
 	req = mux.SetURLVars(req, map[string]string{"id": strconv.Itoa(id)})

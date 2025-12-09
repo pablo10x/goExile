@@ -29,7 +29,14 @@ func RegisterSpawner(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := registry.Register(&s)
+	id, err := registry.Register(&s)
+	if err != nil {
+		// Log the detailed error for debugging
+		fmt.Printf("Registration failed: %v\n", err)
+		writeError(w, r, http.StatusInternalServerError, "failed to register spawner")
+		return
+	}
+
 	GlobalStats.UpdateActiveServers(len(registry.List()))
 	writeJSON(w, http.StatusCreated, map[string]int{"id": id})
 }
@@ -102,9 +109,10 @@ func DeleteSpawner(w http.ResponseWriter, r *http.Request) {
 // SpawnInstance triggers a new game instance on the specified spawner.
 func SpawnInstance(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id, err := parseID(vars["id"])
+	rawID := vars["id"]
+	id, err := parseID(rawID)
 	if err != nil {
-		fmt.Println("error parsing id")
+		fmt.Printf("Error parsing ID. Raw: '%s', Error: %v\n", rawID, err)
 		writeError(w, r, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -121,6 +129,42 @@ func SpawnInstance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
+		return
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(resp.StatusCode)
+	w.Write(body)
+}
+
+// GetSpawnerLogs fetches and returns the log file content from a spawner.
+func GetSpawnerLogs(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := parseID(vars["id"])
+	if err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	s, ok := registry.Get(id)
+	if !ok {
+		writeError(w, r, http.StatusNotFound, "spawner not found")
+		return
+	}
+
+	url := fmt.Sprintf("http://%s:%d/logs", s.Host, s.Port)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		writeError(w, r, http.StatusInternalServerError, "failed to create request")
+		return
+	}
 
 	client := &http.Client{Timeout: 5 * time.Second}
 	resp, err := client.Do(req)
@@ -172,85 +216,10 @@ func ClearErrorsAPI(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"message": "Error log cleared"})
 }
 
-// DashboardPage serves the HTML dashboard.
-func DashboardPage(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	http.ServeFile(w, r, "webpage/dashboard.html")
-}
-
-// ErrorsPage serves the HTML errors page.
-func ErrorsPage(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	http.ServeFile(w, r, "webpage/errors.html")
-}
-
-// LoginPage serves the login form.
-func LoginPage(w http.ResponseWriter, r *http.Request, authConfig AuthConfig) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	html := `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spawner Registry - Login</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .login-container { width: 100%; max-width: 450px; }
-        .login-card { background: white; border-radius: 15px; padding: 50px 40px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); }
-        .login-header { text-align: center; margin-bottom: 40px; }
-        .login-title { font-size: 2em; color: #333; margin-bottom: 10px; font-weight: bold; }
-        .login-subtitle { font-size: 0.95em; color: #666; }
-        .form-group { margin-bottom: 25px; }
-        .form-label { display: block; font-size: 0.9em; font-weight: 600; color: #333; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .form-input { width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em; transition: all 0.3s ease; font-family: inherit; }
-        .form-input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
-        .login-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 1em; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px; margin-top: 30px; }
-        .login-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4); }
-        .info-box { background-color: #e7f3ff; color: #004085; padding: 15px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0066cc; font-size: 0.85em; }
-        .info-box strong { display: block; margin-bottom: 8px; }
-        .info-item { margin: 5px 0; font-family: 'Courier New', monospace; }
-    </style>
-</head>
-<body>
-    <div class="login-container">
-        <div class="login-card">
-            <div class="login-header">
-                <div class="login-title">🎮 Spawner Registry</div>
-                <div class="login-subtitle">Admin Dashboard</div>
-            </div>
-
-            <div class="info-box">
-                <strong>📱 Development Mode - Default Credentials</strong>
-                <div class="info-item">📧 Email: ` + authConfig.Email + `</div>
-                <div class="info-item">🔐 Password: ` + authConfig.Password + `</div>
-            </div>
-
-            <form method="POST" action="/login">
-                <div class="form-group">
-                    <label class="form-label">Email Address</label>
-                    <input type="email" name="email" class="form-input" placeholder="admin@example.com" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Password</label>
-                    <input type="password" name="password" class="form-input" placeholder="••••••••" required>
-                </div>
-
-                <button type="submit" class="login-btn">🔓 Login</button>
-            </form>
-        </div>
-    </div>
-</body>
-</html>`
-
-	w.Write([]byte(html))
-}
-
 // HandleLogin processes login requests.
 func HandleLogin(w http.ResponseWriter, r *http.Request, authConfig AuthConfig, sessionStore *SessionStore) {
 	if r.Method == http.MethodGet {
-		LoginPage(w, r, authConfig)
+		writeError(w, r, http.StatusMethodNotAllowed, "GET login not supported. Please POST credentials.")
 		return
 	}
 

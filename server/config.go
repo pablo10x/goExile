@@ -13,7 +13,7 @@ const (
 	MaxBodySize = 1 << 20 // 1MB
 
 	// MaxIDValue provides a sanity limit for parsed ID values.
-	MaxIDValue = 1000000
+	MaxIDValue = 2147483647
 
 	// ServerTTL defines how long a server is considered alive since its
 	// last heartbeat. Servers older than this are removed by cleanup.

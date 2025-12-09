@@ -24,9 +24,6 @@ const (
 	// maxBodySize is the maximum size accepted for request bodies.
 	maxBodySize = 1 << 20 // 1MB
 
-	// maxIDValue provides a sanity limit for parsed ID values.
-	maxIDValue = 1000000
-
 	// serverTTL defines how long a spawner is considered alive since its
 	// last heartbeat. Spawners older than this are removed by cleanup.
 	serverTTL = 60 * time.Second
@@ -119,6 +116,7 @@ func run() error {
 	apiRouter.HandleFunc("/{id}", DeleteSpawner).Methods("DELETE")
 	apiRouter.HandleFunc("/{id}/spawn", SpawnInstance).Methods("POST")
 	apiRouter.HandleFunc("/{id}/heartbeat", HeartbeatSpawner).Methods("POST")
+	apiRouter.HandleFunc("/{id}/logs", GetSpawnerLogs).Methods("GET")
 
 	// Liveness check
 	router.HandleFunc("/health", Health).Methods("GET")
@@ -133,18 +131,11 @@ func run() error {
 	}).Methods("GET")
 
 	// Dashboard & UI endpoints (Protected by AuthMiddleware in dev/prod)
-	dashboardHandler := http.HandlerFunc(DashboardPage)
-	errorsPageHandler := http.HandlerFunc(ErrorsPage) // New page handler
-	usersHandler := http.HandlerFunc(UsersPage)
 	statsHandler := http.HandlerFunc(StatsAPI)
 	errorsAPIHandler := http.HandlerFunc(ErrorsAPI) // New API handler
 	sseHandler := http.HandlerFunc(sseHub.HandleSSE)
 
 	if authConfig.Enabled {
-		router.Handle("/", AuthMiddleware(authConfig, sessionStore)(dashboardHandler))
-		router.Handle("/dashboard", AuthMiddleware(authConfig, sessionStore)(dashboardHandler))
-		router.Handle("/errors", AuthMiddleware(authConfig, sessionStore)(errorsPageHandler)) // Secure /errors
-		router.Handle("/users", AuthMiddleware(authConfig, sessionStore)(usersHandler))
 		router.Handle("/api/stats", AuthMiddleware(authConfig, sessionStore)(statsHandler))
 		router.Handle("/api/errors", AuthMiddleware(authConfig, sessionStore)(errorsAPIHandler)).Methods("GET")
 		router.Handle("/api/errors", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ClearErrorsAPI))).Methods("DELETE")
@@ -155,22 +146,10 @@ func run() error {
 		router.Handle("/api/versions", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListVersions))).Methods("GET")
 		router.Handle("/api/versions/{id}/active", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(HandleSetActiveVersion))).Methods("POST")
 		router.Handle("/api/versions/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(HandleDeleteVersion))).Methods("DELETE")
-	} else {
-		// Secure default: disable web dashboard if auth is somehow disabled in prod
-		router.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			http.Error(w, "Web dashboard is disabled in production mode", http.StatusForbidden)
-		}))
-		router.Handle("/dashboard", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			http.Error(w, "Web dashboard is disabled in production mode", http.StatusForbidden)
-		}))
 	}
 
 	// CLI-friendly status endpoint
 	router.HandleFunc("/status", PrintStatus).Methods("GET")
-
-	// Static assets
-	fs := http.FileServer(http.Dir("./webpage/dist"))
-	router.PathPrefix("/dist/").Handler(http.StripPrefix("/dist/", fs))
 
 	// 8. Start background cleanup
 	go registry.Cleanup(serverTTL, cleanupInterval)
@@ -192,7 +171,6 @@ func run() error {
 
 	go func() {
 		log.Println("✓ Starting spawner registry on :8081")
-		log.Println("🌐 Web Dashboard: http://localhost:8081")
 		log.Println("📊 API Stats: http://localhost:8081/api/stats")
 		log.Println("🏥 Health Check: http://localhost:8081/health")
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {

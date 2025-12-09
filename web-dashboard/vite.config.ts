@@ -8,6 +8,7 @@ export default defineConfig({
 	server: {
 		proxy: {
 			'/api': 'http://localhost:8081',
+			'/events': 'http://localhost:8081',
 			'/login': 'http://localhost:8081',
 			'/logout': 'http://localhost:8081',
 			'/health': 'http://localhost:8081'

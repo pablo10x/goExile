@@ -30,8 +30,9 @@ var dbConn *sqlx.DB
 // Logic:
 // 1. Sets initial metadata (LastSeen, Status).
 // 2. Attempts to persist to DB first to get an authoritative ID.
-// 3. Falls back to in-memory ID generation if DB is unavailable.
-func (r *Registry) Register(s *Spawner) int {
+// 3. Fails if DB is enabled but write fails.
+// 4. Uses in-memory ID generation ONLY if DB is not configured (nil).
+func (r *Registry) Register(s *Spawner) (int, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -39,30 +40,30 @@ func (r *Registry) Register(s *Spawner) int {
 	s.Status = "active"
 
 	if dbConn != nil {
-		s.ID = 0
+		s.ID = 0 // Ensure ID is 0 so DB assigns a new one
 		id, err := SaveSpawner(dbConn, s)
-		if err == nil && id > 0 {
-			r.items[id] = s
-			if id >= r.nextID {
-				r.nextID = id + 1
-			}
-			return id
+		if err != nil {
+			return 0, fmt.Errorf("failed to save spawner to DB: %w", err)
 		}
-		log.Printf("warning: SaveSpawner failed, falling back to in-memory id: %v", err)
+		
+		// Refresh with authoritative ID
+		s.ID = id
+		r.items[id] = s
+		
+		// Sync in-memory counter just in case
+		if id >= r.nextID {
+			r.nextID = id + 1
+		}
+		return id, nil
 	}
 
+	// In-memory mode only (no DB configured)
 	id := r.nextID
 	r.nextID++
 	s.ID = id
 	r.items[id] = s
 
-	if dbConn != nil {
-		if _, err := SaveSpawner(dbConn, s); err != nil {
-			log.Printf("warning: failed to persist spawner id=%d after fallback: %v", id, err)
-		}
-	}
-
-	return id
+	return id, nil
 }
 
 // UpdateHeartbeat refreshes the LastSeen timestamp and updates stats.
