@@ -6,21 +6,20 @@ import (
 )
 
 // SaveState writes the current instances to a JSON file.
+// It acquires a read lock.
 func (m *Manager) SaveState() error {
-	// We only need read lock to marshal, but since we might be writing to a file,
-	// let's just ensure we have a stable view.
 	m.mu.RLock()
 	defer m.mu.RUnlock()
+	return m.saveStateInternal()
+}
 
-	// Convert map to slice or just save the map directly
-	// We need to exclude the 'cmd' field which is not serializable.
-	// The Instance struct already has json tags.
-
+// saveStateInternal writes state to disk without locking.
+// Caller MUST hold at least a read lock.
+func (m *Manager) saveStateInternal() error {
 	data, err := json.MarshalIndent(m.instances, "", "  ")
 	if err != nil {
 		return err
 	}
-
 	return os.WriteFile(m.cfg.StateFilePath, data, 0644)
 }
 

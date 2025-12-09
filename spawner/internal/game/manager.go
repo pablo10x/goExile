@@ -90,7 +90,7 @@ func (m *Manager) Spawn(ctx context.Context) (*Instance, error) {
 	}
 
 	m.instances[id] = instance
-	if err := m.SaveState(); err != nil {
+	if err := m.saveStateInternal(); err != nil {
 		m.logger.Error("Failed to save state during spawn", "error", err)
 	}
 
@@ -117,26 +117,33 @@ func (m *Manager) provisionAndStart(inst *Instance) {
 		return
 	}
 
-	// Start the process
+	// Start the process (requires lock)
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	
 	if err := m.startProcess(inst); err != nil {
-		m.setErrorState(inst, fmt.Errorf("failed to start process: %w", err))
+		// If start fails, we are already locked, so we can set error state directly or call internal helper
+		m.logger.Error("Provisioning failed", "id", inst.ID, "error", err)
+		inst.Status = "Error"
+		m.saveStateInternal()
 		return
 	}
 
 	m.logger.Info("Instance provisioning complete and started", "id", inst.ID)
-	// startProcess sets Status to Running and saves state
+	m.saveStateInternal()
 }
 
 func (m *Manager) setErrorState(inst *Instance, err error) {
 	m.logger.Error("Provisioning failed", "id", inst.ID, "error", err)
 	m.mu.Lock()
 	inst.Status = "Error"
+	m.saveStateInternal()
 	m.mu.Unlock()
-	m.SaveState()
 }
 
 // startProcess constructs the command and starts the process for an instance.
 // It assumes the instance directory and files are already set up.
+// Caller MUST hold the lock.
 func (m *Manager) startProcess(inst *Instance) error {
 	// Construct absolute path to the binary within the instance directory
 	// We treat m.cfg.GameBinaryPath as relative to the instance root
@@ -166,13 +173,9 @@ func (m *Manager) startProcess(inst *Instance) error {
 		return fmt.Errorf("failed to start process %s: %w", absBinaryPath, err)
 	}
 
-	m.mu.Lock()
 	inst.cmd = cmd
 	inst.ProcessID = cmd.Process.Pid
 	inst.Status = "Running"
-	m.mu.Unlock()
-	
-	m.SaveState()
 	
 	// Monitor in background
 	go m.monitorInstance(inst.ID, cmd)
@@ -205,7 +208,7 @@ func (m *Manager) monitorInstance(id string, cmd *exec.Cmd) {
 				m.logger.Info("Game server stopped normally", "id", id)
 			}
 
-			if err := m.SaveState(); err != nil {
+			if err := m.saveStateInternal(); err != nil {
 				m.logger.Error("Failed to save state after instance stop", "error", err)
 			}
 		}
