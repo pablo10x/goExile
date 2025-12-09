@@ -54,19 +54,42 @@ func EnsureInstalled(cfg *config.Config, logger *slog.Logger) error {
 
 	// 5. Verify installation
 	if _, err := os.Stat(fullBinaryPath); err != nil {
-		// Debug: list files to help diagnose structure issues
-		logger.Error("Binary verification failed. Listing installed files to debug structure:", "root", cfg.GameInstallDir)
+		// Attempt to auto-detect the binary if the path is wrong (e.g., missing or extra directory)
+		targetName := filepath.Base(cfg.GameBinaryPath)
+		var foundPath string
+
 		_ = filepath.Walk(cfg.GameInstallDir, func(path string, info os.FileInfo, err error) error {
-			if err == nil {
-				// Show relative path
-				rel, _ := filepath.Rel(cfg.GameInstallDir, path)
-				if rel != "." {
-					logger.Error("Found file", "path", rel)
-				}
+			if err == nil && !info.IsDir() && strings.EqualFold(info.Name(), targetName) {
+				foundPath = path
+				return io.EOF // Stop walking
 			}
 			return nil
 		})
-		return fmt.Errorf("installation completed but binary still missing at %s", fullBinaryPath)
+
+		if foundPath != "" {
+			rel, _ := filepath.Rel(cfg.GameInstallDir, foundPath)
+			logger.Warn("Game binary not found at configured path, but found elsewhere. Auto-correcting configuration.", 
+				"configured", cfg.GameBinaryPath, 
+				"found", rel)
+			
+			// Update config dynamically
+			cfg.GameBinaryPath = rel
+			fullBinaryPath = foundPath // Update local var for chmod below
+		} else {
+			// Debug: list files to help diagnose structure issues
+			logger.Error("Binary verification failed. Listing installed files to debug structure:", "root", cfg.GameInstallDir)
+			_ = filepath.Walk(cfg.GameInstallDir, func(path string, info os.FileInfo, err error) error {
+				if err == nil {
+					// Show relative path
+					rel, _ := filepath.Rel(cfg.GameInstallDir, path)
+					if rel != "." {
+						logger.Error("Found file", "path", rel)
+					}
+				}
+				return nil
+			})
+			return fmt.Errorf("installation completed but binary still missing at %s", fullBinaryPath)
+		}
 	}
 
 	// 6. Make executable
