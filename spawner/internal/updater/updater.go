@@ -54,6 +54,18 @@ func EnsureInstalled(cfg *config.Config, logger *slog.Logger) error {
 
 	// 5. Verify installation
 	if _, err := os.Stat(fullBinaryPath); err != nil {
+		// Debug: list files to help diagnose structure issues
+		logger.Error("Binary verification failed. Listing installed files to debug structure:", "root", cfg.GameInstallDir)
+		_ = filepath.Walk(cfg.GameInstallDir, func(path string, info os.FileInfo, err error) error {
+			if err == nil {
+				// Show relative path
+				rel, _ := filepath.Rel(cfg.GameInstallDir, path)
+				if rel != "." {
+					logger.Error("Found file", "path", rel)
+				}
+			}
+			return nil
+		})
 		return fmt.Errorf("installation completed but binary still missing at %s", fullBinaryPath)
 	}
 
