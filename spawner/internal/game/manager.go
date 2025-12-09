@@ -95,7 +95,7 @@ func (m *Manager) Spawn(ctx context.Context) (*Instance, error) {
 	}
 
 	m.logger.Info("Starting async provisioning for new instance", "id", id, "port", port)
-	
+
 	// Run provisioning in background to avoid blocking the API request (and avoiding timeouts)
 	go m.provisionAndStart(instance)
 
@@ -120,7 +120,7 @@ func (m *Manager) provisionAndStart(inst *Instance) {
 	// Start the process (requires lock)
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	if err := m.startProcess(inst); err != nil {
 		// If start fails, we are already locked, so we can set error state directly or call internal helper
 		m.logger.Error("Provisioning failed", "id", inst.ID, "error", err)
@@ -148,7 +148,7 @@ func (m *Manager) startProcess(inst *Instance) error {
 	// Construct absolute path to the binary within the instance directory
 	// We treat m.cfg.GameBinaryPath as relative to the instance root
 	binaryPath := filepath.Join(inst.Path, m.cfg.GameBinaryPath)
-	
+
 	// Resolve absolute path for the command execution to be safe
 	absBinaryPath, err := filepath.Abs(binaryPath)
 	if err != nil {
@@ -158,16 +158,24 @@ func (m *Manager) startProcess(inst *Instance) error {
 	// Ensure binary is executable (no-op on Windows usually, but good practice)
 	_ = os.Chmod(absBinaryPath, 0755)
 
-	cmd := exec.Command(absBinaryPath,
+	// Prepare arguments for the game server binary
+	args := []string{
 		"-batchmode",
 		"-nographics",
 		"-mode", "server",
 		"-port", fmt.Sprintf("%d", inst.Port),
-	)
-	
+	}
+
+	logFilePath := filepath.Join(inst.Path, "gameserver.log")
+	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to open log file %s: %w", logFilePath, err)
+	}
+	// We don't close logFile here, as it needs to stay open for the child process.
+	// The OS will close it when the child process exits.
+
+	cmd := newGameCmd(absBinaryPath, args, logFile)
 	cmd.Dir = inst.Path
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
 
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start process %s: %w", absBinaryPath, err)
@@ -176,27 +184,27 @@ func (m *Manager) startProcess(inst *Instance) error {
 	inst.cmd = cmd
 	inst.ProcessID = cmd.Process.Pid
 	inst.Status = "Running"
-	
+
 	// Monitor in background
 	go m.monitorInstance(inst.ID, cmd)
-	
+
 	return nil
 }
 
 // monitorInstance waits for the process to exit and cleans up.
 func (m *Manager) monitorInstance(id string, cmd *exec.Cmd) {
 	err := cmd.Wait()
-	
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	if instance, exists := m.instances[id]; exists {
 		// Only update if the command matches (handling restarts/race conditions)
 		if instance.cmd == cmd {
 			instance.Status = "Stopped"
 			instance.ProcessID = 0
 			instance.cmd = nil
-			
+
 			exitCode := 0
 			if err != nil {
 				var exitError *exec.ExitError
@@ -234,7 +242,7 @@ func (m *Manager) StopInstance(id string) error {
 			return fmt.Errorf("failed to kill process: %w", err)
 		}
 	}
-	
+
 	// monitorInstance will update status and save state
 	return nil
 }
@@ -258,7 +266,7 @@ func (m *Manager) Shutdown() {
 func (m *Manager) GetInstance(id string) (*Instance, bool) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	inst, ok := m.instances[id]
 	if !ok {
 		return nil, false
