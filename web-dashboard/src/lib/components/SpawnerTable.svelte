@@ -170,6 +170,7 @@
                                             <tr>
                                                 <th class="px-4 py-2">ID</th>
                                                 <th class="px-4 py-2">Port</th>
+                                                <th class="px-4 py-2">Status</th>
                                                 <th class="px-4 py-2">PID</th>
                                                 <th class="px-4 py-2 text-right">Action</th>
                                             </tr>
@@ -179,6 +180,17 @@
                                                 <tr class="hover:bg-slate-700/10">
                                                     <td class="px-4 py-2 text-slate-300 font-mono">{instance.id}</td>
                                                     <td class="px-4 py-2 text-slate-300 font-mono">{instance.port}</td>
+                                                    <td class="px-4 py-2">
+                                                        {#if instance.status === 'Running'}
+                                                            <span class="text-emerald-400">Running</span>
+                                                        {:else if instance.status === 'Provisioning'}
+                                                            <span class="text-blue-400 animate-pulse">Provisioning...</span>
+                                                        {:else if instance.status === 'Error'}
+                                                            <span class="text-red-400">Error</span>
+                                                        {:else}
+                                                            <span class="text-slate-400">{instance.status}</span>
+                                                        {/if}
+                                                    </td>
                                                     <td class="px-4 py-2 text-slate-400 font-mono">{instance.pid || '-'}</td>
                                                     <td class="px-4 py-2 text-right">
                                                         <button 

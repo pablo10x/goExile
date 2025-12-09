@@ -67,6 +67,7 @@ func (m *Manager) RestoreInstances() error {
 }
 
 // Spawn starts a new game server instance.
+// It initializes the instance record and starts the provisioning process in the background.
 func (m *Manager) Spawn(ctx context.Context) (*Instance, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -79,40 +80,59 @@ func (m *Manager) Spawn(ctx context.Context) (*Instance, error) {
 	id := fmt.Sprintf("%s-%d", m.cfg.Region, port)
 	instanceDir := filepath.Join(m.cfg.InstancesDir, id)
 
-	// Ensure instances directory exists
-	if err := os.MkdirAll(m.cfg.InstancesDir, 0755); err != nil {
-		return nil, fmt.Errorf("failed to create instances directory: %w", err)
-	}
-
-	// Copy game files to new instance directory
-	m.logger.Info("Creating instance directory...", "id", id, "dir", instanceDir)
-	if err := copyDir(m.cfg.GameInstallDir, instanceDir); err != nil {
-		return nil, fmt.Errorf("failed to copy game files: %w", err)
-	}
-
 	instance := &Instance{
 		ID:        id,
 		Port:      port,
-		Status:    "Running",
+		Status:    "Provisioning",
 		Region:    m.cfg.Region,
 		StartTime: time.Now(),
 		Path:      instanceDir,
 	}
 
-	if err := m.startProcess(instance); err != nil {
-		// Cleanup if start fails? 
-		// os.RemoveAll(instanceDir)
-		return nil, fmt.Errorf("failed to start process: %w", err)
+	m.instances[id] = instance
+	if err := m.SaveState(); err != nil {
+		m.logger.Error("Failed to save state during spawn", "error", err)
 	}
 
-	m.instances[id] = instance
-	m.logger.Info("Spawned new game server", "id", id, "port", port, "pid", instance.ProcessID)
+	m.logger.Info("Starting async provisioning for new instance", "id", id, "port", port)
 	
-	if err := m.SaveState(); err != nil {
-		m.logger.Error("Failed to save state after spawn", "error", err)
-	}
+	// Run provisioning in background to avoid blocking the API request (and avoiding timeouts)
+	go m.provisionAndStart(instance)
 
 	return instance, nil
+}
+
+// provisionAndStart handles the heavy lifting of copying files and starting the process.
+func (m *Manager) provisionAndStart(inst *Instance) {
+	// Ensure instances directory exists
+	if err := os.MkdirAll(m.cfg.InstancesDir, 0755); err != nil {
+		m.setErrorState(inst, fmt.Errorf("failed to create instances directory: %w", err))
+		return
+	}
+
+	// Copy game files to new instance directory
+	m.logger.Info("Copying game files...", "id", inst.ID, "dir", inst.Path)
+	if err := copyDir(m.cfg.GameInstallDir, inst.Path); err != nil {
+		m.setErrorState(inst, fmt.Errorf("failed to copy game files: %w", err))
+		return
+	}
+
+	// Start the process
+	if err := m.startProcess(inst); err != nil {
+		m.setErrorState(inst, fmt.Errorf("failed to start process: %w", err))
+		return
+	}
+
+	m.logger.Info("Instance provisioning complete and started", "id", inst.ID)
+	// startProcess sets Status to Running and saves state
+}
+
+func (m *Manager) setErrorState(inst *Instance, err error) {
+	m.logger.Error("Provisioning failed", "id", inst.ID, "error", err)
+	m.mu.Lock()
+	inst.Status = "Error"
+	m.mu.Unlock()
+	m.SaveState()
 }
 
 // startProcess constructs the command and starts the process for an instance.
@@ -146,9 +166,13 @@ func (m *Manager) startProcess(inst *Instance) error {
 		return fmt.Errorf("failed to start process %s: %w", absBinaryPath, err)
 	}
 
+	m.mu.Lock()
 	inst.cmd = cmd
 	inst.ProcessID = cmd.Process.Pid
 	inst.Status = "Running"
+	m.mu.Unlock()
+	
+	m.SaveState()
 	
 	// Monitor in background
 	go m.monitorInstance(inst.ID, cmd)
