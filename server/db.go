@@ -45,9 +45,29 @@ func InitDB(path string) (*sqlx.DB, error) {
 		return nil, err
 	}
 
+	// Check if 'version' column exists in server_versions (Migration)
+	var hasVersionCol int
+	err = db.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('server_versions') WHERE name='version'`).Scan(&hasVersionCol)
+	if err == nil && hasVersionCol == 0 {
+		fmt.Println("Migrating DB: Adding 'version' column to server_versions table...")
+		if _, err := db.Exec(`ALTER TABLE server_versions ADD COLUMN version TEXT`); err != nil {
+			fmt.Printf("warning: failed to migrate server_versions table: %v\n", err)
+		}
+	}
+
 	// Ensure unique index exists (migration for existing DBs)
 	if _, err := db.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_spawners_host_port ON spawners(host, port)`); err != nil {
 		fmt.Printf("warning: failed to create unique index: %v\n", err)
+	}
+
+	// Check if 'game_version' column exists in spawners (Migration)
+	var hasGameVersionCol int
+	err = db.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('spawners') WHERE name='game_version'`).Scan(&hasGameVersionCol)
+	if err == nil && hasGameVersionCol == 0 {
+		fmt.Println("Migrating DB: Adding 'game_version' column to spawners table...")
+		if _, err := db.Exec(`ALTER TABLE spawners ADD COLUMN game_version TEXT`); err != nil {
+			fmt.Printf("warning: failed to migrate spawners table: %v\n", err)
+		}
 	}
 
 	return db, nil
@@ -63,11 +83,13 @@ func createTables(db *sqlx.DB) error {
 		current_instances INTEGER NOT NULL,
 		status TEXT,
 		last_seen INTEGER NOT NULL,
+		game_version TEXT,
 		UNIQUE(host, port)
 	);
 	CREATE TABLE IF NOT EXISTS server_versions (
 		id INTEGER PRIMARY KEY,
 		filename TEXT NOT NULL,
+		version TEXT,
 		comment TEXT,
 		uploaded_at INTEGER NOT NULL,
 		is_active INTEGER DEFAULT 0
@@ -118,14 +140,23 @@ func SaveSpawner(db *sqlx.DB, s *Spawner) (int, error) {
 		defer tx.Rollback()
 
 		if s.ID == 0 {
-			res, err := tx.Exec(`INSERT INTO spawners (region, host, port, max_instances, current_instances, status, last_seen) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-				s.Region, s.Host, s.Port, s.MaxInstances, s.CurrentInstances, s.Status, s.LastSeen.Unix())
+			// Use UPSERT to handle re-registration of existing spawner (same host/port)
+			// effectively getting the existing ID or creating a new one.
+			query := `INSERT INTO spawners (region, host, port, max_instances, current_instances, status, last_seen, game_version) 
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+				ON CONFLICT(host, port) DO UPDATE SET
+				region=excluded.region,
+				max_instances=excluded.max_instances,
+				current_instances=excluded.current_instances,
+				status=excluded.status,
+				last_seen=excluded.last_seen,
+				game_version=excluded.game_version
+				RETURNING id`
+			
+			var id int64
+			err := tx.QueryRow(query, s.Region, s.Host, s.Port, s.MaxInstances, s.CurrentInstances, s.Status, s.LastSeen.Unix(), s.GameVersion).Scan(&id)
 			if err != nil {
-				return fmt.Errorf("insert spawner: %w", err)
-			}
-			id, err := res.LastInsertId()
-			if err != nil {
-				return fmt.Errorf("last insert id: %w", err)
+				return fmt.Errorf("upsert spawner: %w", err)
 			}
 			assignedID = int(id)
 			if err := tx.Commit(); err != nil {
@@ -134,8 +165,8 @@ func SaveSpawner(db *sqlx.DB, s *Spawner) (int, error) {
 			return nil
 		}
 
-		_, err = tx.Exec(`REPLACE INTO spawners (id, region, host, port, max_instances, current_instances, status, last_seen) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-			s.ID, s.Region, s.Host, s.Port, s.MaxInstances, s.CurrentInstances, s.Status, s.LastSeen.Unix())
+		_, err = tx.Exec(`REPLACE INTO spawners (id, region, host, port, max_instances, current_instances, status, last_seen, game_version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			s.ID, s.Region, s.Host, s.Port, s.MaxInstances, s.CurrentInstances, s.Status, s.LastSeen.Unix(), s.GameVersion)
 		if err != nil {
 			return fmt.Errorf("upsert spawner: %w", err)
 		}
@@ -155,7 +186,7 @@ func SaveSpawner(db *sqlx.DB, s *Spawner) (int, error) {
 
 // LoadSpawners returns all spawners from DB.
 func LoadSpawners(db *sqlx.DB) ([]Spawner, error) {
-	rows, err := db.Queryx(`SELECT id, region, host, port, max_instances, current_instances, status, last_seen FROM spawners`)
+	rows, err := db.Queryx(`SELECT id, region, host, port, max_instances, current_instances, status, last_seen, game_version FROM spawners`)
 	if err != nil {
 		return nil, fmt.Errorf("query spawners: %w", err)
 	}
@@ -165,10 +196,14 @@ func LoadSpawners(db *sqlx.DB) ([]Spawner, error) {
 	for rows.Next() {
 		var s Spawner
 		var lastSeenUnix int64
-		if err := rows.Scan(&s.ID, &s.Region, &s.Host, &s.Port, &s.MaxInstances, &s.CurrentInstances, &s.Status, &lastSeenUnix); err != nil {
+		var gameVersion sql.NullString
+		if err := rows.Scan(&s.ID, &s.Region, &s.Host, &s.Port, &s.MaxInstances, &s.CurrentInstances, &s.Status, &lastSeenUnix, &gameVersion); err != nil {
 			return nil, fmt.Errorf("scan: %w", err)
 		}
 		s.LastSeen = time.Unix(lastSeenUnix, 0).UTC()
+		if gameVersion.Valid {
+			s.GameVersion = gameVersion.String
+		}
 		out = append(out, s)
 	}
 	if err := rows.Err(); err != nil {
@@ -192,16 +227,20 @@ func DeleteSpawnerDB(db *sqlx.DB, id int) error {
 func GetSpawnerByID(db *sqlx.DB, id int) (*Spawner, error) {
 	var out *Spawner
 	do := func() error {
-		row := db.QueryRowx(`SELECT id, region, host, port, max_instances, current_instances, status, last_seen FROM spawners WHERE id = ?`, id)
+		row := db.QueryRowx(`SELECT id, region, host, port, max_instances, current_instances, status, last_seen, game_version FROM spawners WHERE id = ?`, id)
 		var s Spawner
 		var lastSeenUnix int64
-		if err := row.Scan(&s.ID, &s.Region, &s.Host, &s.Port, &s.MaxInstances, &s.CurrentInstances, &s.Status, &lastSeenUnix); err != nil {
+		var gameVersion sql.NullString
+		if err := row.Scan(&s.ID, &s.Region, &s.Host, &s.Port, &s.MaxInstances, &s.CurrentInstances, &s.Status, &lastSeenUnix, &gameVersion); err != nil {
 			if err == sql.ErrNoRows {
 				return nil // Return nil if not found, handled by caller
 			}
 			return fmt.Errorf("scan spawner: %w", err)
 		}
 		s.LastSeen = time.Unix(lastSeenUnix, 0).UTC()
+		if gameVersion.Valid {
+			s.GameVersion = gameVersion.String
+		}
 		out = &s
 		return nil
 	}
@@ -215,8 +254,8 @@ func GetSpawnerByID(db *sqlx.DB, id int) (*Spawner, error) {
 
 func SaveServerVersion(db *sqlx.DB, v *GameServerVersion) error {
 	do := func() error {
-		_, err := db.Exec(`INSERT INTO server_versions (filename, comment, uploaded_at, is_active) VALUES (?, ?, ?, ?)`,
-			v.Filename, v.Comment, v.UploadedAt.Unix(), v.IsActive)
+		_, err := db.Exec(`INSERT INTO server_versions (filename, version, comment, uploaded_at, is_active) VALUES (?, ?, ?, ?, ?)`,
+			v.Filename, v.Version, v.Comment, v.UploadedAt.Unix(), v.IsActive)
 		if err != nil {
 			return fmt.Errorf("insert version: %w", err)
 		}
@@ -226,7 +265,7 @@ func SaveServerVersion(db *sqlx.DB, v *GameServerVersion) error {
 }
 
 func ListServerVersions(db *sqlx.DB) ([]GameServerVersion, error) {
-	rows, err := db.Queryx(`SELECT id, filename, comment, uploaded_at, is_active FROM server_versions ORDER BY uploaded_at DESC`)
+	rows, err := db.Queryx(`SELECT id, filename, version, comment, uploaded_at, is_active FROM server_versions ORDER BY uploaded_at DESC`)
 	if err != nil {
 		return nil, fmt.Errorf("query versions: %w", err)
 	}
@@ -236,8 +275,13 @@ func ListServerVersions(db *sqlx.DB) ([]GameServerVersion, error) {
 	for rows.Next() {
 		var v GameServerVersion
 		var uploadedAtUnix int64
-		if err := rows.Scan(&v.ID, &v.Filename, &v.Comment, &uploadedAtUnix, &v.IsActive); err != nil {
+		// Handle NULL version if migration hasn't happened or older records
+		var version sql.NullString
+		if err := rows.Scan(&v.ID, &v.Filename, &version, &v.Comment, &uploadedAtUnix, &v.IsActive); err != nil {
 			return nil, fmt.Errorf("scan version: %w", err)
+		}
+		if version.Valid {
+			v.Version = version.String
 		}
 		v.UploadedAt = time.Unix(uploadedAtUnix, 0).UTC()
 		out = append(out, v)
@@ -288,13 +332,17 @@ func DeleteServerVersion(db *sqlx.DB, id int) (string, error) {
 func GetActiveServerVersion(db *sqlx.DB) (*GameServerVersion, error) {
 	var v GameServerVersion
 	var uploadedAtUnix int64
-	err := db.QueryRow(`SELECT id, filename, comment, uploaded_at, is_active FROM server_versions WHERE is_active = 1 LIMIT 1`).
-		Scan(&v.ID, &v.Filename, &v.Comment, &uploadedAtUnix, &v.IsActive)
+	var version sql.NullString
+	err := db.QueryRow(`SELECT id, filename, version, comment, uploaded_at, is_active FROM server_versions WHERE is_active = 1 LIMIT 1`).
+		Scan(&v.ID, &v.Filename, &version, &v.Comment, &uploadedAtUnix, &v.IsActive)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
 		return nil, err
+	}
+	if version.Valid {
+		v.Version = version.String
 	}
 	v.UploadedAt = time.Unix(uploadedAtUnix, 0).UTC()
 	return &v, nil

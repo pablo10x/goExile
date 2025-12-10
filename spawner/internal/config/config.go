@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
+
 	"strconv"
-	"strings"
+
 
 	"github.com/joho/godotenv"
 )
@@ -70,12 +70,7 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("GAME_BINARY_PATH is required")
 	}
 
-	// Adjust binary path for Windows if needed
-	if runtime.GOOS == "windows" {
-		if !strings.HasSuffix(strings.ToLower(c.GameBinaryPath), ".exe") {
-			c.GameBinaryPath += ".exe"
-		}
-	}
+
 	
 	// Check if binary exists in the install directory
 	fullBinaryPath := filepath.Join(c.GameInstallDir, c.GameBinaryPath)

@@ -43,7 +43,7 @@
         <!-- Backdrop -->
         <div 
             class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" 
-            onclick={close}
+            on:click={close}
             role="button"
             tabindex="0"
             aria-label="Close dialog"
@@ -76,13 +76,13 @@
                     </div>
                 {:else}
                     <button 
-                        onclick={close}
+                        on:click={close}
                         class="px-4 py-2 text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors"
                     >
                         {cancelText}
                     </button>
                     <button 
-                        onclick={handleConfirm}
+                        on:click={handleConfirm}
                         class={`px-4 py-2 text-sm font-semibold text-white rounded-lg shadow-lg transition-all transform active:scale-95 ${
                             isCritical 
                             ? 'bg-red-600 hover:bg-red-500 shadow-red-900/20' 

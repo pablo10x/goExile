@@ -40,11 +40,25 @@ func EnsureInstalled(cfg *config.Config, logger *slog.Logger) error {
 	defer os.Remove(tmpFile.Name())
 
 	logger.Info("Downloading game server package...", "url", downloadURL)
-	if err := downloadFile(downloadURL, cfg.MasterAPIKey, tmpFile); err != nil {
+	version, err := downloadFile(downloadURL, cfg.MasterAPIKey, tmpFile)
+	if err != nil {
 		tmpFile.Close()
 		return fmt.Errorf("download failed: %w", err)
 	}
 	tmpFile.Close()
+
+	// Save version info if available
+	if version != "" {
+		versionFile := filepath.Join(cfg.GameInstallDir, "version.txt")
+		// We write to a temp location first or just overwrite after unzip? 
+		// Unzip happens next. If we write now, unzip might overwrite or be fine.
+		// Actually, let's write it AFTER unzip to ensure it persists.
+		defer func() {
+			if err := os.WriteFile(versionFile, []byte(version), 0644); err != nil {
+				logger.Warn("Failed to save version file", "error", err)
+			}
+		}()
+	}
 
 	// 4. Unzip
 	logger.Info("Extracting package...", "destination", cfg.GameInstallDir)
@@ -95,14 +109,85 @@ func EnsureInstalled(cfg *config.Config, logger *slog.Logger) error {
 	// 6. Make executable
 	_ = os.Chmod(fullBinaryPath, 0755)
 
-	logger.Info("Game server downloaded and installed successfully")
+	logger.Info("Game server downloaded and installed successfully", "version", version)
 	return nil
 }
 
-func downloadFile(url, apiKey string, dest *os.File) error {
+// UpdateTemplate checks if a newer version is available on the master server and updates the local template.
+func UpdateTemplate(cfg *config.Config, logger *slog.Logger) (string, error) {
+	// 1. Check local version
+	versionFile := filepath.Join(cfg.GameInstallDir, "version.txt")
+	localVersionBytes, err := os.ReadFile(versionFile)
+	localVersion := ""
+	if err == nil {
+		localVersion = strings.TrimSpace(string(localVersionBytes))
+	}
+
+	downloadURL := fmt.Sprintf("%s/api/spawners/download?os=%s", cfg.MasterURL, runtime.GOOS)
+	
+	// 2. Check remote version (HEAD request)
+	req, err := http.NewRequest("HEAD", downloadURL, nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+	if cfg.MasterAPIKey != "" {
+		req.Header.Set("X-API-Key", cfg.MasterAPIKey)
+	}
+	
+	client := &http.Client{Timeout: 5 * http.DefaultClient.Timeout} // Short timeout for check
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to check update: %w", err)
+	}
+	resp.Body.Close()
+	
+	remoteVersion := resp.Header.Get("X-Game-Version")
+	if remoteVersion == "" {
+		logger.Warn("Master server did not return X-Game-Version header. Skipping update check.", "current_local", localVersion)
+		return localVersion, nil
+	}
+
+	if localVersion == remoteVersion {
+		logger.Info("Local template is up to date", "version", localVersion)
+		return localVersion, nil
+	}
+
+	logger.Info("Found new version, updating template...", "local", localVersion, "remote", remoteVersion)
+
+	// 3. Download and Extract
+	tmpFile, err := os.CreateTemp("", "gameserver-update-*.zip")
+	if err != nil {
+		return "", fmt.Errorf("failed to create temp file: %w", err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	if _, err := downloadFile(downloadURL, cfg.MasterAPIKey, tmpFile); err != nil {
+		tmpFile.Close()
+		return "", fmt.Errorf("download failed: %w", err)
+	}
+	tmpFile.Close()
+
+	if err := unzip(tmpFile.Name(), cfg.GameInstallDir); err != nil {
+		return "", fmt.Errorf("extraction failed: %w", err)
+	}
+
+	// 4. Update version file
+	if err := os.WriteFile(versionFile, []byte(remoteVersion), 0644); err != nil {
+		logger.Warn("Failed to save version file", "error", err)
+	}
+
+	// 5. Re-apply permissions
+	fullBinaryPath := filepath.Join(cfg.GameInstallDir, cfg.GameBinaryPath)
+	_ = os.Chmod(fullBinaryPath, 0755)
+
+	logger.Info("Template updated successfully", "version", remoteVersion)
+	return remoteVersion, nil
+}
+
+func downloadFile(url, apiKey string, dest *os.File) (string, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	req.Header.Set("User-Agent", "Spawner/1.0")
@@ -113,16 +198,16 @@ func downloadFile(url, apiKey string, dest *os.File) error {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("server returned status: %s %s", resp.Status,resp.Body)
+		return "", fmt.Errorf("server returned status: %s", resp.Status)
 	}
 
 	_, err = io.Copy(dest, resp.Body)
-	return err
+	return resp.Header.Get("X-Game-Version"), err
 }
 
 func unzip(src, dest string) error {

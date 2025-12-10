@@ -10,9 +10,20 @@ import (
 	"os/exec"
 	"path/filepath"
 	"spawner/internal/config"
+	"spawner/internal/updater"
+	"strings"
 	"sync"
 	"time"
+
+	"github.com/shirou/gopsutil/v3/process"
 )
+
+// InstanceStats holds resource usage information.
+type InstanceStats struct {
+	CPUPercent  float64 `json:"cpu_percent"`
+	MemoryUsage uint64  `json:"memory_usage"`
+	DiskUsage   uint64  `json:"disk_usage"`
+}
 
 // Instance represents a running game server.
 type Instance struct {
@@ -21,6 +32,7 @@ type Instance struct {
 	ProcessID int       `json:"pid"`
 	Status    string    `json:"status"` // "Running", "Stopped", "Error"
 	Region    string    `json:"region"`
+	Version   string    `json:"version"`
 	StartTime time.Time `json:"start_time"`
 	Path      string    `json:"path"` // Path to this instance's directory
 
@@ -55,6 +67,11 @@ func (m *Manager) RestoreInstances() error {
 	defer m.mu.Unlock()
 
 	for id, inst := range m.instances {
+		// Ensure version is loaded from disk if missing
+		if inst.Version == "" {
+			inst.Version = m.readVersionFile(inst.Path)
+		}
+
 		if inst.Status == "Running" {
 			m.logger.Info("Restoring instance", "id", id, "port", inst.Port)
 			if err := m.startProcess(inst); err != nil {
@@ -117,6 +134,9 @@ func (m *Manager) provisionAndStart(inst *Instance) {
 		return
 	}
 
+	// Read version from the copied files
+	inst.Version = m.readVersionFile(inst.Path)
+
 	// Start the process (requires lock)
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -131,6 +151,97 @@ func (m *Manager) provisionAndStart(inst *Instance) {
 
 	m.logger.Info("Instance provisioning complete and started", "id", inst.ID)
 	m.saveStateInternal()
+}
+
+// UpdateInstance stops the instance if running and re-copies the game files.
+func (m *Manager) UpdateInstance(id string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	inst, exists := m.instances[id]
+	if !exists {
+		return fmt.Errorf("instance not found")
+	}
+
+	// Stop if running
+	if inst.Status == "Running" && inst.cmd != nil && inst.cmd.Process != nil {
+		m.logger.Info("Stopping instance for update", "id", id)
+		_ = inst.cmd.Process.Kill()
+		// Wait for process to exit to release file locks?
+		// In a real scenario, we should wait. But here we might just proceed.
+		// Windows might lock files.
+		inst.cmd.Wait() // Wait for exit
+		inst.Status = "Stopped"
+		inst.ProcessID = 0
+		inst.cmd = nil
+	}
+
+	// Update local template if needed
+	if _, err := updater.UpdateTemplate(m.cfg, m.logger); err != nil {
+		m.logger.Warn("Failed to update template from master", "error", err)
+		// Continue anyway with existing template? Or fail?
+		// Better to fail if the user explicitly requested an update.
+		// But maybe network is down. Let's fail to be safe.
+		inst.Status = "Error"
+		m.saveStateInternal()
+		return fmt.Errorf("failed to pull update from master: %w", err)
+	}
+
+	m.logger.Info("Updating instance files", "id", id)
+	if err := copyDir(m.cfg.GameInstallDir, inst.Path); err != nil {
+		inst.Status = "Error"
+		m.saveStateInternal()
+		return fmt.Errorf("failed to update game files: %w", err)
+	}
+
+	inst.Version = m.readVersionFile(inst.Path)
+
+	m.logger.Info("Instance updated successfully", "id", id)
+	return m.saveStateInternal()
+}
+
+// RenameInstance renames an instance ID and its directory.
+func (m *Manager) RenameInstance(id string, newID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if _, exists := m.instances[newID]; exists {
+		return fmt.Errorf("instance with ID %s already exists", newID)
+	}
+
+	inst, exists := m.instances[id]
+	if !exists {
+		return fmt.Errorf("instance not found")
+	}
+
+	// Stop if running
+	if inst.Status == "Running" && inst.cmd != nil && inst.cmd.Process != nil {
+		m.logger.Info("Stopping instance for rename", "id", id)
+		_ = inst.cmd.Process.Kill()
+		inst.cmd.Wait()
+		inst.Status = "Stopped"
+		inst.ProcessID = 0
+		inst.cmd = nil
+	}
+
+	oldPath := inst.Path
+	newPath := filepath.Join(m.cfg.InstancesDir, newID)
+
+	m.logger.Info("Renaming instance", "old_id", id, "new_id", newID, "old_path", oldPath, "new_path", newPath)
+
+	if err := os.Rename(oldPath, newPath); err != nil {
+		return fmt.Errorf("failed to rename directory: %w", err)
+	}
+
+	// Update Instance
+	inst.ID = newID
+	inst.Path = newPath
+
+	// Update Map
+	delete(m.instances, id)
+	m.instances[newID] = inst
+
+	return m.saveStateInternal()
 }
 
 func (m *Manager) setErrorState(inst *Instance, err error) {
@@ -171,8 +282,7 @@ func (m *Manager) startProcess(inst *Instance) error {
 	if err != nil {
 		return fmt.Errorf("failed to open log file %s: %w", logFilePath, err)
 	}
-	// We don't close logFile here, as it needs to stay open for the child process.
-	// The OS will close it when the child process exits.
+	defer logFile.Close() // Close parent's handle, child inherits it
 
 	cmd := newGameCmd(absBinaryPath, args, logFile)
 	cmd.Dir = inst.Path
@@ -223,27 +333,112 @@ func (m *Manager) monitorInstance(id string, cmd *exec.Cmd) {
 	}
 }
 
-// StopInstance kills a specific game server.
+// StopInstance kills a specific game server and waits for it to stop.
 func (m *Manager) StopInstance(id string) error {
 	m.mu.Lock()
-	defer m.mu.Unlock()
-
 	instance, exists := m.instances[id]
 	if !exists {
+		m.mu.Unlock()
 		return fmt.Errorf("instance not found")
 	}
 
 	if instance.Status != "Running" {
+		m.mu.Unlock()
 		return fmt.Errorf("instance is not running")
 	}
 
 	if instance.cmd != nil && instance.cmd.Process != nil {
 		if err := instance.cmd.Process.Kill(); err != nil {
+			m.mu.Unlock()
 			return fmt.Errorf("failed to kill process: %w", err)
 		}
 	}
+	m.mu.Unlock()
 
-	// monitorInstance will update status and save state
+	// Wait for monitorInstance to update status
+	timeout := time.After(10 * time.Second)
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-timeout:
+			return fmt.Errorf("timed out waiting for instance to stop")
+		case <-ticker.C:
+			m.mu.RLock()
+			inst, ok := m.instances[id]
+			status := ""
+			if ok {
+				status = inst.Status
+			}
+			m.mu.RUnlock()
+			
+			if !ok || status == "Stopped" || status == "Error" {
+				return nil
+			}
+		}
+	}
+}
+
+// RemoveInstance deletes a stopped instance from disk and registry.
+func (m *Manager) RemoveInstance(id string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	inst, exists := m.instances[id]
+	if !exists {
+		return fmt.Errorf("instance not found")
+	}
+
+	if inst.Status == "Running" {
+		return fmt.Errorf("instance is running, stop it first")
+	}
+
+	m.logger.Info("Removing instance", "id", id, "path", inst.Path)
+
+	// Remove files
+	if err := os.RemoveAll(inst.Path); err != nil {
+		m.logger.Error("Failed to remove instance files", "id", id, "error", err)
+		// We continue to remove from memory/state even if file deletion fails
+	}
+
+	delete(m.instances, id)
+	return m.saveStateInternal()
+}
+
+// StartInstance starts a previously stopped or errored game server instance.
+func (m *Manager) StartInstance(id string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	instance, exists := m.instances[id]
+	if !exists {
+		return fmt.Errorf("instance with ID %s not found", id)
+	}
+
+	if instance.Status == "Running" {
+		return fmt.Errorf("instance with ID %s is already running", id)
+	}
+
+	m.logger.Info("Attempting to start instance", "id", id, "status", instance.Status)
+
+	// The startProcess function expects the instance directory to be set up
+	// and will handle setting the status to "Running" and launching monitorInstance.
+	if err := m.startProcess(instance); err != nil {
+		m.logger.Error("Failed to start process for instance", "id", id, "error", err)
+		instance.Status = "Error" // Mark as error if starting fails
+		m.saveStateInternal()
+		return fmt.Errorf("failed to start instance %s: %w", id, err)
+	}
+
+	// Instance status is now "Running" from startProcess.
+	// Save the updated state to disk.
+	if err := m.saveStateInternal(); err != nil {
+		m.logger.Error("Failed to save state after starting instance", "id", id, "error", err)
+		// This is a warning, the instance is running, but state might be inconsistent
+	}
+
+	m.logger.Info("Instance started successfully", "id", id, "port", instance.Port)
 	return nil
 }
 
@@ -289,6 +484,91 @@ func (m *Manager) ListInstances() []Instance {
 		list = append(list, val)
 	}
 	return list
+}
+
+// GetInstanceLogPath returns the absolute path to the log file for an instance.
+func (m *Manager) GetInstanceLogPath(id string) (string, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	inst, exists := m.instances[id]
+	if !exists {
+		return "", fmt.Errorf("instance not found")
+	}
+
+	return filepath.Join(inst.Path, "gameserver.log"), nil
+}
+
+// ClearInstanceLogs truncates the log file for an instance.
+func (m *Manager) ClearInstanceLogs(id string) error {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	inst, exists := m.instances[id]
+	if !exists {
+		return fmt.Errorf("instance not found")
+	}
+
+	logPath := filepath.Join(inst.Path, "gameserver.log")
+	if err := os.Truncate(logPath, 0); err != nil {
+		return fmt.Errorf("failed to truncate log file: %w", err)
+	}
+	return nil
+}
+
+// GetInstanceStats returns resource usage statistics for an instance.
+func (m *Manager) GetInstanceStats(id string) (*InstanceStats, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	inst, exists := m.instances[id]
+	if !exists {
+		return nil, fmt.Errorf("instance not found")
+	}
+
+	stats := &InstanceStats{}
+
+	// Disk Usage
+	var size uint64
+	err := filepath.Walk(inst.Path, func(_ string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			size += uint64(info.Size())
+		}
+		return nil
+	})
+	if err != nil {
+		m.logger.Warn("Failed to calculate disk usage", "id", id, "error", err)
+	}
+	stats.DiskUsage = size
+
+	// Process Stats (if running)
+	if inst.Status == "Running" && inst.ProcessID > 0 {
+		p, err := process.NewProcess(int32(inst.ProcessID))
+		if err == nil {
+			cpu, _ := p.Percent(0)
+			mem, _ := p.MemoryInfo()
+			
+			stats.CPUPercent = cpu
+			if mem != nil {
+				stats.MemoryUsage = mem.RSS
+			}
+		}
+	}
+
+	return stats, nil
+}
+
+// readVersionFile attempts to read the version string from version.txt in the instance directory.
+func (m *Manager) readVersionFile(dir string) string {
+	path := filepath.Join(dir, "version.txt")
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(content))
 }
 
 // findAvailablePort scans for an open TCP port.

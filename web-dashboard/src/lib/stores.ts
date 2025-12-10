@@ -22,6 +22,12 @@ export interface Spawner {
     status: string;
     current_instances: number;
     max_instances: number;
+    cpu_usage: number;
+    mem_used: number;
+    mem_total: number;
+    disk_used: number;
+    disk_total: number;
+    game_version: string;
 }
 
 export const spawners = writable<Spawner[]>([]);
@@ -29,6 +35,7 @@ export const spawners = writable<Spawner[]>([]);
 export interface ServerVersion {
     id: number;
     filename: string;
+    version: string;
     comment: string;
     uploaded_at: string; // ISO string from JSON
     is_active: boolean;

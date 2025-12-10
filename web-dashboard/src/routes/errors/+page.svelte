@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { fade } from 'svelte/transition';
+    import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 
     interface ErrorLog {
         timestamp: string;
@@ -13,6 +14,10 @@
     let errors: ErrorLog[] = [];
     let loading = true;
     let clearing = false;
+
+    // Confirm Dialog State
+    let isConfirmOpen = false;
+    let confirmAction: () => Promise<void> = async () => {};
 
     async function fetchErrors() {
         try {
@@ -27,9 +32,12 @@
         }
     }
 
+    function requestClearErrors() {
+        confirmAction = async () => await clearErrors();
+        isConfirmOpen = true;
+    }
+
     async function clearErrors() {
-        if (!confirm('Are you sure you want to clear all error logs?')) return;
-        
         clearing = true;
         try {
             const res = await fetch('/api/errors', { method: 'DELETE' });
@@ -74,7 +82,7 @@
                 Back to Dashboard
             </a>
             <button 
-                onclick={clearErrors} 
+                onclick={requestClearErrors} 
                 disabled={clearing || errors.length === 0}
                 class="px-4 py-2 bg-red-600 text-white hover:bg-red-500 rounded font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-900/20"
             >
@@ -136,3 +144,12 @@
         {/if}
     </div>
 </div>
+
+<ConfirmDialog
+    bind:isOpen={isConfirmOpen}
+    title="Clear All Errors"
+    message="Are you sure you want to clear all error logs? This cannot be undone."
+    confirmText="Clear Errors"
+    isCritical={true}
+    onConfirm={confirmAction}
+/>

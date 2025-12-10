@@ -1,15 +1,25 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { serverVersions } from '$lib/stores';
+    import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 
     let activeTab = 'upload'; // 'upload' | 'history'
     
     // Upload State
     let fileInput: HTMLInputElement;
     let comment = '';
+    let version = '';
     let uploading = false;
     let uploadStatus = '';
     let uploadError = false;
+
+    // Confirm Dialog State
+    let isConfirmOpen = false;
+    let confirmTitle = '';
+    let confirmMessage = '';
+    let confirmAction: () => Promise<void> = async () => {};
+    let confirmIsCritical = false;
+    let confirmButtonText = 'Confirm';
 
     async function loadVersions() {
         try {
@@ -47,6 +57,7 @@
         const formData = new FormData();
         formData.append('file', file);
         formData.append('comment', comment);
+        formData.append('version', version);
 
         try {
             const response = await fetch('/api/upload', {
@@ -59,6 +70,7 @@
                 uploadError = false;
                 fileInput.value = '';
                 comment = '';
+                version = '';
                 loadVersions();
                 setTimeout(() => {
                     uploadStatus = '';
@@ -76,32 +88,50 @@
         }
     }
 
+    function requestActivate(id: number) {
+        confirmTitle = 'Activate Version';
+        confirmMessage = 'Are you sure you want to activate this version? Spawners will download it on next check.';
+        confirmButtonText = 'Activate';
+        confirmIsCritical = false;
+        confirmAction = async () => await activateVersion(id);
+        isConfirmOpen = true;
+    }
+
     async function activateVersion(id: number) {
-        if (!confirm('Activate this version? Spawners will download it on next check.')) return;
         try {
             const res = await fetch(`/api/versions/${id}/active`, { method: 'POST' });
             if (res.ok) {
                 loadVersions();
             } else {
-                alert('Failed to activate version');
+                throw new Error('Failed to activate version');
             }
         } catch (e) {
-            alert('Error activating version');
+            console.error(e);
+            throw e; // Propagate to dialog for error handling
         }
     }
 
+    function requestDelete(id: number) {
+        confirmTitle = 'Delete Version';
+        confirmMessage = 'Are you sure you want to delete this version? This action cannot be undone.';
+        confirmButtonText = 'Delete';
+        confirmIsCritical = true;
+        confirmAction = async () => await deleteVersion(id);
+        isConfirmOpen = true;
+    }
+
     async function deleteVersion(id: number) {
-        if (!confirm('Delete this version? This cannot be undone.')) return;
         try {
             const res = await fetch(`/api/versions/${id}`, { method: 'DELETE' });
             if (res.ok) {
                 loadVersions();
             } else {
                 const data = await res.json();
-                alert('Failed to delete: ' + (data.error || 'Unknown error'));
+                throw new Error(data.error || 'Failed to delete version');
             }
         } catch (e) {
-            alert('Error deleting version');
+            console.error(e);
+            throw e;
         }
     }
 </script>
@@ -130,7 +160,7 @@
     </div>
 
     {#if activeTab === 'upload'}
-        <div class="card p-8">
+        <div class="card p-8 bg-slate-800/50 border border-slate-700/50 rounded-xl">
             <p class="text-slate-400 mb-6">
                 Upload a new <code>game_server.zip</code> package here. You can add a comment to describe the changes (e.g., "v1.2.0 - Fixed bugs").
             </p>
@@ -138,10 +168,10 @@
             <div class="max-w-xl space-y-6">
                 <!-- File Input -->
                 <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">
+                    <span class="block text-sm font-medium text-slate-300 mb-2">
                         Server Package (.zip)
-                    </label>
-                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-700 border-dashed rounded-md hover:border-blue-400 transition-colors bg-slate-800/30">
+                    </span>
+                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-700 border-dashed rounded-md hover:border-blue-400 transition-colors bg-slate-900/30">
                         <div class="space-y-1 text-center">
                             <svg class="mx-auto h-12 w-12 text-slate-500" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
                                 <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -159,8 +189,27 @@
                         </div>
                     </div>
                     {#if fileInput && fileInput.files && fileInput.files.length > 0}
-                        <div class="mt-2 text-sm text-slate-300">Selected: {fileInput.files[0].name}</div>
+                        <div class="mt-2 text-sm text-emerald-400 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                            Selected: {fileInput.files[0].name}
+                        </div>
                     {/if}
+                </div>
+
+                <!-- Version Input -->
+                <div>
+                    <label for="version" class="block text-sm font-medium text-slate-300 mb-2">
+                        Version (e.g. 1.0.0)
+                    </label>
+                    <input 
+                        type="text" 
+                        id="version" 
+                        bind:value={version}
+                        class="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                        placeholder="1.0.0"
+                    />
                 </div>
 
                 <!-- Comment Input -->
@@ -172,7 +221,7 @@
                         id="comment" 
                         bind:value={comment}
                         rows="3" 
-                        class="w-full px-4 py-2 bg-slate-800/50 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                        class="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
                         placeholder="e.g. Added new map, fixed crash on startup..."
                     ></textarea>
                 </div>
@@ -182,26 +231,36 @@
                     <button 
                         onclick={handleUpload} 
                         disabled={uploading}
-                        class="btn-primary w-full sm:w-auto justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                        class="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow-lg shadow-blue-900/20 font-semibold transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
                     >
-                        {uploading ? 'Uploading...' : 'Upload Version'}
+                        {#if uploading}
+                            <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            Uploading...
+                        {:else}
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                            </svg>
+                            Upload Version
+                        {/if}
                     </button>
                 </div>
 
                 {#if uploadStatus}
-                    <div class={`p-3 rounded text-sm font-semibold border ${uploadError ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
+                    <div class={`p-3 rounded-lg text-sm font-medium border flex items-center gap-2 ${uploadError ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
+                        <span>{uploadError ? '⚠️' : '✓'}</span>
                         {uploadStatus}
                     </div>
                 {/if}
             </div>
         </div>
     {:else}
-        <div class="card overflow-hidden">
+        <div class="card bg-slate-800/30 border border-slate-700/50 rounded-xl overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead class="bg-slate-800/50 border-b border-slate-700">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Version</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Uploaded</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Filename</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Comment</th>
@@ -213,7 +272,8 @@
                             <tr class="hover:bg-slate-800/30 transition">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     {#if version.is_active}
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-sm shadow-emerald-900/20">
+                                            <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-1.5 animate-pulse"></span>
                                             Active
                                         </span>
                                     {:else}
@@ -221,6 +281,9 @@
                                             Inactive
                                         </span>
                                     {/if}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-slate-300 font-medium">
+                                    {version.version || 'Unknown'}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-slate-400">
                                     {new Date(version.uploaded_at).toLocaleString()}
@@ -234,19 +297,19 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                                     {#if !version.is_active}
                                         <button 
-                                            onclick={() => activateVersion(version.id)}
-                                            class="text-blue-400 hover:text-blue-300"
+                                            onclick={() => requestActivate(version.id)}
+                                            class="px-3 py-1 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-600/30 rounded-md text-xs font-semibold transition-colors"
                                         >
                                             Activate
                                         </button>
                                         <button 
-                                            onclick={() => deleteVersion(version.id)}
-                                            class="text-red-400 hover:text-red-300"
+                                            onclick={() => requestDelete(version.id)}
+                                            class="px-3 py-1 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-600/30 rounded-md text-xs font-semibold transition-colors"
                                         >
                                             Delete
                                         </button>
                                     {:else}
-                                        <span class="text-slate-600 cursor-not-allowed">Active</span>
+                                        <span class="text-slate-600 cursor-not-allowed text-xs font-medium px-2">Active</span>
                                     {/if}
                                 </td>
                             </tr>
@@ -264,3 +327,12 @@
         </div>
     {/if}
 </div>
+
+<ConfirmDialog
+    bind:isOpen={isConfirmOpen}
+    title={confirmTitle}
+    message={confirmMessage}
+    confirmText={confirmButtonText}
+    isCritical={confirmIsCritical}
+    onConfirm={confirmAction}
+/>

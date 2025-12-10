@@ -67,7 +67,7 @@ func (r *Registry) Register(s *Spawner) (int, error) {
 }
 
 // UpdateHeartbeat refreshes the LastSeen timestamp and updates stats.
-func (r *Registry) UpdateHeartbeat(id int, currentInstances, maxInstances int, status string) error {
+func (r *Registry) UpdateHeartbeat(id int, currentInstances, maxInstances int, status string, cpuUsage float64, memUsed, memTotal, diskUsed, diskTotal uint64, gameVersion string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	s, ok := r.items[id]
@@ -78,6 +78,13 @@ func (r *Registry) UpdateHeartbeat(id int, currentInstances, maxInstances int, s
 	s.CurrentInstances = currentInstances
 	s.MaxInstances = maxInstances
 	s.Status = status
+	
+	s.CpuUsage = cpuUsage
+	s.MemUsed = memUsed
+	s.MemTotal = memTotal
+	s.DiskUsed = diskUsed
+	s.DiskTotal = diskTotal
+	s.GameVersion = gameVersion
 
 	if dbConn != nil {
 		if _, err := SaveSpawner(dbConn, s); err != nil {
@@ -85,6 +92,24 @@ func (r *Registry) UpdateHeartbeat(id int, currentInstances, maxInstances int, s
 		}
 	}
 
+	return nil
+}
+
+// UpdateSpawnerStatus updates the status of a spawner and its last seen time.
+func (r *Registry) UpdateSpawnerStatus(id int, newStatus string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	s, ok := r.items[id]
+	if !ok {
+		return fmt.Errorf("spawner not found")
+	}
+	s.Status = newStatus
+	s.LastSeen = time.Now().UTC() // Update LastSeen as well
+	if dbConn != nil {
+		if _, err := SaveSpawner(dbConn, s); err != nil {
+			log.Printf("warning: failed to persist status update for id=%d: %v", id, err)
+		}
+	}
 	return nil
 }
 

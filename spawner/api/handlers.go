@@ -1,11 +1,15 @@
 package api
 
 import (
+	"bufio"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
 	"spawner/internal/config"
 	"spawner/internal/game"
+	"spawner/internal/updater"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,11 +27,173 @@ func NewHandler(m *game.Manager, c *config.Config, l *slog.Logger) *Handler {
 // RegisterRoutes sets up the API endpoints
 func (h *Handler) RegisterRoutes(router *gin.Engine) {
 	router.POST("/spawn", h.HandleSpawn)
+	router.POST("/update-template", h.HandleUpdateTemplate)
 	router.GET("/instances", h.HandleListInstances)
-	router.DELETE("/instance/:id", h.HandleStopInstance)
+	router.POST("/instance/:id/stop", h.HandleStopInstance)
+	router.DELETE("/instance/:id", h.HandleRemoveInstance)
+	router.POST("/instance/:id/start", h.HandleStartInstance)
+	router.POST("/instance/:id/update", h.HandleUpdateInstance)
+	router.POST("/instance/:id/rename", h.HandleRenameInstance)
+	router.GET("/instance/:id/stats", h.HandleInstanceStats)
+	router.GET("/instance/:id/logs", h.HandleInstanceLogs)
+	router.DELETE("/instance/:id/logs", h.HandleClearInstanceLogs)
 	router.GET("/health", h.HandleHealth)
 	router.GET("/logs", h.HandleGetLogs)
 	router.DELETE("/logs", h.HandleClearLogs)
+}
+
+func (h *Handler) HandleUpdateTemplate(c *gin.Context) {
+	version, err := updater.UpdateTemplate(h.config, h.logger)
+	if err != nil {
+		h.logger.Error("Failed to update template", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Template updated", "version": version})
+}
+
+func (h *Handler) HandleUpdateInstance(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+		return
+	}
+
+	if err := h.manager.UpdateInstance(id); err != nil {
+		h.logger.Error("Failed to update instance", "id", id, "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "instance updated"})
+}
+
+func (h *Handler) HandleRenameInstance(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+		return
+	}
+
+	var req struct {
+		NewID string `json:"new_id"`
+	}
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+		return
+	}
+
+	if req.NewID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "new_id is required"})
+		return
+	}
+
+	if err := h.manager.RenameInstance(id, req.NewID); err != nil {
+		h.logger.Error("Failed to rename instance", "id", id, "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "instance renamed", "new_id": req.NewID})
+}
+
+func (h *Handler) HandleRemoveInstance(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+		return
+	}
+
+	if err := h.manager.RemoveInstance(id); err != nil {
+		h.logger.Error("Failed to remove instance", "id", id, "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "instance removed", "id": id})
+}
+
+func (h *Handler) HandleInstanceStats(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+		return
+	}
+
+	stats, err := h.manager.GetInstanceStats(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, stats)
+}
+
+func (h *Handler) HandleInstanceLogs(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+		return
+	}
+
+	logPath, err := h.manager.GetInstanceLogPath(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Open file (or wait for it to exist)
+	var file *os.File
+	for i := 0; i < 10; i++ {
+		file, err = os.Open(logPath)
+		if err == nil {
+			break
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "log file not found"})
+		return
+	}
+	defer file.Close()
+
+	c.Writer.Header().Set("Content-Type", "text/event-stream")
+	c.Writer.Header().Set("Cache-Control", "no-cache")
+	c.Writer.Header().Set("Connection", "keep-alive")
+	c.Writer.Header().Set("Transfer-Encoding", "chunked")
+
+	reader := bufio.NewReader(file)
+	
+	// Stream existing content + tail
+	c.Stream(func(w io.Writer) bool {
+		// Read line
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				time.Sleep(500 * time.Millisecond)
+				return true // Continue stream
+			}
+			return false // Stop stream on other errors
+		}
+		
+		c.SSEvent("log", line)
+		return true
+	})
+}
+
+func (h *Handler) HandleClearInstanceLogs(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+		return
+	}
+
+	if err := h.manager.ClearInstanceLogs(id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "logs cleared"})
 }
 
 func (h *Handler) HandleHealth(c *gin.Context) {
@@ -92,4 +258,21 @@ func (h *Handler) HandleStopInstance(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "instance stopped", "id": id})
+}
+
+func (h *Handler) HandleStartInstance(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+		return
+	}
+
+	 err := h.manager.StartInstance(id)
+	if err != nil {
+		h.logger.Error("Failed to start instance", "id", id, "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK,gin.H{"message": "instance started", "id": id})
 }

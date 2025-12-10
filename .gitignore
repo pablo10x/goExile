@@ -45,3 +45,9 @@ coverage.out
 # Large binary files
 *.zip
 server/files/*.zip
+
+# Spawner specific
+spawner/lin/
+spawner/instances/
+spawner/game_server/
+spawner/spawner

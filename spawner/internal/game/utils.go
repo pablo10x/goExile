@@ -26,9 +26,7 @@ func copyDir(src string, dst string) error {
 	if err != nil && !os.IsNotExist(err) {
 		return err
 	}
-	if err == nil {
-		return fmt.Errorf("destination already exists")
-	}
+	// if err == nil { return fmt.Errorf("destination already exists") } -> Removed to allow update/overwrite
 
 	err = os.MkdirAll(dst, si.Mode())
 	if err != nil {

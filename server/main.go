@@ -9,6 +9,7 @@ package main
 
 import (
 	"context"
+	
 	"log"
 	"net/http"
 	"os"
@@ -30,6 +31,9 @@ const (
 
 	// cleanupInterval is how frequently the cleanup loop runs.
 	cleanupInterval = 30 * time.Second
+
+	// healthCheckInterval is how frequently the master server pings spawners for health checks.
+	healthCheckInterval = 10 * time.Second
 )
 
 func main() {
@@ -81,32 +85,13 @@ func run() error {
 			registry.mu.Lock()
 			
 			validCount := 0
-			removedCount := 0
-			client := &http.Client{Timeout: 2 * time.Second}
+			// client := &http.Client{Timeout: 2 * time.Second} // No longer needed for proactive checks
 
 			for i := range loaded {
 				s := loaded[i]
 				
-				// Health check
-				healthURL := fmt.Sprintf("http://%s:%d/health", s.Host, s.Port)
-				resp, err := client.Get(healthURL)
-				isHealthy := false
-				if err == nil {
-					if resp.StatusCode == http.StatusOK {
-						isHealthy = true
-					}
-					resp.Body.Close()
-				}
-
-				if !isHealthy {
-					log.Printf("⚠️ Spawner #%d (%s:%d) unresponsive at startup. Removing from DB.", s.ID, s.Host, s.Port)
-					if err := DeleteSpawnerDB(dbConn, s.ID); err != nil {
-						log.Printf("   -> Failed to delete from DB: %v", err)
-					}
-					removedCount++
-					continue
-				}
-
+				// Health check removed as per user request (rely on heartbeats)
+				
 				copyS := s
 				registry.items[copyS.ID] = &copyS
 				if copyS.ID > maxID {
@@ -116,7 +101,7 @@ func run() error {
 			}
 			registry.nextID = maxID + 1
 			registry.mu.Unlock()
-			log.Printf("Startup: loaded %d active spawners, removed %d unresponsive.", validCount, removedCount)
+			log.Printf("Startup: loaded %d spawners from DB.", validCount)
 		}
 	}
 
@@ -126,6 +111,8 @@ func run() error {
 	// 7. Define API Routes
 	// Spawner interactions (public/internal API) - Secured via API Key if set
 	apiRouter := router.PathPrefix("/api/spawners").Subrouter()
+
+
 	apiKey := os.Getenv("MASTER_API_KEY")
 	if apiKey == "" {
 		apiKey = "your_very_secret_master_api_key_here" // Default API key
@@ -146,7 +133,15 @@ func run() error {
 	apiRouter.HandleFunc("/{id}/logs", GetSpawnerLogs).Methods("GET")
 	apiRouter.HandleFunc("/{id}/logs", ClearSpawnerLogs).Methods("DELETE")
 	apiRouter.HandleFunc("/{id}/instances", ListSpawnerInstances).Methods("GET")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id}", StopSpawnerInstance).Methods("DELETE")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id}/logs", GetInstanceLogs).Methods("GET")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id}/logs", ClearInstanceLogs).Methods("DELETE")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id}/stats", GetInstanceStats).Methods("GET")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id}/start", StartSpawnerInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id}/stop", StopSpawnerInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id}/update", UpdateSpawnerInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id}/rename", RenameSpawnerInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id}", RemoveSpawnerInstance).Methods("DELETE")
+	apiRouter.HandleFunc("/{id}/update-template", UpdateSpawnerTemplate).Methods("POST")
 
 	// Liveness check
 	router.HandleFunc("/health", Health).Methods("GET")
@@ -184,6 +179,9 @@ func run() error {
 	// 8. Start background cleanup
 	go registry.Cleanup(serverTTL, cleanupInterval)
 
+	// 9. Start proactive health checks
+	// go ProactiveHealthCheck(healthCheckInterval)
+
 	// Start Memory Stats Ticker
 	go func() {
 		ticker := time.NewTicker(5 * time.Second)
@@ -193,7 +191,7 @@ func run() error {
 		}
 	}()
 
-	// 9. Start HTTP Server
+	// 10. Start HTTP Server
 	srv := &http.Server{
 		Addr:    ":8081",
 		Handler: StatsMiddleware(router),
@@ -226,3 +224,5 @@ func run() error {
 	log.Println("server stopped")
 	return nil
 }
+
+
