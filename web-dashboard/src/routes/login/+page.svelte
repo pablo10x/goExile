@@ -5,8 +5,8 @@
     import { fade, fly, slide } from 'svelte/transition';
     import { quintOut } from 'svelte/easing';
 
-    let email = '';
-    let password = '';
+    let email = 'admin@example.com';
+    let password = 'admin123';
     let error = '';
     let loading = false;
     let mounted = false;

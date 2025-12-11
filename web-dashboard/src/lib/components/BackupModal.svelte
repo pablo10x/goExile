@@ -118,29 +118,17 @@
         isOpen = false;
     }
     
-    function getConfirmTitle() {
-        switch(confirmAction) {
-            case 'create': return 'Create Backup';
-            case 'restore': return 'Restore Backup';
-            case 'delete': return 'Delete Backup';
-        }
-    }
-
-    function getConfirmMessage() {
-        switch(confirmAction) {
-            case 'create': return 'Are you sure you want to create a new backup? The server must be stopped.';
-            case 'restore': return `Are you sure you want to restore "${confirmTarget}"?\n\n⚠️ WARNING: This will overwrite all current game files!`;
-            case 'delete': return `Are you sure you want to PERMANENTLY delete "${confirmTarget}"?`;
-        }
-    }
+    $: confirmTitle = (confirmAction === 'delete') ? 'Delete Backup' : (confirmAction === 'restore' ? 'Restore Backup' : 'Create Backup');
     
-    function getConfirmBtnText() {
-        switch(confirmAction) {
-            case 'create': return 'Start Backup';
-            case 'restore': return 'Restore Files';
-            case 'delete': return 'Delete Backup';
-        }
-    }
+    $: confirmMessage = (confirmAction === 'delete') 
+        ? `Are you sure you want to PERMANENTLY delete "${confirmTarget}"?` 
+        : ((confirmAction === 'restore') 
+            ? `Are you sure you want to restore "${confirmTarget}"?\n\n⚠️ WARNING: This will overwrite all current game files!` 
+            : 'Are you sure you want to create a new backup? The server must be stopped.');
+
+    $: confirmBtnText = (confirmAction === 'delete') ? 'Delete Backup' : (confirmAction === 'restore' ? 'Restore Files' : 'Start Backup');
+
+    $: isCritical = confirmAction === 'restore' || confirmAction === 'delete';
 </script>
 
 {#if isOpen}
@@ -265,10 +253,10 @@
 
 <ConfirmDialog
     bind:isOpen={isConfirmOpen}
-    title={getConfirmTitle()}
-    message={getConfirmMessage()}
-    confirmText={getConfirmBtnText()}
-    isCritical={confirmAction === 'restore' || confirmAction === 'delete'}
+    title={confirmTitle}
+    message={confirmMessage}
+    confirmText={confirmBtnText}
+    isCritical={isCritical}
     onConfirm={executeAction}
     statusMessage={statusMessage}
     progress={processing ? 100 : null} 
