@@ -15,14 +15,25 @@ import (
 	"sync"
 	"time"
 
+	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/shirou/gopsutil/v3/process"
 )
+
+// HistoryPoint represents a snapshot of resource usage.
+type HistoryPoint struct {
+	Timestamp time.Time `json:"timestamp"`
+	CPU       float64   `json:"cpu"`
+	Memory    uint64    `json:"memory_bytes"`
+	MemoryPct float64   `json:"memory_percent"`
+}
 
 // InstanceStats holds resource usage information.
 type InstanceStats struct {
 	CPUPercent  float64 `json:"cpu_percent"`
 	MemoryUsage uint64  `json:"memory_usage"`
 	DiskUsage   uint64  `json:"disk_usage"`
+	Status      string  `json:"status"`
+	Uptime      int64   `json:"uptime"`
 }
 
 // Instance represents a running game server.
@@ -36,7 +47,12 @@ type Instance struct {
 	StartTime time.Time `json:"start_time"`
 	Path      string    `json:"path"` // Path to this instance's directory
 
+	History []HistoryPoint `json:"-"` // Stored in memory, not serialized in basic list
+
 	cmd *exec.Cmd // Private: command handle for process management
+	
+	proc   *process.Process // Persistent process handle for stats
+	procMu sync.Mutex       // Protects proc usage
 }
 
 // Manager handles the lifecycle of game server processes.
@@ -55,7 +71,88 @@ func NewManager(cfg *config.Config, logger *slog.Logger) *Manager {
 		instances: make(map[string]*Instance),
 		logger:    logger,
 	}
+	m.startStatsCollector()
 	return m
+}
+
+func (m *Manager) startStatsCollector() {
+	// Collect stats immediately in background
+	go m.collectStats()
+
+	// Collect stats every minute
+	ticker := time.NewTicker(1 * time.Minute)
+	go func() {
+		for range ticker.C {
+			m.collectStats()
+		}
+	}()
+}
+
+func (m *Manager) collectStats() {
+	m.mu.RLock()
+	// Create a list of IDs to iterate over to avoid holding the lock during the heavy check?
+	// Actually GetInstanceStats holds the lock.
+	// We need to iterate the map.
+	// Let's get a snapshot of IDs.
+	ids := make([]string, 0, len(m.instances))
+	for id := range m.instances {
+		ids = append(ids, id)
+	}
+	m.mu.RUnlock()
+
+	for _, id := range ids {
+		m.recordInstanceStat(id)
+	}
+}
+
+func (m *Manager) recordInstanceStat(id string) {
+	// 1. Get Stats (computes CPU/Mem)
+	stats, err := m.GetInstanceStats(id)
+	if err != nil || stats.Status != "Running" {
+		return
+	}
+
+	// 2. Calculate Mem Percent (Need System Total)
+	var memTotal uint64 = 1 // Avoid div by zero
+	if v, err := mem.VirtualMemory(); err == nil {
+		memTotal = v.Total
+	}
+	memPct := (float64(stats.MemoryUsage) / float64(memTotal)) * 100
+
+	// 3. Append to History
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	
+	if inst, exists := m.instances[id]; exists {
+		point := HistoryPoint{
+			Timestamp: time.Now(),
+			CPU:       stats.CPUPercent,
+			Memory:    stats.MemoryUsage,
+			MemoryPct: memPct,
+		}
+		inst.History = append(inst.History, point)
+		
+		// Keep last 24h (1440 mins)
+		if len(inst.History) > 1440 {
+			inst.History = inst.History[1:]
+		}
+	}
+}
+
+// GetInstanceHistory returns the historical stats for an instance.
+func (m *Manager) GetInstanceHistory(id string) ([]HistoryPoint, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	inst, exists := m.instances[id]
+	if !exists {
+		return nil, fmt.Errorf("instance not found")
+	}
+	
+	// Return a copy to avoid race conditions
+	history := make([]HistoryPoint, len(inst.History))
+	copy(history, inst.History)
+	return history, nil
 }
 
 // IsBusy returns true if the manager is currently performing a blocking operation.
@@ -343,6 +440,14 @@ func (m *Manager) startProcess(inst *Instance) error {
 	inst.cmd = cmd
 	inst.ProcessID = cmd.Process.Pid
 	inst.Status = "Running"
+	
+	// Create process handle for stats
+	inst.procMu.Lock()
+	if p, err := process.NewProcess(int32(inst.ProcessID)); err == nil {
+		inst.proc = p
+		inst.proc.Percent(0) // Prime CPU calculation
+	}
+	inst.procMu.Unlock()
 
 	// Monitor in background
 	go m.monitorInstance(inst.ID, cmd)
@@ -363,6 +468,11 @@ func (m *Manager) monitorInstance(id string, cmd *exec.Cmd) {
 			instance.Status = "Stopped"
 			instance.ProcessID = 0
 			instance.cmd = nil
+			
+			// Clear process handle
+			instance.procMu.Lock()
+			instance.proc = nil
+			instance.procMu.Unlock()
 
 			// Close firewall port
 			m.closeFirewallPort(instance.Port)
@@ -591,7 +701,13 @@ func (m *Manager) GetInstanceStats(id string) (*InstanceStats, error) {
 		return nil, fmt.Errorf("instance not found")
 	}
 
-	stats := &InstanceStats{}
+	stats := &InstanceStats{
+		Status: inst.Status,
+	}
+
+	if inst.Status == "Running" {
+		stats.Uptime = int64(time.Since(inst.StartTime).Seconds())
+	}
 
 	// Disk Usage
 	var size uint64
@@ -611,16 +727,25 @@ func (m *Manager) GetInstanceStats(id string) (*InstanceStats, error) {
 
 	// Process Stats (if running)
 	if inst.Status == "Running" && inst.ProcessID > 0 {
-		p, err := process.NewProcess(int32(inst.ProcessID))
-		if err == nil {
-			cpu, _ := p.Percent(0)
-			mem, _ := p.MemoryInfo()
+		inst.procMu.Lock()
+		if inst.proc == nil {
+			// Try to recover handle
+			if p, err := process.NewProcess(int32(inst.ProcessID)); err == nil {
+				inst.proc = p
+				inst.proc.Percent(0) // Prime it
+			}
+		}
+		
+		if inst.proc != nil {
+			cpu, _ := inst.proc.Percent(0)
+			mem, _ := inst.proc.MemoryInfo()
 			
 			stats.CPUPercent = cpu
 			if mem != nil {
 				stats.MemoryUsage = mem.RSS
 			}
 		}
+		inst.procMu.Unlock()
 	}
 
 	return stats, nil

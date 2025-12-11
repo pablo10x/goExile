@@ -469,6 +469,7 @@
     spawnerId={spawnerId}
     instanceId={consoleInstanceId}
     onClose={() => isConsoleOpen = false}
+    memTotal={spawner?.mem_total || 0}
 />
 
 <!-- Spawn Confirmation Dialog -->

@@ -373,6 +373,12 @@
         valueGradientClass="from-emerald-400 to-cyan-400"
     />
     <StatsCard 
+        title="🖥️ CPU" 
+        value={$stats.active_spawners} 
+        borderColorClass="border-t-emerald-500"
+        valueGradientClass="from-emerald-400 to-cyan-400"
+    />
+    <StatsCard 
         title="📡 Requests" 
         value={$stats.total_requests} 
         borderColorClass="border-t-blue-500"

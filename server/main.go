@@ -138,6 +138,7 @@ func run() error {
 	apiRouter.HandleFunc("/{id}/instances/{instance_id}/stats", GetInstanceStats).Methods("GET")
 	apiRouter.HandleFunc("/{id}/instances/{instance_id}/start", StartSpawnerInstance).Methods("POST")
 	apiRouter.HandleFunc("/{id}/instances/{instance_id}/stop", StopSpawnerInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id}/restart", RestartSpawnerInstance).Methods("POST")
 	apiRouter.HandleFunc("/{id}/instances/{instance_id}/update", UpdateSpawnerInstance).Methods("POST")
 	apiRouter.HandleFunc("/{id}/instances/{instance_id}/rename", RenameSpawnerInstance).Methods("POST")
 	apiRouter.HandleFunc("/{id}/instances/{instance_id}", RemoveSpawnerInstance).Methods("DELETE")
@@ -145,6 +146,7 @@ func run() error {
 	apiRouter.HandleFunc("/{id}/instances/{instance_id}/restore", RestoreSpawnerInstance).Methods("POST")
 	apiRouter.HandleFunc("/{id}/instances/{instance_id}/backups", ListSpawnerBackups).Methods("GET")
 	apiRouter.HandleFunc("/{id}/instances/{instance_id}/backup/delete", DeleteSpawnerBackup).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id}/stats/history", GetInstanceHistory).Methods("GET")
 	apiRouter.HandleFunc("/{id}/update-template", UpdateSpawnerTemplate).Methods("POST")
 
 	// Liveness check

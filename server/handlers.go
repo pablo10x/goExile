@@ -143,6 +143,7 @@ func SpawnInstance(w http.ResponseWriter, r *http.Request) {
 	}
 	req.Header.Set("Content-Type", "application/json")
 
+	// Increased timeout to 30s to prevent context deadline exceeded on slower networks
 	client := &http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -153,7 +154,7 @@ func SpawnInstance(w http.ResponseWriter, r *http.Request) {
 
 	body, _ := io.ReadAll(resp.Body)
 	
-w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(resp.StatusCode)
 	w.Write(body)
 }
@@ -189,7 +190,7 @@ func GetSpawnerLogs(w http.ResponseWriter, r *http.Request) {
 
 	body, _ := io.ReadAll(resp.Body)
 	
-w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(resp.StatusCode)
 	w.Write(body)
 }
@@ -285,7 +286,7 @@ func UpdateSpawnerTemplate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := &http.Client{Timeout: 300 * time.Second}
+	client := &http.Client{Timeout: 300 * time.Second} // Long timeout for download
 	resp, err := client.Do(req)
 	if err != nil {
 		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
@@ -326,7 +327,7 @@ func UpdateSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := &http.Client{Timeout: 300 * time.Second}
+	client := &http.Client{Timeout: 300 * time.Second} // Long timeout for file copy/download
 	resp, err := client.Do(req)
 	if err != nil {
 		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
@@ -361,7 +362,7 @@ func RenameSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 	}
 
 	url := fmt.Sprintf("http://%s:%d/instance/%s/rename", s.Host, s.Port, instanceID)
-	req, err := http.NewRequest("POST", url, r.Body)
+	req, err := http.NewRequest("POST", url, r.Body) // Forward body
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "failed to create request")
 		return
@@ -486,13 +487,58 @@ func StartSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 	}
 
 	url := fmt.Sprintf("http://%s:%d/instance/%s/start", s.Host, s.Port, instanceID)
+	req, err := http.NewRequest("POST", url, nil) // Changed to POST method
+	if err != nil {
+		writeError(w, r, http.StatusInternalServerError, "failed to create request")
+		return
+	}
+	// Add content type if the spawner expects a body, even an empty one.
+	// For now, assuming no specific body is needed for a simple start.
+	// req.Header.Set("Content-Type", "application/json") 
+
+
+	client := &http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
+		return
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(resp.StatusCode)
+	w.Write(body)
+}
+
+// RestartSpawnerInstance restarts a specific game instance on a spawner.
+func RestartSpawnerInstance(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+	id, err := parseID(vars["id"])
+	if err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	instanceID := vars["instance_id"]
+	if instanceID == "" {
+		writeError(w, r, http.StatusBadRequest, "missing instance_id")
+		return
+	}
+
+	s, ok := registry.Get(id)
+	if !ok {
+		writeError(w, r, http.StatusNotFound, "spawner not found")
+		return
+	}
+
+	url := fmt.Sprintf("http://%s:%d/instance/%s/restart", s.Host, s.Port, instanceID)
 	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "failed to create request")
 		return
 	}
 
-	client := &http.Client{Timeout: 5 * time.Second}
+	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
@@ -533,7 +579,10 @@ func GetInstanceLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := &http.Client{}
+	client := &http.Client{} // Default client, no timeout for streaming?
+	// Actually, we need to be careful with timeouts for streams.
+	// But standard http.Client has no default timeout.
+	
 	resp, err := client.Do(req)
 	if err != nil {
 		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
@@ -541,6 +590,7 @@ func GetInstanceLogs(w http.ResponseWriter, r *http.Request) {
 	}
 	defer resp.Body.Close()
 
+	// Copy headers
 	for k, vv := range resp.Header {
 		for _, v := range vv {
 			w.Header().Add(k, v)
@@ -548,8 +598,10 @@ func GetInstanceLogs(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(resp.StatusCode)
 
+	// Stream body
 	flusher, ok := w.(http.Flusher)
 	if !ok {
+		// Fallback for non-flusher
 		io.Copy(w, resp.Body)
 		return
 	}
@@ -649,6 +701,47 @@ func GetInstanceStats(w http.ResponseWriter, r *http.Request) {
 	w.Write(body)
 }
 
+// GetInstanceHistory proxies the history request for a specific game instance.
+func GetInstanceHistory(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := parseID(vars["id"])
+	if err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	instanceID := vars["instance_id"]
+	if instanceID == "" {
+		writeError(w, r, http.StatusBadRequest, "missing instance_id")
+		return
+	}
+
+	s, ok := registry.Get(id)
+	if !ok {
+		writeError(w, r, http.StatusNotFound, "spawner not found")
+		return
+	}
+
+	url := fmt.Sprintf("http://%s:%d/instance/%s/stats/history", s.Host, s.Port, instanceID)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		writeError(w, r, http.StatusInternalServerError, "failed to create request")
+		return
+	}
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
+		return
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(resp.StatusCode)
+	w.Write(body)
+}
+
 // BackupSpawnerInstance creates a backup of a game instance on a spawner.
 func BackupSpawnerInstance(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
@@ -676,7 +769,7 @@ func BackupSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := &http.Client{Timeout: 300 * time.Second}
+	client := &http.Client{Timeout: 300 * time.Second} // Long timeout for backup
 	resp, err := client.Do(req)
 	if err != nil {
 		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
@@ -711,14 +804,14 @@ func RestoreSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 	}
 
 	url := fmt.Sprintf("http://%s:%d/instance/%s/restore", s.Host, s.Port, instanceID)
-	req, err := http.NewRequest("POST", url, r.Body)
+	req, err := http.NewRequest("POST", url, r.Body) // Forward body (filename)
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "failed to create request")
 		return
 	}
     req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{Timeout: 300 * time.Second}
+	client := &http.Client{Timeout: 300 * time.Second} // Long timeout for restore
 	resp, err := client.Do(req)
 	if err != nil {
 		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
@@ -794,7 +887,7 @@ func DeleteSpawnerBackup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	url := fmt.Sprintf("http://%s:%d/instance/%s/backup/delete", s.Host, s.Port, instanceID)
-	req, err := http.NewRequest("POST", url, r.Body)
+	req, err := http.NewRequest("POST", url, r.Body) // Forward body (filename)
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "failed to create request")
 		return
@@ -850,6 +943,7 @@ func ClearErrorsAPI(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"message": "Error log cleared"})
 }
 
+// HandleLogin processes login requests.
 func HandleLogin(w http.ResponseWriter, r *http.Request, authConfig AuthConfig, sessionStore *SessionStore) {
 	if r.Method == http.MethodGet {
 		writeError(w, r, http.StatusMethodNotAllowed, "GET login not supported. Please POST credentials.")
@@ -919,4 +1013,3 @@ func HandleLogout(w http.ResponseWriter, r *http.Request, sessionStore *SessionS
 
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
-// HandleLogin processes login requests.

@@ -33,9 +33,11 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 	router.POST("/instance/:id/stop", h.HandleStopInstance)
 	router.DELETE("/instance/:id", h.HandleRemoveInstance)
 	router.POST("/instance/:id/start", h.HandleStartInstance)
+	router.POST("/instance/:id/restart", h.HandleRestartInstance)
 	router.POST("/instance/:id/update", h.HandleUpdateInstance)
 	router.POST("/instance/:id/rename", h.HandleRenameInstance)
 	router.GET("/instance/:id/stats", h.HandleInstanceStats)
+	router.GET("/instance/:id/stats/history", h.HandleInstanceHistory)
 	router.GET("/instance/:id/logs", h.HandleInstanceLogs)
 	router.DELETE("/instance/:id/logs", h.HandleClearInstanceLogs)
 	router.GET("/health", h.HandleHealth)
@@ -56,8 +58,6 @@ func (h *Handler) HandleUpdateTemplate(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	// The manager.UpdateTemplate function returns the version that is now active.
-	// If it was already up to date, it returns the current version and no error.
 	localVersion := ""
 	versionFile := filepath.Join(h.config.GameInstallDir, "version.txt")
 	if content, err := os.ReadFile(versionFile); err == nil {
@@ -65,7 +65,7 @@ func (h *Handler) HandleUpdateTemplate(c *gin.Context) {
 	}
 
 	message := "Template updated."
-	if localVersion == updatedVersion { // If UpdateTemplate returned the same version as currently on disk, it means no actual change occurred.
+	if localVersion == updatedVersion {
 		message = "Template already up to date."
 	}
 	c.JSON(http.StatusOK, gin.H{"message": message, "version": updatedVersion})
@@ -132,6 +132,59 @@ func (h *Handler) HandleRemoveInstance(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "instance removed", "id": id})
 }
 
+func (h *Handler) HandleStopInstance(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+		return
+	}
+
+	if err := h.manager.StopInstance(id); err != nil {
+		h.logger.Error("Failed to stop instance", "id", id, "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "instance stopped", "id": id})
+}
+
+func (h *Handler) HandleStartInstance(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+		return
+	}
+
+	 err := h.manager.StartInstance(id)
+	if err != nil {
+		h.logger.Error("Failed to start instance", "id", id, "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK,gin.H{"message": "instance started", "id": id})
+}
+
+func (h *Handler) HandleRestartInstance(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+		return
+	}
+
+    // Try stop (ignore error if not running)
+    h.manager.StopInstance(id)
+    
+    // Start
+    if err := h.manager.StartInstance(id); err != nil {
+        h.logger.Error("Failed to start instance during restart", "id", id, "error", err)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+	c.JSON(http.StatusOK, gin.H{"message": "instance restarted", "id": id})
+}
+
 func (h *Handler) HandleInstanceStats(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -148,6 +201,22 @@ func (h *Handler) HandleInstanceStats(c *gin.Context) {
 	c.JSON(http.StatusOK, stats)
 }
 
+func (h *Handler) HandleInstanceHistory(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+		return
+	}
+
+	history, err := h.manager.GetInstanceHistory(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"history": history})
+}
+
 func (h *Handler) HandleInstanceLogs(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -161,7 +230,6 @@ func (h *Handler) HandleInstanceLogs(c *gin.Context) {
 		return
 	}
 
-	// Open file (or wait for it to exist)
 	var file *os.File
 	for i := 0; i < 10; i++ {
 		file, err = os.Open(logPath)
@@ -183,18 +251,15 @@ func (h *Handler) HandleInstanceLogs(c *gin.Context) {
 
 	reader := bufio.NewReader(file)
 	
-	// Stream existing content + tail
 	c.Stream(func(w io.Writer) bool {
-		// Read line
 		line, err := reader.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
 				time.Sleep(500 * time.Millisecond)
-				return true // Continue stream
+				return true
 			}
-			return false // Stop stream on other errors
+			return false
 		}
-		
 		c.SSEvent("log", line)
 		return true
 	})
@@ -219,7 +284,7 @@ func (h *Handler) HandleHealth(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status": "online",
 		"region": h.config.Region,
-		"uptime": "OK", // Could add real uptime
+		"uptime": "OK", 
 	})
 }
 
@@ -263,126 +328,93 @@ func (h *Handler) HandleListInstances(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"instances": instances})
 }
 
-func (h *Handler) HandleStopInstance(c *gin.Context) {
-	id := c.Param("id")
-	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
-		return
-	}
-
-	if err := h.manager.StopInstance(id); err != nil {
-		h.logger.Error("Failed to stop instance", "id", id, "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "instance stopped", "id": id})
-}
-
-func (h *Handler) HandleStartInstance(c *gin.Context) {
-	id := c.Param("id")
-	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
-		return
-	}
-
-	 err := h.manager.StartInstance(id)
-	if err != nil {
-		h.logger.Error("Failed to start instance", "id", id, "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK,gin.H{"message": "instance started", "id": id})
-}
-
 func (h *Handler) HandleBackupInstance(c *gin.Context) {
-	id := c.Param("id")
-	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
-		return
-	}
+    id := c.Param("id")
+    if id == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+        return
+    }
 
-	if err := h.manager.BackupInstance(id); err != nil {
-		h.logger.Error("Failed to backup instance", "id", id, "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+    if err := h.manager.BackupInstance(id); err != nil {
+        h.logger.Error("Failed to backup instance", "id", id, "error", err)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
 
-	c.JSON(http.StatusOK, gin.H{"message": "backup created"})
+    c.JSON(http.StatusOK, gin.H{"message": "backup created"})
 }
 
 func (h *Handler) HandleRestoreInstance(c *gin.Context) {
-	id := c.Param("id")
-	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
-		return
-	}
+    id := c.Param("id")
+    if id == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+        return
+    }
 
-	var req struct {
-		Filename string `json:"filename"`
-	}
-	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
-		return
-	}
+    var req struct {
+        Filename string `json:"filename"`
+    }
+    if err := c.BindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+        return
+    }
 
-	if req.Filename == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "filename is required"})
-		return
-	}
+    if req.Filename == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "filename is required"})
+        return
+    }
 
-	if err := h.manager.RestoreInstance(id, req.Filename); err != nil {
-		h.logger.Error("Failed to restore instance", "id", id, "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+    if err := h.manager.RestoreInstance(id, req.Filename); err != nil {
+        h.logger.Error("Failed to restore instance", "id", id, "error", err)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
 
-	c.JSON(http.StatusOK, gin.H{"message": "instance restored"})
-}
-
-func (h *Handler) HandleDeleteBackup(c *gin.Context) {
-	id := c.Param("id")
-	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
-		return
-	}
-
-	var req struct {
-		Filename string `json:"filename"`
-	}
-	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
-		return
-	}
-
-	if req.Filename == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "filename is required"})
-		return
-	}
-
-	if err := h.manager.DeleteBackup(id, req.Filename); err != nil {
-		h.logger.Error("Failed to delete backup", "id", id, "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "backup deleted"})
+    c.JSON(http.StatusOK, gin.H{"message": "instance restored"})
 }
 
 func (h *Handler) HandleListBackups(c *gin.Context) {
-	id := c.Param("id")
-	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
-		return
-	}
+    id := c.Param("id")
+    if id == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+        return
+    }
 
-	backups, err := h.manager.ListBackups(id)
-	if err != nil {
-		h.logger.Error("Failed to list backups", "id", id, "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+    backups, err := h.manager.ListBackups(id)
+    if err != nil {
+        h.logger.Error("Failed to list backups", "id", id, "error", err)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
 
-	c.JSON(http.StatusOK, gin.H{"backups": backups})
+    c.JSON(http.StatusOK, gin.H{"backups": backups})
+}
+
+func (h *Handler) HandleDeleteBackup(c *gin.Context) {
+    id := c.Param("id")
+    if id == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+        return
+    }
+
+    var req struct {
+        Filename string `json:"filename"`
+    }
+    if err := c.BindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+        return
+    }
+
+    if req.Filename == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "filename is required"})
+        return
+    }
+
+    if err := h.manager.DeleteBackup(id, req.Filename); err != nil {
+        h.logger.Error("Failed to delete backup", "id", id, "error", err)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"message": "backup deleted"})
 }
