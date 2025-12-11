@@ -44,6 +44,7 @@ type Manager struct {
 	cfg       *config.Config
 	instances map[string]*Instance // Key is ID (string)
 	mu        sync.RWMutex         // RWMutex for better concurrency
+	busy      bool                 // If true, manager is performing a global operation (update)
 	logger    *slog.Logger
 }
 
@@ -55,6 +56,33 @@ func NewManager(cfg *config.Config, logger *slog.Logger) *Manager {
 		logger:    logger,
 	}
 	return m
+}
+
+// IsBusy returns true if the manager is currently performing a blocking operation.
+func (m *Manager) IsBusy() bool {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.busy
+}
+
+// UpdateTemplate wraps the updater logic and sets the busy state.
+func (m *Manager) UpdateTemplate() (string, error) {
+	m.mu.Lock()
+	if m.busy {
+		m.mu.Unlock()
+		return "", fmt.Errorf("spawner is already busy")
+	}
+	m.busy = true
+	m.mu.Unlock()
+
+	defer func() {
+		m.mu.Lock()
+		m.busy = false
+		m.mu.Unlock()
+	}()
+
+	// Call updater (this is blocking and time consuming)
+	return updater.UpdateTemplate(m.cfg, m.logger)
 }
 
 // RestoreInstances loads state from disk and restarts servers that should be running.
@@ -88,6 +116,10 @@ func (m *Manager) RestoreInstances() error {
 func (m *Manager) Spawn(ctx context.Context) (*Instance, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
+	if m.busy {
+		return nil, fmt.Errorf("spawner is busy updating")
+	}
 
 	port, err := m.findAvailablePort()
 	if err != nil {
@@ -158,6 +190,10 @@ func (m *Manager) UpdateInstance(id string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	if m.busy {
+		return fmt.Errorf("spawner is busy updating")
+	}
+
 	inst, exists := m.instances[id]
 	if !exists {
 		return fmt.Errorf("instance not found")
@@ -167,9 +203,6 @@ func (m *Manager) UpdateInstance(id string) error {
 	if inst.Status == "Running" && inst.cmd != nil && inst.cmd.Process != nil {
 		m.logger.Info("Stopping instance for update", "id", id)
 		_ = inst.cmd.Process.Kill()
-		// Wait for process to exit to release file locks?
-		// In a real scenario, we should wait. But here we might just proceed.
-		// Windows might lock files.
 		inst.cmd.Wait() // Wait for exit
 		inst.Status = "Stopped"
 		inst.ProcessID = 0
@@ -177,11 +210,18 @@ func (m *Manager) UpdateInstance(id string) error {
 	}
 
 	// Update local template if needed
+	// NOTE: We don't call UpdateTemplate here because it would trigger busy state recursively if we implemented it that way.
+	// But updater.UpdateTemplate is safe to call if we are already holding lock? No, updater.UpdateTemplate takes time.
+	// We should probably rely on the global template being updated separately, OR call it here but we are holding the lock.
+	// If we hold the lock during download, EVERYTHING freezes.
+	// So we should NOT call updater.UpdateTemplate inside UpdateInstance if possible, or we accept the freeze.
+	// For now, keeping original logic but without setting global busy flag since this is a specific instance update.
+	// However, if we want to ensure template is fresh, we might need to. 
+	// Let's assume UpdateInstance uses the *current* template. 
+	// The original code called updater.UpdateTemplate. I will keep it but be aware it blocks.
+	
 	if _, err := updater.UpdateTemplate(m.cfg, m.logger); err != nil {
 		m.logger.Warn("Failed to update template from master", "error", err)
-		// Continue anyway with existing template? Or fail?
-		// Better to fail if the user explicitly requested an update.
-		// But maybe network is down. Let's fail to be safe.
 		inst.Status = "Error"
 		m.saveStateInternal()
 		return fmt.Errorf("failed to pull update from master: %w", err)
@@ -204,6 +244,10 @@ func (m *Manager) UpdateInstance(id string) error {
 func (m *Manager) RenameInstance(id string, newID string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
+	if m.busy {
+		return fmt.Errorf("spawner is busy updating")
+	}
 
 	if _, exists := m.instances[newID]; exists {
 		return fmt.Errorf("instance with ID %s already exists", newID)
@@ -284,10 +328,15 @@ func (m *Manager) startProcess(inst *Instance) error {
 	}
 	defer logFile.Close() // Close parent's handle, child inherits it
 
+	// Open firewall port
+	m.openFirewallPort(inst.Port)
+
 	cmd := newGameCmd(absBinaryPath, args, logFile)
 	cmd.Dir = inst.Path
 
 	if err := cmd.Start(); err != nil {
+		// Failed to start, close port to be clean
+		m.closeFirewallPort(inst.Port)
 		return fmt.Errorf("failed to start process %s: %w", absBinaryPath, err)
 	}
 
@@ -315,6 +364,9 @@ func (m *Manager) monitorInstance(id string, cmd *exec.Cmd) {
 			instance.ProcessID = 0
 			instance.cmd = nil
 
+			// Close firewall port
+			m.closeFirewallPort(instance.Port)
+
 			exitCode := 0
 			if err != nil {
 				var exitError *exec.ExitError
@@ -336,6 +388,11 @@ func (m *Manager) monitorInstance(id string, cmd *exec.Cmd) {
 // StopInstance kills a specific game server and waits for it to stop.
 func (m *Manager) StopInstance(id string) error {
 	m.mu.Lock()
+	if m.busy {
+		m.mu.Unlock()
+		return fmt.Errorf("spawner is busy updating")
+	}
+
 	instance, exists := m.instances[id]
 	if !exists {
 		m.mu.Unlock()
@@ -385,6 +442,10 @@ func (m *Manager) RemoveInstance(id string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	if m.busy {
+		return fmt.Errorf("spawner is busy updating")
+	}
+
 	inst, exists := m.instances[id]
 	if !exists {
 		return fmt.Errorf("instance not found")
@@ -410,6 +471,10 @@ func (m *Manager) RemoveInstance(id string) error {
 func (m *Manager) StartInstance(id string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
+	if m.busy {
+		return fmt.Errorf("spawner is busy updating")
+	}
 
 	instance, exists := m.instances[id]
 	if !exists {
@@ -595,4 +660,183 @@ func (m *Manager) findAvailablePort() (int, error) {
 		}
 	}
 	return 0, fmt.Errorf("no available ports in range %d-%d", m.cfg.MinGamePort, m.cfg.MaxGamePort)
+}
+
+func (m *Manager) openFirewallPort(port int) {
+	cmd := exec.Command("ufw", "allow", fmt.Sprintf("%d", port))
+	if out, err := cmd.CombinedOutput(); err != nil {
+		m.logger.Error("Failed to open firewall port", "port", port, "error", err, "output", string(out))
+	} else {
+		m.logger.Info("Opened firewall port", "port", port)
+	}
+}
+
+func (m *Manager) closeFirewallPort(port int) {
+	cmd := exec.Command("ufw", "delete", "allow", fmt.Sprintf("%d", port))
+	if out, err := cmd.CombinedOutput(); err != nil {
+		m.logger.Error("Failed to close firewall port", "port", port, "error", err, "output", string(out))
+	} else {
+		m.logger.Info("Closed firewall port", "port", port)
+	}
+}
+
+// BackupInstance creates a zip backup of the instance directory.
+func (m *Manager) BackupInstance(id string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.busy {
+		return fmt.Errorf("spawner is busy updating")
+	}
+
+	inst, exists := m.instances[id]
+	if !exists {
+		return fmt.Errorf("instance not found")
+	}
+
+	if inst.Status == "Running" {
+		return fmt.Errorf("instance must be stopped to backup")
+	}
+
+	backupDir := filepath.Join(inst.Path, "backups")
+	if err := os.MkdirAll(backupDir, 0755); err != nil {
+		return fmt.Errorf("failed to create backup dir: %w", err)
+	}
+
+	timestamp := time.Now().Format("2006-01-02_15-04-05")
+    version := inst.Version
+    if version == "" {
+        version = "unknown"
+    }
+    // Clean version string
+    version = strings.ReplaceAll(version, " ", "_")
+	filename := fmt.Sprintf("backup_%s_v%s.zip", timestamp, version)
+	backupPath := filepath.Join(backupDir, filename)
+
+	m.logger.Info("Creating backup", "id", id, "file", filename)
+
+	// Exclude "backups" folder and log files
+	excludes := []string{"backups", "gameserver.log"}
+	if err := zipDir(inst.Path, backupPath, excludes); err != nil {
+		return fmt.Errorf("backup failed: %w", err)
+	}
+
+	return nil
+}
+
+// RestoreInstance restores a backup, overwriting current files.
+func (m *Manager) RestoreInstance(id string, filename string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.busy {
+		return fmt.Errorf("spawner is busy updating")
+	}
+
+	inst, exists := m.instances[id]
+	if !exists {
+		return fmt.Errorf("instance not found")
+	}
+
+	if inst.Status == "Running" {
+		return fmt.Errorf("instance must be stopped to restore")
+	}
+
+	backupDir := filepath.Join(inst.Path, "backups")
+	backupPath := filepath.Join(backupDir, filename)
+
+	if _, err := os.Stat(backupPath); os.IsNotExist(err) {
+		return fmt.Errorf("backup file not found")
+	}
+
+	m.logger.Info("Restoring backup", "id", id, "file", filename)
+
+	// Wipe directory except backups
+	entries, err := os.ReadDir(inst.Path)
+	if err != nil {
+		return fmt.Errorf("failed to read directory: %w", err)
+	}
+	for _, entry := range entries {
+		if entry.Name() == "backups" {
+			continue
+		}
+		os.RemoveAll(filepath.Join(inst.Path, entry.Name()))
+	}
+
+	// Unzip
+	if err := unzipDir(backupPath, inst.Path); err != nil {
+		return fmt.Errorf("restore failed: %w", err)
+	}
+
+    // Refresh version info from the restored files
+    inst.Version = m.readVersionFile(inst.Path)
+    m.saveStateInternal()
+
+	return nil
+}
+
+// DeleteBackup deletes a specific backup file.
+func (m *Manager) DeleteBackup(id string, filename string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.busy {
+		return fmt.Errorf("spawner is busy updating")
+	}
+
+	inst, exists := m.instances[id]
+	if !exists {
+		return fmt.Errorf("instance not found")
+	}
+
+	backupPath := filepath.Join(inst.Path, "backups", filename)
+	// Security check to prevent directory traversal
+    if filepath.Dir(backupPath) != filepath.Join(inst.Path, "backups") {
+         return fmt.Errorf("invalid filename")
+    }
+
+	if _, err := os.Stat(backupPath); os.IsNotExist(err) {
+		return fmt.Errorf("backup file not found")
+	}
+
+	m.logger.Info("Deleting backup", "id", id, "file", filename)
+	if err := os.Remove(backupPath); err != nil {
+		return fmt.Errorf("failed to delete backup: %w", err)
+	}
+
+	return nil
+}
+
+// ListBackups returns a list of backup files for an instance.
+func (m *Manager) ListBackups(id string) ([]map[string]interface{}, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	inst, exists := m.instances[id]
+	if !exists {
+		return nil, fmt.Errorf("instance not found")
+	}
+
+	backupDir := filepath.Join(inst.Path, "backups")
+	if _, err := os.Stat(backupDir); os.IsNotExist(err) {
+		return []map[string]interface{}{}, nil
+	}
+
+	entries, err := os.ReadDir(backupDir)
+	if err != nil {
+		return nil, err
+	}
+
+	backups := []map[string]interface{}{}
+	for _, entry := range entries {
+		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".zip") {
+			info, _ := entry.Info()
+			backups = append(backups, map[string]interface{}{
+				"filename": entry.Name(),
+				"size":     info.Size(),
+				"date":     info.ModTime(),
+			})
+		}
+	}
+	return backups, nil
 }

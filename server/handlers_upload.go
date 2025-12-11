@@ -14,6 +14,7 @@ import (
 
 // ServeGameServerFile serves the currently active game_server.zip to spawners.
 func ServeGameServerFile(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("ServeGameServerFile: Request received")
 	// If DB is connected, try to find the active version
 	var filename string = "game_server.zip" // default fallback
 	
@@ -21,20 +22,29 @@ func ServeGameServerFile(w http.ResponseWriter, r *http.Request) {
 		active, err := GetActiveServerVersion(dbConn)
 		if err != nil {
 			// Log error but attempt fallback
-			fmt.Printf("Error getting active version: %v\n", err)
+			fmt.Printf("ServeGameServerFile: Error getting active version: %v\n", err)
 		} else if active != nil {
+			fmt.Printf("ServeGameServerFile: Found active version: %s (File: %s)\n", active.Version, active.Filename)
 			filename = active.Filename
 			w.Header().Set("X-Game-Version", active.Version)
+			w.Header().Set("Access-Control-Expose-Headers", "X-Game-Version") // Ensure CORS doesn't block it
+		} else {
+			fmt.Println("ServeGameServerFile: No active version found in DB")
 		}
+	} else {
+		fmt.Println("ServeGameServerFile: DB not connected")
 	}
 
 	path := filepath.Join("files", filename)
+	fmt.Printf("ServeGameServerFile: Serving file at path: %s\n", path)
 	
 	// Check if file exists
 	if _, err := os.Stat(path); os.IsNotExist(err) {
+		fmt.Printf("ServeGameServerFile: File not found: %s\n", path)
 		// Try fallback if active version is missing
 		if filename != "game_server.zip" {
 			path = filepath.Join("files", "game_server.zip")
+			fmt.Printf("ServeGameServerFile: Trying fallback: %s\n", path)
 			if _, err := os.Stat(path); os.IsNotExist(err) {
 				http.Error(w, "No game server package available", http.StatusNotFound)
 				return

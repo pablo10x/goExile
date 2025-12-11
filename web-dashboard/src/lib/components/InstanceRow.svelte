@@ -1,26 +1,40 @@
 <script lang="ts">
-    import { createEventDispatcher } from 'svelte';
-    import { slide } from 'svelte/transition';
-    import { serverVersions } from '$lib/stores';
-
-    export let spawnerId: number;
-    export let instance: any;
-
-    let expanded = false;
-    let renameValue = instance.id;
-
-    const dispatch = createEventDispatcher();
-
-    // Derived state for version checking
-    $: activeVersion = $serverVersions.find(v => v.is_active);
-    $: isOutdated = activeVersion && instance.version && activeVersion.version !== instance.version;
-
-    function toggle() {
-        expanded = !expanded;
-        if (expanded) {
-            renameValue = instance.id;
+            import { createEventDispatcher } from 'svelte';
+            import { slide } from 'svelte/transition';
+            import { serverVersions } from '$lib/stores';
+            import { compareVersions } from '$lib/semver';
+            import PlayersChart from './PlayersChart.svelte';
+            import BackupModal from './BackupModal.svelte';
+        
+            export let spawnerId: number;
+            export let instance: any;
+        
+            let expanded = false;
+            let renameValue = instance.id;
+            let chartData: any[] = [];
+            let isBackupModalOpen = false;
+        
+            const dispatch = createEventDispatcher();    
+        // Derived state for version checking
+        $: activeVersion = $serverVersions.find(v => v.is_active);
+        $: versionDiff = (activeVersion && instance.version) ? compareVersions(activeVersion.version, instance.version) : 0;
+        $: isOutdated = versionDiff > 0; // Only true if active is NEWER than instance
+    
+        function toggle() {
+            expanded = !expanded;
+            if (expanded) {
+                renameValue = instance.id;
+                if (chartData.length === 0) {
+                    chartData = Array.from({ length: 24 }, (_, i) => {
+                        const time = new Date().getTime() - (23 - i) * 3600000; // Last 24h
+                        return {
+                            timestamp: time,
+                            count: Math.floor(Math.random() * 30) // Random 0-30 players
+                        };
+                    });
+                }
+            }
         }
-    }
 
     function handleRename() {
         if (renameValue !== instance.id) {
@@ -40,7 +54,9 @@
         </div>
         
         <div class="flex-1 grid grid-cols-12 gap-4 items-center">
-            <div class="col-span-3 font-mono text-slate-300 truncate" title={instance.id}>{instance.id}</div>
+            <div class="col-span-3 font-mono text-slate-300 truncate" title={`Exile Gameserver : #${instance.port}`}>
+                <span class="hidden md:inline text-slate-500">Exile Gameserver : </span>#{instance.port}
+            </div>
             <div class="col-span-2 text-slate-400 text-xs truncate flex items-center gap-2">
                 {instance.version || 'Unknown'}
                 {#if isOutdated}
@@ -157,6 +173,14 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
                     Console
                 </button>
+
+                <button 
+                    onclick={() => isBackupModalOpen = true}
+                    class="btn-toolbar bg-slate-700 hover:bg-slate-600 text-slate-200"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v13a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    Backups
+                </button>
                 
                 <button 
                     onclick={() => dispatch('start', { spawnerId, instanceId: instance.id })}
@@ -176,11 +200,11 @@
 
                 <button 
                     onclick={() => dispatch('update', { spawnerId, instanceId: instance.id })}
-                    disabled={!isOutdated}
-                    class="btn-toolbar bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-600/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600/20"
-                    title={isOutdated ? `Update to version ${activeVersion?.version}` : 'Server is up to date'}
+                    disabled={versionDiff === 0}
+                    class={`btn-toolbar disabled:opacity-50 disabled:cursor-not-allowed ${versionDiff > 0 ? 'bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-600/30' : 'bg-orange-600/20 hover:bg-orange-600/30 text-orange-400 border border-orange-600/30'}`}
+                    title={versionDiff > 0 ? `Update to ${activeVersion?.version}` : (versionDiff < 0 ? `Downgrade to ${activeVersion?.version}` : 'Server is up to date')}
                 >
-                    Update
+                    {versionDiff > 0 ? 'Update' : 'Downgrade'}
                 </button>
 
                 <button 
@@ -190,6 +214,15 @@
                 >
                     Delete
                 </button>
+            </div>
+
+            <!-- Stats Chart -->
+            <div class="mb-6 bg-slate-950/30 rounded-lg border border-slate-700/50 p-4">
+                <div class="flex justify-between items-end mb-2">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Player Activity (24h)</h4>
+                    <div class="text-sm font-mono text-blue-400">{chartData[chartData.length-1]?.count || 0} active</div>
+                </div>
+                <PlayersChart data={chartData} height={100} color="#3b82f6" />
             </div>
 
             <!-- Settings Form -->
@@ -228,6 +261,11 @@
             </div>
         </div>
     {/if}
+    <BackupModal 
+        bind:isOpen={isBackupModalOpen} 
+        spawnerId={spawnerId} 
+        instanceId={instance.id} 
+    />
 </div>
 
 <style lang="postcss">

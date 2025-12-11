@@ -28,7 +28,7 @@
 
     // Instance Action Dialog State (Start/Stop)
     let isInstanceActionDialogOpen = false;
-    let instanceActionType: 'start' | 'stop' | 'delete' | 'update' | 'rename' | 'restart' | 'bulk_stop' | 'bulk_restart' | 'bulk_update' | 'update_spawner_build' | null = null;
+    let instanceActionType: 'start' | 'stop' | 'delete' | 'update' | 'rename' | 'restart' | 'bulk_stop' | 'bulk_restart' | 'bulk_update' | 'bulk_start' | 'update_spawner_build' | null = null;
     let instanceActionSpawnerId: number | null = null;
     let instanceActionInstanceId: string | null = null;
     let instanceActionNewID: string | null = null;
@@ -60,10 +60,10 @@
                 if (data.type === 'stats') {
                     stats.set(data.payload);
                 } else if (data.type === 'spawners') {
-                    const list = Array.isArray(data.payload) ? data.payload : Object.values(data.payload);
+                    const list: any[] = Array.isArray(data.payload) ? data.payload : Object.values(data.payload);
                     
                     // Detect new spawners for animation
-                    const currentSpawnerIds = new Set(list.map(s => s.id));
+                    const currentSpawnerIds = new Set<number>(list.map((s: any) => s.id));
                     for (const spawner of list) {
                         if (!previousSpawnerIds.has(spawner.id)) {
                             highlightNewSpawnerId = spawner.id;
@@ -99,10 +99,10 @@
             if (statsRes.ok) stats.set(await statsRes.json());
             if (versionsRes.ok) serverVersions.set(await versionsRes.json());
             if (spawnersRes.ok) {
-                const list = await spawnersRes.json();
+                const list: any[] = await spawnersRes.json();
                 
                 // Initialize previousSpawnerIds on initial fetch
-                previousSpawnerIds = new Set(list.map(s => s.id));
+                previousSpawnerIds = new Set<number>(list.map((s: any) => s.id));
 
                 spawners.set(list);
             }
@@ -186,11 +186,11 @@
         isInstanceActionDialogOpen = true;
     }
 
-    function openUpdateSpawnerBuildDialog(spawnerId: number) {
+    function openUpdateSpawnerBuildDialog(event: CustomEvent<number>) {
         instanceActionType = 'update_spawner_build';
-        instanceActionSpawnerId = spawnerId;
+        instanceActionSpawnerId = event.detail;
         instanceActionDialogTitle = 'Update Spawner Build';
-        instanceActionDialogMessage = `Are you sure you want Spawner #${spawnerId} to download the latest game server build? This might take a while.`;
+        instanceActionDialogMessage = `Are you sure you want Spawner #${instanceActionSpawnerId} to download the latest game server build? This might take a while.`;
         instanceActionConfirmText = 'Update Build';
         isInstanceActionDialogOpen = true;
     }
@@ -326,7 +326,7 @@
             if (instanceActionSpawnerId) {
                 spawnerTableComponent?.refreshSpawner(instanceActionSpawnerId);
             }
-        } catch (e) {
+        } catch (e: any) {
             console.error(`Error ${instanceActionType}ing instance:`, e);
             alert(`Failed to ${instanceActionType} instance: ${e.message || 'Unknown error'}`);
         }

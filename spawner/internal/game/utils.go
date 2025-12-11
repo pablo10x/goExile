@@ -1,94 +1,165 @@
 package game
 
 import (
+	"archive/zip"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
-// copyDir recursively copies a directory tree, attempting to preserve permissions.
-// Source directory must exist, destination directory must *not* exist.
-// Symlinks are ignored and skipped.
-func copyDir(src string, dst string) error {
-	src = filepath.Clean(src)
-	dst = filepath.Clean(dst)
-
-	si, err := os.Stat(src)
-	if err != nil {
-		return err
-	}
-	if !si.IsDir() {
-		return fmt.Errorf("source is not a directory")
-	}
-
-	_, err = os.Stat(dst)
-	if err != nil && !os.IsNotExist(err) {
-		return err
-	}
-	// if err == nil { return fmt.Errorf("destination already exists") } -> Removed to allow update/overwrite
-
-	err = os.MkdirAll(dst, si.Mode())
-	if err != nil {
-		return err
-	}
-
-	entries, err := os.ReadDir(src)
-	if err != nil {
-		return err
-	}
-
-	for _, entry := range entries {
-		srcPath := filepath.Join(src, entry.Name())
-		dstPath := filepath.Join(dst, entry.Name())
-
-		if entry.IsDir() {
-			err = copyDir(srcPath, dstPath)
-			if err != nil {
-				return err
-			}
-		} else {
-			// Skip symlinks
-			if entry.Type()&os.ModeSymlink != 0 {
-				continue
-			}
-
-			err = copyFile(srcPath, dstPath)
-			if err != nil {
-				return err
-			}
+// copyDir copies a directory recursively
+func copyDir(src, dst string) error {
+	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
 		}
-	}
 
-	return nil
+		relPath, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+
+		newPath := filepath.Join(dst, relPath)
+
+		if info.IsDir() {
+			return os.MkdirAll(newPath, info.Mode())
+		}
+
+		// Copy file
+		srcFile, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer srcFile.Close()
+
+		dstFile, err := os.Create(newPath)
+		if err != nil {
+			return err
+		}
+		defer dstFile.Close()
+
+		if _, err := io.Copy(dstFile, srcFile); err != nil {
+			return err
+		}
+
+		return os.Chmod(newPath, info.Mode())
+	})
 }
 
-func copyFile(src, dst string) error {
-	in, err := os.Open(src)
+// zipDir compresses a directory into a zip file, excluding specific subdirectories.
+func zipDir(src string, dest string, excludes []string) error {
+	zipFile, err := os.Create(dest)
 	if err != nil {
 		return err
 	}
-	defer in.Close()
+	defer zipFile.Close()
 
-	out, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
+	archive := zip.NewWriter(zipFile)
+	defer archive.Close()
 
-	_, err = io.Copy(out, in)
-	if err != nil {
-		return err
-	}
+	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 
-	si, err := os.Stat(src)
-	if err != nil {
-		return err
-	}
-	err = os.Chmod(dst, si.Mode())
-	if err != nil {
-		return err
-	}
+		// Handle exclusions
+		for _, exclude := range excludes {
+			if strings.Contains(path, exclude) {
+				if info.IsDir() {
+					return filepath.SkipDir
+				}
+				return nil
+			}
+		}
 
+		// Get relative path for header
+		headerPath, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+
+		// Skip the root directory itself
+		if headerPath == "." {
+			return nil
+		}
+
+		// Use forward slashes for zip compatibility
+		headerPath = filepath.ToSlash(headerPath)
+
+		header, err := zip.FileInfoHeader(info)
+		if err != nil {
+			return err
+		}
+		
+		header.Name = headerPath
+		header.Method = zip.Deflate // High compression
+
+		if info.IsDir() {
+			header.Name += "/"
+		}
+
+		writer, err := archive.CreateHeader(header)
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		file, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		_, err = io.Copy(writer, file)
+		return err
+	})
+}
+
+func unzipDir(src, dest string) error {
+	r, err := zip.OpenReader(src)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+
+	for _, f := range r.File {
+		fpath := filepath.Join(dest, f.Name)
+		if !strings.HasPrefix(fpath, filepath.Clean(dest)+string(os.PathSeparator)) {
+			return fmt.Errorf("illegal file path: %s", fpath)
+		}
+
+		if f.FileInfo().IsDir() {
+			os.MkdirAll(fpath, os.ModePerm)
+			continue
+		}
+
+		if err := os.MkdirAll(filepath.Dir(fpath), os.ModePerm); err != nil {
+			return err
+		}
+
+		outFile, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+		if err != nil {
+			return err
+		}
+
+		rc, err := f.Open()
+		if err != nil {
+			outFile.Close()
+			return err
+		}
+
+		_, err = io.Copy(outFile, rc)
+		outFile.Close()
+		rc.Close()
+
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

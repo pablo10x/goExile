@@ -123,7 +123,7 @@ func run() error {
 	//	apiRouter.Use(APIKeyMiddleware(apiKey))
 	}
 
-	apiRouter.HandleFunc("/download", ServeGameServerFile).Methods("GET")
+	apiRouter.HandleFunc("/download", ServeGameServerFile).Methods("GET", "HEAD")
 	apiRouter.HandleFunc("", RegisterSpawner).Methods("POST")
 	apiRouter.HandleFunc("", ListSpawners).Methods("GET") // Maybe this should be public or auth? Keeping consistent
 	apiRouter.HandleFunc("/{id}", GetSpawner).Methods("GET")
@@ -141,6 +141,10 @@ func run() error {
 	apiRouter.HandleFunc("/{id}/instances/{instance_id}/update", UpdateSpawnerInstance).Methods("POST")
 	apiRouter.HandleFunc("/{id}/instances/{instance_id}/rename", RenameSpawnerInstance).Methods("POST")
 	apiRouter.HandleFunc("/{id}/instances/{instance_id}", RemoveSpawnerInstance).Methods("DELETE")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id}/backup", BackupSpawnerInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id}/restore", RestoreSpawnerInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id}/backups", ListSpawnerBackups).Methods("GET")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id}/backup/delete", DeleteSpawnerBackup).Methods("POST")
 	apiRouter.HandleFunc("/{id}/update-template", UpdateSpawnerTemplate).Methods("POST")
 
 	// Liveness check

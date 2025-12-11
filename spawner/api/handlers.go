@@ -6,9 +6,10 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"path/filepath"
 	"spawner/internal/config"
 	"spawner/internal/game"
-	"spawner/internal/updater"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -40,16 +41,34 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 	router.GET("/health", h.HandleHealth)
 	router.GET("/logs", h.HandleGetLogs)
 	router.DELETE("/logs", h.HandleClearLogs)
+	
+	// Backup endpoints
+	router.POST("/instance/:id/backup", h.HandleBackupInstance)
+	router.POST("/instance/:id/restore", h.HandleRestoreInstance)
+	router.GET("/instance/:id/backups", h.HandleListBackups)
+	router.POST("/instance/:id/backup/delete", h.HandleDeleteBackup)
 }
 
 func (h *Handler) HandleUpdateTemplate(c *gin.Context) {
-	version, err := updater.UpdateTemplate(h.config, h.logger)
+	updatedVersion, err := h.manager.UpdateTemplate()
 	if err != nil {
 		h.logger.Error("Failed to update template", "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Template updated", "version": version})
+	// The manager.UpdateTemplate function returns the version that is now active.
+	// If it was already up to date, it returns the current version and no error.
+	localVersion := ""
+	versionFile := filepath.Join(h.config.GameInstallDir, "version.txt")
+	if content, err := os.ReadFile(versionFile); err == nil {
+		localVersion = strings.TrimSpace(string(content))
+	}
+
+	message := "Template updated."
+	if localVersion == updatedVersion { // If UpdateTemplate returned the same version as currently on disk, it means no actual change occurred.
+		message = "Template already up to date."
+	}
+	c.JSON(http.StatusOK, gin.H{"message": message, "version": updatedVersion})
 }
 
 func (h *Handler) HandleUpdateInstance(c *gin.Context) {
@@ -275,4 +294,95 @@ func (h *Handler) HandleStartInstance(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK,gin.H{"message": "instance started", "id": id})
+}
+
+func (h *Handler) HandleBackupInstance(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+		return
+	}
+
+	if err := h.manager.BackupInstance(id); err != nil {
+		h.logger.Error("Failed to backup instance", "id", id, "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "backup created"})
+}
+
+func (h *Handler) HandleRestoreInstance(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+		return
+	}
+
+	var req struct {
+		Filename string `json:"filename"`
+	}
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+		return
+	}
+
+	if req.Filename == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "filename is required"})
+		return
+	}
+
+	if err := h.manager.RestoreInstance(id, req.Filename); err != nil {
+		h.logger.Error("Failed to restore instance", "id", id, "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "instance restored"})
+}
+
+func (h *Handler) HandleDeleteBackup(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+		return
+	}
+
+	var req struct {
+		Filename string `json:"filename"`
+	}
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+		return
+	}
+
+	if req.Filename == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "filename is required"})
+		return
+	}
+
+	if err := h.manager.DeleteBackup(id, req.Filename); err != nil {
+		h.logger.Error("Failed to delete backup", "id", id, "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "backup deleted"})
+}
+
+func (h *Handler) HandleListBackups(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+		return
+	}
+
+	backups, err := h.manager.ListBackups(id)
+	if err != nil {
+		h.logger.Error("Failed to list backups", "id", id, "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"backups": backups})
 }

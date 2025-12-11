@@ -5,6 +5,7 @@
     import { formatBytes } from '$lib/utils';
     import InstanceRow from './InstanceRow.svelte';
     import Dropdown from './Dropdown.svelte';
+    import { compareVersions } from '$lib/semver';
 
     export let spawners: Spawner[] = [];
     export let highlightNewSpawnerId: number | null = null;
@@ -17,7 +18,8 @@
 
     function getOutdatedCount(spawnerId: number) {
         if (!activeInstances[spawnerId] || !activeVersion) return 0;
-        return activeInstances[spawnerId].filter(i => !i.version || i.version !== activeVersion.version).length;
+        // Only count instances that are OLDER than active version
+        return activeInstances[spawnerId].filter(i => i.version && compareVersions(activeVersion.version, i.version) > 0).length;
     }
 
     const dispatch = createEventDispatcher();
@@ -43,7 +45,7 @@
                 console.error('Bulk Update: No active version found.');
                 return;
             }
-            targetInstances = instances.filter(i => !i.version || i.version !== activeVersion.version);
+            targetInstances = instances.filter(i => !i.version || compareVersions(activeVersion.version, i.version) > 0);
         }
 
         console.log(`Dispatching bulk action: ${action} for spawner ${spawnerId}. Target instances:`, targetInstances.map(i => i.id));
@@ -132,10 +134,11 @@
         </thead>
         <tbody class="text-slate-300">
             {#each spawners as spawner}
-                                                        <tr 
-                                                        class="border-t border-slate-700 hover:bg-slate-800/50 transition cursor-pointer {spawner.id === highlightNewSpawnerId ? 'animate-highlight-new-spawner' : ''}" 
-                                                        onclick={() => toggleRow(spawner.id)}
-                                                    >                    <td class="px-4 py-3 text-center text-slate-500">
+                {@const updateAvailable = activeVersion && spawner.game_version !== activeVersion.version}
+                <tr 
+                    class="border-t border-slate-700 hover:bg-slate-800/50 transition cursor-pointer {spawner.id === highlightNewSpawnerId ? 'animate-highlight-new-spawner' : ''}" 
+                    onclick={() => toggleRow(spawner.id)}
+                >                    <td class="px-4 py-3 text-center text-slate-500">
                         <span class="inline-block transition-transform duration-200 {expandedRows.has(spawner.id) ? 'rotate-90' : ''}">▶</span>
                     </td>
                     <td class="px-4 py-3 text-slate-400">#{spawner.id}</td>
@@ -157,13 +160,13 @@
                         {spawner.game_version || 'N/A'}
                     </td>
                     <td class="px-4 py-3 text-right space-x-2" onclick={(e) => e.stopPropagation()}>
-                        <button 
-                            onclick={() => dispatch('updateSpawnerBuild', spawner.id)}
-                            class="px-3 py-1 bg-blue-700 hover:bg-blue-600 text-white rounded text-xs font-semibold transition-colors"
-                            title="Update Spawner's game server template"
+                        <a 
+                            href="/spawners/{spawner.id}"
+                            class="inline-flex items-center gap-2 px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded text-xs font-semibold transition-colors"
                         >
-                            Update Build
-                        </button>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                            Manage Spawner
+                        </a>
                         <button 
                             onclick={() => dispatch('viewLogs', spawner.id)}
                             class="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded text-xs font-semibold transition-colors"

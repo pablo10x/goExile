@@ -45,16 +45,9 @@ func main() {
 	logger.Info("Starting Spawner", "region", cfg.Region, "port", cfg.Port, "master_url", cfg.MasterURL)
 
 	// 2.5 Ensure Game Server Files are Installed
-	spawnerActiveGameVersion := ""
 	if err := updater.EnsureInstalled(cfg, logger); err != nil {
 		logger.Error("Failed to ensure game server files", "error", err)
 		os.Exit(1)
-	} else {
-		// Read the installed version after successful installation/check
-		versionFile := filepath.Join(cfg.GameInstallDir, "version.txt")
-		if content, err := os.ReadFile(versionFile); err == nil {
-			spawnerActiveGameVersion = string(bytes.TrimSpace(content))
-		}
 	}
 
 	// 3. Initialize Game Manager
@@ -70,7 +63,7 @@ func main() {
 	spawnerID := registerLoop(cfg, manager, logger)
 
 	// 5. Start Heartbeat Loop
-	go heartbeatLoop(spawnerID, cfg, manager, logger, spawnerActiveGameVersion)
+	go heartbeatLoop(spawnerID, cfg, manager, logger)
 
 	// 6. Initialize Router
 	gin.SetMode(gin.ReleaseMode)
@@ -168,7 +161,7 @@ func registerLoop(cfg *config.Config, manager *game.Manager, logger *slog.Logger
 }
 
 // heartbeatLoop sends periodic status updates to the Master Server.
-func heartbeatLoop(id int, cfg *config.Config, manager *game.Manager, logger *slog.Logger, gameVersion string) {
+func heartbeatLoop(id int, cfg *config.Config, manager *game.Manager, logger *slog.Logger) {
 	url := fmt.Sprintf("%s/api/spawners/%d/heartbeat", cfg.MasterURL, id)
 	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
@@ -197,16 +190,28 @@ func heartbeatLoop(id int, cfg *config.Config, manager *game.Manager, logger *sl
 			diskTotal = d.Total
 		}
 
+		// Read dynamic game version
+		currentGameVersion := ""
+		versionFile := filepath.Join(cfg.GameInstallDir, "version.txt")
+		if content, err := os.ReadFile(versionFile); err == nil {
+			currentGameVersion = string(bytes.TrimSpace(content))
+		}
+
+		status := "active"
+		if manager.IsBusy() {
+			status = "Updating"
+		}
+
 		payload := map[string]interface{}{
 			"current_instances": len(manager.ListInstances()),
 			"max_instances":     maxInstances,
-			"status":            "active",
+			"status":            status,
 			"cpu_usage":         cpuUsage,
 			"mem_used":          memUsed,
 			"mem_total":         memTotal,
 			"disk_used":         diskUsed,
 			"disk_total":        diskTotal,
-			"game_version":      gameVersion,
+			"game_version":      currentGameVersion,
 		}
 		
 		body, _ := json.Marshal(payload)

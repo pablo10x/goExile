@@ -139,9 +139,11 @@ func UpdateTemplate(cfg *config.Config, logger *slog.Logger) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to check update: %w", err)
 	}
-	resp.Body.Close()
+	defer resp.Body.Close()
 	
 	remoteVersion := resp.Header.Get("X-Game-Version")
+	logger.Info("Update Check", "url", downloadURL, "status", resp.Status, "remote_version_header", remoteVersion, "all_headers", resp.Header)
+
 	if remoteVersion == "" {
 		logger.Warn("Master server did not return X-Game-Version header. Skipping update check.", "current_local", localVersion)
 		return localVersion, nil
