@@ -2,9 +2,10 @@
     import { onMount } from 'svelte';
     import { serverVersions } from '$lib/stores';
     import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+    import { Upload, History, Package, CheckCircle, XCircle, Clock, Trash2, Play } from 'lucide-svelte';
 
     let activeTab = 'upload'; // 'upload' | 'history'
-    
+
     // Upload State
     let fileInput: HTMLInputElement;
     let comment = '';
@@ -12,6 +13,7 @@
     let uploading = false;
     let uploadStatus = '';
     let uploadError = false;
+    let dragOver = false;
 
     // Confirm Dialog State
     let isConfirmOpen = false;
@@ -36,6 +38,37 @@
         loadVersions();
     });
 
+    // Drag and drop handlers
+    function handleDragOver(event: DragEvent) {
+        event.preventDefault();
+        dragOver = true;
+    }
+
+    function handleDragLeave(event: DragEvent) {
+        event.preventDefault();
+        dragOver = false;
+    }
+
+    function handleDrop(event: DragEvent) {
+        event.preventDefault();
+        dragOver = false;
+
+        const files = event.dataTransfer?.files;
+        if (files && files.length > 0) {
+            const file = files[0];
+            if (file.name.endsWith('.zip')) {
+                // Create a new FileList-like object
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                fileInput.files = dt.files;
+                fileInput.dispatchEvent(new Event('change'));
+            } else {
+                uploadStatus = 'Only .zip files are allowed.';
+                uploadError = true;
+            }
+        }
+    }
+
     async function handleUpload() {
         if (!fileInput.files || fileInput.files.length === 0) {
             uploadStatus = 'Please select a file first.';
@@ -46,6 +79,14 @@
         const file = fileInput.files[0];
         if (!file.name.endsWith('.zip')) {
             uploadStatus = 'Only .zip files are allowed.';
+            uploadError = true;
+            return;
+        }
+
+        // Validate version format
+        const semverRegex = /^\d+\.\d+\.\d+$/;
+        if (!semverRegex.test(version.trim())) {
+            uploadStatus = 'Version must be in semantic versioning format (e.g. 1.2.3).';
             uploadError = true;
             return;
         }
@@ -136,197 +177,419 @@
     }
 </script>
 
-<div class="space-y-6">
-    <div class="flex justify-between items-center">
-        <h2 class="text-2xl font-bold text-slate-50">Game Server Files</h2>
-    </div>
-
-    <!-- Tabs -->
-    <div class="border-b border-slate-700">
-        <nav class="-mb-px flex space-x-8">
-            <button 
-                onclick={() => activeTab = 'upload'}
-                class="{activeTab === 'upload' ? 'border-blue-500 text-blue-400' : 'border-transparent text-slate-400 hover:text-slate-300 hover:border-slate-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
-            >
-                Upload New Version
-            </button>
-            <button 
-                onclick={() => activeTab = 'history'}
-                class="{activeTab === 'history' ? 'border-blue-500 text-blue-400' : 'border-transparent text-slate-400 hover:text-slate-300 hover:border-slate-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
-            >
-                Version History
-            </button>
-        </nav>
-    </div>
-
-    {#if activeTab === 'upload'}
-        <div class="card p-8 bg-slate-800/50 border border-slate-700/50 rounded-xl">
-            <p class="text-slate-400 mb-6">
-                Upload a new <code>game_server.zip</code> package here. You can add a comment to describe the changes (e.g., "v1.2.0 - Fixed bugs").
-            </p>
-
-            <div class="max-w-xl space-y-6">
-                <!-- File Input -->
-                <div>
-                    <span class="block text-sm font-medium text-slate-300 mb-2">
-                        Server Package (.zip)
-                    </span>
-                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-700 border-dashed rounded-md hover:border-blue-400 transition-colors bg-slate-900/30">
-                        <div class="space-y-1 text-center">
-                            <svg class="mx-auto h-12 w-12 text-slate-500" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                            <div class="flex text-sm text-slate-400 justify-center">
-                                <label for="file-upload" class="relative cursor-pointer rounded-md font-medium text-blue-400 hover:text-blue-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
-                                    <span>Upload a file</span>
-                                    <input id="file-upload" name="file-upload" type="file" class="sr-only" accept=".zip" bind:this={fileInput} onchange={() => { uploadStatus = ''; }}>
-                                </label>
-                                <p class="pl-1">or drag and drop</p>
-                            </div>
-                            <p class="text-xs text-slate-500">
-                                ZIP up to 100MB
-                            </p>
-                        </div>
-                    </div>
-                    {#if fileInput && fileInput.files && fileInput.files.length > 0}
-                        <div class="mt-2 text-sm text-emerald-400 flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                            </svg>
-                            Selected: {fileInput.files[0].name}
-                        </div>
-                    {/if}
+<!-- Modern Header -->
+<div class="relative mb-8">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div class="space-y-3">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                    <Package class="w-6 h-6 text-white" />
                 </div>
-
-                <!-- Version Input -->
                 <div>
-                    <label for="version" class="block text-sm font-medium text-slate-300 mb-2">
-                        Version (e.g. 1.0.0)
-                    </label>
-                    <input 
-                        type="text" 
-                        id="version" 
-                        bind:value={version}
-                        class="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
-                        placeholder="1.0.0"
-                    />
+                    <h1 class="text-3xl font-bold bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-clip-text text-transparent">Server Files</h1>
+                    <p class="text-slate-400 text-sm font-medium">Manage game server versions and deployments</p>
                 </div>
+            </div>
 
-                <!-- Comment Input -->
-                <div>
-                    <label for="comment" class="block text-sm font-medium text-slate-300 mb-2">
-                        Version Comment
-                    </label>
-                    <textarea 
-                        id="comment" 
-                        bind:value={comment}
-                        rows="3" 
-                        class="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
-                        placeholder="e.g. Added new map, fixed crash on startup..."
-                    ></textarea>
+            <!-- Stats Overview -->
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/50 border border-slate-700/50 backdrop-blur-sm">
+                    <Package class="w-4 h-4 text-indigo-400" />
+                    <span class="text-xs font-semibold text-slate-300">{$serverVersions.length} versions</span>
                 </div>
-
-                <!-- Submit -->
-                <div>
-                    <button 
-                        onclick={handleUpload} 
-                        disabled={uploading}
-                        class="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow-lg shadow-blue-900/20 font-semibold transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
-                    >
-                        {#if uploading}
-                            <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            Uploading...
-                        {:else}
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                            </svg>
-                            Upload Version
-                        {/if}
-                    </button>
-                </div>
-
-                {#if uploadStatus}
-                    <div class={`p-3 rounded-lg text-sm font-medium border flex items-center gap-2 ${uploadError ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
-                        <span>{uploadError ? '⚠️' : '✓'}</span>
-                        {uploadStatus}
+                {#if $serverVersions.some(v => v.is_active)}
+                    <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                        <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                        <span class="text-xs font-semibold text-emerald-400">Active version deployed</span>
                     </div>
                 {/if}
             </div>
         </div>
-    {:else}
-        <div class="card bg-slate-800/30 border border-slate-700/50 rounded-xl overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-slate-800/50 border-b border-slate-700">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Version</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Uploaded</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Filename</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Comment</th>
-                            <th class="px-6 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-700 text-slate-300">
-                        {#each $serverVersions as version}
-                            <tr class="hover:bg-slate-800/30 transition">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    {#if version.is_active}
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-sm shadow-emerald-900/20">
-                                            <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-1.5 animate-pulse"></span>
-                                            Active
-                                        </span>
-                                    {:else}
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-700 text-slate-400">
-                                            Inactive
-                                        </span>
-                                    {/if}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-slate-300 font-medium">
-                                    {version.version || 'Unknown'}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-slate-400">
-                                    {new Date(version.uploaded_at).toLocaleString()}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap font-mono text-xs text-slate-400">
-                                    {version.filename}
-                                </td>
-                                <td class="px-6 py-4 text-slate-300 max-w-xs truncate" title={version.comment}>
-                                    {version.comment || '-'}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                    {#if !version.is_active}
-                                        <button 
-                                            onclick={() => requestActivate(version.id)}
-                                            class="px-3 py-1 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-600/30 rounded-md text-xs font-semibold transition-colors"
-                                        >
-                                            Activate
-                                        </button>
-                                        <button 
-                                            onclick={() => requestDelete(version.id)}
-                                            class="px-3 py-1 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-600/30 rounded-md text-xs font-semibold transition-colors"
-                                        >
-                                            Delete
-                                        </button>
-                                    {:else}
-                                        <span class="text-slate-600 cursor-not-allowed text-xs font-medium px-2">Active</span>
-                                    {/if}
-                                </td>
-                            </tr>
-                        {/each}
-                        {#if $serverVersions.length === 0}
-                            <tr>
-                                <td colspan="5" class="px-6 py-8 text-center text-slate-500">
-                                    No versions uploaded yet.
-                                </td>
-                            </tr>
+    </div>
+</div>
+
+<!-- Enhanced Tabs -->
+<div class="relative mb-8">
+    <div class="flex gap-1 p-1.5 bg-slate-800/40 border border-slate-700/50 rounded-2xl backdrop-blur-sm shadow-lg">
+        <button
+            onclick={() => activeTab = 'upload'}
+            class="group relative flex items-center gap-3 px-6 py-3 rounded-xl transition-all duration-300 overflow-hidden
+            {activeTab === 'upload' ?
+                'bg-gradient-to-r from-indigo-600/20 to-purple-600/20 text-indigo-300 shadow-lg shadow-indigo-500/10 border border-indigo-500/30 backdrop-blur-sm' :
+                'hover:bg-slate-700/50 text-slate-400 hover:text-slate-200 border border-transparent'
+            }"
+        >
+            {#if activeTab === 'upload'}
+                <div class="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-indigo-400 to-purple-400 rounded-r-full shadow-lg"></div>
+                <div class="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-purple-500/5 rounded-xl"></div>
+            {/if}
+            <Upload class="w-5 h-5 transition-all duration-300 group-hover:scale-110 {activeTab === 'upload' ? 'text-indigo-400' : ''}" />
+            <span class="font-semibold tracking-wide relative z-10">Upload Version</span>
+            {#if activeTab === 'upload'}
+                <div class="ml-auto w-2 h-2 bg-indigo-400 rounded-full animate-pulse relative z-10"></div>
+            {/if}
+        </button>
+
+        <button
+            onclick={() => activeTab = 'history'}
+            class="group relative flex items-center gap-3 px-6 py-3 rounded-xl transition-all duration-300 overflow-hidden
+            {activeTab === 'history' ?
+                'bg-gradient-to-r from-indigo-600/20 to-purple-600/20 text-indigo-300 shadow-lg shadow-indigo-500/10 border border-indigo-500/30 backdrop-blur-sm' :
+                'hover:bg-slate-700/50 text-slate-400 hover:text-slate-200 border border-transparent'
+            }"
+        >
+            {#if activeTab === 'history'}
+                <div class="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-indigo-400 to-purple-400 rounded-r-full shadow-lg"></div>
+                <div class="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-purple-500/5 rounded-xl"></div>
+            {/if}
+            <History class="w-5 h-5 transition-all duration-300 group-hover:scale-110 {activeTab === 'history' ? 'text-indigo-400' : ''}" />
+            <span class="font-semibold tracking-wide relative z-10">Version History</span>
+            {#if activeTab === 'history'}
+                <div class="ml-auto w-2 h-2 bg-indigo-400 rounded-full animate-pulse relative z-10"></div>
+            {/if}
+        </button>
+    </div>
+</div>
+
+    {#if activeTab === 'upload'}
+        <!-- Modern Upload Section -->
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-800/40 via-slate-900/40 to-slate-800/40 border border-slate-700/50 backdrop-blur-sm shadow-2xl">
+            <!-- Section Header -->
+            <div class="relative px-8 py-6 border-b border-slate-700/50 bg-gradient-to-r from-slate-800/60 to-slate-900/60 backdrop-blur-sm">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                        <Upload class="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-100">Upload New Version</h2>
+                        <p class="text-sm text-slate-400">Deploy a new game server package to the registry</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Form -->
+            <div class="p-8">
+                <div class="max-w-2xl mx-auto space-y-8">
+                    <!-- Info Banner -->
+                    <div class="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 rounded-2xl p-6">
+                        <div class="flex items-start gap-4">
+                            <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                                <Package class="w-5 h-5 text-white" />
+                            </div>
+                            <div class="space-y-2">
+                                <h3 class="text-lg font-semibold text-slate-100">Package Requirements</h3>
+                                <p class="text-slate-300 text-sm leading-relaxed">
+                                    Upload a <code class="bg-slate-800/50 px-2 py-1 rounded text-xs font-mono">game_server.zip</code> package containing your game server files.
+                                    Include version information and change notes for better tracking.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Enhanced File Upload Area -->
+                    <div class="space-y-4">
+                        <label class="block text-sm font-bold text-slate-200 uppercase tracking-wider">Server Package</label>
+
+                        <div
+                            class="relative group"
+                            ondragover={handleDragOver}
+                            ondragleave={handleDragLeave}
+                            ondrop={handleDrop}
+                        >
+                            <div class={`relative overflow-hidden rounded-2xl border-2 border-dashed transition-all duration-300 p-8 text-center ${
+                                dragOver
+                                    ? 'border-indigo-400 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 scale-[1.02] shadow-2xl shadow-indigo-500/20'
+                                    : 'border-slate-600/50 bg-gradient-to-br from-slate-800/50 to-slate-900/50 hover:border-slate-500/50 hover:bg-gradient-to-br hover:from-slate-800/60 hover:to-slate-900/60'
+                            }`}>
+
+                                <!-- Background Effects -->
+                                <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                                <div class="relative z-10 space-y-4">
+                                    <div class={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 ${
+                                        dragOver
+                                            ? 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-indigo-500/30 scale-110'
+                                            : 'bg-gradient-to-br from-slate-700 to-slate-800 shadow-slate-900/20 group-hover:scale-105'
+                                    }`}>
+                                        <Upload class={`w-8 h-8 transition-colors duration-300 ${
+                                            dragOver ? 'text-white' : 'text-slate-400 group-hover:text-slate-300'
+                                        }`} />
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <h3 class="text-lg font-semibold text-slate-200">
+                                            {dragOver ? 'Drop your package here' : 'Upload Game Server Package'}
+                                        </h3>
+                                        <p class="text-slate-400 text-sm">
+                                            {dragOver ? 'Release to upload the file' : 'Drag & drop your .zip file here, or click to browse'}
+                                        </p>
+                                    </div>
+
+                                    <div class="flex justify-center">
+                                        <label class="group/btn relative">
+                                            <input
+                                                type="file"
+                                                class="sr-only"
+                                                accept=".zip"
+                                                bind:this={fileInput}
+                                                onchange={() => { uploadStatus = ''; }}
+                                            />
+                                            <div class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/25 transition-all duration-300 cursor-pointer group-hover/btn:scale-105 group-active/btn:scale-95">
+                                                Choose File
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    <p class="text-xs text-slate-500">
+                                        Supports ZIP files up to 100MB
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- File Selection Status -->
+                        {#if fileInput && fileInput.files && fileInput.files.length > 0}
+                            <div class="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+                                <div class="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+                                    <CheckCircle class="w-5 h-5 text-white" />
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-semibold text-emerald-300">File Selected</p>
+                                    <p class="text-xs text-emerald-400 font-mono">{fileInput.files[0].name}</p>
+                                </div>
+                                <button
+                                    onclick={() => { fileInput.value = ''; uploadStatus = ''; }}
+                                    class="p-2 text-emerald-400 hover:text-emerald-300 transition-colors"
+                                >
+                                    <XCircle class="w-4 h-4" />
+                                </button>
+                            </div>
                         {/if}
-                    </tbody>
-                </table>
+                    </div>
+
+                    <!-- Version and Comment Inputs -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Version Input -->
+                        <div class="space-y-3">
+                            <label for="version" class="block text-sm font-bold text-slate-200 uppercase tracking-wider">
+                                Version Tag
+                            </label>
+                            <input
+                                type="text"
+                                id="version"
+                                bind:value={version}
+                                pattern="^\d+\.\d+\.\d+$"
+                                title="Version must be in semantic versioning format (e.g. 1.2.3)"
+                                class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700/50 rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-300 backdrop-blur-sm"
+                                placeholder="e.g. 1.2.0"
+                                oninput={(e) => {
+                                    const target = e.target as HTMLInputElement;
+                                    let value = target.value;
+                                    
+                                    // Only allow digits and periods
+                                    value = value.replace(/[^\d.]/g, '');
+                                    
+                                    // Prevent consecutive periods
+                                    value = value.replace(/\.+/g, '.');
+                                    
+                                    // Prevent starting or ending with period
+                                    value = value.replace(/^\.+|\.+$/g, '');
+                                    
+                                    // Limit to semantic versioning format (max 2 periods)
+                                    const parts = value.split('.');
+                                    if (parts.length > 3) {
+                                        value = parts.slice(0, 3).join('.');
+                                    }
+                                    
+                                    target.value = value;
+                                    version = value;
+                                }}
+                            />
+                        </div>
+
+                        <!-- Comment Input -->
+                        <div class="space-y-3 md:col-span-2">
+                            <label for="comment" class="block text-sm font-bold text-slate-200 uppercase tracking-wider">
+                                Release Notes
+                            </label>
+                            <textarea
+                                id="comment"
+                                bind:value={comment}
+                                rows="4"
+                                class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700/50 rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-300 backdrop-blur-sm resize-none"
+                                placeholder="Describe the changes, fixes, and new features in this version..."
+                            ></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Upload Button and Status -->
+                    <div class="space-y-4">
+                        <button
+                            onclick={handleUpload}
+                            disabled={uploading || !fileInput?.files?.length}
+                            class="w-full group relative overflow-hidden bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:from-slate-700 disabled:to-slate-800 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                        >
+                            <div class="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                            {#if uploading}
+                                <div class="relative z-10 w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                <span class="relative z-10 font-semibold">Deploying Version...</span>
+                            {:else}
+                                <Upload class="relative z-10 w-5 h-5" />
+                                <span class="relative z-10 font-semibold">Deploy Version</span>
+                            {/if}
+                        </button>
+
+                        <!-- Upload Status -->
+                        {#if uploadStatus}
+                            <div class={`p-4 rounded-xl border flex items-center gap-3 transition-all duration-300 ${
+                                uploadError
+                                    ? 'bg-red-500/10 border-red-500/20 text-red-300'
+                                    : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'
+                            }`}>
+                                <div class={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                                    uploadError ? 'bg-red-500/20' : 'bg-emerald-500/20'
+                                }`}>
+                                    {#if uploadError}
+                                        <XCircle class="w-5 h-5" />
+                                    {:else}
+                                        <CheckCircle class="w-5 h-5" />
+                                    {/if}
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-semibold">{uploadError ? 'Upload Failed' : 'Upload Successful'}</p>
+                                    <p class="text-sm opacity-90">{uploadStatus}</p>
+                                </div>
+                            </div>
+                        {/if}
+                    </div>
+                </div>
             </div>
         </div>
     {/if}
-</div>
+
+    {#if activeTab === 'history'}
+        <!-- Modern Version History -->
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-800/40 via-slate-900/40 to-slate-800/40 border border-slate-700/50 backdrop-blur-sm shadow-2xl">
+            <!-- Section Header -->
+            <div class="relative px-8 py-6 border-b border-slate-700/50 bg-gradient-to-r from-slate-800/60 to-slate-900/60 backdrop-blur-sm">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                            <History class="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-100">Version History</h2>
+                            <p class="text-sm text-slate-400">Manage deployed server versions and deployments</p>
+                        </div>
+                    </div>
+                    <div class="text-xs text-slate-500 bg-slate-800/50 px-3 py-1 rounded-md border border-slate-700/50">
+                        {$serverVersions.length} total versions
+                    </div>
+                </div>
+            </div>
+
+            <!-- Version List -->
+            <div class="p-6">
+                {#if $serverVersions.length === 0}
+                    <!-- Empty State -->
+                    <div class="flex flex-col items-center justify-center py-16 text-center">
+                        <div class="w-20 h-20 bg-slate-800/30 rounded-full flex items-center justify-center border border-slate-700/30 mb-6">
+                            <Package class="w-10 h-10 opacity-50 text-slate-500" />
+                        </div>
+                        <h3 class="text-xl font-semibold text-slate-400 mb-2">No Versions Yet</h3>
+                        <p class="text-slate-600 max-w-md">Upload your first game server package to get started with version management.</p>
+                        <button
+                            onclick={() => activeTab = 'upload'}
+                            class="mt-6 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/25 transition-all duration-300 flex items-center gap-2"
+                        >
+                            <Upload class="w-5 h-5" />
+                            Upload First Version
+                        </button>
+                    </div>
+                {:else}
+                    <!-- Version Cards Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                        {#each $serverVersions as version}
+                            <div class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/50 backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-indigo-500/10">
+                                <!-- Status Indicator -->
+                                {#if version.is_active}
+                                    <div class="absolute top-4 right-4 z-20">
+                                        <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-sm">
+                                            <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                                            <span class="text-xs font-semibold text-emerald-400">Active</span>
+                                        </div>
+                                    </div>
+                                {/if}
+
+                                <!-- Background Effects -->
+                                <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                                <div class="relative z-10 p-6">
+                                    <!-- Version Header -->
+                                    <div class="flex items-start justify-between mb-4">
+                                        <div class="space-y-1">
+                                            <h3 class="text-lg font-bold text-slate-100">
+                                                v{version.version || 'Unknown'}
+                                            </h3>
+                                            <p class="text-xs text-slate-400 font-mono">
+                                                {version.filename}
+                                            </p>
+                                        </div>
+                                        {#if !version.is_active}
+                                            <div class="px-2 py-1 rounded-md bg-slate-700/50 text-xs text-slate-400 border border-slate-600/30">
+                                                Inactive
+                                            </div>
+                                        {/if}
+                                    </div>
+
+                                    <!-- Upload Info -->
+                                    <div class="space-y-3 mb-6">
+                                        <div class="flex items-center gap-2 text-sm text-slate-400">
+                                            <Clock class="w-4 h-4" />
+                                            <span>Uploaded {new Date(version.uploaded_at).toLocaleDateString()}</span>
+                                        </div>
+                                        {#if version.comment}
+                                            <div class="p-3 bg-slate-800/50 rounded-lg border border-slate-700/30">
+                                                <p class="text-sm text-slate-300 leading-relaxed">{version.comment}</p>
+                                            </div>
+                                        {/if}
+                                    </div>
+
+                                    <!-- Actions -->
+                                    <div class="flex gap-2">
+                                        {#if !version.is_active}
+                                            <button
+                                                onclick={() => requestActivate(version.id)}
+                                                class="flex-1 group/btn relative overflow-hidden bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold py-2.5 px-4 rounded-lg shadow-lg shadow-indigo-500/25 transition-all duration-300 flex items-center justify-center gap-2"
+                                            >
+                                                <div class="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></div>
+                                                <Play class="w-4 h-4 relative z-10" />
+                                                <span class="text-sm relative z-10">Activate</span>
+                                            </button>
+                                            <button
+                                                onclick={() => requestDelete(version.id)}
+                                                class="p-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-lg transition-all duration-300 hover:scale-105"
+                                                title="Delete Version"
+                                            >
+                                                <Trash2 class="w-4 h-4" />
+                                            </button>
+                                        {:else}
+                                            <div class="flex-1 py-2.5 px-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center gap-2">
+                                                <CheckCircle class="w-4 h-4 text-emerald-400" />
+                                                <span class="text-sm font-semibold text-emerald-400">Currently Active</span>
+                                            </div>
+                                        {/if}
+                                    </div>
+                                </div>
+                            </div>
+                        {/each}
+                    </div>
+                {/if}
+            </div>
+        </div>
+    {/if}
+   
+
 
 <ConfirmDialog
     bind:isOpen={isConfirmOpen}

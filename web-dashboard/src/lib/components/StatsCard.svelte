@@ -9,34 +9,72 @@
     export let color: 'blue' | 'emerald' | 'orange' | 'red' | 'purple' = 'blue';
     
     const colorMap = {
-        blue: { border: 'border-blue-500/20', text: 'text-blue-400', bg: 'bg-blue-500/10' },
-        emerald: { border: 'border-emerald-500/20', text: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-        orange: { border: 'border-orange-500/20', text: 'text-orange-400', bg: 'bg-orange-500/10' },
-        red: { border: 'border-red-500/20', text: 'text-red-400', bg: 'bg-red-500/10' },
-        purple: { border: 'border-purple-500/20', text: 'text-purple-400', bg: 'bg-purple-500/10' }
+        blue: {
+            border: 'border-blue-500/30',
+            text: 'text-blue-300',
+            bg: 'bg-gradient-to-br from-blue-500/20 to-blue-600/10',
+            iconBg: 'bg-gradient-to-br from-blue-500 to-blue-600',
+            glow: 'shadow-blue-500/20'
+        },
+        emerald: {
+            border: 'border-emerald-500/30',
+            text: 'text-emerald-300',
+            bg: 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/10',
+            iconBg: 'bg-gradient-to-br from-emerald-500 to-emerald-600',
+            glow: 'shadow-emerald-500/20'
+        },
+        orange: {
+            border: 'border-orange-500/30',
+            text: 'text-orange-300',
+            bg: 'bg-gradient-to-br from-orange-500/20 to-orange-600/10',
+            iconBg: 'bg-gradient-to-br from-orange-500 to-orange-600',
+            glow: 'shadow-orange-500/20'
+        },
+        red: {
+            border: 'border-red-500/30',
+            text: 'text-red-300',
+            bg: 'bg-gradient-to-br from-red-500/20 to-red-600/10',
+            iconBg: 'bg-gradient-to-br from-red-500 to-red-600',
+            glow: 'shadow-red-500/20'
+        },
+        purple: {
+            border: 'border-purple-500/30',
+            text: 'text-purple-300',
+            bg: 'bg-gradient-to-br from-purple-500/20 to-purple-600/10',
+            iconBg: 'bg-gradient-to-br from-purple-500 to-purple-600',
+            glow: 'shadow-purple-500/20'
+        }
     };
     
     $: colors = colorMap[color] || colorMap.blue;
 </script>
 
-<div class={`relative p-5 rounded-xl bg-slate-900/50 border ${colors.border} backdrop-blur-sm transition-all hover:bg-slate-900/80`}>
-    <div class="flex items-center justify-between mb-3">
-        <span class="text-slate-400 text-xs font-bold uppercase tracking-wider">{title}</span>
-        {#if Icon}
-            <div class={`p-2 rounded-lg ${colors.bg}`}>
-                <svelte:component this={Icon} class={`w-4 h-4 ${colors.text}`} />
-            </div>
-        {/if}
-    </div>
-    
-    <div class="flex items-baseline gap-2">
-        <div class="text-2xl font-bold text-slate-100 tabular-nums tracking-tight">
-            {value}
+<div class={`group relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800/60 to-slate-900/60 border ${colors.border} backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl ${colors.glow} cursor-pointer`}>
+    <!-- Background gradient overlay -->
+    <div class={`absolute inset-0 ${colors.bg} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
+
+    <!-- Subtle animated border -->
+    <div class="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+
+    <div class="relative z-10 p-6">
+        <div class="flex items-center justify-between mb-4">
+            <span class="text-slate-400 text-xs font-bold uppercase tracking-wider">{title}</span>
+            {#if Icon}
+                <div class={`p-2.5 rounded-xl ${colors.iconBg} shadow-lg ${colors.glow} transition-transform duration-300 group-hover:scale-110`}>
+                    <svelte:component this={Icon} class="w-5 h-5 text-white" />
+                </div>
+            {/if}
         </div>
-        {#if subValue}
-            <div class={`text-xs ${subValueClass}`}>
-                {@html subValue}
+
+        <div class="space-y-2">
+            <div class="text-3xl font-bold text-slate-100 tabular-nums tracking-tight">
+                {value}
             </div>
-        {/if}
+            {#if subValue}
+                <div class={`text-sm leading-relaxed ${subValueClass}`}>
+                    {@html subValue}
+                </div>
+            {/if}
+        </div>
     </div>
 </div>

@@ -6,8 +6,7 @@
     import StatsCard from '$lib/components/StatsCard.svelte';
     import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
     import InstanceManagerModal from '$lib/components/InstanceManagerModal.svelte';
-    import Drawer from '$lib/components/Drawer.svelte';
-    import LogViewer from '$lib/components/LogViewer.svelte';
+    import LogViewerModal from '$lib/components/LogViewerModal.svelte';
     import Dropdown from '$lib/components/Dropdown.svelte';
     import { serverVersions } from '$lib/stores';
     import { compareVersions } from '$lib/semver';
@@ -453,16 +452,12 @@
     {/if}
 </div>
 
-<!-- Log Drawer -->
-<Drawer 
-    isOpen={isLogDrawerOpen} 
-    onClose={() => isLogDrawerOpen = false} 
-    title={`Spawner #${spawnerId} Logs`}
->
-    {#if spawner}
-        <LogViewer spawnerId={spawnerId} />
-    {/if}
-</Drawer>
+<!-- Log Viewer Modal -->
+<LogViewerModal
+    isOpen={isLogDrawerOpen}
+    spawnerId={spawnerId}
+    onClose={() => isLogDrawerOpen = false}
+/>
 
 <!-- Instance Console Modal -->
 <InstanceManagerModal

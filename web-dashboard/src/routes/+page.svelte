@@ -348,84 +348,164 @@
     }
 </script>
 
-<div class="flex justify-between items-center mb-6">
-    <div>
-        <h1 class="text-2xl font-bold text-slate-50">Dashboard</h1>
-        <div class="flex items-center gap-2 mt-1">
-            <div class={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`}></div>
-            <span class="text-xs font-mono text-slate-400">{connectionStatus}</span>
+<!-- Modern Header -->
+<div class="relative mb-8">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div class="space-y-3">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-clip-text text-transparent">System Dashboard</h1>
+                    <p class="text-slate-400 text-sm font-medium">Monitor and manage your game server infrastructure</p>
+                </div>
+            </div>
+
+            <!-- Connection Status -->
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/50 border border-slate-700/50 backdrop-blur-sm">
+                    <div class={`w-2 h-2 rounded-full transition-all duration-300 ${isConnected ? 'bg-emerald-400 shadow-lg shadow-emerald-400/50 animate-pulse' : 'bg-red-400 shadow-lg shadow-red-400/50'}`}></div>
+                    <span class="text-xs font-semibold text-slate-300">{connectionStatus}</span>
+                </div>
+                <div class="text-xs text-slate-500 font-mono bg-slate-800/30 px-2 py-1 rounded-md border border-slate-700/30">
+                    {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                </div>
+            </div>
         </div>
-    </div>
-    <div class="text-slate-500 text-sm">
-        {new Date().toLocaleDateString()}
     </div>
 </div>
 
-<!-- Stats Grid -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <StatsCard 
-        title="Uptime" 
-        value={formatUptime($stats.uptime)} 
+<!-- Primary Stats Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+    <StatsCard
+        title="System Uptime"
+        value={formatUptime($stats.uptime)}
         Icon={Clock}
         color="blue"
     />
-    <StatsCard 
-        title="Active Spawners" 
-        value={$stats.active_spawners} 
+    <StatsCard
+        title="Active Spawners"
+        value={$stats.active_spawners}
         Icon={Server}
         color="emerald"
     />
-   
-    <StatsCard 
-        title="Total Requests" 
-        value={$stats.total_requests} 
+    <StatsCard
+        title="Total Requests"
+        value={$stats.total_requests}
         Icon={Activity}
         color="purple"
     />
-    <a href="/errors" class="block transition hover:scale-[1.02]">
-        <StatsCard 
-            title="Total Errors" 
-            value={$stats.total_errors} 
+    <a href="/errors" class="block group">
+        <StatsCard
+            title="System Errors"
+            value={$stats.total_errors}
             Icon={AlertCircle}
             color="red"
         />
     </a>
 </div>
 
-<!-- Secondary Stats Row (Network & DB) -->
+<!-- Secondary Stats & Resources -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-    <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
-        <StatsCard 
-            title="Network Traffic" 
-            value="" 
-            subValue={`<span class="text-orange-400">↑ ${formatBytes($stats.bytes_sent)}</span> <span class="text-slate-600 mx-2">|</span> <span class="text-cyan-400">↓ ${formatBytes($stats.bytes_received)}</span>`}
-            Icon={Network}
-            color="orange"
-        />
-        <StatsCard 
-            title="Database Status" 
-            value={$stats.db_connected ? 'Connected' : 'Disconnected'} 
-            Icon={Database}
-            color={$stats.db_connected ? "emerald" : "red"}
-        />
+    <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Network Traffic Card -->
+        <div class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/50 backdrop-blur-sm p-6 hover:border-slate-600/50 transition-all duration-300">
+            <div class="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div class="relative z-10">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <Network class="w-5 h-5 text-white" />
+                    </div>
+                    <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Network</div>
+                </div>
+                <h3 class="text-lg font-bold text-slate-200 mb-2">Traffic Overview</h3>
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-slate-400">Upload</span>
+                        <span class="text-orange-400 font-mono font-semibold">{formatBytes($stats.bytes_sent)}</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-slate-400">Download</span>
+                        <span class="text-cyan-400 font-mono font-semibold">{formatBytes($stats.bytes_received)}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Database Status Card -->
+        <div class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/50 backdrop-blur-sm p-6 hover:border-slate-600/50 transition-all duration-300">
+            <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div class="relative z-10">
+                <div class="flex items-center justify-between mb-4">
+                    <div class={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg ${
+                        $stats.db_connected
+                            ? 'bg-gradient-to-br from-emerald-500 to-emerald-600'
+                            : 'bg-gradient-to-br from-red-500 to-red-600'
+                    }`}>
+                        <Database class={`w-5 h-5 text-white`} />
+                    </div>
+                    <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Database</div>
+                </div>
+                <h3 class="text-lg font-bold text-slate-200 mb-2">Connection Status</h3>
+                <div class="flex items-center gap-2">
+                    <div class={`w-3 h-3 rounded-full ${
+                        $stats.db_connected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'
+                    }`}></div>
+                    <span class={`text-sm font-semibold ${
+                        $stats.db_connected ? 'text-emerald-400' : 'text-red-400'
+                    }`}>
+                        {$stats.db_connected ? 'Connected' : 'Disconnected'}
+                    </span>
+                </div>
+            </div>
+        </div>
     </div>
-    
+
+    <!-- Top Resource Consumers -->
     <div class="lg:col-span-1">
         <TopResourceConsumers limit={5} compact={true} resourceType="cpu" />
     </div>
 </div>
 
-<!-- Spawners Section -->
-<div class="card bg-slate-800/30 border border-slate-700/50">
-    <div class="border-b border-slate-700 px-6 py-4 flex justify-between items-center">
-        <h2 class="text-xl font-bold text-slate-50">📦 Registered Spawners</h2>
-        <span class="text-xs text-slate-500 uppercase tracking-widest font-semibold">Real-time</span>
+<!-- Spawners Management Section -->
+<div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-800/40 via-slate-900/40 to-slate-800/40 border border-slate-700/50 backdrop-blur-sm shadow-2xl">
+    <!-- Section Header -->
+    <div class="relative px-8 py-6 border-b border-slate-700/50 bg-gradient-to-r from-slate-800/60 to-slate-900/60 backdrop-blur-sm">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-slate-100">Spawner Infrastructure</h2>
+                    <p class="text-sm text-slate-400">Manage your distributed game server network</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                    <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                    <span class="text-xs font-semibold text-emerald-400">Live Updates</span>
+                </div>
+                <div class="text-xs text-slate-500 bg-slate-800/50 px-2 py-1 rounded-md border border-slate-700/50">
+                    {$spawners.length} registered
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- Spawner Table -->
     <div class="p-0">
-        <SpawnerTable 
+        <SpawnerTable
             bind:this={spawnerTableComponent}
-            spawners={$spawners} 
-            on:spawn={openSpawnDialog} 
+            spawners={$spawners}
+            on:spawn={openSpawnDialog}
             on:viewLogs={handleViewLogs}
             on:startInstanceRequest={openStartInstanceDialog}
             on:stopInstanceRequest={openStopInstanceDialog}

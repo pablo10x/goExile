@@ -2,6 +2,7 @@
     import { onMount } from 'svelte';
     import { fade } from 'svelte/transition';
     import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+    import { stats } from '$lib/stores';
 
     interface ErrorLog {
         timestamp: string;
@@ -37,12 +38,26 @@
         isConfirmOpen = true;
     }
 
+    async function refreshStats() {
+        try {
+            const res = await fetch('/api/stats');
+            if (res.ok) {
+                const statsData = await res.json();
+                stats.set(statsData);
+            }
+        } catch (e) {
+            console.error('Failed to refresh stats:', e);
+        }
+    }
+
     async function clearErrors() {
         clearing = true;
         try {
             const res = await fetch('/api/errors', { method: 'DELETE' });
             if (res.ok) {
                 errors = [];
+                // Refresh dashboard stats after clearing errors
+                await refreshStats();
             } else {
                 alert('Failed to clear errors');
             }

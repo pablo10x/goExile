@@ -9,6 +9,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"log"
 	"net/http"
@@ -57,10 +58,10 @@ func run() error {
 	// 3. Initialize SSE hub for real-time dashboard updates
 	sseHub := NewSSEHub()
 	go sseHub.Run()
-
+	
 	// 4. Initialize Router
 	router := mux.NewRouter()
-
+	
 	// 5. Initialize Database (optional persistence)
 	// If DB_PATH is not set, defaults to "database/registry.db".
 	// Falls back to in-memory mode if DB connection fails.
@@ -68,7 +69,9 @@ func run() error {
 	if dbPath == "" {
 		dbPath = "database/registry.db"
 	}
-	var err error
+		var err error
+	port := "8081"
+	
 	dbConn, err = InitDB(dbPath)
 	if err != nil {
 		log.Printf("warning: failed to init DB (%s): %v — continuing without persistence", dbPath, err)
@@ -106,7 +109,7 @@ func run() error {
 	}
 
 	// 6. Print configuration summary
-	PrintConfig(8081, dbPath)
+	PrintConfig(port, dbPath)
 
 	// 7. Define API Routes
 	// Spawner interactions (public/internal API) - Secured via API Key if set
@@ -205,19 +208,26 @@ func run() error {
 	}()
 
 	// 10. Start HTTP Server
-	srv := &http.Server{
-		Addr:    ":8081",
-		Handler: StatsMiddleware(router),
-	}
+srv := &http.Server{
+    Addr:    fmt.Sprintf(":%s", port),
+    Handler: StatsMiddleware(router),
+}
 
 	go func() {
-		log.Println("✓ Starting spawner registry on :8081")
-		log.Println("📊 API Stats: http://localhost:8081/api/stats")
-		log.Println("🏥 Health Check: http://localhost:8081/health")
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %v", err)
-		}
-	}()
+    log.Printf("✓ Starting spawner registry on :%s", port)
+
+    apiURL := fmt.Sprintf("📊 API Stats: http://localhost:%s/api/stats", port)
+    log.Println(apiURL)
+
+    healthURL := fmt.Sprintf("🏥 Health Check: http://localhost:%s/health", port)
+    log.Println(healthURL)
+
+    if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+        log.Fatalf("listen: %v", err)
+    }
+}()
+
+
 
 	// 10. Graceful Shutdown
 	stop := make(chan os.Signal, 1)

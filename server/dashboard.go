@@ -56,7 +56,7 @@ func (ds *DashboardStats) RecordRequest(statusCode int, bytesIn, bytesOut int64)
 func (ds *DashboardStats) RecordError(path string, status int, message string, clientIP string) {
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
-	
+
 	logEntry := ErrorLog{
 		Timestamp: time.Now(),
 		Path:      path,
@@ -64,7 +64,7 @@ func (ds *DashboardStats) RecordError(path string, status int, message string, c
 		Message:   message,
 		ClientIP:  clientIP,
 	}
-	
+
 	// Prepend and keep last 50
 	ds.ErrorLogs = append([]ErrorLog{logEntry}, ds.ErrorLogs...)
 	if len(ds.ErrorLogs) > 50 {
@@ -106,11 +106,12 @@ func (ds *DashboardStats) GetErrors() []ErrorLog {
 	return logs
 }
 
-// ClearErrors empties the error log.
+// ClearErrors empties the error log and resets the error count.
 func (ds *DashboardStats) ClearErrors() {
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
 	ds.ErrorLogs = make([]ErrorLog, 0)
+	ds.TotalErrors = 0 // Reset the error counter
 }
 
 // UpdateActiveServers updates the active server count.
@@ -261,13 +262,13 @@ func truncate(s string, maxLen int) string {
 }
 
 // PrintConfig prints server configuration.
-func PrintConfig(port int, dbPath string) {
+func PrintConfig(port string, dbPath string) {
 	config := fmt.Sprintf(`
 ╔════════════════════════════════════════════════════════════════╗
 ║                   ⚙️  CONFIGURATION ⚙️                        ║
 ╠════════════════════════════════════════════════════════════════╣
 ║                                                                ║
-║  🌐 HTTP Port:         %-42d║
+║  🌐 HTTP Port:         %-42s║
 ║  🗄️  Database Path:     %-42s║
 ║  🔧 Server TTL:        %-42ds║
 ║  🧹 Cleanup Interval:  %-42ds║

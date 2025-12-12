@@ -5,6 +5,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
 	plugins: [sveltekit()],
 	server: {
+		port: 3000,
 		proxy: {
 			'/api': 'http://localhost:8081',
 			'/events': 'http://localhost:8081',
