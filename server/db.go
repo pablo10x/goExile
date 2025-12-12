@@ -70,6 +70,16 @@ func InitDB(path string) (*sqlx.DB, error) {
 		}
 	}
 
+	// Seed default configuration if table is empty
+	var configCount int
+	err = db.QueryRow(`SELECT COUNT(*) FROM server_config`).Scan(&configCount)
+	if err == nil && configCount == 0 {
+		fmt.Println("Seeding default configuration...")
+		if err := SeedDefaultConfig(db); err != nil {
+			fmt.Printf("warning: failed to seed default config: %v\n", err)
+		}
+	}
+
 	return db, nil
 }
 
@@ -93,6 +103,28 @@ func createTables(db *sqlx.DB) error {
 		comment TEXT,
 		uploaded_at INTEGER NOT NULL,
 		is_active INTEGER DEFAULT 0
+	);
+	CREATE TABLE IF NOT EXISTS server_config (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		key TEXT UNIQUE NOT NULL,
+		value TEXT NOT NULL,
+		type TEXT NOT NULL DEFAULT 'string',
+		category TEXT NOT NULL DEFAULT 'system',
+		description TEXT,
+		is_read_only INTEGER DEFAULT 0,
+		requires_restart INTEGER DEFAULT 0,
+		updated_at INTEGER NOT NULL,
+		updated_by TEXT
+	);
+	CREATE TABLE IF NOT EXISTS instance_actions (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		spawner_id INTEGER NOT NULL,
+		instance_id TEXT NOT NULL,
+		action TEXT NOT NULL,
+		timestamp INTEGER NOT NULL,
+		status TEXT,
+		details TEXT,
+		FOREIGN KEY(spawner_id) REFERENCES spawners(id) ON DELETE CASCADE
 	);`
 	_, err := db.Exec(q)
 	if err != nil {
@@ -152,7 +184,7 @@ func SaveSpawner(db *sqlx.DB, s *Spawner) (int, error) {
 				last_seen=excluded.last_seen,
 				game_version=excluded.game_version
 				RETURNING id`
-			
+
 			var id int64
 			err := tx.QueryRow(query, s.Region, s.Host, s.Port, s.MaxInstances, s.CurrentInstances, s.Status, s.LastSeen.Unix(), s.GameVersion).Scan(&id)
 			if err != nil {
@@ -221,6 +253,40 @@ func DeleteSpawnerDB(db *sqlx.DB, id int) error {
 		return nil
 	}
 	return execWithRetry(do)
+}
+
+// -- Instance Actions --
+
+func SaveInstanceAction(db *sqlx.DB, a *InstanceAction) error {
+	do := func() error {
+		_, err := db.Exec(`INSERT INTO instance_actions (spawner_id, instance_id, action, timestamp, status, details) VALUES (?, ?, ?, ?, ?, ?)`,
+			a.SpawnerID, a.InstanceID, a.Action, a.Timestamp.Unix(), a.Status, a.Details)
+		if err != nil {
+			return fmt.Errorf("save instance action: %w", err)
+		}
+		return nil
+	}
+	return execWithRetry(do)
+}
+
+func GetInstanceActions(db *sqlx.DB, spawnerID int, instanceID string) ([]InstanceAction, error) {
+	rows, err := db.Queryx(`SELECT id, spawner_id, instance_id, action, timestamp, status, details FROM instance_actions WHERE spawner_id = ? AND instance_id = ? ORDER BY timestamp DESC LIMIT 50`, spawnerID, instanceID)
+	if err != nil {
+		return nil, fmt.Errorf("query instance actions: %w", err)
+	}
+	defer rows.Close()
+
+	var out []InstanceAction
+	for rows.Next() {
+		var a InstanceAction
+		var tsUnix int64
+		if err := rows.Scan(&a.ID, &a.SpawnerID, &a.InstanceID, &a.Action, &tsUnix, &a.Status, &a.Details); err != nil {
+			return nil, fmt.Errorf("scan instance action: %w", err)
+		}
+		a.Timestamp = time.Unix(tsUnix, 0).UTC()
+		out = append(out, a)
+	}
+	return out, nil
 }
 
 // GetSpawnerByID returns a single spawner by id.
@@ -346,4 +412,178 @@ func GetActiveServerVersion(db *sqlx.DB) (*GameServerVersion, error) {
 	}
 	v.UploadedAt = time.Unix(uploadedAtUnix, 0).UTC()
 	return &v, nil
+}
+
+// -- Server Configuration --
+
+func SeedDefaultConfig(db *sqlx.DB) error {
+	defaultConfigs := []ServerConfig{
+		{
+			Key:             "server_port",
+			Value:           "8081",
+			Type:            "int",
+			Category:        "system",
+			Description:     "Port for the master server to listen on",
+			IsReadOnly:      false,
+			RequiresRestart: true,
+			UpdatedBy:       "system",
+		},
+		{
+			Key:             "server_ttl",
+			Value:           "60s",
+			Type:            "duration",
+			Category:        "system",
+			Description:     "How long a spawner is considered alive since last heartbeat",
+			IsReadOnly:      false,
+			RequiresRestart: false,
+			UpdatedBy:       "system",
+		},
+		{
+			Key:             "cleanup_interval",
+			Value:           "30s",
+			Type:            "duration",
+			Category:        "system",
+			Description:     "Frequency of cleanup routine for inactive spawners",
+			IsReadOnly:      false,
+			RequiresRestart: false,
+			UpdatedBy:       "system",
+		},
+		{
+			Key:             "max_body_size",
+			Value:           "1MB",
+			Type:            "string",
+			Category:        "system",
+			Description:     "Maximum size for request bodies",
+			IsReadOnly:      false,
+			RequiresRestart: true,
+			UpdatedBy:       "system",
+		},
+		{
+			Key:             "session_timeout",
+			Value:           "24h",
+			Type:            "duration",
+			Category:        "security",
+			Description:     "Session timeout for dashboard authentication",
+			IsReadOnly:      false,
+			RequiresRestart: false,
+			UpdatedBy:       "system",
+		},
+		{
+			Key:             "max_instances_per_spawner",
+			Value:           "20",
+			Type:            "int",
+			Category:        "spawner",
+			Description:     "Default maximum instances per spawner",
+			IsReadOnly:      false,
+			RequiresRestart: false,
+			UpdatedBy:       "system",
+		},
+	}
+
+	for _, config := range defaultConfigs {
+		config.UpdatedAt = time.Now().UTC()
+		if err := SaveConfig(db, &config); err != nil {
+			return fmt.Errorf("seed default config %s: %w", config.Key, err)
+		}
+	}
+	return nil
+}
+
+func SaveConfig(db *sqlx.DB, c *ServerConfig) error {
+	do := func() error {
+		_, err := db.Exec(`INSERT OR REPLACE INTO server_config 
+			(key, value, type, category, description, is_read_only, requires_restart, updated_at, updated_by) 
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			c.Key, c.Value, c.Type, c.Category, c.Description, c.IsReadOnly, c.RequiresRestart, c.UpdatedAt.Unix(), c.UpdatedBy)
+		if err != nil {
+			return fmt.Errorf("save config: %w", err)
+		}
+		return nil
+	}
+	return execWithRetry(do)
+}
+
+func GetAllConfig(db *sqlx.DB) ([]ServerConfig, error) {
+	rows, err := db.Queryx(`SELECT id, key, value, type, category, description, is_read_only, requires_restart, updated_at, updated_by FROM server_config ORDER BY category, key`)
+	if err != nil {
+		return nil, fmt.Errorf("query config: %w", err)
+	}
+	defer rows.Close()
+
+	var out []ServerConfig
+	for rows.Next() {
+		var c ServerConfig
+		var updatedAtUnix int64
+		var updatedBy sql.NullString
+		if err := rows.Scan(&c.ID, &c.Key, &c.Value, &c.Type, &c.Category, &c.Description, &c.IsReadOnly, &c.RequiresRestart, &updatedAtUnix, &updatedBy); err != nil {
+			return nil, fmt.Errorf("scan config: %w", err)
+		}
+		c.UpdatedAt = time.Unix(updatedAtUnix, 0).UTC()
+		if updatedBy.Valid {
+			c.UpdatedBy = updatedBy.String
+		}
+		out = append(out, c)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows err: %w", err)
+	}
+	return out, nil
+}
+
+func GetConfigByCategory(db *sqlx.DB, category string) ([]ServerConfig, error) {
+	rows, err := db.Queryx(`SELECT id, key, value, type, category, description, is_read_only, requires_restart, updated_at, updated_by FROM server_config WHERE category = ? ORDER BY key`, category)
+	if err != nil {
+		return nil, fmt.Errorf("query config by category: %w", err)
+	}
+	defer rows.Close()
+
+	var out []ServerConfig
+	for rows.Next() {
+		var c ServerConfig
+		var updatedAtUnix int64
+		var updatedBy sql.NullString
+		if err := rows.Scan(&c.ID, &c.Key, &c.Value, &c.Type, &c.Category, &c.Description, &c.IsReadOnly, &c.RequiresRestart, &updatedAtUnix, &updatedBy); err != nil {
+			return nil, fmt.Errorf("scan config: %w", err)
+		}
+		c.UpdatedAt = time.Unix(updatedAtUnix, 0).UTC()
+		if updatedBy.Valid {
+			c.UpdatedBy = updatedBy.String
+		}
+		out = append(out, c)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows err: %w", err)
+	}
+	return out, nil
+}
+
+func GetConfigByKey(db *sqlx.DB, key string) (*ServerConfig, error) {
+	var c ServerConfig
+	var updatedAtUnix int64
+	var updatedBy sql.NullString
+	err := db.QueryRow(`SELECT id, key, value, type, category, description, is_read_only, requires_restart, updated_at, updated_by FROM server_config WHERE key = ?`, key).
+		Scan(&c.ID, &c.Key, &c.Value, &c.Type, &c.Category, &c.Description, &c.IsReadOnly, &c.RequiresRestart, &updatedAtUnix, &updatedBy)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("get config by key: %w", err)
+	}
+	c.UpdatedAt = time.Unix(updatedAtUnix, 0).UTC()
+	if updatedBy.Valid {
+		c.UpdatedBy = updatedBy.String
+	}
+	return &c, nil
+}
+
+func UpdateConfig(db *sqlx.DB, key, value, updatedBy string) error {
+	do := func() error {
+		_, err := db.Exec(`UPDATE server_config SET value = ?, updated_at = ?, updated_by = ? WHERE key = ? AND is_read_only = 0`,
+			value, time.Now().Unix(), updatedBy, key)
+		if err != nil {
+			return fmt.Errorf("update config: %w", err)
+		}
+		return nil
+	}
+	return execWithRetry(do)
 }

@@ -9,7 +9,7 @@ package main
 
 import (
 	"context"
-	
+
 	"log"
 	"net/http"
 	"os"
@@ -83,15 +83,15 @@ func run() error {
 			// Re-populate in-memory registry from DB records, checking health
 			maxID := registry.nextID - 1
 			registry.mu.Lock()
-			
+
 			validCount := 0
 			// client := &http.Client{Timeout: 2 * time.Second} // No longer needed for proactive checks
 
 			for i := range loaded {
 				s := loaded[i]
-				
+
 				// Health check removed as per user request (rely on heartbeats)
-				
+
 				copyS := s
 				registry.items[copyS.ID] = &copyS
 				if copyS.ID > maxID {
@@ -112,7 +112,6 @@ func run() error {
 	// Spawner interactions (public/internal API) - Secured via API Key if set
 	apiRouter := router.PathPrefix("/api/spawners").Subrouter()
 
-
 	apiKey := os.Getenv("MASTER_API_KEY")
 	if apiKey == "" {
 		apiKey = "your_very_secret_master_api_key_here" // Default API key
@@ -120,7 +119,7 @@ func run() error {
 	}
 	if apiKey != "" {
 		log.Println("🔒 API Key authentication enabled for Spawners")
-	//	apiRouter.Use(APIKeyMiddleware(apiKey))
+		//	apiRouter.Use(APIKeyMiddleware(apiKey))
 	}
 
 	apiRouter.HandleFunc("/download", ServeGameServerFile).Methods("GET", "HEAD")
@@ -133,20 +132,21 @@ func run() error {
 	apiRouter.HandleFunc("/{id}/logs", GetSpawnerLogs).Methods("GET")
 	apiRouter.HandleFunc("/{id}/logs", ClearSpawnerLogs).Methods("DELETE")
 	apiRouter.HandleFunc("/{id}/instances", ListSpawnerInstances).Methods("GET")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id}/logs", GetInstanceLogs).Methods("GET")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id}/logs", ClearInstanceLogs).Methods("DELETE")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id}/stats", GetInstanceStats).Methods("GET")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id}/start", StartSpawnerInstance).Methods("POST")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id}/stop", StopSpawnerInstance).Methods("POST")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id}/restart", RestartSpawnerInstance).Methods("POST")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id}/update", UpdateSpawnerInstance).Methods("POST")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id}/rename", RenameSpawnerInstance).Methods("POST")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id}", RemoveSpawnerInstance).Methods("DELETE")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id}/backup", BackupSpawnerInstance).Methods("POST")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id}/restore", RestoreSpawnerInstance).Methods("POST")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id}/backups", ListSpawnerBackups).Methods("GET")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id}/backup/delete", DeleteSpawnerBackup).Methods("POST")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id}/stats/history", GetInstanceHistory).Methods("GET")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/logs", GetInstanceLogs).Methods("GET")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/logs", ClearInstanceLogs).Methods("DELETE")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/stats", GetInstanceStats).Methods("GET")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/start", StartSpawnerInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/stop", StopSpawnerInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/restart", RestartSpawnerInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/update", UpdateSpawnerInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/rename", RenameSpawnerInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}", RemoveSpawnerInstance).Methods("DELETE")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/backup", BackupSpawnerInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/restore", RestoreSpawnerInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/backups", ListSpawnerBackups).Methods("GET")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/backup/delete", DeleteSpawnerBackup).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/stats/history", GetInstanceHistory).Methods("GET")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/history", GetInstanceHistoryActions).Methods("GET")
 	apiRouter.HandleFunc("/{id}/update-template", UpdateSpawnerTemplate).Methods("POST")
 
 	// Liveness check
@@ -170,13 +170,20 @@ func run() error {
 		router.Handle("/api/stats", AuthMiddleware(authConfig, sessionStore)(statsHandler))
 		router.Handle("/api/errors", AuthMiddleware(authConfig, sessionStore)(errorsAPIHandler)).Methods("GET")
 		router.Handle("/api/errors", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ClearErrorsAPI))).Methods("DELETE")
-		router.Handle("/events", AuthMiddleware(authConfig, sessionStore)(sseHandler))           // Replaced /ws with /events
+		router.Handle("/events", AuthMiddleware(authConfig, sessionStore)(sseHandler)) // Replaced /ws with /events
 		router.Handle("/api/upload", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(HandleUploadGameServer))).Methods("POST")
-		
+
 		// Version Management Routes
 		router.Handle("/api/versions", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListVersions))).Methods("GET")
 		router.Handle("/api/versions/{id}/active", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(HandleSetActiveVersion))).Methods("POST")
 		router.Handle("/api/versions/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(HandleDeleteVersion))).Methods("DELETE")
+
+		// Configuration Management Routes
+		router.Handle("/api/config", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetAllConfigHandler))).Methods("GET")
+		router.Handle("/api/config", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(CreateConfigHandler))).Methods("POST")
+		router.Handle("/api/config/{category}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetConfigByCategoryHandler))).Methods("GET")
+		router.Handle("/api/config/{key}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(UpdateConfigHandler))).Methods("PUT")
+		router.Handle("/api/config/key/{key}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetConfigByKeyHandler))).Methods("GET")
 	}
 
 	// CLI-friendly status endpoint
@@ -230,5 +237,3 @@ func run() error {
 	log.Println("server stopped")
 	return nil
 }
-
-

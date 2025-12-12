@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -154,6 +155,30 @@ func SpawnInstance(w http.ResponseWriter, r *http.Request) {
 
 	body, _ := io.ReadAll(resp.Body)
 	
+	if dbConn != nil && resp.StatusCode < 400 {
+		var resData struct {
+			ID string `json:"id"`
+		}
+		if json.Unmarshal(body, &resData) == nil && resData.ID != "" {
+			SaveInstanceAction(dbConn, &InstanceAction{
+				SpawnerID:  id,
+				InstanceID: resData.ID,
+				Action:     "spawn",
+				Timestamp:  time.Now().UTC(),
+				Status:     "success",
+			})
+		}
+	} else if dbConn != nil {
+		SaveInstanceAction(dbConn, &InstanceAction{
+			SpawnerID:  id,
+			InstanceID: "new",
+			Action:     "spawn",
+			Timestamp:  time.Now().UTC(),
+			Status:     "failed",
+			Details:    fmt.Sprintf("HTTP %d", resp.StatusCode),
+		})
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(resp.StatusCode)
 	w.Write(body)
@@ -335,6 +360,23 @@ func UpdateSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 	}
 	defer resp.Body.Close()
 
+	if dbConn != nil {
+		status := "success"
+		details := ""
+		if resp.StatusCode >= 400 {
+			status = "failed"
+			details = fmt.Sprintf("HTTP %d", resp.StatusCode)
+		}
+		SaveInstanceAction(dbConn, &InstanceAction{
+			SpawnerID:  id,
+			InstanceID: instanceID,
+			Action:     "update",
+			Timestamp:  time.Now().UTC(),
+			Status:     status,
+			Details:    details,
+		})
+	}
+
 	body, _ := io.ReadAll(resp.Body)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(resp.StatusCode)
@@ -367,8 +409,6 @@ func RenameSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, http.StatusInternalServerError, "failed to create request")
 		return
 	}
-	req.Header.Set("Content-Type", "application/json")
-
 	client := &http.Client{Timeout: 5 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -376,6 +416,25 @@ func RenameSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer resp.Body.Close()
+
+	if dbConn != nil {
+		status := "success"
+		details := ""
+		if resp.StatusCode >= 400 {
+			status = "failed"
+			details = fmt.Sprintf("HTTP %d", resp.StatusCode)
+		}
+		// Note: We might want to record the new ID in details, but reading body is consumed.
+		// For simplicity, we just record "rename".
+		SaveInstanceAction(dbConn, &InstanceAction{
+			SpawnerID:  id,
+			InstanceID: instanceID,
+			Action:     "rename",
+			Timestamp:  time.Now().UTC(),
+			Status:     status,
+			Details:    details,
+		})
+	}
 
 	body, _ := io.ReadAll(resp.Body)
 	w.Header().Set("Content-Type", "application/json")
@@ -418,6 +477,23 @@ func RemoveSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 	}
 	defer resp.Body.Close()
 
+	if dbConn != nil {
+		status := "success"
+		details := ""
+		if resp.StatusCode >= 400 {
+			status = "failed"
+			details = fmt.Sprintf("HTTP %d", resp.StatusCode)
+		}
+		SaveInstanceAction(dbConn, &InstanceAction{
+			SpawnerID:  id,
+			InstanceID: instanceID,
+			Action:     "delete",
+			Timestamp:  time.Now().UTC(),
+			Status:     status,
+			Details:    details,
+		})
+	}
+
 	body, _ := io.ReadAll(resp.Body)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(resp.StatusCode)
@@ -459,6 +535,23 @@ func StopSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 	}
 	defer resp.Body.Close()
 
+	if dbConn != nil {
+		status := "success"
+		details := ""
+		if resp.StatusCode >= 400 {
+			status = "failed"
+			details = fmt.Sprintf("HTTP %d", resp.StatusCode)
+		}
+		SaveInstanceAction(dbConn, &InstanceAction{
+			SpawnerID:  id,
+			InstanceID: instanceID,
+			Action:     "stop",
+			Timestamp:  time.Now().UTC(),
+			Status:     status,
+			Details:    details,
+		})
+	}
+
 	body, _ := io.ReadAll(resp.Body)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(resp.StatusCode)
@@ -494,9 +587,6 @@ func StartSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 	}
 	// Add content type if the spawner expects a body, even an empty one.
 	// For now, assuming no specific body is needed for a simple start.
-	// req.Header.Set("Content-Type", "application/json") 
-
-
 	client := &http.Client{Timeout: 5 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -504,6 +594,23 @@ func StartSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer resp.Body.Close()
+
+	if dbConn != nil {
+		status := "success"
+		details := ""
+		if resp.StatusCode >= 400 {
+			status = "failed"
+			details = fmt.Sprintf("HTTP %d", resp.StatusCode)
+		}
+		SaveInstanceAction(dbConn, &InstanceAction{
+			SpawnerID:  id,
+			InstanceID: instanceID,
+			Action:     "start",
+			Timestamp:  time.Now().UTC(),
+			Status:     status,
+			Details:    details,
+		})
+	}
 
 	body, _ := io.ReadAll(resp.Body)
 	w.Header().Set("Content-Type", "application/json")
@@ -545,6 +652,23 @@ func RestartSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer resp.Body.Close()
+
+	if dbConn != nil {
+		status := "success"
+		details := ""
+		if resp.StatusCode >= 400 {
+			status = "failed"
+			details = fmt.Sprintf("HTTP %d", resp.StatusCode)
+		}
+		SaveInstanceAction(dbConn, &InstanceAction{
+			SpawnerID:  id,
+			InstanceID: instanceID,
+			Action:     "restart",
+			Timestamp:  time.Now().UTC(),
+			Status:     status,
+			Details:    details,
+		})
+	}
 
 	body, _ := io.ReadAll(resp.Body)
 	w.Header().Set("Content-Type", "application/json")
@@ -740,6 +864,33 @@ func GetInstanceHistory(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(resp.StatusCode)
 	w.Write(body)
+}
+
+// GetInstanceHistoryActions retrieves the recorded action history for an instance.
+func GetInstanceHistoryActions(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := parseID(vars["id"])
+	if err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	instanceID := vars["instance_id"]
+	if instanceID == "" {
+		writeError(w, r, http.StatusBadRequest, "missing instance_id")
+		return
+	}
+
+	if dbConn == nil {
+		writeJSON(w, http.StatusOK, []InstanceAction{})
+		return
+	}
+
+	actions, err := GetInstanceActions(dbConn, id, instanceID)
+	if err != nil {
+		writeError(w, r, http.StatusInternalServerError, "failed to retrieve history")
+		return
+	}
+	writeJSON(w, http.StatusOK, actions)
 }
 
 // BackupSpawnerInstance creates a backup of a game instance on a spawner.

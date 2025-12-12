@@ -122,9 +122,13 @@
             const res = await fetch(`/api/spawners/${spawnerId}/instances/${instanceId}/history`);
             if (res.ok) {
                 historyLogs = await res.json();
+            } else {
+                console.error('Failed to fetch history:', res.status, res.statusText);
+                historyLogs = [];
             }
         } catch (e) {
-            console.error(e);
+            console.error('Error fetching history:', e);
+            historyLogs = [];
         } finally {
             isLoadingData = false;
         }
@@ -487,7 +491,7 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-800/50">
-                                    {#each historyLogs as log}
+                                    {#each (historyLogs || []) as log}
                                         <tr class="hover:bg-slate-900/30 transition-colors">
                                             <td class="px-6 py-3">
                                                 <span class="font-mono text-sm text-slate-300 bg-slate-800/50 px-2 py-0.5 rounded border border-slate-700/50">
@@ -507,7 +511,7 @@
                                             </td>
                                         </tr>
                                     {/each}
-                                    {#if historyLogs.length === 0 && !isLoadingData}
+                                     {#if (historyLogs || []).length === 0 && !isLoadingData}
                                         <tr>
                                             <td colspan="4" class="px-6 py-8 text-center text-slate-500 italic">No history found</td>
                                         </tr>
