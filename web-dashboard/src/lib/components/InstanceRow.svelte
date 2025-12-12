@@ -1,40 +1,39 @@
 <script lang="ts">
-            import { createEventDispatcher } from 'svelte';
-            import { slide } from 'svelte/transition';
-            import { serverVersions } from '$lib/stores';
-            import { compareVersions } from '$lib/semver';
-            import PlayersChart from './PlayersChart.svelte';
-            import BackupModal from './BackupModal.svelte';
-        
-            export let spawnerId: number;
-            export let instance: any;
-        
-            let expanded = false;
-            let renameValue = instance.id;
-            let chartData: any[] = [];
-            let isBackupModalOpen = false;
-        
-            const dispatch = createEventDispatcher();    
-        // Derived state for version checking
-        $: activeVersion = $serverVersions.find(v => v.is_active);
-        $: versionDiff = (activeVersion && instance.version) ? compareVersions(activeVersion.version, instance.version) : 0;
-        $: isOutdated = versionDiff > 0; // Only true if active is NEWER than instance
-    
-        function toggle() {
-            expanded = !expanded;
-            if (expanded) {
-                renameValue = instance.id;
-                if (chartData.length === 0) {
-                    chartData = Array.from({ length: 24 }, (_, i) => {
-                        const time = new Date().getTime() - (23 - i) * 3600000; // Last 24h
-                        return {
-                            timestamp: time,
-                            count: Math.floor(Math.random() * 30) // Random 0-30 players
-                        };
-                    });
-                }
+    import { createEventDispatcher } from 'svelte';
+    import { slide } from 'svelte/transition';
+    import { serverVersions } from '$lib/stores';
+    import { compareVersions } from '$lib/semver';
+    import PlayersChart from './PlayersChart.svelte';
+    import { ChevronRight, Settings, Play, Square, RotateCw, ArrowDownToLine, Trash2, TerminalSquare } from 'lucide-svelte';
+
+    let { spawnerId, instance }: { spawnerId: number, instance: any } = $props();
+
+    let expanded = $state(false);
+    let renameValue = $state(instance.id);
+    let chartData = $state<any[]>([]);
+
+    const dispatch = createEventDispatcher();
+
+    // Derived state for version checking
+    let activeVersion = $derived($serverVersions.find(v => v.is_active));
+    let versionDiff = $derived((activeVersion && instance.version) ? compareVersions(activeVersion.version, instance.version) : 0);
+    let isOutdated = $derived(versionDiff > 0); 
+
+    function toggle() {
+        expanded = !expanded;
+        if (expanded) {
+            renameValue = instance.id;
+            if (chartData.length === 0) {
+                chartData = Array.from({ length: 24 }, (_, i) => {
+                    const time = new Date().getTime() - (23 - i) * 3600000; // Last 24h
+                    return {
+                        timestamp: time,
+                        count: Math.floor(Math.random() * 30) // Random 0-30 players
+                    };
+                });
             }
         }
+    }
 
     function handleRename() {
         if (renameValue !== instance.id) {
@@ -48,9 +47,12 @@
     <div 
         class="flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-slate-700/30 transition-colors"
         onclick={toggle}
+        role="button"
+        tabindex="0"
+        onkeydown={(e) => e.key === 'Enter' && toggle()}
     >
         <div class="text-slate-500 transform transition-transform duration-200 {expanded ? 'rotate-90' : ''}">
-            ▶
+            <ChevronRight class="w-5 h-5" />
         </div>
         
         <div class="flex-1 grid grid-cols-12 gap-4 items-center">
@@ -89,74 +91,68 @@
         </div>
 
                 <!-- Quick Actions -->
-
-                <!-- svelte-ignore a11y_click_events_have_key_events -->
-
-                <!-- svelte-ignore a11y_no_static_element_interactions -->
-
-                <div class="flex items-center gap-1 ml-auto pl-4 border-l border-slate-700/50" onclick={(e) => e.stopPropagation()}>
+                <div 
+                    class="flex items-center gap-1 ml-auto pl-4 border-l border-slate-700/50" 
+                    role="group" 
+                    onclick={(e) => e.stopPropagation()}
+                    onkeydown={(e) => e.stopPropagation()}
+                >
 
                     <button 
-
                         onclick={() => dispatch('tail', { spawnerId, instanceId: instance.id })}
-
                         class="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
-
-                        title="Console"
-
+                        title="Manage"
                     >
-
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
-
+                        <Settings class="w-4 h-4" />
                     </button>
 
-                    <button 
+                                        <button 
 
-                        onclick={() => dispatch('start', { spawnerId, instanceId: instance.id })}
+                                            onclick={() => dispatch('start', { spawnerId, instanceId: instance.id })}
 
-                        disabled={instance.status === 'Running'}
+                                            disabled={instance.status === 'Running'}
 
-                        class="p-1.5 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-400/10 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                                            class="p-1.5 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-400/10 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
 
-                        title="Start"
+                                            title="Start"
 
-                    >
+                                        >
 
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                                            <Play class="w-4 h-4" />
 
-                    </button>
+                                        </button>
 
-                    <button 
+                                        <button 
 
-                        onclick={() => dispatch('stop', { spawnerId, instanceId: instance.id })}
+                                            onclick={() => dispatch('stop', { spawnerId, instanceId: instance.id })}
 
-                        disabled={instance.status !== 'Running'}
+                                            disabled={instance.status !== 'Running'}
 
-                        class="p-1.5 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                                            class="p-1.5 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
 
-                        title="Stop"
+                                            title="Stop"
 
-                    >
+                                        >
 
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+                                            <Square class="w-4 h-4" />
 
-                    </button>
+                                        </button>
 
-                    <button 
+                                        <button 
 
-                        onclick={() => dispatch('restart', { spawnerId, instanceId: instance.id })}
+                                            onclick={() => dispatch('restart', { spawnerId, instanceId: instance.id })}
 
-                        disabled={instance.status !== 'Running'}
+                                            disabled={instance.status !== 'Running'}
 
-                        class="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                                            class="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
 
-                        title="Restart"
+                                            title="Restart"
 
-                    >
+                                        >
 
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M1 20v6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                                            <RotateCw class="w-4 h-4" />
 
-                    </button>
+                                        </button>
 
                 </div>
     </div>
@@ -170,16 +166,8 @@
                     onclick={() => dispatch('tail', { spawnerId, instanceId: instance.id })}
                     class="btn-toolbar bg-slate-700 hover:bg-slate-600 text-slate-200"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
-                    Console
-                </button>
-
-                <button 
-                    onclick={() => isBackupModalOpen = true}
-                    class="btn-toolbar bg-slate-700 hover:bg-slate-600 text-slate-200"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v13a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                    Backups
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+                    Manage
                 </button>
                 
                 <button 
@@ -261,11 +249,6 @@
             </div>
         </div>
     {/if}
-    <BackupModal 
-        bind:isOpen={isBackupModalOpen} 
-        spawnerId={spawnerId} 
-        instanceId={instance.id} 
-    />
 </div>
 
 <style lang="postcss">

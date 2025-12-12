@@ -6,8 +6,10 @@
     import Drawer from '$lib/components/Drawer.svelte';
     import LogViewer from '$lib/components/LogViewer.svelte';
     import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
-    import InstanceConsoleModal from '$lib/components/InstanceConsoleModal.svelte';
+    import InstanceManagerModal from '$lib/components/InstanceManagerModal.svelte';
+    import TopResourceConsumers from '$lib/components/TopResourceConsumers.svelte';
     import { formatBytes, formatUptime } from '$lib/utils';
+    import { Clock, Server, Activity, AlertCircle, Database, Network } from 'lucide-svelte';
 
     let eventSource: EventSource | null = null;
     let isConnected = false;
@@ -360,59 +362,57 @@
 </div>
 
 <!-- Stats Grid -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
     <StatsCard 
-        title="⏱️ Uptime" 
+        title="Uptime" 
         value={formatUptime($stats.uptime)} 
-        borderColorClass="border-t-blue-500"
+        Icon={Clock}
+        color="blue"
     />
     <StatsCard 
-        title="🖥️ Active Spawners" 
+        title="Active Spawners" 
         value={$stats.active_spawners} 
-        borderColorClass="border-t-emerald-500"
-        valueGradientClass="from-emerald-400 to-cyan-400"
+        Icon={Server}
+        color="emerald"
     />
+   
     <StatsCard 
-        title="🖥️ CPU" 
-        value={$stats.active_spawners} 
-        borderColorClass="border-t-emerald-500"
-        valueGradientClass="from-emerald-400 to-cyan-400"
-    />
-    <StatsCard 
-        title="📡 Requests" 
+        title="Total Requests" 
         value={$stats.total_requests} 
-        borderColorClass="border-t-blue-500"
+        Icon={Activity}
+        color="purple"
     />
     <a href="/errors" class="block transition hover:scale-[1.02]">
         <StatsCard 
-            title="⚠️ Errors" 
+            title="Total Errors" 
             value={$stats.total_errors} 
-            borderColorClass="border-t-red-500"
-            valueGradientClass="from-red-400 to-pink-400"
+            Icon={AlertCircle}
+            color="red"
         />
     </a>
-    <StatsCard 
-        title="💾 Memory" 
-        value={formatBytes($stats.memory_usage)} 
-        borderColorClass="border-t-purple-500"
-        valueGradientClass="from-purple-400 to-indigo-400"
-    />
 </div>
 
 <!-- Secondary Stats Row (Network & DB) -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-    <StatsCard 
-        title="⬆️ Tx / ⬇️ Rx" 
-        value="" 
-        subValue={`<span class="text-orange-400">${formatBytes($stats.bytes_sent)}</span> / <span class="text-cyan-400">${formatBytes($stats.bytes_received)}</span>`}
-        borderColorClass="border-t-orange-500"
-    />
-    <StatsCard 
-        title="🗄️ Database" 
-        value={$stats.db_connected ? '✓ Connected' : '✗ Disconnected'} 
-        borderColorClass={$stats.db_connected ? "border-t-emerald-500" : "border-t-red-500"}
-        valueGradientClass={$stats.db_connected ? "from-emerald-400 to-cyan-400" : "from-red-400 to-orange-400"}
-    />
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+    <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
+        <StatsCard 
+            title="Network Traffic" 
+            value="" 
+            subValue={`<span class="text-orange-400">↑ ${formatBytes($stats.bytes_sent)}</span> <span class="text-slate-600 mx-2">|</span> <span class="text-cyan-400">↓ ${formatBytes($stats.bytes_received)}</span>`}
+            Icon={Network}
+            color="orange"
+        />
+        <StatsCard 
+            title="Database Status" 
+            value={$stats.db_connected ? 'Connected' : 'Disconnected'} 
+            Icon={Database}
+            color={$stats.db_connected ? "emerald" : "red"}
+        />
+    </div>
+    
+    <div class="lg:col-span-1">
+        <TopResourceConsumers limit={5} compact={true} resourceType="cpu" />
+    </div>
 </div>
 
 <!-- Spawners Section -->
@@ -453,7 +453,7 @@
 </Drawer>
 
 <!-- Instance Console Modal -->
-<InstanceConsoleModal
+<InstanceManagerModal
     bind:isOpen={isConsoleOpen}
     spawnerId={consoleSpawnerId}
     instanceId={consoleInstanceId}

@@ -42,3 +42,18 @@ export interface ServerVersion {
 }
 
 export const serverVersions = writable<ServerVersion[]>([]);
+
+export interface ServerConfig {
+    id: number;
+    key: string;
+    value: string;
+    type: string;
+    category: string;
+    description: string;
+    is_read_only: boolean;
+    requires_restart: boolean;
+    updated_at: string; // ISO string from JSON
+    updated_by: string;
+}
+
+export const config = writable<ServerConfig[]>([]);

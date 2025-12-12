@@ -5,13 +5,14 @@
     import InstanceRow from '$lib/components/InstanceRow.svelte';
     import StatsCard from '$lib/components/StatsCard.svelte';
     import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
-    import InstanceConsoleModal from '$lib/components/InstanceConsoleModal.svelte';
+    import InstanceManagerModal from '$lib/components/InstanceManagerModal.svelte';
     import Drawer from '$lib/components/Drawer.svelte';
     import LogViewer from '$lib/components/LogViewer.svelte';
     import Dropdown from '$lib/components/Dropdown.svelte';
     import { serverVersions } from '$lib/stores';
     import { compareVersions } from '$lib/semver';
     import PlayersChart from '$lib/components/PlayersChart.svelte';
+    import { Server, Cpu, HardDrive, MemoryStick, List, Plus } from 'lucide-svelte';
 
     const spawnerId = parseInt($page.params.id || '0');
 
@@ -347,30 +348,30 @@
                 value={`${spawner.current_instances} / ${spawner.max_instances}`} 
                 subValue={spawner.max_instances > 0 ? `${((spawner.current_instances / spawner.max_instances) * 100).toFixed(1)}% Capacity` : ''}
                 subValueClass="text-slate-400 text-xs mt-1"
-                borderColorClass="border-t-blue-500"
-                valueGradientClass="from-blue-400 to-cyan-400"
+                Icon={Server}
+                color="blue"
             />
             <StatsCard 
                 title="CPU Usage" 
                 value={`${spawner.cpu_usage?.toFixed(1) || 0}%`} 
-                borderColorClass="border-t-purple-500"
-                valueGradientClass="from-purple-400 to-indigo-400"
+                Icon={Cpu}
+                color="purple"
             />
             <StatsCard 
                 title="Memory Usage" 
                 value={formatBytes(spawner.mem_used || 0)} 
                 subValue={`of ${formatBytes(spawner.mem_total || 0)}`}
                 subValueClass="text-slate-400 text-xs mt-1"
-                borderColorClass="border-t-emerald-500"
-                valueGradientClass="from-emerald-400 to-teal-400"
+                Icon={MemoryStick}
+                color="emerald"
             />
             <StatsCard 
                 title="Disk Usage" 
                 value={formatBytes(spawner.disk_used || 0)} 
                 subValue={`of ${formatBytes(spawner.disk_total || 0)}`}
                 subValueClass="text-slate-400 text-xs mt-1"
-                borderColorClass="border-t-orange-500"
-                valueGradientClass="from-orange-400 to-amber-400"
+                Icon={HardDrive}
+                color="orange"
             />
         </div>
 
@@ -391,7 +392,7 @@
                 </div>
                 
                 <div class="flex items-center gap-3">
-                    <Dropdown label="Bulk Actions" icon={`<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>`}>
+                    <Dropdown label="Bulk Actions" Icon={List}>
                         <div slot="default" let:close>
                             <button onclick={() => { dispatchBulkAction('start'); close(); }} class="w-full text-left px-4 py-2 text-sm text-emerald-400 hover:bg-emerald-500/10">Start All</button>
                             <button onclick={() => { dispatchBulkAction('stop'); close(); }} class="w-full text-left px-4 py-2 text-sm text-yellow-400 hover:bg-yellow-500/10">Stop All</button>
@@ -404,7 +405,7 @@
                         onclick={openSpawnDialog}
                         class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-blue-900/20"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        <Plus class="w-4 h-4" />
                         Spawn Instance
                     </button>
                 </div>
@@ -464,7 +465,7 @@
 </Drawer>
 
 <!-- Instance Console Modal -->
-<InstanceConsoleModal
+<InstanceManagerModal
     bind:isOpen={isConsoleOpen}
     spawnerId={spawnerId}
     instanceId={consoleInstanceId}

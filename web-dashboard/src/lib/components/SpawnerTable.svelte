@@ -224,7 +224,7 @@
                                 <div class="flex justify-between items-center mb-2 px-1">
                                     <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Active Instances</h4>
                                     <div class="flex items-center gap-2">
-                                        <Dropdown label="Bulk Actions" icon={`<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>`}>
+                                        <Dropdown label="Bulk Actions">
                                             <div slot="default" let:close>
                                                 <button 
                                                     onclick={() => { dispatchBulkAction('start', spawner.id); close(); }}

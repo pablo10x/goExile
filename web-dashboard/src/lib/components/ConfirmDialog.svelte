@@ -55,14 +55,13 @@
 {#if isOpen}
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" transition:fade={{ duration: 200 }}>
         <!-- Backdrop with blur -->
-        <div 
-            class="absolute inset-0 bg-slate-950/60 backdrop-blur-md" 
-            on:click={!loading ? close : undefined}
-            role="button"
-            tabindex="0"
-            aria-label="Close dialog"
-        ></div>
-
+                    <div 
+                        class="absolute inset-0 bg-slate-950/60 backdrop-blur-md" 
+                        onclick={!loading ? close : undefined}
+                        role="button"
+                        tabindex="0"
+                        aria-label="Close dialog"
+                    ></div>
         <!-- Modal Container -->
         <div 
             class="relative w-full max-w-lg bg-slate-900/90 border border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-white/10"
@@ -135,13 +134,13 @@
                     </button>
                 {:else}
                     <button 
-                        on:click={close}
+                        onclick={close}
                         class="px-5 py-2 text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-all"
                     >
                         {cancelText}
                     </button>
                     <button 
-                        on:click={handleConfirm}
+                        onclick={handleConfirm}
                         class={`px-5 py-2 text-sm font-semibold text-white rounded-lg shadow-lg hover:shadow-xl transition-all transform active:scale-95 flex items-center gap-2 ${
                             isCritical 
                             ? 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 shadow-red-900/20' 

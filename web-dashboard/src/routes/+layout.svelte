@@ -94,6 +94,20 @@
                             <span class="font-medium tracking-wide">Dashboard</span>
                         </a>
 
+                        <a href="/config" 
+                            class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden
+                            {isRouteActive('/config') || isRouteActive('/config/') ? 'bg-blue-600/20 text-blue-300 shadow-lg shadow-blue-900/20 border border-blue-500/30' : 'hover:bg-white/5 text-slate-400 hover:text-slate-200 hover:shadow-md border border-transparent'}"
+                        >
+                            {#if isRouteActive('/config') || isRouteActive('/config/')}
+                                <div class="absolute inset-y-0 left-0 w-1 bg-blue-400 rounded-r shadow-[0_0_10px_rgba(96,165,250,0.8)]"></div>
+                            {/if}
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform group-hover:scale-110 group-hover:rotate-3 duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M12 1v6m0 6v6m4.22-13.22l4.24 4.24M1.54 1.54l4.24 4.24M20.46 20.46l-4.24-4.24M1.54 20.46l4.24-4.24"></path>
+                            </svg>
+                            <span class="font-medium tracking-wide">Configuration</span>
+                        </a>
+
                         <a href="/server" 
                             class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden
                             {isRouteActive('/server') ? 'bg-blue-600/20 text-blue-300 shadow-lg shadow-blue-900/20 border border-blue-500/30' : 'hover:bg-white/5 text-slate-400 hover:text-slate-200 hover:shadow-md border border-transparent'}"
