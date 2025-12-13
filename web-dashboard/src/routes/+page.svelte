@@ -15,6 +15,14 @@
     let animateStats = false;
     let mouseX = 0;
     let mouseY = 0;
+    let particles = Array.from({ length: 50 }, (_, i) => ({
+        id: i,
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        size: Math.random() * 4 + 1,
+        speedX: (Math.random() - 0.5) * 0.5,
+        speedY: (Math.random() - 0.5) * 0.5
+    }));
 
     let eventSource: EventSource | null = null;
     let isConnected = false;
@@ -122,6 +130,25 @@
         initialFetch();
         connectSSE();
         
+        // Mouse tracking for parallax effects
+        const handleMouseMove = (e: MouseEvent) => {
+            mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+            mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+        };
+        
+        window.addEventListener('mousemove', handleMouseMove);
+        
+        // Particle animation
+        const animateParticles = () => {
+            particles = particles.map(particle => ({
+                ...particle,
+                x: (particle.x + particle.speedX + 100) % 100,
+                y: (particle.y + particle.speedY + 100) % 100
+            }));
+        };
+        
+        const interval = setInterval(animateParticles, 50);
+        
         // Trigger animations after component mounts
         setTimeout(() => {
             isLoaded = true;
@@ -129,6 +156,11 @@
                 animateStats = true;
             }, 200);
         }, 100);
+        
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            clearInterval(interval);
+        };
     });
 
     onDestroy(() => {
@@ -361,13 +393,7 @@
     }
 </script>
 
-<!-- Animated Background -->
-<div class="fixed inset-0 -z-10 overflow-hidden">
-    <div class="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900/20">
-        <!-- Animated Grid Pattern -->
-        <div class="absolute inset-0 opacity-10">
-            <div class="absolute inset-0" style="background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgPGcgZmlsbD0iIzY0NzQ4YiIgZmlsbC1vcGFjaXR5PSIwLjA1Ij4KICAgICAgPHBhdGggZD0iTTM2IDM0di00aC0ydjRoLTR2Mmg0djRoMnYtNGg0di0yaC00em0wLTMwVjBoLTJ2NGgtNHYyaDR2NGgyVjZoNFY0aC00ek02IDM0di00SDR2NEgwdjJoNHY0aDJ2LTRoNHYtMkg2ek02IDRWMEg0djRIMHYyaDR2NGgyVjZoNFY0SDZ6Ii8+CiAgICA8L2c+CiAgPC9nPgo8L3N2Zz4='); animation: float 20s ease-in-out infinite;"></div>
-        </div>
+
         
         <!-- Floating Particles -->
         <div class="absolute inset-0">
@@ -381,8 +407,8 @@
         
         <!-- Gradient Overlay -->
         <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-slate-900/60"></div>
-    </div>
-</div>
+   
+
 
 <div class="flex justify-between items-center mb-6">
     <div class="transform transition-all duration-700 {isLoaded ? 'translate-x-0 opacity-100' : '-translate-x-4 opacity-0'}">
@@ -457,15 +483,15 @@
 </div>
 
 <!-- Spawners Section -->
-<div class="card bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-xl overflow-hidden transform transition-all duration-700 hover:scale-[1.01] hover:border-blue-500/20 hover:shadow-2xl hover:shadow-blue-500/5 {animateStats ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}" style="animation-delay: 0.7s;">
-    <div class="border-b border-slate-700/50 px-6 py-4 flex justify-between items-center bg-gradient-to-r from-slate-800/50 to-slate-800/30 backdrop-blur-sm">
+<div class="card bg-slate-800/60 backdrop-blur-sm border border-slate-700/50 rounded-xl overflow-hidden transform transition-all duration-700 hover:scale-[1.01] hover:border-blue-500/20 hover:shadow-2xl hover:shadow-blue-500/5 {animateStats ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}" style="animation-delay: 0.7s;">
+    <div class="border-b border-slate-700/50 px-6 py-4 flex justify-between items-center bg-gradient-to-r from-slate-800/80 to-slate-800/60 backdrop-blur-sm">
         <div class="flex items-center gap-3">
             <div class="w-3 h-3 bg-blue-500 rounded-full animate-pulse shadow-lg shadow-blue-500/50"></div>
             <h2 class="text-xl font-bold text-slate-50">📦 Registered Spawners</h2>
         </div>
-        <span class="text-xs text-slate-500 uppercase tracking-widest font-semibold bg-slate-900/50 px-3 py-1 rounded-full border border-slate-700">Real-time</span>
+        <span class="text-xs text-slate-500 uppercase tracking-widest font-semibold bg-slate-900/80 px-3 py-1 rounded-full border border-slate-700">Real-time</span>
     </div>
-    <div class="p-0 bg-slate-900/20">
+    <div class="p-0 bg-slate-900/40">
         <SpawnerTable 
             bind:this={spawnerTableComponent}
             spawners={$spawners}
@@ -522,6 +548,8 @@
     onConfirm={executeInstanceAction}
 />
 
+
+
 <style>
     @keyframes float {
         0%, 100% { transform: translateY(0px) rotate(0deg); }
@@ -555,6 +583,13 @@
         50% { background-position: 100% 50%; }
     }
     
+    @keyframes blob {
+        0% { transform: translate(0px, 0px) scale(1); }
+        33% { transform: translate(30px, -50px) scale(1.1); }
+        66% { transform: translate(-20px, 20px) scale(0.9); }
+        100% { transform: translate(0px, 0px) scale(1); }
+    }
+    
     .animate-float {
         animation: float 6s ease-in-out infinite;
     }
@@ -572,6 +607,15 @@
         animation: gradient-shift 3s ease-in-out infinite;
     }
     
+    .animate-gradient-shift {
+        background-size: 200% 200%;
+        animation: gradient-shift 8s ease infinite;
+    }
+    
+    .animate-blob {
+        animation: blob 7s infinite;
+    }
+    
     /* Enhanced hover effects */
     .hover-glow:hover {
         box-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
@@ -583,5 +627,9 @@
     .parallax-bg {
         will-change: transform;
         transform: translateZ(0);
+    }
+    
+    .bg-radial-gradient {
+        background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.6) 100%);
     }
 </style>

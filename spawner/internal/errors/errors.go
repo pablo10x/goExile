@@ -1,284 +1,282 @@
 package errors
 
 import (
-	"encoding/json"
 	"fmt"
 	"log/slog"
-	"net/http"
-	"time"
+	"runtime"
+	"strings"
 )
 
-// ErrorType represents different categories of errors
-type ErrorType string
-
+// Error codes for categorization
 const (
-	ErrorTypeNetwork       ErrorType = "NETWORK"
-	ErrorTypeValidation    ErrorType = "VALIDATION"
-	ErrorTypePermission    ErrorType = "PERMISSION"
-	ErrorTypeResource      ErrorType = "RESOURCE"
-	ErrorTypeConfiguration ErrorType = "CONFIGURATION"
-	ErrorTypeTimeout       ErrorType = "TIMEOUT"
-	ErrorTypeUnknown       ErrorType = "UNKNOWN"
-)
-
-// ErrorSeverity represents the severity level of errors
-type ErrorSeverity string
-
-const (
-	ErrorSeverityLow      ErrorSeverity = "LOW"
-	ErrorSeverityMedium   ErrorSeverity = "MEDIUM"
-	ErrorSeverityHigh     ErrorSeverity = "HIGH"
-	ErrorSeverityCritical ErrorSeverity = "CRITICAL"
+	ErrCodeProcessStart   = "PROCESS_START_FAILED"
+	ErrCodeProcessStop    = "PROCESS_STOP_FAILED"
+	ErrCodePortAllocation = "PORT_ALLOCATION_FAILED"
+	ErrCodeFileOperation  = "FILE_OPERATION_FAILED"
+	ErrCodeNetwork        = "NETWORK_ERROR"
+	ErrCodeConfig         = "CONFIG_ERROR"
+	ErrCodeTimeout        = "TIMEOUT_ERROR"
+	ErrCodeValidation     = "VALIDATION_ERROR"
+	ErrCodePermission     = "PERMISSION_ERROR"
+	ErrCodeResource       = "RESOURCE_ERROR"
 )
 
 // SpawnerError represents a structured error with context
 type SpawnerError struct {
-	Type     ErrorType              `json:"type"`
-	Severity ErrorSeverity          `json:"severity"`
-	Code     string                 `json:"code"`
-	Message  string                 `json:"message"`
-	Details  map[string]interface{} `json:"details,omitempty"`
-	Context  *ErrorContext          `json:"context,omitempty"`
-	Cause    error                  `json:"-"`
-	Stack    string                 `json:"stack,omitempty"`
-}
-
-// ErrorContext provides additional context about where and when the error occurred
-type ErrorContext struct {
-	SpawnerID  string    `json:"spawnerId,omitempty"`
-	InstanceID string    `json:"instanceId,omitempty"`
-	Operation  string    `json:"operation,omitempty"`
-	Timestamp  time.Time `json:"timestamp"`
-	UserID     string    `json:"userId,omitempty"`
-}
-
-// ErrorCodes defines standard error codes
-var ErrorCodes = struct {
-	// Network errors
-	NetworkConnectionFailed string
-	NetworkTimeout          string
-	NetworkUnauthorized     string
-
-	// Validation errors
-	ValidationInvalidInput    string
-	ValidationMissingRequired string
-	ValidationInvalidFormat   string
-
-	// Permission errors
-	PermissionDenied       string
-	PermissionInsufficient string
-
-	// Resource errors
-	ResourceNotFound  string
-	ResourceExhausted string
-	ResourceConflict  string
-
-	// Configuration errors
-	ConfigInvalid string
-	ConfigMissing string
-
-	// Timeout errors
-	TimeoutExceeded string
-}{
-	NetworkConnectionFailed: "NETWORK_001",
-	NetworkTimeout:          "NETWORK_002",
-	NetworkUnauthorized:     "NETWORK_003",
-
-	ValidationInvalidInput:    "VALIDATION_001",
-	ValidationMissingRequired: "VALIDATION_002",
-	ValidationInvalidFormat:   "VALIDATION_003",
-
-	PermissionDenied:       "PERMISSION_001",
-	PermissionInsufficient: "PERMISSION_002",
-
-	ResourceNotFound:  "RESOURCE_001",
-	ResourceExhausted: "RESOURCE_002",
-	ResourceConflict:  "RESOURCE_003",
-
-	ConfigInvalid: "CONFIG_001",
-	ConfigMissing: "CONFIG_002",
-
-	TimeoutExceeded: "TIMEOUT_001",
-}
-
-// NewSpawnerError creates a new structured error
-func NewSpawnerError(errType ErrorType, severity ErrorSeverity, code, message string, details map[string]interface{}, context *ErrorContext, cause error) *SpawnerError {
-	if context == nil {
-		context = &ErrorContext{
-			Timestamp: time.Now(),
-		}
-	} else if context.Timestamp.IsZero() {
-		context.Timestamp = time.Now()
-	}
-
-	return &SpawnerError{
-		Type:     errType,
-		Severity: severity,
-		Code:     code,
-		Message:  message,
-		Details:  details,
-		Context:  context,
-		Cause:    cause,
-	}
+	Code      string         `json:"code"`
+	Message   string         `json:"message"`
+	Operation string         `json:"operation"`
+	Context   map[string]any `json:"context,omitempty"`
+	Stack     []string       `json:"stack,omitempty"`
+	Cause     error          `json:"-"`
 }
 
 // Error implements the error interface
 func (e *SpawnerError) Error() string {
-	return fmt.Sprintf("[%s:%s] %s", e.Type, e.Code, e.Message)
-}
-
-// GetUserMessage returns a user-friendly error message
-func (e *SpawnerError) GetUserMessage() string {
-	switch e.Code {
-	case ErrorCodes.NetworkConnectionFailed:
-		return "Unable to connect to the spawner. Please check your network connection and try again."
-	case ErrorCodes.NetworkTimeout:
-		return "The operation timed out. The spawner may be busy or unresponsive."
-	case ErrorCodes.PermissionDenied:
-		return "You do not have permission to perform this operation."
-	case ErrorCodes.ResourceNotFound:
-		return "The requested resource was not found."
-	case ErrorCodes.ResourceExhausted:
-		return "System resources are exhausted. Please try again later."
-	case ErrorCodes.ValidationInvalidInput:
-		return "The provided input is invalid. Please check your data and try again."
-	default:
-		return e.Message
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("[%s] %s", e.Code, e.Message))
+	if e.Operation != "" {
+		sb.WriteString(fmt.Sprintf(" (operation: %s)", e.Operation))
 	}
-}
-
-// GetTechnicalDetails returns detailed error information for logging/debugging
-func (e *SpawnerError) GetTechnicalDetails() map[string]interface{} {
-	details := map[string]interface{}{
-		"type":     e.Type,
-		"severity": e.Severity,
-		"code":     e.Code,
-		"message":  e.Message,
-	}
-
-	if e.Details != nil {
-		details["details"] = e.Details
-	}
-
-	if e.Context != nil {
-		details["context"] = e.Context
-	}
-
-	if e.Stack != "" {
-		details["stack"] = e.Stack
-	}
-
 	if e.Cause != nil {
-		details["cause"] = e.Cause.Error()
+		sb.WriteString(fmt.Sprintf(": %v", e.Cause))
 	}
-
-	return details
+	return sb.String()
 }
 
-// Log logs the error with appropriate level
-func (e *SpawnerError) Log(logger *slog.Logger) {
-	details := e.GetTechnicalDetails()
+// Unwrap returns the underlying cause
+func (e *SpawnerError) Unwrap() error {
+	return e.Cause
+}
 
-	switch e.Severity {
-	case ErrorSeverityCritical:
-		logger.Error("CRITICAL ERROR", "error", details)
-	case ErrorSeverityHigh:
-		logger.Error("HIGH SEVERITY ERROR", "error", details)
-	case ErrorSeverityMedium:
-		logger.Warn("MEDIUM SEVERITY ERROR", "error", details)
-	case ErrorSeverityLow:
-		logger.Info("LOW SEVERITY ERROR", "error", details)
+// New creates a new SpawnerError with the given code and message
+func New(code, message string) *SpawnerError {
+	return &SpawnerError{
+		Code:    code,
+		Message: message,
+		Stack:   captureStack(),
 	}
 }
 
-// ToJSON converts the error to JSON for API responses
-func (e *SpawnerError) ToJSON() ([]byte, error) {
-	return json.Marshal(e)
-}
-
-// ToHTTPResponse converts the error to an HTTP response
-func (e *SpawnerError) ToHTTPResponse() (int, map[string]interface{}) {
-	statusCode := http.StatusInternalServerError
-
-	// Map error types to HTTP status codes
-	switch e.Type {
-	case ErrorTypeValidation:
-		statusCode = http.StatusBadRequest
-	case ErrorTypePermission:
-		statusCode = http.StatusForbidden
-	case ErrorTypeResource:
-		if e.Code == ErrorCodes.ResourceNotFound {
-			statusCode = http.StatusNotFound
-		} else {
-			statusCode = http.StatusConflict
-		}
-	case ErrorTypeNetwork:
-		statusCode = http.StatusBadGateway
-	case ErrorTypeTimeout:
-		statusCode = http.StatusGatewayTimeout
+// Newf creates a new SpawnerError with formatted message
+func Newf(code, format string, args ...any) *SpawnerError {
+	return &SpawnerError{
+		Code:    code,
+		Message: fmt.Sprintf(format, args...),
+		Stack:   captureStack(),
 	}
-
-	return statusCode, map[string]interface{}{
-		"error": map[string]interface{}{
-			"code":     e.Code,
-			"message":  e.GetUserMessage(),
-			"type":     e.Type,
-			"severity": e.Severity,
-		},
-	}
-}
-
-// Factory functions for common error types
-
-// Network creates a network error
-func Network(code, message string, details map[string]interface{}, context *ErrorContext) *SpawnerError {
-	return NewSpawnerError(ErrorTypeNetwork, ErrorSeverityHigh, code, message, details, context, nil)
-}
-
-// Validation creates a validation error
-func Validation(code, message string, details map[string]interface{}, context *ErrorContext) *SpawnerError {
-	return NewSpawnerError(ErrorTypeValidation, ErrorSeverityMedium, code, message, details, context, nil)
-}
-
-// Permission creates a permission error
-func Permission(code, message string, details map[string]interface{}, context *ErrorContext) *SpawnerError {
-	return NewSpawnerError(ErrorTypePermission, ErrorSeverityHigh, code, message, details, context, nil)
-}
-
-// Resource creates a resource error
-func Resource(code, message string, details map[string]interface{}, context *ErrorContext) *SpawnerError {
-	return NewSpawnerError(ErrorTypeResource, ErrorSeverityHigh, code, message, details, context, nil)
-}
-
-// Config creates a configuration error
-func Config(code, message string, details map[string]interface{}, context *ErrorContext) *SpawnerError {
-	return NewSpawnerError(ErrorTypeConfiguration, ErrorSeverityMedium, code, message, details, context, nil)
-}
-
-// Timeout creates a timeout error
-func Timeout(code, message string, details map[string]interface{}, context *ErrorContext) *SpawnerError {
-	return NewSpawnerError(ErrorTypeTimeout, ErrorSeverityMedium, code, message, details, context, nil)
 }
 
 // Wrap wraps an existing error with additional context
-func Wrap(err error, errType ErrorType, context *ErrorContext) *SpawnerError {
-	if spawnerErr, ok := err.(*SpawnerError); ok {
-		return spawnerErr
+func Wrap(err error, code, operation string) *SpawnerError {
+	if err == nil {
+		return nil
 	}
 
-	return NewSpawnerError(errType, ErrorSeverityMedium, "WRAPPED_ERROR", err.Error(), nil, context, err)
+	se := &SpawnerError{
+		Code:      code,
+		Message:   err.Error(),
+		Operation: operation,
+		Stack:     captureStack(),
+		Cause:     err,
+	}
+
+	// If the underlying error is already a SpawnerError, preserve its context
+	if underlying, ok := err.(*SpawnerError); ok {
+		se.Context = underlying.Context
+		if se.Code == "" {
+			se.Code = underlying.Code
+		}
+	}
+
+	return se
 }
 
-// HandleError is a utility function for handling errors in HTTP handlers
-func HandleError(err error, logger *slog.Logger, context *ErrorContext) *SpawnerError {
-	var spawnerErr *SpawnerError
-
-	if se, ok := err.(*SpawnerError); ok {
-		spawnerErr = se
-	} else {
-		spawnerErr = Wrap(err, ErrorTypeUnknown, context)
+// Wrapf wraps an existing error with formatted operation context
+func Wrapf(err error, code, format string, args ...any) *SpawnerError {
+	if err == nil {
+		return nil
 	}
 
-	spawnerErr.Log(logger)
-	return spawnerErr
+	return &SpawnerError{
+		Code:      code,
+		Message:   err.Error(),
+		Operation: fmt.Sprintf(format, args...),
+		Stack:     captureStack(),
+		Cause:     err,
+	}
+}
+
+// WithContext adds context to the error
+func (e *SpawnerError) WithContext(key string, value any) *SpawnerError {
+	if e.Context == nil {
+		e.Context = make(map[string]any)
+	}
+	e.Context[key] = value
+	return e
+}
+
+// WithContextMap adds multiple context values
+func (e *SpawnerError) WithContextMap(ctx map[string]any) *SpawnerError {
+	if e.Context == nil {
+		e.Context = make(map[string]any)
+	}
+	for k, v := range ctx {
+		e.Context[k] = v
+	}
+	return e
+}
+
+// LogAttrs returns slog attributes for structured logging
+func (e *SpawnerError) LogAttrs() []slog.Attr {
+	attrs := []slog.Attr{
+		slog.String("error_code", e.Code),
+		slog.String("error_message", e.Message),
+	}
+
+	if e.Operation != "" {
+		attrs = append(attrs, slog.String("operation", e.Operation))
+	}
+
+	if e.Cause != nil {
+		attrs = append(attrs, slog.String("cause", e.Cause.Error()))
+	}
+
+	// Add context attributes
+	for k, v := range e.Context {
+		attrs = append(attrs, slog.Any(k, v))
+	}
+
+	// Add stack trace if available
+	if len(e.Stack) > 0 {
+		attrs = append(attrs, slog.String("stack", strings.Join(e.Stack, "\n")))
+	}
+
+	return attrs
+}
+
+// captureStack captures the current goroutine's stack trace
+func captureStack() []string {
+	const maxFrames = 10
+	var stack []string
+
+	for i := 2; i < maxFrames+2; i++ { // Skip captureStack and the calling function
+		pc, file, line, ok := runtime.Caller(i)
+		if !ok {
+			break
+		}
+
+		fn := runtime.FuncForPC(pc)
+		if fn == nil {
+			continue
+		}
+
+		// Create a readable stack frame
+		frame := fmt.Sprintf("%s:%d %s",
+			file,
+			line,
+			fn.Name())
+		stack = append(stack, frame)
+	}
+
+	return stack
+}
+
+// IsErrorCode checks if an error matches a specific error code
+func IsErrorCode(err error, code string) bool {
+	if err == nil {
+		return false
+	}
+
+	if se, ok := err.(*SpawnerError); ok {
+		return se.Code == code
+	}
+
+	return false
+}
+
+// GetErrorCode extracts the error code from an error
+func GetErrorCode(err error) string {
+	if err == nil {
+		return ""
+	}
+
+	if se, ok := err.(*SpawnerError); ok {
+		return se.Code
+	}
+
+	return "UNKNOWN"
+}
+
+// Helper functions for common error scenarios
+
+// ProcessStartError creates a process start failure error
+func ProcessStartError(operation string, cause error) *SpawnerError {
+	return Wrap(cause, ErrCodeProcessStart, operation).
+		WithContext("error_type", "process_start")
+}
+
+// ProcessStopError creates a process stop failure error
+func ProcessStopError(operation string, cause error) *SpawnerError {
+	return Wrap(cause, ErrCodeProcessStop, operation).
+		WithContext("error_type", "process_stop")
+}
+
+// PortAllocationError creates a port allocation failure error
+func PortAllocationError(minPort, maxPort int, cause error) *SpawnerError {
+	return Wrap(cause, ErrCodePortAllocation, "find_available_port").
+		WithContext("error_type", "port_allocation").
+		WithContext("min_port", minPort).
+		WithContext("max_port", maxPort)
+}
+
+// FileOperationError creates a file operation failure error
+func FileOperationError(operation, path string, cause error) *SpawnerError {
+	return Wrap(cause, ErrCodeFileOperation, operation).
+		WithContext("error_type", "file_operation").
+		WithContext("file_path", path)
+}
+
+// NetworkError creates a network-related error
+func NetworkError(operation string, cause error) *SpawnerError {
+	return Wrap(cause, ErrCodeNetwork, operation).
+		WithContext("error_type", "network")
+}
+
+// ConfigError creates a configuration error
+func ConfigError(field, value string, cause error) *SpawnerError {
+	return Wrap(cause, ErrCodeConfig, "config_validation").
+		WithContext("error_type", "config").
+		WithContext("config_field", field).
+		WithContext("config_value", value)
+}
+
+// TimeoutError creates a timeout error
+func TimeoutError(operation string, timeout string, cause error) *SpawnerError {
+	return Wrap(cause, ErrCodeTimeout, operation).
+		WithContext("error_type", "timeout").
+		WithContext("timeout_duration", timeout)
+}
+
+// ValidationError creates a validation error
+func ValidationError(field, value string, cause error) *SpawnerError {
+	return Wrap(cause, ErrCodeValidation, "validation").
+		WithContext("error_type", "validation").
+		WithContext("field", field).
+		WithContext("value", value)
+}
+
+// PermissionError creates a permission error
+func PermissionError(operation, resource string, cause error) *SpawnerError {
+	return Wrap(cause, ErrCodePermission, operation).
+		WithContext("error_type", "permission").
+		WithContext("resource", resource)
+}
+
+// ResourceError creates a resource-related error
+func ResourceError(resourceType, resourceID string, cause error) *SpawnerError {
+	return Wrap(cause, ErrCodeResource, "resource_operation").
+		WithContext("error_type", "resource").
+		WithContext("resource_type", resourceType).
+		WithContext("resource_id", resourceID)
 }

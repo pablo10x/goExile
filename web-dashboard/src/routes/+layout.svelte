@@ -68,25 +68,12 @@ onMount(() => {
         </div>
     {:else}
     {#if $isAuthenticated && page.url.pathname !== '/login'}
-        <div class="flex h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100 overflow-hidden">
-            <!-- Modern Sidebar -->
-            <aside class="relative w-72 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border-r border-slate-700/50 flex flex-col shrink-0 overflow-hidden shadow-2xl z-20 backdrop-blur-xl">
-
-                <!-- Enhanced Background Layers -->
-                <div class="absolute inset-0 z-0">
-                    <!-- Base gradient -->
-                    <div class="absolute inset-0 bg-gradient-to-b from-slate-950 to-slate-900"></div>
-
-                    <!-- Animated geometric shapes -->
-                    <div class="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-indigo-600/10 to-purple-600/10 rounded-full blur-3xl animate-pulse"></div>
-                    <div class="absolute bottom-0 right-0 w-40 h-40 bg-gradient-to-tl from-cyan-600/10 to-blue-600/10 rounded-full blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
-
-                    <!-- Subtle grid pattern -->
-                    <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjAzKSIvPjwvc3ZnPg==')] opacity-30"></div>
-
-                    <!-- Glass morphism overlay -->
-                    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm border-r border-white/10"></div>
-                </div>
+        <div class="flex h-screen text-slate-300 overflow-hidden relative">
+            <!-- Sidebar with 3D Background -->
+            <aside class="relative w-64 bg-slate-950 border-r border-slate-800 flex flex-col shrink-0 overflow-hidden shadow-2xl z-20">
+                
+    <!-- Glass Surface -->
+                <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-[1px] border-r border-white/5"></div>
 
               <!-- Content Container -->
                 <div class="relative z-10 flex flex-col h-full">
@@ -204,19 +191,45 @@ onMount(() => {
                             </div>
                         </button>
                     </div>
-                </div>
+      </div>
             </aside>
 
-            <!-- Enhanced Main Content -->
-            <main class="flex-1 overflow-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative">
-                <!-- Subtle background pattern -->
-                <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMSIgZmlsbD0icmdiYSgxMDQsIDExNCwgMTIyLCAwLjAzKSIvPjwvc3ZnPg==')] opacity-20"></div>
-
-                <div class="relative max-w-7xl mx-auto px-8 py-8 min-h-full">
+            <!-- Main Content -->
+            <main class="flex-1 overflow-auto relative">
+                 <!-- Top shadow/fade for content scrolling under -->
+                <div class="max-w-7xl mx-auto px-6 sm:px-8 py-8 min-h-full">
                     {@render children()}
                 </div>
             </main>
         </div>
+        
+        <!-- Spectacular Background for authenticated pages -->
+        {#if $isAuthenticated && page.url.pathname !== '/login'}
+            <div class="fixed inset-0 -z-50 overflow-hidden">
+                <!-- Animated Gradient Background -->
+                <div class="absolute inset-0 bg-gradient-to-br from-purple-900 via-black to-blue-900 animate-gradient-shift"></div>
+                
+                <!-- Moving Nebula Clouds -->
+                <div class="absolute inset-0">
+                    <div class="absolute top-0 left-0 w-[60%] h-[40%] bg-blue-600/20 rounded-full blur-[150px] animate-blob" style="animation-delay: 0s;"></div>
+                    <div class="absolute top-1/4 right-0 w-[50%] h-[35%] bg-purple-600/20 rounded-full blur-[150px] animate-blob" style="animation-delay: 3s;"></div>
+                    <div class="absolute bottom-0 left-1/3 w-[45%] h-[30%] bg-cyan-600/15 rounded-full blur-[120px] animate-blob" style="animation-delay: 5s;"></div>
+                </div>
+                
+                <!-- Grid Pattern Overlay -->
+                <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgPGcgZmlsbD0iIzY0NzQ4YiIgZmlsbC1vcGFjaXR5PSIwLjAzIj4KICAgICAgPHBhdGggZD0iTTM2IDM0di00aC0ydjRoLTR2Mmg0djRoMnYtNGg0di0yaC00em0wLTMwVjBoLTJ2NGgtNHYyaDR2NGgyVjZoNFY0aC00ek02IDM0di00SDR2NEgwdjJoNHY0aDJ2LTRoNHYtMkg2ek02IDRWMEg0djRIMHZoaDR2NGgyVjZoNFY0SDZ6Ii8+CiAgICA8L2c+CiAgPC9nPgo8L3N2Zz4=')] opacity-20"></div>
+                
+                <!-- Vignette Effect -->
+                <div class="absolute inset-0 bg-radial-gradient from-transparent via-black/20 to-black/60"></div>
+            </div>
+            
+            <!-- Floating Elements -->
+            <div class="fixed inset-0 pointer-events-none z-5">
+                <div class="absolute top-20 left-20 w-16 h-16 border-2 border-blue-400/30 rounded-lg animate-float" style="animation-delay: 0s;"></div>
+                <div class="absolute top-40 right-32 w-12 h-12 border-2 border-purple-400/30 rounded-full animate-pulse" style="animation-delay: 1s;"></div>
+                <div class="absolute bottom-32 left-1/3 w-20 h-20 border-2 border-cyan-400/30 transform rotate-45 animate-spin" style="animation-delay: 2s; animation-duration: 15s;"></div>
+            </div>
+        {/if}
     {:else}
         {@render children()}
     {/if}
@@ -331,6 +344,46 @@ onMount(() => {
         box-shadow: 
             inset 0 0 30px rgba(59, 130, 246, 0.1),
             0 0 20px rgba(59, 130, 246, 0.2);
+    }
+    
+    /* Background Animations */
+    @keyframes gradient-shift {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+    
+    @keyframes blob {
+        0% { transform: translate(0px, 0px) scale(1); }
+        33% { transform: translate(30px, -50px) scale(1.1); }
+        66% { transform: translate(-20px, 20px) scale(0.9); }
+        100% { transform: translate(0px, 0px) scale(1); }
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(5deg); }
+    }
+    
+    .animate-gradient-shift {
+        background-size: 200% 200%;
+        animation: gradient-shift 8s ease infinite;
+    }
+    
+    .animate-blob {
+        animation: blob 7s infinite;
+    }
+    
+    .animate-float {
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    .bg-radial-gradient {
+        background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.6) 100%);
+    }
+    
+    /* Reusable Page Container */
+    .page-container {
+        /* Let pages handle their own styling - this is just for global page wrapper if needed */
     }
     
     /* Navigation Links */

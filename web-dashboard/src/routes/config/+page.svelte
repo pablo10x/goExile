@@ -73,7 +73,7 @@
             <h1 class="text-3xl font-bold text-slate-100 mb-2">Configuration</h1>
             <p class="text-slate-400">Manage server settings, spawner defaults, and security options</p>
         </div>
-        <button 
+      <button 
             onclick={loadConfig}
             class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
         >
@@ -86,9 +86,9 @@
         </button>
     </div>
 
-    <!-- Error State -->
-    {#if error}
-        <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-300">
+            <!-- Error State -->
+        {#if error}
+            <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-300">
             <div class="flex items-center gap-3">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
@@ -106,14 +106,14 @@
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
     {:else}
-        <!-- Configuration Categories Grid -->
+<!-- Configuration Categories Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {#each categories as category}
                 <a 
                     href="/config/{category.name}"
-                    class="group block"
+                    class="group block transform hover:scale-[1.02] transition-transform duration-300"
                 >
-                    <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 hover:border-{category.color}-500/50 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-{category.color}-900/20">
+                    <div class="bg-slate-800/60 backdrop-blur-sm border border-slate-700 rounded-xl p-6 hover:border-{category.color}-500/50 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-{category.color}-900/20">
                         <div class="flex items-start justify-between mb-4">
                             <div class="p-2 bg-{category.color}-500/10 rounded-lg">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-{category.color}-400" viewBox="0 0 24 24" fill="currentColor">
@@ -131,13 +131,13 @@
             {/each}
         </div>
 
-        <!-- Recent Configuration Changes -->
+      <!-- Recent Configuration Changes -->
         {#if $config && $config.length > 0}
-            <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
+            <div class="bg-slate-800/60 backdrop-blur-sm border border-slate-700 rounded-xl p-6 transform hover:scale-[1.01] transition-transform duration-300">
                 <h2 class="text-xl font-semibold text-slate-100 mb-4">All Configuration Settings</h2>
                 <div class="space-y-3">
-                    {#each $config as configItem (configItem.key)}
-                        <div class="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg border border-slate-700">
+                  {#each $config as configItem (configItem.key)}
+                        <div class="flex items-center justify-between p-3 bg-slate-900/60 rounded-lg border border-slate-700">
                             <div class="flex items-center gap-3">
                                 <div class="w-2 h-2 rounded-full bg-{getCategoryColor(configItem.category)}-500"></div>
                                 <div>

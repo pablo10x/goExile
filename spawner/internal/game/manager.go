@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"spawner/internal/config"
+	spawnerErrors "spawner/internal/errors"
 	"spawner/internal/updater"
 	"strings"
 	"sync"
@@ -29,11 +30,13 @@ type HistoryPoint struct {
 
 // InstanceStats holds resource usage information.
 type InstanceStats struct {
-	CPUPercent  float64 `json:"cpu_percent"`
-	MemoryUsage uint64  `json:"memory_usage"`
-	DiskUsage   uint64  `json:"disk_usage"`
-	Status      string  `json:"status"`
-	Uptime      int64   `json:"uptime"`
+	CPUPercent     float64 `json:"cpu_percent"`
+	MemoryUsage    uint64  `json:"memory_usage"`
+	DiskUsage      uint64  `json:"disk_usage"`
+	Status         string  `json:"status"`
+	Uptime         int64   `json:"uptime"`
+	PlayerCount    int     `json:"player_count"`
+	MaximumPlayers int     `json:"maximum_players"`
 }
 
 // Instance represents a running game server.
@@ -50,7 +53,7 @@ type Instance struct {
 	History []HistoryPoint `json:"-"` // Stored in memory, not serialized in basic list
 
 	cmd *exec.Cmd // Private: command handle for process management
-	
+
 	proc   *process.Process // Persistent process handle for stats
 	procMu sync.Mutex       // Protects proc usage
 }
@@ -122,7 +125,7 @@ func (m *Manager) recordInstanceStat(id string) {
 	// 3. Append to History
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	if inst, exists := m.instances[id]; exists {
 		point := HistoryPoint{
 			Timestamp: time.Now(),
@@ -131,7 +134,7 @@ func (m *Manager) recordInstanceStat(id string) {
 			MemoryPct: memPct,
 		}
 		inst.History = append(inst.History, point)
-		
+
 		// Keep last 24h (1440 mins)
 		if len(inst.History) > 1440 {
 			inst.History = inst.History[1:]
@@ -148,7 +151,7 @@ func (m *Manager) GetInstanceHistory(id string) ([]HistoryPoint, error) {
 	if !exists {
 		return nil, fmt.Errorf("instance not found")
 	}
-	
+
 	// Return a copy to avoid race conditions
 	history := make([]HistoryPoint, len(inst.History))
 	copy(history, inst.History)
@@ -257,19 +260,43 @@ func (m *Manager) Spawn(ctx context.Context) (*Instance, error) {
 func (m *Manager) provisionAndStart(inst *Instance) {
 	// Ensure instances directory exists
 	if err := os.MkdirAll(m.cfg.InstancesDir, 0755); err != nil {
-		m.setErrorState(inst, fmt.Errorf("failed to create instances directory: %w", err))
+		spawnerErr := spawnerErrors.FileOperationError("create_instances_dir", m.cfg.InstancesDir, err).
+			WithContext("instance_id", inst.ID).
+			WithContext("instances_dir", m.cfg.InstancesDir)
+		attrs := spawnerErr.LogAttrs()
+		args := make([]any, len(attrs)*2)
+		for i, attr := range attrs {
+			args[i*2] = attr.Key
+			args[i*2+1] = attr.Value
+		}
+		m.logger.Error("Failed to create instances directory", args...)
+		m.setErrorState(inst, spawnerErr)
 		return
 	}
 
 	// Copy game files to new instance directory
-	m.logger.Info("Copying game files...", "id", inst.ID, "dir", inst.Path)
+	m.logger.Info("Copying game files...", "id", inst.ID, "dir", inst.Path, "source", m.cfg.GameInstallDir)
 	if err := copyDir(m.cfg.GameInstallDir, inst.Path); err != nil {
-		m.setErrorState(inst, fmt.Errorf("failed to copy game files: %w", err))
+		spawnerErr := spawnerErrors.FileOperationError("copy_game_files", inst.Path, err).
+			WithContext("instance_id", inst.ID).
+			WithContext("source_dir", m.cfg.GameInstallDir).
+			WithContext("target_dir", inst.Path)
+		attrs := spawnerErr.LogAttrs()
+		args := make([]any, len(attrs)*2)
+		for i, attr := range attrs {
+			args[i*2] = attr.Key
+			args[i*2+1] = attr.Value
+		}
+		m.logger.Error("Failed to copy game files", args...)
+		m.setErrorState(inst, spawnerErr)
 		return
 	}
 
 	// Read version from the copied files
 	inst.Version = m.readVersionFile(inst.Path)
+	if inst.Version != "" {
+		m.logger.Info("Game version detected", "instance_id", inst.ID, "version", inst.Version)
+	}
 
 	// Start the process (requires lock)
 	m.mu.Lock()
@@ -277,18 +304,47 @@ func (m *Manager) provisionAndStart(inst *Instance) {
 
 	if err := m.startProcess(inst); err != nil {
 		// If start fails, we are already locked, so we can set error state directly or call internal helper
-		m.logger.Error("Provisioning failed", "id", inst.ID, "error", err)
+		spawnerErr := spawnerErrors.ProcessStartError("start_provisioned_instance", err).
+			WithContext("instance_id", inst.ID).
+			WithContext("port", inst.Port).
+			WithContext("path", inst.Path)
+		attrs := spawnerErr.LogAttrs()
+		args := make([]any, len(attrs)*2)
+		for i, attr := range attrs {
+			args[i*2] = attr.Key
+			args[i*2+1] = attr.Value
+		}
+		m.logger.Error("Failed to start provisioned instance", args...)
 		inst.Status = "Error"
 		m.saveStateInternal()
 		return
 	}
 
-	m.logger.Info("Instance provisioning complete and started", "id", inst.ID)
+	m.logger.Info("Instance provisioning complete and started", "id", inst.ID, "port", inst.Port, "path", inst.Path)
 	m.saveStateInternal()
 }
 
 // UpdateInstance stops the instance if running and re-copies the game files.
 func (m *Manager) UpdateInstance(id string) error {
+	// Stop the instance first, if it is running. This is a blocking call.
+	// We must do this outside the main lock to avoid deadlocking with monitorInstance.
+	m.mu.RLock()
+	inst, exists := m.instances[id]
+	isRunning := exists && inst.Status == "Running"
+	m.mu.RUnlock()
+
+	if isRunning {
+		m.logger.Info("Stopping instance for update", "id", id)
+		if err := m.StopInstance(id); err != nil {
+			// StopInstance returns an error if it's already stopped, which can happen
+			// in a race condition. We can ignore that specific error.
+			if !strings.Contains(err.Error(), "instance is not running") {
+				return fmt.Errorf("failed to stop instance before update: %w", err)
+			}
+		}
+	}
+
+	// Now, acquire the main lock to perform the file operations.
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -296,19 +352,11 @@ func (m *Manager) UpdateInstance(id string) error {
 		return fmt.Errorf("spawner is busy updating")
 	}
 
-	inst, exists := m.instances[id]
+	// Re-fetch the instance state, as it must be checked after acquiring the lock.
+	inst, exists = m.instances[id]
 	if !exists {
-		return fmt.Errorf("instance not found")
-	}
-
-	// Stop if running
-	if inst.Status == "Running" && inst.cmd != nil && inst.cmd.Process != nil {
-		m.logger.Info("Stopping instance for update", "id", id)
-		_ = inst.cmd.Process.Kill()
-		inst.cmd.Wait() // Wait for exit
-		inst.Status = "Stopped"
-		inst.ProcessID = 0
-		inst.cmd = nil
+		// This can happen if the instance was removed between the unlock and re-lock.
+		return fmt.Errorf("instance not found (it may have been removed)")
 	}
 
 	// Update local template if needed
@@ -318,10 +366,10 @@ func (m *Manager) UpdateInstance(id string) error {
 	// If we hold the lock during download, EVERYTHING freezes.
 	// So we should NOT call updater.UpdateTemplate inside UpdateInstance if possible, or we accept the freeze.
 	// For now, keeping original logic but without setting global busy flag since this is a specific instance update.
-	// However, if we want to ensure template is fresh, we might need to. 
-	// Let's assume UpdateInstance uses the *current* template. 
+	// However, if we want to ensure template is fresh, we might need to.
+	// Let's assume UpdateInstance uses the *current* template.
 	// The original code called updater.UpdateTemplate. I will keep it but be aware it blocks.
-	
+
 	if _, err := updater.UpdateTemplate(m.cfg, m.logger); err != nil {
 		m.logger.Warn("Failed to update template from master", "error", err)
 		inst.Status = "Error"
@@ -344,6 +392,22 @@ func (m *Manager) UpdateInstance(id string) error {
 
 // RenameInstance renames an instance ID and its directory.
 func (m *Manager) RenameInstance(id string, newID string) error {
+	// Stop the instance first, if it is running.
+	m.mu.RLock()
+	inst, exists := m.instances[id]
+	isRunning := exists && inst.Status == "Running"
+	m.mu.RUnlock()
+
+	if isRunning {
+		m.logger.Info("Stopping instance for rename", "id", id)
+		if err := m.StopInstance(id); err != nil {
+			if !strings.Contains(err.Error(), "instance is not running") {
+				return fmt.Errorf("failed to stop instance before rename: %w", err)
+			}
+		}
+	}
+
+	// Now, acquire the main lock to perform the rename.
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -355,19 +419,10 @@ func (m *Manager) RenameInstance(id string, newID string) error {
 		return fmt.Errorf("instance with ID %s already exists", newID)
 	}
 
-	inst, exists := m.instances[id]
+	// Re-fetch the instance state after acquiring the lock.
+	inst, exists = m.instances[id]
 	if !exists {
-		return fmt.Errorf("instance not found")
-	}
-
-	// Stop if running
-	if inst.Status == "Running" && inst.cmd != nil && inst.cmd.Process != nil {
-		m.logger.Info("Stopping instance for rename", "id", id)
-		_ = inst.cmd.Process.Kill()
-		inst.cmd.Wait()
-		inst.Status = "Stopped"
-		inst.ProcessID = 0
-		inst.cmd = nil
+		return fmt.Errorf("instance not found (it may have been removed)")
 	}
 
 	oldPath := inst.Path
@@ -409,24 +464,59 @@ func (m *Manager) startProcess(inst *Instance) error {
 	// Resolve absolute path for the command execution to be safe
 	absBinaryPath, err := filepath.Abs(binaryPath)
 	if err != nil {
-		return fmt.Errorf("failed to resolve absolute binary path: %w", err)
+		spawnerErr := spawnerErrors.FileOperationError("resolve_binary_path", binaryPath, err).
+			WithContext("instance_id", inst.ID).
+			WithContext("binary_path", binaryPath)
+		attrs := spawnerErr.LogAttrs()
+		args := make([]any, len(attrs)*2)
+		for i, attr := range attrs {
+			args[i*2] = attr.Key
+			args[i*2+1] = attr.Value
+		}
+		m.logger.Error("Failed to resolve absolute binary path", args...)
+		return spawnerErr
 	}
 
 	// Ensure binary is executable (no-op on Windows usually, but good practice)
-	_ = os.Chmod(absBinaryPath, 0755)
+	err = os.Chmod(absBinaryPath, 0755)
+	if err != nil {
+		spawnerErr := spawnerErrors.PermissionError("make_binary_executable", absBinaryPath, err).
+			WithContext("instance_id", inst.ID).
+			WithContext("binary_path", absBinaryPath)
+		attrs := spawnerErr.LogAttrs()
+		args := make([]any, len(attrs)*2)
+		for i, attr := range attrs {
+			args[i*2] = attr.Key
+			args[i*2+1] = attr.Value
+		}
+		m.logger.Error("Failed to make binary executable", args...)
+		return spawnerErr
+	}
 
+	wsURL := fmt.Sprintf("ws://%s:%s", m.cfg.Host, m.cfg.Port)
 	// Prepare arguments for the game server binary
 	args := []string{
 		"-batchmode",
 		"-nographics",
 		"-mode", "server",
 		"-port", fmt.Sprintf("%d", inst.Port),
+		"-ws", wsURL,
 	}
 
 	logFilePath := filepath.Join(inst.Path, "gameserver.log")
 	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
-		return fmt.Errorf("failed to open log file %s: %w", logFilePath, err)
+		spawnerErr := spawnerErrors.FileOperationError("open_log_file", logFilePath, err).
+			WithContext("instance_id", inst.ID).
+			WithContext("log_path", logFilePath)
+		attrs := spawnerErr.LogAttrs()
+		args := make([]any, len(attrs)*2)
+		for i, attr := range attrs {
+			args[i*2] = attr.Key
+			args[i*2+1] = attr.Value
+		}
+		m.logger.Error("Failed to open log file", args...)
+		return spawnerErr
 	}
 	defer logFile.Close() // Close parent's handle, child inherits it
 
@@ -439,13 +529,24 @@ func (m *Manager) startProcess(inst *Instance) error {
 	if err := cmd.Start(); err != nil {
 		// Failed to start, close port to be clean
 		m.closeFirewallPort(inst.Port)
-		return fmt.Errorf("failed to start process %s: %w", absBinaryPath, err)
+		spawnerErr := spawnerErrors.ProcessStartError("start_game_binary", err).
+			WithContext("instance_id", inst.ID).
+			WithContext("binary_path", absBinaryPath).
+			WithContext("port", inst.Port)
+		attrs := spawnerErr.LogAttrs()
+		args := make([]any, len(attrs)*2)
+		for i, attr := range attrs {
+			args[i*2] = attr.Key
+			args[i*2+1] = attr.Value
+		}
+		m.logger.Error("Failed to start process", args...)
+		return spawnerErr
 	}
 
 	inst.cmd = cmd
 	inst.ProcessID = cmd.Process.Pid
 	inst.Status = "Running"
-	
+
 	// Create process handle for stats
 	inst.procMu.Lock()
 	if p, err := process.NewProcess(int32(inst.ProcessID)); err == nil {
@@ -473,7 +574,7 @@ func (m *Manager) monitorInstance(id string, cmd *exec.Cmd) {
 			instance.Status = "Stopped"
 			instance.ProcessID = 0
 			instance.cmd = nil
-			
+
 			// Clear process handle
 			instance.procMu.Lock()
 			instance.proc = nil
@@ -544,7 +645,7 @@ func (m *Manager) StopInstance(id string) error {
 				status = inst.Status
 			}
 			m.mu.RUnlock()
-			
+
 			if !ok || status == "Stopped" || status == "Error" {
 				return nil
 			}
@@ -740,11 +841,11 @@ func (m *Manager) GetInstanceStats(id string) (*InstanceStats, error) {
 				inst.proc.Percent(0) // Prime it
 			}
 		}
-		
+
 		if inst.proc != nil {
 			cpu, _ := inst.proc.Percent(0)
 			mem, _ := inst.proc.MemoryInfo()
-			
+
 			stats.CPUPercent = cpu
 			if mem != nil {
 				stats.MemoryUsage = mem.RSS
@@ -789,13 +890,26 @@ func (m *Manager) findAvailablePort() (int, error) {
 			return port, nil
 		}
 	}
-	return 0, fmt.Errorf("no available ports in range %d-%d", m.cfg.MinGamePort, m.cfg.MaxGamePort)
+	spawnerErr := spawnerErrors.PortAllocationError(m.cfg.MinGamePort, m.cfg.MaxGamePort,
+		fmt.Errorf("no available ports in range %d-%d", m.cfg.MinGamePort, m.cfg.MaxGamePort)).
+		WithContext("region", m.cfg.Region)
+	return 0, spawnerErr
 }
 
 func (m *Manager) openFirewallPort(port int) {
 	cmd := exec.Command("ufw", "allow", fmt.Sprintf("%d", port))
 	if out, err := cmd.CombinedOutput(); err != nil {
-		m.logger.Error("Failed to open firewall port", "port", port, "error", err, "output", string(out))
+		spawnerErr := spawnerErrors.NetworkError("open_firewall_port", err).
+			WithContext("port", port).
+			WithContext("command", "ufw allow").
+			WithContext("output", string(out))
+		attrs := spawnerErr.LogAttrs()
+		args := make([]any, len(attrs)*2)
+		for i, attr := range attrs {
+			args[i*2] = attr.Key
+			args[i*2+1] = attr.Value
+		}
+		m.logger.Error("Failed to open firewall port", args...)
 	} else {
 		m.logger.Info("Opened firewall port", "port", port)
 	}
@@ -804,7 +918,17 @@ func (m *Manager) openFirewallPort(port int) {
 func (m *Manager) closeFirewallPort(port int) {
 	cmd := exec.Command("ufw", "delete", "allow", fmt.Sprintf("%d", port))
 	if out, err := cmd.CombinedOutput(); err != nil {
-		m.logger.Error("Failed to close firewall port", "port", port, "error", err, "output", string(out))
+		spawnerErr := spawnerErrors.NetworkError("close_firewall_port", err).
+			WithContext("port", port).
+			WithContext("command", "ufw delete allow").
+			WithContext("output", string(out))
+		attrs := spawnerErr.LogAttrs()
+		args := make([]any, len(attrs)*2)
+		for i, attr := range attrs {
+			args[i*2] = attr.Key
+			args[i*2+1] = attr.Value
+		}
+		m.logger.Error("Failed to close firewall port", args...)
 	} else {
 		m.logger.Info("Closed firewall port", "port", port)
 	}
@@ -834,12 +958,12 @@ func (m *Manager) BackupInstance(id string) error {
 	}
 
 	timestamp := time.Now().Format("2006-01-02_15-04-05")
-    version := inst.Version
-    if version == "" {
-        version = "unknown"
-    }
-    // Clean version string
-    version = strings.ReplaceAll(version, " ", "_")
+	version := inst.Version
+	if version == "" {
+		version = "unknown"
+	}
+	// Clean version string
+	version = strings.ReplaceAll(version, " ", "_")
 	filename := fmt.Sprintf("backup_%s_v%s.zip", timestamp, version)
 	backupPath := filepath.Join(backupDir, filename)
 
@@ -898,9 +1022,9 @@ func (m *Manager) RestoreInstance(id string, filename string) error {
 		return fmt.Errorf("restore failed: %w", err)
 	}
 
-    // Refresh version info from the restored files
-    inst.Version = m.readVersionFile(inst.Path)
-    m.saveStateInternal()
+	// Refresh version info from the restored files
+	inst.Version = m.readVersionFile(inst.Path)
+	m.saveStateInternal()
 
 	return nil
 }
@@ -921,9 +1045,9 @@ func (m *Manager) DeleteBackup(id string, filename string) error {
 
 	backupPath := filepath.Join(inst.Path, "backups", filename)
 	// Security check to prevent directory traversal
-    if filepath.Dir(backupPath) != filepath.Join(inst.Path, "backups") {
-         return fmt.Errorf("invalid filename")
-    }
+	if filepath.Dir(backupPath) != filepath.Join(inst.Path, "backups") {
+		return fmt.Errorf("invalid filename")
+	}
 
 	if _, err := os.Stat(backupPath); os.IsNotExist(err) {
 		return fmt.Errorf("backup file not found")
