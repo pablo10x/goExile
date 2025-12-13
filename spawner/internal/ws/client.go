@@ -283,6 +283,185 @@ func (c *Client) handleMessage(msg WSMessage) {
 		instances := c.manager.ListInstances()
 		data, _ := json.Marshal(map[string]interface{}{"instances": instances})
 		c.sendResponse(msg.RequestID, "success", data, "")
+
+	case "get_instance_stats":
+		var req struct {
+			InstanceID string `json:"instance_id"`
+		}
+		json.Unmarshal(msg.Payload, &req)
+		stats, err := c.manager.GetInstanceStats(req.InstanceID)
+		if err != nil {
+			c.sendResponse(msg.RequestID, "error", nil, err.Error())
+		} else {
+			data, _ := json.Marshal(stats)
+			c.sendResponse(msg.RequestID, "success", data, "")
+		}
+
+	case "get_instance_history":
+		var req struct {
+			InstanceID string `json:"instance_id"`
+		}
+		json.Unmarshal(msg.Payload, &req)
+		history, err := c.manager.GetInstanceHistory(req.InstanceID)
+		if err != nil {
+			c.sendResponse(msg.RequestID, "error", nil, err.Error())
+		} else {
+			data, _ := json.Marshal(map[string]interface{}{"history": history})
+			c.sendResponse(msg.RequestID, "success", data, "")
+		}
+
+	case "update_instance":
+		var req struct {
+			InstanceID string `json:"instance_id"`
+		}
+		json.Unmarshal(msg.Payload, &req)
+		err := c.manager.UpdateInstance(req.InstanceID)
+		if err != nil {
+			c.sendResponse(msg.RequestID, "error", nil, err.Error())
+		} else {
+			data, _ := json.Marshal(map[string]string{"message": "instance updated"})
+			c.sendResponse(msg.RequestID, "success", data, "")
+		}
+
+	case "rename_instance":
+		var req struct {
+			InstanceID string `json:"instance_id"`
+			NewID      string `json:"new_id"`
+		}
+		json.Unmarshal(msg.Payload, &req)
+		err := c.manager.RenameInstance(req.InstanceID, req.NewID)
+		if err != nil {
+			c.sendResponse(msg.RequestID, "error", nil, err.Error())
+		} else {
+			data, _ := json.Marshal(map[string]string{"message": "instance renamed", "new_id": req.NewID})
+			c.sendResponse(msg.RequestID, "success", data, "")
+		}
+
+	case "backup_instance":
+		var req struct {
+			InstanceID string `json:"instance_id"`
+		}
+		json.Unmarshal(msg.Payload, &req)
+		err := c.manager.BackupInstance(req.InstanceID)
+		if err != nil {
+			c.sendResponse(msg.RequestID, "error", nil, err.Error())
+		} else {
+			data, _ := json.Marshal(map[string]string{"message": "backup created"})
+			c.sendResponse(msg.RequestID, "success", data, "")
+		}
+
+	case "restore_instance":
+		var req struct {
+			InstanceID string `json:"instance_id"`
+			Filename   string `json:"filename"`
+		}
+		json.Unmarshal(msg.Payload, &req)
+		err := c.manager.RestoreInstance(req.InstanceID, req.Filename)
+		if err != nil {
+			c.sendResponse(msg.RequestID, "error", nil, err.Error())
+		} else {
+			data, _ := json.Marshal(map[string]string{"message": "instance restored"})
+			c.sendResponse(msg.RequestID, "success", data, "")
+		}
+
+	case "list_backups":
+		var req struct {
+			InstanceID string `json:"instance_id"`
+		}
+		json.Unmarshal(msg.Payload, &req)
+		backups, err := c.manager.ListBackups(req.InstanceID)
+		if err != nil {
+			c.sendResponse(msg.RequestID, "error", nil, err.Error())
+		} else {
+			data, _ := json.Marshal(map[string]interface{}{"backups": backups})
+			c.sendResponse(msg.RequestID, "success", data, "")
+		}
+
+	case "delete_backup":
+		var req struct {
+			InstanceID string `json:"instance_id"`
+			Filename   string `json:"filename"`
+		}
+		json.Unmarshal(msg.Payload, &req)
+		err := c.manager.DeleteBackup(req.InstanceID, req.Filename)
+		if err != nil {
+			c.sendResponse(msg.RequestID, "error", nil, err.Error())
+		} else {
+			data, _ := json.Marshal(map[string]string{"message": "backup deleted"})
+			c.sendResponse(msg.RequestID, "success", data, "")
+		}
+
+	case "update_template":
+		updatedVersion, err := c.manager.UpdateTemplate()
+		if err != nil {
+			c.sendResponse(msg.RequestID, "error", nil, err.Error())
+		} else {
+			// Read local version
+			versionFile := filepath.Join(c.config.GameInstallDir, "version.txt")
+			localVersion := ""
+			if content, err := os.ReadFile(versionFile); err == nil {
+				localVersion = string(bytes.TrimSpace(content))
+			}
+			message := "Template updated."
+			if localVersion == updatedVersion {
+				message = "Template already up to date."
+			}
+			data, _ := json.Marshal(map[string]string{"message": message, "version": updatedVersion})
+			c.sendResponse(msg.RequestID, "success", data, "")
+		}
+
+	case "get_logs":
+		content, err := os.ReadFile("spawner.log")
+		if err != nil {
+			if os.IsNotExist(err) {
+				data, _ := json.Marshal(map[string]string{"logs": ""})
+				c.sendResponse(msg.RequestID, "success", data, "")
+			} else {
+				c.sendResponse(msg.RequestID, "error", nil, "failed to read logs")
+			}
+		} else {
+			data, _ := json.Marshal(map[string]string{"logs": string(content)})
+			c.sendResponse(msg.RequestID, "success", data, "")
+		}
+
+	case "clear_logs":
+		if err := os.Truncate("spawner.log", 0); err != nil {
+			c.sendResponse(msg.RequestID, "error", nil, "failed to clear logs")
+		} else {
+			data, _ := json.Marshal(map[string]string{"message": "logs cleared"})
+			c.sendResponse(msg.RequestID, "success", data, "")
+		}
+
+	case "get_instance_logs":
+		var req struct {
+			InstanceID string `json:"instance_id"`
+		}
+		json.Unmarshal(msg.Payload, &req)
+		logPath, err := c.manager.GetInstanceLogPath(req.InstanceID)
+		if err != nil {
+			c.sendResponse(msg.RequestID, "error", nil, err.Error())
+		} else {
+			content, err := os.ReadFile(logPath)
+			if err != nil {
+				c.sendResponse(msg.RequestID, "error", nil, "log file not found")
+			} else {
+				data, _ := json.Marshal(map[string]string{"logs": string(content)})
+				c.sendResponse(msg.RequestID, "success", data, "")
+			}
+		}
+
+	case "clear_instance_logs":
+		var req struct {
+			InstanceID string `json:"instance_id"`
+		}
+		json.Unmarshal(msg.Payload, &req)
+		err := c.manager.ClearInstanceLogs(req.InstanceID)
+		if err != nil {
+			c.sendResponse(msg.RequestID, "error", nil, err.Error())
+		} else {
+			data, _ := json.Marshal(map[string]string{"message": "logs cleared"})
+			c.sendResponse(msg.RequestID, "success", data, "")
+		}
 	}
 }
 

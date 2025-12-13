@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"sync"
@@ -173,32 +172,21 @@ func GetSpawnerLogs(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, http.StatusBadRequest, err.Error())
 		return
 	}
-	s, ok := registry.Get(id)
-	if !ok {
-		writeError(w, r, http.StatusNotFound, "spawner not found")
-		return
-	}
 
-	url := fmt.Sprintf("http://%s:%d/logs", s.Host, s.Port)
-	req, err := http.NewRequest("GET", url, nil)
+	resp, err := GlobalWSManager.SendCommandSync(id, "get_logs", nil, 10*time.Second)
 	if err != nil {
-		writeError(w, r, http.StatusInternalServerError, "failed to create request")
+		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
 		return
 	}
 
-	client := &http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
+	if resp.Status == "error" {
+		writeError(w, r, http.StatusInternalServerError, resp.Error)
 		return
 	}
-	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
-	
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(resp.StatusCode)
-	w.Write(body)
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp.Data)
 }
 
 // ClearSpawnerLogs truncates the log file on a spawner.
@@ -209,31 +197,21 @@ func ClearSpawnerLogs(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, http.StatusBadRequest, err.Error())
 		return
 	}
-	s, ok := registry.Get(id)
-	if !ok {
-		writeError(w, r, http.StatusNotFound, "spawner not found")
-		return
-	}
 
-	url := fmt.Sprintf("http://%s:%d/logs", s.Host, s.Port)
-	req, err := http.NewRequest("DELETE", url, nil)
+	resp, err := GlobalWSManager.SendCommandSync(id, "clear_logs", nil, 10*time.Second)
 	if err != nil {
-		writeError(w, r, http.StatusInternalServerError, "failed to create request")
+		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
 		return
 	}
 
-	client := &http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
+	if resp.Status == "error" {
+		writeError(w, r, http.StatusInternalServerError, resp.Error)
 		return
 	}
-	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(resp.StatusCode)
-	w.Write(body)
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp.Data)
 }
 
 // ListSpawnerInstances fetches active game instances from a spawner.
@@ -269,31 +247,21 @@ func UpdateSpawnerTemplate(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, http.StatusBadRequest, err.Error())
 		return
 	}
-	s, ok := registry.Get(id)
-	if !ok {
-		writeError(w, r, http.StatusNotFound, "spawner not found")
-		return
-	}
 
-	url := fmt.Sprintf("http://%s:%d/update-template", s.Host, s.Port)
-	req, err := http.NewRequest("POST", url, nil)
+	resp, err := GlobalWSManager.SendCommandSync(id, "update_template", nil, 300*time.Second)
 	if err != nil {
-		writeError(w, r, http.StatusInternalServerError, "failed to create request")
+		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
 		return
 	}
 
-	client := &http.Client{Timeout: 300 * time.Second} // Long timeout for download
-	resp, err := client.Do(req)
-	if err != nil {
-		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
+	if resp.Status == "error" {
+		writeError(w, r, http.StatusInternalServerError, resp.Error)
 		return
 	}
-	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(resp.StatusCode)
-	w.Write(body)
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp.Data)
 }
 
 // UpdateSpawnerInstance triggers an update (reinstall files) for a specific game instance.
@@ -310,48 +278,30 @@ func UpdateSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s, ok := registry.Get(id)
-	if !ok {
-		writeError(w, r, http.StatusNotFound, "spawner not found")
+	resp, err := GlobalWSManager.SendCommandSync(id, "update_instance", map[string]string{"instance_id": instanceID}, 300*time.Second)
+	if err != nil {
+		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
 		return
 	}
 
-	url := fmt.Sprintf("http://%s:%d/instance/%s/update", s.Host, s.Port, instanceID)
-	req, err := http.NewRequest("POST", url, nil)
-	if err != nil {
-		writeError(w, r, http.StatusInternalServerError, "failed to create request")
+	if resp.Status == "error" {
+		writeError(w, r, http.StatusInternalServerError, resp.Error)
 		return
 	}
-
-	client := &http.Client{Timeout: 300 * time.Second} // Long timeout for file copy/download
-	resp, err := client.Do(req)
-	if err != nil {
-		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
-		return
-	}
-	defer resp.Body.Close()
 
 	if dbConn != nil {
-		status := "success"
-		details := ""
-		if resp.StatusCode >= 400 {
-			status = "failed"
-			details = fmt.Sprintf("HTTP %d", resp.StatusCode)
-		}
 		SaveInstanceAction(dbConn, &InstanceAction{
 			SpawnerID:  id,
 			InstanceID: instanceID,
 			Action:     "update",
 			Timestamp:  time.Now().UTC(),
-			Status:     status,
-			Details:    details,
+			Status:     "success",
 		})
 	}
 
-	body, _ := io.ReadAll(resp.Body)
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(resp.StatusCode)
-	w.Write(body)
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp.Data)
 }
 
 // RenameSpawnerInstance renames a specific game instance on a spawner.
@@ -368,49 +318,38 @@ func RenameSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s, ok := registry.Get(id)
-	if !ok {
-		writeError(w, r, http.StatusNotFound, "spawner not found")
+	var reqBody struct {
+		NewID string `json:"new_id"`
+	}
+	if err := decodeJSON(r, &reqBody); err != nil {
+		writeError(w, r, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	url := fmt.Sprintf("http://%s:%d/instance/%s/rename", s.Host, s.Port, instanceID)
-	req, err := http.NewRequest("POST", url, r.Body) // Forward body
+	resp, err := GlobalWSManager.SendCommandSync(id, "rename_instance", map[string]string{"instance_id": instanceID, "new_id": reqBody.NewID}, 10*time.Second)
 	if err != nil {
-		writeError(w, r, http.StatusInternalServerError, "failed to create request")
+		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
 		return
 	}
-	client := &http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
+
+	if resp.Status == "error" {
+		writeError(w, r, http.StatusInternalServerError, resp.Error)
 		return
 	}
-	defer resp.Body.Close()
 
 	if dbConn != nil {
-		status := "success"
-		details := ""
-		if resp.StatusCode >= 400 {
-			status = "failed"
-			details = fmt.Sprintf("HTTP %d", resp.StatusCode)
-		}
-		// Note: We might want to record the new ID in details, but reading body is consumed.
-		// For simplicity, we just record "rename".
 		SaveInstanceAction(dbConn, &InstanceAction{
 			SpawnerID:  id,
 			InstanceID: instanceID,
 			Action:     "rename",
 			Timestamp:  time.Now().UTC(),
-			Status:     status,
-			Details:    details,
+			Status:     "success",
 		})
 	}
 
-	body, _ := io.ReadAll(resp.Body)
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(resp.StatusCode)
-	w.Write(body)
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp.Data)
 }
 
 // RemoveSpawnerInstance removes a specific game instance on a spawner.
@@ -427,48 +366,30 @@ func RemoveSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s, ok := registry.Get(id)
-	if !ok {
-		writeError(w, r, http.StatusNotFound, "spawner not found")
+	resp, err := GlobalWSManager.SendCommandSync(id, "remove_instance", map[string]string{"instance_id": instanceID}, 10*time.Second)
+	if err != nil {
+		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
 		return
 	}
 
-	url := fmt.Sprintf("http://%s:%d/instance/%s", s.Host, s.Port, instanceID)
-	req, err := http.NewRequest("DELETE", url, nil)
-	if err != nil {
-		writeError(w, r, http.StatusInternalServerError, "failed to create request")
+	if resp.Status == "error" {
+		writeError(w, r, http.StatusInternalServerError, resp.Error)
 		return
 	}
-
-	client := &http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
-		return
-	}
-	defer resp.Body.Close()
 
 	if dbConn != nil {
-		status := "success"
-		details := ""
-		if resp.StatusCode >= 400 {
-			status = "failed"
-			details = fmt.Sprintf("HTTP %d", resp.StatusCode)
-		}
 		SaveInstanceAction(dbConn, &InstanceAction{
 			SpawnerID:  id,
 			InstanceID: instanceID,
 			Action:     "delete",
 			Timestamp:  time.Now().UTC(),
-			Status:     status,
-			Details:    details,
+			Status:     "success",
 		})
 	}
 
-	body, _ := io.ReadAll(resp.Body)
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(resp.StatusCode)
-	w.Write(body)
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp.Data)
 }
 
 // StopSpawnerInstance stops a specific game instance on a spawner.
@@ -550,7 +471,7 @@ func StartSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 
 // RestartSpawnerInstance restarts a specific game instance on a spawner.
 func RestartSpawnerInstance(w http.ResponseWriter, r *http.Request) {
-    vars := mux.Vars(r)
+	vars := mux.Vars(r)
 	id, err := parseID(vars["id"])
 	if err != nil {
 		writeError(w, r, http.StatusBadRequest, err.Error())
@@ -562,51 +483,34 @@ func RestartSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s, ok := registry.Get(id)
-	if !ok {
-		writeError(w, r, http.StatusNotFound, "spawner not found")
+	resp, err := GlobalWSManager.SendCommandSync(id, "restart_instance", map[string]string{"instance_id": instanceID}, 10*time.Second)
+	if err != nil {
+		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
 		return
 	}
 
-	url := fmt.Sprintf("http://%s:%d/instance/%s/restart", s.Host, s.Port, instanceID)
-	req, err := http.NewRequest("POST", url, nil)
-	if err != nil {
-		writeError(w, r, http.StatusInternalServerError, "failed to create request")
+	if resp.Status == "error" {
+		writeError(w, r, http.StatusInternalServerError, resp.Error)
 		return
 	}
-
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
-		return
-	}
-	defer resp.Body.Close()
 
 	if dbConn != nil {
-		status := "success"
-		details := ""
-		if resp.StatusCode >= 400 {
-			status = "failed"
-			details = fmt.Sprintf("HTTP %d", resp.StatusCode)
-		}
 		SaveInstanceAction(dbConn, &InstanceAction{
 			SpawnerID:  id,
 			InstanceID: instanceID,
 			Action:     "restart",
 			Timestamp:  time.Now().UTC(),
-			Status:     status,
-			Details:    details,
+			Status:     "success",
 		})
 	}
 
-	body, _ := io.ReadAll(resp.Body)
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(resp.StatusCode)
-	w.Write(body)
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp.Data)
 }
 
 // GetInstanceLogs proxies the log stream from a specific game instance.
+// Note: Returns full log content via WebSocket. For streaming, consider SSE or WebSocket streaming.
 func GetInstanceLogs(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := parseID(vars["id"])
@@ -620,57 +524,21 @@ func GetInstanceLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s, ok := registry.Get(id)
-	if !ok {
-		writeError(w, r, http.StatusNotFound, "spawner not found")
-		return
-	}
-
-	url := fmt.Sprintf("http://%s:%d/instance/%s/logs", s.Host, s.Port, instanceID)
-	req, err := http.NewRequest("GET", url, nil)
+	resp, err := GlobalWSManager.SendCommandSync(id, "get_instance_logs", map[string]string{"instance_id": instanceID}, 30*time.Second)
 	if err != nil {
-		writeError(w, r, http.StatusInternalServerError, "failed to create request")
+		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
 		return
 	}
 
-	client := &http.Client{} // Default client, no timeout for streaming?
-	// Actually, we need to be careful with timeouts for streams.
-	// But standard http.Client has no default timeout.
-	
-	resp, err := client.Do(req)
-	if err != nil {
-		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
-		return
-	}
-	defer resp.Body.Close()
-
-	// Copy headers
-	for k, vv := range resp.Header {
-		for _, v := range vv {
-			w.Header().Add(k, v)
-		}
-	}
-	w.WriteHeader(resp.StatusCode)
-
-	// Stream body
-	flusher, ok := w.(http.Flusher)
-	if !ok {
-		// Fallback for non-flusher
-		io.Copy(w, resp.Body)
+	if resp.Status == "error" {
+		writeError(w, r, http.StatusInternalServerError, resp.Error)
 		return
 	}
 
-	buf := make([]byte, 1024)
-	for {
-		n, err := resp.Body.Read(buf)
-		if n > 0 {
-			w.Write(buf[:n])
-			flusher.Flush()
-		}
-		if err != nil {
-			break
-		}
-	}
+	// Return logs as JSON (for now - streaming can be added later via SSE or WebSocket)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp.Data)
 }
 
 // ClearInstanceLogs proxies the request to clear an instance's logs.
@@ -687,31 +555,20 @@ func ClearInstanceLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s, ok := registry.Get(id)
-	if !ok {
-		writeError(w, r, http.StatusNotFound, "spawner not found")
-		return
-	}
-
-	url := fmt.Sprintf("http://%s:%d/instance/%s/logs", s.Host, s.Port, instanceID)
-	req, err := http.NewRequest("DELETE", url, nil)
+	resp, err := GlobalWSManager.SendCommandSync(id, "clear_instance_logs", map[string]string{"instance_id": instanceID}, 10*time.Second)
 	if err != nil {
-		writeError(w, r, http.StatusInternalServerError, "failed to create request")
+		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
 		return
 	}
 
-	client := &http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
+	if resp.Status == "error" {
+		writeError(w, r, http.StatusInternalServerError, resp.Error)
 		return
 	}
-	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(resp.StatusCode)
-	w.Write(body)
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp.Data)
 }
 
 // GetInstanceStats proxies the stats request for a specific game instance.
@@ -728,31 +585,20 @@ func GetInstanceStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s, ok := registry.Get(id)
-	if !ok {
-		writeError(w, r, http.StatusNotFound, "spawner not found")
-		return
-	}
-
-	url := fmt.Sprintf("http://%s:%d/instance/%s/stats", s.Host, s.Port, instanceID)
-	req, err := http.NewRequest("GET", url, nil)
+	resp, err := GlobalWSManager.SendCommandSync(id, "get_instance_stats", map[string]string{"instance_id": instanceID}, 10*time.Second)
 	if err != nil {
-		writeError(w, r, http.StatusInternalServerError, "failed to create request")
+		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
 		return
 	}
 
-	client := &http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
+	if resp.Status == "error" {
+		writeError(w, r, http.StatusInternalServerError, resp.Error)
 		return
 	}
-	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(resp.StatusCode)
-	w.Write(body)
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp.Data)
 }
 
 // GetInstanceHistory proxies the history request for a specific game instance.
@@ -769,31 +615,20 @@ func GetInstanceHistory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s, ok := registry.Get(id)
-	if !ok {
-		writeError(w, r, http.StatusNotFound, "spawner not found")
-		return
-	}
-
-	url := fmt.Sprintf("http://%s:%d/instance/%s/stats/history", s.Host, s.Port, instanceID)
-	req, err := http.NewRequest("GET", url, nil)
+	resp, err := GlobalWSManager.SendCommandSync(id, "get_instance_history", map[string]string{"instance_id": instanceID}, 10*time.Second)
 	if err != nil {
-		writeError(w, r, http.StatusInternalServerError, "failed to create request")
+		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
 		return
 	}
 
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
+	if resp.Status == "error" {
+		writeError(w, r, http.StatusInternalServerError, resp.Error)
 		return
 	}
-	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(resp.StatusCode)
-	w.Write(body)
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp.Data)
 }
 
 // GetInstanceHistoryActions retrieves the recorded action history for an instance.
@@ -825,7 +660,7 @@ func GetInstanceHistoryActions(w http.ResponseWriter, r *http.Request) {
 
 // BackupSpawnerInstance creates a backup of a game instance on a spawner.
 func BackupSpawnerInstance(w http.ResponseWriter, r *http.Request) {
-    vars := mux.Vars(r)
+	vars := mux.Vars(r)
 	id, err := parseID(vars["id"])
 	if err != nil {
 		writeError(w, r, http.StatusBadRequest, err.Error())
@@ -837,36 +672,25 @@ func BackupSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s, ok := registry.Get(id)
-	if !ok {
-		writeError(w, r, http.StatusNotFound, "spawner not found")
-		return
-	}
-
-	url := fmt.Sprintf("http://%s:%d/instance/%s/backup", s.Host, s.Port, instanceID)
-	req, err := http.NewRequest("POST", url, nil)
+	resp, err := GlobalWSManager.SendCommandSync(id, "backup_instance", map[string]string{"instance_id": instanceID}, 300*time.Second)
 	if err != nil {
-		writeError(w, r, http.StatusInternalServerError, "failed to create request")
+		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
 		return
 	}
 
-	client := &http.Client{Timeout: 300 * time.Second} // Long timeout for backup
-	resp, err := client.Do(req)
-	if err != nil {
-		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
+	if resp.Status == "error" {
+		writeError(w, r, http.StatusInternalServerError, resp.Error)
 		return
 	}
-	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(resp.StatusCode)
-	w.Write(body)
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp.Data)
 }
 
 // RestoreSpawnerInstance restores a backup of a game instance on a spawner.
 func RestoreSpawnerInstance(w http.ResponseWriter, r *http.Request) {
-    vars := mux.Vars(r)
+	vars := mux.Vars(r)
 	id, err := parseID(vars["id"])
 	if err != nil {
 		writeError(w, r, http.StatusBadRequest, err.Error())
@@ -878,37 +702,33 @@ func RestoreSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s, ok := registry.Get(id)
-	if !ok {
-		writeError(w, r, http.StatusNotFound, "spawner not found")
+	var reqBody struct {
+		Filename string `json:"filename"`
+	}
+	if err := decodeJSON(r, &reqBody); err != nil {
+		writeError(w, r, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	url := fmt.Sprintf("http://%s:%d/instance/%s/restore", s.Host, s.Port, instanceID)
-	req, err := http.NewRequest("POST", url, r.Body) // Forward body (filename)
+	resp, err := GlobalWSManager.SendCommandSync(id, "restore_instance", map[string]string{"instance_id": instanceID, "filename": reqBody.Filename}, 300*time.Second)
 	if err != nil {
-		writeError(w, r, http.StatusInternalServerError, "failed to create request")
+		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
 		return
 	}
-    req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{Timeout: 300 * time.Second} // Long timeout for restore
-	resp, err := client.Do(req)
-	if err != nil {
-		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
+	if resp.Status == "error" {
+		writeError(w, r, http.StatusInternalServerError, resp.Error)
 		return
 	}
-	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(resp.StatusCode)
-	w.Write(body)
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp.Data)
 }
 
 // ListSpawnerBackups lists backups of a game instance on a spawner.
 func ListSpawnerBackups(w http.ResponseWriter, r *http.Request) {
-    vars := mux.Vars(r)
+	vars := mux.Vars(r)
 	id, err := parseID(vars["id"])
 	if err != nil {
 		writeError(w, r, http.StatusBadRequest, err.Error())
@@ -920,36 +740,25 @@ func ListSpawnerBackups(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s, ok := registry.Get(id)
-	if !ok {
-		writeError(w, r, http.StatusNotFound, "spawner not found")
-		return
-	}
-
-	url := fmt.Sprintf("http://%s:%d/instance/%s/backups", s.Host, s.Port, instanceID)
-	req, err := http.NewRequest("GET", url, nil)
+	resp, err := GlobalWSManager.SendCommandSync(id, "list_backups", map[string]string{"instance_id": instanceID}, 10*time.Second)
 	if err != nil {
-		writeError(w, r, http.StatusInternalServerError, "failed to create request")
+		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
 		return
 	}
 
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
+	if resp.Status == "error" {
+		writeError(w, r, http.StatusInternalServerError, resp.Error)
 		return
 	}
-	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(resp.StatusCode)
-	w.Write(body)
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp.Data)
 }
 
 // DeleteSpawnerBackup deletes a backup of a game instance on a spawner.
 func DeleteSpawnerBackup(w http.ResponseWriter, r *http.Request) {
-    vars := mux.Vars(r)
+	vars := mux.Vars(r)
 	id, err := parseID(vars["id"])
 	if err != nil {
 		writeError(w, r, http.StatusBadRequest, err.Error())
@@ -961,32 +770,28 @@ func DeleteSpawnerBackup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s, ok := registry.Get(id)
-	if !ok {
-		writeError(w, r, http.StatusNotFound, "spawner not found")
+	var reqBody struct {
+		Filename string `json:"filename"`
+	}
+	if err := decodeJSON(r, &reqBody); err != nil {
+		writeError(w, r, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	url := fmt.Sprintf("http://%s:%d/instance/%s/backup/delete", s.Host, s.Port, instanceID)
-	req, err := http.NewRequest("POST", url, r.Body) // Forward body (filename)
+	resp, err := GlobalWSManager.SendCommandSync(id, "delete_backup", map[string]string{"instance_id": instanceID, "filename": reqBody.Filename}, 10*time.Second)
 	if err != nil {
-		writeError(w, r, http.StatusInternalServerError, "failed to create request")
+		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
 		return
 	}
-    req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
+	if resp.Status == "error" {
+		writeError(w, r, http.StatusInternalServerError, resp.Error)
 		return
 	}
-	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(resp.StatusCode)
-	w.Write(body)
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp.Data)
 }
 
 // Health is a lightweight liveness endpoint.
