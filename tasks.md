@@ -41,3 +41,16 @@
 15. ✅ **Migrate GetInstanceLogs to WebSocket** - Updated to use WebSocket (returns full content, streaming can be added later)
 16. ✅ **Migrate ClearInstanceLogs to WebSocket** - Updated to use WebSocket
 17. ✅ **Clean up unused imports** - Removed unused `io` import from handlers.go
+
+### UI/UX Animations & Enhancements
+
+1. ✅ **Fix event handler syntax consistency** - Updated all `on:click` to `onclick` in server page for Svelte 5 compatibility
+2. ✅ **Enhance dashboard with particle animations** - Added floating background particles, grid patterns, and gradient effects
+3. ✅ **Implement staggered card animations** - Sequential loading animations for dashboard stat cards with 0.1s intervals
+4. ✅ **Add 3D tilting effects to server cards** - Implemented perspective transforms and rotation on hover for version history cards
+5. ✅ **Create floating action buttons** - Added animate-in activate/delete buttons that appear on card hover
+6. ✅ **Enhance sidebar navigation animations** - Added icon animations, gradient backgrounds, and smooth transitions
+7. ✅ **Implement glassmorphism effects** - Added backdrop blur and transparent gradient overlays throughout UI
+8. ✅ **Add tech-inspired backgrounds** - Created data grid patterns and animated gradient orbs
+9. ✅ **Fix PostCSS @apply errors** - Replaced @apply directives with pure Tailwind CSS classes
+10. ✅ **Optimize animation performance** - Used transform-gpu and proper z-index layering for smooth animations
