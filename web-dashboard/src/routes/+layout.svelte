@@ -117,12 +117,22 @@
                             {/if}
                         </a>
 
-                        <a href="/config"
-                            class="group relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 overflow-hidden
-                            {isRouteActive('/config') || isRouteActive('/config/') ?
-                                'bg-gradient-to-r from-indigo-600/20 to-purple-600/20 text-indigo-300 shadow-lg shadow-indigo-500/10 border border-indigo-500/30 backdrop-blur-sm' :
-                                'hover:bg-slate-800/50 text-slate-400 hover:text-slate-200 border border-transparent hover:border-slate-600/30'
-                            }"
+                        <a href="/performance" 
+                            class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden
+                            {isRouteActive('/performance') ? 'bg-blue-600/20 text-blue-300 shadow-lg shadow-blue-900/20 border border-blue-500/30' : 'hover:bg-white/5 text-slate-400 hover:text-slate-200 hover:shadow-md border border-transparent'}"
+                        >
+                            {#if isRouteActive('/performance')}
+                                <div class="absolute inset-y-0 left-0 w-1 bg-blue-400 rounded-r shadow-[0_0_10px_rgba(96,165,250,0.8)]"></div>
+                            {/if}
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform group-hover:scale-110 group-hover:rotate-3 duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                            </svg>
+                            <span class="font-medium tracking-wide">Performance</span>
+                        </a>
+
+                        <a href="/config"  
+                            class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden
+                            {isRouteActive('/config') || isRouteActive('/config/') ? 'bg-blue-600/20 text-blue-300 shadow-lg shadow-blue-900/20 border border-blue-500/30' : 'hover:bg-white/5 text-slate-400 hover:text-slate-200 hover:shadow-md border border-transparent'}"
                         >
                             {#if isRouteActive('/config') || isRouteActive('/config/')}
                                 <div class="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-indigo-400 to-purple-400 rounded-r-full shadow-lg"></div>

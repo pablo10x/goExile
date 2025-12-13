@@ -31,11 +31,8 @@ type Config struct {
 // It attempts to load .env files from current and parent directories to support
 // different running contexts (e.g., direct binary execution vs `go run`).
 func Load() (*Config, error) {
-	// Try loading .env from multiple locations
+	// Try loading .env from local directory only
 	_ = godotenv.Load(".env")
-	_ = godotenv.Load("spawner/.env") // If running from project root
-	_ = godotenv.Load("../../.env")   // If running from cmd/server
-	_ = godotenv.Load("../.env")
 	
 	conf := &Config{
 		Region:            getEnv("REGION", ""),
@@ -48,7 +45,7 @@ func Load() (*Config, error) {
 		MinGamePort:       getEnvAsInt("MIN_GAME_PORT", 7777),
 		MaxGamePort:       getEnvAsInt("MAX_GAME_PORT", 8000),
 		MasterURL:         getEnv("MASTER_URL", "http://localhost:8081"),
-		MasterAPIKey:      getEnv("MASTER_API_KEY", ""),
+		MasterAPIKey:      getEnv("MASTER_API_KEY", "dev_master_key"),
 		StateFilePath:     getEnv("STATE_FILE_PATH", "instances.json"),
 		InstancesDir:      getEnv("INSTANCES_DIR", "./instances"),
 	}

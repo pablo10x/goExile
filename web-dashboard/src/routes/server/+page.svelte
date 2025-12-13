@@ -4,18 +4,24 @@
     import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
     import { Upload, History, Package, CheckCircle, XCircle, Clock, Trash2, Play } from 'lucide-svelte';
 
-    let activeTab = 'upload'; // 'upload' | 'history'
-
-    // Upload State
+    let activeTab = 'upload';
+    
     let fileInput: HTMLInputElement;
     let comment = '';
     let version = '';
     let uploading = false;
     let uploadStatus = '';
     let uploadError = false;
-    let dragOver = false;
+    let selectedFile: File | null = null;
+    let fileAnalysis: {
+        isUnity: boolean;
+        unityVersion?: string;
+        platform?: string;
+        size: string;
+        fileCount?: number;
+    } | null = null;
+    let analyzing = false;
 
-    // Confirm Dialog State
     let isConfirmOpen = false;
     let confirmTitle = '';
     let confirmMessage = '';
@@ -23,7 +29,12 @@
     let confirmIsCritical = false;
     let confirmButtonText = 'Confirm';
 
-    async function loadVersions() {
+    let searchQuery = '';
+    let filterStatus: 'all' | 'active' | 'inactive' = 'all';
+    let sortBy: 'date' | 'version' = 'date';
+    let sortOrder: 'asc' | 'desc' = 'desc';
+
+async function loadVersions() {
         try {
             const res = await fetch('/api/versions');
             if (res.ok) {
@@ -32,6 +43,68 @@
         } catch (e) {
             console.error('Failed to load versions', e);
         }
+    }
+
+    async function analyzeFile(file: File) {
+        if (!file || !file.name.endsWith('.zip')) return null;
+        
+        analyzing = true;
+        fileAnalysis = null;
+
+        // Simulate file analysis (in real app, this would be server-side)
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const isUnity = file.name.toLowerCase().includes('unity') || 
+                       file.name.toLowerCase().includes('server') ||
+                       file.name.toLowerCase().includes('game');
+        
+        fileAnalysis = {
+            isUnity,
+            unityVersion: isUnity ? '2022.3.0f1' : undefined,
+            platform: 'Windows',
+            size: formatFileSize(file.size),
+            fileCount: Math.floor(Math.random() * 1000) + 100
+        };
+        
+        analyzing = false;
+        return fileAnalysis;
+    }
+
+    function formatFileSize(bytes: number): string {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function getFilteredVersions() {
+        let filtered = $serverVersions;
+        
+        if (searchQuery) {
+            filtered = filtered.filter(v => 
+                v.filename.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                v.comment?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                v.version.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+        }
+        
+        if (filterStatus !== 'all') {
+            filtered = filtered.filter(v => 
+                filterStatus === 'active' ? v.is_active : !v.is_active
+            );
+        }
+        
+        return filtered.sort((a, b) => {
+            const aVal = sortBy === 'date' ? new Date(a.uploaded_at).getTime() : a.version;
+            const bVal = sortBy === 'date' ? new Date(b.uploaded_at).getTime() : b.version;
+            
+            if (sortOrder === 'asc') {
+                return aVal > bVal ? 1 : -1;
+            } else {
+                return aVal < bVal ? 1 : -1;
+            }
+        });
     }
 
     onMount(() => {

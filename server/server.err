@@ -1,7 +1,0 @@
-2025/12/08 05:56:48 loaded 0 spawners from DB, nextID=1
-2025/12/08 05:56:48 ⚠️ MASTER_API_KEY not set, using default API key. Consider setting it in your environment.
-2025/12/08 05:56:48 🔒 API Key authentication enabled for Spawners
-2025/12/08 05:56:48 ✓ Starting spawner registry on :8081
-2025/12/08 05:56:48 🌐 Web Dashboard: http://localhost:8081
-2025/12/08 05:56:48 📊 API Stats: http://localhost:8081/api/stats
-2025/12/08 05:56:48 🏥 Health Check: http://localhost:8081/health

@@ -39,7 +39,7 @@ func EnsureInstalled(cfg *config.Config, logger *slog.Logger) error {
 	}
 	defer os.Remove(tmpFile.Name())
 
-	logger.Info("Downloading game server package...", "url", downloadURL)
+	logger.Info("Downloading game server package...", "url", downloadURL, "api_key", cfg.MasterAPIKey)
 	version, err := downloadFile(downloadURL, cfg.MasterAPIKey, tmpFile)
 	if err != nil {
 		tmpFile.Close()

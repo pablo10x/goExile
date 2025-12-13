@@ -3,18 +3,22 @@ package main
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"log"
 	"net/http"
 	"os"
 	"strings"
 	"sync"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // AuthConfig holds authentication credentials for the dashboard.
 type AuthConfig struct {
-	Enabled bool
-	Email   string
-	Password string
+	Enabled        bool
+	Email          string
+	HashedPassword string
+	IsProduction   bool
 }
 
 // SessionStore manages active sessions.
@@ -92,20 +96,53 @@ func (ss *SessionStore) CleanupExpiredSessions() {
 
 // GetAuthConfig returns the auth configuration based on environment.
 func GetAuthConfig() AuthConfig {
-	// Check if development mode
-	//devMode := os.Getenv("DEV_MODE") != "" || os.Getenv("DEVELOPMENT") != ""
-   devMode := true;
-	// If development mode is enabled, auth is required
-	if !devMode {
-		// Production: webpages disabled entirely
-		return AuthConfig{Enabled: false}
+	isProduction := os.Getenv("PRODUCTION_MODE") == "true"
+
+	if !isProduction {
+		log.Println("⚠️  Running in DEVELOPMENT mode. Security features are relaxed.")
+		// Dev defaults
+		adminPassword := getEnv("ADMIN_PASSWORD", "admin123")
+		hashed, _ := bcrypt.GenerateFromPassword([]byte(adminPassword), bcrypt.DefaultCost)
+		
+		return AuthConfig{
+			Enabled:        true,
+			Email:          getEnv("ADMIN_EMAIL", "admin@example.com"),
+			HashedPassword: string(hashed),
+			IsProduction:   false,
+		}
 	}
 
-	// Development: require auth with default credentials
+	// PRODUCTION MODE
+	log.Println("🔒 Running in PRODUCTION mode. Strict security enforced.")
+
+	email := os.Getenv("ADMIN_EMAIL")
+	if email == "" {
+		log.Fatal("FATAL: ADMIN_EMAIL must be set in production mode")
+	}
+
+	password := os.Getenv("ADMIN_PASSWORD")
+	passwordHash := os.Getenv("ADMIN_PASSWORD_HASH")
+
+	var finalHash string
+
+	if passwordHash != "" {
+		finalHash = passwordHash
+	} else if password != "" {
+		log.Println("⚠️  ADMIN_PASSWORD used in plaintext. Consider using ADMIN_PASSWORD_HASH for better security.")
+		hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if err != nil {
+			log.Fatalf("FATAL: Failed to hash password: %v", err)
+		}
+		finalHash = string(hashed)
+	} else {
+		log.Fatal("FATAL: ADMIN_PASSWORD or ADMIN_PASSWORD_HASH must be set in production mode")
+	}
+
 	return AuthConfig{
-		Enabled:  true,
-		Email:    getEnv("ADMIN_EMAIL", "admin@example.com"),
-		Password: getEnv("ADMIN_PASSWORD", "admin123"),
+		Enabled:        true,
+		Email:          email,
+		HashedPassword: finalHash,
+		IsProduction:   true,
 	}
 }
 
@@ -121,11 +158,8 @@ func getEnv(key, defaultVal string) string {
 func AuthMiddleware(authConfig AuthConfig, sessionStore *SessionStore) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// If auth is disabled, deny all web access
-			if !authConfig.Enabled {
-				http.Error(w, "Web dashboard is disabled in production mode", http.StatusForbidden)
-				return
-			}
+			// In production, force HTTPS redirects if not behind a proxy handling it? 
+			// For now, we focus on cookie security.
 
 			// Check for valid session cookie
 			cookie, err := r.Cookie("session")

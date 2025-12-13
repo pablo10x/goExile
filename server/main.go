@@ -116,15 +116,28 @@ func run() error {
 	apiRouter := router.PathPrefix("/api/spawners").Subrouter()
 
 	apiKey := os.Getenv("MASTER_API_KEY")
-	if apiKey == "" {
-		apiKey = "your_very_secret_master_api_key_here" // Default API key
-		log.Println("⚠️ MASTER_API_KEY not set, using default API key. Consider setting it in your environment.")
-	}
-	if apiKey != "" {
-		log.Println("🔒 API Key authentication enabled for Spawners")
-		//	apiRouter.Use(APIKeyMiddleware(apiKey))
+	isProduction := os.Getenv("PRODUCTION_MODE") == "true"
+
+    // Start WS Manager
+    go GlobalWSManager.Run()
+
+	if isProduction {
+		if apiKey == "" {
+			log.Fatal("FATAL: MASTER_API_KEY must be set in production mode")
+		}
+		log.Println("🔒 API Key authentication enabled for Spawners (Production)")
+	} else {
+		if apiKey == "" {
+			apiKey = "dev_master_key" // Default for development
+			log.Println("⚠️  MASTER_API_KEY not set, using default 'dev_master_key'")
+		}
+		log.Println("🔒 API Key authentication enabled for Spawners (Dev)")
 	}
 
+	// Always enforce Unified Auth (API Key OR Session)
+	apiRouter.Use(UnifiedAuthMiddleware(apiKey, authConfig, sessionStore))
+
+	apiRouter.HandleFunc("/ws", GlobalWSManager.HandleWS) // WebSocket Endpoint
 	apiRouter.HandleFunc("/download", ServeGameServerFile).Methods("GET", "HEAD")
 	apiRouter.HandleFunc("", RegisterSpawner).Methods("POST")
 	apiRouter.HandleFunc("", ListSpawners).Methods("GET") // Maybe this should be public or auth? Keeping consistent

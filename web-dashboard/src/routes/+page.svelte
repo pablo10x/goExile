@@ -7,7 +7,6 @@
     import LogViewer from '$lib/components/LogViewer.svelte';
     import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
     import InstanceManagerModal from '$lib/components/InstanceManagerModal.svelte';
-    import TopResourceConsumers from '$lib/components/TopResourceConsumers.svelte';
     import { formatBytes, formatUptime } from '$lib/utils';
     import { Clock, Server, Activity, AlertCircle, Database, Network } from 'lucide-svelte';
 
@@ -464,11 +463,6 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Top Resource Consumers -->
-    <div class="lg:col-span-1">
-        <TopResourceConsumers limit={5} compact={true} resourceType="cpu" />
     </div>
 </div>
 

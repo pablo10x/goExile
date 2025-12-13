@@ -82,3 +82,33 @@ func APIKeyMiddleware(apiKey string) func(http.Handler) http.Handler {
 		})
 	}
 }
+
+// UnifiedAuthMiddleware allows access if EITHER a valid API Key is provided OR a valid Session exists.
+func UnifiedAuthMiddleware(apiKey string, authConfig AuthConfig, sessionStore *SessionStore) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// 1. Check API Key (Service-to-Service)
+			if apiKey != "" {
+				clientKey := r.Header.Get("X-API-Key")
+				if clientKey == apiKey {
+					next.ServeHTTP(w, r)
+					return
+				}
+			}
+
+			// 2. Check Session (User-to-Service)
+			if authConfig.Enabled {
+				cookie, err := r.Cookie("session")
+				if err == nil && sessionStore.ValidateSession(cookie.Value) {
+					next.ServeHTTP(w, r)
+					return
+				}
+			}
+
+			// 3. Unauthorized
+			// If request had an API key but it was wrong, we already fell through.
+			// If request had no session or invalid session, we fall through here.
+			writeError(w, r, http.StatusUnauthorized, "unauthorized: invalid api key or session")
+		})
+	}
+}

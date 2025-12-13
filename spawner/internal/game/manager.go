@@ -208,7 +208,12 @@ func (m *Manager) RestoreInstances() error {
 	return nil
 }
 
-// Spawn starts a new game server instance.
+// NewContext creates a context for spawning operations.
+func (m *Manager) NewContext() context.Context {
+	return context.Background()
+}
+
+// Spawn triggers the spawning of a new game server instance.
 // It initializes the instance record and starts the provisioning process in the background.
 func (m *Manager) Spawn(ctx context.Context) (*Instance, error) {
 	m.mu.Lock()
