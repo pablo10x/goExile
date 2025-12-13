@@ -10,12 +10,15 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var (
 	loginAttempts   = make(map[string]time.Time)
 	loginAttemptsMu sync.Mutex
 )
+
+// ... (existing code remains until HandleLogin) ...
 
 // RegisterSpawner accepts registration from a Spawner service.
 func RegisterSpawner(w http.ResponseWriter, r *http.Request) {
@@ -130,36 +133,23 @@ func SpawnInstance(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, http.StatusBadRequest, err.Error())
 		return
 	}
-	s, ok := registry.Get(id)
-	if !ok {
-		writeError(w, r, http.StatusNotFound, "spawner not found")
-		return
-	}
 
-	url := fmt.Sprintf("http://%s:%d/spawn", s.Host, s.Port)
-	req, err := http.NewRequest("POST", url, nil)
+	resp, err := GlobalWSManager.SendCommandSync(id, "spawn", nil, 30*time.Second)
 	if err != nil {
-		writeError(w, r, http.StatusInternalServerError, "failed to create request")
+		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
 		return
 	}
-	req.Header.Set("Content-Type", "application/json")
 
-	// Increased timeout to 30s to prevent context deadline exceeded on slower networks
-	client := &http.Client{Timeout: 30 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
+	if resp.Status == "error" {
+		writeError(w, r, http.StatusInternalServerError, resp.Error)
 		return
 	}
-	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
-	
-	if dbConn != nil && resp.StatusCode < 400 {
+	if dbConn != nil {
 		var resData struct {
 			ID string `json:"id"`
 		}
-		if json.Unmarshal(body, &resData) == nil && resData.ID != "" {
+		if json.Unmarshal(resp.Data, &resData) == nil && resData.ID != "" {
 			SaveInstanceAction(dbConn, &InstanceAction{
 				SpawnerID:  id,
 				InstanceID: resData.ID,
@@ -168,20 +158,11 @@ func SpawnInstance(w http.ResponseWriter, r *http.Request) {
 				Status:     "success",
 			})
 		}
-	} else if dbConn != nil {
-		SaveInstanceAction(dbConn, &InstanceAction{
-			SpawnerID:  id,
-			InstanceID: "new",
-			Action:     "spawn",
-			Timestamp:  time.Now().UTC(),
-			Status:     "failed",
-			Details:    fmt.Sprintf("HTTP %d", resp.StatusCode),
-		})
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(resp.StatusCode)
-	w.Write(body)
+	w.WriteHeader(http.StatusCreated)
+	w.Write(resp.Data)
 }
 
 // GetSpawnerLogs fetches and returns the log file content from a spawner.
@@ -263,31 +244,21 @@ func ListSpawnerInstances(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, http.StatusBadRequest, err.Error())
 		return
 	}
-	s, ok := registry.Get(id)
-	if !ok {
-		writeError(w, r, http.StatusNotFound, "spawner not found")
-		return
-	}
 
-	url := fmt.Sprintf("http://%s:%d/instances", s.Host, s.Port)
-	req, err := http.NewRequest("GET", url, nil)
+	resp, err := GlobalWSManager.SendCommandSync(id, "list_instances", nil, 10*time.Second)
 	if err != nil {
-		writeError(w, r, http.StatusInternalServerError, "failed to create request")
+		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
 		return
 	}
 
-	client := &http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
+	if resp.Status == "error" {
+		writeError(w, r, http.StatusInternalServerError, resp.Error)
 		return
 	}
-	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(resp.StatusCode)
-	w.Write(body)
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp.Data)
 }
 
 // UpdateSpawnerTemplate triggers the spawner to re-download the latest game server files from master.
@@ -514,48 +485,28 @@ func StopSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s, ok := registry.Get(id)
-	if !ok {
-		writeError(w, r, http.StatusNotFound, "spawner not found")
+	resp, err := GlobalWSManager.SendCommandSync(id, "stop_instance", map[string]string{"instance_id": instanceID}, 10*time.Second)
+	if err != nil {
+		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
 		return
 	}
 
-	url := fmt.Sprintf("http://%s:%d/instance/%s/stop", s.Host, s.Port, instanceID)
-	req, err := http.NewRequest("POST", url, nil)
-	if err != nil {
-		writeError(w, r, http.StatusInternalServerError, "failed to create request")
+	if resp.Status == "error" {
+		writeError(w, r, http.StatusInternalServerError, resp.Error)
 		return
 	}
-
-	client := &http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
-		return
-	}
-	defer resp.Body.Close()
 
 	if dbConn != nil {
-		status := "success"
-		details := ""
-		if resp.StatusCode >= 400 {
-			status = "failed"
-			details = fmt.Sprintf("HTTP %d", resp.StatusCode)
-		}
 		SaveInstanceAction(dbConn, &InstanceAction{
 			SpawnerID:  id,
 			InstanceID: instanceID,
 			Action:     "stop",
 			Timestamp:  time.Now().UTC(),
-			Status:     status,
-			Details:    details,
+			Status:     "success",
 		})
 	}
 
-	body, _ := io.ReadAll(resp.Body)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(resp.StatusCode)
-	w.Write(body)
+	writeJSON(w, http.StatusOK, map[string]string{"message": "instance stopped", "id": instanceID})
 }
 
 // StartSpawnerInstance starts a specific game instance on a spawner.
@@ -573,49 +524,28 @@ func StartSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s, ok := registry.Get(id)
-	if !ok {
-		writeError(w, r, http.StatusNotFound, "spawner not found")
+	resp, err := GlobalWSManager.SendCommandSync(id, "start_instance", map[string]string{"instance_id": instanceID}, 10*time.Second)
+	if err != nil {
+		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
 		return
 	}
 
-	url := fmt.Sprintf("http://%s:%d/instance/%s/start", s.Host, s.Port, instanceID)
-	req, err := http.NewRequest("POST", url, nil) // Changed to POST method
-	if err != nil {
-		writeError(w, r, http.StatusInternalServerError, "failed to create request")
+	if resp.Status == "error" {
+		writeError(w, r, http.StatusInternalServerError, resp.Error)
 		return
 	}
-	// Add content type if the spawner expects a body, even an empty one.
-	// For now, assuming no specific body is needed for a simple start.
-	client := &http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		writeError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner: %v", err))
-		return
-	}
-	defer resp.Body.Close()
 
 	if dbConn != nil {
-		status := "success"
-		details := ""
-		if resp.StatusCode >= 400 {
-			status = "failed"
-			details = fmt.Sprintf("HTTP %d", resp.StatusCode)
-		}
 		SaveInstanceAction(dbConn, &InstanceAction{
 			SpawnerID:  id,
 			InstanceID: instanceID,
 			Action:     "start",
 			Timestamp:  time.Now().UTC(),
-			Status:     status,
-			Details:    details,
+			Status:     "success",
 		})
 	}
 
-	body, _ := io.ReadAll(resp.Body)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(resp.StatusCode)
-	w.Write(body)
+	writeJSON(w, http.StatusOK, map[string]string{"message": "instance started", "id": instanceID})
 }
 
 // RestartSpawnerInstance restarts a specific game instance on a spawner.
@@ -1123,27 +1053,38 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, authConfig AuthConfig, 
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 
-	if email == authConfig.Email && password == authConfig.Password {
-		sessionID, err := sessionStore.CreateSession()
-		if err != nil {
-			http.Error(w, "Failed to create session", http.StatusInternalServerError)
+	// Verify email and hashed password
+	if email == authConfig.Email {
+		err := bcrypt.CompareHashAndPassword([]byte(authConfig.HashedPassword), []byte(password))
+		if err == nil { // Password matches
+			sessionID, err := sessionStore.CreateSession()
+			if err != nil {
+				http.Error(w, "Failed to create session", http.StatusInternalServerError)
+				return
+			}
+
+			// Secure attributes based on production mode
+			sameSite := http.SameSiteLaxMode
+			if authConfig.IsProduction {
+				sameSite = http.SameSiteStrictMode
+			}
+
+			http.SetCookie(w, &http.Cookie{
+				Name:     "session",
+				Value:    sessionID,
+				Path:     "/",
+				HttpOnly: true,
+				Secure:   authConfig.IsProduction, // Only true in production
+				SameSite: sameSite,
+				MaxAge:   86400,
+			})
+
+			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
 		}
-
-		http.SetCookie(w, &http.Cookie{
-			Name:     "session",
-			Value:    sessionID,
-			Path:     "/",
-			HttpOnly: true,
-			Secure:   false,
-			SameSite: http.SameSiteLaxMode,
-			MaxAge:   86400,
-		})
-
-		http.Redirect(w, r, "/", http.StatusSeeOther)
-		return
 	}
 
+	// Authentication failed
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 

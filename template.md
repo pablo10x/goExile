@@ -122,6 +122,8 @@ This repository contains 3 interconnected projects:
   - Spawner registers with full metadata (region, host, port, max_instances, etc.)
   - Removed HTTP registration loop and heartbeat functions
   - WebSocket handles registration, heartbeat, and command routing
+  - Instance listing (`list_instances`) now uses WebSocket instead of HTTP (fixes 401 errors)
+  - Instance spawning (`spawn`) already uses WebSocket
 
 ## Pre-Task Checklist
 

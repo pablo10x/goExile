@@ -278,6 +278,11 @@ func (c *Client) handleMessage(msg WSMessage) {
 		} else {
 			c.sendResponse(msg.RequestID, "success", nil, "")
 		}
+
+	case "list_instances":
+		instances := c.manager.ListInstances()
+		data, _ := json.Marshal(map[string]interface{}{"instances": instances})
+		c.sendResponse(msg.RequestID, "success", data, "")
 	}
 }
 

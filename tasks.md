@@ -15,3 +15,9 @@
 5. ⚠️ **Test WebSocket connection lifecycle** - Manual testing recommended to verify reconnection, registration retry, and error handling
 6. ✅ **Update master server WebSocket handler** - Updated `server/ws_manager.go` to handle initial registration with full metadata and return assigned ID
 7. ✅ **Remove HTTP dependencies** - Cleaned up unused HTTP client code and imports (bytes, strconv, cpu, disk, mem, filepath) from `spawner/main.go`
+
+### Instance Management via WebSocket
+
+1. ✅ **Add list_instances command handler** - Added `list_instances` handler in `spawner/internal/ws/client.go` to return instances via WebSocket
+2. ✅ **Migrate ListSpawnerInstances to WebSocket** - Updated `ListSpawnerInstances` in `server/handlers.go` to use WebSocket instead of HTTP (fixes 401 error)
+3. ✅ **Verify SpawnInstance uses WebSocket** - Confirmed `SpawnInstance` already uses WebSocket correctly
