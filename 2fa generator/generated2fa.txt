@@ -1,2 +1,0 @@
-Your 2FA Secret (Base32): VWFJ42JZQDXLEYWD3ROOUVOOVW6TB3GU
-Provisioning URL: otpauth://totp/GoExile:admin?algorithm=SHA1&digits=6&issuer=GoExile&period=30&secret=VWFJ42JZQDXLEYWD3ROOUVOOVW6TB3GU

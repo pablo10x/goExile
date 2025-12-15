@@ -6,6 +6,8 @@
 *.dll
 *.so
 *.dylib
+server/server_bin
+spawner/spawner_bin
 
 # Editor directories and files
 .vscode/
@@ -51,3 +53,6 @@ spawner/lin/
 spawner/instances/
 spawner/game_server/
 spawner/spawner
+spawner/instancesx/
+spawner/examples/
+2fa generator/
