@@ -253,7 +253,14 @@
     {#if !embedded}
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" transition:fade={{ duration: 200 }}>
             <!-- Backdrop click to close -->
-            <div class="absolute inset-0" on:click={onClose}></div>
+            <div 
+                class="absolute inset-0" 
+                on:click={onClose}
+                on:keydown={(e) => (e.key === 'Enter' || e.key === ' ') && onClose()}
+                role="button"
+                tabindex="0"
+                aria-label="Close"
+            ></div>
 
             <div
                 class="relative w-full max-w-6xl h-[85vh] bg-slate-900 rounded-xl border border-slate-700 shadow-2xl flex flex-col overflow-hidden"

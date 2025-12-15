@@ -160,6 +160,7 @@
                         {#if !showEmailSection}
                             <div class="space-y-6">
                                 <div class="relative group/input">
+                                    <!-- svelte-ignore a11y_autofocus -->
                                     <input 
                                         type="text" 
                                         bind:value={code}
@@ -186,6 +187,7 @@
                                 </div>
 
                                 <div class="relative group/input">
+                                    <!-- svelte-ignore a11y_autofocus -->
                                     <input 
                                         type="text" 
                                         bind:value={emailCode}

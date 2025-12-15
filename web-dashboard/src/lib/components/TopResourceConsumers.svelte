@@ -16,6 +16,8 @@
     let error = $state<string | null>(null);
     let refreshTimer: number | null = null;
     
+    let Icon = $derived(getIconForType(resourceType));
+
     function getIconForType(type: ResourceType) {
         const iconMap = {
             cpu: Cpu,
@@ -92,7 +94,7 @@
     <div class="flex items-center justify-between mb-6">
         <div class="flex items-center gap-3">
             <div class="p-2 bg-slate-900/50 rounded-lg border border-slate-700/50 text-slate-400">
-                <svelte:component this={getIconForType(resourceType)} class="w-6 h-6" />
+                <Icon class="w-6 h-6" />
             </div>
             <div>
                 <h3 class="text-lg font-semibold text-slate-200">Top Resource Consumers</h3>

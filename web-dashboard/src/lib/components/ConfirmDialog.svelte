@@ -58,6 +58,7 @@
                     <div 
                         class="absolute inset-0 bg-slate-950/60 backdrop-blur-md" 
                         onclick={!loading ? close : undefined}
+                        onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && !loading && close()}
                         role="button"
                         tabindex="0"
                         aria-label="Close dialog"

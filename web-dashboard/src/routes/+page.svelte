@@ -3,7 +3,6 @@
     import { stats, spawners, serverVersions } from '$lib/stores';
     import StatsCard from '$lib/components/StatsCard.svelte';
     import SpawnerTable from '$lib/components/SpawnerTable.svelte';
-    import Drawer from '$lib/components/Drawer.svelte';
     import LogViewer from '$lib/components/LogViewer.svelte';
     import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
     import InstanceManagerModal from '$lib/components/InstanceManagerModal.svelte';
@@ -11,57 +10,59 @@
     import { Clock, Server, Activity, AlertCircle, Database, Network } from 'lucide-svelte';
     
     // Animation states
-    let isLoaded = false;
-    let animateStats = false;
-    let mouseX = 0;
-    let mouseY = 0;
-    let particles = Array.from({ length: 50 }, (_, i) => ({
+    let isLoaded = $state(false);
+    let animateStats = $state(false);
+    let mouseX = $state(0);
+    let mouseY = $state(0);
+    let particles = $state(Array.from({ length: 50 }, (_, i) => ({
         id: i,
         x: Math.random() * 100,
         y: Math.random() * 100,
         size: Math.random() * 4 + 1,
         speedX: (Math.random() - 0.5) * 0.5,
         speedY: (Math.random() - 0.5) * 0.5
-    }));
+    })));
 
     let eventSource: EventSource | null = null;
-    let isConnected = false;
-    let connectionStatus = 'Connecting...';
+    let isConnected = $state(false);
+    let connectionStatus = $state('Connecting...');
     
     // Log Viewer State
-    let isLogViewerOpen = false;
-    let selectedSpawnerId: number | null = null;
+    let isLogViewerOpen = $state(false);
+    let selectedSpawnerId = $state<number | null>(null);
 
     // Instance Console State
-    let isConsoleOpen = false;
-    let consoleSpawnerId: number | null = null;
-    let consoleInstanceId: string | null = null;
+    let isConsoleOpen = $state(false);
+    let consoleSpawnerId = $state<number | null>(null);
+    let consoleInstanceId = $state<string | null>(null);
 
     // Spawn Dialog State
-    let isSpawnDialogOpen = false;
-    let spawnTargetId: number | null = null;
+    let isSpawnDialogOpen = $state(false);
+    let spawnTargetId = $state<number | null>(null);
 
     // Instance Action Dialog State (Start/Stop)
-    let isInstanceActionDialogOpen = false;
-    let instanceActionType: 'start' | 'stop' | 'delete' | 'update' | 'rename' | 'restart' | 'bulk_stop' | 'bulk_restart' | 'bulk_update' | 'bulk_start' | 'update_spawner_build' | null = null;
-    let instanceActionSpawnerId: number | null = null;
-    let instanceActionInstanceId: string | null = null;
-    let instanceActionNewID: string | null = null;
-    let instanceActionBulkIds: string[] = []; // New state for bulk IDs
-    let instanceActionDialogTitle = '';
-    let instanceActionDialogMessage = '';
-    let instanceActionConfirmText = '';
+    let isInstanceActionDialogOpen = $state(false);
+    let instanceActionType = $state<'start' | 'stop' | 'delete' | 'update' | 'rename' | 'restart' | 'bulk_stop' | 'bulk_restart' | 'bulk_update' | 'bulk_start' | 'update_spawner_build' | null>(null);
+    let instanceActionSpawnerId = $state<number | null>(null);
+    let instanceActionInstanceId = $state<string | null>(null);
+    let instanceActionNewID = $state<string | null>(null);
+    let instanceActionBulkIds = $state<string[]>([]);
+    let instanceActionDialogTitle = $state('');
+    let instanceActionDialogMessage = $state('');
+    let instanceActionConfirmText = $state('');
+    let actionProgress = $state<number | null>(null);
+    let actionStatusMessage = $state<string | null>(null);
 
     // Animation state for new spawners
-    let previousSpawnerIds: Set<number> = new Set();
-    let highlightNewSpawnerId: number | null = null;
+    let previousSpawnerIds = $state(new Set<number>());
+    let highlightNewSpawnerId = $state<number | null>(null);
     let highlightTimeout: ReturnType<typeof setTimeout> | null = null;
 
-    let spawnerTableComponent: any;
+    let spawnerTableComponent = $state<any>(null);
 
     // Spawner Deletion State
-    let isSpawnerDeleteDialogOpen = false;
-    let spawnerToDeleteId: number | null = null;
+    let isSpawnerDeleteDialogOpen = $state(false);
+    let spawnerToDeleteId = $state<number | null>(null);
 
     function connectSSE() {
         if (eventSource) eventSource.close();
@@ -580,6 +581,8 @@
     message={instanceActionDialogMessage}
     confirmText={instanceActionConfirmText}
     onConfirm={executeInstanceAction}
+    progress={actionProgress}
+    statusMessage={actionStatusMessage}
 />
 
 
@@ -619,7 +622,7 @@
     
     @keyframes blob {
         0% { transform: translate(0px, 0px) scale(1); }
-        33% { transform: translate(30px, -50px) scale(1.1); }
+        33% { transform: translate(30px, -20px) scale(1.1); }
         66% { transform: translate(-20px, 20px) scale(0.9); }
         100% { transform: translate(0px, 0px) scale(1); }
     }

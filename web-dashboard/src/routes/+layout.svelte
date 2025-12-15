@@ -9,11 +9,10 @@
     let isChecking = $state(true);
     
     // Animation states
-    let sidebarLoaded = false;
-    let activeNavItem = '';
-    let mouseX = 0;
-    let mouseY = 0;
-    let hoveredItem = -1;
+    let sidebarLoaded = $state(false);
+    let mouseX = $state(0);
+    let mouseY = $state(0);
+    let hoveredItem = $state(-1);
 
     async function checkAuth() {
         try {
@@ -36,18 +35,14 @@
         }
     }
 
-onMount(() => {
+    onMount(() => {
         checkAuth();
-        
-        // Set active nav item based on current route
-        activeNavItem = page.url.pathname;
         
         // Trigger sidebar animations after mount
         setTimeout(() => {
             sidebarLoaded = true;
         }, 300);
     });
-
     async function logout() {
         await fetch('/logout');
         isAuthenticated.set(false);
@@ -163,24 +158,44 @@ onMount(() => {
                             </svg>
                             <span>Server Files</span>
                         </a>
-                    </nav>
 
-                <div class="p-4 border-t border-white/5 bg-black/20 backdrop-blur-md transform transition-all duration-700 {sidebarLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}" style="animation-delay: 0.5s;">
-                        <button 
-                            onclick={logout} 
+                        <!-- Database -->
+                        <a 
+                            href="/database" 
+                            class="nav-link"
+                            class:nav-active={isRouteActive('/database')}
                             onmouseenter={() => hoveredItem = 4}
                             onmouseleave={() => hoveredItem = -1}
+                            style="animation-delay: 0.5s;"
+                        >
+                            {#if isRouteActive('/database')}
+                                <div class="nav-indicator"></div>
+                            {/if}
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                            </svg>
+                            <span>Databases</span>
+                        </a>
+                    </nav>
+
+                <div class="p-4 border-t border-white/5 bg-black/20 backdrop-blur-md transform transition-all duration-700 {sidebarLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}" style="animation-delay: 0.6s;">
+                        <button 
+                            onclick={logout} 
+                            onmouseenter={() => hoveredItem = 5}
+                            onmouseleave={() => hoveredItem = -1}
                             class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-slate-400 hover:text-white border border-transparent transition-all duration-500 group relative overflow-hidden backdrop-blur-sm
-                            {hoveredItem === 4 ? 'bg-gradient-to-r from-red-500/20 to-red-600/20 border-red-500/40 shadow-lg shadow-red-500/20 scale-[1.02]' : 'hover:bg-red-500/10 hover:border-red-500/30'}"
+                            {hoveredItem === 5 ? 'bg-gradient-to-r from-red-500/20 to-red-600/20 border-red-500/40 shadow-lg shadow-red-500/20 scale-[1.02]' : 'hover:bg-red-500/10 hover:border-red-500/30'}"
                         >
                             <!-- Animated Background -->
-                            <div class="absolute inset-0 bg-gradient-to-r from-red-600/0 via-red-600/15 to-red-600/0 translate-x-[-100%] {hoveredItem === 4 ? 'translate-x-[100%]' : ''} transition-transform duration-700"></div>
+                            <div class="absolute inset-0 bg-gradient-to-r from-red-600/0 via-red-600/15 to-red-600/0 translate-x-[-100%] {hoveredItem === 5 ? 'translate-x-[100%]' : ''} transition-transform duration-700"></div>
                             
                             <!-- Warning Pulse on Hover -->
-                            <div class="absolute inset-0 {hoveredItem === 4 ? 'animate-pulse' : ''} bg-red-500/5 rounded-lg"></div>
+                            <div class="absolute inset-0 {hoveredItem === 5 ? 'animate-pulse' : ''} bg-red-500/5 rounded-lg"></div>
                             
                             <div class="relative z-10 flex items-center justify-center gap-2">
-                                <div class="w-4 h-4 flex items-center justify-center {hoveredItem === 4 ? 'animate-bounce' : ''}">
+                                <div class="w-4 h-4 flex items-center justify-center {hoveredItem === 5 ? 'animate-bounce' : ''}">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 transition-all duration-500 group-hover:-translate-x-1 group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                                         <polyline points="16 17 21 12 16 7"></polyline>
@@ -204,7 +219,7 @@ onMount(() => {
         </div>
         
         <!-- Spectacular Background for authenticated pages -->
-        {#if $isAuthenticated && page.url.pathname !== '/login'}
+        {#if $isAuthenticated && !isRouteActive('/login')}
             <div class="fixed inset-0 -z-50 overflow-hidden">
                 <!-- Animated Gradient Background -->
                 <div class="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 animate-gradient-shift"></div>

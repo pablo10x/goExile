@@ -68,56 +68,56 @@ func run() error {
 	// 4. Initialize Router
 	router := mux.NewRouter()
 	
-	// 5. Initialize Database (optional persistence)
-	// If DB_PATH is not set, defaults to "database/registry.db".
-	// Falls back to in-memory mode if DB connection fails.
-	dbPath := os.Getenv("DB_PATH")
-	if dbPath == "" {
-		dbPath = "database/registry.db"
-	}
-		var err error
-	port := "8081"
-	
-	dbConn, err = InitDB(dbPath)
-	if err != nil {
-		log.Printf("warning: failed to init DB (%s): %v — continuing without persistence", dbPath, err)
-		GlobalStats.SetDBConnected(false)
+		// 5. Initialize Database (PostgreSQL)
+	dbDSN := os.Getenv("DB_DSN")
+	if dbDSN == "" {
+		log.Println("⚠️  DB_DSN not set. Persistence disabled.")
 	} else {
-		GlobalStats.SetDBConnected(true)
-		// Load existing spawners from DB to restore state
-		loaded, err := LoadSpawners(dbConn)
+		log.Println("Initializing DB (PostgreSQL)...")
+		var err error
+		dbConn, err = InitDB(dbDSN)
 		if err != nil {
-			log.Printf("warning: failed to load spawners from DB: %v", err)
+			log.Printf("warning: failed to init DB: %v — continuing without persistence", err)
+			GlobalStats.SetDBConnected(false)
 		} else {
-			// Re-populate in-memory registry from DB records, checking health
-			maxID := registry.nextID - 1
-			registry.mu.Lock()
+			GlobalStats.SetDBConnected(true)
+			// Load existing spawners from DB to restore state
+			loaded, err := LoadSpawners(dbConn)
+			if err != nil {
+				log.Printf("warning: failed to load spawners from DB: %v", err)
+			} else {
+				// Re-populate in-memory registry from DB records
+				maxID := registry.nextID - 1
+				registry.mu.Lock()
 
-			validCount := 0
-			// client := &http.Client{Timeout: 2 * time.Second} // No longer needed for proactive checks
-
-			for i := range loaded {
-				s := loaded[i]
-
-				// Health check removed as per user request (rely on heartbeats)
-
-				copyS := s
-				registry.items[copyS.ID] = &copyS
-				if copyS.ID > maxID {
-					maxID = copyS.ID
+				validCount := 0
+				for i := range loaded {
+					s := loaded[i]
+					copyS := s
+					registry.items[copyS.ID] = &copyS
+					if copyS.ID > maxID {
+						maxID = copyS.ID
+					}
+					validCount++
 				}
-				validCount++
+				registry.nextID = maxID + 1
+				registry.mu.Unlock()
+				log.Printf("Startup: loaded %d spawners from DB.", validCount)
 			}
-			registry.nextID = maxID + 1
-			registry.mu.Unlock()
-			log.Printf("Startup: loaded %d spawners from DB.", validCount)
 		}
 	}
-
-	// 6. Print configuration summary
-	PrintConfig(port, dbPath)
-
-	// 7. Define API Routes
+	
+			// 6. Print configuration summary
+	
+			port := "8081"
+	
+			PrintConfig(port, dbDSN)
+	
+		
+	
+			// 7. Define API Routes
+	
+		
 	// Spawner interactions (public/internal API) - Secured via API Key if set
 	apiRouter := router.PathPrefix("/api/spawners").Subrouter()
 
@@ -214,6 +214,24 @@ func run() error {
 		router.Handle("/api/config/{category}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetConfigByCategoryHandler))).Methods("GET")
 		router.Handle("/api/config/{key}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(UpdateConfigHandler))).Methods("PUT")
 		router.Handle("/api/config/key/{key}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetConfigByKeyHandler))).Methods("GET")
+
+		// Database Management Routes
+		router.Handle("/api/database/tables", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListTablesHandler))).Methods("GET")
+		router.Handle("/api/database/counts", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetTableCountsHandler))).Methods("GET")
+		router.Handle("/api/database/backup", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(BackupDatabaseHandler))).Methods("POST")
+
+		router.Handle("/api/database/overview", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetDatabaseOverviewHandler))).Methods("GET")
+		router.Handle("/api/database/table/{table}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetTableDataHandler))).Methods("GET")
+		router.Handle("/api/database/table/{table}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(InsertTableRowHandler))).Methods("POST")
+		router.Handle("/api/database/table/{table}/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(UpdateTableRowHandler))).Methods("PUT")
+		router.Handle("/api/database/table/{table}/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DeleteTableRowHandler))).Methods("DELETE")
+		router.Handle("/api/database/config", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetPostgresConfigHandler))).Methods("GET")
+
+		router.Handle("/api/database/backups", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(CreateInternalBackupHandler))).Methods("POST")
+		router.Handle("/api/database/backups", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListInternalBackupsHandler))).Methods("GET")
+		router.Handle("/api/database/backups/{filename}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DownloadInternalBackupHandler))).Methods("GET")
+		router.Handle("/api/database/backups/{filename}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DeleteInternalBackupHandler))).Methods("DELETE")
+		router.Handle("/api/database/restore", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(RestoreInternalBackupHandler))).Methods("POST")
 	}
 
 	// CLI-friendly status endpoint

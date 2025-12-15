@@ -1,43 +1,38 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jmoiron/sqlx"
 
-	// Use the pure-Go SQLite driver to avoid CGO dependency in builds.
-	_ "modernc.org/sqlite"
+	// Drivers
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-// db.go provides a minimal persistence layer for the registry.
+// db.go provides a persistence layer for the registry using PostgreSQL.
 
-// InitDB opens (or creates) an SQLite database at the given path.
-func InitDB(path string) (*sqlx.DB, error) {
-	db, err := sqlx.Open("sqlite", path)
+// InitDB opens a database connection to PostgreSQL.
+func InitDB(dsn string) (*sqlx.DB, error) {
+	// Enforce pgx driver
+	db, err := sqlx.Open("pgx", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("open db: %w", err)
 	}
 
-	db.SetMaxOpenConns(1)
+	// Connection pool settings
+	db.SetMaxOpenConns(25)
+	db.SetMaxIdleConns(5)
 	db.SetConnMaxLifetime(time.Minute * 5)
 
-	if _, err := db.Exec("PRAGMA busy_timeout = 5000"); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := db.PingContext(ctx); err != nil {
 		db.Close()
-		return nil, fmt.Errorf("set busy_timeout: %w", err)
-	}
-	if _, err := db.Exec("PRAGMA foreign_keys = ON"); err != nil {
-		db.Close()
-		return nil, fmt.Errorf("enable foreign_keys: %w", err)
-	}
-	if _, err := db.Exec("PRAGMA journal_mode = WAL"); err != nil {
-		db.Close()
-		return nil, fmt.Errorf("enable WAL journal: %w", err)
-	}
-	if _, err := db.Exec("PRAGMA synchronous = NORMAL"); err != nil {
-		db.Close()
-		return nil, fmt.Errorf("set synchronous: %w", err)
+		return nil, fmt.Errorf("ping db: %w", err)
 	}
 
 	if err := createTables(db); err != nil {
@@ -45,28 +40,32 @@ func InitDB(path string) (*sqlx.DB, error) {
 		return nil, err
 	}
 
-	// Check if 'version' column exists in server_versions (Migration)
+	// Migrations
+	// Check if 'version' column exists in server_versions
 	var hasVersionCol int
-	err = db.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('server_versions') WHERE name='version'`).Scan(&hasVersionCol)
+	err = db.QueryRow(`SELECT COUNT(*) FROM information_schema.columns WHERE table_name='server_versions' AND column_name='version'`).Scan(&hasVersionCol)
 	if err == nil && hasVersionCol == 0 {
 		fmt.Println("Migrating DB: Adding 'version' column to server_versions table...")
 		if _, err := db.Exec(`ALTER TABLE server_versions ADD COLUMN version TEXT`); err != nil {
-			fmt.Printf("warning: failed to migrate server_versions table: %v\n", err)
+			if !strings.Contains(err.Error(), "duplicate column") && !strings.Contains(err.Error(), "already exists") {
+				fmt.Printf("warning: failed to migrate server_versions table: %v\n", err)
+			}
 		}
 	}
 
-	// Ensure unique index exists (migration for existing DBs)
+	// Ensure unique index exists
 	if _, err := db.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_spawners_host_port ON spawners(host, port)`); err != nil {
 		fmt.Printf("warning: failed to create unique index: %v\n", err)
 	}
 
-	// Check if 'game_version' column exists in spawners (Migration)
-	var hasGameVersionCol int
-	err = db.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('spawners') WHERE name='game_version'`).Scan(&hasGameVersionCol)
-	if err == nil && hasGameVersionCol == 0 {
+	// Check if 'game_version' column exists in spawners
+	err = db.QueryRow(`SELECT COUNT(*) FROM information_schema.columns WHERE table_name='spawners' AND column_name='game_version'`).Scan(&hasVersionCol)
+	if err == nil && hasVersionCol == 0 {
 		fmt.Println("Migrating DB: Adding 'game_version' column to spawners table...")
 		if _, err := db.Exec(`ALTER TABLE spawners ADD COLUMN game_version TEXT`); err != nil {
-			fmt.Printf("warning: failed to migrate spawners table: %v\n", err)
+			if !strings.Contains(err.Error(), "duplicate column") && !strings.Contains(err.Error(), "already exists") {
+				fmt.Printf("warning: failed to migrate spawners table: %v\n", err)
+			}
 		}
 	}
 
@@ -84,8 +83,10 @@ func InitDB(path string) (*sqlx.DB, error) {
 }
 
 func createTables(db *sqlx.DB) error {
-	q := `CREATE TABLE IF NOT EXISTS spawners (
-		id INTEGER PRIMARY KEY,
+	pkType := "SERIAL PRIMARY KEY"
+
+	q := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS spawners (
+		id %s,
 		region TEXT,
 		host TEXT NOT NULL,
 		port INTEGER NOT NULL,
@@ -97,7 +98,7 @@ func createTables(db *sqlx.DB) error {
 		UNIQUE(host, port)
 	);
 	CREATE TABLE IF NOT EXISTS server_versions (
-		id INTEGER PRIMARY KEY,
+		id %s,
 		filename TEXT NOT NULL,
 		version TEXT,
 		comment TEXT,
@@ -105,7 +106,7 @@ func createTables(db *sqlx.DB) error {
 		is_active INTEGER DEFAULT 0
 	);
 	CREATE TABLE IF NOT EXISTS server_config (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		id %s,
 		key TEXT UNIQUE NOT NULL,
 		value TEXT NOT NULL,
 		type TEXT NOT NULL DEFAULT 'string',
@@ -117,7 +118,7 @@ func createTables(db *sqlx.DB) error {
 		updated_by TEXT
 	);
 	CREATE TABLE IF NOT EXISTS instance_actions (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		id %s,
 		spawner_id INTEGER NOT NULL,
 		instance_id TEXT NOT NULL,
 		action TEXT NOT NULL,
@@ -125,7 +126,8 @@ func createTables(db *sqlx.DB) error {
 		status TEXT,
 		details TEXT,
 		FOREIGN KEY(spawner_id) REFERENCES spawners(id) ON DELETE CASCADE
-	);`
+	);`, pkType, pkType, pkType, pkType)
+
 	_, err := db.Exec(q)
 	if err != nil {
 		return fmt.Errorf("create tables: %w", err)
@@ -136,9 +138,6 @@ func createTables(db *sqlx.DB) error {
 func CloseDB(db *sqlx.DB) error {
 	if db == nil {
 		return nil
-	}
-	if _, err := db.Exec("PRAGMA wal_checkpoint(TRUNCATE)"); err != nil {
-		// ignore
 	}
 	return db.Close()
 }
@@ -158,6 +157,13 @@ func execWithRetry(fn func() error) error {
 	return lastErr
 }
 
+func boolToInt(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
+}
+
 // SaveSpawner inserts or replaces a spawner record.
 func SaveSpawner(db *sqlx.DB, s *Spawner) (int, error) {
 	if s == nil {
@@ -172,10 +178,8 @@ func SaveSpawner(db *sqlx.DB, s *Spawner) (int, error) {
 		defer tx.Rollback()
 
 		if s.ID == 0 {
-			// Use UPSERT to handle re-registration of existing spawner (same host/port)
-			// effectively getting the existing ID or creating a new one.
 			query := `INSERT INTO spawners (region, host, port, max_instances, current_instances, status, last_seen, game_version) 
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 				ON CONFLICT(host, port) DO UPDATE SET
 				region=excluded.region,
 				max_instances=excluded.max_instances,
@@ -184,9 +188,9 @@ func SaveSpawner(db *sqlx.DB, s *Spawner) (int, error) {
 				last_seen=excluded.last_seen,
 				game_version=excluded.game_version
 				RETURNING id`
-
+		
 			var id int64
-			err := tx.QueryRow(query, s.Region, s.Host, s.Port, s.MaxInstances, s.CurrentInstances, s.Status, s.LastSeen.Unix(), s.GameVersion).Scan(&id)
+			err = tx.QueryRow(query, s.Region, s.Host, s.Port, s.MaxInstances, s.CurrentInstances, s.Status, s.LastSeen.Unix(), s.GameVersion).Scan(&id)
 			if err != nil {
 				return fmt.Errorf("upsert spawner: %w", err)
 			}
@@ -197,10 +201,22 @@ func SaveSpawner(db *sqlx.DB, s *Spawner) (int, error) {
 			return nil
 		}
 
-		_, err = tx.Exec(`REPLACE INTO spawners (id, region, host, port, max_instances, current_instances, status, last_seen, game_version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		query := `INSERT INTO spawners (id, region, host, port, max_instances, current_instances, status, last_seen, game_version) 
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+			ON CONFLICT(id) DO UPDATE SET
+			region=excluded.region,
+			host=excluded.host,
+			port=excluded.port,
+			max_instances=excluded.max_instances,
+			current_instances=excluded.current_instances,
+			status=excluded.status,
+			last_seen=excluded.last_seen,
+			game_version=excluded.game_version`
+		
+		_, err = tx.Exec(query,
 			s.ID, s.Region, s.Host, s.Port, s.MaxInstances, s.CurrentInstances, s.Status, s.LastSeen.Unix(), s.GameVersion)
 		if err != nil {
-			return fmt.Errorf("upsert spawner: %w", err)
+			return fmt.Errorf("upsert spawner (id): %w", err)
 		}
 
 		if err := tx.Commit(); err != nil {
@@ -224,9 +240,10 @@ func LoadSpawners(db *sqlx.DB) ([]Spawner, error) {
 	}
 	defer rows.Close()
 
-	var out []Spawner
+	out := make([]Spawner, 0)
 	for rows.Next() {
 		var s Spawner
+
 		var lastSeenUnix int64
 		var gameVersion sql.NullString
 		if err := rows.Scan(&s.ID, &s.Region, &s.Host, &s.Port, &s.MaxInstances, &s.CurrentInstances, &s.Status, &lastSeenUnix, &gameVersion); err != nil {
@@ -246,7 +263,7 @@ func LoadSpawners(db *sqlx.DB) ([]Spawner, error) {
 
 func DeleteSpawnerDB(db *sqlx.DB, id int) error {
 	do := func() error {
-		_, err := db.Exec(`DELETE FROM spawners WHERE id = ?`, id)
+		_, err := db.Exec(`DELETE FROM spawners WHERE id = $1`, id)
 		if err != nil {
 			return fmt.Errorf("delete spawner: %w", err)
 		}
@@ -259,7 +276,7 @@ func DeleteSpawnerDB(db *sqlx.DB, id int) error {
 
 func SaveInstanceAction(db *sqlx.DB, a *InstanceAction) error {
 	do := func() error {
-		_, err := db.Exec(`INSERT INTO instance_actions (spawner_id, instance_id, action, timestamp, status, details) VALUES (?, ?, ?, ?, ?, ?)`,
+		_, err := db.Exec(`INSERT INTO instance_actions (spawner_id, instance_id, action, timestamp, status, details) VALUES ($1, $2, $3, $4, $5, $6)`,
 			a.SpawnerID, a.InstanceID, a.Action, a.Timestamp.Unix(), a.Status, a.Details)
 		if err != nil {
 			return fmt.Errorf("save instance action: %w", err)
@@ -270,7 +287,8 @@ func SaveInstanceAction(db *sqlx.DB, a *InstanceAction) error {
 }
 
 func GetInstanceActions(db *sqlx.DB, spawnerID int, instanceID string) ([]InstanceAction, error) {
-	rows, err := db.Queryx(`SELECT id, spawner_id, instance_id, action, timestamp, status, details FROM instance_actions WHERE spawner_id = ? AND instance_id = ? ORDER BY timestamp DESC LIMIT 50`, spawnerID, instanceID)
+
+rows, err := db.Queryx(`SELECT id, spawner_id, instance_id, action, timestamp, status, details FROM instance_actions WHERE spawner_id = $1 AND instance_id = $2 ORDER BY timestamp DESC LIMIT 50`, spawnerID, instanceID)
 	if err != nil {
 		return nil, fmt.Errorf("query instance actions: %w", err)
 	}
@@ -293,7 +311,7 @@ func GetInstanceActions(db *sqlx.DB, spawnerID int, instanceID string) ([]Instan
 func GetSpawnerByID(db *sqlx.DB, id int) (*Spawner, error) {
 	var out *Spawner
 	do := func() error {
-		row := db.QueryRowx(`SELECT id, region, host, port, max_instances, current_instances, status, last_seen, game_version FROM spawners WHERE id = ?`, id)
+		row := db.QueryRowx(`SELECT id, region, host, port, max_instances, current_instances, status, last_seen, game_version FROM spawners WHERE id = $1`, id)
 		var s Spawner
 		var lastSeenUnix int64
 		var gameVersion sql.NullString
@@ -320,8 +338,8 @@ func GetSpawnerByID(db *sqlx.DB, id int) (*Spawner, error) {
 
 func SaveServerVersion(db *sqlx.DB, v *GameServerVersion) error {
 	do := func() error {
-		_, err := db.Exec(`INSERT INTO server_versions (filename, version, comment, uploaded_at, is_active) VALUES (?, ?, ?, ?, ?)`,
-			v.Filename, v.Version, v.Comment, v.UploadedAt.Unix(), v.IsActive)
+		_, err := db.Exec(`INSERT INTO server_versions (filename, version, comment, uploaded_at, is_active) VALUES ($1, $2, $3, $4, $5)`,
+			v.Filename, v.Version, v.Comment, v.UploadedAt.Unix(), boolToInt(v.IsActive))
 		if err != nil {
 			return fmt.Errorf("insert version: %w", err)
 		}
@@ -331,15 +349,26 @@ func SaveServerVersion(db *sqlx.DB, v *GameServerVersion) error {
 }
 
 func ListServerVersions(db *sqlx.DB) ([]GameServerVersion, error) {
+
 	rows, err := db.Queryx(`SELECT id, filename, version, comment, uploaded_at, is_active FROM server_versions ORDER BY uploaded_at DESC`)
+
 	if err != nil {
+
 		return nil, fmt.Errorf("query versions: %w", err)
+
 	}
+
 	defer rows.Close()
 
-	var out []GameServerVersion
+
+
+	out := make([]GameServerVersion, 0)
+
 	for rows.Next() {
+
 		var v GameServerVersion
+
+
 		var uploadedAtUnix int64
 		// Handle NULL version if migration hasn't happened or older records
 		var version sql.NullString
@@ -368,7 +397,7 @@ func SetActiveVersion(db *sqlx.DB, id int) error {
 			return err
 		}
 		// Activate target
-		if _, err := tx.Exec(`UPDATE server_versions SET is_active = 1 WHERE id = ?`, id); err != nil {
+		if _, err := tx.Exec(`UPDATE server_versions SET is_active = 1 WHERE id = $1`, id); err != nil {
 			return err
 		}
 
@@ -381,10 +410,10 @@ func DeleteServerVersion(db *sqlx.DB, id int) (string, error) {
 	var filename string
 	do := func() error {
 		// Get filename first to return it (so caller can delete file)
-		if err := db.QueryRow(`SELECT filename FROM server_versions WHERE id = ?`, id).Scan(&filename); err != nil {
+		if err := db.QueryRow(`SELECT filename FROM server_versions WHERE id = $1`, id).Scan(&filename); err != nil {
 			return err
 		}
-		if _, err := db.Exec(`DELETE FROM server_versions WHERE id = ?`, id); err != nil {
+		if _, err := db.Exec(`DELETE FROM server_versions WHERE id = $1`, id); err != nil {
 			return err
 		}
 		return nil
@@ -491,10 +520,16 @@ func SeedDefaultConfig(db *sqlx.DB) error {
 
 func SaveConfig(db *sqlx.DB, c *ServerConfig) error {
 	do := func() error {
-		_, err := db.Exec(`INSERT OR REPLACE INTO server_config 
+		query := `INSERT INTO server_config 
 			(key, value, type, category, description, is_read_only, requires_restart, updated_at, updated_by) 
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-			c.Key, c.Value, c.Type, c.Category, c.Description, c.IsReadOnly, c.RequiresRestart, c.UpdatedAt.Unix(), c.UpdatedBy)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+			ON CONFLICT(key) DO UPDATE SET
+			value=excluded.value,
+			updated_at=excluded.updated_at,
+			updated_by=excluded.updated_by`
+		
+		_, err := db.Exec(query,
+			c.Key, c.Value, c.Type, c.Category, c.Description, boolToInt(c.IsReadOnly), boolToInt(c.RequiresRestart), c.UpdatedAt.Unix(), c.UpdatedBy)
 		if err != nil {
 			return fmt.Errorf("save config: %w", err)
 		}
@@ -504,7 +539,8 @@ func SaveConfig(db *sqlx.DB, c *ServerConfig) error {
 }
 
 func GetAllConfig(db *sqlx.DB) ([]ServerConfig, error) {
-	rows, err := db.Queryx(`SELECT id, key, value, type, category, description, is_read_only, requires_restart, updated_at, updated_by FROM server_config ORDER BY category, key`)
+
+rows, err := db.Queryx(`SELECT id, key, value, type, category, description, is_read_only, requires_restart, updated_at, updated_by FROM server_config ORDER BY category, key`)
 	if err != nil {
 		return nil, fmt.Errorf("query config: %w", err)
 	}
@@ -531,7 +567,8 @@ func GetAllConfig(db *sqlx.DB) ([]ServerConfig, error) {
 }
 
 func GetConfigByCategory(db *sqlx.DB, category string) ([]ServerConfig, error) {
-	rows, err := db.Queryx(`SELECT id, key, value, type, category, description, is_read_only, requires_restart, updated_at, updated_by FROM server_config WHERE category = ? ORDER BY key`, category)
+
+rows, err := db.Queryx(`SELECT id, key, value, type, category, description, is_read_only, requires_restart, updated_at, updated_by FROM server_config WHERE category = $1 ORDER BY key`, category)
 	if err != nil {
 		return nil, fmt.Errorf("query config by category: %w", err)
 	}
@@ -561,7 +598,7 @@ func GetConfigByKey(db *sqlx.DB, key string) (*ServerConfig, error) {
 	var c ServerConfig
 	var updatedAtUnix int64
 	var updatedBy sql.NullString
-	err := db.QueryRow(`SELECT id, key, value, type, category, description, is_read_only, requires_restart, updated_at, updated_by FROM server_config WHERE key = ?`, key).
+	err := db.QueryRow(`SELECT id, key, value, type, category, description, is_read_only, requires_restart, updated_at, updated_by FROM server_config WHERE key = $1`, key).
 		Scan(&c.ID, &c.Key, &c.Value, &c.Type, &c.Category, &c.Description, &c.IsReadOnly, &c.RequiresRestart, &updatedAtUnix, &updatedBy)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -578,7 +615,7 @@ func GetConfigByKey(db *sqlx.DB, key string) (*ServerConfig, error) {
 
 func UpdateConfig(db *sqlx.DB, key, value, updatedBy string) error {
 	do := func() error {
-		_, err := db.Exec(`UPDATE server_config SET value = ?, updated_at = ?, updated_by = ? WHERE key = ? AND is_read_only = 0`,
+		_, err := db.Exec(`UPDATE server_config SET value = $1, updated_at = $2, updated_by = $3 WHERE key = $4 AND is_read_only = 0`,
 			value, time.Now().Unix(), updatedBy, key)
 		if err != nil {
 			return fmt.Errorf("update config: %w", err)
@@ -586,4 +623,28 @@ func UpdateConfig(db *sqlx.DB, key, value, updatedBy string) error {
 		return nil
 	}
 	return execWithRetry(do)
+}
+
+func ListTables(db *sqlx.DB) ([]string, error) {
+	query := "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"
+	var tables []string
+	err := db.Select(&tables, query)
+	return tables, err
+}
+
+func GetTableCounts(db *sqlx.DB) (map[string]int, error) {
+    tables, err := ListTables(db)
+    if err != nil {
+        return nil, err
+    }
+    
+    counts := make(map[string]int)
+    for _, table := range tables {
+        var count int
+        // Postgres: SELECT count(*) FROM "table"
+        if err := db.Get(&count, fmt.Sprintf("SELECT count(*) FROM %q", table)); err == nil {
+            counts[table] = count
+        }
+    }
+    return counts, nil
 }

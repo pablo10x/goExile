@@ -264,6 +264,7 @@
                     <div 
                         class="absolute inset-0 bg-slate-950/90 backdrop-blur-md"
                         onclick={close}
+                        onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && close()}
                         role="button"
                         tabindex="0"
                         aria-label="Close console"

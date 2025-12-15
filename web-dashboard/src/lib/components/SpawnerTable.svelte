@@ -15,7 +15,7 @@
     let activeInstances: Record<number, any[]> = {};
     let loadingInstances: Record<number, boolean> = {};
 
-    $: activeVersion = $serverVersions.find(v => v.is_active);
+    $: activeVersion = ($serverVersions || []).find(v => v.is_active);
 
     function getOutdatedCount(spawnerId: number) {
         if (!activeInstances[spawnerId] || !activeVersion) return 0;

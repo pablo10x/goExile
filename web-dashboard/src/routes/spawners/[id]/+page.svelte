@@ -6,7 +6,7 @@
     import StatsCard from '$lib/components/StatsCard.svelte';
     import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
     import InstanceManagerModal from '$lib/components/InstanceManagerModal.svelte';
-    import LogViewerModal from '$lib/components/LogViewerModal.svelte';
+    import LogViewer from '$lib/components/LogViewer.svelte';
     import Dropdown from '$lib/components/Dropdown.svelte';
     import { serverVersions } from '$lib/stores';
     import { compareVersions } from '$lib/semver';

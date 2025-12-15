@@ -3,6 +3,7 @@
     import { serverVersions } from '$lib/stores';
     import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
     import { setContext } from 'svelte';
+    import { History, Package, Upload, Play, Trash2, CheckCircle, Clock } from 'lucide-svelte';
 
     let activeTab = 'upload';
     let isDragging = false;
@@ -381,6 +382,8 @@ async function handleUpload() {
                         ondragleave={handleDragLeave}
                         ondragover={handleDragOver}
                         ondrop={handleDrop}
+                        role="region"
+                        aria-label="File Upload Drop Zone"
                     >
                         <div 
                             class="group relative border-2 border-dashed rounded-xl transition-all duration-200 bg-slate-900/30 hover:bg-slate-900/50 {isDragging ? 'border-blue-400 bg-blue-400/5' : 'border-slate-700 hover:border-slate-600'}"
@@ -517,7 +520,6 @@ async function handleUpload() {
                         </div>
                     </div>
                 </div>
-            </div>
 
                 <!-- Upload Button & Status -->
                 <div class="space-y-4">
@@ -835,3 +837,4 @@ async function handleUpload() {
     isCritical={confirmIsCritical}
     onConfirm={confirmAction}
 />
+</div>

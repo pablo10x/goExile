@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/exec"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -822,4 +824,55 @@ func ErrorsAPI(w http.ResponseWriter, r *http.Request) {
 func ClearErrorsAPI(w http.ResponseWriter, r *http.Request) {
 	GlobalStats.ClearErrors()
 	writeJSON(w, http.StatusOK, map[string]string{"message": "Error log cleared"})
+}
+
+// ListTablesHandler returns a list of database tables.
+func ListTablesHandler(w http.ResponseWriter, r *http.Request) {
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+
+	tables, err := ListTables(dbConn)
+	if err != nil {
+		writeError(w, r, http.StatusInternalServerError, fmt.Sprintf("failed to list tables: %v", err))
+		return
+	}
+
+	writeJSON(w, http.StatusOK, tables)
+}
+
+// GetTableCountsHandler returns table row counts.
+func GetTableCountsHandler(w http.ResponseWriter, r *http.Request) {
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+
+	counts, err := GetTableCounts(dbConn)
+	if err != nil {
+		writeError(w, r, http.StatusInternalServerError, fmt.Sprintf("failed to get table counts: %v", err))
+		return
+	}
+
+	writeJSON(w, http.StatusOK, counts)
+}
+
+// BackupDatabaseHandler triggers a pg_dump and streams it to the client.
+func BackupDatabaseHandler(w http.ResponseWriter, r *http.Request) {
+	dbDSN := os.Getenv("DB_DSN")
+	if dbDSN == "" {
+		writeError(w, r, http.StatusBadRequest, "DB_DSN not configured")
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"backup-%d.sql\"", time.Now().Unix()))
+
+	cmd := exec.Command("pg_dump", dbDSN)
+	cmd.Stdout = w
+
+	if err := cmd.Run(); err != nil {
+		log.Printf("pg_dump error: %v", err)
+	}
 }
