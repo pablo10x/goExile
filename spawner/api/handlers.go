@@ -39,6 +39,7 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 	router.GET("/instance/:id/stats", h.HandleInstanceStats)
 	router.GET("/instance/:id/stats/history", h.HandleInstanceHistory)
 	router.GET("/instance/:id/logs", h.HandleInstanceLogs)
+	router.GET("/instance/:id/ws", h.HandleInstanceWebSocket) // Game Server WebSocket
 	router.DELETE("/instance/:id/logs", h.HandleClearInstanceLogs)
 	router.GET("/health", h.HandleHealth)
 	router.GET("/logs", h.HandleGetLogs)

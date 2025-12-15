@@ -1,12 +1,13 @@
 <script lang="ts">
     import { onMount, onDestroy } from 'svelte';
-    import { fade, scale } from 'svelte/transition';
+    import { fade, scale, fly } from 'svelte/transition';
     import { formatBytes, formatUptime } from '$lib/utils';
     import { serverVersions } from '$lib/stores';
     import Terminal from './Terminal.svelte';
     import ResourceHistoryChart from './ResourceHistoryChart.svelte';
     import ResourceMetricsPanel from './ResourceMetricsPanel.svelte';
     import ConfirmDialog from './ConfirmDialog.svelte';
+    import LogViewer from './LogViewer.svelte'; // Import LogViewer for Node Logs
 
     export let isOpen: boolean = false;
     export let spawnerId: number | null = null;
@@ -15,7 +16,6 @@
     export let memTotal: number = 0;
 
     let logs: string[] = [];
-    let eventSource: EventSource | null = null;
     
     let stats = {
         cpu_percent: 0,
@@ -24,7 +24,7 @@
         status: 'Unknown',
         uptime: 0
     };
-    let activeTab: 'console' | 'metrics' | 'backups' | 'history' = 'console';
+    let activeTab: 'console' | 'metrics' | 'backups' | 'history' | 'node_logs' = 'console';
     
     // New State for Backups and History
     let backups: any[] = [];
@@ -40,6 +40,7 @@
     let pendingBackupAction: () => Promise<void> = async () => {};
 
     let statsInterval: ReturnType<typeof setInterval> | null = null;
+    let logsInterval: ReturnType<typeof setInterval> | null = null;
     
     // Provisioning State
     let isProvisioning = false;
@@ -66,11 +67,11 @@
     }
 
     $: if (isOpen && spawnerId !== null && instanceId) {
-        startStreaming();
+        startPolling();
         // Reset provisioning animation if just opened
         provisioningStep = 0;
     } else {
-        stopStreaming();
+        stopPolling();
         activeTab = 'console'; // Reset tab
     }
 
@@ -184,43 +185,44 @@
         isConfirmOpen = true;
     }
 
-    function startStreaming() {
-        stopStreaming(); 
-        logs = [];
-        if (spawnerId === null || !instanceId) return;
-
-        // Connect to SSE
-        eventSource = new EventSource(`/api/spawners/${spawnerId}/instances/${instanceId}/logs`);
-        
-        eventSource.onopen = () => {
-            logs = [...logs, `>>> Connected to ${instanceId} log stream.`];
-        };
-
-        eventSource.addEventListener('log', (event) => {
-            try {
-                const line = JSON.parse(event.data);
-                if (line) logs = [...logs, line.trimEnd()];
-            } catch (e) {
-                 logs = [...logs, event.data.trimEnd()];
+    async function fetchInstanceLogs() {
+        if (!spawnerId || !instanceId) return;
+        try {
+            const res = await fetch(`/api/spawners/${spawnerId}/instances/${instanceId}/logs`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.logs) {
+                    // Split logs by newline
+                    logs = data.logs.split('\n');
+                }
             }
-        });
-
-        eventSource.onerror = () => {
-            eventSource?.close();
-        };
-
-        fetchStats();
-        statsInterval = setInterval(fetchStats, 2000);
+        } catch (e) {
+            console.error('Failed to fetch logs:', e);
+        }
     }
 
-    function stopStreaming() {
-        if (eventSource) {
-            eventSource.close();
-            eventSource = null;
-        }
+    function startPolling() {
+        stopPolling();
+        logs = [];
+        fetchStats();
+        fetchInstanceLogs(); // Initial fetch
+        
+        statsInterval = setInterval(fetchStats, 2000);
+        logsInterval = setInterval(() => {
+            if (activeTab === 'console') {
+                fetchInstanceLogs();
+            }
+        }, 2000); // Poll logs every 2s
+    }
+
+    function stopPolling() {
         if (statsInterval) {
             clearInterval(statsInterval);
             statsInterval = null;
+        }
+        if (logsInterval) {
+            clearInterval(logsInterval);
+            logsInterval = null;
         }
         logs = [];
     }
@@ -238,17 +240,20 @@
         }
     }
 
-    async function handleAction(action: string) {
-        if (!confirm(`Are you sure you want to ${action.toUpperCase()} this instance?`)) return;
-        try {
-            await fetch(`/api/spawners/${spawnerId}/instances/${instanceId}/${action}`, { method: 'POST' });
-        } catch (e) {
-            alert(`Failed: ${e}`);
-        }
+    function triggerAction(action: string) {
+        confirmTitle = `${action.charAt(0).toUpperCase() + action.slice(1)} Instance`;
+        confirmMessage = `Are you sure you want to ${action.toUpperCase()} this instance?`;
+        confirmBtnText = action === 'delete' ? 'Delete' : 'Confirm';
+        isCriticalAction = action === 'delete' || action === 'stop';
+        
+        pendingBackupAction = async () => {
+             await fetch(`/api/spawners/${spawnerId}/instances/${instanceId}/${action}`, { method: 'POST' });
+        };
+        isConfirmOpen = true;
     }
 
     function close() {
-        stopStreaming();
+        stopPolling();
         onClose();
     }
 </script>
@@ -345,20 +350,28 @@
 
                 <!-- Actions -->
                 <div class="p-4 border-t border-slate-800 grid grid-cols-2 gap-3 bg-slate-900/50">
-                                    <button 
-                                        onclick={() => handleAction('restart')}
-                                        disabled={stats.status !== 'Running'}
-                                        class="px-4 py-2.5 bg-slate-800 hover:bg-blue-600/20 hover:text-blue-400 text-slate-400 rounded-lg text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-slate-700 hover:border-blue-500/30"
-                                    >
-                                        Restart
-                                    </button>
-                                    <button 
-                                        onclick={() => handleAction('stop')}
-                                        disabled={stats.status !== 'Running'}
-                                        class="px-4 py-2.5 bg-slate-800 hover:bg-red-600/20 hover:text-red-400 text-slate-400 rounded-lg text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-slate-700 hover:border-red-500/30"
-                                    >
-                                        Stop
-                                    </button>                </div>
+                    <button 
+                        onclick={() => triggerAction('start')}
+                        disabled={stats.status === 'Running' || stats.status === 'Provisioning'}
+                        class="col-span-2 px-4 py-2.5 bg-slate-800 hover:bg-emerald-600/20 hover:text-emerald-400 text-slate-400 rounded-lg text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-slate-700 hover:border-emerald-500/30"
+                    >
+                        Start
+                    </button>
+                    <button 
+                        onclick={() => triggerAction('restart')}
+                        disabled={stats.status !== 'Running'}
+                        class="px-4 py-2.5 bg-slate-800 hover:bg-blue-600/20 hover:text-blue-400 text-slate-400 rounded-lg text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-slate-700 hover:border-blue-500/30"
+                    >
+                        Restart
+                    </button>
+                    <button 
+                        onclick={() => triggerAction('stop')}
+                        disabled={stats.status !== 'Running'}
+                        class="px-4 py-2.5 bg-slate-800 hover:bg-red-600/20 hover:text-red-400 text-slate-400 rounded-lg text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-slate-700 hover:border-red-500/30"
+                    >
+                        Stop
+                    </button>
+                </div>
             </div>
 
             <!-- Main Area -->
@@ -389,6 +402,12 @@
                     >
                         History
                     </button>
+                    <button 
+                        class={`px-6 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${activeTab==='node_logs' ? 'text-blue-400 border-b-2 border-blue-400 bg-slate-800/50' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'}`} 
+                        onclick={() => activeTab = 'node_logs'}
+                    >
+                        Node Logs
+                    </button>
                 </div>
 
                 <div class="flex-1 relative overflow-hidden">
@@ -418,6 +437,12 @@
                                 </div>
                             {/if}
                         </div>
+                    {:else if activeTab === 'node_logs'}
+                        <div class="h-full relative">
+                            {#if spawnerId !== null}
+                                <LogViewer spawnerId={spawnerId} isOpen={true} embedded={true} />
+                            {/if}
+                        </div>
                     {:else if activeTab === 'backups'}
                         <div class="p-8 h-full overflow-y-auto bg-slate-950/50">
                             <div class="flex justify-between items-center mb-6">
@@ -438,10 +463,13 @@
                                 </div>
                             {:else}
                                 <div class="space-y-3">
-                                    {#each backups as backup}
+                                    {#each backups as backup, i (backup.filename)}
                                         {@const outdated = isOutdated(backup.filename)}
                                         {@const version = getBackupVersion(backup.filename)}
-                                        <div class={`relative flex items-center justify-between p-4 rounded-xl border transition-all group ${outdated ? 'bg-orange-500/5 border-orange-500/20 hover:border-orange-500/40' : 'bg-slate-900/50 border-slate-800 hover:border-slate-700'}`}>
+                                        <div 
+                                            class={`relative flex items-center justify-between p-4 rounded-xl border transition-all group ${outdated ? 'bg-orange-500/5 border-orange-500/20 hover:border-orange-500/40' : 'bg-slate-900/50 border-slate-800 hover:border-slate-700'}`}
+                                            in:fly={{ y: 20, duration: 300, delay: 50 * i }}
+                                        >
                                             <div class="flex items-center gap-4">
                                                 <div class={`p-2 rounded-lg flex-shrink-0 ${outdated ? 'bg-orange-500/10 text-orange-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>

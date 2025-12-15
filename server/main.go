@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 )
 
 // Configuration constants used by the registry.
@@ -47,6 +48,11 @@ func main() {
 // It handles database connection, route setup, background cleanup tasks,
 // and graceful shutdown.
 func run() error {
+	// 0. Load .env file if present
+	if err := godotenv.Load(); err != nil {
+		log.Println("ℹ️  No .env file found or failed to load, relying on system environment variables.")
+	}
+
 	// 1. Print startup banner
 	PrintBanner()
 
@@ -171,7 +177,15 @@ func run() error {
 	// Authentication endpoints
 	router.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		HandleLogin(w, r, authConfig, sessionStore)
-	}).Methods("GET", "POST")
+	}).Methods("POST")
+
+	router.HandleFunc("/login/2fa", func(w http.ResponseWriter, r *http.Request) {
+		Handle2FAVerify(w, r, authConfig, sessionStore)
+	}).Methods("POST")
+
+	router.HandleFunc("/login/email", func(w http.ResponseWriter, r *http.Request) {
+		HandleEmailVerify(w, r, authConfig, sessionStore)
+	}).Methods("POST")
 
 	router.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
 		HandleLogout(w, r, sessionStore)
@@ -207,6 +221,7 @@ func run() error {
 
 	// 8. Start background cleanup
 	go registry.Cleanup(serverTTL, cleanupInterval)
+	go registry.MonitorStatuses(1 * time.Second) // Monitor status updates every second
 
 	// 9. Start proactive health checks
 	// go ProactiveHealthCheck(healthCheckInterval)

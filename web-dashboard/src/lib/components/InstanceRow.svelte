@@ -23,15 +23,24 @@
         expanded = !expanded;
         if (expanded) {
             renameValue = instance.id;
-            if (chartData.length === 0) {
-                chartData = Array.from({ length: 24 }, (_, i) => {
-                    const time = new Date().getTime() - (23 - i) * 3600000; // Last 24h
-                    return {
-                        timestamp: time,
-                        count: Math.floor(Math.random() * 30) // Random 0-30 players
-                    };
-                });
+            fetchHistory();
+        }
+    }
+
+    async function fetchHistory() {
+        try {
+            const res = await fetch(`/api/spawners/${spawnerId}/instances/${instance.id}/stats/history`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.history) {
+                    chartData = data.history.map((h: any) => ({
+                        timestamp: new Date(h.timestamp).getTime(),
+                        count: h.player_count || 0
+                    }));
+                }
             }
+        } catch (e) {
+            console.error("Failed to fetch history", e);
         }
     }
 
@@ -208,7 +217,7 @@
             <div class="mb-6 bg-slate-950/30 rounded-lg border border-slate-700/50 p-4">
                 <div class="flex justify-between items-end mb-2">
                     <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Player Activity (24h)</h4>
-                    <div class="text-sm font-mono text-blue-400">{chartData[chartData.length-1]?.count || 0} active</div>
+                    <div class="text-sm font-mono text-blue-400">{instance.player_count || 0} active</div>
                 </div>
                 <PlayersChart data={chartData} height={100} color="#3b82f6" />
             </div>

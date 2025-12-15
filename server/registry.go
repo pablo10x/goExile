@@ -37,7 +37,7 @@ func (r *Registry) Register(s *Spawner) (int, error) {
 	defer r.mu.Unlock()
 
 	s.LastSeen = time.Now().UTC()
-	s.Status = "active"
+	s.Status = "Online"
 
 	if dbConn != nil {
 		s.ID = 0 // Ensure ID is 0 so DB assigns a new one
@@ -147,23 +147,47 @@ func (r *Registry) Delete(id int) bool {
 	return true
 }
 
-func (r *Registry) Cleanup(ttl time.Duration, interval time.Duration) {
+// MonitorStatuses updates spawner statuses based on last seen time.
+func (r *Registry) MonitorStatuses(interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
+
 	for range ticker.C {
-		cutoff := time.Now().UTC().Add(-ttl)
 		r.mu.Lock()
-		for id, s := range r.items {
-			if s.LastSeen.Before(cutoff) {
-				log.Printf("removing expired spawner id=%d region=%s host=%s", id, s.Region, s.Host)
-				delete(r.items, id)
-				if dbConn != nil {
-					if err := DeleteSpawnerDB(dbConn, id); err != nil {
-						log.Printf("warning: failed to delete expired spawner id=%d from db: %v", id, err)
-					}
-				}
+		// now := time.Now().UTC()
+		for _, s := range r.items {
+			// If Offline (WS disconnected), don't change based on time
+			if s.Status == "Offline" {
+				continue
 			}
+
+			// Time-based status updates disabled (Degraded/Unresponsive).
+			// Status is only "Online" (connected) or "Offline" (disconnected).
+			/*
+			since := now.Sub(s.LastSeen)
+			
+			var newStatus string
+			// Heartbeat is 5s. 2 heartbeats = 10s.
+			// Increased buffer to 20s (4 missed heartbeats) to prevent flapping
+			if since < 20*time.Second { 
+				newStatus = "Online"
+			} else if since < 45*time.Second {
+				newStatus = "Degraded"
+			} else {
+				newStatus = "Unresponsive"
+			}
+
+			// Only update if changed
+			if s.Status != newStatus {
+				s.Status = newStatus
+			}
+			*/
 		}
 		r.mu.Unlock()
 	}
+}
+
+func (r *Registry) Cleanup(ttl time.Duration, interval time.Duration) {
+	// Automatic cleanup disabled as per requirement.
+	// Spawners persist until explicitly deleted.
 }

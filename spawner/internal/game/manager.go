@@ -22,10 +22,11 @@ import (
 
 // HistoryPoint represents a snapshot of resource usage.
 type HistoryPoint struct {
-	Timestamp time.Time `json:"timestamp"`
-	CPU       float64   `json:"cpu"`
-	Memory    uint64    `json:"memory_bytes"`
-	MemoryPct float64   `json:"memory_percent"`
+	Timestamp   time.Time `json:"timestamp"`
+	CPU         float64   `json:"cpu"`
+	Memory      uint64    `json:"memory_bytes"`
+	MemoryPct   float64   `json:"memory_percent"`
+	PlayerCount int       `json:"player_count"`
 }
 
 // InstanceStats holds resource usage information.
@@ -49,6 +50,9 @@ type Instance struct {
 	Version   string    `json:"version"`
 	StartTime time.Time `json:"start_time"`
 	Path      string    `json:"path"` // Path to this instance's directory
+
+	PlayerCount int `json:"player_count"`
+	MaxPlayers  int `json:"max_players"`
 
 	History []HistoryPoint `json:"-"` // Stored in memory, not serialized in basic list
 
@@ -128,10 +132,11 @@ func (m *Manager) recordInstanceStat(id string) {
 
 	if inst, exists := m.instances[id]; exists {
 		point := HistoryPoint{
-			Timestamp: time.Now(),
-			CPU:       stats.CPUPercent,
-			Memory:    stats.MemoryUsage,
-			MemoryPct: memPct,
+			Timestamp:   time.Now(),
+			CPU:         stats.CPUPercent,
+			Memory:      stats.MemoryUsage,
+			MemoryPct:   memPct,
+			PlayerCount: stats.PlayerCount,
 		}
 		inst.History = append(inst.History, point)
 
@@ -493,7 +498,7 @@ func (m *Manager) startProcess(inst *Instance) error {
 		return spawnerErr
 	}
 
-	wsURL := fmt.Sprintf("ws://%s:%s", m.cfg.Host, m.cfg.Port)
+	wsURL := fmt.Sprintf("ws://%s:%s/instance/%s/ws", m.cfg.Host, m.cfg.Port, inst.ID)
 	// Prepare arguments for the game server binary
 	args := []string{
 		"-batchmode",
@@ -813,6 +818,8 @@ func (m *Manager) GetInstanceStats(id string) (*InstanceStats, error) {
 
 	if inst.Status == "Running" {
 		stats.Uptime = int64(time.Since(inst.StartTime).Seconds())
+		stats.PlayerCount = inst.PlayerCount
+		stats.MaximumPlayers = inst.MaxPlayers
 	}
 
 	// Disk Usage
@@ -855,6 +862,21 @@ func (m *Manager) GetInstanceStats(id string) (*InstanceStats, error) {
 	}
 
 	return stats, nil
+}
+
+// UpdatePlayerStats updates the player count for a running instance.
+func (m *Manager) UpdatePlayerStats(id string, current, max int) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	inst, exists := m.instances[id]
+	if !exists {
+		return fmt.Errorf("instance not found")
+	}
+
+	inst.PlayerCount = current
+	inst.MaxPlayers = max
+	return nil
 }
 
 // readVersionFile attempts to read the version string from version.txt in the instance directory.

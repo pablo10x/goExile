@@ -77,6 +77,11 @@
             const elapsed = Date.now() - start;
             if (elapsed < 800) await new Promise(r => setTimeout(r, 800 - elapsed));
 
+            if (response.redirected && response.url.includes('/login/2fa')) {
+                goto('/login/2fa');
+                return;
+            }
+
             if (response.redirected && response.url.includes('/login')) {
                  // Add shake animation for failed login
                  formShake = true;

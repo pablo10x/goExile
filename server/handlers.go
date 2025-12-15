@@ -5,17 +5,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
-	"golang.org/x/crypto/bcrypt"
 )
 
-var (
-	loginAttempts   = make(map[string]time.Time)
-	loginAttemptsMu sync.Mutex
-)
+
 
 // ... (existing code remains until HandleLogin) ...
 
@@ -827,86 +822,4 @@ func ErrorsAPI(w http.ResponseWriter, r *http.Request) {
 func ClearErrorsAPI(w http.ResponseWriter, r *http.Request) {
 	GlobalStats.ClearErrors()
 	writeJSON(w, http.StatusOK, map[string]string{"message": "Error log cleared"})
-}
-
-// HandleLogin processes login requests.
-func HandleLogin(w http.ResponseWriter, r *http.Request, authConfig AuthConfig, sessionStore *SessionStore) {
-	if r.Method == http.MethodGet {
-		writeError(w, r, http.StatusMethodNotAllowed, "GET login not supported. Please POST credentials.")
-		return
-	}
-
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	// Rate Limiting: 1 attempt per 30 minutes per IP
-	ip := r.RemoteAddr // In prod, consider X-Forwarded-For if behind proxy
-	loginAttemptsMu.Lock()
-	lastAttempt, exists := loginAttempts[ip]
-	if exists && time.Since(lastAttempt) < 30*time.Minute {
-		loginAttemptsMu.Unlock()
-		// Silent failure: Redirect back to login without error message
-		log.Printf("Login rate limited for IP: %s", ip)
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		return
-	}
-	loginAttempts[ip] = time.Now()
-	loginAttemptsMu.Unlock()
-
-	email := r.FormValue("email")
-	password := r.FormValue("password")
-
-	// Verify email and hashed password
-	if email == authConfig.Email {
-		err := bcrypt.CompareHashAndPassword([]byte(authConfig.HashedPassword), []byte(password))
-		if err == nil { // Password matches
-			sessionID, err := sessionStore.CreateSession()
-			if err != nil {
-				http.Error(w, "Failed to create session", http.StatusInternalServerError)
-				return
-			}
-
-			// Secure attributes based on production mode
-			sameSite := http.SameSiteLaxMode
-			if authConfig.IsProduction {
-				sameSite = http.SameSiteStrictMode
-			}
-
-			http.SetCookie(w, &http.Cookie{
-				Name:     "session",
-				Value:    sessionID,
-				Path:     "/",
-				HttpOnly: true,
-				Secure:   authConfig.IsProduction, // Only true in production
-				SameSite: sameSite,
-				MaxAge:   86400,
-			})
-
-			http.Redirect(w, r, "/", http.StatusSeeOther)
-			return
-		}
-	}
-
-	// Authentication failed
-	http.Redirect(w, r, "/login", http.StatusSeeOther)
-}
-
-// HandleLogout revokes the session.
-func HandleLogout(w http.ResponseWriter, r *http.Request, sessionStore *SessionStore) {
-	cookie, err := r.Cookie("session")
-	if err == nil {
-		sessionStore.RevokeSession(cookie.Value)
-	}
-
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session",
-		Value:    "",
-		Path:     "/",
-		HttpOnly: true,
-		MaxAge:   -1,
-	})
-
-	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }

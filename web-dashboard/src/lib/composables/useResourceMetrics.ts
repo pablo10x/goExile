@@ -16,7 +16,10 @@ export function useResourceMetrics(spawnerId: number, instanceId: number | strin
     async function fetchStats() {
         try {
             const response = await fetch(`/api/spawners/${spawnerId}/instances/${instanceId}/stats`);
-            if (!response.ok) throw new Error(`Failed to fetch stats: ${response.statusText}`);
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || `Failed to fetch stats: ${response.statusText}`);
+            }
             
             const data = await response.json();
             stats.set(data);
@@ -54,7 +57,10 @@ export function useResourceMetrics(spawnerId: number, instanceId: number | strin
         try {
             loading.set(true);
             const response = await fetch(`/api/spawners/${spawnerId}/instances/${instanceId}/stats/history`);
-            if (!response.ok) throw new Error(`Failed to fetch history: ${response.statusText}`);
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || `Failed to fetch history: ${response.statusText}`);
+            }
             
             const rawData = await response.json();
             const data = Array.isArray(rawData) ? rawData : (rawData.history || []);
@@ -80,8 +86,8 @@ export function useResourceMetrics(spawnerId: number, instanceId: number | strin
     }
 
     function startPolling() {
-        // Start real-time stats polling (every 2 seconds)
-        statsInterval = setInterval(fetchStats, 2000) as unknown as number;
+        // Start real-time stats polling (every 5 seconds)
+        statsInterval = setInterval(fetchStats, 5000) as unknown as number;
         
         // Start history polling (every 60 seconds)
         historyInterval = setInterval(fetchHistory, 60000) as unknown as number;

@@ -207,17 +207,17 @@ onMount(() => {
         {#if $isAuthenticated && page.url.pathname !== '/login'}
             <div class="fixed inset-0 -z-50 overflow-hidden">
                 <!-- Animated Gradient Background -->
-                <div class="absolute inset-0 bg-gradient-to-br from-purple-900 via-black to-blue-900 animate-gradient-shift"></div>
+                <div class="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 animate-gradient-shift"></div>
                 
                 <!-- Moving Nebula Clouds -->
                 <div class="absolute inset-0">
-                    <div class="absolute top-0 left-0 w-[60%] h-[40%] bg-blue-600/20 rounded-full blur-[150px] animate-blob" style="animation-delay: 0s;"></div>
-                    <div class="absolute top-1/4 right-0 w-[50%] h-[35%] bg-purple-600/20 rounded-full blur-[150px] animate-blob" style="animation-delay: 3s;"></div>
-                    <div class="absolute bottom-0 left-1/3 w-[45%] h-[30%] bg-cyan-600/15 rounded-full blur-[120px] animate-blob" style="animation-delay: 5s;"></div>
+                    <div class="absolute top-0 left-0 w-[60%] h-[40%] bg-slate-700/20 rounded-full blur-[150px] animate-blob" style="animation-delay: 0s;"></div>
+                    <div class="absolute top-1/4 right-0 w-[50%] h-[35%] bg-gray-600/20 rounded-full blur-[150px] animate-blob" style="animation-delay: 3s;"></div>
+                    <div class="absolute bottom-0 left-1/3 w-[45%] h-[30%] bg-zinc-700/20 rounded-full blur-[120px] animate-blob" style="animation-delay: 5s;"></div>
                 </div>
                 
                 <!-- Grid Pattern Overlay -->
-                <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgPGcgZmlsbD0iIzY0NzQ4YiIgZmlsbC1vcGFjaXR5PSIwLjAzIj4KICAgICAgPHBhdGggZD0iTTM2IDM0di00aC0ydjRoLTR2Mmg0djRoMnYtNGg0di0yaC00em0wLTMwVjBoLTJ2NGgtNHYyaDR2NGgyVjZoNFY0aC00ek02IDM0di00SDR2NEgwdjJoNHY0aDJ2LTRoNHYtMkg2ek02IDRWMEg0djRIMHZoaDR2NGgyVjZoNFY0SDZ6Ii8+CiAgICA8L2c+CiAgPC9nPgo8L3N2Zz4=')] opacity-20"></div>
+                <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgPGcgZmlsbD0iIzY0NzQ4YiIgZmlsbC1vcGFjaXR5PSIwLjAzIj4KICAgICAgPHBhdGggZD0iTTM2IDM0di00aC0ydjRoLTR2Mmg0djRoMnYtNGg0di0yaC00em0wLTMwVjBoLTJ2NGgtNHYyaDR2NGgyVjZoNFY0aC00ek02IDM0di00SDR2NEgwdjJoNHY0aDJ2LTRoNHYtMkg2ek02IDRWMEg0djRIMHZoaDR2NGgyVjZoNFY0SDZ6Ii8+CiAgICA8L2c+CiAgPC9nPgo8L3N2Zz4=')] opacity-[0.03]"></div>
                 
                 <!-- Vignette Effect -->
                 <div class="absolute inset-0 bg-radial-gradient from-transparent via-black/20 to-black/60"></div>
@@ -225,9 +225,9 @@ onMount(() => {
             
             <!-- Floating Elements -->
             <div class="fixed inset-0 pointer-events-none z-5">
-                <div class="absolute top-20 left-20 w-16 h-16 border-2 border-blue-400/30 rounded-lg animate-float" style="animation-delay: 0s;"></div>
-                <div class="absolute top-40 right-32 w-12 h-12 border-2 border-purple-400/30 rounded-full animate-pulse" style="animation-delay: 1s;"></div>
-                <div class="absolute bottom-32 left-1/3 w-20 h-20 border-2 border-cyan-400/30 transform rotate-45 animate-spin" style="animation-delay: 2s; animation-duration: 15s;"></div>
+                <div class="absolute top-20 left-20 w-16 h-16 border-2 border-slate-400/20 rounded-lg animate-float" style="animation-delay: 0s;"></div>
+                <div class="absolute top-40 right-32 w-12 h-12 border-2 border-gray-400/20 rounded-full animate-pulse" style="animation-delay: 1s;"></div>
+                <div class="absolute bottom-32 left-1/3 w-20 h-20 border-2 border-zinc-400/20 transform rotate-45 animate-spin" style="animation-delay: 2s; animation-duration: 15s;"></div>
             </div>
         {/if}
     {:else}

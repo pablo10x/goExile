@@ -50,7 +50,7 @@
     // Console & Logs
     let isConsoleOpen = false;
     let consoleInstanceId: string | null = null;
-    let isLogDrawerOpen = false;
+    let isLogViewerOpen = false;
 
     $: activeVersion = $serverVersions.find(v => v.is_active);
 
@@ -300,7 +300,7 @@
         {/if}
         <div class="ml-auto flex items-center gap-3">
             <button 
-                onclick={() => isLogDrawerOpen = true}
+                onclick={() => isLogViewerOpen = true}
                 class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm font-semibold transition-colors border border-slate-700"
             >
                 View Logs
@@ -453,11 +453,13 @@
 </div>
 
 <!-- Log Viewer Modal -->
-<LogViewerModal
-    isOpen={isLogDrawerOpen}
-    spawnerId={spawnerId}
-    onClose={() => isLogDrawerOpen = false}
-/>
+{#if spawner}
+    <LogViewer
+        spawnerId={spawnerId}
+        isOpen={isLogViewerOpen}
+        onClose={() => isLogViewerOpen = false}
+    />
+{/if}
 
 <!-- Instance Console Modal -->
 <InstanceManagerModal

@@ -155,6 +155,11 @@ func (e *SpawnerError) LogAttrs() []slog.Attr {
 	return attrs
 }
 
+// LogValue implements slog.LogValuer for automatic structured logging
+func (e *SpawnerError) LogValue() slog.Value {
+	return slog.GroupValue(e.LogAttrs()...)
+}
+
 // captureStack captures the current goroutine's stack trace
 func captureStack() []string {
 	const maxFrames = 10

@@ -49,6 +49,20 @@ DB_PATH=database/registry.db
 ADMIN_EMAIL=admin@example.com
 ADMIN_PASSWORD=admin123
 
+# Two-Factor Authentication (TOTP)
+# Base32 encoded secret key. Generate one using `gotp` or an online generator.
+# If set, 2FA is required for login.
+ADMIN_2FA_SECRET=JBSWY3DPEHPK3PXP
+
+# Email Verification (SMTP)
+# Required for the 3rd step of authentication (Email Code).
+# If SMTP_HOST is not set, this step is skipped.
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=your_email@example.com
+SMTP_PASS=your_password
+SMTP_FROM=no-reply@example.com
+
 # API Key for Spawner Authentication (REQUIRED for secure Spawner communication)
 # Spawners must use this exact key in their X-API-Key header.
 MASTER_API_KEY=your_very_secret_master_api_key_here

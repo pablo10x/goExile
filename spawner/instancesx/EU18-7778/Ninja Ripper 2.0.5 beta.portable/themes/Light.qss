@@ -1,0 +1,190 @@
+
+*{
+  color: #002B36;
+  background-color: #D4D0C8;
+}
+
+
+QPushButton
+{
+  color: #002B36;
+  border-style: outset;
+  border: 1px solid #161B1E;
+  min-width: 100px;
+  min-height: 30px;
+  border-radius: 3px;
+}
+QPushButton:hover
+{
+  background-color: #f0f0f0;
+}
+QPushButton:disabled
+{
+  background-color: #D4D0C8;
+  color: #0f0f0f;
+  border: 1px solid #0f0f0f;
+}
+
+QTextEdit, QProgressBar, QMenu
+{
+  background-color: #cacaca;
+}
+
+
+QScrollBar {
+    border: 1px solid #002B36;
+    background: #f0f0f0;
+}
+
+QScrollBar::handle {
+    background: #cacaca;
+    min-width: 20px;
+    min-height: 20px;
+}
+
+QScrollBar::vertical {
+    width: 20px;
+}
+
+QScrollBar::horizontal {
+    height: 20px;
+}
+
+QScrollBar::add-line {
+    border: none;
+    background: none;
+}
+
+QScrollBar::sub-line {
+    border: none;
+    background: none;
+}
+
+
+
+QLineEdit
+{
+  color:#002B36;
+  background-color: #f0f0f0;
+  border: 1px solid #002B36;
+}
+
+QToolTip
+{
+  color: #161B1E;
+  background-color: #f0f0f0;
+}
+
+QMenu::item:selected
+{
+  color:#002B36;
+  background-color: #f0f0f0;
+}
+QMenuBar::item:selected
+{
+  background-color: #cacaca;
+  border: 1px solid #002B36;
+}
+
+
+
+
+QComboBox
+{
+  border: 1px solid #002B36;
+  padding: 1px 18px 1px 3px;
+  min-width: 6em;
+  background-color: #f0f0f0;
+  selection-background-color: #f0f0f0;
+}
+QComboBox::drop-down
+{
+  background-color: #f0f0f0;
+}
+QComboBox QAbstractItemView
+{
+  background-color: #f0f0f0;
+  border: 2px solid #002B36; 
+  selection-background-color: #002B36;
+}
+QComboBox::down-arrow {
+    image: url("../themes/images/down_arrow_combo.png");
+}
+QComboBox::down-arrow:on {
+    top: 1px;
+    left: 1px;
+}
+
+
+QCheckBox
+{
+  spacing: 5px;
+}
+QCheckBox::indicator {
+  width: 13px;
+  height: 13px;
+  background-color: #f0f0f0;
+}
+QCheckBox::indicator:checked {
+    image: url("../themes/images/checkbox_checked.png");
+}
+QCheckBox::indicator:unchecked {
+    image: url("../themes/images/checkbox_unchecked.png");
+}
+QCheckBox:disabled
+{
+  color: #AAAAAA;
+  spacing: 5px;
+}
+
+
+QSpinBox
+{
+  background-color: #f0f0f0;
+  border: 1px solid #002B36;
+}
+QSpinBox::up-arrow
+{
+  image: url("../themes/images/up_arrow.png");
+  width: 14px;
+  height: 7px;
+}
+QSpinBox::down-arrow
+{
+  image: url("../themes/images/down_arrow.png");
+  width: 14px;
+  height: 7px;
+}
+
+
+
+
+
+
+MainWindow,
+SettingsDialog,
+CrashDumpSendDialog,
+NewVersionDialog
+{
+
+}
+
+QTextBrowser#borderColorBackground
+{
+  background-color: #D4D0C8;
+}
+
+
+QPushButton#exitBtn:hover
+{
+  background-color: #D73835;
+}
+
+
+QPushButton#exeSelBtn, 
+QPushButton#workDirSelBtn, 
+QPushButton#outDirBtn
+{
+  min-width: 22px;
+  min-height: 22px;
+}

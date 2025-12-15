@@ -84,43 +84,6 @@
         }
     }
     
-    function renderConfigInput(configItem: ServerConfig) {
-        if (configItem.type === 'bool') {
-            return `
-                <label class="flex items-center cursor-pointer">
-                    <input 
-                        type="checkbox" 
-                        class="sr-only peer"
-                        ${configItem.value === 'true' ? 'checked' : ''}
-                        onchange="updateConfig('${configItem.key}', this.checked ? 'true' : 'false')"
-                        ${configItem.is_read_only ? 'disabled' : ''}
-                    >
-                    <div class="relative w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-            `;
-        } else if (configItem.type === 'int') {
-            return `
-                <input 
-                    type="number" 
-                    value="${configItem.value}"
-                    onchange="updateConfig('${configItem.key}', this.value)"
-                    ${configItem.is_read_only ? 'disabled' : ''}
-                    class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-            `;
-        } else {
-            return `
-                <input 
-                    type="text" 
-                    value="${configItem.value}"
-                    onchange="updateConfig('${configItem.key}', this.value)"
-                    ${configItem.is_read_only ? 'disabled' : ''}
-                    class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-            `;
-        }
-    }
-    
     onMount(() => {
         loadCategoryConfig();
         
@@ -204,7 +167,34 @@
                             <p class="text-slate-400 text-sm mb-3">{configItem.description}</p>
                             <div class="flex items-center gap-4">
                                 <div class="flex-1 max-w-md">
-                                    {@html renderConfigInput(configItem)}
+                                    {#if configItem.type === 'bool'}
+                                        <label class="flex items-center cursor-pointer">
+                                            <input 
+                                                type="checkbox" 
+                                                class="sr-only peer"
+                                                checked={configItem.value === 'true'}
+                                                onchange={(e) => updateConfig(configItem.key, e.currentTarget.checked ? 'true' : 'false')}
+                                                disabled={configItem.is_read_only}
+                                            >
+                                            <div class="relative w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                        </label>
+                                    {:else if configItem.type === 'int'}
+                                        <input 
+                                            type="number" 
+                                            value={configItem.value}
+                                            onchange={(e) => updateConfig(configItem.key, e.currentTarget.value)}
+                                            disabled={configItem.is_read_only}
+                                            class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        >
+                                    {:else}
+                                        <input 
+                                            type="text" 
+                                            value={configItem.value}
+                                            onchange={(e) => updateConfig(configItem.key, e.currentTarget.value)}
+                                            disabled={configItem.is_read_only}
+                                            class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        >
+                                    {/if}
                                 </div>
                                 <div class="text-xs text-slate-500">
                                     Type: {configItem.type}<br>

@@ -6,6 +6,7 @@
     import InstanceRow from './InstanceRow.svelte';
     import Dropdown from './Dropdown.svelte';
     import { compareVersions } from '$lib/semver';
+    import { Trash2 } from 'lucide-svelte';
 
     export let spawners: Spawner[] = [];
     export let highlightNewSpawnerId: number | null = null;
@@ -94,15 +95,25 @@
     }
 
     function getStatusClass(status: string) {
-        return status === 'active' 
-            ? 'bg-emerald-500/10 text-emerald-400' 
-            : 'bg-red-500/10 text-red-400';
+        switch (status) {
+            case 'Online': return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+            case 'Degraded': return 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20';
+            case 'Unresponsive': return 'bg-orange-500/10 text-orange-400 border border-orange-500/20';
+            case 'Offline': return 'bg-slate-700/30 text-slate-400 border border-slate-700/50';
+            default: return 'bg-slate-700/30 text-slate-400';
+        }
     }
 
     function getInstancePercent(spawner: Spawner) {
         return spawner.max_instances > 0 
             ? (spawner.current_instances / spawner.max_instances) * 100 
             : 0;
+    }
+    
+    function deleteSpawner(id: number) {
+        if (confirm(`Are you sure you want to delete Spawner #${id}? This cannot be undone.`)) {
+            dispatch('deleteSpawnerRequest', id);
+        }
     }
 </script>
 
@@ -160,25 +171,36 @@
                         {spawner.game_version || 'N/A'}
                     </td>
                     <td class="px-4 py-3 text-right space-x-2" onclick={(e) => e.stopPropagation()}>
-                        <a 
-                            href="/spawners/{spawner.id}"
-                            class="inline-flex items-center gap-2 px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded text-xs font-semibold transition-colors"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                            Manage Spawner
-                        </a>
-                        <button 
-                            onclick={() => dispatch('viewLogs', spawner.id)}
-                            class="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded text-xs font-semibold transition-colors"
-                        >
-                            Logs
-                        </button>
-                        <button 
-                            onclick={() => dispatch('spawn', spawner.id)}
-                            class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-semibold transition-colors shadow-lg shadow-blue-900/20"
-                        >
-                            Spawn
-                        </button>
+                        {#if spawner.status === 'Offline'}
+                            <button 
+                                onclick={() => deleteSpawner(spawner.id)}
+                                class="inline-flex items-center gap-2 px-3 py-1 bg-red-900/30 hover:bg-red-900/50 text-red-400 border border-red-900/50 rounded text-xs font-semibold transition-colors"
+                            >
+                                <Trash2 class="w-3.5 h-3.5" />
+                                Delete
+                            </button>
+                        {:else}
+                            <a 
+                                href="/spawners/{spawner.id}"
+                                class="inline-flex items-center gap-2 px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded text-xs font-semibold transition-colors"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                Manage
+                            </a>
+                            <button 
+                                onclick={() => dispatch('viewLogs', spawner.id)}
+                                class="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded text-xs font-semibold transition-colors"
+                            >
+                                Logs
+                            </button>
+                            <button 
+                                onclick={() => dispatch('spawn', spawner.id)}
+                                disabled={spawner.status !== 'Online'}
+                                class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-semibold transition-colors shadow-lg shadow-blue-900/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-700"
+                            >
+                                Spawn
+                            </button>
+                        {/if}
                     </td>
                 </tr>
                 <!-- Details Row -->

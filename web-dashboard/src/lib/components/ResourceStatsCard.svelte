@@ -13,7 +13,6 @@
     }: ResourceStatsCardProps = $props();
     
     let displayCurrent = $state(0);
-    let displayPeak = $state(0);
     
     // Animate number changes
     $effect(() => {
@@ -22,126 +21,68 @@
             if (targetCurrent !== displayCurrent) {
                 animateValue(displayCurrent, targetCurrent, (val) => displayCurrent = val);
             }
-            
-            const targetPeak = peak;
-            if (targetPeak !== displayPeak) {
-                animateValue(displayPeak, targetPeak, (val) => displayPeak = val);
-            }
         } else {
             displayCurrent = current;
-            displayPeak = peak;
         }
     });
     
     function animateValue(start: number, end: number, callback: (val: number) => void) {
-        const duration = 500; // 500ms animation
+        const duration = 500; 
         const startTime = Date.now();
         
         function update() {
             const elapsed = Date.now() - startTime;
             const progress = Math.min(elapsed / duration, 1);
-            const easeProgress = 1 - Math.pow(1 - progress, 3); // Ease out cubic
+            const easeProgress = 1 - Math.pow(1 - progress, 3);
             const value = start + (end - start) * easeProgress;
-            
             callback(value);
-            
-            if (progress < 1) {
-                requestAnimationFrame(update);
-            }
+            if (progress < 1) requestAnimationFrame(update);
         }
-        
         requestAnimationFrame(update);
     }
     
-    function getColorClasses() {
-        const baseClasses = 'relative overflow-hidden';
-        const colorMap = {
-            orange: 'from-orange-500 to-red-500',
-            blue: 'from-blue-500 to-purple-500',
-            green: 'from-green-500 to-teal-500',
-            red: 'from-red-500 to-pink-500',
-            purple: 'from-purple-500 to-indigo-500',
-            teal: 'from-teal-500 to-cyan-500'
+    function getColors() {
+        const map = {
+            orange: { text: 'text-orange-400', bg: 'bg-orange-500', border: 'border-orange-500/20' },
+            blue:   { text: 'text-blue-400',   bg: 'bg-blue-500',   border: 'border-blue-500/20' },
+            green:  { text: 'text-emerald-400', bg: 'bg-emerald-500', border: 'border-emerald-500/20' },
+            red:    { text: 'text-red-400',    bg: 'bg-red-500',    border: 'border-red-500/20' },
+            purple: { text: 'text-purple-400', bg: 'bg-purple-500', border: 'border-purple-500/20' },
+            teal:   { text: 'text-teal-400',   bg: 'bg-teal-500',   border: 'border-teal-500/20' }
         };
-        
-        return `${baseClasses} bg-gradient-to-br ${colorMap[color] || colorMap.blue}`;
+        return map[color] || map.blue;
     }
-    
-    function getTrendIcon() {
-        if (!trend) return '';
-        
-        const trendMap = {
-            up: '↗️',
-            down: '↘️',
-            stable: '→'
-        };
-        
-        return trendMap[trend];
-    }
-    
-    function getTrendColor() {
-        if (!trend) return 'text-slate-400';
-        
-        const colorMap = {
-            up: 'text-red-400',
-            down: 'text-green-400',
-            stable: 'text-slate-400'
-        };
-        
-        return colorMap[trend];
-    }
-    
-    function getProgressPercentage() {
-        return Math.min((current / peak) * 100, 100);
-    }
+
+    const c = $derived(getColors());
+    const pct = $derived(Math.min((current / (peak || 1)) * 100, 100));
 </script>
 
-<div class="group relative bg-slate-800/50 backdrop-blur-md border border-slate-700/50 rounded-xl p-6 hover:border-slate-600/50 transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/20">
-    <!-- Background Gradient -->
-    <div class="absolute inset-0 bg-gradient-to-br from-slate-900/20 to-slate-800/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-    
-    <!-- Content -->
-    <div class="relative z-10">
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-3">
-                <div class="p-2 bg-slate-900/50 rounded-lg border border-slate-700/50">
-                    <div class="text-xl">{icon}</div>
-                </div>
-                <h3 class="text-slate-200 font-semibold tracking-wide">{title}</h3>
-            </div>
-            {#if trend}
-                <div class="flex items-center gap-1 text-sm {getTrendColor()}">
-                    <span class="text-lg">{getTrendIcon()}</span>
-                    <span class="font-medium">{Math.abs(Math.round((current - peak) / peak * 100))}%</span>
-                </div>
-            {/if}
-        </div>
-        
-        <!-- Current Value -->
-        <div class="mb-3">
-            <div class="text-3xl font-bold text-slate-100 tabular-nums">
-                {displayCurrent.toFixed(1)}{unit}
+<div class="bg-slate-900/50 border border-slate-800 rounded-xl p-4 relative overflow-hidden group hover:border-slate-700 transition-colors">
+    <div class="flex justify-between items-start mb-3">
+        <div>
+            <div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-0.5">{title}</div>
+            <div class="text-2xl font-mono font-medium text-slate-200 tabular-nums tracking-tight">
+                {displayCurrent.toFixed(1)}<span class="text-sm text-slate-500 ml-0.5">{unit}</span>
             </div>
         </div>
-        
-        <!-- Progress Bar -->
-        <div class="mb-3">
-            <div class="h-2 bg-slate-700/50 rounded-full overflow-hidden">
-                <div 
-                    class="h-full {getColorClasses()} rounded-full transition-all duration-500 ease-out"
-                    style="width: {getProgressPercentage()}%"
-                ></div>
-            </div>
-        </div>
-        
-        <!-- Peak Value -->
-        <div class="flex items-center justify-between text-sm text-slate-400">
-            <span>Peak: {displayPeak.toFixed(1)}{unit}</span>
-            <span>{getProgressPercentage().toFixed(0)}% of peak</span>
+        <div class="p-2 rounded-lg bg-slate-800/50 text-lg opacity-80 group-hover:scale-110 transition-transform">
+            {icon}
         </div>
     </div>
-    
-    <!-- Hover Effect Border -->
-    <div class="absolute inset-0 rounded-xl border border-transparent group-hover:border-slate-600/30 transition-all duration-300 pointer-events-none"></div>
+
+    <!-- Progress Bar -->
+    <div class="relative h-1.5 w-full bg-slate-800 rounded-full overflow-hidden mb-2">
+        <div 
+            class="absolute top-0 left-0 h-full {c.bg} transition-all duration-500 ease-out" 
+            style="width: {pct}%"
+        ></div>
+    </div>
+
+    <!-- Footer -->
+    <div class="flex items-center justify-between text-[10px] text-slate-500 font-mono">
+        <span>PEAK: {peak.toFixed(1)}{unit}</span>
+        <span class={trend === 'up' ? c.text : 'text-slate-600'}>
+            {pct.toFixed(0)}%
+        </span>
+    </div>
 </div>

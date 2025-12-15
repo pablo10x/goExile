@@ -2,9 +2,11 @@ package main
 
 import (
 	"crypto/rand"
+	"encoding/base32"
 	"encoding/base64"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"sync"
@@ -13,29 +15,50 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+const (
+	AuthStepAuthenticated = "authenticated"
+	AuthStepTOTP          = "totp"
+	AuthStepEmail         = "email"
+)
+
 // AuthConfig holds authentication credentials for the dashboard.
 type AuthConfig struct {
 	Enabled        bool
 	Email          string
 	HashedPassword string
+	TOTPSecret     string
 	IsProduction   bool
+	
+	// SMTP Settings
+	SMTPHost string
+	SMTPPort string
+	SMTPUser string
+	SMTPPass string
+	SMTPFrom string
+}
+
+// SessionData holds session information.
+type SessionData struct {
+	Expiry    time.Time
+	AuthStep  string // "authenticated", "totp", "email"
+	EmailCode string
 }
 
 // SessionStore manages active sessions.
 type SessionStore struct {
 	mu       sync.RWMutex
-	sessions map[string]time.Time
+	sessions map[string]SessionData
 }
 
 // NewSessionStore creates a new session store.
 func NewSessionStore() *SessionStore {
 	return &SessionStore{
-		sessions: make(map[string]time.Time),
+		sessions: make(map[string]SessionData),
 	}
 }
 
 // CreateSession creates a new session token.
-func (ss *SessionStore) CreateSession() (string, error) {
+func (ss *SessionStore) CreateSession(initialStep string) (string, error) {
 	token := make([]byte, 32)
 	_, err := rand.Read(token)
 	if err != nil {
@@ -45,29 +68,71 @@ func (ss *SessionStore) CreateSession() (string, error) {
 	sessionID := base64.StdEncoding.EncodeToString(token)
 
 	ss.mu.Lock()
-	ss.sessions[sessionID] = time.Now().Add(24 * time.Hour) // 24-hour session
+	ss.sessions[sessionID] = SessionData{
+		Expiry:   time.Now().Add(24 * time.Hour), // 24-hour session
+		AuthStep: initialStep,
+	}
 	ss.mu.Unlock()
 
 	return sessionID, nil
 }
 
-// ValidateSession checks if a session token is valid.
-func (ss *SessionStore) ValidateSession(sessionID string) bool {
+// ValidateSession checks if a session token is valid and returns its current auth step.
+func (ss *SessionStore) ValidateSession(sessionID string) (isValid bool, authStep string) {
 	ss.mu.RLock()
 	defer ss.mu.RUnlock()
 
-	expiresAt, exists := ss.sessions[sessionID]
+	data, exists := ss.sessions[sessionID]
 	if !exists {
-		return false
+		return false, ""
 	}
 
 	// Check if session has expired
-	if time.Now().After(expiresAt) {
-		// Don't delete here; let cleanup handle it
-		return false
+	if time.Now().After(data.Expiry) {
+		return false, ""
 	}
 
-	return true
+	return true, data.AuthStep
+}
+
+// SetSessionStep updates the authentication step for a session.
+func (ss *SessionStore) SetSessionStep(sessionID string, step string) {
+	ss.mu.Lock()
+	defer ss.mu.Unlock()
+	if data, exists := ss.sessions[sessionID]; exists {
+		data.AuthStep = step
+		ss.sessions[sessionID] = data
+	}
+}
+
+// SetEmailCode stores the verification code for the email step.
+func (ss *SessionStore) SetEmailCode(sessionID string, code string) {
+	ss.mu.Lock()
+	defer ss.mu.Unlock()
+	if data, exists := ss.sessions[sessionID]; exists {
+		data.EmailCode = code
+		ss.sessions[sessionID] = data
+	}
+}
+
+// VerifyEmailCode checks if the provided code matches the stored one.
+func (ss *SessionStore) VerifyEmailCode(sessionID string, code string) bool {
+	ss.mu.RLock()
+	defer ss.mu.RUnlock()
+	if data, exists := ss.sessions[sessionID]; exists {
+		return data.EmailCode == code && code != ""
+	}
+	return false
+}
+
+// MarkSessionAuthenticated marks a session as fully authenticated.
+func (ss *SessionStore) MarkSessionAuthenticated(sessionID string) {
+	ss.mu.Lock()
+	defer ss.mu.Unlock()
+	if data, exists := ss.sessions[sessionID]; exists {
+		data.AuthStep = AuthStepAuthenticated
+		ss.sessions[sessionID] = data
+	}
 }
 
 // RevokeSession removes a session.
@@ -77,7 +142,7 @@ func (ss *SessionStore) RevokeSession(sessionID string) {
 	delete(ss.sessions, sessionID)
 }
 
-// CleanupExpiredSessions removes expired sessions periodically.
+// CleanupExpired sessions removes expired sessions periodically.
 func (ss *SessionStore) CleanupExpiredSessions() {
 	ticker := time.NewTicker(1 * time.Hour)
 	defer ticker.Stop()
@@ -85,8 +150,8 @@ func (ss *SessionStore) CleanupExpiredSessions() {
 	for range ticker.C {
 		ss.mu.Lock()
 		now := time.Now()
-		for sessionID, expiresAt := range ss.sessions {
-			if now.After(expiresAt) {
+		for sessionID, data := range ss.sessions {
+			if now.After(data.Expiry) {
 				delete(ss.sessions, sessionID)
 			}
 		}
@@ -94,9 +159,105 @@ func (ss *SessionStore) CleanupExpiredSessions() {
 	}
 }
 
+// RateLimiter manages request rate limiting.
+type RateLimiter struct {
+	mu          sync.Mutex
+	attempts    map[string]rateLimitEntry
+	maxAttempts int
+	window      time.Duration
+}
+
+type rateLimitEntry struct {
+	count    int
+	firstTry time.Time
+}
+
+// NewRateLimiter creates a new rate limiter.
+func NewRateLimiter(maxAttempts int, window time.Duration) *RateLimiter {
+	return &RateLimiter{
+		attempts:    make(map[string]rateLimitEntry),
+		maxAttempts: maxAttempts,
+		window:      window,
+	}
+}
+
+// Allow checks if the action is allowed for the given key.
+func (rl *RateLimiter) Allow(key string) (bool, int) {
+	rl.mu.Lock()
+	defer rl.mu.Unlock()
+
+	entry, exists := rl.attempts[key]
+
+	// If entry exists and window has passed, reset
+	if exists && time.Since(entry.firstTry) > rl.window {
+		delete(rl.attempts, key)
+		exists = false
+	}
+
+	if !exists {
+		rl.attempts[key] = rateLimitEntry{
+			count:    1,
+			firstTry: time.Now(),
+		}
+		return true, 1
+	}
+
+	if entry.count >= rl.maxAttempts {
+		entry.count++
+		rl.attempts[key] = entry
+		return false, entry.count
+	}
+
+	entry.count++
+	rl.attempts[key] = entry
+	return true, entry.count
+}
+
+// Reset clears the limit for a key (e.g. on success).
+func (rl *RateLimiter) Reset(key string) {
+	rl.mu.Lock()
+	defer rl.mu.Unlock()
+	delete(rl.attempts, key)
+}
+
+// Global Limiters
+var (
+	LoginRateLimiter     = NewRateLimiter(5, 15*time.Minute) // 5 attempts per 15 mins
+	TwoFactorRateLimiter = NewRateLimiter(3, 15*time.Minute) // 3 attempts per 15 mins
+	EmailCodeRateLimiter = NewRateLimiter(3, 15*time.Minute) // 3 attempts per 15 mins for email code
+)
+
 // GetAuthConfig returns the auth configuration based on environment.
 func GetAuthConfig() AuthConfig {
 	isProduction := os.Getenv("PRODUCTION_MODE") == "true"
+
+	// Common Config
+	cfg := AuthConfig{
+		Enabled:      true,
+		IsProduction: isProduction,
+		SMTPHost:     getEnv("SMTP_HOST", ""),
+		SMTPPort:     getEnv("SMTP_PORT", "587"),
+		SMTPUser:     getEnv("SMTP_USER", ""),
+		SMTPPass:     getEnv("SMTP_PASS", ""),
+		SMTPFrom:     getEnv("SMTP_FROM", ""),
+	}
+
+	// Override with SMTP_URL if present (e.g. smtp://user:pass@host:port)
+	if smtpURL := os.Getenv("SMTP_URL"); smtpURL != "" {
+		u, err := url.Parse(smtpURL)
+		if err == nil {
+			cfg.SMTPHost = u.Hostname()
+			if p := u.Port(); p != "" {
+				cfg.SMTPPort = p
+			}
+			cfg.SMTPUser = u.User.Username()
+			if p, ok := u.User.Password(); ok {
+				cfg.SMTPPass = p
+			}
+		} else {
+			log.Printf("⚠️  Invalid SMTP_URL: %v", err)
+		}
+	}
 
 	if !isProduction {
 		log.Println("⚠️  Running in DEVELOPMENT mode. Security features are relaxed.")
@@ -104,46 +265,60 @@ func GetAuthConfig() AuthConfig {
 		adminPassword := getEnv("ADMIN_PASSWORD", "admin123")
 		hashed, _ := bcrypt.GenerateFromPassword([]byte(adminPassword), bcrypt.DefaultCost)
 		
-		return AuthConfig{
-			Enabled:        true,
-			Email:          getEnv("ADMIN_EMAIL", "admin@example.com"),
-			HashedPassword: string(hashed),
-			IsProduction:   false,
-		}
+		cfg.Email = getEnv("ADMIN_EMAIL", "admin@example.com")
+		cfg.HashedPassword = string(hashed)
+		cfg.TOTPSecret = getEnv("ADMIN_2FA_SECRET", "")
+		
+		return cfg
 	}
 
 	// PRODUCTION MODE
 	log.Println("🔒 Running in PRODUCTION mode. Strict security enforced.")
 
-	email := os.Getenv("ADMIN_EMAIL")
-	if email == "" {
+	cfg.Email = os.Getenv("ADMIN_EMAIL")
+	if cfg.Email == "" {
 		log.Fatal("FATAL: ADMIN_EMAIL must be set in production mode")
 	}
 
 	password := os.Getenv("ADMIN_PASSWORD")
 	passwordHash := os.Getenv("ADMIN_PASSWORD_HASH")
 
-	var finalHash string
-
 	if passwordHash != "" {
-		finalHash = passwordHash
+		cfg.HashedPassword = passwordHash
 	} else if password != "" {
 		log.Println("⚠️  ADMIN_PASSWORD used in plaintext. Consider using ADMIN_PASSWORD_HASH for better security.")
 		hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 		if err != nil {
 			log.Fatalf("FATAL: Failed to hash password: %v", err)
 		}
-		finalHash = string(hashed)
+		cfg.HashedPassword = string(hashed)
 	} else {
 		log.Fatal("FATAL: ADMIN_PASSWORD or ADMIN_PASSWORD_HASH must be set in production mode")
 	}
-
-	return AuthConfig{
-		Enabled:        true,
-		Email:          email,
-		HashedPassword: finalHash,
-		IsProduction:   true,
+	
+	cfg.TOTPSecret = os.Getenv("ADMIN_2FA_SECRET")
+	if cfg.TOTPSecret == "" {
+		log.Println("⚠️  ADMIN_2FA_SECRET is not set. 2FA will be disabled.")
+	} else {
+		// Validate Secret Format
+		// TOTP secrets are typically Base32. Check if we can decode it.
+		// We try both standard and unpadded.
+		_, err := base32.StdEncoding.DecodeString(cfg.TOTPSecret)
+		if err != nil {
+			if _, err2 := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(cfg.TOTPSecret); err2 != nil {
+				log.Printf("⚠️  ADMIN_2FA_SECRET appears to be invalid Base32. 2FA validation will likely fail.")
+			}
+		}
 	}
+
+	return cfg
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 // getEnv gets an environment variable with a default value.
@@ -158,15 +333,56 @@ func getEnv(key, defaultVal string) string {
 func AuthMiddleware(authConfig AuthConfig, sessionStore *SessionStore) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// In production, force HTTPS redirects if not behind a proxy handling it? 
-			// For now, we focus on cookie security.
-
 			// Check for valid session cookie
 			cookie, err := r.Cookie("session")
-			if err == nil && sessionStore.ValidateSession(cookie.Value) {
-				// Valid session, proceed
-				next.ServeHTTP(w, r)
-				return
+			if err == nil {
+				isValid, authStep := sessionStore.ValidateSession(cookie.Value)
+				if isValid {
+					// Check Authentication Step
+					if authStep == AuthStepAuthenticated {
+						// Fully authenticated
+						if r.URL.Path == "/login/2fa" {
+							// Already authenticated, go to dashboard
+							http.Redirect(w, r, "/", http.StatusSeeOther)
+							return
+						}
+						next.ServeHTTP(w, r)
+						return
+					}
+
+					// Pending Steps (TOTP or Email)
+					// Allow access to 2FA page and API endpoints for verification
+					allowedPaths := []string{
+						"/login/2fa", 
+						"/api/login/2fa", // TOTP Verify
+						"/login/email", // If separate page (optional)
+						"/api/login/email", // Email Verify
+						"/_app", // Static assets
+					}
+					
+					isAllowed := false
+					for _, path := range allowedPaths {
+						if r.URL.Path == path || strings.HasPrefix(r.URL.Path, path) {
+							isAllowed = true
+							break
+						}
+					}
+
+					if isAllowed {
+						next.ServeHTTP(w, r)
+						return
+					}
+
+					// Redirect everything else to 2FA page
+					if strings.HasPrefix(r.URL.Path, "/api") {
+						http.Error(w, "Unauthorized: Verification Required", http.StatusUnauthorized)
+						return
+					}
+					
+					// Both TOTP and Email steps happen on the /login/2fa page (UI expands)
+					http.Redirect(w, r, "/login/2fa", http.StatusSeeOther)
+					return
+				}
 			}
 
 			// No valid session
@@ -176,6 +392,12 @@ func AuthMiddleware(authConfig AuthConfig, sessionStore *SessionStore) func(http
 			}
 			
 			// Redirect to login for pages
+			// Allow access to /login
+			if strings.HasPrefix(r.URL.Path, "/login") {
+				next.ServeHTTP(w, r)
+				return
+			}
+
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 		})
 	}

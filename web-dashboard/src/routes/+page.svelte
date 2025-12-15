@@ -29,7 +29,7 @@
     let connectionStatus = 'Connecting...';
     
     // Log Viewer State
-    let isLogDrawerOpen = false;
+    let isLogViewerOpen = false;
     let selectedSpawnerId: number | null = null;
 
     // Instance Console State
@@ -58,6 +58,10 @@
     let highlightTimeout: ReturnType<typeof setTimeout> | null = null;
 
     let spawnerTableComponent: any;
+
+    // Spawner Deletion State
+    let isSpawnerDeleteDialogOpen = false;
+    let spawnerToDeleteId: number | null = null;
 
     function connectSSE() {
         if (eventSource) eventSource.close();
@@ -256,6 +260,27 @@
         isInstanceActionDialogOpen = true;
     }
 
+    function openDeleteSpawnerDialog(event: CustomEvent<number>) {
+        spawnerToDeleteId = event.detail;
+        isSpawnerDeleteDialogOpen = true;
+    }
+
+    async function executeDeleteSpawner() {
+        if (!spawnerToDeleteId) return;
+        try {
+            const res = await fetch(`/api/spawners/${spawnerToDeleteId}`, { method: 'DELETE' });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error || 'Failed to delete spawner');
+            }
+            await initialFetch();
+        } catch (e: any) {
+            console.error(e);
+            alert(`Failed to delete spawner: ${e.message}`);
+        }
+        isSpawnerDeleteDialogOpen = false;
+    }
+
     async function executeSpawn() {
         if (!spawnTargetId) return;
         
@@ -383,7 +408,7 @@
 
     function handleViewLogs(event: CustomEvent<number>) {
         selectedSpawnerId = event.detail;
-        isLogDrawerOpen = true;
+        isLogViewerOpen = true;
     }
 
     function handleTail(event: CustomEvent<{ spawnerId: number, instanceId: string }>) {
@@ -505,6 +530,7 @@
             on:renameInstanceRequest={openRenameInstanceDialog}
             on:updateSpawnerBuild={openUpdateSpawnerBuildDialog}
             on:bulkInstanceActionRequest={openBulkActionDialog}
+            on:deleteSpawnerRequest={openDeleteSpawnerDialog}
             on:tail={handleTail}
             highlightNewSpawnerId={highlightNewSpawnerId}
         />
@@ -512,15 +538,13 @@
 </div>
 
 <!-- Log Drawer -->
-<Drawer 
-    isOpen={isLogDrawerOpen} 
-    onClose={() => isLogDrawerOpen = false} 
-    title={`Spawner #${selectedSpawnerId} Logs`}
->
-    {#if selectedSpawnerId}
-        <LogViewer spawnerId={selectedSpawnerId} />
-    {/if}
-</Drawer>
+{#if selectedSpawnerId}
+    <LogViewer
+        spawnerId={selectedSpawnerId}
+        isOpen={isLogViewerOpen}
+        onClose={() => isLogViewerOpen = false}
+    />
+{/if}
 
 <!-- Instance Console Modal -->
 <InstanceManagerModal
@@ -537,6 +561,16 @@
     message={`Are you sure you want to spawn a new game server instance on Spawner #${spawnTargetId}?`}
     confirmText="Spawn Server"
     onConfirm={executeSpawn}
+/>
+
+<!-- Spawner Deletion Confirmation Dialog -->
+<ConfirmDialog
+    bind:isOpen={isSpawnerDeleteDialogOpen}
+    title="Delete Spawner"
+    message={`Are you sure you want to delete Spawner #${spawnerToDeleteId}? This will remove it from the registry. If it is still running, it might re-register.`}
+    confirmText="Delete Spawner"
+    isCritical={true}
+    onConfirm={executeDeleteSpawner}
 />
 
 <!-- Instance Action Confirmation Dialog (Start/Stop) -->

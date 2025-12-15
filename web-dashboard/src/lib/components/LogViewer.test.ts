@@ -1,8 +1,8 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/svelte';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, fireEvent, screen, waitFor } from '@testing-library/svelte';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import LogViewer from './LogViewer.svelte';
 
-global.fetch = vi.fn();
+global.fetch = vi.fn() as any;
 
 describe('LogViewer Component', () => {
     beforeEach(() => {

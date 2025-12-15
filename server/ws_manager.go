@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
@@ -74,6 +75,7 @@ func (manager *WSManager) Run() {
 			}
 			manager.connections[conn.ID] = conn
 			manager.mu.Unlock()
+			registry.UpdateSpawnerStatus(conn.ID, "Online")
 			log.Printf("🔌 Spawner #%d connected via WebSocket", conn.ID)
 
 		case conn := <-manager.Unregister:
@@ -83,6 +85,7 @@ func (manager *WSManager) Run() {
 				close(conn.WriteChan)
 			}
 			manager.mu.Unlock()
+			registry.UpdateSpawnerStatus(conn.ID, "Offline")
 			log.Printf("🔌 Spawner #%d disconnected", conn.ID)
 
 		case message := <-manager.Broadcast:
@@ -102,6 +105,13 @@ func (manager *WSManager) Run() {
 
 // SendCommandSync sends a command and waits for a response.
 func (manager *WSManager) SendCommandSync(spawnerID int, msgType string, payload interface{}, timeout time.Duration) (WSResponse, error) {
+	// Check status first
+	if s, ok := registry.Get(spawnerID); !ok {
+		return WSResponse{}, fmt.Errorf("spawner not found")
+	} else if s.Status != "Online" {
+		return WSResponse{Status: "error", Error: "spawner not online"}, nil
+	}
+
 	manager.mu.RLock()
 	conn, ok := manager.connections[spawnerID]
 	manager.mu.RUnlock()
@@ -155,6 +165,13 @@ func (manager *WSManager) SendCommandSync(spawnerID int, msgType string, payload
 
 // SendCommand sends a command to a specific Spawner asynchronously.
 func (manager *WSManager) SendCommand(spawnerID int, msgType string, payload interface{}) error {
+	// Check status first
+	if s, ok := registry.Get(spawnerID); !ok {
+		return fmt.Errorf("spawner not found")
+	} else if s.Status != "Online" {
+		return fmt.Errorf("spawner not online")
+	}
+
 	manager.mu.RLock()
 	conn, ok := manager.connections[spawnerID]
 	manager.mu.RUnlock()
@@ -221,6 +238,9 @@ func (c *SpawnerConnection) readPump() {
 			}
 			break
 		}
+		
+		// Refresh deadline on any message (e.g. Heartbeat)
+		c.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 
 		var msg WSMessage
 		if err := json.Unmarshal(message, &msg); err != nil {
