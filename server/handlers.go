@@ -798,20 +798,7 @@ func Health(w http.ResponseWriter, r *http.Request) {
 
 // StatsAPI returns JSON statistics about the server for the dashboard.
 func StatsAPI(w http.ResponseWriter, r *http.Request) {
-	totalReq, totalErr, active, dbOK, uptime, mem, tx, rx := GlobalStats.GetStats()
-
-	stats := map[string]interface{}{
-		"uptime":          uptime.Milliseconds(),
-		"active_spawners": active,
-		"total_requests":  totalReq,
-		"total_errors":    totalErr,
-		"db_connected":    dbOK,
-		"memory_usage":    mem,
-		"bytes_sent":      tx,
-		"bytes_received":  rx,
-	}
-
-	writeJSON(w, http.StatusOK, stats)
+	writeJSON(w, http.StatusOK, GlobalStats.GetStatsMap())
 }
 
 // ErrorsAPI returns the recent error log.
@@ -875,4 +862,16 @@ func BackupDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 	if err := cmd.Run(); err != nil {
 		log.Printf("pg_dump error: %v", err)
 	}
+}
+
+// RestartServerHandler attempts to restart the server.
+func RestartServerHandler(w http.ResponseWriter, r *http.Request) {
+    writeJSON(w, http.StatusOK, map[string]string{"message": "Restarting server..."})
+    
+    // Execute in a goroutine to allow the response to flush
+    go func() {
+        time.Sleep(1 * time.Second)
+        log.Println("Restart triggered via API...")
+        os.Exit(0) // Process manager should restart it
+    }()
 }

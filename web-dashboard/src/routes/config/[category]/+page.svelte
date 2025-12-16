@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
-    import { config } from '$lib/stores';
+    import { config, restartRequired } from '$lib/stores';
     import type { ServerConfig } from '$lib/stores';
     
     let loading = $state(true);
@@ -56,6 +56,12 @@
             const configIndex = categoryConfigs.findIndex(c => c.key === key);
             if (configIndex !== -1) {
                 const updatedConfig = { ...categoryConfigs[configIndex], value };
+                
+                // Check if restart is required
+                if (updatedConfig.requires_restart) {
+                    restartRequired.set(true);
+                }
+
                 categoryConfigs = [
                     ...categoryConfigs.slice(0, configIndex),
                     updatedConfig,

@@ -28,7 +28,6 @@ func (h *SSEHub) HandleSSE(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	// Create a channel for this client
 	clientChan := make(chan string, 10)
@@ -38,15 +37,12 @@ func (h *SSEHub) HandleSSE(w http.ResponseWriter, r *http.Request) {
 	h.clients[clientChan] = true
 	h.mu.Unlock()
 
-	log.Println("SSE client connected")
-
 	// Ensure channel is closed on disconnect
 	defer func() {
 		h.mu.Lock()
 		delete(h.clients, clientChan)
 		h.mu.Unlock()
 		close(clientChan)
-		log.Println("SSE client disconnected")
 	}()
 
 	// Send initial data
@@ -104,18 +100,7 @@ func (h *SSEHub) Run() {
 	for {
 		select {
 		case <-statsTicker.C:
-			totalReq, totalErr, active, dbOK, uptime, mem, tx, rx := GlobalStats.GetStats()
-			stats := map[string]interface{}{
-				"uptime":          uptime.Milliseconds(),
-				"active_spawners": active,
-				"total_requests":  totalReq,
-				"total_errors":    totalErr,
-				"db_connected":    dbOK,
-				"memory_usage":    mem,
-				"bytes_sent":      tx,
-				"bytes_received":  rx,
-			}
-			h.Broadcast("stats", stats)
+			h.Broadcast("stats", GlobalStats.GetStatsMap())
 
 		case <-spawnersTicker.C:
 			spawners := registry.List()
@@ -128,18 +113,7 @@ func (h *SSEHub) Run() {
 func (h *SSEHub) sendUpdate(client chan string, msgType string) {
 	var payload interface{}
 	if msgType == "stats" {
-		totalReq, totalErr, active, dbOK, uptime, mem, tx, rx := GlobalStats.GetStats()
-		payload = map[string]interface{}{
-			"uptime":          uptime.Milliseconds(),
-			"active_spawners": active,
-			"total_requests":  totalReq,
-			"total_errors":    totalErr,
-			"db_connected":    dbOK,
-			"memory_usage":    mem,
-			"bytes_sent":      tx,
-			"bytes_received":  rx,
-			
-		}
+		payload = GlobalStats.GetStatsMap()
 	} else if msgType == "spawners" {
 		payload = registry.List()
 	}

@@ -86,6 +86,7 @@
                                 <p>{message}</p>
                              {/if}
                         </div>
+                        <slot />
                     </div>
                 </div>
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/rand"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -43,9 +44,28 @@ type DashboardStats struct {
 	MemUsage        uint64 // in bytes
 	LastRequestTime time.Time
 	DBConnected     bool
-	Uptime          time.Duration
-	StartTime       time.Time
-	ErrorLogs       []ErrorLog
+	// DB Stats
+	DBOpenConnections int
+	DBInUse           int
+	DBIdle            int
+	DBWaitCount       int64
+	DBWaitDuration    time.Duration
+	DBMaxLifetimeClosed int64
+	DBMaxIdleClosed   int64
+
+    // Advanced DB Stats
+    DBSize        string
+    DBCommits     int64
+    DBRollbacks   int64
+    DBCacheHit    float64
+    DBTupFetched  int64
+    DBTupInserted int64
+    DBTupUpdated  int64
+    DBTupDeleted  int64
+
+	Uptime    time.Duration
+	StartTime time.Time
+	ErrorLogs []ErrorLog
 }
 
 // GlobalStats is the global dashboard stats instance.
@@ -96,6 +116,33 @@ func (ds *DashboardStats) UpdateMemoryStats() {
 	ds.mu.Unlock()
 }
 
+// UpdateDBStats updates the database statistics.
+func (ds *DashboardStats) UpdateDBStats(stats sql.DBStats) {
+	ds.mu.Lock()
+	defer ds.mu.Unlock()
+	ds.DBOpenConnections = stats.OpenConnections
+	ds.DBInUse = stats.InUse
+	ds.DBIdle = stats.Idle
+	ds.DBWaitCount = stats.WaitCount
+	ds.DBWaitDuration = stats.WaitDuration
+	ds.DBMaxLifetimeClosed = stats.MaxLifetimeClosed
+	ds.DBMaxIdleClosed = stats.MaxIdleClosed
+}
+
+// UpdateAdvancedDBStats updates advanced Postgres stats.
+func (ds *DashboardStats) UpdateAdvancedDBStats(stats *AdvancedDBStats) {
+    ds.mu.Lock()
+    defer ds.mu.Unlock()
+    ds.DBSize = stats.DatabaseSize
+    ds.DBCommits = stats.XactCommit
+    ds.DBRollbacks = stats.XactRollback
+    ds.DBCacheHit = stats.CacheHitRatio
+    ds.DBTupFetched = stats.TupFetched
+    ds.DBTupInserted = stats.TupInserted
+    ds.DBTupUpdated = stats.TupUpdated
+    ds.DBTupDeleted = stats.TupDeleted
+}
+
 // GetStats returns a snapshot of current stats.
 func (ds *DashboardStats) GetStats() (totalReq int64, totalErr int64, active int, dbOK bool, uptime time.Duration, mem uint64, tx, rx int64) {
 	ds.mu.RLock()
@@ -109,6 +156,38 @@ func (ds *DashboardStats) GetStats() (totalReq int64, totalErr int64, active int
 	tx = ds.BytesSent
 	rx = ds.BytesReceived
 	return
+}
+
+// GetStatsMap returns a map of all stats for JSON/SSE consumption.
+func (ds *DashboardStats) GetStatsMap() map[string]interface{} {
+	ds.mu.RLock()
+	defer ds.mu.RUnlock()
+	uptime := time.Since(ds.StartTime)
+	return map[string]interface{}{
+		"uptime":             uptime.Milliseconds(),
+		"active_spawners":    ds.ActiveSpawners,
+		"total_requests":     ds.TotalRequests,
+		"total_errors":       ds.TotalErrors,
+		"db_connected":       ds.DBConnected,
+		"memory_usage":       ds.MemUsage,
+		"bytes_sent":         ds.BytesSent,
+		"bytes_received":     ds.BytesReceived,
+		"db_open_connections": ds.DBOpenConnections,
+		"db_in_use":           ds.DBInUse,
+		"db_idle":             ds.DBIdle,
+		"db_wait_count":       ds.DBWaitCount,
+		"db_wait_duration":    ds.DBWaitDuration.String(),
+		"db_max_lifetime_closed": ds.DBMaxLifetimeClosed,
+		"db_max_idle_closed":  ds.DBMaxIdleClosed,
+        "db_size":             ds.DBSize,
+        "db_commits":          ds.DBCommits,
+        "db_rollbacks":        ds.DBRollbacks,
+        "db_cache_hit":        ds.DBCacheHit,
+        "db_tup_fetched":      ds.DBTupFetched,
+        "db_tup_inserted":     ds.DBTupInserted,
+        "db_tup_updated":      ds.DBTupUpdated,
+        "db_tup_deleted":      ds.DBTupDeleted,
+	}
 }
 
 // GetErrors returns the list of recent errors.

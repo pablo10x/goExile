@@ -348,6 +348,8 @@ func AuthMiddleware(authConfig AuthConfig, sessionStore *SessionStore) func(http
 						}
 						next.ServeHTTP(w, r)
 						return
+					} else if r.URL.Path == "/events" {
+						log.Printf("AuthMiddleware: /events denied. Valid session but step is '%s'", authStep)
 					}
 
 					// Pending Steps (TOTP or Email)

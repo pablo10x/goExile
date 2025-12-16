@@ -11,7 +11,22 @@ export const stats = writable({
     db_connected: false,
     memory_usage: 0,
     bytes_sent: 0,
-    bytes_received: 0
+    bytes_received: 0,
+    db_open_connections: 0,
+    db_in_use: 0,
+    db_idle: 0,
+    db_wait_count: 0,
+    db_wait_duration: "0s",
+    db_max_lifetime_closed: 0,
+    db_max_idle_closed: 0,
+    db_size: "",
+    db_commits: 0,
+    db_rollbacks: 0,
+    db_cache_hit: 0,
+    db_tup_fetched: 0,
+    db_tup_inserted: 0,
+    db_tup_updated: 0,
+    db_tup_deleted: 0
 });
 
 export interface Spawner {
@@ -28,6 +43,7 @@ export interface Spawner {
     disk_used: number;
     disk_total: number;
     game_version: string;
+    last_seen?: string;
 }
 
 export const spawners = writable<Spawner[]>([]);
@@ -57,3 +73,51 @@ export interface ServerConfig {
 }
 
 export const config = writable<ServerConfig[]>([]);
+
+export const restartRequired = writable(false);
+
+export interface Notification {
+    id: string;
+    type: 'success' | 'error' | 'info' | 'warning';
+    message: string;
+    details?: string;
+    timeout?: number;
+    timestamp?: number;
+}
+
+export const notifications = createNotificationStore();
+
+export const isConnected = writable(false);
+export const connectionStatus = writable('Connecting...');
+
+function createNotificationStore() {
+    const { subscribe, update } = writable<Notification[]>([]);
+    const history = writable<Notification[]>([]);
+
+    return {
+        subscribe,
+        history: { subscribe: history.subscribe },
+        add: (n: Omit<Notification, 'id'>) => {
+            const id = crypto.randomUUID();
+            const notification = { ...n, id, timestamp: Date.now(), timeout: n.timeout ?? 5000 };
+            
+            // Add to active notifications
+            update(notifications => [...notifications, notification]);
+            
+            // Add to history (limit to 50)
+            history.update(h => [notification, ...h].slice(0, 50));
+            
+            if (notification.timeout > 0) {
+                setTimeout(() => {
+                    update(notifications => notifications.filter(n => n.id !== id));
+                }, notification.timeout);
+            }
+        },
+        remove: (id: string) => {
+            update(notifications => notifications.filter(n => n.id !== id));
+        },
+        clearHistory: () => {
+            history.set([]);
+        }
+    };
+}

@@ -1,24 +1,60 @@
 <script lang="ts">
     import '../app.css';
-    import { onMount } from 'svelte';
+    import { onMount, onDestroy } from 'svelte';
     import { goto } from '$app/navigation';
     import { page } from '$app/state';
-    import { isAuthenticated } from '$lib/stores';
+    import { isAuthenticated, restartRequired, stats, spawners, serverVersions, isConnected, connectionStatus } from '$lib/stores';
+    import ToastContainer from '$lib/components/ToastContainer.svelte';
 
     let { children } = $props();
     let isChecking = $state(true);
-    
+    let restarting = $state(false);
+    let eventSource: EventSource | null = null;
+
     // Animation states
     let sidebarLoaded = $state(false);
     let mouseX = $state(0);
     let mouseY = $state(0);
     let hoveredItem = $state(-1);
 
+    function connectSSE() {
+        if (typeof window === 'undefined') return;
+        if (eventSource) eventSource.close();
+
+        eventSource = new EventSource('/events');
+        
+        eventSource.onopen = () => {
+            isConnected.set(true);
+            connectionStatus.set('Live (SSE)');
+        };
+
+        eventSource.onerror = () => {
+            isConnected.set(false);
+            connectionStatus.set('Reconnecting...');
+        };
+
+        eventSource.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                // console.log('SSE Message:', data.type); // Uncomment for verbose debugging
+                if (data.type === 'stats') {
+                    stats.set(data.payload);
+                } else if (data.type === 'spawners') {
+                    const list: any[] = Array.isArray(data.payload) ? data.payload : Object.values(data.payload);
+                    spawners.set(list);
+                }
+            } catch (e) {
+                console.error('SSE Parse Error', e);
+            }
+        };
+    }
+
     async function checkAuth() {
         try {
-            const res = await fetch('/api/stats');
+            const res = await fetch('/api/stats', { cache: 'no-store', credentials: 'include' });
             if (res.ok) {
                 isAuthenticated.set(true);
+                connectSSE(); // Connect SSE on auth success
             } else {
                 isAuthenticated.set(false);
                 if (window.location.pathname !== '/login') {
@@ -35,14 +71,53 @@
         }
     }
 
-    onMount(() => {
-        checkAuth();
+    async function initialFetch() {
+        try {
+            const [statsRes, spawnersRes, versionsRes] = await Promise.all([
+                fetch('/api/stats', { cache: 'no-store', credentials: 'include' }),
+                fetch('/api/spawners', { cache: 'no-store', credentials: 'include' }),
+                fetch('/api/versions', { cache: 'no-store', credentials: 'include' })
+            ]);
+            if (statsRes.ok) stats.set(await statsRes.json());
+            if (versionsRes.ok) serverVersions.set(await versionsRes.json());
+            if (spawnersRes.ok) spawners.set(await spawnersRes.json());
+        } catch (e) {
+            console.error('Initial fetch failed', e);
+        }
+    }
+
+    async function restartServer() {
+        if (!confirm('Are you sure you want to restart the server? This will interrupt all active connections.')) return;
+        
+        try {
+            restarting = true;
+            await fetch('/api/restart', { method: 'POST' });
+            alert('Server restart triggered. The dashboard will reload in a moment.');
+            setTimeout(() => {
+                window.location.reload();
+            }, 5000);
+        } catch (e) {
+            alert('Failed to trigger restart: ' + e);
+            restarting = false;
+        }
+    }
+
+    onMount(async () => {
+        await checkAuth();
+        if ($isAuthenticated) {
+            initialFetch();
+        }
         
         // Trigger sidebar animations after mount
         setTimeout(() => {
             sidebarLoaded = true;
         }, 300);
     });
+
+    onDestroy(() => {
+        if (eventSource) eventSource.close();
+    });
+
     async function logout() {
         await fetch('/logout');
         isAuthenticated.set(false);
@@ -64,6 +139,27 @@
     {:else}
     {#if $isAuthenticated && page.url.pathname !== '/login'}
         <div class="flex h-screen text-slate-300 overflow-hidden relative">
+            <!-- Global Restart Banner -->
+            {#if $restartRequired}
+                <div class="absolute top-0 left-64 right-0 z-50 bg-orange-600/90 backdrop-blur-md text-white px-6 py-2 flex justify-between items-center shadow-lg border-b border-orange-500/50 animate-slide-fade">
+                    <div class="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                        <span class="font-medium">Configuration changes detected. Restart required to apply.</span>
+                    </div>
+                    <button 
+                        onclick={restartServer}
+                        disabled={restarting}
+                        class="px-4 py-1 bg-white text-orange-600 rounded font-bold hover:bg-orange-50 transition-colors shadow-sm text-sm disabled:opacity-50"
+                    >
+                        {restarting ? 'Restarting...' : 'Restart Now'}
+                    </button>
+                </div>
+            {/if}
+
             <!-- Sidebar with 3D Background -->
             <aside class="relative w-64 bg-slate-950 border-r border-slate-800 flex flex-col shrink-0 overflow-hidden shadow-2xl z-20">
                 
@@ -81,7 +177,7 @@
                     </div>
 
                   <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-                        <!-- Dashboard -->
+                        <!-- Home (Topology) -->
                         <a 
                             href="/" 
                             class="nav-link"
@@ -91,6 +187,25 @@
                             style="animation-delay: 0.1s;"
                         >
                             {#if isRouteActive('/')}
+                                <div class="nav-indicator"></div>
+                            {/if}
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                            <span>Home</span>
+                        </a>
+
+                        <!-- Dashboard (Management) -->
+                        <a 
+                            href="/dashboard" 
+                            class="nav-link"
+                            class:nav-active={isRouteActive('/dashboard')}
+                            onmouseenter={() => hoveredItem = 6}
+                            onmouseleave={() => hoveredItem = -1}
+                            style="animation-delay: 0.15s;"
+                        >
+                            {#if isRouteActive('/dashboard')}
                                 <div class="nav-indicator"></div>
                             {/if}
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -180,7 +295,20 @@
                         </a>
                     </nav>
 
-                <div class="p-4 border-t border-white/5 bg-black/20 backdrop-blur-md transform transition-all duration-700 {sidebarLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}" style="animation-delay: 0.6s;">
+                    <div class="p-4 border-t border-white/5 bg-black/20 backdrop-blur-md flex flex-col gap-2 transform transition-all duration-700 {sidebarLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}" style="animation-delay: 0.6s;">
+                        <!-- Notifications (Future panel trigger) -->
+                        <button class="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
+                            <div class="relative">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                                </svg>
+                                <!-- Example Badge -->
+                                <span class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                            </div>
+                            <span class="text-sm font-medium">Notifications</span>
+                        </button>
+
                         <button 
                             onclick={logout} 
                             onmouseenter={() => hoveredItem = 5}
@@ -248,6 +376,8 @@
     {:else}
         {@render children()}
     {/if}
+    
+    <ToastContainer />
 {/if}
 
 <style>

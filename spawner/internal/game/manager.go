@@ -918,6 +918,22 @@ func (m *Manager) findAvailablePort() (int, error) {
 	return 0, spawnerErr
 }
 
+// findOutboundIP gets the preferred outbound ip of this machine by simulating a connection.
+func findOutboundIP() (string, error) {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		return "", err
+	}
+	defer conn.Close()
+
+	localAddr, ok := conn.LocalAddr().(*net.UDPAddr)
+	if !ok {
+		return "", errors.New("could not cast to UDPAddr")
+	}
+
+	return localAddr.IP.String(), nil
+}
+
 func (m *Manager) openFirewallPort(port int) {
 	cmd := exec.Command("ufw", "allow", fmt.Sprintf("%d", port))
 	if out, err := cmd.CombinedOutput(); err != nil {

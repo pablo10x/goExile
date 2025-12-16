@@ -226,12 +226,29 @@ func run() error {
 		router.Handle("/api/database/table/{table}/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(UpdateTableRowHandler))).Methods("PUT")
 		router.Handle("/api/database/table/{table}/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DeleteTableRowHandler))).Methods("DELETE")
 		router.Handle("/api/database/config", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetPostgresConfigHandler))).Methods("GET")
+		router.Handle("/api/database/config", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(UpdatePostgresConfigHandler))).Methods("PUT")
+		router.Handle("/api/database/config/restart", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(RestartPostgresHandler))).Methods("POST")
+
+        // Introspection & SQL
+        router.Handle("/api/database/schemas", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListSchemasHandler))).Methods("GET")
+        router.Handle("/api/database/schemas", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(CreateSchemaHandler))).Methods("POST")
+        router.Handle("/api/database/tables", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListTablesBySchemaHandler))).Methods("GET")
+        router.Handle("/api/database/columns", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListColumnsHandler))).Methods("GET")
+        router.Handle("/api/database/sql", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ExecuteSQLHandler))).Methods("POST")
+        
+        // Roles
+        router.Handle("/api/database/roles", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListRolesHandler))).Methods("GET")
+        router.Handle("/api/database/roles", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(CreateRoleHandler))).Methods("POST")
+        router.Handle("/api/database/roles/{name}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DeleteRoleHandler))).Methods("DELETE")
 
 		router.Handle("/api/database/backups", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(CreateInternalBackupHandler))).Methods("POST")
 		router.Handle("/api/database/backups", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListInternalBackupsHandler))).Methods("GET")
 		router.Handle("/api/database/backups/{filename}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DownloadInternalBackupHandler))).Methods("GET")
 		router.Handle("/api/database/backups/{filename}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DeleteInternalBackupHandler))).Methods("DELETE")
 		router.Handle("/api/database/restore", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(RestoreInternalBackupHandler))).Methods("POST")
+
+        // System Management
+        router.Handle("/api/restart", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(RestartServerHandler))).Methods("POST")
 	}
 
 	// CLI-friendly status endpoint
@@ -244,12 +261,22 @@ func run() error {
 	// 9. Start proactive health checks
 	// go ProactiveHealthCheck(healthCheckInterval)
 
-	// Start Memory Stats Ticker
+	// Start Stats Ticker (Memory & DB)
 	go func() {
 		ticker := time.NewTicker(5 * time.Second)
 		defer ticker.Stop()
 		for range ticker.C {
 			GlobalStats.UpdateMemoryStats()
+			if dbConn != nil {
+				GlobalStats.UpdateDBStats(dbConn.Stats())
+                // Advanced Stats
+                advStats, err := GetAdvancedDBStats(dbConn)
+                if err == nil {
+                    GlobalStats.UpdateAdvancedDBStats(advStats)
+                } else {
+                    log.Printf("Failed to get advanced DB stats: %v", err)
+                }
+			}
 		}
 	}()
 

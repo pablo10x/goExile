@@ -24,7 +24,7 @@ func InitDB(dsn string) (*sqlx.DB, error) {
 	}
 
 	// Connection pool settings
-	db.SetMaxOpenConns(25)
+	db.SetMaxOpenConns(10)
 	db.SetMaxIdleConns(5)
 	db.SetConnMaxLifetime(time.Minute * 5)
 
@@ -39,8 +39,10 @@ func InitDB(dsn string) (*sqlx.DB, error) {
 		db.Close()
 		return nil, err
 	}
+    
+    // ... rest of function ...
 
-	// Migrations
+    // Migrations
 	// Check if 'version' column exists in server_versions
 	var hasVersionCol int
 	err = db.QueryRow(`SELECT COUNT(*) FROM information_schema.columns WHERE table_name='server_versions' AND column_name='version'`).Scan(&hasVersionCol)
@@ -80,6 +82,59 @@ func InitDB(dsn string) (*sqlx.DB, error) {
 	}
 
 	return db, nil
+}
+
+// AdvancedDBStats holds Postgres specific metrics
+type AdvancedDBStats struct {
+	DatabaseSize string  `db:"db_size"`
+	XactCommit   int64   `db:"xact_commit"`
+	XactRollback int64   `db:"xact_rollback"`
+	BlksHit      int64   `db:"blks_hit"`
+	BlksRead     int64   `db:"blks_read"`
+	TupReturned  int64   `db:"tup_returned"`
+	TupFetched   int64   `db:"tup_fetched"`
+	TupInserted  int64   `db:"tup_inserted"`
+	TupUpdated   int64   `db:"tup_updated"`
+	TupDeleted   int64   `db:"tup_deleted"`
+    CacheHitRatio float64 // Calculated
+}
+
+func GetAdvancedDBStats(db *sqlx.DB) (*AdvancedDBStats, error) {
+    if db == nil {
+        return nil, fmt.Errorf("db is nil")
+    }
+
+    // Get current DB name to filter stats
+    var dbName string
+    if err := db.Get(&dbName, "SELECT current_database()"); err != nil {
+        return nil, err
+    }
+
+    var stats AdvancedDBStats
+    query := `
+        SELECT 
+            pg_size_pretty(pg_database_size($1)) as db_size,
+            xact_commit,
+            xact_rollback,
+            blks_hit,
+            blks_read,
+            tup_returned,
+            tup_fetched,
+            tup_inserted,
+            tup_updated,
+            tup_deleted
+        FROM pg_stat_database 
+        WHERE datname = $1
+    `
+    if err := db.Get(&stats, query, dbName); err != nil {
+        return nil, err
+    }
+
+    if stats.BlksHit+stats.BlksRead > 0 {
+        stats.CacheHitRatio = float64(stats.BlksHit) / float64(stats.BlksHit+stats.BlksRead) * 100
+    }
+
+    return &stats, nil
 }
 
 func createTables(db *sqlx.DB) error {
@@ -630,6 +685,124 @@ func ListTables(db *sqlx.DB) ([]string, error) {
 	var tables []string
 	err := db.Select(&tables, query)
 	return tables, err
+}
+
+func ListSchemas(db *sqlx.DB) ([]string, error) {
+    query := "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT IN ('information_schema', 'pg_catalog', 'pg_toast') AND schema_name NOT LIKE 'pg_temp_%' AND schema_name NOT LIKE 'pg_toast_temp_%'"
+    var schemas []string
+    err := db.Select(&schemas, query)
+    return schemas, err
+}
+
+func CreateSchema(db *sqlx.DB, name string) error {
+    // Basic validation to prevent SQL injection (alphanumeric + underscore)
+    for _, r := range name {
+        if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_') {
+            return fmt.Errorf("invalid schema name")
+        }
+    }
+    _, err := db.Exec(fmt.Sprintf("CREATE SCHEMA %s", name))
+    return err
+}
+
+type Role struct {
+    Name        string `db:"rolname" json:"name"`
+    Superuser   bool   `db:"rolsuper" json:"superuser"`
+    Inherit     bool   `db:"rolinherit" json:"inherit"`
+    CreateRole  bool   `db:"rolcreaterole" json:"create_role"`
+    CreateDB    bool   `db:"rolcreatedb" json:"create_db"`
+    CanLogin    bool   `db:"rolcanlogin" json:"can_login"`
+    Replication bool   `db:"rolreplication" json:"replication"`
+    BypassRLS   bool   `db:"rolbypassrls" json:"bypass_rls"`
+}
+
+func ListRoles(db *sqlx.DB) ([]Role, error) {
+    var roles []Role
+    err := db.Select(&roles, "SELECT rolname, rolsuper, rolinherit, rolcreaterole, rolcreatedb, rolcanlogin, rolreplication, rolbypassrls FROM pg_roles")
+    return roles, err
+}
+
+func CreateRole(db *sqlx.DB, name, password string, options []string) error {
+    // Validate name
+    for _, r := range name {
+        if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_') {
+            return fmt.Errorf("invalid role name")
+        }
+    }
+    
+    q := fmt.Sprintf("CREATE ROLE %s WITH LOGIN PASSWORD '%s'", name, strings.ReplaceAll(password, "'", "''"))
+    if len(options) > 0 {
+        // Validate options (only allow specific keywords)
+        allowed := map[string]bool{"SUPERUSER": true, "NOSUPERUSER": true, "CREATEDB": true, "NOCREATEDB": true, "CREATEROLE": true, "NOCREATEROLE": true, "INHERIT": true, "NOINHERIT": true, "LOGIN": true, "NOLOGIN": true, "REPLICATION": true, "NOREPLICATION": true, "BYPASSRLS": true, "NOBYPASSRLS": true}
+        safeOpts := []string{}
+        for _, opt := range options {
+            opt = strings.ToUpper(opt)
+            if allowed[opt] {
+                safeOpts = append(safeOpts, opt)
+            }
+        }
+        if len(safeOpts) > 0 {
+            q += " " + strings.Join(safeOpts, " ")
+        }
+    }
+    
+    _, err := db.Exec(q)
+    return err
+}
+
+func DeleteRole(db *sqlx.DB, name string) error {
+    // Validate name
+    for _, r := range name {
+        if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_') {
+            return fmt.Errorf("invalid role name")
+        }
+    }
+    _, err := db.Exec(fmt.Sprintf("DROP ROLE %s", name))
+    return err
+}
+
+func ListTablesBySchema(db *sqlx.DB, schema string) ([]string, error) {
+    query := "SELECT table_name FROM information_schema.tables WHERE table_schema = $1"
+    var tables []string
+    err := db.Select(&tables, query, schema)
+    return tables, err
+}
+
+type ColumnInfo struct {
+    Name     string `db:"column_name" json:"name"`
+    DataType string `db:"data_type" json:"type"`
+    IsNullable string `db:"is_nullable" json:"nullable"`
+}
+
+func ListColumns(db *sqlx.DB, schema, table string) ([]ColumnInfo, error) {
+    query := "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_schema = $1 AND table_name = $2 ORDER BY ordinal_position"
+    var cols []ColumnInfo
+    err := db.Select(&cols, query, schema, table)
+    return cols, err
+}
+
+func ExecuteSQL(db *sqlx.DB, query string) ([]map[string]interface{}, error) {
+    rows, err := db.Queryx(query)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    results := []map[string]interface{}{}
+    for rows.Next() {
+        row := make(map[string]interface{})
+        if err := rows.MapScan(row); err != nil {
+            return nil, err
+        }
+        // Handle []byte for text columns (common in sqlx/drivers)
+        for k, v := range row {
+            if b, ok := v.([]byte); ok {
+                row[k] = string(b)
+            }
+        }
+        results = append(results, row)
+    }
+    return results, nil
 }
 
 func GetTableCounts(db *sqlx.DB) (map[string]int, error) {

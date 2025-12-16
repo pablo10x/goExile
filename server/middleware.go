@@ -63,6 +63,11 @@ func StatsMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		// Disable caching for all other API/HTML responses
+		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
+
 		sw := &statusResponseWriter{ResponseWriter: w, statusCode: http.StatusOK}
 		
 		// Estimate request size (Header + Body)
