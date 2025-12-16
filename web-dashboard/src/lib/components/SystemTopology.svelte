@@ -44,6 +44,27 @@
             y: startY + index * spacing
         };
     }
+
+    function getOrthogonalPath(startX: number, startY: number, endX: number, endY: number) {
+        // Master is at center.x (150), spawners at x=650
+        // So, spawners are to the right of the master.
+        // Path: spawner -> horizontal right -> vertical -> horizontal left -> master
+
+        const midX = (startX + endX) / 2; // Midpoint X for horizontal segment
+
+        let path = `M${startX},${startY} `;
+
+        // Go horizontal from spawner to midX
+        path += `H${midX} `;
+
+        // Go vertical from midX, currentY to midX, endY
+        path += `V${endY} `;
+
+        // Go horizontal from midX, endY to endX, endY (master)
+        path += `H${endX}`;
+
+        return path;
+    }
 </script>
 
 <div class="relative w-full h-[600px] bg-slate-900/50 rounded-2xl border border-slate-800 overflow-hidden flex items-center justify-center shadow-inner">
@@ -65,17 +86,16 @@
         {#each $spawners as spawner, i}
             {@const pos = getPosition(i, $spawners.length)}
             {@const isActive = spawner.status !== 'offline'}
+            {@const orthogonalPathD = getOrthogonalPath(pos.x, pos.y, center.x, center.y)}
             
-            <!-- Connection Line -->
-            <line 
-                x1={pos.x} 
-                y1={pos.y} 
-                x2={center.x} 
-                y2={center.y} 
+            <!-- Connection Line (Orthogonal) -->
+            <path 
+                d={orthogonalPathD}
                 stroke={isActive ? '#64748b' : '#7f1d1d'} 
                 stroke-width={isActive ? 2 : 1}
                 stroke-dasharray={isActive ? "0" : "5,5"}
                 opacity="0.5"
+                fill="none"
             />
 
             <!-- Pulse Packet (Spark) -->
@@ -86,7 +106,7 @@
                         <animateMotion 
                             dur="1s" 
                             repeatCount="1"
-                            path={`M${pos.x},${pos.y} L${center.x},${center.y}`}
+                            path={orthogonalPathD}
                             fill="freeze"
                             keyPoints="0;1"
                             keyTimes="0;1"
@@ -98,7 +118,7 @@
                         <animateMotion 
                             dur="1s" 
                             repeatCount="1"
-                            path={`M${pos.x},${pos.y} L${center.x},${center.y}`}
+                            path={orthogonalPathD}
                             fill="freeze"
                             begin="0.05s"
                             keyPoints="0;1"
@@ -110,7 +130,7 @@
                         <animateMotion 
                             dur="1s" 
                             repeatCount="1"
-                            path={`M${pos.x},${pos.y} L${center.x},${center.y}`}
+                            path={orthogonalPathD}
                             fill="freeze"
                             begin="0.1s"
                             keyPoints="0;1"
@@ -127,8 +147,18 @@
                     <animateMotion 
                         dur="3s" 
                         repeatCount="indefinite"
-                        path={`M${pos.x},${pos.y} L${center.x},${center.y} L${pos.x},${pos.y}`}
+                        path={orthogonalPathD}
                         rotate="auto"
+                    />
+                </circle>
+                <!-- Add a second one for master to spawner direction -->
+                <circle r="2" fill="white" opacity="0.7">
+                    <animateMotion 
+                        dur="3s" 
+                        repeatCount="indefinite"
+                        path={getOrthogonalPath(center.x, center.y, pos.x, pos.y)}
+                        rotate="auto"
+                        begin="1.5s"
                     />
                 </circle>
             {/if}

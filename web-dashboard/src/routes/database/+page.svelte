@@ -358,7 +358,7 @@
         if (activeTab === 'overview') loadOverview();
         if (activeTab === 'tables') {
             loadSchemas();
-            loadTables();
+            loadTables(selectedSchema);
         }
         if (activeTab === 'roles') loadRoles();
         if (activeTab === 'backups') loadBackups();
