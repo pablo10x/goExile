@@ -91,7 +91,7 @@
             <!-- Connection Line (Orthogonal) -->
             <path 
                 d={orthogonalPathD}
-                stroke={isActive ? '#64748b' : '#7f1d1d'} 
+                stroke={isActive ? '#64748b' : '#ef4444'} 
                 stroke-width={isActive ? 2 : 1}
                 stroke-dasharray={isActive ? "0" : "5,5"}
                 opacity="0.5"
@@ -196,9 +196,9 @@
             `}>
                 <Cpu class={`w-6 h-6 ${isActive ? 'text-slate-300' : 'text-red-500'}`} />
                 
-                {#if isActive}
-                    <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-slate-900 animate-pulse"></div>
-                {/if}
+                <div class={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-slate-900 
+                    ${isActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`}>
+                </div>
             </div>
             
             <div class="absolute top-14 flex flex-col items-center bg-slate-900/90 px-3 py-1 rounded-lg border border-slate-700 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-30 pointer-events-none">
