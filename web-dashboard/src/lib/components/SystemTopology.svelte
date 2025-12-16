@@ -44,7 +44,7 @@
 
 <div class="relative w-full h-[600px] bg-slate-900/50 rounded-2xl border border-slate-800 overflow-hidden flex items-center justify-center shadow-inner">
     <!-- Grid Background -->
-    <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNMCAwaDQwdjQwSDB6IiBmaWxsPSJub25lIi8+CiAgPHBhdGggZD0iTTAgNDBoNDBNNDAgMHY0MCIgc3Ryb2tlPSJyZ2JhKDI1NSwgMj1NSwgMjU1LCAwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+Cjwvc3ZnPg==')] opacity-20"></div>
+    <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNMCAwaDQwdjQwSDB6IiBmaWxsPSJub25lIi8+CiAgPHBhdGggZD0iTTAgNDBoNDBNNDAgMHY0MCIgc3Ryb2tlPSJyZ2JhKDI1NSwgMjU1LCAyNTUsIDAuMDMpIiBzdHJva2Utd2lkdGg9IjEiLz4KPC9zdmc+')] opacity-20"></div>
 
     <svg class="w-full h-full pointer-events-none absolute inset-0">
         <defs>
@@ -75,10 +75,10 @@
             />
 
             <!-- Pulse Packet (Spark) -->
-            {#if pulsingSpawners.has(spawner.id)}
+            {#if pulsingSpawners.has(spawner.id) && isActive}
                 <g filter="url(#glow)">
-                    <!-- Spark Head -->
-                    <circle r="3" fill="#60a5fa">
+                    <!-- Spark circles -->
+                    <circle r="3" fill="#10b981">
                         <animateMotion 
                             dur="1s" 
                             repeatCount="1"
@@ -90,7 +90,7 @@
                         />
                     </circle>
                     <!-- Trail Effect -->
-                     <circle r="1.5" fill="#3b82f6" opacity="0.6">
+                     <circle r="1.5" fill="#059669" opacity="0.6">
                         <animateMotion 
                             dur="1s" 
                             repeatCount="1"
@@ -102,7 +102,7 @@
                             calcMode="linear"
                         />
                     </circle>
-                    <circle r="1" fill="#3b82f6" opacity="0.3">
+                    <circle r="1" fill="#059669" opacity="0.3">
                         <animateMotion 
                             dur="1s" 
                             repeatCount="1"
@@ -115,6 +115,18 @@
                         />
                     </circle>
                 </g>
+            {/if}
+
+            <!-- Sync Animation (Continuous Flow) -->
+            {#if isActive}
+                <circle r="2" fill="white" opacity="0.7">
+                    <animateMotion 
+                        dur="3s" 
+                        repeatCount="indefinite"
+                        path={`M${pos.x},${pos.y} L${center.x},${center.y} L${pos.x},${pos.y}`}
+                        rotate="auto"
+                    />
+                </circle>
             {/if}
         {/each}
     </svg>
@@ -145,7 +157,7 @@
             <div class={`
                 relative w-12 h-12 rounded-full flex items-center justify-center border-2 shadow-lg backdrop-blur-md
                 ${isActive ? 'bg-slate-800/80 border-slate-500 shadow-slate-500/20' : 'bg-red-900/20 border-red-800 shadow-red-900/20'}
-                ${pulsingSpawners.has(spawner.id) ? 'scale-110 border-blue-400 shadow-blue-500/50' : ''}
+                ${pulsingSpawners.has(spawner.id) ? 'scale-110 border-emerald-400 shadow-emerald-500/50' : ''}
                 transition-all duration-300
             `}>
                 <Cpu class={`w-6 h-6 ${isActive ? 'text-slate-300' : 'text-red-500'}`} />

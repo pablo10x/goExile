@@ -12,6 +12,42 @@
     let loading = $state(false);
     let error = $state<string | null>(null);
 
+    let sqlQuery = $state('');
+    let sqlLoading = $state(false);
+    let sqlResults = $state<any[]>([]);
+
+    let addingRow = $state(false);
+    let pendingChanges = $state<Record<string, Record<string, any>>>({}); // For tracking changes to rows
+    let newRowData = $state<Record<string, any>>({}); // For adding new rows
+    let backups = $state<any[]>([]); // For backups tab
+    let confirmTitle = $state(''); // For ConfirmDialog
+    let confirmMessage = $state(''); // For ConfirmDialog
+    let confirmIsCritical = $state(false); // For ConfirmDialog
+    let confirmAction = $state<(() => Promise<void>) | null>(null); // For ConfirmDialog
+    let isConfirmOpen = $state(false); // For ConfirmDialog
+    let pgConfig = $state<any[]>([]); // For database config
+    let editingConfig = $state<{ name: string } | null>(null); // For editing database config
+    let editConfigValue = $state(''); // For editing database config
+    let pendingConfigChanges = $state<Record<string, any>>({}); // For tracking changes to config
+    let isConfigConfirmOpen = $state(false); // For ConfirmDialog (config changes)
+    let isCreatingRole = $state(false); // For creating new role
+    let newRole = $state({
+        name: '',
+        password: '',
+        canLogin: true,
+        createDb: false,
+        createRole: false,
+        inherit: true,
+        replication: false,
+        bypassRls: false,
+        isSuperuser: false
+    });
+    let roles = $state<any[]>([]); // For roles tab
+
+    // Editor State (moved to top for clarity and compiler recognition)
+    let editingCell = $state<{ rowId: any, key: string } | null>(null);
+    let editValue = $state('');
+
     // Overview Stats
     let dbStats = $state({
         size_bytes: 0,
@@ -335,6 +371,183 @@
 
     function downloadFile(filename: string) {
         window.open(`/api/database/backups/${filename}`, '_blank');
+    }
+
+    async function loadOverview() {
+        try {
+            loading = true;
+            const res = await fetch('/api/database/overview');
+            if (res.ok) {
+                const data = await res.json();
+                dbStats = data;
+            } else {
+                notifications.add({ type: 'error', message: 'Failed to load overview', details: `Server returned ${res.status}` });
+            }
+        } catch (e: any) {
+            notifications.add({ type: 'error', message: 'Failed to load overview', details: e.message });
+        } finally {
+            loading = false;
+        }
+    }
+
+    async function loadSchemas() {
+        try {
+            const res = await fetch('/api/database/schemas');
+            if (res.ok) {
+                schemas = await res.json();
+                schemas.forEach(schema => {
+                    if (!expandedSchemas.has(schema)) {
+                        expandedSchemas.add(schema); // Expand all schemas by default for now
+                    }
+                    if (!schemaTables[schema]) {
+                        loadTables(schema); // Load tables for each schema
+                    }
+                });
+            } else {
+                notifications.add({ type: 'error', message: 'Failed to load schemas', details: `Server returned ${res.status}` });
+            }
+        } catch (e: any) {
+            notifications.add({ type: 'error', message: 'Failed to load schemas', details: e.message });
+        }
+    }
+
+    async function loadTables(schema: string) {
+        try {
+            const res = await fetch(`/api/database/tables?schema=${schema}`);
+            if (res.ok) {
+                const tablesForSchema = await res.json();
+                schemaTables = { ...schemaTables, [schema]: tablesForSchema };
+
+                // For each table, load its columns
+                for (const table of tablesForSchema) {
+                    const colRes = await fetch(`/api/database/columns?schema=${schema}&table=${table}`);
+                    if (colRes.ok) {
+                        const cols = await colRes.json();
+                        tableColumns = { ...tableColumns, [`${schema}.${table}`]: cols };
+                    } else {
+                        notifications.add({ type: 'error', message: `Failed to load columns for ${schema}.${table}`, details: `Server returned ${colRes.status}` });
+                    }
+                }
+            } else {
+                notifications.add({ type: 'error', message: `Failed to load tables for schema ${schema}`, details: `Server returned ${res.status}` });
+            }
+        } catch (e: any) {
+            notifications.add({ type: 'error', message: `Failed to load tables for schema ${schema}`, details: e.message });
+        }
+    }
+
+    async function loadRoles() {
+        try {
+            const res = await fetch('/api/database/roles');
+            if (res.ok) {
+                roles = await res.json();
+            } else {
+                notifications.add({ type: 'error', message: 'Failed to load roles', details: `Server returned ${res.status}` });
+            }
+        } catch (e: any) {
+            notifications.add({ type: 'error', message: 'Failed to load roles', details: e.message });
+        }
+    }
+
+    async function createSchema() {
+        if (!newSchemaName.trim()) {
+            notifications.add({ type: 'warning', message: 'Schema name cannot be empty.' });
+            return;
+        }
+        try {
+            const res = await fetch('/api/database/schemas', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newSchemaName })
+            });
+            if (res.ok) {
+                notifications.add({ type: 'success', message: `Schema '${newSchemaName}' created.` });
+                newSchemaName = '';
+                isCreatingSchema = false;
+                loadSchemas(); // Reload schemas
+            } else {
+                const err = await res.json();
+                notifications.add({ type: 'error', message: `Failed to create schema '${newSchemaName}'`, details: err.error || res.statusText });
+            }
+        } catch (e: any) {
+            notifications.add({ type: 'error', message: `Failed to create schema '${newSchemaName}'`, details: e.message });
+        }
+    }
+
+    function toggleSchema(schema: string) {
+        if (expandedSchemas.has(schema)) {
+            expandedSchemas.delete(schema);
+        } else {
+            expandedSchemas.add(schema);
+        }
+        expandedSchemas = new Set(expandedSchemas); // Trigger reactivity
+    }
+
+    function toggleTable(schema: string, table: string) {
+        const key = `${schema}.${table}`;
+        if (expandedTables.has(key)) {
+            expandedTables.delete(key);
+        } else {
+            expandedTables.add(key);
+        }
+        expandedTables = new Set(expandedTables); // Trigger reactivity
+        
+        selectedSchema = schema;
+        selectedTable = table;
+        loadTableData(table); // Load data when table is selected/toggled
+    }
+
+    async function createRole() {
+        if (!newRole.name.trim()) {
+            notifications.add({ type: 'warning', message: 'Role name cannot be empty.' });
+            return;
+        }
+        try {
+            const res = await fetch('/api/database/roles', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newRole)
+            });
+            if (res.ok) {
+                notifications.add({ type: 'success', message: `Role '${newRole.name}' created.` });
+                isCreatingRole = false;
+                // Reset newRole state
+                newRole = {
+                    name: '',
+                    password: '',
+                    canLogin: true,
+                    createDb: false,
+                    createRole: false,
+                    inherit: true,
+                    replication: false,
+                    bypassRls: false,
+                    isSuperuser: false
+                };
+                loadRoles(); // Reload roles
+            } else {
+                const err = await res.json();
+                notifications.add({ type: 'error', message: `Failed to create role '${newRole.name}'`, details: err.error || res.statusText });
+            }
+        } catch (e: any) {
+            notifications.add({ type: 'error', message: `Failed to create role '${newRole.name}'`, details: e.message });
+        }
+    }
+
+    async function deleteRole(roleName: string) {
+        try {
+            const res = await fetch(`/api/database/roles/${roleName}`, {
+                method: 'DELETE'
+            });
+            if (res.ok) {
+                notifications.add({ type: 'success', message: `Role '${roleName}' deleted.` });
+                loadRoles(); // Reload roles
+            } else {
+                const err = await res.json();
+                notifications.add({ type: 'error', message: `Failed to delete role '${roleName}'`, details: err.error || res.statusText });
+            }
+        } catch (e: any) {
+            notifications.add({ type: 'error', message: `Failed to delete role '${roleName}'`, details: e.message });
+        }
     }
 </script>
 
@@ -918,5 +1131,5 @@
     title={confirmTitle}
     message={confirmMessage}
     isCritical={confirmIsCritical}
-    onConfirm={confirmAction}
+    onConfirm={confirmAction || (async () => {})}
 />
