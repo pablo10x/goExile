@@ -5,7 +5,7 @@
     import { fade, scale } from 'svelte/transition';
 
     // Animation state
-    let center = { x: 400, y: 300 };
+    let center = { x: 150, y: 300 };
     let radius = 200;
     
     // Track heartbeats for pulse animation
@@ -33,11 +33,15 @@
     }
 
     function getPosition(index: number, total: number) {
-        if (total === 0) return center;
-        const angle = (index / total) * 2 * Math.PI - Math.PI / 2; // Start from top
+        if (total === 0) return { x: 650, y: center.y }; // Default position for 0 spawners
+        
+        const startY = 100; // Starting Y position for the first spawner
+        const endY = 500;   // Ending Y position for the last spawner
+        const spacing = (endY - startY) / (total > 1 ? total - 1 : 1);
+
         return {
-            x: center.x + radius * Math.cos(angle),
-            y: center.y + radius * Math.sin(angle)
+            x: 650, // Fixed X position for spawners on the right
+            y: startY + index * spacing
         };
     }
 </script>
