@@ -174,6 +174,7 @@
             <div class="absolute top-14 flex flex-col items-center bg-slate-900/90 px-3 py-1 rounded-lg border border-slate-700 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-30 pointer-events-none">
                 <span class="text-xs font-bold text-white">Spawner #{spawner.id}</span>
                 <span class="text-[10px] text-slate-400">{spawner.region}</span>
+                <span class="text-[10px] text-slate-400">Instances: {spawner.current_instances}/{spawner.max_instances}</span>
                 <span class={`text-[10px] font-mono ${isActive ? 'text-emerald-400' : 'text-red-400'}`}>{spawner.status}</span>
             </div>
         </div>
