@@ -85,7 +85,7 @@
         <!-- Connections -->
         {#each $spawners as spawner, i}
             {@const pos = getPosition(i, $spawners.length)}
-            {@const isActive = spawner.status !== 'offline'}
+            {@const isActive = spawner.status === 'Online'}
             {@const orthogonalPathD = getOrthogonalPath(pos.x, pos.y, center.x, center.y)}
             
             <!-- Connection Line (Orthogonal) -->
