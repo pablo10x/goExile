@@ -380,7 +380,7 @@
 			: '-translate-x-4 opacity-0'}"
 	>
 		<h1
-			class="text-3xl font-bold text-slate-50 bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent animate-pulse"
+			class="text-2xl sm:text-3xl font-bold text-slate-50 bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent animate-pulse"
 		>
 			Dashboard
 		</h1>
@@ -396,7 +396,7 @@
 		<!-- Add Spawner Button -->
 		<button
 			onclick={() => (showAddSpawnerModal = true)}
-			class="group relative flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-emerald-900/30 hover:shadow-emerald-500/30 transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95 overflow-hidden {isLoaded
+			class="group relative flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-emerald-900/30 hover:shadow-emerald-500/30 transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95 overflow-hidden {isLoaded
 				? 'translate-x-0 opacity-100'
 				: 'translate-x-4 opacity-0'}"
 		>
@@ -410,7 +410,7 @@
 				<Plus class="w-5 h-5 transition-transform duration-300 group-hover:rotate-90" />
 			</div>
 
-			<span class="relative">Add Spawner</span>
+			<span class="relative hidden sm:inline">Add Spawner</span>
 
 			<!-- Glow effect -->
 			<div
@@ -421,7 +421,7 @@
 
 		<NotificationBell />
 		<div
-			class="text-slate-500 text-sm transform transition-all duration-700 delay-100 {isLoaded
+			class="text-slate-500 text-sm hidden sm:block transform transition-all duration-700 delay-100 {isLoaded
 				? 'translate-x-0 opacity-100'
 				: 'translate-x-4 opacity-0'}"
 		>
@@ -519,7 +519,7 @@
 
 <!-- System Topology -->
 <div
-	class="mb-8 h-[600px] transform transition-all duration-700 {animateStats
+	class="mb-8 h-[400px] lg:h-[600px] transform transition-all duration-700 {animateStats
 		? 'translate-y-0 opacity-100'
 		: 'translate-y-12 opacity-0'}"
 	style="animation-delay: 0.65s;"

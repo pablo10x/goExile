@@ -217,7 +217,7 @@
 
 			<div
 				bind:this={containerElement}
-				class="relative w-full h-[600px] bg-slate-950 rounded-2xl border border-slate-800/50 overflow-hidden flex items-center justify-center shadow-2xl transition-colors duration-300"
+				class="relative w-full h-full bg-slate-950 rounded-2xl border border-slate-800/50 overflow-hidden flex items-center justify-center shadow-2xl transition-colors duration-300"
 			>
 
 
