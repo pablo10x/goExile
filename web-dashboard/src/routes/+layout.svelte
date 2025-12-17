@@ -247,45 +247,17 @@
 					</div>
 
 					<nav class="flex-1 p-4 space-y-2 overflow-y-auto overflow-x-hidden">
-						<!-- Home (Topology) -->
-						<a
-							href="/"
-							class="nav-link {isSidebarCollapsed ? 'justify-center px-2' : ''}"
-							class:nav-active={isRouteActive('/')}
-							onmouseenter={() => (hoveredItem = 0)}
-							onmouseleave={() => (hoveredItem = -1)}
-							style="animation-delay: 0.1s;"
-							title={isSidebarCollapsed ? "Home" : ""}
-						>
-							{#if isRouteActive('/')}
-								<div class="nav-indicator"></div>
-							{/if}
-							<svg
-								class="nav-icon"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"
-							>
-								<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-								<polyline points="9 22 9 12 15 12 15 22"></polyline>
-							</svg>
-							{#if !isSidebarCollapsed}
-								<span class="animate-in fade-in slide-in-from-left-2 duration-300">Home</span>
-							{/if}
-						</a>
-
 						<!-- Dashboard (Management) -->
 						<a
 							href="/dashboard"
 							class="nav-link {isSidebarCollapsed ? 'justify-center px-2' : ''}"
-							class:nav-active={isRouteActive('/dashboard')}
+							class:nav-active={isRouteActive('/dashboard') || isRouteActive('/')}
 							onmouseenter={() => (hoveredItem = 6)}
 							onmouseleave={() => (hoveredItem = -1)}
-							style="animation-delay: 0.15s;"
+							style="animation-delay: 0.1s;"
 							title={isSidebarCollapsed ? "Dashboard" : ""}
 						>
-							{#if isRouteActive('/dashboard')}
+							{#if isRouteActive('/dashboard') || isRouteActive('/')}
 								<div class="nav-indicator"></div>
 							{/if}
 							<svg

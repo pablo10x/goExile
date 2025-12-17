@@ -24,10 +24,18 @@
 	const MIN_ZOOM = 0.5;
 	const MAX_ZOOM = 2.5;
 	
+	// Zoom Control (only double-click enables)
+	let canZoom = $state(false);
+
 	// Drag state
 	let isDragging = $state(false);
 	let dragStart = $state({ x: 0, y: 0 });
 	let lastPanOffset = $state({ x: 0, y: 0 });
+
+	function enableZoomImmediately() {
+		canZoom = true;
+		if (containerElement && !isDragging) containerElement.style.cursor = 'grab';
+	}
 
 	// Background particles
 	const backgroundParticles = Array.from({ length: 30 }, (_, i) => ({
@@ -55,6 +63,8 @@
 			
 			// Add wheel event listener for zoom
 			const handleWheel = (e: WheelEvent) => {
+				if (!canZoom) return; // Prevent zoom if not enabled
+
 				e.preventDefault();
 				
 				// Zoom factor
@@ -87,29 +97,38 @@
 			
 			const handleMouseUp = () => {
 				isDragging = false;
-				containerElement.style.cursor = 'grab';
+				containerElement.style.cursor = canZoom ? 'grab' : 'default';
 			};
 			
 			const handleMouseLeave = () => {
+				canZoom = false; // Disable zoom when mouse leaves
 				if (isDragging) {
 					isDragging = false;
-					containerElement.style.cursor = 'grab';
 				}
+				if (containerElement) containerElement.style.cursor = 'default';
+			};
+
+			const handleDblClick = () => {
+				enableZoomImmediately();
 			};
 			
 			containerElement.addEventListener('wheel', handleWheel, { passive: false });
 			containerElement.addEventListener('mousedown', handleMouseDown);
+			containerElement.addEventListener('mouseleave', handleMouseLeave); // New mouseleave to disable zoom
+			containerElement.addEventListener('dblclick', handleDblClick);
 			document.addEventListener('mousemove', handleMouseMove);
 			document.addEventListener('mouseup', handleMouseUp);
-			containerElement.addEventListener('mouseleave', handleMouseLeave);
 
 			return () => {
 				resizeObserver.disconnect();
-				containerElement.removeEventListener('wheel', handleWheel);
-				containerElement.removeEventListener('mousedown', handleMouseDown);
+				if (containerElement) {
+					containerElement.removeEventListener('wheel', handleWheel);
+					containerElement.removeEventListener('mousedown', handleMouseDown);
+					containerElement.removeEventListener('mouseleave', handleMouseLeave); // Clean up new listener
+					containerElement.removeEventListener('dblclick', handleDblClick);
+				}
 				document.removeEventListener('mousemove', handleMouseMove);
 				document.removeEventListener('mouseup', handleMouseUp);
-				containerElement.removeEventListener('mouseleave', handleMouseLeave);
 			};
 		}
 	});
@@ -196,11 +215,16 @@
 	}
 </script>
 
-<div
-	bind:this={containerElement}
-	class="relative w-full h-[600px] bg-slate-950 rounded-2xl border border-slate-800/50 overflow-hidden flex items-center justify-center shadow-2xl cursor-grab"
->
+			<div
+				bind:this={containerElement}
+				class="relative w-full h-[600px] bg-slate-950 rounded-2xl border border-slate-800/50 overflow-hidden flex items-center justify-center shadow-2xl transition-colors duration-300"
+			>
+
+
+
 	<!-- Animated gradient blobs in background -->
+
+
 	<div class="absolute inset-0 overflow-hidden pointer-events-none">
 		<!-- Primary gradient blob -->
 		<div class="gradient-blob blob-1 bg-gradient-to-br from-blue-600/15 via-cyan-600/10 to-transparent"></div>
@@ -250,6 +274,12 @@
 
 	<!-- Shimmer overlay -->
 	<div class="absolute inset-0 opacity-10 pointer-events-none gradient-overlay"></div>
+
+	<!-- Edge Fade Overlays -->
+	<div class="absolute inset-0 pointer-events-none fade-overlay-top"></div>
+	<div class="absolute inset-0 pointer-events-none fade-overlay-bottom"></div>
+	<div class="absolute inset-0 pointer-events-none fade-overlay-left"></div>
+	<div class="absolute inset-0 pointer-events-none fade-overlay-right"></div>
 
 	<!-- Zoomable and pannable content wrapper -->
 	<div 
@@ -1121,5 +1151,42 @@
 
 	.animate-ping-slower {
 		animation: ping 5s cubic-bezier(0, 0, 0.2, 1) infinite;
+	}
+
+	.fade-overlay-top {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 15%; /* Adjust height for desired fade amount */
+		background: linear-gradient(to bottom, rgb(15 23 42 / 1) 0%, rgb(15 23 42 / 0) 100%);
+		z-index: 40; /* Ensure it's above other elements but below hints */
+	}
+	.fade-overlay-bottom {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		height: 15%; /* Adjust height for desired fade amount */
+		background: linear-gradient(to top, rgb(15 23 42 / 1) 0%, rgb(15 23 42 / 0) 100%);
+		z-index: 40;
+	}
+	.fade-overlay-left {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		width: 15%; /* Adjust width for desired fade amount */
+		background: linear-gradient(to right, rgb(15 23 42 / 1) 0%, rgb(15 23 42 / 0) 100%);
+		z-index: 40;
+	}
+	.fade-overlay-right {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		right: 0;
+		width: 15%; /* Adjust width for desired fade amount */
+		background: linear-gradient(to left, rgb(15 23 42 / 1) 0%, rgb(15 23 42 / 0) 100%);
+		z-index: 40;
 	}
 </style>

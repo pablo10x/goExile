@@ -8,8 +8,10 @@
 	import InstanceManagerModal from '$lib/components/InstanceManagerModal.svelte';
 	import DatabaseDetailModal from '$lib/components/DatabaseDetailModal.svelte';
 	import NotificationBell from '$lib/components/NotificationBell.svelte';
+	import SystemTopology from '$lib/components/SystemTopology.svelte';
+	import AddSpawnerModal from '$lib/components/AddSpawnerModal.svelte';
 	import { formatBytes, formatUptime } from '$lib/utils';
-	import { Clock, Server, Activity, AlertCircle, Database, Network } from 'lucide-svelte';
+	import { Clock, Server, Activity, AlertCircle, Database, Network, Plus } from 'lucide-svelte';
 
 	// Animation states
 	let isLoaded = $state(false);
@@ -89,6 +91,9 @@
 	// Spawner Deletion State
 	let isSpawnerDeleteDialogOpen = $state(false);
 	let spawnerToDeleteId = $state<number | null>(null);
+
+	// Add Spawner State
+	let showAddSpawnerModal = $state(false);
 
 	// Reactivity for new spawners animation
 	$effect(() => {
@@ -388,6 +393,32 @@
 	</div>
 
 	<div class="flex items-center gap-4">
+		<!-- Add Spawner Button -->
+		<button
+			onclick={() => (showAddSpawnerModal = true)}
+			class="group relative flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-emerald-900/30 hover:shadow-emerald-500/30 transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95 overflow-hidden {isLoaded
+				? 'translate-x-0 opacity-100'
+				: 'translate-x-4 opacity-0'}"
+		>
+			<!-- Shimmer effect -->
+			<div
+				class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"
+			></div>
+
+			<!-- Icon with rotation on hover -->
+			<div class="relative">
+				<Plus class="w-5 h-5 transition-transform duration-300 group-hover:rotate-90" />
+			</div>
+
+			<span class="relative">Add Spawner</span>
+
+			<!-- Glow effect -->
+			<div
+				class="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+				style="box-shadow: inset 0 0 20px rgba(16, 185, 129, 0.3);"
+			></div>
+		</button>
+
 		<NotificationBell />
 		<div
 			class="text-slate-500 text-sm transform transition-all duration-700 delay-100 {isLoaded
@@ -486,6 +517,16 @@
 	</div>
 </div>
 
+<!-- System Topology -->
+<div
+	class="mb-8 h-[600px] transform transition-all duration-700 {animateStats
+		? 'translate-y-0 opacity-100'
+		: 'translate-y-12 opacity-0'}"
+	style="animation-delay: 0.65s;"
+>
+	<SystemTopology />
+</div>
+
 <!-- Spawners Section -->
 <div
 	class="card bg-slate-800/60 backdrop-blur-sm border border-slate-700/50 rounded-xl overflow-hidden transform transition-all duration-700 hover:scale-[1.01] hover:border-blue-500/20 hover:shadow-2xl hover:shadow-blue-500/5 {animateStats
@@ -577,6 +618,9 @@
 
 <!-- Database Detail Modal -->
 <DatabaseDetailModal stats={$stats} isOpen={isDBHovered} x={dbHoverX} y={dbHoverY} />
+
+<!-- Add Spawner Modal -->
+<AddSpawnerModal bind:isOpen={showAddSpawnerModal} />
 
 <style>
 	@keyframes float {
