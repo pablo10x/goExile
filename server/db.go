@@ -694,14 +694,73 @@ func ListSchemas(db *sqlx.DB) ([]string, error) {
     return schemas, err
 }
 
-func CreateSchema(db *sqlx.DB, name string) error {
+func ListAllTables(db *sqlx.DB) ([]map[string]string, error) {
+    query := `
+        SELECT 
+            n.nspname AS schema_name,
+            c.relname AS table_name
+        FROM 
+            pg_catalog.pg_class c
+        JOIN 
+            pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+        WHERE 
+            c.relkind = 'r'
+            AND n.nspname NOT IN ('pg_catalog', 'information_schema')
+            AND n.nspname NOT LIKE 'pg_temp_%' 
+            AND n.nspname NOT LIKE 'pg_toast_temp_%'
+        ORDER BY 
+            n.nspname,
+            c.relname;
+    `
+    
+    rows, err := db.Queryx(query)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    results := []map[string]string{}
+    for rows.Next() {
+        var schema, table string
+        if err := rows.Scan(&schema, &table); err != nil {
+            return nil, err
+        }
+        results = append(results, map[string]string{"schema": schema, "table": table})
+    }
+    return results, nil
+}
+
+func CreateSchema(db *sqlx.DB, name, owner string) error {
     // Basic validation to prevent SQL injection (alphanumeric + underscore)
     for _, r := range name {
         if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_') {
             return fmt.Errorf("invalid schema name")
         }
     }
-    _, err := db.Exec(fmt.Sprintf("CREATE SCHEMA %s", name))
+    
+    query := fmt.Sprintf("CREATE SCHEMA %s", name)
+    if owner != "" {
+        // Validate owner name as well
+        for _, r := range owner {
+            if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_') {
+                return fmt.Errorf("invalid owner name")
+            }
+        }
+        query += fmt.Sprintf(" AUTHORIZATION %s", owner)
+    }
+    
+    _, err := db.Exec(query)
+    return err
+}
+
+func DropSchema(db *sqlx.DB, name string) error {
+    for _, r := range name {
+        if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_') {
+            return fmt.Errorf("invalid schema name")
+        }
+    }
+    // CASCADE to drop tables inside
+    _, err := db.Exec(fmt.Sprintf("DROP SCHEMA %s CASCADE", name))
     return err
 }
 
@@ -762,10 +821,24 @@ func DeleteRole(db *sqlx.DB, name string) error {
 }
 
 func ListTablesBySchema(db *sqlx.DB, schema string) ([]string, error) {
-    query := "SELECT table_name FROM information_schema.tables WHERE table_schema = $1"
-    var tables []string
-    err := db.Select(&tables, query, schema)
-    return tables, err
+    // Use pg_catalog.pg_tables as the authoritative source
+    query := "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = $1 ORDER BY tablename"
+    
+    rows, err := db.Queryx(query, schema)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    tables := []string{} // Initialize as empty slice
+    for rows.Next() {
+        var name string
+        if err := rows.Scan(&name); err != nil {
+            return nil, err
+        }
+        tables = append(tables, name)
+    }
+    return tables, nil
 }
 
 type ColumnInfo struct {
@@ -776,7 +849,7 @@ type ColumnInfo struct {
 
 func ListColumns(db *sqlx.DB, schema, table string) ([]ColumnInfo, error) {
     query := "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_schema = $1 AND table_name = $2 ORDER BY ordinal_position"
-    var cols []ColumnInfo
+    cols := []ColumnInfo{}
     err := db.Select(&cols, query, schema, table)
     return cols, err
 }
@@ -820,4 +893,115 @@ func GetTableCounts(db *sqlx.DB) (map[string]int, error) {
         }
     }
     return counts, nil
+}
+
+// DDL Helpers
+
+func CreateTable(db *sqlx.DB, schema, name string, columns []string) error {
+	// Basic validation
+	if !isValidName(schema) || !isValidName(name) {
+		return fmt.Errorf("invalid schema or table name")
+	}
+	if len(columns) == 0 {
+		return fmt.Errorf("columns definition required")
+	}
+
+	// Columns should be validated/sanitized in handler, but we can do a quick check here if needed
+	// For now, assuming handler constructs safe column definitions or we use raw input if admin trusted.
+	// But let's assume columns array strings are like "id SERIAL PRIMARY KEY", "name TEXT NOT NULL"
+	
+	q := fmt.Sprintf("CREATE TABLE %q.%q (%s)", schema, name, strings.Join(columns, ", "))
+	_, err := db.Exec(q)
+	return err
+}
+
+func DropTable(db *sqlx.DB, schema, name string) error {
+	if !isValidName(schema) || !isValidName(name) {
+		return fmt.Errorf("invalid schema or table name")
+	}
+	q := fmt.Sprintf("DROP TABLE %q.%q", schema, name)
+	_, err := db.Exec(q)
+	return err
+}
+
+func AddColumn(db *sqlx.DB, schema, table, colName, colType string) error {
+	if !isValidName(schema) || !isValidName(table) || !isValidName(colName) {
+		return fmt.Errorf("invalid identifiers")
+	}
+	// colType needs to be validated or allowed list? Postgres types are many.
+	// We'll trust admin input for now but prevent obvious injection if possible.
+	// Simple allow-list for basic types or just trust. Admin tool = trust.
+	
+	q := fmt.Sprintf("ALTER TABLE %q.%q ADD COLUMN %q %s", schema, table, colName, colType)
+	_, err := db.Exec(q)
+	return err
+}
+
+func DropColumn(db *sqlx.DB, schema, table, colName string) error {
+	if !isValidName(schema) || !isValidName(table) || !isValidName(colName) {
+		return fmt.Errorf("invalid identifiers")
+	}
+	q := fmt.Sprintf("ALTER TABLE %q.%q DROP COLUMN %q", schema, table, colName)
+	_, err := db.Exec(q)
+	return err
+}
+
+func RenameColumn(db *sqlx.DB, schema, table, oldName, newName string) error {
+	if !isValidName(schema) || !isValidName(table) || !isValidName(oldName) || !isValidName(newName) {
+		return fmt.Errorf("invalid identifiers")
+	}
+	q := fmt.Sprintf("ALTER TABLE %q.%q RENAME COLUMN %q TO %q", schema, table, oldName, newName)
+	_, err := db.Exec(q)
+	return err
+}
+
+func AlterColumnType(db *sqlx.DB, schema, table, column, newType string) error {
+	if !isValidName(schema) || !isValidName(table) || !isValidName(column) {
+		return fmt.Errorf("invalid identifiers")
+	}
+    // Using CAST for safety when converting types
+	q := fmt.Sprintf("ALTER TABLE %q.%q ALTER COLUMN %q TYPE %s USING %q::%s", schema, table, column, newType, column, newType)
+	_, err := db.Exec(q)
+	return err
+}
+
+func AlterColumnNullable(db *sqlx.DB, schema, table, column string, notNull bool) error {
+	if !isValidName(schema) || !isValidName(table) || !isValidName(column) {
+		return fmt.Errorf("invalid identifiers")
+	}
+    action := "DROP NOT NULL"
+    if notNull {
+        action = "SET NOT NULL"
+    }
+	q := fmt.Sprintf("ALTER TABLE %q.%q ALTER COLUMN %q %s", schema, table, column, action)
+	_, err := db.Exec(q)
+	return err
+}
+
+func AlterColumnDefault(db *sqlx.DB, schema, table, column, defaultVal string) error {
+	if !isValidName(schema) || !isValidName(table) || !isValidName(column) {
+		return fmt.Errorf("invalid identifiers")
+	}
+    var q string
+    if defaultVal == "" {
+        q = fmt.Sprintf("ALTER TABLE %q.%q ALTER COLUMN %q DROP DEFAULT", schema, table, column)
+    } else {
+        // defaultVal needs to be sanitized or handled carefully. 
+        // For simplicity, we assume it's a raw SQL string (e.g. "0" or "'text'" or "NOW()").
+        // A robust editor usually passes this as a safe string. 
+        // We will simple-quote it if it looks like a string but users might want expressions.
+        // Let's rely on client sending valid SQL value expression for now.
+        q = fmt.Sprintf("ALTER TABLE %q.%q ALTER COLUMN %q SET DEFAULT %s", schema, table, column, defaultVal)
+    }
+	_, err := db.Exec(q)
+	return err
+}
+
+func isValidName(s string) bool {
+	for _, r := range s {
+		if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_') {
+			return false
+		}
+	}
+	return len(s) > 0
 }

@@ -232,9 +232,15 @@ func run() error {
         // Introspection & SQL
         router.Handle("/api/database/schemas", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListSchemasHandler))).Methods("GET")
         router.Handle("/api/database/schemas", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(CreateSchemaHandler))).Methods("POST")
+        router.Handle("/api/database/schemas/{name}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DeleteSchemaHandler))).Methods("DELETE")
+        router.Handle("/api/database/all-tables", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetAllTablesHandler))).Methods("GET")
         router.Handle("/api/database/tables", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListTablesBySchemaHandler))).Methods("GET")
+        router.Handle("/api/database/tables/create", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(CreateTableHandler))).Methods("POST")
+        router.Handle("/api/database/tables/{table}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DropTableHandler))).Methods("DELETE")
+        router.Handle("/api/database/tables/{table}/alter", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(AlterTableHandler))).Methods("POST")
         router.Handle("/api/database/columns", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListColumnsHandler))).Methods("GET")
         router.Handle("/api/database/sql", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ExecuteSQLHandler))).Methods("POST")
+        router.Handle("/api/database/debug/tables", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DebugListAllTablesHandler))).Methods("GET")
         
         // Roles
         router.Handle("/api/database/roles", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListRolesHandler))).Methods("GET")

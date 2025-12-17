@@ -359,17 +359,32 @@ func CreateSchemaHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
     var req struct {
-        Name string `json:"name"`
+        Name  string `json:"name"`
+        Owner string `json:"owner"`
     }
     if err := decodeJSON(r, &req); err != nil {
         writeError(w, r, http.StatusBadRequest, "invalid json")
         return
     }
-    if err := CreateSchema(dbConn, req.Name); err != nil {
+    if err := CreateSchema(dbConn, req.Name, req.Owner); err != nil {
         writeError(w, r, http.StatusInternalServerError, err.Error())
         return
     }
     writeJSON(w, http.StatusCreated, map[string]string{"message": "schema created"})
+}
+
+func DeleteSchemaHandler(w http.ResponseWriter, r *http.Request) {
+    if dbConn == nil {
+        writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+        return
+    }
+    vars := mux.Vars(r)
+    name := vars["name"]
+    if err := DropSchema(dbConn, name); err != nil {
+        writeError(w, r, http.StatusInternalServerError, err.Error())
+        return
+    }
+    writeJSON(w, http.StatusOK, map[string]string{"message": "schema deleted"})
 }
 
 func ListRolesHandler(w http.ResponseWriter, r *http.Request) {
@@ -425,16 +440,33 @@ func ListTablesBySchemaHandler(w http.ResponseWriter, r *http.Request) {
         writeError(w, r, http.StatusServiceUnavailable, "database not connected")
         return
     }
-    schema := strings.TrimSpace(r.URL.Query().Get("schema"))
+    rawSchema := r.URL.Query().Get("schema")
+    schema := strings.TrimSpace(rawSchema)
     if schema == "" {
-        schema = "public"
+        // STRICT MODE: Do not default to public. Force frontend to specify.
+        writeError(w, r, http.StatusBadRequest, "schema parameter required")
+        return
     }
     
-    // Explicitly check if schema exists to avoid confusion? 
-    // No, standard behavior is empty list if schema doesn't exist or has no tables.
-    // However, if the user sees public tables when querying 'app', it implies schema variable IS 'public'.
-    
     tables, err := ListTablesBySchema(dbConn, schema)
+    if err != nil {
+        writeError(w, r, http.StatusInternalServerError, err.Error())
+        return
+    }
+    
+    // Debug header to help frontend verify what happened
+    w.Header().Set("X-Resolved-Schema", schema)
+    
+    writeJSON(w, http.StatusOK, tables)
+}
+
+func GetAllTablesHandler(w http.ResponseWriter, r *http.Request) {
+    if dbConn == nil {
+        writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+        return
+    }
+    
+    tables, err := ListAllTables(dbConn)
     if err != nil {
         writeError(w, r, http.StatusInternalServerError, err.Error())
         return
@@ -485,6 +517,31 @@ func ExecuteSQLHandler(w http.ResponseWriter, r *http.Request) {
     if err != nil {
         writeError(w, r, http.StatusBadRequest, err.Error())
         return
+    }
+    writeJSON(w, http.StatusOK, results)
+}
+
+func DebugListAllTablesHandler(w http.ResponseWriter, r *http.Request) {
+    if dbConn == nil {
+        writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+        return
+    }
+    
+    query := "SELECT table_schema, table_name FROM information_schema.tables WHERE table_schema NOT IN ('information_schema', 'pg_catalog')"
+    rows, err := dbConn.Queryx(query)
+    if err != nil {
+        writeError(w, r, http.StatusInternalServerError, err.Error())
+        return
+    }
+    defer rows.Close()
+
+    results := []map[string]string{}
+    for rows.Next() {
+        var schema, name string
+        if err := rows.Scan(&schema, &name); err != nil {
+            continue
+        }
+        results = append(results, map[string]string{"schema": schema, "table": name})
     }
     writeJSON(w, http.StatusOK, results)
 }
@@ -696,4 +753,100 @@ func DeleteTableRowHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"message": "row deleted"})
+}
+
+// --- DDL Operations ---
+
+func CreateTableHandler(w http.ResponseWriter, r *http.Request) {
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+	var req struct {
+		Schema  string   `json:"schema"`
+		Name    string   `json:"name"`
+		Columns []string `json:"columns"`
+	}
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, r, http.StatusBadRequest, "invalid json")
+		return
+	}
+	if req.Schema == "" {
+		req.Schema = "public"
+	}
+	if err := CreateTable(dbConn, req.Schema, req.Name, req.Columns); err != nil {
+		writeError(w, r, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusCreated, map[string]string{"message": "table created"})
+}
+
+func DropTableHandler(w http.ResponseWriter, r *http.Request) {
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+	vars := mux.Vars(r)
+	table := vars["table"]
+	schema := r.URL.Query().Get("schema")
+	if schema == "" {
+		schema = "public"
+	}
+	
+	if err := DropTable(dbConn, schema, table); err != nil {
+		writeError(w, r, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"message": "table dropped"})
+}
+
+func AlterTableHandler(w http.ResponseWriter, r *http.Request) {
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+	vars := mux.Vars(r)
+	table := vars["table"]
+	
+	var req struct {
+		Schema    string `json:"schema"`
+		Action    string `json:"action"` // add_column, drop_column, rename_column, alter_column_type, alter_column_nullable, alter_column_default
+		Column    string `json:"column"`
+		Type      string `json:"type,omitempty"` // for add_column, alter_column_type
+		NewName   string `json:"new_name,omitempty"` // for rename_column
+        NotNull   bool   `json:"not_null,omitempty"` // for alter_column_nullable
+        Default   string `json:"default,omitempty"` // for alter_column_default
+	}
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, r, http.StatusBadRequest, "invalid json")
+		return
+	}
+	if req.Schema == "" {
+		req.Schema = "public"
+	}
+
+	var err error
+	switch req.Action {
+	case "add_column":
+		err = AddColumn(dbConn, req.Schema, table, req.Column, req.Type)
+	case "drop_column":
+		err = DropColumn(dbConn, req.Schema, table, req.Column)
+	case "rename_column":
+		err = RenameColumn(dbConn, req.Schema, table, req.Column, req.NewName)
+	case "alter_column_type":
+        err = AlterColumnType(dbConn, req.Schema, table, req.Column, req.Type)
+    case "alter_column_nullable":
+        err = AlterColumnNullable(dbConn, req.Schema, table, req.Column, req.NotNull)
+    case "alter_column_default":
+        err = AlterColumnDefault(dbConn, req.Schema, table, req.Column, req.Default)
+	default:
+		writeError(w, r, http.StatusBadRequest, "invalid action")
+		return
+	}
+
+	if err != nil {
+		writeError(w, r, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"message": "table altered successfully"})
 }
