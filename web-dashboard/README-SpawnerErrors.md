@@ -28,45 +28,41 @@ import { SpawnerErrorWrapper, SpawnerErrorType, ErrorCodes } from '$lib/utils/sp
 ```typescript
 // Network error
 const error = SpawnerErrorWrapper.network(
-  ErrorCodes.NETWORK_CONNECTION_FAILED,
-  'Failed to connect to spawner',
-  { spawnerId: 'spawner-123' },
-  { spawnerId: 'spawner-123', operation: 'connect' }
+	ErrorCodes.NETWORK_CONNECTION_FAILED,
+	'Failed to connect to spawner',
+	{ spawnerId: 'spawner-123' },
+	{ spawnerId: 'spawner-123', operation: 'connect' }
 );
 
 // Validation error
 const validationError = SpawnerErrorWrapper.validation(
-  ErrorCodes.VALIDATION_MISSING_REQUIRED,
-  'Instance name is required',
-  { field: 'name' }
+	ErrorCodes.VALIDATION_MISSING_REQUIRED,
+	'Instance name is required',
+	{ field: 'name' }
 );
 
 // Permission error
-const permError = SpawnerErrorWrapper.permission(
-  ErrorCodes.PERMISSION_DENIED,
-  'Access denied'
-);
+const permError = SpawnerErrorWrapper.permission(ErrorCodes.PERMISSION_DENIED, 'Access denied');
 ```
 
 ### Wrapping Existing Errors
 
 ```typescript
 try {
-  await someSpawnerOperation();
+	await someSpawnerOperation();
 } catch (error) {
-  const wrappedError = SpawnerErrorWrapper.wrap(
-    error as Error,
-    SpawnerErrorType.NETWORK,
-    { spawnerId: 'spawner-123', operation: 'spawn' }
-  );
+	const wrappedError = SpawnerErrorWrapper.wrap(error as Error, SpawnerErrorType.NETWORK, {
+		spawnerId: 'spawner-123',
+		operation: 'spawn'
+	});
 
-  // Log with appropriate severity
-  wrappedError.log();
+	// Log with appropriate severity
+	wrappedError.log();
 
-  // Get user-friendly message
-  console.log(wrappedError.getUserMessage());
+	// Get user-friendly message
+	console.log(wrappedError.getUserMessage());
 
-  throw wrappedError;
+	throw wrappedError;
 }
 ```
 
@@ -76,21 +72,24 @@ try {
 import { withErrorHandler } from '$lib/utils/spawner-errors';
 
 async function spawnInstance(spawnerId: string, config: any) {
-  return withErrorHandler(async () => {
-    const response = await fetch(`/api/spawners/${spawnerId}/spawn`, {
-      method: 'POST',
-      body: JSON.stringify(config)
-    });
+	return withErrorHandler(
+		async () => {
+			const response = await fetch(`/api/spawners/${spawnerId}/spawn`, {
+				method: 'POST',
+				body: JSON.stringify(config)
+			});
 
-    if (!response.ok) {
-      throw SpawnerErrorWrapper.network(
-        ErrorCodes.NETWORK_CONNECTION_FAILED,
-        'Spawn request failed'
-      );
-    }
+			if (!response.ok) {
+				throw SpawnerErrorWrapper.network(
+					ErrorCodes.NETWORK_CONNECTION_FAILED,
+					'Spawn request failed'
+				);
+			}
 
-    return response.json();
-  }, { spawnerId, operation: 'spawn' });
+			return response.json();
+		},
+		{ spawnerId, operation: 'spawn' }
+	);
 }
 ```
 
@@ -100,15 +99,15 @@ async function spawnInstance(spawnerId: string, config: any) {
 import { handleUIError } from '$lib/utils/spawner-errors';
 
 function handleError(error: unknown) {
-  const wrappedError = handleUIError(error, { component: 'SpawnerList' });
+	const wrappedError = handleUIError(error, { component: 'SpawnerList' });
 
-  // Show user-friendly message in UI
-  showNotification(wrappedError.getUserMessage(), {
-    type: wrappedError.error.severity === 'CRITICAL' ? 'error' : 'warning'
-  });
+	// Show user-friendly message in UI
+	showNotification(wrappedError.getUserMessage(), {
+		type: wrappedError.error.severity === 'CRITICAL' ? 'error' : 'warning'
+	});
 
-  // Log technical details
-  wrappedError.log();
+	// Log technical details
+	wrappedError.log();
 }
 ```
 
@@ -145,11 +144,13 @@ See `ErrorCodes` object for predefined error codes:
 ### SpawnerErrorWrapper Class
 
 #### Constructor
+
 ```typescript
 new SpawnerErrorWrapper(error: Partial<SpawnerError>)
 ```
 
 #### Static Factory Methods
+
 - `SpawnerErrorWrapper.network(code, message, details?, context?)`
 - `SpawnerErrorWrapper.validation(code, message, details?, context?)`
 - `SpawnerErrorWrapper.permission(code, message, details?, context?)`
@@ -159,6 +160,7 @@ new SpawnerErrorWrapper(error: Partial<SpawnerError>)
 - `SpawnerErrorWrapper.wrap(error, type?, context?)`
 
 #### Instance Methods
+
 - `getError(): SpawnerError` - Get structured error object
 - `getUserMessage(): string` - Get user-friendly message
 - `getTechnicalDetails(): object` - Get full technical details
@@ -169,6 +171,7 @@ new SpawnerErrorWrapper(error: Partial<SpawnerError>)
 ### Utility Functions
 
 #### withErrorHandler
+
 ```typescript
 withErrorHandler<T>(operation: () => Promise<T>, context?: Partial<SpawnerError['context']>): Promise<T>
 ```
@@ -176,6 +179,7 @@ withErrorHandler<T>(operation: () => Promise<T>, context?: Partial<SpawnerError[
 Wraps async operations with automatic error handling and logging.
 
 #### handleUIError
+
 ```typescript
 handleUIError(error: unknown, context?: Partial<SpawnerError['context']>): SpawnerErrorWrapper
 ```
@@ -199,10 +203,10 @@ The error wrapper integrates seamlessly with the LogViewer component:
 ```typescript
 // Errors are automatically logged with full context
 const error = SpawnerErrorWrapper.resource(
-  ErrorCodes.RESOURCE_NOT_FOUND,
-  'Spawner not found',
-  { spawnerId },
-  { spawnerId, operation: 'get_status' }
+	ErrorCodes.RESOURCE_NOT_FOUND,
+	'Spawner not found',
+	{ spawnerId },
+	{ spawnerId, operation: 'get_status' }
 );
 
 error.log(); // Logs with ERROR level and full context
