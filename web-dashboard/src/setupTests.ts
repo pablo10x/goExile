@@ -45,6 +45,6 @@ if (typeof Element !== 'undefined' && !Element.prototype.animate) {
 		// Add other properties that might be accessed, e.g., onfinish
 		onfinish: null,
 		// Mock a Promise-like object for `finished`
-		finished: Promise.resolve(this)
-	});
+		finished: Promise.resolve(this as any)
+	}) as any;
 }

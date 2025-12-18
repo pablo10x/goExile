@@ -622,7 +622,7 @@
 							>
 								<div class="flex items-center gap-3 sm:gap-4">
 									<div class="p-2 sm:p-2.5 bg-gradient-to-br {section.gradient} rounded-lg sm:rounded-xl shadow-lg">
-										<svelte:component this={section.icon} class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+										{section.icon({ class: 'w-4 h-4 sm:w-5 sm:h-5 text-white' })}
 									</div>
 									<div class="text-left">
 										<h3 class="text-sm sm:text-lg font-semibold text-white">{section.title}</h3>

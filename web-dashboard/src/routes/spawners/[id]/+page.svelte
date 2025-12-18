@@ -445,7 +445,7 @@
 
 				<div class="flex items-center gap-3 w-full sm:w-auto">
 					<div class="flex-1 sm:flex-initial">
-						<Dropdown label="Bulk Actions" Icon={List} align="right">
+						<Dropdown label="Bulk Actions" Icon={List}>
 							<div slot="default" let:close>
 								<button
 									onclick={() => {

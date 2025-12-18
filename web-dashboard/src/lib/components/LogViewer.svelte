@@ -77,7 +77,7 @@
 	const refreshInterval = 5000;
 	let refreshTimer: ReturnType<typeof setInterval> | null = null;
 
-	let logContainer: HTMLElement; // No need for $state
+	let logContainer = $state<HTMLElement | null>(null);
 
 	let isConfirmOpen = $state(false);
 
@@ -239,7 +239,9 @@
 		if (filteredLogs.length > 0 && shouldAutoScroll && logContainer) {
 			// Use a microtask to ensure DOM is updated before scrolling
 			queueMicrotask(() => {
-				logContainer.scrollTop = logContainer.scrollHeight;
+				if (logContainer) { // Additional null check for safety
+					logContainer.scrollTop = logContainer.scrollHeight;
+				}
 			});
 		}
 	});
@@ -282,8 +284,8 @@
 			<!-- Backdrop click to close -->
 			<div
 				class="absolute inset-0"
-				on:click={onClose}
-				on:keydown={(e) => (e.key === 'Enter' || e.key === ' ') && onClose()}
+				onclick={onClose}
+				onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && onClose()}
 				role="button"
 				tabindex="0"
 				aria-label="Close"
@@ -331,7 +333,7 @@
 			<button
 				class="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors"
 				title="Refresh Now"
-				on:click={fetchLogs}
+				onclick={fetchLogs}
 			>
 				<RefreshCw class="w-4 h-4 {loading ? 'animate-spin' : ''}" />
 			</button>
@@ -339,7 +341,7 @@
 			<button
 				class="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors"
 				title="Clear Logs"
-				on:click={() => (isConfirmOpen = true)}
+				onclick={() => (isConfirmOpen = true)}
 			>
 				<XCircle class="w-4 h-4" />
 			</button>
@@ -348,7 +350,7 @@
 				<div class="h-6 w-px bg-slate-700 mx-1 sm:mx-2"></div>
 
 				<button
-					on:click={onClose}
+					onclick={onClose}
 					class="p-2 hover:bg-red-500/20 hover:text-red-400 rounded-lg text-slate-400 transition-colors"
 				>
 					<X class="w-5 h-5" />
@@ -364,20 +366,19 @@
 		<!-- Tabs (Scrollable on mobile) -->
 		<div class="flex p-1 bg-slate-950 rounded-lg border border-slate-800 overflow-x-auto no-scrollbar">
 			{#each tabs as tab}
-					<button
-						class="px-2.5 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 whitespace-nowrap
-                        {selectedTab === tab.id
-						? 'bg-slate-800 text-white shadow-sm'
-						: 'text-slate-500 hover:text-slate-300'}"
-						on:click={() => (selectedTab = tab.id)}
-					>
-						<svelte:component this={tab.icon} class="w-3.5 h-3.5" />
-						{tab.label}
-						<span class="ml-0.5 text-[10px] opacity-60 bg-slate-900/50 px-1.5 rounded-full">
-							{stats[tab.id]}
-						</span>
-					</button>
-			{/each}
+									<button
+										class="px-2.5 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 whitespace-nowrap
+					                        {selectedTab === tab.id
+											? 'bg-slate-800 text-white shadow-sm'
+											: 'text-slate-500 hover:text-slate-300'}"
+										onclick={() => (selectedTab = tab.id)}
+									>
+										{tab.icon({ class: 'w-3.5 h-3.5' })}
+										{tab.label}
+										<span class="ml-0.5 text-[10px] opacity-60 bg-slate-900/50 px-1.5 rounded-full">
+											{stats[tab.id]}
+										</span>
+									</button>			{/each}
 		</div>
 
 		<!-- Search & Options -->
@@ -424,7 +425,7 @@
 			<div class="absolute inset-0 flex flex-col items-center justify-center text-red-400 gap-2">
 				<AlertTriangle class="w-8 h-8 opacity-50" />
 				<span class="text-sm">{error}</span>
-				<button class="text-xs underline hover:text-red-300" on:click={fetchLogs}>Try Again</button>
+				<button class="text-xs underline hover:text-red-300" onclick={fetchLogs}>Try Again</button>
 			</div>
 		{:else if filteredLogs.length === 0}
 			<div class="absolute inset-0 flex flex-col items-center justify-center text-slate-600 gap-2">
@@ -434,7 +435,7 @@
 		{:else}
 			<div
 				bind:this={logContainer}
-				on:scroll={handleScroll}
+				onscroll={handleScroll}
 				class="absolute inset-0 overflow-y-auto overflow-x-auto p-2 font-mono text-[10px] sm:text-xs space-y-0.5 custom-scrollbar"
 			>
 				{#each filteredLogs as l (l.id)}

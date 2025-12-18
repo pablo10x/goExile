@@ -307,17 +307,16 @@
 		<div class="flex flex-wrap items-center gap-2 sm:gap-3">
 			<!-- Health Status -->
 			{#if health}
-				<div
-					class="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border flex items-center gap-2 text-xs sm:text-sm {health.color === 'emerald'
-						? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-						: health.color === 'amber'
-							? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-							: 'bg-red-500/10 border-red-500/30 text-red-400'}"
-					transition:scale={{ start: 0.9, duration: 200 }}
-				>
-					<svelte:component this={health.icon} class="w-4 h-4 sm:w-5 sm:h-5" />
-					<span class="font-semibold">{health.status}</span>
-				</div>
+									<div class="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border flex items-center gap-2 text-xs sm:text-sm {health.color === 'emerald'
+										? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+										: health.color === 'amber'
+											? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+											: 'bg-red-500/10 border-red-500/30 text-red-400'}"
+									transition:scale={{ start: 0.9, duration: 200 }}
+								>
+									{health.icon({ class: 'w-4 h-4 sm:w-5 sm:h-5' })}
+									<span class="font-semibold">{health.status}</span>
+								</div>
 			{/if}
 
 			<!-- Auto Refresh Toggle -->
