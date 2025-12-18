@@ -34,8 +34,17 @@ var (
 	urlFlag    = flag.String("url", "", "URL of the Master Server")
 	spFlag     = flag.Int("sp", 0, "Starting port for game instances")
 	maxFlag    = flag.Int("max", 0, "Maximum number of instances")
-	regionFlag = flag.String("region", "", "Region identifier")
-	// Other config flags can be added here
+	regionFlag = flag.String("region", "", "Region identifier (e.g. US-East)")
+
+	// Spawner specific settings (no .env fallback for these)
+	hostFlag              = flag.String("host", "localhost", "Hostname/IP reachable by Master Server")
+	gameBinaryPathFlag    = flag.String("game-binary", "", "Path to the game server binary relative to install dir")
+	gameDownloadURLFlag   = flag.String("game-download-url", "", "URL to download game server files (if different from Master)")
+	gameDownloadTokenFlag = flag.String("game-download-token", "", "Token for game server download (if required)")
+	gameInstallDirFlag    = flag.String("install-dir", "./game_server", "Directory where game server is installed")
+	portFlag              = flag.String("port", "8080", "Port for the Spawner API itself")
+	stateFilePathFlag     = flag.String("state-file", "instances.json", "Path to the JSON file storing instance state")
+	instancesDirFlag      = flag.String("instances-dir", "./instances", "Directory where game server instances are spawned")
 )
 
 // Load reads configuration from environment variables and command-line flags.
@@ -45,36 +54,44 @@ func Load() (*Config, error) {
 	_ = godotenv.Load(".env")
 
 	conf := &Config{
-		Region:            getEnv("REGION", *regionFlag),
-		Host:              getEnv("SPAWNER_HOST", "localhost"),
-		GameBinaryPath:    getEnv("GAME_BINARY_PATH", ""),
-		GameDownloadURL:   getEnv("GAME_DOWNLOAD_URL", ""),
-		GameDownloadToken: getEnv("GAME_DOWNLOAD_TOKEN", ""),
-		GameInstallDir:    getEnv("GAME_INSTALL_DIR", "./game_server"),
-		Port:              getEnv("SPAWNER_PORT", "8080"),
-		StartingPort:      getEnvAsInt("STARTING_PORT", 7777),
-		MaxInstances:      getEnvAsInt("MAX_INSTANCES", 10),
-		MasterURL:         getEnv("MASTER_URL", "http://localhost:8081"),
-		MasterAPIKey:      getEnv("MASTER_API_KEY", ""),
-		StateFilePath:     getEnv("STATE_FILE_PATH", "instances.json"),
-		InstancesDir:      getEnv("INSTANCES_DIR", "./instances"),
+		// These fields ONLY come from flags or hardcoded defaults
+		Region:            *regionFlag,
+		Host:              *hostFlag,
+		GameBinaryPath:    *gameBinaryPathFlag,
+		GameDownloadURL:   *gameDownloadURLFlag,
+		GameDownloadToken: *gameDownloadTokenFlag,
+		GameInstallDir:    *gameInstallDirFlag,
+		Port:              *portFlag,
+		StartingPort:      *spFlag,
+		MaxInstances:      *maxFlag,
+		StateFilePath:     *stateFilePathFlag,
+		InstancesDir:      *instancesDirFlag,
 		EnrollmentKey:     *keyFlag,
+
+		// These fields can fall back to environment variables
+		MasterURL:    getEnv("MASTER_URL", *urlFlag),
+		MasterAPIKey: getEnv("MASTER_API_KEY", ""),
 	}
 
-	// Override with flags if provided
-	if *urlFlag != "" {
+	// Apply flag overrides where flag default is 0 or ""
+	// For flags that have default values set in flag.String/Int etc., those defaults are already in *flagName
+	// This block ensures explicit 0/"" values from flags are honored, and overrides env vars if both present.
+	if *urlFlag != "" { // Only override env if flag was explicitly provided
 		conf.MasterURL = *urlFlag
 	}
-	if *spFlag != 0 {
+	if *spFlag == 0 { // If flag default (0) was not changed, use env or hardcoded default
+		conf.StartingPort = getEnvAsInt("STARTING_PORT", 7777)
+	} else { // Flag was provided
 		conf.StartingPort = *spFlag
 	}
-	if *maxFlag != 0 {
+	if *maxFlag == 0 { // If flag default (0) was not changed, use env or hardcoded default
+		conf.MaxInstances = getEnvAsInt("MAX_INSTANCES", 10)
+	} else { // Flag was provided
 		conf.MaxInstances = *maxFlag
 	}
-	if *regionFlag != "" {
-		conf.Region = *regionFlag
-	}
+	// No longer overriding region with env, it's flag or nothing
 
+	// Final validation (handles missing required fields that are no longer defaulting to env)
 	if err := conf.Validate(); err != nil {
 		return nil, err
 	}
@@ -85,8 +102,7 @@ func Load() (*Config, error) {
 // Validate checks if the configuration is valid and sufficient to start the application.
 func (c *Config) Validate() error {
 	if c.Region == "" {
-		// Region is required for identity
-		return fmt.Errorf("REGION is required (use -region flag or env)")
+		return fmt.Errorf("REGION is required (use -region flag)")
 	}
 	if c.GameBinaryPath == "" {
 		return fmt.Errorf("GAME_BINARY_PATH is required")
