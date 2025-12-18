@@ -28,18 +28,19 @@ type Config struct {
 	EnrollmentKey     string // One-time enrollment key for initial registration
 }
 
-// Load reads configuration from environment variables and command-line flags.
-// It attempts to load .env files from current and parent directories to support
-// different running contexts (e.g., direct binary execution vs `go run`).
-func Load() (*Config, error) {
-	// Parse command-line flags first
-	keyFlag := flag.String("key", "", "One-time enrollment key for initial registration with master server")
-	urlFlag := flag.String("url", "", "URL of the Master Server")
-	spFlag := flag.Int("sp", 0, "Starting port for game instances")
-	maxFlag := flag.Int("max", 0, "Maximum number of instances")
-	regionFlag := flag.String("region", "", "Region identifier")
-	flag.Parse()
+// Package-level flag variables
+var (
+	keyFlag    = flag.String("key", "", "One-time enrollment key for initial registration with master server")
+	urlFlag    = flag.String("url", "", "URL of the Master Server")
+	spFlag     = flag.Int("sp", 0, "Starting port for game instances")
+	maxFlag    = flag.Int("max", 0, "Maximum number of instances")
+	regionFlag = flag.String("region", "", "Region identifier")
+	// Other config flags can be added here
+)
 
+// Load reads configuration from environment variables and command-line flags.
+// It assumes flag.Parse() has already been called.
+func Load() (*Config, error) {
 	// Try loading .env from local directory only
 	_ = godotenv.Load(".env")
 

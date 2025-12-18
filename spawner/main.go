@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"flag" // Import the flag package
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -20,7 +21,36 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Define the application version
+const appVersion = "1.0.0" 
+
 func main() {
+	// 0. Handle command-line flags immediately
+	versionFlag := flag.Bool("v", false, "Print version information and exit")
+	flag.Parse() // Parse flags here so -v can be caught early
+
+	if *versionFlag {
+		fmt.Printf("Spawner Version: %s\n", appVersion)
+		fmt.Println("Available commands:")
+		flag.PrintDefaults() // Print default usage for all flags
+		os.Exit(0)
+	}
+
+	// Customize usage output
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "  The spawner connects to a Master Server to manage game instances.\n")
+		fmt.Fprintf(os.Stderr, "  Configuration can be set via environment variables or command-line flags.\n")
+		fmt.Fprintf(os.Stderr, "  Command-line flags take precedence over environment variables.\n\n")
+		fmt.Fprintf(os.Stderr, "Flags:\n")
+		flag.PrintDefaults()
+		fmt.Fprintf(os.Stderr, "\nExamples:\n")
+		fmt.Fprintf(os.Stderr, "  %s -key <enrollment_key>                   (Initial enrollment)\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "  %s -url http://localhost:8081 -sp 8000     (Run with specific Master and starting port)\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "  %s -region us-east -max 10                 (Set region and max instances)\n", os.Args[0])
+	}
+	// Note: flag.Parse() is already called above, so explicit usage printing will be done after -v is handled.
+
 	// 1. Setup Logging (File based for production)
 	logFile, err := os.OpenFile("spawner.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
@@ -32,7 +62,7 @@ func main() {
 	slog.SetDefault(logger)
 
 	// 2. Load Config
-	cfg, err := config.Load()
+	cfg, err := config.Load() // config.Load now calls flag.Parse() internally as well for non-version flags
 	if err != nil {
 		logger.Error("Failed to load configuration", "error", err)
 		os.Exit(1)
