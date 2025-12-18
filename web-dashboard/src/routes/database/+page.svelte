@@ -22,7 +22,8 @@
 		Server,
 		BarChart3,
 		Shield,
-		FolderTree
+		FolderTree,
+		Menu
 	} from 'lucide-svelte';
 	import SchemaBrowser from '$lib/components/SchemaBrowser.svelte';
 	import QueryTabs from '$lib/components/database/QueryTabs.svelte';
@@ -140,6 +141,9 @@
 		}
 	];
 
+	// Flattened items for mobile nav
+	const allMenuItems = menuCategories.flatMap(c => c.items);
+
 	// --- Tab Management ---
 
 	function openTab(id: string, label: string, type: any, data: any = {}) {
@@ -250,10 +254,28 @@
 	});
 </script>
 
-<div class="flex h-[calc(100vh-64px)] overflow-hidden bg-slate-950 text-slate-200">
-	<!-- Sidebar -->
+<div class="flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden bg-slate-950 text-slate-200">
+	<!-- Mobile Top Nav (Horizontal Scroll) -->
+	<div class="md:hidden border-b border-slate-800/80 bg-slate-900/50 overflow-x-auto no-scrollbar">
+		<div class="flex items-center gap-2 p-2 min-w-max">
+			{#each allMenuItems as item}
+				{@const isActive = activeTabId === item.id}
+				{@const colors = getColorClasses(item.color, isActive)}
+				<button
+					onclick={() => openTab(item.id, item.label, item.type)}
+					class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all
+					{isActive ? colors.active : 'text-slate-400 ' + colors.hover}"
+				>
+					<item.icon class="w-4 h-4" />
+					{item.label}
+				</button>
+			{/each}
+		</div>
+	</div>
+
+	<!-- Desktop Sidebar -->
 	<div
-		class="flex flex-col border-r border-slate-800/80 transition-all duration-300 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 {isSidebarOpen
+		class="hidden md:flex flex-col border-r border-slate-800/80 transition-all duration-300 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 {isSidebarOpen
 			? 'w-64'
 			: 'w-16'}"
 	>
@@ -361,17 +383,17 @@
 						>
 							<!-- Header -->
 							<div
-								class="p-8 border-b border-slate-800/50 bg-gradient-to-r from-blue-500/5 via-transparent to-cyan-500/5"
+								class="p-4 sm:p-8 border-b border-slate-800/50 bg-gradient-to-r from-blue-500/5 via-transparent to-cyan-500/5"
 							>
 								<div class="flex items-center gap-4 mb-2">
 									<div
 										class="p-3 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-xl border border-blue-500/30 shadow-lg shadow-blue-500/10"
 									>
-										<Database class="w-8 h-8 text-blue-400" />
+										<Database class="w-6 h-6 sm:w-8 sm:h-8 text-blue-400" />
 									</div>
 									<div>
-										<h1 class="text-3xl font-bold text-slate-100">Database Overview</h1>
-										<p class="text-slate-500 mt-1">
+										<h1 class="text-2xl sm:text-3xl font-bold text-slate-100">Database Overview</h1>
+										<p class="text-sm text-slate-500 mt-1 hidden sm:block">
 											Monitor your PostgreSQL database performance and health
 										</p>
 									</div>
@@ -379,8 +401,8 @@
 							</div>
 
 							<!-- Stats Grid -->
-							<div class="p-8">
-								<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+							<div class="p-4 sm:p-8">
+								<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
 									<!-- Database Size Card -->
 									<div
 										class="relative overflow-hidden bg-gradient-to-br from-slate-800/80 to-slate-800/40 border border-slate-700/50 rounded-2xl p-6 hover:border-blue-500/30 transition-all group"
@@ -472,7 +494,7 @@
 													>Version</span
 												>
 											</div>
-											<div class="text-3xl font-bold text-slate-100 mb-1">
+											<div class="text-3xl font-bold text-slate-100 mb-1 truncate">
 												{dbStats.version.split(' ')[0] || 'PostgreSQL'}
 											</div>
 											<div class="text-sm text-slate-500 truncate">
@@ -620,5 +642,14 @@
 
 	.overflow-y-auto::-webkit-scrollbar-thumb:hover {
 		background: rgb(71 85 105 / 0.5);
+	}
+
+	/* Hide scrollbar for mobile horizontal nav */
+	.no-scrollbar::-webkit-scrollbar {
+		display: none;
+	}
+	.no-scrollbar {
+		-ms-overflow-style: none;
+		scrollbar-width: none;
 	}
 </style>

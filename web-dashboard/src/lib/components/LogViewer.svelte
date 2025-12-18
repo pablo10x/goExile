@@ -25,7 +25,7 @@
 		isOpen = false,
 		onClose = () => {},
 		embedded = false
-	} = $props<{
+	} = $props<{ 
 		spawnerId: number;
 		isOpen?: boolean;
 		onClose?: () => void;
@@ -98,8 +98,8 @@
 	const tabs: TabDef[] = [
 		{ id: 'all', label: 'All', icon: BarChart3, color: 'text-slate-400' },
 		{ id: 'info', label: 'Info', icon: Info, color: 'text-blue-400' },
-		{ id: 'warn', label: 'Warnings', icon: AlertTriangle, color: 'text-yellow-400' },
-		{ id: 'error', label: 'Errors', icon: XCircle, color: 'text-red-400' }
+		{ id: 'warn', label: 'Warn', icon: AlertTriangle, color: 'text-yellow-400' },
+		{ id: 'error', label: 'Error', icon: XCircle, color: 'text-red-400' }
 	];
 
 	function parseLogLine(line: string, index: number): ParsedLogEntry {
@@ -234,17 +234,6 @@
 		shouldAutoScroll = scrollHeight - scrollTop - clientHeight < 50;
 	}
 
-	async function scrollBottom() {
-		// This function is no longer needed as $effect handles auto-scrolling
-		// Retained for now to avoid breaking other parts until fully refactored.
-		// if (shouldAutoScroll && logContainer) {
-		// 	await tick();
-		// 	logContainer.scrollTop = logContainer.scrollHeight;
-		// }
-	}
-
-
-
 	// Auto-scroll logic: use $effect for side effects
 	$effect(() => {
 		if (filteredLogs.length > 0 && shouldAutoScroll && logContainer) {
@@ -287,7 +276,7 @@
 {#if isOpen}
 	{#if !embedded}
 		<div
-			class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+			class="fixed inset-0 z-50 flex items-center justify-center sm:p-4 bg-black/60 backdrop-blur-sm"
 			transition:fade={{ duration: 200 }}
 		>
 			<!-- Backdrop click to close -->
@@ -300,8 +289,9 @@
 				aria-label="Close"
 			></div>
 
+			<!-- Modal Container - Full screen on mobile, limited on desktop -->
 			<div
-				class="relative w-full max-w-6xl h-[85vh] bg-slate-900 rounded-xl border border-slate-700 shadow-2xl flex flex-col overflow-hidden"
+				class="relative w-full h-full sm:h-[85vh] sm:max-w-6xl bg-slate-900 sm:rounded-xl border-0 sm:border border-slate-700 shadow-2xl flex flex-col overflow-hidden"
 				transition:scale={{ start: 0.95, duration: 200, easing: cubicOut }}
 			>
 				<div class="contents">
@@ -322,22 +312,22 @@
 	<div
 		class="px-4 py-3 border-b border-slate-700 flex justify-between items-center bg-slate-800/50"
 	>
-		<div class="flex items-center gap-3">
-			<h2 class="text-white font-semibold text-lg flex items-center gap-2">
-				<span class="text-slate-400"># {spawnerId}</span> Console Logs
+		<div class="flex items-center gap-3 overflow-hidden">
+			<h2 class="text-white font-semibold text-base sm:text-lg flex items-center gap-2 truncate">
+				<span class="text-slate-400">#{spawnerId}</span> Logs
 				{#if fileSize > 0}
 					<span
-						class="text-xs text-slate-500 font-mono ml-2 border border-slate-700 rounded px-1.5 py-0.5 bg-slate-900/50"
+						class="text-[10px] text-slate-500 font-mono border border-slate-700 rounded px-1.5 py-0.5 bg-slate-900/50 hidden sm:inline-block"
 						>{formatBytes(fileSize)}</span
 					>
 				{/if}
 			</h2>
 			{#if loading && parsedLogs.length > 0}
-				<RefreshCw class="w-4 h-4 text-slate-400 animate-spin" />
+				<RefreshCw class="w-3.5 h-3.5 text-slate-400 animate-spin shrink-0" />
 			{/if}
 		</div>
 
-		<div class="flex items-center gap-2">
+		<div class="flex items-center gap-1 sm:gap-2">
 			<button
 				class="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors"
 				title="Refresh Now"
@@ -355,7 +345,7 @@
 			</button>
 
 			{#if !embedded}
-				<div class="h-6 w-px bg-slate-700 mx-2"></div>
+				<div class="h-6 w-px bg-slate-700 mx-1 sm:mx-2"></div>
 
 				<button
 					on:click={onClose}
@@ -369,55 +359,57 @@
 
 	<!-- Toolbar: Tabs & Search -->
 	<div
-		class="px-4 py-3 bg-slate-900 border-b border-slate-800 flex flex-col sm:flex-row gap-4 justify-between items-center"
+		class="px-3 sm:px-4 py-3 bg-slate-900 border-b border-slate-800 flex flex-col md:flex-row gap-3 md:items-center"
 	>
-		<!-- Tabs -->
-		<div class="flex p-1 bg-slate-950 rounded-lg border border-slate-800">
+		<!-- Tabs (Scrollable on mobile) -->
+		<div class="flex p-1 bg-slate-950 rounded-lg border border-slate-800 overflow-x-auto no-scrollbar">
 			{#each tabs as tab}
-				<button
-					class="px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2
+					<button
+						class="px-2.5 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 whitespace-nowrap
                         {selectedTab === tab.id
 						? 'bg-slate-800 text-white shadow-sm'
 						: 'text-slate-500 hover:text-slate-300'}"
-					on:click={() => (selectedTab = tab.id)}
-				>
-					<svelte:component this={tab.icon} class="w-3.5 h-3.5" />
-					{tab.label}
-					<span class="ml-1 text-xs opacity-60 bg-slate-900/50 px-1.5 rounded-full">
-						{stats[tab.id]}
-					</span>
-				</button>
+						on:click={() => (selectedTab = tab.id)}
+					>
+						<svelte:component this={tab.icon} class="w-3.5 h-3.5" />
+						{tab.label}
+						<span class="ml-0.5 text-[10px] opacity-60 bg-slate-900/50 px-1.5 rounded-full">
+							{stats[tab.id]}
+						</span>
+					</button>
 			{/each}
 		</div>
 
-		<!-- Search & Auto-Refresh -->
-		<div class="flex items-center gap-3 w-full sm:w-auto">
-			<div class="relative w-full sm:w-64">
-				<Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+		<!-- Search & Options -->
+		<div class="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
+			<div class="relative w-full sm:w-56">
+				<Search class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
 				<input
 					type="text"
 					placeholder="Search logs..."
 					bind:value={searchTerm}
-					class="w-full pl-9 pr-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-sm text-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+					class="w-full pl-9 pr-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs sm:text-sm text-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
 				/>
 			</div>
 
-			<label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer select-none">
-				<input
-					type="checkbox"
-					bind:checked={shouldAutoScroll}
-					class="rounded bg-slate-800 border-slate-700 text-blue-500 focus:ring-0 focus:ring-offset-0"
-				/>
-				<span>Auto-scroll</span>
-			</label>
-			<label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer select-none">
-				<input
-					type="checkbox"
-					bind:checked={isAutoRefreshing}
-					class="rounded bg-slate-800 border-slate-700 text-blue-500 focus:ring-0 focus:ring-offset-0"
-				/>
-				<span>Auto-refresh</span>
-			</label>
+			<div class="flex items-center gap-4 text-xs text-slate-400 select-none">
+				<label class="flex items-center gap-2 cursor-pointer">
+					<input
+						type="checkbox"
+						bind:checked={shouldAutoScroll}
+						class="rounded bg-slate-800 border-slate-700 text-blue-500 focus:ring-0 w-3.5 h-3.5"
+					/>
+					<span>Auto-scroll</span>
+				</label>
+				<label class="flex items-center gap-2 cursor-pointer">
+					<input
+						type="checkbox"
+						bind:checked={isAutoRefreshing}
+						class="rounded bg-slate-800 border-slate-700 text-blue-500 focus:ring-0 w-3.5 h-3.5"
+					/>
+					<span>Auto-refresh</span>
+				</label>
+			</div>
 		</div>
 	</div>
 
@@ -443,36 +435,36 @@
 			<div
 				bind:this={logContainer}
 				on:scroll={handleScroll}
-				class="absolute inset-0 overflow-y-auto overflow-x-hidden p-2 font-mono text-xs space-y-0.5 custom-scrollbar"
+				class="absolute inset-0 overflow-y-auto overflow-x-auto p-2 font-mono text-[10px] sm:text-xs space-y-0.5 custom-scrollbar"
 			>
 				{#each filteredLogs as l (l.id)}
 					<div
-						class="flex items-start gap-3 hover:bg-slate-900/50 px-2 py-1 rounded select-text group transition-colors"
+						class="flex items-start gap-2 sm:gap-3 hover:bg-slate-900/50 px-1.5 sm:px-2 py-1 rounded select-text group transition-colors"
 					>
 						<!-- Time -->
-						<span class="text-slate-600 shrink-0 w-24 tabular-nums select-none">{l.time}</span>
+						<span class="text-slate-600 shrink-0 w-16 sm:w-24 tabular-nums select-none truncate">{l.time}</span>
 
 						<!-- Level -->
-						<span class="shrink-0 w-12 font-bold select-none {getLevelClass(l.level)}">
+						<span class="shrink-0 w-8 sm:w-12 font-bold select-none {getLevelClass(l.level)}">
 							{l.level}
 						</span>
 
 						<!-- Message -->
-						<div class="flex-1 min-w-0 break-words text-slate-300">
+						<div class="flex-1 min-w-0 break-all sm:break-words text-slate-300">
 							<span>{l.message}</span>
 
-							<!-- Structured Context / Error Cause -->
+							<!-- Structured Context -->
 							{#if l.raw && Object.keys(l.raw).length > 3}
 								<div
-									class="mt-1 ml-2 text-slate-500 text-[10px] space-y-1 border-l-2 border-slate-800 pl-2 opacity-80 group-hover:opacity-100 transition-opacity"
+									class="mt-1 ml-1 sm:ml-2 text-slate-500 text-[9px] sm:text-[10px] space-y-1 border-l-2 border-slate-800 pl-2 opacity-80 group-hover:opacity-100 transition-opacity"
 								>
 									{#each Object.entries(l.raw) as [k, v]}
 										{#if !['time', 'level', 'msg', 'message'].includes(k)}
-											<div class="flex gap-2">
+											<div class="flex gap-2 flex-wrap">
 												<span class="text-slate-600">{k}:</span>
-												<span class="text-slate-400 font-mono whitespace-pre-wrap"
-													>{JSON.stringify(v)}</span
-												>
+												<span class="text-slate-400 font-mono whitespace-pre-wrap break-all"
+														>{JSON.stringify(v)}</span
+													>
 											</div>
 										{/if}
 									{/each}
@@ -484,7 +476,6 @@
 
 				{#if shouldAutoScroll}
 					<div class="h-4"></div>
-					<!-- Spacer at bottom -->
 				{/if}
 			</div>
 		{/if}
@@ -502,6 +493,7 @@
 	/* Custom Scrollbar for the log container */
 	.custom-scrollbar::-webkit-scrollbar {
 		width: 10px;
+		height: 10px;
 	}
 	.custom-scrollbar::-webkit-scrollbar-track {
 		background: #0f172a; /* slate-950 */
@@ -513,5 +505,14 @@
 	}
 	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
 		background: #475569; /* slate-600 */
+	}
+	
+	/* Hide scrollbar for tab nav */
+	.no-scrollbar::-webkit-scrollbar {
+		display: none;
+	}
+	.no-scrollbar {
+		-ms-overflow-style: none; /* IE and Edge */
+		scrollbar-width: none; /* Firefox */
 	}
 </style>
