@@ -51,7 +51,15 @@ func (r *Registry) Register(s *Spawner) (int, error) {
 	}
 
 	if dbConn != nil {
-		s.ID = 0 // Ensure ID is 0 so DB assigns a new one
+		// Only force ID to 0 if we don't have one, to ensure new record creation if intended.
+		// But here we might want to update.
+		// If s.ID is 0, SaveSpawner will try INSERT ... ON CONFLICT(host, port) DO UPDATE ...
+		// which returns the existing ID if it matches.
+		// So s.ID = 0 is actually fine for Upsert by Host/Port.
+		
+		// The issue is if we want to BLOCK creation if it doesn't exist.
+		// SaveSpawner creates if not exists.
+		
 		id, err := SaveSpawner(dbConn, s)
 		if err != nil {
 			return 0, fmt.Errorf("failed to save spawner to DB: %w", err)
@@ -129,6 +137,28 @@ func (r *Registry) Get(id int) (*Spawner, bool) {
 	defer r.mu.RUnlock()
 	s, ok := r.items[id]
 	return s, ok
+}
+
+func (r *Registry) Lookup(host string, port int) (*Spawner, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	// Check memory cache first
+	for _, s := range r.items {
+		if s.Host == host && s.Port == port {
+			return s, true
+		}
+	}
+
+	// Check DB if not in memory
+	if dbConn != nil {
+		s, err := GetSpawnerByHostPort(dbConn, host, port)
+		if err == nil && s != nil {
+			return s, true
+		}
+	}
+
+	return nil, false
 }
 
 func (r *Registry) List() []Spawner {

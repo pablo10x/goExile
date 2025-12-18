@@ -412,6 +412,36 @@ func GetSpawnerByID(db *sqlx.DB, id int) (*Spawner, error) {
 	return out, nil
 }
 
+func GetSpawnerByHostPort(db *sqlx.DB, host string, port int) (*Spawner, error) {
+	var out *Spawner
+	do := func() error {
+		row := db.QueryRowx(`SELECT id, name, region, host, port, max_instances, current_instances, status, last_seen, game_version FROM spawners WHERE host = $1 AND port = $2`, host, port)
+		var s Spawner
+		var lastSeenUnix int64
+		var gameVersion sql.NullString
+		var name sql.NullString
+		if err := row.Scan(&s.ID, &name, &s.Region, &s.Host, &s.Port, &s.MaxInstances, &s.CurrentInstances, &s.Status, &lastSeenUnix, &gameVersion); err != nil {
+			if err == sql.ErrNoRows {
+				return nil
+			}
+			return fmt.Errorf("scan spawner: %w", err)
+		}
+		s.LastSeen = time.Unix(lastSeenUnix, 0).UTC()
+		if gameVersion.Valid {
+			s.GameVersion = gameVersion.String
+		}
+		if name.Valid {
+			s.Name = name.String
+		}
+		out = &s
+		return nil
+	}
+	if err := execWithRetry(do); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // -- Server Versions --
 
 func SaveServerVersion(db *sqlx.DB, v *GameServerVersion) error {

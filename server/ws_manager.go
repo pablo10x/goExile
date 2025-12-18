@@ -344,7 +344,39 @@ func (c *SpawnerConnection) handleMessage(msg WSMessage) {
 	case "REGISTER":
 		var s Spawner
 		if err := json.Unmarshal(msg.Payload, &s); err == nil {
-			// Register spawner with full metadata and get assigned ID
+			// Enforce Enrollment: Check if spawner exists
+			existing, found := registry.Lookup(s.Host, s.Port)
+			if !found {
+				log.Printf("❌ Rejected connection from unenrolled spawner: %s:%d", s.Host, s.Port)
+				errorResp := WSMessage{
+					Type: "REGISTER_RESPONSE",
+					Payload: func() json.RawMessage {
+						data, _ := json.Marshal(map[string]interface{}{
+							"status": "error",
+							"error":  "Spawner not enrolled. Please use the dashboard to generate an enrollment key.",
+						})
+						return data
+					}(),
+				}
+				if bytes, err := json.Marshal(errorResp); err == nil {
+					select {
+					case c.WriteChan <- bytes:
+					default:
+					}
+				}
+				// Close connection after sending error
+				go func() {
+					time.Sleep(1 * time.Second)
+					c.Manager.Unregister <- c
+				}()
+				return
+			}
+
+			// Maintain Identity
+			s.ID = existing.ID
+			s.Name = existing.Name
+
+			// Register spawner (Update)
 			id, err := registry.Register(&s)
 			if err != nil {
 				log.Printf("❌ Failed to register spawner via WS: %v", err)
