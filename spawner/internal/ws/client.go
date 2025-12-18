@@ -120,7 +120,7 @@ func (c *Client) connect() error {
 
 func (c *Client) sendRegister() error {
 	port, _ := strconv.Atoi(c.config.Port)
-	maxInstances := c.config.MaxGamePort - c.config.MinGamePort
+	maxInstances := c.config.MaxInstances
 	if maxInstances < 1 {
 		maxInstances = 1
 	}
@@ -265,7 +265,7 @@ func (c *Client) heartbeatLoop(done chan struct{}) {
 		case <-done:
 			return
 		case <-ticker.C:
-			maxInstances := c.config.MaxGamePort - c.config.MinGamePort
+			maxInstances := c.config.MaxInstances
 
 			// Use cached metrics
 			c.metricsMu.RLock()

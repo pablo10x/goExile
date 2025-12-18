@@ -63,8 +63,8 @@ func TestSpawnIntegration(t *testing.T) {
 
 func TestFindAvailablePort(t *testing.T) {
 	cfg := &config.Config{
-		MinGamePort: 9010,
-		MaxGamePort: 9012,
+		StartingPort: 9010,
+		MaxInstances: 2,
 	}
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	m := NewManager(cfg, logger)

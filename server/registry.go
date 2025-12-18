@@ -39,6 +39,17 @@ func (r *Registry) Register(s *Spawner) (int, error) {
 	s.LastSeen = time.Now().UTC()
 	s.Status = "Online"
 
+	// Assign Identity (Giga Chad Name) if missing
+	if s.Name == "" {
+		existingNames := make(map[string]bool)
+		for _, existing := range r.items {
+			if existing.Name != "" {
+				existingNames[existing.Name] = true
+			}
+		}
+		s.Name = GenerateGigaChadName(existingNames)
+	}
+
 	if dbConn != nil {
 		s.ID = 0 // Ensure ID is 0 so DB assigns a new one
 		id, err := SaveSpawner(dbConn, s)

@@ -10,7 +10,8 @@ type ErrorResponse struct {
 // Spawner instance registered by the Spawner service
 type Spawner struct {
 	ID               int       `json:"id"`
-	Region           string    `json:"region"`
+	Name             string    `json:"name"`   // Giga Chad Name (Identity)
+	Region           string    `json:"region"` // Geographic region (e.g. US-East)
 	Host             string    `json:"host"`
 	Port             int       `json:"port"`
 	MaxInstances     int       `json:"max_instances"`

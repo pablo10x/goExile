@@ -71,6 +71,18 @@ func InitDB(dsn string) (*sqlx.DB, error) {
 		}
 	}
 
+	// Check if 'name' column exists in spawners
+	var hasNameCol int
+	err = db.QueryRow(`SELECT COUNT(*) FROM information_schema.columns WHERE table_name='spawners' AND column_name='name'`).Scan(&hasNameCol)
+	if err == nil && hasNameCol == 0 {
+		fmt.Println("Migrating DB: Adding 'name' column to spawners table...")
+		if _, err := db.Exec(`ALTER TABLE spawners ADD COLUMN name TEXT`); err != nil {
+			if !strings.Contains(err.Error(), "duplicate column") && !strings.Contains(err.Error(), "already exists") {
+				fmt.Printf("warning: failed to migrate spawners table (name): %v\n", err)
+			}
+		}
+	}
+
 	// Seed default configuration if table is empty
 	var configCount int
 	err = db.QueryRow(`SELECT COUNT(*) FROM server_config`).Scan(&configCount)
@@ -142,6 +154,7 @@ func createTables(db *sqlx.DB) error {
 
 	q := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS spawners (
 		id %s,
+		name TEXT,
 		region TEXT,
 		host TEXT NOT NULL,
 		port INTEGER NOT NULL,
@@ -233,9 +246,10 @@ func SaveSpawner(db *sqlx.DB, s *Spawner) (int, error) {
 		defer tx.Rollback()
 
 		if s.ID == 0 {
-			query := `INSERT INTO spawners (region, host, port, max_instances, current_instances, status, last_seen, game_version)
-				VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+			query := `INSERT INTO spawners (name, region, host, port, max_instances, current_instances, status, last_seen, game_version)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 				ON CONFLICT(host, port) DO UPDATE SET
+				name=excluded.name,
 				region=excluded.region,
 				max_instances=excluded.max_instances,
 				current_instances=excluded.current_instances,
@@ -245,7 +259,7 @@ func SaveSpawner(db *sqlx.DB, s *Spawner) (int, error) {
 				RETURNING id`
 
 			var id int64
-			err = tx.QueryRow(query, s.Region, s.Host, s.Port, s.MaxInstances, s.CurrentInstances, s.Status, s.LastSeen.Unix(), s.GameVersion).Scan(&id)
+			err = tx.QueryRow(query, s.Name, s.Region, s.Host, s.Port, s.MaxInstances, s.CurrentInstances, s.Status, s.LastSeen.Unix(), s.GameVersion).Scan(&id)
 			if err != nil {
 				return fmt.Errorf("upsert spawner: %w", err)
 			}
@@ -256,9 +270,10 @@ func SaveSpawner(db *sqlx.DB, s *Spawner) (int, error) {
 			return nil
 		}
 
-		query := `INSERT INTO spawners (id, region, host, port, max_instances, current_instances, status, last_seen, game_version)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		query := `INSERT INTO spawners (id, name, region, host, port, max_instances, current_instances, status, last_seen, game_version)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 			ON CONFLICT(id) DO UPDATE SET
+			name=excluded.name,
 			region=excluded.region,
 			host=excluded.host,
 			port=excluded.port,
@@ -269,7 +284,7 @@ func SaveSpawner(db *sqlx.DB, s *Spawner) (int, error) {
 			game_version=excluded.game_version`
 
 		_, err = tx.Exec(query,
-			s.ID, s.Region, s.Host, s.Port, s.MaxInstances, s.CurrentInstances, s.Status, s.LastSeen.Unix(), s.GameVersion)
+			s.ID, s.Name, s.Region, s.Host, s.Port, s.MaxInstances, s.CurrentInstances, s.Status, s.LastSeen.Unix(), s.GameVersion)
 		if err != nil {
 			return fmt.Errorf("upsert spawner (id): %w", err)
 		}
@@ -289,7 +304,7 @@ func SaveSpawner(db *sqlx.DB, s *Spawner) (int, error) {
 
 // LoadSpawners returns all spawners from DB.
 func LoadSpawners(db *sqlx.DB) ([]Spawner, error) {
-	rows, err := db.Queryx(`SELECT id, region, host, port, max_instances, current_instances, status, last_seen, game_version FROM spawners`)
+	rows, err := db.Queryx(`SELECT id, name, region, host, port, max_instances, current_instances, status, last_seen, game_version FROM spawners`)
 	if err != nil {
 		return nil, fmt.Errorf("query spawners: %w", err)
 	}
@@ -301,12 +316,16 @@ func LoadSpawners(db *sqlx.DB) ([]Spawner, error) {
 
 		var lastSeenUnix int64
 		var gameVersion sql.NullString
-		if err := rows.Scan(&s.ID, &s.Region, &s.Host, &s.Port, &s.MaxInstances, &s.CurrentInstances, &s.Status, &lastSeenUnix, &gameVersion); err != nil {
+		var name sql.NullString
+		if err := rows.Scan(&s.ID, &name, &s.Region, &s.Host, &s.Port, &s.MaxInstances, &s.CurrentInstances, &s.Status, &lastSeenUnix, &gameVersion); err != nil {
 			return nil, fmt.Errorf("scan: %w", err)
 		}
 		s.LastSeen = time.Unix(lastSeenUnix, 0).UTC()
 		if gameVersion.Valid {
 			s.GameVersion = gameVersion.String
+		}
+		if name.Valid {
+			s.Name = name.String
 		}
 		out = append(out, s)
 	}
@@ -366,11 +385,12 @@ func GetInstanceActions(db *sqlx.DB, spawnerID int, instanceID string) ([]Instan
 func GetSpawnerByID(db *sqlx.DB, id int) (*Spawner, error) {
 	var out *Spawner
 	do := func() error {
-		row := db.QueryRowx(`SELECT id, region, host, port, max_instances, current_instances, status, last_seen, game_version FROM spawners WHERE id = $1`, id)
+		row := db.QueryRowx(`SELECT id, name, region, host, port, max_instances, current_instances, status, last_seen, game_version FROM spawners WHERE id = $1`, id)
 		var s Spawner
 		var lastSeenUnix int64
 		var gameVersion sql.NullString
-		if err := row.Scan(&s.ID, &s.Region, &s.Host, &s.Port, &s.MaxInstances, &s.CurrentInstances, &s.Status, &lastSeenUnix, &gameVersion); err != nil {
+		var name sql.NullString
+		if err := row.Scan(&s.ID, &name, &s.Region, &s.Host, &s.Port, &s.MaxInstances, &s.CurrentInstances, &s.Status, &lastSeenUnix, &gameVersion); err != nil {
 			if err == sql.ErrNoRows {
 				return nil // Return nil if not found, handled by caller
 			}
@@ -379,6 +399,9 @@ func GetSpawnerByID(db *sqlx.DB, id int) (*Spawner, error) {
 		s.LastSeen = time.Unix(lastSeenUnix, 0).UTC()
 		if gameVersion.Valid {
 			s.GameVersion = gameVersion.String
+		}
+		if name.Valid {
+			s.Name = name.String
 		}
 		out = &s
 		return nil

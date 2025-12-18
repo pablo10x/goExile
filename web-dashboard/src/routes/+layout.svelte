@@ -165,15 +165,15 @@
 {:else}
 	{#if $isAuthenticated && page.url.pathname !== '/login'}
 		<div class="flex h-screen text-slate-300 overflow-hidden relative">
-			<!-- Global Restart Banner -->
+			<!-- Global Restart Banner (Mobile adjusted) -->
 			{#if $restartRequired}
 				<div
-					class="absolute top-0 left-64 right-0 z-50 bg-orange-600/90 backdrop-blur-md text-white px-6 py-2 flex justify-between items-center shadow-lg border-b border-orange-500/50 animate-slide-fade"
+					class="absolute top-0 md:left-64 left-0 right-0 z-50 bg-orange-600/90 backdrop-blur-md text-white px-4 py-2 flex justify-between items-center shadow-lg border-b border-orange-500/50 animate-slide-fade text-xs md:text-sm"
 				>
 					<div class="flex items-center gap-2">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
-							class="w-5 h-5 animate-pulse"
+							class="w-4 h-4 animate-pulse shrink-0"
 							viewBox="0 0 24 24"
 							fill="none"
 							stroke="currentColor"
@@ -187,23 +187,21 @@
 							<line x1="12" y1="9" x2="12" y2="13"></line>
 							<line x1="12" y1="17" x2="12.01" y2="17"></line>
 						</svg>
-						<span class="font-medium"
-							>Configuration changes detected. Restart required to apply.</span
-						>
+						<span class="font-medium truncate">Restart required.</span>
 					</div>
 					<button
 						onclick={restartServer}
 						disabled={restarting}
-						class="px-4 py-1 bg-white text-orange-600 rounded font-bold hover:bg-orange-50 transition-colors shadow-sm text-sm disabled:opacity-50"
+						class="px-3 py-1 bg-white text-orange-600 rounded font-bold hover:bg-orange-50 transition-colors shadow-sm text-xs disabled:opacity-50 whitespace-nowrap"
 					>
-						{restarting ? 'Restarting...' : 'Restart Now'}
+						{restarting ? '...' : 'Restart'}
 					</button>
 				</div>
 			{/if}
 
-			<!-- Sidebar with 3D Background -->
+			<!-- Desktop Sidebar (Hidden on Mobile) -->
 			<aside
-				class="relative transition-all duration-300 ease-in-out bg-slate-950 border-r border-slate-800 flex flex-col shrink-0 overflow-hidden shadow-2xl z-20 {isSidebarCollapsed ? 'w-20' : 'w-64'}"
+				class="hidden md:flex relative transition-all duration-300 ease-in-out bg-slate-950 border-r border-slate-800 flex-col shrink-0 overflow-hidden shadow-2xl z-20 {isSidebarCollapsed ? 'w-20' : 'w-64'}"
 			>
 				<!-- Glass Surface -->
 				<div
@@ -486,13 +484,82 @@
 				</div>
 			</aside>
 
-			<!-- Main Content -->
-			<main class="flex-1 overflow-auto relative">
-				<!-- Top shadow/fade for content scrolling under -->
-				<div class="max-w-7xl mx-auto px-6 sm:px-8 py-8 min-h-full">
-					{@render children()}
-				</div>
-			</main>
+			<div class="flex-1 flex flex-col h-full overflow-hidden relative">
+				<!-- Mobile Top Header -->
+				<header class="md:hidden h-14 bg-slate-950/80 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-4 z-30 shrink-0">
+					<div class="flex items-center gap-2">
+						<div class="w-2.5 h-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full animate-pulse"></div>
+						<h1 class="text-lg font-bold text-slate-50 bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent">
+							GoExile
+						</h1>
+					</div>
+					<div class="flex items-center gap-3">
+						<button class="relative text-slate-400 hover:text-white transition-colors">
+							<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+								<path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+							</svg>
+							<span class="absolute top-0 right-0 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+						</button>
+						<button onclick={logout} class="text-slate-400 hover:text-red-400 transition-colors">
+							<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+								<polyline points="16 17 21 12 16 7"></polyline>
+								<line x1="21" y1="12" x2="9" y2="12"></line>
+							</svg>
+						</button>
+					</div>
+				</header>
+
+				<!-- Main Content -->
+				<main class="flex-1 overflow-auto relative">
+					<div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6 md:py-8 min-h-full pb-24 md:pb-8">
+						{@render children()}
+					</div>
+				</main>
+
+				<!-- Mobile Bottom Nav -->
+				<nav class="md:hidden h-16 bg-slate-950/90 backdrop-blur-xl border-t border-white/10 fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2 safe-area-pb">
+					<a href="/dashboard" class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive('/dashboard') || isRouteActive('/') ? 'text-blue-400' : 'text-slate-500 hover:text-slate-300'} transition-colors">
+						<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<rect x="3" y="3" width="7" height="7"></rect>
+							<rect x="14" y="3" width="7" height="7"></rect>
+							<rect x="14" y="14" width="7" height="7"></rect>
+							<rect x="3" y="14" width="7" height="7"></rect>
+						</svg>
+						<span class="text-[10px] font-medium">Dash</span>
+					</a>
+					<a href="/performance" class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive('/performance') ? 'text-blue-400' : 'text-slate-500 hover:text-slate-300'} transition-colors">
+						<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+						</svg>
+						<span class="text-[10px] font-medium">Perf</span>
+					</a>
+					<a href="/config" class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive('/config') || isRouteActive('/config/') ? 'text-blue-400' : 'text-slate-500 hover:text-slate-300'} transition-colors">
+						<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<circle cx="12" cy="12" r="3"></circle>
+							<path d="M12 1v6m0 6v6m4.22-13.22l4.24 4.24M1.54 1.54l4.24 4.24M20.46 20.46l-4.24-4.24M1.54 20.46l4.24-4.24"></path>
+						</svg>
+						<span class="text-[10px] font-medium">Config</span>
+					</a>
+					<a href="/server" class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive('/server') ? 'text-blue-400' : 'text-slate-500 hover:text-slate-300'} transition-colors">
+						<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+							<polyline points="7 10 12 15 17 10"></polyline>
+							<line x1="12" y1="15" x2="12" y2="3"></line>
+						</svg>
+						<span class="text-[10px] font-medium">Files</span>
+					</a>
+					<a href="/database" class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive('/database') ? 'text-blue-400' : 'text-slate-500 hover:text-slate-300'} transition-colors">
+						<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+							<path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+							<path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+						</svg>
+						<span class="text-[10px] font-medium">DB</span>
+					</a>
+				</nav>
+			</div>
 		</div>
 
 		<!-- Spectacular Background for authenticated pages -->
@@ -554,6 +621,11 @@
 {/if}
 
 <style>
+	/* Safe Area for Mobile Bottom Nav */
+	.safe-area-pb {
+		padding-bottom: env(safe-area-inset-bottom);
+	}
+
 	@keyframes blob {
 		0% {
 			transform: translate(0px, 0px) scale(1);

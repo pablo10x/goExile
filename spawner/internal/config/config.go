@@ -19,8 +19,8 @@ type Config struct {
 	GameDownloadToken string
 	GameInstallDir    string
 	Port              string // Port for the Spawner API itself
-	MinGamePort       int
-	MaxGamePort       int
+	StartingPort      int    // Starting port for game instances
+	MaxInstances      int    // Maximum number of instances allowed
 	MasterURL         string // URL of the Master Server (Registry)
 	MasterAPIKey      string // API Key for Master Server authentication
 	StateFilePath     string // Path to the JSON file storing instance state
@@ -33,27 +33,45 @@ type Config struct {
 // different running contexts (e.g., direct binary execution vs `go run`).
 func Load() (*Config, error) {
 	// Parse command-line flags first
-	enrollmentKey := flag.String("key", "", "One-time enrollment key for initial registration with master server")
+	keyFlag := flag.String("key", "", "One-time enrollment key for initial registration with master server")
+	urlFlag := flag.String("url", "", "URL of the Master Server")
+	spFlag := flag.Int("sp", 0, "Starting port for game instances")
+	maxFlag := flag.Int("max", 0, "Maximum number of instances")
+	regionFlag := flag.String("region", "", "Region identifier")
 	flag.Parse()
 
 	// Try loading .env from local directory only
 	_ = godotenv.Load(".env")
 
 	conf := &Config{
-		Region:            getEnv("REGION", ""),
+		Region:            getEnv("REGION", *regionFlag),
 		Host:              getEnv("SPAWNER_HOST", "localhost"),
 		GameBinaryPath:    getEnv("GAME_BINARY_PATH", ""),
 		GameDownloadURL:   getEnv("GAME_DOWNLOAD_URL", ""),
 		GameDownloadToken: getEnv("GAME_DOWNLOAD_TOKEN", ""),
 		GameInstallDir:    getEnv("GAME_INSTALL_DIR", "./game_server"),
 		Port:              getEnv("SPAWNER_PORT", "8080"),
-		MinGamePort:       getEnvAsInt("MIN_GAME_PORT", 7777),
-		MaxGamePort:       getEnvAsInt("MAX_GAME_PORT", 8000),
+		StartingPort:      getEnvAsInt("STARTING_PORT", 7777),
+		MaxInstances:      getEnvAsInt("MAX_INSTANCES", 10),
 		MasterURL:         getEnv("MASTER_URL", "http://localhost:8081"),
 		MasterAPIKey:      getEnv("MASTER_API_KEY", ""),
 		StateFilePath:     getEnv("STATE_FILE_PATH", "instances.json"),
 		InstancesDir:      getEnv("INSTANCES_DIR", "./instances"),
-		EnrollmentKey:     *enrollmentKey,
+		EnrollmentKey:     *keyFlag,
+	}
+
+	// Override with flags if provided
+	if *urlFlag != "" {
+		conf.MasterURL = *urlFlag
+	}
+	if *spFlag != 0 {
+		conf.StartingPort = *spFlag
+	}
+	if *maxFlag != 0 {
+		conf.MaxInstances = *maxFlag
+	}
+	if *regionFlag != "" {
+		conf.Region = *regionFlag
 	}
 
 	if err := conf.Validate(); err != nil {
@@ -66,8 +84,8 @@ func Load() (*Config, error) {
 // Validate checks if the configuration is valid and sufficient to start the application.
 func (c *Config) Validate() error {
 	if c.Region == "" {
-		cwd, _ := os.Getwd()
-		return fmt.Errorf("REGION is required (CWD: %s)", cwd)
+		// Region is required for identity
+		return fmt.Errorf("REGION is required (use -region flag or env)")
 	}
 	if c.GameBinaryPath == "" {
 		return fmt.Errorf("GAME_BINARY_PATH is required")
@@ -88,9 +106,13 @@ func (c *Config) Validate() error {
 		// We can't validate much else if it's missing, we rely on Updater to fetch it
 	}
 
-	if c.MinGamePort >= c.MaxGamePort {
-		return fmt.Errorf("MIN_GAME_PORT (%d) must be less than MAX_GAME_PORT (%d)", c.MinGamePort, c.MaxGamePort)
+	if c.StartingPort <= 0 {
+		return fmt.Errorf("STARTING_PORT must be > 0")
 	}
+	if c.MaxInstances <= 0 {
+		return fmt.Errorf("MAX_INSTANCES must be > 0")
+	}
+
 	return nil
 }
 

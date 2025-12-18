@@ -891,7 +891,10 @@ func (m *Manager) readVersionFile(dir string) string {
 
 // findAvailablePort scans for an open TCP port.
 func (m *Manager) findAvailablePort() (int, error) {
-	for port := m.cfg.MinGamePort; port <= m.cfg.MaxGamePort; port++ {
+	start := m.cfg.StartingPort
+	end := start + m.cfg.MaxInstances
+
+	for port := start; port < end; port++ {
 		// 1. Check internal tracking (including stopped instances to reserve port)
 		portInUse := false
 		for _, inst := range m.instances {
@@ -912,8 +915,8 @@ func (m *Manager) findAvailablePort() (int, error) {
 			return port, nil
 		}
 	}
-	spawnerErr := spawnerErrors.PortAllocationError(m.cfg.MinGamePort, m.cfg.MaxGamePort,
-		fmt.Errorf("no available ports in range %d-%d", m.cfg.MinGamePort, m.cfg.MaxGamePort)).
+	spawnerErr := spawnerErrors.PortAllocationError(start, end-1,
+		fmt.Errorf("no available ports in range %d-%d (max instances reached)", start, end-1)).
 		WithContext("region", m.cfg.Region)
 	return 0, spawnerErr
 }

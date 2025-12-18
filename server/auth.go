@@ -45,14 +45,20 @@ type SessionData struct {
 
 // SessionStore manages active sessions.
 type SessionStore struct {
-	mu       sync.RWMutex
-	sessions map[string]SessionData
+	mu          sync.RWMutex
+	sessions    map[string]SessionData
+	maxSessions int
 }
 
 // NewSessionStore creates a new session store.
-func NewSessionStore() *SessionStore {
+func NewSessionStore(isProduction bool) *SessionStore {
+	max := 2
+	if isProduction {
+		max = 1
+	}
 	return &SessionStore{
-		sessions: make(map[string]SessionData),
+		sessions:    make(map[string]SessionData),
+		maxSessions: max,
 	}
 }
 
@@ -67,11 +73,34 @@ func (ss *SessionStore) CreateSession(initialStep string) (string, error) {
 	sessionID := base64.StdEncoding.EncodeToString(token)
 
 	ss.mu.Lock()
+	defer ss.mu.Unlock()
+
+	// Enforce concurrent session limit
+	if len(ss.sessions) >= ss.maxSessions {
+		// Prune oldest sessions until we have room for 1 more
+		toRemoveCount := len(ss.sessions) - ss.maxSessions + 1
+		for i := 0; i < toRemoveCount; i++ {
+			var oldestID string
+			var oldestTime time.Time
+
+			first := true
+			for id, data := range ss.sessions {
+				if first || data.Expiry.Before(oldestTime) {
+					oldestID = id
+					oldestTime = data.Expiry
+					first = false
+				}
+			}
+			if oldestID != "" {
+				delete(ss.sessions, oldestID)
+			}
+		}
+	}
+
 	ss.sessions[sessionID] = SessionData{
 		Expiry:   time.Now().Add(24 * time.Hour), // 24-hour session
 		AuthStep: initialStep,
 	}
-	ss.mu.Unlock()
 
 	return sessionID, nil
 }

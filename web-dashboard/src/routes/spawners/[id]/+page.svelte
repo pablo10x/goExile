@@ -11,7 +11,7 @@
 	import { serverVersions } from '$lib/stores';
 	import { compareVersions } from '$lib/semver';
 	import PlayersChart from '$lib/components/PlayersChart.svelte';
-	import { Server, Cpu, HardDrive, MemoryStick, List, Plus } from 'lucide-svelte';
+	import { Server, Cpu, HardDrive, MemoryStick, List, Plus, ArrowLeft } from 'lucide-svelte';
 
 	const spawnerId = parseInt($page.params.id || '0');
 
@@ -109,7 +109,7 @@
 	function getStatusClass(status: string) {
 		if (status === 'Updating')
 			return 'bg-orange-500/10 text-orange-400 border-orange-500/20 animate-pulse';
-		return status === 'active'
+		return status === 'active' || status === 'Online' // Handle both cases just in case
 			? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
 			: 'bg-red-500/10 text-red-400 border-red-500/20';
 	}
@@ -304,44 +304,43 @@
 	}
 </script>
 
-<div class="container mx-auto max-w-7xl">
-	<div class="mb-6 flex items-center gap-4">
-		<a
-			href="/"
-			aria-label="Back to Dashboard"
-			class="p-2 rounded-lg bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition-colors"
-		>
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				class="w-5 h-5"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7" /></svg
+<div class="container mx-auto max-w-7xl p-4 sm:p-6 pb-24 md:pb-6">
+	<!-- Header -->
+	<div class="mb-6 flex flex-col md:flex-row md:items-center gap-4">
+		<div class="flex items-center gap-4 w-full md:w-auto">
+			<a
+				href="/"
+				aria-label="Back to Dashboard"
+				class="p-2 rounded-lg bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition-colors"
 			>
-		</a>
-		<h1 class="text-2xl font-bold text-slate-50">Spawner #{spawnerId}</h1>
-		{#if spawner}
-			<div class="flex items-center gap-2">
-				<span
-					class={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusClass(spawner.status)}`}
-				>
-					{spawner.status}
-				</span>
-				<span
-					class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-700 text-slate-300 border border-slate-600 font-mono"
-					title="Current Game Server Version"
-				>
-					v{spawner.game_version || 'Unknown'}
-				</span>
+				<ArrowLeft class="w-5 h-5" />
+			</a>
+			<div>
+				<h1 class="text-xl sm:text-2xl font-bold text-slate-50 flex items-center gap-2">
+					Spawner #{spawnerId}
+				</h1>
+				{#if spawner}
+					<div class="flex items-center gap-2 mt-1">
+						<span
+							class={`px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold border ${getStatusClass(spawner.status)}`}
+						>
+							{spawner.status}
+						</span>
+						<span
+							class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-slate-700 text-slate-300 border border-slate-600 font-mono"
+							title="Current Game Server Version"
+						>
+							v{spawner.game_version || 'Unknown'}
+						</span>
+					</div>
+				{/if}
 			</div>
-		{/if}
-		<div class="ml-auto flex items-center gap-3">
+		</div>
+
+		<div class="flex flex-wrap items-center gap-2 sm:gap-3 md:ml-auto w-full md:w-auto">
 			<button
 				onclick={() => (isLogViewerOpen = true)}
-				class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm font-semibold transition-colors border border-slate-700"
+				class="flex-1 md:flex-none px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs sm:text-sm font-semibold transition-colors border border-slate-700 whitespace-nowrap"
 			>
 				View Logs
 			</button>
@@ -352,7 +351,7 @@
 					<button
 						onclick={() => openUpdateSpawnerBuildDialog()}
 						disabled={spawner.status === 'Updating'}
-						class={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors border shadow-lg ${spawner.status === 'Updating' ? 'bg-slate-700 text-slate-500 border-slate-600 cursor-not-allowed' : cmp > 0 ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500 shadow-emerald-900/20' : 'bg-orange-600 hover:bg-orange-500 text-white border-orange-500 shadow-orange-900/20'}`}
+						class={`flex-1 md:flex-none px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors border shadow-lg whitespace-nowrap ${spawner.status === 'Updating' ? 'bg-slate-700 text-slate-500 border-slate-600 cursor-not-allowed' : cmp > 0 ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500 shadow-emerald-900/20' : 'bg-orange-600 hover:bg-orange-500 text-white border-orange-500 shadow-orange-900/20'}`}
 						title={spawner.status === 'Updating'
 							? 'Update in progress...'
 							: cmp > 0
@@ -364,7 +363,7 @@
 				{:else}
 					<button
 						disabled
-						class="px-4 py-2 bg-slate-800/50 text-slate-500 rounded-lg text-sm font-semibold border border-slate-700/50 cursor-not-allowed"
+						class="flex-1 md:flex-none px-3 py-2 bg-slate-800/50 text-slate-500 rounded-lg text-xs sm:text-sm font-semibold border border-slate-700/50 cursor-not-allowed whitespace-nowrap"
 					>
 						Build Up-to-Date
 					</button>
@@ -385,36 +384,36 @@
 		</div>
 	{:else if spawner}
 		<!-- Spawner Stats -->
-		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+		<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
 			<StatsCard
-				title="Active Instances"
+				title="Instances"
 				value={`${spawner.current_instances} / ${spawner.max_instances}`}
 				subValue={spawner.max_instances > 0
-					? `${((spawner.current_instances / spawner.max_instances) * 100).toFixed(1)}% Capacity`
+					? `${((spawner.current_instances / spawner.max_instances) * 100).toFixed(0)}% Cap`
 					: ''}
-				subValueClass="text-slate-400 text-xs mt-1"
+				subValueClass="text-slate-400 text-[10px] sm:text-xs mt-1"
 				Icon={Server}
 				color="blue"
 			/>
 			<StatsCard
-				title="CPU Usage"
+				title="CPU"
 				value={`${spawner.cpu_usage?.toFixed(1) || 0}%`}
 				Icon={Cpu}
 				color="purple"
 			/>
 			<StatsCard
-				title="Memory Usage"
+				title="Memory"
 				value={formatBytes(spawner.mem_used || 0)}
 				subValue={`of ${formatBytes(spawner.mem_total || 0)}`}
-				subValueClass="text-slate-400 text-xs mt-1"
+				subValueClass="text-slate-400 text-[10px] sm:text-xs mt-1"
 				Icon={MemoryStick}
 				color="emerald"
 			/>
 			<StatsCard
-				title="Disk Usage"
+				title="Disk"
 				value={formatBytes(spawner.disk_used || 0)}
 				subValue={`of ${formatBytes(spawner.disk_total || 0)}`}
-				subValueClass="text-slate-400 text-xs mt-1"
+				subValueClass="text-slate-400 text-[10px] sm:text-xs mt-1"
 				Icon={HardDrive}
 				color="orange"
 			/>
@@ -426,90 +425,92 @@
 		>
 			{#if spawner.status === 'Updating'}
 				<div
-					class="absolute inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center text-slate-300"
+					class="absolute inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center text-slate-300 p-4 text-center"
 				>
 					<div
-						class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"
+						class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"
 					></div>
-					<h3 class="text-xl font-bold text-white">System Updating</h3>
+					<h3 class="text-lg sm:text-xl font-bold text-white">System Updating</h3>
 					<p class="text-sm">Downloading game files. Actions are disabled.</p>
 				</div>
 			{/if}
 
 			<div
-				class="p-6 border-b border-slate-700/50 flex flex-wrap items-center justify-between gap-4"
+				class="p-4 sm:p-6 border-b border-slate-700/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
 			>
 				<div>
-					<h2 class="text-xl font-bold text-slate-50">Game Instances</h2>
-					<p class="text-sm text-slate-400 mt-1">Manage game servers running on this spawner.</p>
+					<h2 class="text-lg sm:text-xl font-bold text-slate-50">Game Instances</h2>
+					<p class="text-xs sm:text-sm text-slate-400 mt-1">Manage game servers on this spawner.</p>
 				</div>
 
-				<div class="flex items-center gap-3">
-					<Dropdown label="Bulk Actions" Icon={List}>
-						<div slot="default" let:close>
-							<button
-								onclick={() => {
-									dispatchBulkAction('start');
-									close();
-								}}
-								class="w-full text-left px-4 py-2 text-sm text-emerald-400 hover:bg-emerald-500/10"
-								>Start All</button
-							>
-							<button
-								onclick={() => {
-									dispatchBulkAction('stop');
-									close();
-								}}
-								class="w-full text-left px-4 py-2 text-sm text-yellow-400 hover:bg-yellow-500/10"
-								>Stop All</button
-							>
-							<button
-								onclick={() => {
-									dispatchBulkAction('restart');
-									close();
-								}}
-								class="w-full text-left px-4 py-2 text-sm text-blue-400 hover:bg-blue-500/10"
-								>Restart All</button
-							>
-							<button
-								onclick={() => {
-									dispatchBulkAction('update');
-									close();
-								}}
-								class="w-full text-left px-4 py-2 text-sm text-purple-400 hover:bg-purple-500/10 border-t border-slate-700"
-								>Update Outdated</button
-							>
-						</div>
-					</Dropdown>
+				<div class="flex items-center gap-3 w-full sm:w-auto">
+					<div class="flex-1 sm:flex-initial">
+						<Dropdown label="Bulk Actions" Icon={List} align="right">
+							<div slot="default" let:close>
+								<button
+									onclick={() => {
+										dispatchBulkAction('start');
+										close();
+									}}
+									class="w-full text-left px-4 py-2 text-sm text-emerald-400 hover:bg-emerald-500/10"
+									>Start All</button
+								>
+								<button
+									onclick={() => {
+										dispatchBulkAction('stop');
+										close();
+									}}
+									class="w-full text-left px-4 py-2 text-sm text-yellow-400 hover:bg-yellow-500/10"
+									>Stop All</button
+								>
+								<button
+									onclick={() => {
+										dispatchBulkAction('restart');
+										close();
+									}}
+									class="w-full text-left px-4 py-2 text-sm text-blue-400 hover:bg-blue-500/10"
+									>Restart All</button
+								>
+								<button
+									onclick={() => {
+										dispatchBulkAction('update');
+										close();
+									}}
+									class="w-full text-left px-4 py-2 text-sm text-purple-400 hover:bg-purple-500/10 border-t border-slate-700"
+									>Update Outdated</button
+								>
+							</div>
+						</Dropdown>
+					</div>
 
 					<button
 						onclick={openSpawnDialog}
-						class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-blue-900/20"
+						class="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-blue-900/20 whitespace-nowrap"
 					>
 						<Plus class="w-4 h-4" />
-						Spawn Instance
+						Spawn
 					</button>
 				</div>
 			</div>
 
-			<div class="p-6">
+			<div class="p-4 sm:p-6">
 				<!-- Players Chart -->
-				<div class="mb-8">
+				<div class="mb-6 sm:mb-8">
 					<div class="flex justify-between items-end mb-4 px-1">
 						<div>
-							<h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider">
+							<h3 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider">
 								Active Players (24h)
 							</h3>
-							<p class="text-xs text-slate-500 mt-1">
+							<p class="text-[10px] sm:text-xs text-slate-500 mt-1">
 								Real-time player concurrency across all instances.
 							</p>
 						</div>
-						<div class="text-2xl font-bold text-emerald-400">
+						<div class="text-xl sm:text-2xl font-bold text-emerald-400">
 							{chartData[chartData.length - 1].count}
 						</div>
 					</div>
 					<div
-						class="h-48 bg-slate-900/50 rounded-xl border border-slate-700/50 overflow-hidden relative shadow-inner"
+						class="h-40 sm:h-48 bg-slate-900/50 rounded-xl border border-slate-700/50 overflow-hidden relative shadow-inner"
 					>
 						<PlayersChart data={chartData} height={192} />
 					</div>
@@ -519,8 +520,8 @@
 					<div
 						class="text-center py-12 text-slate-500 bg-slate-800/50 rounded-lg border border-slate-700/50 border-dashed"
 					>
-						<p class="text-lg mb-2">No instances running</p>
-						<p class="text-sm">Click "Spawn Instance" to start a new game server.</p>
+						<p class="text-base sm:text-lg mb-2">No instances running</p>
+						<p class="text-xs sm:text-sm">Click "Spawn Instance" to start a new game server.</p>
 					</div>
 				{:else}
 					<div class="space-y-3">

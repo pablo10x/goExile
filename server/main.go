@@ -60,7 +60,7 @@ func run() error {
 
 	// Initialize authentication & session management
 	authConfig := GetAuthConfig()
-	sessionStore := NewSessionStore()
+	sessionStore := NewSessionStore(authConfig.IsProduction)
 	go sessionStore.CleanupExpiredSessions()
 	PrintSection("Authentication", "ready", true)
 

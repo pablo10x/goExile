@@ -49,7 +49,7 @@ func Enroll(cfg *config.Config, logger *slog.Logger) (*EnrollmentResult, error) 
 
 	// Calculate max instances
 	port, _ := parsePort(cfg.Port)
-	maxInstances := cfg.MaxGamePort - cfg.MinGamePort
+	maxInstances := cfg.MaxInstances
 	if maxInstances < 1 {
 		maxInstances = 1
 	}

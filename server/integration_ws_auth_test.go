@@ -13,7 +13,7 @@ func TestWebSocketAuthentication(t *testing.T) {
 	// 1. Setup Dependencies
 	testAPIKey := "test-secret-key"
 	authConfig := AuthConfig{Enabled: true} // Minimal config
-	sessionStore := NewSessionStore()
+	sessionStore := NewSessionStore(false)
 
 	// 2. Setup Middleware and Handler
 	// We use a simple handler that attempts to upgrade the connection.
