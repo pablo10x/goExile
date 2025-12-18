@@ -314,7 +314,8 @@
 											: 'bg-red-500/10 border-red-500/30 text-red-400'}"
 									transition:scale={{ start: 0.9, duration: 200 }}
 								>
-									{health.icon({ class: 'w-4 h-4 sm:w-5 sm:h-5' })}
+									<!-- svelte-ignore svelte_component_deprecated -->
+									<svelte:component this={health.icon} class="w-4 h-4 sm:w-5 sm:h-5" />
 									<span class="font-semibold">{health.status}</span>
 								</div>
 			{/if}

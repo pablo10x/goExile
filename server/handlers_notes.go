@@ -35,12 +35,19 @@ func CreateNoteHandler(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, http.StatusBadRequest, err.Error())
 		return
 	}
-	// Defaults
+	// Defaults/Validation
 	if n.Color == "" {
 		n.Color = "yellow"
 	}
-	// Random rotation between -2 and 2 degrees for visual flair
-	n.Rotation = (rand.Float64() * 4) - 2
+	if n.Status == "" {
+		n.Status = "normal"
+	}
+	if n.Rotation == 0 { // Assign a small random rotation for new notes if not provided
+		n.Rotation = (rand.Float64() * 4) - 2
+	}
+	// Set creation/update timestamps on the server side
+	n.CreatedAt = time.Now().UTC()
+	n.UpdatedAt = time.Now().UTC()
 
 	id, err := SaveNote(dbConn, &n)
 	if err != nil {
@@ -48,7 +55,6 @@ func CreateNoteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	n.ID = id
-	n.CreatedAt = time.Now()
 	writeJSON(w, http.StatusCreated, n)
 }
 
@@ -70,6 +76,8 @@ func UpdateNoteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	n.ID = id
+	// Set UpdatedAt on the server side
+	n.UpdatedAt = time.Now().UTC()
 
 	if _, err := SaveNote(dbConn, &n); err != nil {
 		writeError(w, r, http.StatusInternalServerError, fmt.Sprintf("failed to update note: %v", err))

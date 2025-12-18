@@ -31,6 +31,7 @@ export const stats = writable({
 
 export interface Spawner {
 	id: number;
+	name: string;
 	region: string;
 	host: string;
 	port: number;
@@ -75,6 +76,28 @@ export interface ServerConfig {
 export const config = writable<ServerConfig[]>([]);
 
 export const restartRequired = writable(false);
+
+export interface Note {
+	id: number;
+	title: string;
+	content: string;
+	color: string; // e.g., 'yellow', 'blue', 'green'
+	status: 'normal' | 'warn' | 'critical'; // Added for note status
+	rotation: number;
+	created_at: string;
+	updated_at: string; // Added for consistency
+}
+
+export const notes = writable<Note[]>([]);
+
+export interface Todo {
+	id: number;
+	content: string;
+	done: boolean;
+	created_at: string;
+}
+
+export const todos = writable<Todo[]>([]);
 
 export interface Notification {
 	id: string;

@@ -205,9 +205,13 @@
 		class="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6"
 		transition:fade={{ duration: 200 }}
 		onclick={handleBackdropClick}
+		onkeydown={(e) => {
+			if (e.key === 'Enter' || e.key === ' ') handleBackdropClick(e as unknown as MouseEvent);
+		}}
 		role="dialog"
 		aria-modal="true"
 		aria-labelledby="modal-title"
+		tabindex="-1"
 	>
 		<div
 			class="absolute inset-0 bg-black/60 backdrop-blur-md"

@@ -127,7 +127,13 @@
 		{#each spawners as spawner}
 			<div class="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden {spawner.id === highlightNewSpawnerId ? 'ring-2 ring-blue-500' : ''}">
 				<!-- Card Header -->
-				<div class="p-4 border-b border-slate-700/50 flex items-center justify-between" onclick={() => toggleRow(spawner.id)}>
+				<div
+					class="p-4 border-b border-slate-700/50 flex items-center justify-between"
+					onclick={() => toggleRow(spawner.id)}
+					onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleRow(spawner.id); }}
+					role="button"
+					tabindex="0"
+				>
 					<div class="flex items-center gap-3">
 						<div class="p-2 bg-slate-800 rounded-lg border border-slate-700">
 							<Server class="w-5 h-5 text-slate-400" />
@@ -317,6 +323,9 @@
 					<tr
 						class="border-t border-slate-700 hover:bg-slate-800/50 transition cursor-pointer {spawner.id === highlightNewSpawnerId ? 'animate-highlight-new-spawner' : ''}"
 						onclick={() => toggleRow(spawner.id)}
+						onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleRow(spawner.id); }}
+						role="button"
+						tabindex="0"
 					>
 						<td class="px-4 py-3 text-center text-slate-500">
 							<span class="inline-block transition-transform duration-200 {expandedRows.has(spawner.id) ? 'rotate-90' : ''}">▶</span>

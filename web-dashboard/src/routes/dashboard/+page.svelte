@@ -243,6 +243,7 @@
 				const err = await res.json().catch(() => ({}));
 				throw new Error(err.error || 'Failed to delete spawner');
 			}
+			notifications.add({ type: 'success', message: `Spawner #${spawnerToDeleteId} deleted successfully.` });
 		} catch (e: any) {
 			console.error(e);
 			notifications.add({ type: 'error', message: `Failed to delete spawner: ${e.message}` });

@@ -120,17 +120,17 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Role Name</label>
-                            <input type="text" bind:value={newRoleName} class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:border-emerald-500 outline-none" placeholder="e.g. app_user" />
+                            <label for="newRoleName" class="block text-xs font-bold text-slate-400 uppercase mb-1">Role Name</label>
+                            <input id="newRoleName" type="text" bind:value={newRoleName} class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:border-emerald-500 outline-none" placeholder="e.g. app_user" />
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Password</label>
-                            <input type="password" bind:value={newRolePass} class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:border-emerald-500 outline-none" placeholder="••••••••" />
+                            <label for="newRolePass" class="block text-xs font-bold text-slate-400 uppercase mb-1">Password</label>
+                            <input id="newRolePass" type="password" bind:value={newRolePass} class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:border-emerald-500 outline-none" placeholder="••••••••" />
                         </div>
                     </div>
                     
                     <div class="space-y-3">
-                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Privileges</label>
+                        <div class="block text-xs font-bold text-slate-400 uppercase mb-1">Privileges</div>
                         <div class="grid grid-cols-2 gap-2">
                             <label class="flex items-center gap-2 p-2 rounded bg-slate-900 border border-slate-700 cursor-pointer hover:border-emerald-500/50 transition-colors">
                                 <input type="checkbox" bind:checked={roleOptions.login} class="rounded text-emerald-500 focus:ring-emerald-500 bg-slate-800 border-slate-600" />

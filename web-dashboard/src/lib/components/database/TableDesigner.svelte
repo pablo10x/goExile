@@ -2,6 +2,7 @@
 	import { Plus, Trash2, Save, X, Key, Type, Settings } from 'lucide-svelte';
 	import { slide } from 'svelte/transition';
     import { notifications } from '$lib/stores';
+    import { autofocus } from '$lib/actions';
 
 	let { schema, table, columns = [], onClose, onReload } = $props<{
 		schema: string;
@@ -118,7 +119,7 @@
                                         class="bg-slate-900 border border-blue-500 rounded px-2 py-1 text-white w-full outline-none"
                                         onkeydown={(e) => e.key === 'Enter' && renameColumn(col.name)}
                                         onblur={() => renameColumn(col.name)}
-                                        autofocus
+                                        use:autofocus
                                     />
                                 {:else}
                                     <button onclick={() => startRename(col)} class="hover:text-blue-400 hover:underline decoration-dashed underline-offset-4 decoration-slate-600">

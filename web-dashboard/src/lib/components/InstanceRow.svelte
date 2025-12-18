@@ -21,6 +21,10 @@
 	let renameValue = $state(instance.id);
 	let chartData = $state<any[]>([]);
 
+	$effect(() => {
+		renameValue = instance.id;
+	});
+
 	const dispatch = createEventDispatcher();
 
 	// Derived state for version checking

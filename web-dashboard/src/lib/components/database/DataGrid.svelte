@@ -541,7 +541,6 @@
 												if (e.key === 'Escape') cancelEdit();
 											}}
 											class="w-full h-full bg-slate-800 text-white px-3 py-1 outline-none border-2 border-indigo-500 rounded-md text-sm"
-											autofocus
 										/>
 									</div>
 								{:else}

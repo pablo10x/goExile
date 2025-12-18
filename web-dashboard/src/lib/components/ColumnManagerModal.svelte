@@ -45,8 +45,9 @@
 
 			<div class="p-6 space-y-4">
 				<div>
-					<label class="block text-sm font-medium text-slate-300 mb-1.5">Column Name</label>
+					<label for="column-name" class="block text-sm font-medium text-slate-300 mb-1.5">Column Name</label>
 					<input
+						id="column-name"
 						type="text"
 						bind:value={columnName}
 						class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 outline-none focus:border-blue-500"
@@ -54,8 +55,9 @@
 					/>
 				</div>
 				<div>
-					<label class="block text-sm font-medium text-slate-300 mb-1.5">Data Type</label>
+					<label for="column-type" class="block text-sm font-medium text-slate-300 mb-1.5">Data Type</label>
 					<select
+						id="column-type"
 						bind:value={columnType}
 						class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 outline-none focus:border-blue-500"
 					>

@@ -817,23 +817,6 @@
 		}
 	}
 
-	.animate-shake-error {
-		animation: shakeError 0.5s ease-in-out;
-	}
-
-	@keyframes shakeError {
-		0%,
-		100% {
-			transform: translateX(0) rotate(0deg);
-		}
-		25% {
-			transform: translateX(-5px) rotate(-5deg);
-		}
-		75% {
-			transform: translateX(5px) rotate(5deg);
-		}
-	}
-
 	/* Key container glow */
 	.key-container {
 		animation: keyGlow 3s ease-in-out infinite;
@@ -879,24 +862,6 @@
 		}
 	}
 
-	.animate-check-pop {
-		animation: checkPop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-	}
-
-	@keyframes checkPop {
-		0% {
-			transform: scale(0) rotate(-45deg);
-			opacity: 0;
-		}
-		50% {
-			transform: scale(1.2) rotate(10deg);
-		}
-		100% {
-			transform: scale(1) rotate(0deg);
-			opacity: 1;
-		}
-	}
-
 	.animate-ripple {
 		animation: ripple 2s ease-out infinite;
 	}
@@ -913,34 +878,6 @@
 		100% {
 			transform: scale(1.8);
 			opacity: 0;
-		}
-	}
-
-	.animate-sparkle-1 {
-		animation: sparkle 1.5s ease-in-out infinite;
-	}
-
-	.animate-sparkle-2 {
-		animation: sparkle 1.5s ease-in-out 0.2s infinite;
-	}
-
-	.animate-sparkle-3 {
-		animation: sparkle 1.5s ease-in-out 0.4s infinite;
-	}
-
-	.animate-sparkle-4 {
-		animation: sparkle 1.5s ease-in-out 0.6s infinite;
-	}
-
-	@keyframes sparkle {
-		0%,
-		100% {
-			transform: scale(0.8) rotate(0deg);
-			opacity: 0.5;
-		}
-		50% {
-			transform: scale(1.2) rotate(180deg);
-			opacity: 1;
 		}
 	}
 

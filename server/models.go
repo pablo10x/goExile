@@ -78,3 +78,35 @@ type EnrollmentKey struct {
 		Port   int    `json:"port"`
 	} `json:"spawner_info,omitempty"` // Info about the spawner that enrolled
 }
+
+// Note represents a sticky note on the dashboard.
+type Note struct {
+	ID        int       `json:"id" db:"id"`
+	Title     string    `json:"title" db:"title"`
+	Content   string    `json:"content" db:"content"`
+	Color     string    `json:"color" db:"color"`           // css class or hex
+	Status    string    `json:"status" db:"status"`         // e.g., "normal", "warn", "critical"
+	Rotation  float64   `json:"rotation" db:"rotation"`     // visual rotation
+	CreatedAt time.Time `json:"created_at" db:"created_at"` // Handle unix conversion in DB layer
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"` // Last update timestamp
+}
+
+// Todo represents a task in the todo list.
+type Todo struct {
+	ID        int       `json:"id" db:"id"`
+	Content   string    `json:"content" db:"content"`
+	Done      bool      `json:"done" db:"done"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+}
+
+// AIChatRequest represents a message sent to the AI bot.
+type AIChatRequest struct {
+	Message string `json:"message"`
+	Context string `json:"context"` // "notes", "todos", or "general"
+}
+
+// AIChatResponse represents the response from the AI.
+type AIChatResponse struct {
+	Response    string   `json:"response"`
+	SuggestedTodo string `json:"suggested_todo,omitempty"` // Optional todo to add
+}

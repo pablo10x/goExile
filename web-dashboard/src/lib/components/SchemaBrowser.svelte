@@ -141,6 +141,9 @@
 					<div
                         class="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer select-none transition-colors hover:bg-slate-800/50 text-sm group/row"
                         onclick={() => onToggleSchema(schema.name)}
+                        onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') onToggleSchema(schema.name); }}
+                        role="button"
+                        tabindex="0"
                     >
                         <div class="w-4 h-4 flex items-center justify-center text-slate-500 transition-transform duration-200 {schema.isOpen ? 'rotate-90 text-indigo-400' : ''}">
                             <ChevronRight class="w-3.5 h-3.5" />
@@ -200,6 +203,9 @@
                                         ? 'bg-indigo-500/10 text-indigo-300' 
                                         : 'text-slate-400 hover:bg-slate-800/30 hover:text-slate-200'}"
                                     onclick={() => onSelectTable(schema.name, table)}
+                                    onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelectTable(schema.name, table); }}
+                                    role="button"
+                                    tabindex="0"
                                 >
                                     <Table class="w-3.5 h-3.5 {selectedSchema === schema.name && selectedTable === table ? 'text-indigo-400' : 'text-slate-600'}" />
                                     <span class="truncate flex-1">{table}</span>

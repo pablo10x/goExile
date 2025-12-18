@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"sort"
 	"sync"
 	"time"
 
@@ -168,6 +169,9 @@ func (r *Registry) List() []Spawner {
 	for _, v := range r.items {
 		out = append(out, *v)
 	}
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].ID < out[j].ID
+	})
 	return out
 }
 

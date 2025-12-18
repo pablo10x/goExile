@@ -93,14 +93,12 @@
 						<Database class="w-3.5 h-3.5" /> Schema Name
 					</label>
 					<div class="relative">
-						<input
-							type="text"
-							bind:value={schemaName}
-							class="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-4 py-3 pl-11 text-slate-200 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 transition-all placeholder:text-slate-600"
-							placeholder="e.g. analytics_v2"
-							autofocus
-						/>
-						<div class="absolute left-3.5 top-3.5 text-slate-500 group-focus-within/input:text-emerald-500 transition-colors">
+													<input
+														type="text"
+														bind:value={schemaName}
+														class="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-4 py-3 pl-11 text-slate-200 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 transition-all placeholder:text-slate-600"
+														placeholder="e.g. analytics_v2"
+													/>						<div class="absolute left-3.5 top-3.5 text-slate-500 group-focus-within/input:text-emerald-500 transition-colors">
 							<Shield class="w-4 h-4" />
 						</div>
 					</div>

@@ -12,6 +12,19 @@
 		isConnected,
 		connectionStatus
 	} from '$lib/stores';
+	import {
+		FolderTree,
+		Menu,
+		StickyNote,
+		LayoutDashboard,
+		Activity,
+		Settings,
+		Server,
+		Database,
+		Code2,
+		Users,
+		HardDrive
+	} from 'lucide-svelte';
 	import ToastContainer from '$lib/components/ToastContainer.svelte';
 
 	let { children } = $props();
@@ -52,6 +65,8 @@
 					const list: any[] = Array.isArray(data.payload)
 						? data.payload
 						: Object.values(data.payload);
+					// Ensure stable sorting by ID
+					list.sort((a, b) => a.id - b.id);
 					spawners.set(list);
 				}
 			} catch (e) {
@@ -391,6 +406,25 @@
 								<span class="animate-in fade-in slide-in-from-left-2 duration-300">Databases</span>
 							{/if}
 						</a>
+
+						<!-- Notes -->
+						<a
+							href="/notes"
+							class="nav-link {isSidebarCollapsed ? 'justify-center px-2' : ''}"
+							class:nav-active={isRouteActive('/notes')}
+							onmouseenter={() => (hoveredItem = 7)}
+							onmouseleave={() => (hoveredItem = -1)}
+							style="animation-delay: 0.55s;"
+							title={isSidebarCollapsed ? "Notes" : ""}
+						>
+							{#if isRouteActive('/notes')}
+								<div class="nav-indicator"></div>
+							{/if}
+							<StickyNote class="nav-icon" />
+							{#if !isSidebarCollapsed}
+								<span class="animate-in fade-in slide-in-from-left-2 duration-300">Notes</span>
+							{/if}
+						</a>
 					</nav>
 
 					<div
@@ -494,14 +528,14 @@
 						</h1>
 					</div>
 					<div class="flex items-center gap-3">
-						<button class="relative text-slate-400 hover:text-white transition-colors">
+						<button class="relative text-slate-400 hover:text-white transition-colors" aria-label="Notifications">
 							<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 								<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
 								<path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
 							</svg>
 							<span class="absolute top-0 right-0 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
 						</button>
-						<button onclick={logout} class="text-slate-400 hover:text-red-400 transition-colors">
+						<button onclick={logout} class="text-slate-400 hover:text-red-400 transition-colors" aria-label="Logout">
 							<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 								<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
 								<polyline points="16 17 21 12 16 7"></polyline>
@@ -557,6 +591,10 @@
 							<path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
 						</svg>
 						<span class="text-[10px] font-medium">DB</span>
+					</a>
+					<a href="/notes" class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive('/notes') ? 'text-blue-400' : 'text-slate-500 hover:text-slate-300'} transition-colors">
+						<StickyNote class="w-5 h-5" />
+						<span class="text-[10px] font-medium">Notes</span>
 					</a>
 				</nav>
 			</div>
@@ -661,58 +699,8 @@
 		}
 	}
 
-	@keyframes glow-pulse {
-		0%,
-		100% {
-			opacity: 0.3;
-		}
-		50% {
-			opacity: 0.8;
-		}
-	}
-
-	@keyframes slide-in-nav {
-		from {
-			opacity: 0;
-			transform: translateX(-30px);
-		}
-		to {
-			opacity: 1;
-			transform: translateX(0);
-		}
-	}
-
-	@keyframes neon-flicker {
-		0%,
-		100% {
-			opacity: 1;
-		}
-		41.99% {
-			opacity: 1;
-		}
-		42% {
-			opacity: 0.8;
-		}
-		43% {
-			opacity: 1;
-		}
-		47.99% {
-			opacity: 1;
-		}
-		48% {
-			opacity: 0.9;
-		}
-		49% {
-			opacity: 1;
-		}
-	}
-
 	.animate-blob {
 		animation: blob 10s infinite;
-	}
-
-	.animation-delay-4000 {
-		animation-delay: 4s;
 	}
 
 	.animate-gradient {
@@ -724,96 +712,7 @@
 		animation: float 3s ease-in-out infinite;
 	}
 
-	.animate-glow-pulse {
-		animation: glow-pulse 2s ease-in-out infinite;
-	}
-
-	.animate-slide-nav {
-		animation: slide-in-nav 0.5s ease-out forwards;
-	}
-
-	.animate-neon-flicker {
-		animation: neon-flicker 2s infinite;
-	}
-
-	.bg-size-200 {
-		background-size: 200% 200%;
-	}
-
-	/* Enhanced hover effects */
-	.hover-lift:hover {
-		transform: translateY(-2px) scale(1.02);
-		transition: all 0.3s ease;
-	}
-
-	.nav-item-active {
-		position: relative;
-		overflow: hidden;
-	}
-
-	.nav-item-active::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
-		animation: slide-shine 3s infinite;
-	}
-
-	@keyframes slide-shine {
-		0% {
-			transform: translateX(-100%);
-		}
-		100% {
-			transform: translateX(100%);
-		}
-	}
-
-	/* Sidebar glow effects */
-	.sidebar-glow {
-		box-shadow:
-			inset 0 0 30px rgba(59, 130, 246, 0.1),
-			0 0 20px rgba(59, 130, 246, 0.2);
-	}
-
 	/* Background Animations */
-	@keyframes gradient-shift {
-		0%,
-		100% {
-			background-position: 0% 50%;
-		}
-		50% {
-			background-position: 100% 50%;
-		}
-	}
-
-	@keyframes blob {
-		0% {
-			transform: translate(0px, 0px) scale(1);
-		}
-		33% {
-			transform: translate(30px, -50px) scale(1.1);
-		}
-		66% {
-			transform: translate(-20px, 20px) scale(0.9);
-		}
-		100% {
-			transform: translate(0px, 0px) scale(1);
-		}
-	}
-
-	@keyframes float {
-		0%,
-		100% {
-			transform: translateY(0px) rotate(0deg);
-		}
-		50% {
-			transform: translateY(-20px) rotate(5deg);
-		}
-	}
-
 	.animate-gradient-shift {
 		background-size: 200% 200%;
 		animation: gradient-shift 8s ease infinite;
@@ -834,11 +733,6 @@
 			rgba(0, 0, 0, 0.2) 50%,
 			rgba(0, 0, 0, 0.6) 100%
 		);
-	}
-
-	/* Reusable Page Container */
-	.page-container {
-		/* Let pages handle their own styling - this is just for global page wrapper if needed */
 	}
 
 	/* Navigation Links */

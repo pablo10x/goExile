@@ -194,13 +194,153 @@ func createTables(db *sqlx.DB) error {
 		status TEXT,
 		details TEXT,
 		FOREIGN KEY(spawner_id) REFERENCES spawners(id) ON DELETE CASCADE
-	);`, pkType, pkType, pkType, pkType)
+	);
+	CREATE TABLE IF NOT EXISTS notes (
+		id %s,
+		title TEXT,
+		content TEXT,
+		color TEXT,
+		status TEXT,
+		rotation REAL DEFAULT 0,
+		created_at INTEGER NOT NULL,
+		updated_at INTEGER NOT NULL
+	);
+	CREATE TABLE IF NOT EXISTS todos (
+		id %s,
+		content TEXT NOT NULL,
+		done INTEGER DEFAULT 0,
+		created_at INTEGER NOT NULL
+	);`, pkType, pkType, pkType, pkType, pkType, pkType)
 
 	_, err := db.Exec(q)
 	if err != nil {
 		return fmt.Errorf("create tables: %w", err)
 	}
 	return nil
+}
+
+// ... existing functions ...
+
+// -- Notes --
+
+func GetNotes(db *sqlx.DB) ([]Note, error) {
+	rows, err := db.Queryx(`SELECT id, title, content, color, status, rotation, created_at, updated_at FROM notes ORDER BY created_at DESC`)
+	if err != nil {
+		return nil, fmt.Errorf("query notes: %w", err)
+	}
+	defer rows.Close()
+
+	out := make([]Note, 0)
+	for rows.Next() {
+		var n Note
+		var tsUnixCreated, tsUnixUpdated int64
+		if err := rows.Scan(&n.ID, &n.Title, &n.Content, &n.Color, &n.Status, &n.Rotation, &tsUnixCreated, &tsUnixUpdated); err != nil {
+			return nil, fmt.Errorf("scan note: %w", err)
+		}
+		n.CreatedAt = time.Unix(tsUnixCreated, 0).UTC()
+		n.UpdatedAt = time.Unix(tsUnixUpdated, 0).UTC()
+		out = append(out, n)
+	}
+	return out, nil
+}
+
+func SaveNote(db *sqlx.DB, n *Note) (int, error) {
+	var id int
+	do := func() error {
+		// Set UpdatedAt right before saving
+		n.UpdatedAt = time.Now().UTC()
+
+		// Insert or Update
+		if n.ID == 0 {
+			query := `INSERT INTO notes (title, content, color, status, rotation, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
+			err := db.QueryRow(query, n.Title, n.Content, n.Color, n.Status, n.Rotation, n.CreatedAt.Unix(), n.UpdatedAt.Unix()).Scan(&id)
+			if err != nil {
+				return err
+			}
+		} else {
+			query := `UPDATE notes SET title=$1, content=$2, color=$3, status=$4, rotation=$5, updated_at=$6 WHERE id=$7`
+			_, err := db.Exec(query, n.Title, n.Content, n.Color, n.Status, n.Rotation, n.UpdatedAt.Unix(), n.ID)
+			if err != nil {
+				return err
+			}
+			id = n.ID
+		}
+		return nil
+	}
+	if err := execWithRetry(do); err != nil {
+		return 0, err
+	}
+	return id, nil
+}
+
+func DeleteNote(db *sqlx.DB, id int) error {
+	do := func() error {
+		_, err := db.Exec(`DELETE FROM notes WHERE id = $1`, id)
+		return err
+	}
+	return execWithRetry(do)
+}
+
+// -- Todos --
+
+func GetTodos(db *sqlx.DB) ([]Todo, error) {
+	rows, err := db.Queryx(`SELECT id, content, done, created_at FROM todos ORDER BY created_at ASC`)
+	if err != nil {
+		return nil, fmt.Errorf("query todos: %w", err)
+	}
+	defer rows.Close()
+
+	out := make([]Todo, 0)
+	for rows.Next() {
+		var t Todo
+		var tsUnix int64
+		var doneInt int
+		if err := rows.Scan(&t.ID, &t.Content, &doneInt, &tsUnix); err != nil {
+			return nil, fmt.Errorf("scan todo: %w", err)
+		}
+		t.CreatedAt = time.Unix(tsUnix, 0).UTC()
+		t.Done = doneInt == 1
+		out = append(out, t)
+	}
+	return out, nil
+}
+
+func SaveTodo(db *sqlx.DB, t *Todo) (int, error) {
+	var id int
+	do := func() error {
+		doneInt := 0
+		if t.Done {
+			doneInt = 1
+		}
+
+		if t.ID == 0 {
+			query := `INSERT INTO todos (content, done, created_at) VALUES ($1, $2, $3) RETURNING id`
+			err := db.QueryRow(query, t.Content, doneInt, time.Now().Unix()).Scan(&id)
+			if err != nil {
+				return err
+			}
+		} else {
+			query := `UPDATE todos SET content=$1, done=$2 WHERE id=$3`
+			_, err := db.Exec(query, t.Content, doneInt, t.ID)
+			if err != nil {
+				return err
+			}
+			id = t.ID
+		}
+		return nil
+	}
+	if err := execWithRetry(do); err != nil {
+		return 0, err
+	}
+	return id, nil
+}
+
+func DeleteTodo(db *sqlx.DB, id int) error {
+	do := func() error {
+		_, err := db.Exec(`DELETE FROM todos WHERE id = $1`, id)
+		return err
+	}
+	return execWithRetry(do)
 }
 
 func CloseDB(db *sqlx.DB) error {

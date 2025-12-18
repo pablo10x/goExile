@@ -291,6 +291,20 @@ func run() error {
 		router.Handle("/api/config/firebase/parameter", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(UpdateFirebaseConfigHandler))).Methods("PUT")
 		router.Handle("/api/config/firebase/parameter", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DeleteFirebaseConfigHandler))).Methods("DELETE")
 		router.Handle("/api/config/firebase/publish", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(PublishFirebaseConfigHandler))).Methods("POST")
+
+		// Notes & Todos API
+		router.Handle("/api/notes", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListNotesHandler))).Methods("GET")
+		router.Handle("/api/notes", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(CreateNoteHandler))).Methods("POST")
+		router.Handle("/api/notes/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(UpdateNoteHandler))).Methods("PUT")
+		router.Handle("/api/notes/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DeleteNoteHandler))).Methods("DELETE")
+
+		router.Handle("/api/todos", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListTodosHandler))).Methods("GET")
+		router.Handle("/api/todos", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(CreateTodoHandler))).Methods("POST")
+		router.Handle("/api/todos/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(UpdateTodoHandler))).Methods("PUT")
+		router.Handle("/api/todos/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DeleteTodoHandler))).Methods("DELETE")
+
+		// AI Bot API
+		router.Handle("/api/ai/chat", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(AIChatHandler))).Methods("POST")
 	}
 
 	// Enrollment endpoints (public - enrollment key IS the auth)

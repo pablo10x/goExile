@@ -465,7 +465,9 @@
 					{:else if activeTab === 'metrics'}
 						<div class="p-8 h-full overflow-y-auto bg-slate-950/50">
 							{#if spawnerId !== null && instanceId}
-								<ResourceMetricsPanel {spawnerId} {instanceId} {memTotal} height={300} />
+								{#key instanceId}
+									<ResourceMetricsPanel {spawnerId} {instanceId} {memTotal} height={300} />
+								{/key}
 							{:else}
 								<div class="flex items-center justify-center h-full text-slate-500">
 									No instance selected

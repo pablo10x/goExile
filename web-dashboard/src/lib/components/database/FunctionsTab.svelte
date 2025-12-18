@@ -609,6 +609,7 @@
 		<button
 			class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm cursor-default"
 			onclick={closeModal}
+			aria-label="Close modal"
 		></button>
 
 		<div
@@ -652,8 +653,9 @@
 				<!-- Basic Info -->
 				<div class="grid grid-cols-2 gap-4">
 					<div>
-						<label class="block text-xs font-bold text-slate-400 uppercase mb-2">Schema</label>
+						<label for="fnSchema" class="block text-xs font-bold text-slate-400 uppercase mb-2">Schema</label>
 						<select
+							id="fnSchema"
 							bind:value={formData.schema}
 							class="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-slate-200 focus:border-violet-500 outline-none"
 						>
@@ -663,10 +665,11 @@
 						</select>
 					</div>
 					<div>
-						<label class="block text-xs font-bold text-slate-400 uppercase mb-2"
+						<label for="fnName" class="block text-xs font-bold text-slate-400 uppercase mb-2"
 							>Function Name</label
 						>
 						<input
+							id="fnName"
 							type="text"
 							bind:value={formData.name}
 							class="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-slate-200 focus:border-violet-500 outline-none font-mono"
@@ -677,8 +680,9 @@
 
 				<div class="grid grid-cols-2 gap-4">
 					<div>
-						<label class="block text-xs font-bold text-slate-400 uppercase mb-2">Arguments</label>
+						<label for="fnArgs" class="block text-xs font-bold text-slate-400 uppercase mb-2">Arguments</label>
 						<input
+							id="fnArgs"
 							type="text"
 							bind:value={formData.arguments}
 							class="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-slate-200 focus:border-violet-500 outline-none font-mono"
@@ -686,8 +690,9 @@
 						/>
 					</div>
 					<div>
-						<label class="block text-xs font-bold text-slate-400 uppercase mb-2">Returns</label>
+						<label for="fnReturns" class="block text-xs font-bold text-slate-400 uppercase mb-2">Returns</label>
 						<select
+							id="fnReturns"
 							bind:value={formData.returns}
 							class="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-slate-200 focus:border-violet-500 outline-none"
 						>
@@ -700,8 +705,9 @@
 
 				<div class="grid grid-cols-3 gap-4">
 					<div>
-						<label class="block text-xs font-bold text-slate-400 uppercase mb-2">Language</label>
+						<label for="fnLang" class="block text-xs font-bold text-slate-400 uppercase mb-2">Language</label>
 						<select
+							id="fnLang"
 							bind:value={formData.language}
 							class="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-slate-200 focus:border-violet-500 outline-none"
 						>
@@ -711,8 +717,9 @@
 						</select>
 					</div>
 					<div>
-						<label class="block text-xs font-bold text-slate-400 uppercase mb-2">Volatility</label>
+						<label for="fnVol" class="block text-xs font-bold text-slate-400 uppercase mb-2">Volatility</label>
 						<select
+							id="fnVol"
 							bind:value={formData.volatility}
 							class="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-slate-200 focus:border-violet-500 outline-none"
 						>
@@ -747,8 +754,9 @@
 
 				<!-- Function Body -->
 				<div>
-					<label class="block text-xs font-bold text-slate-400 uppercase mb-2">Function Body</label>
+					<label for="fnBody" class="block text-xs font-bold text-slate-400 uppercase mb-2">Function Body</label>
 					<textarea
+						id="fnBody"
 						bind:value={formData.body}
 						rows="15"
 						class="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-slate-200 focus:border-violet-500 outline-none font-mono text-sm resize-none"
@@ -794,6 +802,7 @@ END;"
 		<button
 			class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm cursor-default"
 			onclick={() => (executeModalOpen = false)}
+			aria-label="Close modal"
 		></button>
 
 		<div
@@ -825,13 +834,14 @@ END;"
 			<!-- Modal Body -->
 			<div class="flex-1 overflow-y-auto p-6 space-y-6">
 				{#if functionToExecute.argument_types}
-					<div>
-						<label class="block text-xs font-bold text-slate-400 uppercase mb-3">Arguments</label>
+					<div role="group" aria-labelledby="args-label">
+						<div id="args-label" class="block text-xs font-bold text-slate-400 uppercase mb-3">Arguments</div>
 						<div class="space-y-3">
 							{#each functionToExecute.argument_types.split(',') as arg, i}
 								<div class="flex items-center gap-3">
-									<span class="text-sm text-slate-500 font-mono min-w-[120px]">{arg.trim()}</span>
+									<label for={`execArg-${i}`} class="text-sm text-slate-500 font-mono min-w-[120px]">{arg.trim()}</label>
 									<input
+										id={`execArg-${i}`}
 										type="text"
 										bind:value={executeArgs[i]}
 										class="flex-1 px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 focus:border-emerald-500 outline-none font-mono"
@@ -846,8 +856,8 @@ END;"
 				{/if}
 
 				{#if executeResult.length > 0}
-					<div>
-						<label class="block text-xs font-bold text-slate-400 uppercase mb-3">Result</label>
+					<div role="group" aria-labelledby="result-label">
+						<div id="result-label" class="block text-xs font-bold text-slate-400 uppercase mb-3">Result</div>
 						<div class="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden">
 							<div class="overflow-x-auto">
 								<table class="w-full text-sm">

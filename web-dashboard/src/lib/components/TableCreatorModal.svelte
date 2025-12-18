@@ -73,9 +73,10 @@
 
 			<div class="p-6 overflow-y-auto space-y-6">
 				<div>
-					<label class="block text-sm font-medium text-slate-300 mb-1.5">Table Name</label>
+					<label for="tableName" class="block text-sm font-medium text-slate-300 mb-1.5">Table Name</label>
 					<input
 						type="text"
+						id="tableName"
 						bind:value={tableName}
 						class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 outline-none focus:border-blue-500"
 						placeholder="e.g. users"
@@ -97,20 +98,28 @@
 						{#each columns as col, i}
 							<div class="flex flex-col gap-2 p-3 bg-slate-950/50 border border-slate-800 rounded-lg group">
 								<div class="flex gap-2 items-start">
-									<input
-										type="text"
-										bind:value={col.name}
-										placeholder="Column Name"
-										class="flex-1 bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-sm text-slate-200 outline-none focus:border-blue-500"
-									/>
-									<select
-										bind:value={col.type}
-										class="bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-sm text-blue-400 outline-none focus:border-blue-500 font-mono"
-									>
-										{#each dataTypes as type}
-											<option value={type}>{type}</option>
-										{/each}
-									</select>
+							<div class="flex flex-col gap-1 w-full">
+								<label for="columnName-{i}" class="text-xs text-slate-400">Name</label>
+								<input
+									type="text"
+									id="columnName-{i}"
+									bind:value={col.name}
+									placeholder="Column Name"
+									class="flex-1 bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-sm text-slate-200 outline-none focus:border-blue-500"
+								/>
+							</div>
+							<div class="flex flex-col gap-1 w-full">
+								<label for="columnType-{i}" class="text-xs text-slate-400">Type</label>
+								<select
+									id="columnType-{i}"
+									bind:value={col.type}
+									class="bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-sm text-blue-400 outline-none focus:border-blue-500 font-mono"
+								>
+									{#each dataTypes as type}
+										<option value={type}>{type}</option>
+									{/each}
+								</select>
+							</div>
 									<button
 										onclick={() => removeColumn(i)}
 										class="p-1.5 text-slate-500 hover:text-red-400 rounded"

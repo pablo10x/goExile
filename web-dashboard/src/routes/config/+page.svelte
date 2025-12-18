@@ -269,8 +269,8 @@
 	}
 
 	function distributeConfigs(configs: ConfigItem[]) {
-		masterSections.forEach((s) => (s.items = []));
-		spawnerSections.forEach((s) => (s.items = []));
+		masterSections = masterSections.map(s => ({ ...s, items: [] }));
+		spawnerSections = spawnerSections.map(s => ({ ...s, items: [] }));
 
 		if (!configs || configs.length === 0) {
 			configs = getDefaultConfigs();
@@ -622,8 +622,8 @@
 							>
 								<div class="flex items-center gap-3 sm:gap-4">
 									<div class="p-2 sm:p-2.5 bg-gradient-to-br {section.gradient} rounded-lg sm:rounded-xl shadow-lg">
-										{section.icon({ class: 'w-4 h-4 sm:w-5 sm:h-5 text-white' })}
-									</div>
+																					<!-- svelte-ignore svelte_component_deprecated -->
+											<svelte:component this={section.icon} class="w-4 h-4 sm:w-5 sm:h-5 text-white" />									</div>
 									<div class="text-left">
 										<h3 class="text-sm sm:text-lg font-semibold text-white">{section.title}</h3>
 										<p class="text-xs sm:text-sm text-slate-400 line-clamp-1 sm:line-clamp-none">{section.description}</p>
@@ -977,6 +977,11 @@
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
 		onclick={(e) => e.target === e.currentTarget && closeFirebaseModal()}
+		onkeydown={(e) => {
+			if (e.key === 'Enter' || e.key === ' ') closeFirebaseModal();
+		}}
+		role="button"
+		tabindex="0"
 		transition:fade={{ duration: 150 }}
 	>
 		<div
@@ -1001,8 +1006,9 @@
 			<div class="p-4 sm:p-6 space-y-4 max-h-[70vh] overflow-y-auto">
 				<!-- Key -->
 				<div>
-					<label class="block text-sm font-medium text-slate-300 mb-2">Parameter Key</label>
+					<label for="fbKey" class="block text-sm font-medium text-slate-300 mb-2">Parameter Key</label>
 					<input
+						id="fbKey"
 						type="text"
 						bind:value={firebaseForm.key}
 						disabled={firebaseModalMode === 'edit'}
@@ -1013,8 +1019,9 @@
 
 				<!-- Value Type -->
 				<div>
-					<label class="block text-sm font-medium text-slate-300 mb-2">Value Type</label>
+					<label for="fbType" class="block text-sm font-medium text-slate-300 mb-2">Value Type</label>
 					<select
+						id="fbType"
 						bind:value={firebaseForm.valueType}
 						class="w-full px-4 py-2.5 sm:py-3 bg-slate-800 border border-slate-600 rounded-xl text-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none text-sm"
 					>
@@ -1027,9 +1034,10 @@
 
 				<!-- Value -->
 				<div>
-					<label class="block text-sm font-medium text-slate-300 mb-2">Default Value</label>
+					<label for="fbValue" class="block text-sm font-medium text-slate-300 mb-2">Default Value</label>
 					{#if firebaseForm.valueType === 'BOOLEAN'}
 						<select
+							id="fbValue"
 							bind:value={firebaseForm.value}
 							class="w-full px-4 py-2.5 sm:py-3 bg-slate-800 border border-slate-600 rounded-xl text-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none text-sm"
 						>
@@ -1038,6 +1046,7 @@
 						</select>
 					{:else if firebaseForm.valueType === 'JSON'}
 						<textarea
+							id="fbValue"
 							bind:value={firebaseForm.value}
 							rows={4}
 							placeholder="Enter JSON value..."
@@ -1045,6 +1054,7 @@
 						></textarea>
 					{:else}
 						<input
+							id="fbValue"
 							type={firebaseForm.valueType === 'NUMBER' ? 'number' : 'text'}
 							bind:value={firebaseForm.value}
 							placeholder="Enter value..."
@@ -1055,9 +1065,10 @@
 
 				<!-- Description -->
 				<div>
-					<label class="block text-sm font-medium text-slate-300 mb-2">Description (optional)</label
+					<label for="fbDesc" class="block text-sm font-medium text-slate-300 mb-2">Description (optional)</label
 					>
 					<textarea
+						id="fbDesc"
 						bind:value={firebaseForm.description}
 						rows={2}
 						placeholder="Describe what this parameter does..."
