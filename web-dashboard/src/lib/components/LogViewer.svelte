@@ -366,15 +366,16 @@
 		<!-- Tabs (Scrollable on mobile) -->
 		<div class="flex p-1 bg-slate-950 rounded-lg border border-slate-800 overflow-x-auto no-scrollbar">
 			{#each tabs as tab}
-									<button
-										class="px-2.5 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 whitespace-nowrap
+				{@const Icon = tab.icon}
+				<button
+					class="px-2.5 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 whitespace-nowrap
 					                        {selectedTab === tab.id
-											? 'bg-slate-800 text-white shadow-sm'
-											: 'text-slate-500 hover:text-slate-300'}"
-										onclick={() => (selectedTab = tab.id)}
-									>
-										{tab.icon({ class: 'w-3.5 h-3.5' })}
-										{tab.label}
+						? 'bg-slate-800 text-white shadow-sm'
+						: 'text-slate-500 hover:text-slate-300'}"
+					onclick={() => (selectedTab = tab.id)}
+				>
+					<Icon class="w-3.5 h-3.5" />
+					{tab.label}
 										<span class="ml-0.5 text-[10px] opacity-60 bg-slate-900/50 px-1.5 rounded-full">
 											{stats[tab.id]}
 										</span>

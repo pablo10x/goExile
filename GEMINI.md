@@ -152,3 +152,7 @@ The following security improvements have been implemented:
 *   **Complexity Requirements:** Role passwords require 12+ characters with uppercase, lowercase, digits, and special characters.
 *   **Dangerous Options Blocked:** `SUPERUSER`, `REPLICATION`, and `BYPASSRLS` role options are blocked.
 *   **Security Definer Blocked:** Functions cannot use `SECURITY DEFINER` to prevent privilege escalation.
+
+### Frontend Cleanup
+*   **Removed Component:** Removed `LucideIconWrapper.svelte` as it was redundant.
+*   **LogViewer Refactor:** Updated `LogViewer.svelte` to use Svelte 5 `{@const Icon = tab.icon}` syntax for dynamic icon rendering, fixing deprecation warnings.

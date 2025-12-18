@@ -17,7 +17,7 @@
 		onClose: () => void;
 	}>();
 
-	let currentNote = $state<Note | Omit<Note, 'id' | 'created_at' | 'updated_at'>>({
+	let currentNote = $state<Note>({
 		id: initialNote?.id || 0, // id is 0 for new notes
 		title: initialNote?.title || '',
 		content: initialNote?.content || '',
@@ -63,7 +63,7 @@
 				created_at: currentNote.created_at || new Date().toISOString(),
 				updated_at: new Date().toISOString(),
 				id: currentNote.id || 0 // Ensure ID is set for type compliance, 0 for new
-			} as Note; // Cast to Note to satisfy interface
+			};
 
 			await onSave(noteToSave);
 			onClose();
