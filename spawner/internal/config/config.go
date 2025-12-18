@@ -36,15 +36,15 @@ var (
 	maxFlag    = flag.Int("max", 0, "Maximum number of instances")
 	regionFlag = flag.String("region", "", "Region identifier (e.g. US-East)")
 
-	// Spawner specific settings (no .env fallback for these)
+	// Spawner specific settings (no .env fallback for these initially, will be updated)
 	hostFlag              = flag.String("host", "localhost", "Hostname/IP reachable by Master Server")
 	gameBinaryPathFlag    = flag.String("game-binary", "", "Path to the game server binary relative to install dir")
 	gameDownloadURLFlag   = flag.String("game-download-url", "", "URL to download game server files (if different from Master)")
 	gameDownloadTokenFlag = flag.String("game-download-token", "", "Token for game server download (if required)")
-	gameInstallDirFlag    = flag.String("install-dir", "./game_server", "Directory where game server is installed")
+	gameInstallDirFlag    = flag.String("install-dir", "", "Directory where game server is installed")
 	portFlag              = flag.String("port", "8080", "Port for the Spawner API itself")
 	stateFilePathFlag     = flag.String("state-file", "instances.json", "Path to the JSON file storing instance state")
-	instancesDirFlag      = flag.String("instances-dir", "./instances", "Directory where game server instances are spawned")
+	instancesDirFlag      = flag.String("instances-dir", "", "Directory where game server instances are spawned")
 )
 
 // Load reads configuration from environment variables and command-line flags.
@@ -54,46 +54,63 @@ func Load() (*Config, error) {
 	_ = godotenv.Load(".env")
 
 	conf := &Config{
-		// These fields ONLY come from flags or hardcoded defaults
+		// These fields ONLY come from flags or hardcoded defaults (if flag not provided)
 		Region:            *regionFlag,
 		Host:              *hostFlag,
-		GameBinaryPath:    *gameBinaryPathFlag,
 		GameDownloadURL:   *gameDownloadURLFlag,
 		GameDownloadToken: *gameDownloadTokenFlag,
-		GameInstallDir:    *gameInstallDirFlag,
 		Port:              *portFlag,
 		StartingPort:      *spFlag,
 		MaxInstances:      *maxFlag,
 		StateFilePath:     *stateFilePathFlag,
-		InstancesDir:      *instancesDirFlag,
 		EnrollmentKey:     *keyFlag,
 
-		// These fields can fall back to environment variables
+		// These fields can fall back to environment variables or flags
 		MasterURL:    getEnv("MASTER_URL", *urlFlag),
 		MasterAPIKey: getEnv("MASTER_API_KEY", ""),
-	}
 
-	// Apply flag overrides where flag default is 0 or ""
-	// For flags that have default values set in flag.String/Int etc., those defaults are already in *flagName
-	// This block ensures explicit 0/"" values from flags are honored, and overrides env vars if both present.
-	if *urlFlag != "" { // Only override env if flag was explicitly provided
+		// These specific game server settings now also fall back to environment variables
+		GameBinaryPath: getEnv("GAME_BINARY_PATH", *gameBinaryPathFlag),
+		GameInstallDir: getEnv("GAME_INSTALL_DIR", *gameInstallDirFlag),
+		InstancesDir:   getEnv("INSTANCES_DIR", *instancesDirFlag),
+	}
+	
+	// Apply flag overrides to ensure flags always take precedence.
+	// For flags that provide their own non-zero/non-empty defaults, those already take precedence implicitly.
+	// This block handles cases where an empty env var should be overridden by a non-empty flag,
+	// or where the flag's default is 0/"" but a non-zero/non-empty value was explicitly provided.
+
+	if *urlFlag != "" { // Override env if flag was explicitly provided
 		conf.MasterURL = *urlFlag
 	}
-	if *spFlag == 0 { // If flag default (0) was not changed, use env or hardcoded default
-		conf.StartingPort = getEnvAsInt("STARTING_PORT", 7777)
-	} else { // Flag was provided
+	// For starting port and max instances, their flags have 0 default.
+	// We need to prioritize flag > env > hardcoded default (7777, 10)
+	if *spFlag != 0 {
 		conf.StartingPort = *spFlag
+	} else if conf.StartingPort == 0 { // if env also didn't set it (and flag default is 0)
+		conf.StartingPort = 7777 // Hardcoded default
 	}
-	if *maxFlag == 0 { // If flag default (0) was not changed, use env or hardcoded default
-		conf.MaxInstances = getEnvAsInt("MAX_INSTANCES", 10)
-	} else { // Flag was provided
-		conf.MaxInstances = *maxFlag
-	}
-	// No longer overriding region with env, it's flag or nothing
 
-	// Final validation (handles missing required fields that are no longer defaulting to env)
-	if err := conf.Validate(); err != nil {
-		return nil, err
+	if *maxFlag != 0 {
+		conf.MaxInstances = *maxFlag
+	} else if conf.MaxInstances == 0 { // if env also didn't set it (and flag default is 0)
+		conf.MaxInstances = 10 // Hardcoded default
+	}
+
+	// For string flags, an empty string means the flag wasn't provided, so env takes over.
+	// Only override env if flag was explicitly provided.
+	if *gameBinaryPathFlag != "" {
+		conf.GameBinaryPath = *gameBinaryPathFlag
+	}
+	if *gameInstallDirFlag != "" {
+		conf.GameInstallDir = *gameInstallDirFlag
+	}
+	if *instancesDirFlag != "" {
+		conf.InstancesDir = *instancesDirFlag
+	}
+
+	if *regionFlag != "" {
+		conf.Region = *regionFlag
 	}
 
 	return conf, nil
@@ -105,7 +122,7 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("REGION is required (use -region flag)")
 	}
 	if c.GameBinaryPath == "" {
-		return fmt.Errorf("GAME_BINARY_PATH is required")
+		return fmt.Errorf("GAME_BINARY_PATH is required (use -game-binary flag or env)")
 	}
 
 	// If no API key is configured, an enrollment key is required for initial setup
@@ -124,10 +141,10 @@ func (c *Config) Validate() error {
 	}
 
 	if c.StartingPort <= 0 {
-		return fmt.Errorf("STARTING_PORT must be > 0")
+		return fmt.Errorf("STARTING_PORT must be > 0 (use -sp flag or env)")
 	}
 	if c.MaxInstances <= 0 {
-		return fmt.Errorf("MAX_INSTANCES must be > 0")
+		return fmt.Errorf("MAX_INSTANCES must be > 0 (use -max flag or env)")
 	}
 
 	return nil
