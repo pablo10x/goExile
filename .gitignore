@@ -47,6 +47,7 @@ coverage.out
 # Large binary files
 *.zip
 server/files/*.zip
+server/goexile-f09d4-firebase-adminsdk-fbsvc-5502988de4.json
 
 # Spawner specific
 spawner/lin/
