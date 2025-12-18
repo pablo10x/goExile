@@ -149,7 +149,7 @@ func run() error {
 
 	apiRouter.HandleFunc("/ws", GlobalWSManager.HandleWS) // WebSocket Endpoint
 	apiRouter.HandleFunc("/download", ServeGameServerFile).Methods("GET", "HEAD")
-	apiRouter.HandleFunc("", RegisterSpawner).Methods("POST") // Legacy registration (requires API key)
+	// apiRouter.HandleFunc("", RegisterSpawner).Methods("POST") // Disabled to enforce enrollment flow
 	apiRouter.HandleFunc("", ListSpawners).Methods("GET")     // Maybe this should be public or auth? Keeping consistent
 	apiRouter.HandleFunc("/{id}", GetSpawner).Methods("GET")
 	apiRouter.HandleFunc("/{id}", DeleteSpawner).Methods("DELETE")
