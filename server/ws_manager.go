@@ -347,7 +347,7 @@ func (c *SpawnerConnection) handleMessage(msg WSMessage) {
 			// Enforce Enrollment: Check if spawner exists
 			existing, found := registry.Lookup(s.Host, s.Port)
 			if !found {
-				log.Printf("❌ Rejected connection from unenrolled spawner: %s:%d", s.Host, s.Port)
+				GlobalStats.RecordSecurityEvent("Unauthorized Spawner Connection", fmt.Sprintf("Host: %s, Port: %d", s.Host, s.Port), c.Conn.RemoteAddr().String())
 				errorResp := WSMessage{
 					Type: "REGISTER_RESPONSE",
 					Payload: func() json.RawMessage {

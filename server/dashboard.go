@@ -32,6 +32,14 @@ type ErrorLog struct {
 	ClientIP  string    `json:"client_ip"`
 }
 
+// SecurityLog represents a security event.
+type SecurityLog struct {
+	Timestamp time.Time `json:"timestamp"`
+	Event     string    `json:"event"`
+	Details   string    `json:"details"`
+	ClientIP  string    `json:"client_ip"`
+}
+
 // DashboardStats holds metrics for display.
 type DashboardStats struct {
 	mu              sync.RWMutex
@@ -62,15 +70,17 @@ type DashboardStats struct {
 	DBTupUpdated  int64
 	DBTupDeleted  int64
 
-	Uptime    time.Duration
-	StartTime time.Time
-	ErrorLogs []ErrorLog
+	Uptime       time.Duration
+	StartTime    time.Time
+	ErrorLogs    []ErrorLog
+	SecurityLogs []SecurityLog
 }
 
 // GlobalStats is the global dashboard stats instance.
 var GlobalStats = &DashboardStats{
-	StartTime: time.Now(),
-	ErrorLogs: make([]ErrorLog, 0),
+	StartTime:    time.Now(),
+	ErrorLogs:    make([]ErrorLog, 0),
+	SecurityLogs: make([]SecurityLog, 0),
 }
 
 // RecordRequest increments the request counter and bandwidth stats.
@@ -103,6 +113,25 @@ func (ds *DashboardStats) RecordError(path string, status int, message string, c
 	ds.ErrorLogs = append([]ErrorLog{logEntry}, ds.ErrorLogs...)
 	if len(ds.ErrorLogs) > 50 {
 		ds.ErrorLogs = ds.ErrorLogs[:50]
+	}
+}
+
+// RecordSecurityEvent adds a security event to the log.
+func (ds *DashboardStats) RecordSecurityEvent(event string, details string, clientIP string) {
+	ds.mu.Lock()
+	defer ds.mu.Unlock()
+
+	logEntry := SecurityLog{
+		Timestamp: time.Now(),
+		Event:     event,
+		Details:   details,
+		ClientIP:  clientIP,
+	}
+
+	// Prepend and keep last 50
+	ds.SecurityLogs = append([]SecurityLog{logEntry}, ds.SecurityLogs...)
+	if len(ds.SecurityLogs) > 50 {
+		ds.SecurityLogs = ds.SecurityLogs[:50]
 	}
 }
 

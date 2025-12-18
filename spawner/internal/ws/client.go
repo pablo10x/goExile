@@ -328,6 +328,10 @@ func (c *Client) handleMessage(msg WSMessage) {
 				c.logger.Info("✅ Successfully registered with Master Server via WebSocket", "spawner_id", c.id)
 			} else {
 				c.logger.Error("❌ Registration failed", "error", resp.Error)
+				if strings.Contains(resp.Error, "not enrolled") {
+					c.logger.Error("FATAL: Spawner is not enrolled. Please use the dashboard to generate an enrollment key and run with -key <key>.")
+					os.Exit(1)
+				}
 				// Close connection to trigger reconnection
 				c.conn.Close()
 			}
