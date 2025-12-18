@@ -59,7 +59,8 @@
 	});
 
 	// Custom slide in from right with bounce
-	function slideInBounce(node: HTMLElement, { duration = 600 }) {
+	function slideInBounce(node: HTMLElement, params: { duration?: number } = {}) {
+		const { duration = 600 } = params;
 		return {
 			duration,
 			css: (t: number) => {
@@ -73,7 +74,8 @@
 	}
 
 	// Custom exit animation
-	function slideOutScale(node: HTMLElement, { duration = 300 }) {
+	function slideOutScale(node: HTMLElement, params: { duration?: number } = {}) {
+		const { duration = 300 } = params;
 		return {
 			duration,
 			css: (t: number) => {
@@ -102,28 +104,31 @@
 	<!-- Animated gradient backgrounds -->
 	<div class="absolute inset-0 pointer-events-none overflow-hidden">
 		<!-- Primary gradient blob -->
-		<div class={`gradient-blob blob-1
+		<div
+			class={`gradient-blob blob-1
 			${notification.type === 'success' ? 'bg-gradient-to-br from-emerald-500/30 via-emerald-600/20 to-transparent' : ''}
 			${notification.type === 'error' ? 'bg-gradient-to-br from-red-500/30 via-red-600/20 to-transparent' : ''}
 			${notification.type === 'info' ? 'bg-gradient-to-br from-blue-500/30 via-blue-600/20 to-transparent' : ''}
-			${notification.type === 'warning' ? 'bg-gradient-to-br from-orange-500/30 via-orange-600/20 to-transparent' : ''}`}>
-		</div>
-		
+			${notification.type === 'warning' ? 'bg-gradient-to-br from-orange-500/30 via-orange-600/20 to-transparent' : ''}`}
+		></div>
+
 		<!-- Secondary gradient blob -->
-		<div class={`gradient-blob blob-2
+		<div
+			class={`gradient-blob blob-2
 			${notification.type === 'success' ? 'bg-gradient-to-tl from-emerald-400/25 via-emerald-500/15 to-transparent' : ''}
 			${notification.type === 'error' ? 'bg-gradient-to-tl from-red-400/25 via-red-500/15 to-transparent' : ''}
 			${notification.type === 'info' ? 'bg-gradient-to-tl from-blue-400/25 via-blue-500/15 to-transparent' : ''}
-			${notification.type === 'warning' ? 'bg-gradient-to-tl from-orange-400/25 via-orange-500/15 to-transparent' : ''}`}>
-		</div>
-		
+			${notification.type === 'warning' ? 'bg-gradient-to-tl from-orange-400/25 via-orange-500/15 to-transparent' : ''}`}
+		></div>
+
 		<!-- Tertiary gradient blob -->
-		<div class={`gradient-blob blob-3
+		<div
+			class={`gradient-blob blob-3
 			${notification.type === 'success' ? 'bg-gradient-to-tr from-emerald-600/20 via-emerald-400/10 to-transparent' : ''}
 			${notification.type === 'error' ? 'bg-gradient-to-tr from-red-600/20 via-red-400/10 to-transparent' : ''}
 			${notification.type === 'info' ? 'bg-gradient-to-tr from-blue-600/20 via-blue-400/10 to-transparent' : ''}
-			${notification.type === 'warning' ? 'bg-gradient-to-tr from-orange-600/20 via-orange-400/10 to-transparent' : ''}`}>
-		</div>
+			${notification.type === 'warning' ? 'bg-gradient-to-tr from-orange-600/20 via-orange-400/10 to-transparent' : ''}`}
+		></div>
 	</div>
 
 	<!-- Particles -->
@@ -169,13 +174,15 @@
 			{notification.message}
 		</p>
 		{#if notification.details}
-			<p class="text-xs text-slate-200 mt-1 slide-in-text-delayed drop-shadow">{notification.details}</p>
+			<p class="text-xs text-slate-200 mt-1 slide-in-text-delayed drop-shadow">
+				{notification.details}
+			</p>
 		{/if}
 	</div>
 
 	<!-- Dismiss Button with hover effect -->
-	<button 
-		onclick={() => onDismiss(notification.id)} 
+	<button
+		onclick={() => onDismiss(notification.id)}
 		class="dismiss-button flex-shrink-0 text-slate-300 hover:text-white transition-all duration-200 p-1 rounded-full hover:bg-white/20 hover:rotate-90 relative z-10"
 	>
 		<X class="w-4 h-4" />
@@ -236,7 +243,8 @@
 	}
 
 	@keyframes float1 {
-		0%, 100% {
+		0%,
+		100% {
 			transform: translate(0, 0) scale(1);
 		}
 		33% {
@@ -248,7 +256,8 @@
 	}
 
 	@keyframes float2 {
-		0%, 100% {
+		0%,
+		100% {
 			transform: translate(0, 0) scale(1);
 		}
 		33% {
@@ -260,7 +269,8 @@
 	}
 
 	@keyframes float3 {
-		0%, 100% {
+		0%,
+		100% {
 			transform: translate(-50%, -50%) scale(1);
 		}
 		50% {
@@ -279,7 +289,8 @@
 	}
 
 	@keyframes particleFloat {
-		0%, 100% {
+		0%,
+		100% {
 			transform: translateY(0) translateX(0) scale(0);
 			opacity: 0;
 		}
@@ -301,13 +312,19 @@
 
 	/* Shimmer overlay animation */
 	.gradient-overlay {
-		background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.15) 50%, transparent 70%);
+		background: linear-gradient(
+			45deg,
+			transparent 30%,
+			rgba(255, 255, 255, 0.15) 50%,
+			transparent 70%
+		);
 		background-size: 200% 200%;
 		animation: shimmer 3s ease-in-out infinite;
 	}
 
 	@keyframes shimmer {
-		0%, 100% {
+		0%,
+		100% {
 			background-position: 200% 50%;
 		}
 		50% {
@@ -336,25 +353,37 @@
 	}
 
 	.shake {
-		animation: iconPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55), shake 0.5s ease-in-out 0.5s;
+		animation:
+			iconPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55),
+			shake 0.5s ease-in-out 0.5s;
 	}
 
 	@keyframes shake {
-		0%, 100% { transform: translateX(0) rotate(0deg); }
-		25% { transform: translateX(-5px) rotate(-5deg); }
-		75% { transform: translateX(5px) rotate(5deg); }
+		0%,
+		100% {
+			transform: translateX(0) rotate(0deg);
+		}
+		25% {
+			transform: translateX(-5px) rotate(-5deg);
+		}
+		75% {
+			transform: translateX(5px) rotate(5deg);
+		}
 	}
 
 	.pulse-warning {
-		animation: iconPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55), pulse 2s ease-in-out 0.5s infinite;
+		animation:
+			iconPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55),
+			pulse 2s ease-in-out 0.5s infinite;
 	}
 
 	@keyframes pulse {
-		0%, 100% { 
+		0%,
+		100% {
 			transform: scale(1);
 			opacity: 1;
 		}
-		50% { 
+		50% {
 			transform: scale(1.1);
 			opacity: 0.8;
 		}
@@ -387,7 +416,8 @@
 	}
 
 	@keyframes progressGlow {
-		0%, 100% {
+		0%,
+		100% {
 			filter: brightness(1);
 		}
 		50% {

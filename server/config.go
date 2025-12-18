@@ -12,6 +12,7 @@ const (
 	// protects the server from large or inefficient payloads.
 	MaxBodySize = 1 << 20 // 1MB
 
+
 	// MaxIDValue provides a sanity limit for parsed ID values.
 	MaxIDValue = 2147483647
 

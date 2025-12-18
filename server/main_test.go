@@ -36,6 +36,7 @@ func TestRegisterAndGetSpawner(t *testing.T) {
 	RegisterSpawner(w, req)
 	if w.Code != http.StatusCreated {
 		t.Fatalf("expected 201 Created, got %d, body: %s", w.Code, w.Body.String())
+
 	}
 
 	var resp map[string]int

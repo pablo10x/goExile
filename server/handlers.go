@@ -429,7 +429,6 @@ func StopSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 
 // StartSpawnerInstance starts a specific game instance on a spawner.
 func StartSpawnerInstance(w http.ResponseWriter, r *http.Request) {
-	log.Printf("StartSpawnerInstance handler invoked for request: %s", r.URL.Path)
 	vars := mux.Vars(r)
 	id, err := parseID(vars["id"])
 	if err != nil {
@@ -437,6 +436,7 @@ func StartSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	instanceID := vars["instance_id"]
+
 	if instanceID == "" {
 		writeError(w, r, http.StatusBadRequest, "missing instance_id")
 		return

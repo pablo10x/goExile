@@ -45,11 +45,11 @@ func (r *Registry) Register(s *Spawner) (int, error) {
 		if err != nil {
 			return 0, fmt.Errorf("failed to save spawner to DB: %w", err)
 		}
-		
+
 		// Refresh with authoritative ID
 		s.ID = id
 		r.items[id] = s
-		
+
 		// Sync in-memory counter just in case
 		if id >= r.nextID {
 			r.nextID = id + 1
@@ -78,7 +78,7 @@ func (r *Registry) UpdateHeartbeat(id int, currentInstances, maxInstances int, s
 	s.CurrentInstances = currentInstances
 	s.MaxInstances = maxInstances
 	s.Status = status
-	
+
 	s.CpuUsage = cpuUsage
 	s.MemUsed = memUsed
 	s.MemTotal = memTotal
@@ -130,6 +130,17 @@ func (r *Registry) List() []Spawner {
 	return out
 }
 
+// All returns all spawners as pointers (used for metrics collection)
+func (r *Registry) All() []*Spawner {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	out := make([]*Spawner, 0, len(r.items))
+	for _, v := range r.items {
+		out = append(out, v)
+	}
+	return out
+}
+
 func (r *Registry) Delete(id int) bool {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -164,23 +175,23 @@ func (r *Registry) MonitorStatuses(interval time.Duration) {
 			// Time-based status updates disabled (Degraded/Unresponsive).
 			// Status is only "Online" (connected) or "Offline" (disconnected).
 			/*
-			since := now.Sub(s.LastSeen)
-			
-			var newStatus string
-			// Heartbeat is 5s. 2 heartbeats = 10s.
-			// Increased buffer to 20s (4 missed heartbeats) to prevent flapping
-			if since < 20*time.Second { 
-				newStatus = "Online"
-			} else if since < 45*time.Second {
-				newStatus = "Degraded"
-			} else {
-				newStatus = "Unresponsive"
-			}
+				since := now.Sub(s.LastSeen)
 
-			// Only update if changed
-			if s.Status != newStatus {
-				s.Status = newStatus
-			}
+				var newStatus string
+				// Heartbeat is 5s. 2 heartbeats = 10s.
+				// Increased buffer to 20s (4 missed heartbeats) to prevent flapping
+				if since < 20*time.Second {
+					newStatus = "Online"
+				} else if since < 45*time.Second {
+					newStatus = "Degraded"
+				} else {
+					newStatus = "Unresponsive"
+				}
+
+				// Only update if changed
+				if s.Status != newStatus {
+					s.Status = newStatus
+				}
 			*/
 		}
 		r.mu.Unlock()

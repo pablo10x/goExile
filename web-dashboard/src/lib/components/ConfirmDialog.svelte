@@ -51,7 +51,8 @@
 	}
 
 	// Custom modal entrance animation
-	function modalScale(node: HTMLElement, { duration = 400 }) {
+	function modalScale(node: HTMLElement, params: { duration?: number } = {}) {
+		const { duration = 400 } = params;
 		return {
 			duration,
 			css: (t: number) => {
@@ -84,7 +85,7 @@
 			tabindex="0"
 			aria-label="Close dialog"
 		></div>
-		
+
 		<!-- Modal Container -->
 		<div
 			class="modal-container relative w-full max-w-lg bg-slate-900/40 border border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-white/10 backdrop-blur-xl"
@@ -93,19 +94,22 @@
 			<!-- Animated gradient backgrounds -->
 			<div class="absolute inset-0 pointer-events-none overflow-hidden">
 				<!-- Primary gradient blob -->
-				<div class={`gradient-blob blob-1
-					${isCritical ? 'bg-gradient-to-br from-red-500/30 via-red-600/20 to-transparent' : 'bg-gradient-to-br from-blue-500/30 via-blue-600/20 to-transparent'}`}>
-				</div>
-				
+				<div
+					class={`gradient-blob blob-1
+					${isCritical ? 'bg-gradient-to-br from-red-500/30 via-red-600/20 to-transparent' : 'bg-gradient-to-br from-blue-500/30 via-blue-600/20 to-transparent'}`}
+				></div>
+
 				<!-- Secondary gradient blob -->
-				<div class={`gradient-blob blob-2
-					${isCritical ? 'bg-gradient-to-tl from-red-400/25 via-red-500/15 to-transparent' : 'bg-gradient-to-tl from-blue-400/25 via-blue-500/15 to-transparent'}`}>
-				</div>
-				
+				<div
+					class={`gradient-blob blob-2
+					${isCritical ? 'bg-gradient-to-tl from-red-400/25 via-red-500/15 to-transparent' : 'bg-gradient-to-tl from-blue-400/25 via-blue-500/15 to-transparent'}`}
+				></div>
+
 				<!-- Tertiary gradient blob -->
-				<div class={`gradient-blob blob-3
-					${isCritical ? 'bg-gradient-to-tr from-orange-600/20 via-red-400/10 to-transparent' : 'bg-gradient-to-tr from-cyan-600/20 via-blue-400/10 to-transparent'}`}>
-				</div>
+				<div
+					class={`gradient-blob blob-3
+					${isCritical ? 'bg-gradient-to-tr from-orange-600/20 via-red-400/10 to-transparent' : 'bg-gradient-to-tr from-cyan-600/20 via-blue-400/10 to-transparent'}`}
+				></div>
 			</div>
 
 			<!-- Particles -->
@@ -139,13 +143,17 @@
 			<!-- Content -->
 			<div class="p-6 sm:p-8 relative z-10">
 				<div class="flex items-start gap-4">
-					<div class="icon-wrapper flex-shrink-0 p-3 rounded-full bg-slate-800/50 border border-slate-700/50 backdrop-blur-sm">
+					<div
+						class="icon-wrapper flex-shrink-0 p-3 rounded-full bg-slate-800/50 border border-slate-700/50 backdrop-blur-sm"
+					>
 						<div class="animate-icon-pop">
 							{@html icon}
 						</div>
 					</div>
 					<div class="flex-1">
-						<h3 class="text-xl font-bold text-slate-100 mb-2 tracking-tight slide-in-text">{title}</h3>
+						<h3 class="text-xl font-bold text-slate-100 mb-2 tracking-tight slide-in-text">
+							{title}
+						</h3>
 						<div class="text-slate-400 text-sm leading-relaxed space-y-2 slide-in-text-delayed">
 							{#if loading && statusMessage}
 								<p class="animate-pulse text-slate-300 font-medium">{statusMessage}</p>
@@ -210,7 +218,9 @@
 			</div>
 
 			<!-- Actions -->
-			<div class="px-6 py-5 bg-slate-950/30 border-t border-slate-800/50 flex justify-end gap-3 relative z-10 backdrop-blur-sm">
+			<div
+				class="px-6 py-5 bg-slate-950/30 border-t border-slate-800/50 flex justify-end gap-3 relative z-10 backdrop-blur-sm"
+			>
 				{#if loading && progress !== null}
 					<!-- Locked state during progress -->
 					<button disabled class="px-4 py-2 text-sm font-medium text-slate-500 cursor-not-allowed">
@@ -340,7 +350,8 @@
 	}
 
 	@keyframes float1 {
-		0%, 100% {
+		0%,
+		100% {
 			transform: translate(0, 0) scale(1);
 		}
 		33% {
@@ -352,7 +363,8 @@
 	}
 
 	@keyframes float2 {
-		0%, 100% {
+		0%,
+		100% {
 			transform: translate(0, 0) scale(1);
 		}
 		33% {
@@ -364,7 +376,8 @@
 	}
 
 	@keyframes float3 {
-		0%, 100% {
+		0%,
+		100% {
 			transform: translate(-50%, -50%) scale(1);
 		}
 		50% {
@@ -383,7 +396,8 @@
 	}
 
 	@keyframes particleFloat {
-		0%, 100% {
+		0%,
+		100% {
 			transform: translateY(0) translateX(0) scale(0);
 			opacity: 0;
 		}
@@ -405,13 +419,19 @@
 
 	/* Shimmer overlay animation */
 	.gradient-overlay {
-		background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.15) 50%, transparent 70%);
+		background: linear-gradient(
+			45deg,
+			transparent 30%,
+			rgba(255, 255, 255, 0.15) 50%,
+			transparent 70%
+		);
 		background-size: 200% 200%;
 		animation: shimmer 4s ease-in-out infinite;
 	}
 
 	@keyframes shimmer {
-		0%, 100% {
+		0%,
+		100% {
 			background-position: 200% 50%;
 		}
 		50% {
@@ -425,7 +445,8 @@
 	}
 
 	@keyframes shimmerBar {
-		0%, 100% {
+		0%,
+		100% {
 			opacity: 0.8;
 		}
 		50% {
@@ -458,7 +479,8 @@
 	}
 
 	@keyframes iconWrapperPulse {
-		0%, 100% {
+		0%,
+		100% {
 			box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
 		}
 		50% {
@@ -514,9 +536,16 @@
 	}
 
 	@keyframes shakeError {
-		0%, 100% { transform: translateX(0) rotate(0deg); }
-		25% { transform: translateX(-5px) rotate(-5deg); }
-		75% { transform: translateX(5px) rotate(5deg); }
+		0%,
+		100% {
+			transform: translateX(0) rotate(0deg);
+		}
+		25% {
+			transform: translateX(-5px) rotate(-5deg);
+		}
+		75% {
+			transform: translateX(5px) rotate(5deg);
+		}
 	}
 
 	/* Progress bar glow */
@@ -526,7 +555,8 @@
 	}
 
 	@keyframes progressGlow {
-		0%, 100% {
+		0%,
+		100% {
 			filter: brightness(1);
 		}
 		50% {

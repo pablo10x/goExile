@@ -1,167 +1,575 @@
 <script lang="ts">
-	import { Save, X } from 'lucide-svelte';
-	import { slide } from 'svelte/transition';
+	import {
+		Save,
+		X,
+		Plus,
+		Database,
+		Sparkles,
+		AlertCircle,
+		Check,
+		Type,
+		Hash,
+		Calendar,
+		ToggleLeft,
+		FileJson,
+		Loader2
+	} from 'lucide-svelte';
+	import { fade, fly, scale } from 'svelte/transition';
+	import { cubicOut, backOut, elasticOut } from 'svelte/easing';
+	import { untrack } from 'svelte';
 
-	let { 
-        isOpen = $bindable(false), 
-        schema, 
-        table, 
-        columns = [], 
-        rowData = null, // If null, it's 'Add Mode'. If set, 'Edit Mode' (future use)
-        onClose, 
-        onSave 
-    } = $props<{
+	let {
+		isOpen = $bindable(false),
+		schema,
+		table,
+		columns = [],
+		rowData = null,
+		onClose,
+		onSave
+	} = $props<{
 		isOpen: boolean;
 		schema: string;
 		table: string;
 		columns: any[];
-        rowData?: any;
+		rowData?: any;
 		onClose: () => void;
 		onSave: (data: any) => Promise<void>;
 	}>();
 
 	let formData = $state<Record<string, any>>({});
 	let loading = $state(false);
+	let lastOpenState = $state(false);
+	let error = $state<string | null>(null);
+	let successFields = $state<Set<string>>(new Set());
+	let focusedField = $state<string | null>(null);
+	let modifiedFields = $state<Set<string>>(new Set());
 
-    // Initialize form data when opening
-    $effect(() => {
-        if (isOpen) {
-            formData = {};
-            if (rowData) {
-                formData = { ...rowData };
-            } else {
-                // Set defaults?
-                columns.forEach((col: any) => {
-                    if (col.name !== 'id') { // Skip auto-increment usually
-                        formData[col.name] = null;
-                    }
-                });
-            }
-        }
-    });
+	// Derived values
+	let editableColumns = $derived(columns.filter((c: any) => c.name !== 'id'));
+	let modifiedCount = $derived(modifiedFields.size);
+	let isEditing = $derived(rowData !== null);
+
+	// Initialize form data when opening
+	$effect(() => {
+		const currentIsOpen = isOpen;
+
+		if (currentIsOpen && !lastOpenState) {
+			untrack(() => {
+				const newFormData: Record<string, any> = {};
+				if (rowData) {
+					Object.assign(newFormData, rowData);
+				} else {
+					for (const col of columns) {
+						if (col.name !== 'id') {
+							newFormData[col.name] = null;
+						}
+					}
+				}
+				formData = newFormData;
+				modifiedFields = new Set();
+				error = null;
+				successFields = new Set();
+			});
+		}
+
+		lastOpenState = currentIsOpen;
+	});
+
+	function getFieldIcon(type: string) {
+		if (!type) return Type;
+		const t = type.toLowerCase();
+		if (
+			t.includes('int') ||
+			t.includes('float') ||
+			t.includes('numeric') ||
+			t.includes('decimal') ||
+			t === 'real'
+		)
+			return Hash;
+		if (t.includes('bool')) return ToggleLeft;
+		if (t.includes('json')) return FileJson;
+		if (t.includes('timestamp') || t.includes('date') || t.includes('time')) return Calendar;
+		return Type;
+	}
+
+	function getFieldColor(type: string) {
+		if (!type)
+			return { bg: 'bg-slate-500/20', text: 'text-slate-400', border: 'border-slate-500/30' };
+		const t = type.toLowerCase();
+		if (
+			t.includes('int') ||
+			t.includes('float') ||
+			t.includes('numeric') ||
+			t.includes('decimal') ||
+			t === 'real'
+		) {
+			return { bg: 'bg-blue-500/20', text: 'text-blue-400', border: 'border-blue-500/30' };
+		}
+		if (t.includes('bool')) {
+			return { bg: 'bg-purple-500/20', text: 'text-purple-400', border: 'border-purple-500/30' };
+		}
+		if (t.includes('json')) {
+			return { bg: 'bg-amber-500/20', text: 'text-amber-400', border: 'border-amber-500/30' };
+		}
+		if (t.includes('timestamp') || t.includes('date') || t.includes('time')) {
+			return { bg: 'bg-emerald-500/20', text: 'text-emerald-400', border: 'border-emerald-500/30' };
+		}
+		if (t.includes('text') || t.includes('char') || t === 'uuid') {
+			return { bg: 'bg-cyan-500/20', text: 'text-cyan-400', border: 'border-cyan-500/30' };
+		}
+		return { bg: 'bg-slate-500/20', text: 'text-slate-400', border: 'border-slate-500/30' };
+	}
+
+	function handleFieldChange(colName: string) {
+		modifiedFields.add(colName);
+		modifiedFields = new Set(modifiedFields);
+	}
 
 	async function handleSubmit() {
 		loading = true;
-        // Filter out nulls/undefined for insertion if we want DB defaults to trigger?
-        // Or send explicitly null.
-        // For simplicity, we send keys that have values or explicit user input.
-        
-        const payload: Record<string, any> = {};
-        for (const col of columns) {
-            if (col.name === 'id' && !rowData) continue; // Skip ID on insert
-            
-            let val = formData[col.name];
-            
-            // Basic type coercion
-            if (col.type.startsWith('int') || col.type === 'numeric' || col.type === 'real') {
-                if (val !== null && val !== '') val = Number(val);
-            } else if (col.type === 'boolean') {
-                // boolean usually handled by checkbox binding
-            }
-            
-            if (val !== undefined && val !== '') {
-                payload[col.name] = val;
-            }
-        }
+		error = null;
+
+		const payload: Record<string, any> = {};
+		for (const col of columns) {
+			if (col.name === 'id' && !rowData) continue;
+
+			let val = formData[col.name];
+
+			if (
+				col.type &&
+				(col.type.startsWith('int') || col.type === 'numeric' || col.type === 'real')
+			) {
+				if (val !== null && val !== '' && val !== undefined) val = Number(val);
+			}
+
+			if (val !== undefined && val !== '') {
+				payload[col.name] = val;
+			}
+		}
 
 		try {
 			await onSave(payload);
-			onClose();
+			for (const key of Object.keys(payload)) {
+				successFields.add(key);
+			}
+			successFields = new Set(successFields);
+
+			setTimeout(() => {
+				onClose();
+			}, 300);
+		} catch (e: any) {
+			error = e.message || 'An unexpected error occurred.';
 		} finally {
 			loading = false;
 		}
 	}
+
+	function handleKeydown(e: KeyboardEvent) {
+		if (e.key === 'Escape' && !loading) {
+			onClose();
+		}
+		if (e.key === 'Enter' && e.ctrlKey) {
+			handleSubmit();
+		}
+	}
+
+	function handleBackdropClick(e: MouseEvent) {
+		if (e.target === e.currentTarget && !loading) {
+			onClose();
+		}
+	}
+
+	function getContainerClass(isSuccess: boolean, isFocused: boolean, isModified: boolean): string {
+		if (isSuccess) return 'border-emerald-500/50 bg-emerald-500/5';
+		if (isFocused) return 'border-blue-500/50 bg-blue-500/5';
+		if (isModified) return 'border-amber-500/30 bg-amber-500/5';
+		return 'border-slate-700/50 bg-slate-800/30 hover:border-slate-600/50';
+	}
+
+	function getBoolButtonClass(formValue: any, optionValue: any, optionColor: string): string {
+		if (formValue === optionValue) {
+			if (optionColor === 'emerald')
+				return 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 shadow-lg shadow-emerald-500/10';
+			if (optionColor === 'red')
+				return 'bg-red-500/20 text-red-400 border border-red-500/50 shadow-lg shadow-red-500/10';
+			return 'bg-slate-600/30 text-slate-300 border border-slate-500/50';
+		}
+		return 'bg-slate-800/50 text-slate-500 border border-slate-700/50 hover:border-slate-600/50 hover:text-slate-400';
+	}
 </script>
+
+<svelte:window onkeydown={handleKeydown} />
 
 {#if isOpen}
 	<div
-		class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
-		transition:slide={{ duration: 100 }}
+		class="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6"
+		transition:fade={{ duration: 200 }}
+		onclick={handleBackdropClick}
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="modal-title"
 	>
-		<div class="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]">
-			<div class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-950">
-				<h3 class="text-lg font-bold text-slate-100">
-                    {rowData ? 'Edit Row' : 'Add Row'} 
-                    <span class="text-slate-500 text-sm font-normal">in {schema}.{table}</span>
-                </h3>
-				<button onclick={onClose} class="text-slate-400 hover:text-white">
-					<X class="w-5 h-5" />
-				</button>
-			</div>
+		<div
+			class="absolute inset-0 bg-black/60 backdrop-blur-md"
+			transition:fade={{ duration: 300 }}
+		></div>
 
-			<div class="p-6 overflow-y-auto space-y-4">
-                {#each columns as col}
-                    {#if col.name !== 'id'} <!-- Skip ID for now, assume serial/uuid -->
-                        <div>
-                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">
-                                {col.name} 
-                                <span class="text-slate-600 font-normal normal-case">({col.type})</span>
-                            </label>
-                            
-                            {#if col.type === 'boolean'}
-                                <select 
-                                    bind:value={formData[col.name]}
-                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 outline-none focus:border-blue-500"
-                                >
-                                    <option value={null}>NULL</option>
-                                    <option value={true}>TRUE</option>
-                                    <option value={false}>FALSE</option>
-                                </select>
-                            {:else if col.type.includes('text') || col.type.includes('char') || col.type === 'uuid'}
-                                <input
-                                    type="text"
-                                    bind:value={formData[col.name]}
-                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 outline-none focus:border-blue-500"
-                                    placeholder="NULL"
-                                />
-                            {:else if col.type.includes('int') || col.type.includes('float') || col.type.includes('numeric')}
-                                <input
-                                    type="number"
-                                    bind:value={formData[col.name]}
-                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 outline-none focus:border-blue-500"
-                                    placeholder="NULL"
-                                />
-                            {:else if col.type.includes('json')}
-                                <textarea
-                                    bind:value={formData[col.name]}
-                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 outline-none focus:border-blue-500 font-mono text-xs"
-                                    rows="3"
-                                    placeholder="{`{}`}"
-                                ></textarea>
-                            {:else}
-                                <!-- Fallback -->
-                                <input
-                                    type="text"
-                                    bind:value={formData[col.name]}
-                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 outline-none focus:border-blue-500"
-                                />
-                            /
-                            {/if}
-                        </div>
-                    {/if}
-                {/each}
-			</div>
+		<div class="absolute inset-0 overflow-hidden pointer-events-none">
+			{#each Array(15) as _, i}
+				<div
+					class="absolute w-1 h-1 bg-blue-400/30 rounded-full animate-float"
+					style="left: {Math.random() * 100}%; top: {Math.random() *
+						100}%; animation-delay: {Math.random() * 5}s; animation-duration: {3 +
+						Math.random() * 4}s;"
+				></div>
+			{/each}
+		</div>
 
-			<div class="p-4 border-t border-slate-700 bg-slate-950 flex justify-end gap-3">
-				<button
-					onclick={onClose}
-					class="px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
-				>
-					Cancel
-				</button>
-				<button
-					onclick={handleSubmit}
-					disabled={loading}
-					class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold flex items-center gap-2 shadow-lg disabled:opacity-50"
-				>
-					{#if loading}
-						<div class="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></div>
+		<div
+			class="relative w-full max-w-2xl max-h-[90vh] flex flex-col"
+			transition:fly={{ y: 30, duration: 400, easing: backOut }}
+		>
+			<div
+				class="absolute -inset-1 bg-gradient-to-r from-blue-600/20 via-indigo-600/20 to-purple-600/20 rounded-2xl blur-xl opacity-75"
+				transition:scale={{ start: 0.8, duration: 500, easing: elasticOut }}
+			></div>
+
+			<div
+				class="relative bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden"
+			>
+				<div class="relative overflow-hidden">
+					<div
+						class="absolute inset-0 bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-purple-600/10"
+					></div>
+					<div
+						class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-shimmer"
+					></div>
+
+					<div class="relative p-6 flex items-start justify-between gap-4">
+						<div class="flex items-start gap-4">
+							<div
+								class="relative p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/30"
+								transition:scale={{ start: 0.5, duration: 400, delay: 100, easing: backOut }}
+							>
+								{#if isEditing}
+									<Database class="w-6 h-6 text-blue-400" />
+								{:else}
+									<Plus class="w-6 h-6 text-emerald-400" />
+								{/if}
+								<div
+									class="absolute inset-0 rounded-xl border-2 border-blue-400/50 animate-ping opacity-20"
+								></div>
+							</div>
+
+							<div>
+								<h2 id="modal-title" class="text-xl font-bold text-white flex items-center gap-2">
+									{#if isEditing}
+										Edit Row
+									{:else}
+										<span class="flex items-center gap-2">
+											Add New Row
+											<Sparkles class="w-4 h-4 text-amber-400 animate-pulse" />
+										</span>
+									{/if}
+								</h2>
+								<p class="text-sm text-slate-400 mt-1 flex items-center gap-2">
+									<span class="px-2 py-0.5 bg-slate-800 rounded-md font-mono text-xs"
+										>{schema}.{table}</span
+									>
+									<span class="text-slate-600">•</span>
+									<span>{editableColumns.length} fields</span>
+									{#if modifiedCount > 0}
+										<span
+											class="px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-full text-xs font-medium"
+											transition:scale={{ start: 0.8, duration: 200 }}
+										>
+											{modifiedCount} modified
+										</span>
+									{/if}
+								</p>
+							</div>
+						</div>
+
+						<button
+							onclick={onClose}
+							disabled={loading}
+							class="p-2 text-slate-400 hover:text-white hover:bg-slate-800/80 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50"
+							aria-label="Close modal"
+						>
+							<X class="w-5 h-5" />
+						</button>
+					</div>
+				</div>
+
+				{#if error}
+					<div
+						class="mx-6 mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-start gap-3"
+						transition:fly={{ y: -10, duration: 300 }}
+					>
+						<AlertCircle class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+						<div class="flex-1">
+							<p class="text-red-400 font-medium text-sm">Error saving row</p>
+							<p class="text-red-300/80 text-sm mt-1">{error}</p>
+						</div>
+						<button
+							onclick={() => (error = null)}
+							class="text-red-400/60 hover:text-red-400 transition-colors"
+						>
+							<X class="w-4 h-4" />
+						</button>
+					</div>
+				{/if}
+
+				<div class="p-6 pt-2 overflow-y-auto max-h-[calc(90vh-220px)] custom-scrollbar">
+					{#if editableColumns.length === 0}
+						<div class="text-center py-12">
+							<div
+								class="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800/50 flex items-center justify-center"
+							>
+								<Database class="w-8 h-8 text-slate-600" />
+							</div>
+							<p class="text-slate-400 font-medium">No editable columns</p>
+							<p class="text-slate-500 text-sm mt-1">
+								This table has no columns that can be edited
+							</p>
+						</div>
 					{:else}
-						<Save class="w-4 h-4" />
+						<div class="grid gap-4">
+							{#each editableColumns as col, index (col.name)}
+								{@const colors = getFieldColor(col.type)}
+								{@const FieldIcon = getFieldIcon(col.type)}
+								{@const isModified = modifiedFields.has(col.name)}
+								{@const isSuccess = successFields.has(col.name)}
+								{@const isFocused = focusedField === col.name}
+
+								<div
+									class="group relative"
+									transition:fly={{ y: 20, duration: 300, delay: index * 50, easing: cubicOut }}
+								>
+									<div
+										class="relative rounded-xl border transition-all duration-300 {getContainerClass(
+											isSuccess,
+											isFocused,
+											isModified
+										)}"
+									>
+										<div class="flex items-center justify-between px-4 pt-3 pb-1">
+											<label
+												for="field-{col.name}"
+												class="flex items-center gap-2 text-sm font-medium transition-colors {isFocused
+													? 'text-blue-400'
+													: 'text-slate-300'}"
+											>
+												<div class="p-1 rounded-md {colors.bg}">
+													<FieldIcon class="w-3.5 h-3.5 {colors.text}" />
+												</div>
+												<span>{col.name}</span>
+											</label>
+
+											<div class="flex items-center gap-2">
+												<span
+													class="px-2 py-0.5 text-xs rounded-md {colors.bg} {colors.text} font-mono"
+												>
+													{col.type || 'unknown'}
+												</span>
+
+												{#if col.nullable === 'YES'}
+													<span
+														class="px-1.5 py-0.5 text-xs rounded-md bg-slate-700/50 text-slate-500"
+														>nullable</span
+													>
+												{/if}
+
+												{#if isSuccess}
+													<div transition:scale={{ start: 0.5, duration: 300 }}>
+														<Check class="w-4 h-4 text-emerald-400" />
+													</div>
+												{:else if isModified}
+													<div
+														class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"
+														transition:scale={{ start: 0.5, duration: 200 }}
+													></div>
+												{/if}
+											</div>
+										</div>
+
+										<div class="px-4 pb-3">
+											{#if col.type === 'boolean'}
+												<div class="flex items-center gap-3 py-2">
+													{#each [{ value: null, label: 'NULL', color: 'slate' }, { value: true, label: 'TRUE', color: 'emerald' }, { value: false, label: 'FALSE', color: 'red' }] as option}
+														<button
+															type="button"
+															onclick={() => {
+																formData[col.name] = option.value;
+																handleFieldChange(col.name);
+															}}
+															class="flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-200 {getBoolButtonClass(
+																formData[col.name],
+																option.value,
+																option.color
+															)}"
+														>
+															{option.label}
+														</button>
+													{/each}
+												</div>
+											{:else if col.type && col.type.includes('json')}
+												<textarea
+													id="field-{col.name}"
+													bind:value={formData[col.name]}
+													oninput={() => handleFieldChange(col.name)}
+													onfocus={() => (focusedField = col.name)}
+													onblur={() => (focusedField = null)}
+													class="w-full bg-slate-950/50 border border-slate-700/50 rounded-lg px-4 py-3 text-slate-200 font-mono text-sm outline-none transition-all duration-200 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 resize-none"
+													rows="4"
+													placeholder={'{ "key": "value" }'}
+													spellcheck="false"
+												></textarea>
+											{:else if col.type && (col.type.includes('timestamp') || col.type.includes('date'))}
+												<input
+													id="field-{col.name}"
+													type="datetime-local"
+													bind:value={formData[col.name]}
+													oninput={() => handleFieldChange(col.name)}
+													onfocus={() => (focusedField = col.name)}
+													onblur={() => (focusedField = null)}
+													class="w-full bg-slate-950/50 border border-slate-700/50 rounded-lg px-4 py-3 text-slate-200 outline-none transition-all duration-200 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
+												/>
+											{:else if col.type && (col.type.includes('int') || col.type.includes('float') || col.type.includes('numeric') || col.type.includes('decimal') || col.type === 'real')}
+												<input
+													id="field-{col.name}"
+													type="number"
+													bind:value={formData[col.name]}
+													oninput={() => handleFieldChange(col.name)}
+													onfocus={() => (focusedField = col.name)}
+													onblur={() => (focusedField = null)}
+													class="w-full bg-slate-950/50 border border-slate-700/50 rounded-lg px-4 py-3 text-slate-200 outline-none transition-all duration-200 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
+													placeholder="Enter a number..."
+													step="any"
+												/>
+											{:else if col.type && (col.type.includes('text') || col.type === 'character varying') && !col.type.includes('[]')}
+												<textarea
+													id="field-{col.name}"
+													bind:value={formData[col.name]}
+													oninput={() => handleFieldChange(col.name)}
+													onfocus={() => (focusedField = col.name)}
+													onblur={() => (focusedField = null)}
+													class="w-full bg-slate-950/50 border border-slate-700/50 rounded-lg px-4 py-3 text-slate-200 outline-none transition-all duration-200 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 resize-none"
+													rows="2"
+													placeholder="Enter text..."
+												></textarea>
+											{:else}
+												<input
+													id="field-{col.name}"
+													type="text"
+													bind:value={formData[col.name]}
+													oninput={() => handleFieldChange(col.name)}
+													onfocus={() => (focusedField = col.name)}
+													onblur={() => (focusedField = null)}
+													class="w-full bg-slate-950/50 border border-slate-700/50 rounded-lg px-4 py-3 text-slate-200 outline-none transition-all duration-200 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
+													placeholder="Enter value..."
+												/>
+											{/if}
+										</div>
+									</div>
+								</div>
+							{/each}
+						</div>
 					{/if}
-					Save
-				</button>
+				</div>
+
+				<div class="relative border-t border-slate-700/50 bg-slate-900/80 backdrop-blur-sm p-4">
+					<div
+						class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-slate-600/50 to-transparent"
+					></div>
+
+					<div class="flex items-center justify-between gap-4">
+						<div class="hidden sm:flex items-center gap-2 text-xs text-slate-500">
+							<kbd class="px-2 py-1 bg-slate-800 rounded border border-slate-700 font-mono"
+								>Ctrl</kbd
+							>
+							<span>+</span>
+							<kbd class="px-2 py-1 bg-slate-800 rounded border border-slate-700 font-mono"
+								>Enter</kbd
+							>
+							<span>to save</span>
+						</div>
+
+						<div class="flex items-center gap-3 ml-auto">
+							<button
+								onclick={onClose}
+								disabled={loading}
+								class="px-5 py-2.5 text-slate-400 hover:text-white hover:bg-slate-800/80 rounded-xl font-medium transition-all duration-200 disabled:opacity-50"
+							>
+								Cancel
+							</button>
+
+							<button
+								onclick={handleSubmit}
+								disabled={loading || editableColumns.length === 0}
+								class="relative px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-blue-500/25 transition-all duration-200 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 overflow-hidden"
+							>
+								<div
+									class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shimmer"
+								></div>
+
+								{#if loading}
+									<Loader2 class="w-4 h-4 animate-spin" />
+									<span>Saving...</span>
+								{:else}
+									<Save class="w-4 h-4" />
+									<span>{isEditing ? 'Update Row' : 'Add Row'}</span>
+								{/if}
+							</button>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
 {/if}
+
+<style>
+	@keyframes float {
+		0%,
+		100% {
+			transform: translateY(0) translateX(0);
+			opacity: 0.3;
+		}
+		50% {
+			transform: translateY(-20px) translateX(10px);
+			opacity: 0.6;
+		}
+	}
+
+	@keyframes shimmer {
+		100% {
+			transform: translateX(100%);
+		}
+	}
+
+	.animate-float {
+		animation: float 3s ease-in-out infinite;
+	}
+
+	.animate-shimmer {
+		animation: shimmer 2s ease-in-out infinite;
+	}
+
+	.custom-scrollbar::-webkit-scrollbar {
+		width: 8px;
+	}
+
+	.custom-scrollbar::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	.custom-scrollbar::-webkit-scrollbar-thumb {
+		background: #334155;
+		border-radius: 4px;
+	}
+
+	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+		background: #475569;
+	}
+</style>

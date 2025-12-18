@@ -120,3 +120,35 @@ npm run dev   # Starts Vite dev server
 *   **Authentication:** All sensitive endpoints are protected by `X-API-Key` (Spawners) or Session Cookie (Dashboard).
 *   **Security:** Removed insecure logging of 2FA secrets in `server`.
 *   **Dashboard Updates:** Added "Start" button, "Node Logs" tab (embedded `LogViewer`), and switched Console logs to polling in `InstanceManagerModal`.
+
+## 🛡️ Security Hardening (Recent)
+The following security improvements have been implemented:
+
+### SQL Injection Prevention
+*   **Input Validation:** All SQL identifiers (schema, table, column, function names) are validated via `security.go` helpers.
+*   **Type Whitelist:** SQL types are validated against a strict whitelist of allowed PostgreSQL types.
+*   **Parameterized Queries:** Function execution uses parameterized queries (`$1`, `$2`, etc.) instead of string concatenation.
+*   **Role Creation:** Uses PostgreSQL's `format()` function with `%I` (identifier) and `%L` (literal) for safe escaping.
+*   **Read-Only SQL:** The `ExecuteSQLHandler` now enforces read-only queries (SELECT, WITH, EXPLAIN only).
+
+### WebSocket Security
+*   **Origin Validation:** WebSocket connections now validate the `Origin` header against an allowlist.
+*   **Custom Origins:** Set `ALLOWED_ORIGINS` environment variable for production domains (comma-separated).
+
+### XSS Prevention
+*   **HTML Sanitization:** Frontend components using `{@html}` now sanitize input, allowing only safe formatting tags.
+
+### Rate Limiting & IP Handling
+*   **Proxy Support:** Rate limiting now uses `X-Forwarded-For` and `X-Real-IP` headers when behind a reverse proxy.
+*   **IP Validation:** Firewall blocking validates IPs to prevent blocking localhost or critical addresses.
+
+### Path Traversal Prevention
+*   **Filename Validation:** All file operations validate filenames for `..`, `/`, `\`, and shell metacharacters.
+
+### Error Sanitization
+*   **Safe Errors:** Database errors are sanitized to prevent leaking sensitive information (paths, credentials).
+
+### Password Security
+*   **Complexity Requirements:** Role passwords require 12+ characters with uppercase, lowercase, digits, and special characters.
+*   **Dangerous Options Blocked:** `SUPERUSER`, `REPLICATION`, and `BYPASSRLS` role options are blocked.
+*   **Security Definer Blocked:** Functions cannot use `SECURITY DEFINER` to prevent privilege escalation.

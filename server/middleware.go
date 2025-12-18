@@ -69,7 +69,7 @@ func StatsMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Expires", "0")
 
 		sw := &statusResponseWriter{ResponseWriter: w, statusCode: http.StatusOK}
-		
+
 		// Estimate request size (Header + Body)
 		reqSize := int64(0)
 		if r.ContentLength != -1 {
@@ -84,7 +84,7 @@ func StatsMiddleware(next http.Handler) http.Handler {
 		// Centralized Error Logging
 		if sw.statusCode >= 400 {
 			message := http.StatusText(sw.statusCode)
-			
+
 			// Try to parse useful message from body
 			if len(sw.body) > 0 {
 				// Check for JSON error format: {"error": "message"}
@@ -104,10 +104,7 @@ func StatsMiddleware(next http.Handler) http.Handler {
 				}
 			}
 
-			clientIP := r.RemoteAddr
-			if host, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
-				clientIP = host
-			}
+			clientIP := GetClientIP(r)
 
 			GlobalStats.RecordError(r.URL.Path, sw.statusCode, message, clientIP)
 		}

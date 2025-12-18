@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -15,8 +16,62 @@ import (
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
-		return true // Validate API Key instead
+		// Validate Origin header to prevent Cross-Site WebSocket Hijacking
+		origin := r.Header.Get("Origin")
+
+		// If no Origin header, this is likely a direct API call (not from browser)
+		// Still require API key validation in the handler
+		if origin == "" {
+			return true
+		}
+
+		// Get allowed origins from environment or use defaults
+		allowedOrigins := getAllowedOrigins()
+
+		for _, allowed := range allowedOrigins {
+			if origin == allowed {
+				return true
+			}
+		}
+
+		log.Printf("WebSocket connection rejected: invalid origin %s", origin)
+		return false
 	},
+}
+
+// getAllowedOrigins returns the list of allowed WebSocket origins
+func getAllowedOrigins() []string {
+	// Default allowed origins for development and production
+	defaults := []string{
+		"http://localhost:5173", // SvelteKit dev server
+		"http://localhost:8081", // Backend server
+		"http://127.0.0.1:5173",
+		"http://127.0.0.1:8081",
+	}
+
+	// Add custom origins from environment variable if set
+	// Format: ALLOWED_ORIGINS=https://example.com,https://admin.example.com
+	if customOrigins := getEnv("ALLOWED_ORIGINS", ""); customOrigins != "" {
+		for _, origin := range splitAndTrim(customOrigins, ",") {
+			if origin != "" {
+				defaults = append(defaults, origin)
+			}
+		}
+	}
+
+	return defaults
+}
+
+// splitAndTrim splits a string and trims whitespace from each part
+func splitAndTrim(s, sep string) []string {
+	parts := make([]string, 0)
+	for _, part := range strings.Split(s, sep) {
+		trimmed := strings.TrimSpace(part)
+		if trimmed != "" {
+			parts = append(parts, trimmed)
+		}
+	}
+	return parts
 }
 
 // SpawnerConnection represents a connected Spawner.
@@ -76,7 +131,6 @@ func (manager *WSManager) Run() {
 			manager.connections[conn.ID] = conn
 			manager.mu.Unlock()
 			registry.UpdateSpawnerStatus(conn.ID, "Online")
-			log.Printf("🔌 Spawner #%d connected via WebSocket", conn.ID)
 
 		case conn := <-manager.Unregister:
 			manager.mu.Lock()
@@ -86,7 +140,6 @@ func (manager *WSManager) Run() {
 			}
 			manager.mu.Unlock()
 			registry.UpdateSpawnerStatus(conn.ID, "Offline")
-			log.Printf("🔌 Spawner #%d disconnected", conn.ID)
 
 		case message := <-manager.Broadcast:
 			manager.mu.RLock()
@@ -238,7 +291,7 @@ func (c *SpawnerConnection) readPump() {
 			}
 			break
 		}
-		
+
 		// Refresh deadline on any message (e.g. Heartbeat)
 		c.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 
@@ -316,7 +369,6 @@ func (c *SpawnerConnection) handleMessage(msg WSMessage) {
 			}
 			c.ID = id
 			c.Manager.Register <- c
-			log.Printf("✅ Spawner #%d Registered via WS (region=%s, host=%s, port=%d)", c.ID, s.Region, s.Host, s.Port)
 
 			// Send success response with assigned ID
 			successResp := WSMessage{

@@ -2,34 +2,27 @@ package main
 
 import (
 	"os"
-	"strings"
 	"testing"
 	"time"
 )
 
 func TestDBSaveLoadDelete(t *testing.T) {
-	f, err := os.CreateTemp("", "registry_test_*.db")
-	if err != nil {
-		t.Fatalf("create temp: %v", err)
+	dsn := os.Getenv("DB_DSN")
+	if dsn == "" {
+		t.Skip("DB_DSN not set, skipping DB test")
 	}
-	path := f.Name()
-	f.Close()
-	defer os.Remove(path)
 
-	db, err := InitDB(path)
+	db, err := InitDB(dsn)
 	if err != nil {
-		if strings.Contains(err.Error(), "requires cgo") || strings.Contains(err.Error(), "CGO_ENABLED") {
-			t.Skipf("sqlite3 driver not available in this environment: %v", err)
-			return
-		}
 		t.Fatalf("init db: %v", err)
 	}
 	defer db.Close()
 
+	// Use random port to avoid unique constraint violation if cleanup fails
 	s := &Spawner{
 		Region:           "db1",
 		Host:             "127.0.0.1",
-		Port:             7777,
+		Port:             7000 + int(time.Now().UnixNano()%1000),
 		MaxInstances:     10,
 		CurrentInstances: 0,
 		Status:           "active",

@@ -60,3 +60,20 @@ type InstanceAction struct {
 	Status     string    `json:"status" db:"status"` // "success" or "failed"
 	Details    string    `json:"details" db:"details"`
 }
+
+// EnrollmentKey represents a temporary key used for spawner enrollment
+type EnrollmentKey struct {
+	Key         string     `json:"key"`
+	ExpiresAt   time.Time  `json:"expires_at"`
+	CreatedAt   time.Time  `json:"created_at"`
+	CreatedBy   string     `json:"created_by"`
+	Used        bool       `json:"used"`
+	UsedAt      *time.Time `json:"used_at,omitempty"`
+	UsedBy      *int       `json:"used_by,omitempty"` // Spawner ID that used the key
+	SpawnerInfo *struct {
+		ID     int    `json:"id"`
+		Region string `json:"region"`
+		Host   string `json:"host"`
+		Port   int    `json:"port"`
+	} `json:"spawner_info,omitempty"` // Info about the spawner that enrolled
+}

@@ -1,12 +1,12 @@
 package config
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
 
 	"strconv"
-
 
 	"github.com/joho/godotenv"
 )
@@ -25,15 +25,20 @@ type Config struct {
 	MasterAPIKey      string // API Key for Master Server authentication
 	StateFilePath     string // Path to the JSON file storing instance state
 	InstancesDir      string // Directory where game server instances are spawned
+	EnrollmentKey     string // One-time enrollment key for initial registration
 }
 
-// Load reads configuration from environment variables.
+// Load reads configuration from environment variables and command-line flags.
 // It attempts to load .env files from current and parent directories to support
 // different running contexts (e.g., direct binary execution vs `go run`).
 func Load() (*Config, error) {
+	// Parse command-line flags first
+	enrollmentKey := flag.String("key", "", "One-time enrollment key for initial registration with master server")
+	flag.Parse()
+
 	// Try loading .env from local directory only
 	_ = godotenv.Load(".env")
-	
+
 	conf := &Config{
 		Region:            getEnv("REGION", ""),
 		Host:              getEnv("SPAWNER_HOST", "localhost"),
@@ -45,9 +50,10 @@ func Load() (*Config, error) {
 		MinGamePort:       getEnvAsInt("MIN_GAME_PORT", 7777),
 		MaxGamePort:       getEnvAsInt("MAX_GAME_PORT", 8000),
 		MasterURL:         getEnv("MASTER_URL", "http://localhost:8081"),
-		MasterAPIKey:      getEnv("MASTER_API_KEY", "dev_master_key"),
+		MasterAPIKey:      getEnv("MASTER_API_KEY", ""),
 		StateFilePath:     getEnv("STATE_FILE_PATH", "instances.json"),
 		InstancesDir:      getEnv("INSTANCES_DIR", "./instances"),
+		EnrollmentKey:     *enrollmentKey,
 	}
 
 	if err := conf.Validate(); err != nil {
@@ -67,8 +73,11 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("GAME_BINARY_PATH is required")
 	}
 
+	// If no API key is configured, an enrollment key is required for initial setup
+	if c.MasterAPIKey == "" && c.EnrollmentKey == "" {
+		return fmt.Errorf("either MASTER_API_KEY or -key (enrollment key) is required")
+	}
 
-	
 	// Check if binary exists in the install directory
 	fullBinaryPath := filepath.Join(c.GameInstallDir, c.GameBinaryPath)
 	if _, err := os.Stat(fullBinaryPath); os.IsNotExist(err) {

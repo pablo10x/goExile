@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net"
 	"net/http"
 	"net/smtp"
 	"runtime"
@@ -45,23 +44,23 @@ type DashboardStats struct {
 	LastRequestTime time.Time
 	DBConnected     bool
 	// DB Stats
-	DBOpenConnections int
-	DBInUse           int
-	DBIdle            int
-	DBWaitCount       int64
-	DBWaitDuration    time.Duration
+	DBOpenConnections   int
+	DBInUse             int
+	DBIdle              int
+	DBWaitCount         int64
+	DBWaitDuration      time.Duration
 	DBMaxLifetimeClosed int64
-	DBMaxIdleClosed   int64
+	DBMaxIdleClosed     int64
 
-    // Advanced DB Stats
-    DBSize        string
-    DBCommits     int64
-    DBRollbacks   int64
-    DBCacheHit    float64
-    DBTupFetched  int64
-    DBTupInserted int64
-    DBTupUpdated  int64
-    DBTupDeleted  int64
+	// Advanced DB Stats
+	DBSize        string
+	DBCommits     int64
+	DBRollbacks   int64
+	DBCacheHit    float64
+	DBTupFetched  int64
+	DBTupInserted int64
+	DBTupUpdated  int64
+	DBTupDeleted  int64
 
 	Uptime    time.Duration
 	StartTime time.Time
@@ -131,16 +130,16 @@ func (ds *DashboardStats) UpdateDBStats(stats sql.DBStats) {
 
 // UpdateAdvancedDBStats updates advanced Postgres stats.
 func (ds *DashboardStats) UpdateAdvancedDBStats(stats *AdvancedDBStats) {
-    ds.mu.Lock()
-    defer ds.mu.Unlock()
-    ds.DBSize = stats.DatabaseSize
-    ds.DBCommits = stats.XactCommit
-    ds.DBRollbacks = stats.XactRollback
-    ds.DBCacheHit = stats.CacheHitRatio
-    ds.DBTupFetched = stats.TupFetched
-    ds.DBTupInserted = stats.TupInserted
-    ds.DBTupUpdated = stats.TupUpdated
-    ds.DBTupDeleted = stats.TupDeleted
+	ds.mu.Lock()
+	defer ds.mu.Unlock()
+	ds.DBSize = stats.DatabaseSize
+	ds.DBCommits = stats.XactCommit
+	ds.DBRollbacks = stats.XactRollback
+	ds.DBCacheHit = stats.CacheHitRatio
+	ds.DBTupFetched = stats.TupFetched
+	ds.DBTupInserted = stats.TupInserted
+	ds.DBTupUpdated = stats.TupUpdated
+	ds.DBTupDeleted = stats.TupDeleted
 }
 
 // GetStats returns a snapshot of current stats.
@@ -164,29 +163,29 @@ func (ds *DashboardStats) GetStatsMap() map[string]interface{} {
 	defer ds.mu.RUnlock()
 	uptime := time.Since(ds.StartTime)
 	return map[string]interface{}{
-		"uptime":             uptime.Milliseconds(),
-		"active_spawners":    ds.ActiveSpawners,
-		"total_requests":     ds.TotalRequests,
-		"total_errors":       ds.TotalErrors,
-		"db_connected":       ds.DBConnected,
-		"memory_usage":       ds.MemUsage,
-		"bytes_sent":         ds.BytesSent,
-		"bytes_received":     ds.BytesReceived,
-		"db_open_connections": ds.DBOpenConnections,
-		"db_in_use":           ds.DBInUse,
-		"db_idle":             ds.DBIdle,
-		"db_wait_count":       ds.DBWaitCount,
-		"db_wait_duration":    ds.DBWaitDuration.String(),
+		"uptime":                 uptime.Milliseconds(),
+		"active_spawners":        ds.ActiveSpawners,
+		"total_requests":         ds.TotalRequests,
+		"total_errors":           ds.TotalErrors,
+		"db_connected":           ds.DBConnected,
+		"memory_usage":           ds.MemUsage,
+		"bytes_sent":             ds.BytesSent,
+		"bytes_received":         ds.BytesReceived,
+		"db_open_connections":    ds.DBOpenConnections,
+		"db_in_use":              ds.DBInUse,
+		"db_idle":                ds.DBIdle,
+		"db_wait_count":          ds.DBWaitCount,
+		"db_wait_duration":       ds.DBWaitDuration.String(),
 		"db_max_lifetime_closed": ds.DBMaxLifetimeClosed,
-		"db_max_idle_closed":  ds.DBMaxIdleClosed,
-        "db_size":             ds.DBSize,
-        "db_commits":          ds.DBCommits,
-        "db_rollbacks":        ds.DBRollbacks,
-        "db_cache_hit":        ds.DBCacheHit,
-        "db_tup_fetched":      ds.DBTupFetched,
-        "db_tup_inserted":     ds.DBTupInserted,
-        "db_tup_updated":      ds.DBTupUpdated,
-        "db_tup_deleted":      ds.DBTupDeleted,
+		"db_max_idle_closed":     ds.DBMaxIdleClosed,
+		"db_size":                ds.DBSize,
+		"db_commits":             ds.DBCommits,
+		"db_rollbacks":           ds.DBRollbacks,
+		"db_cache_hit":           ds.DBCacheHit,
+		"db_tup_fetched":         ds.DBTupFetched,
+		"db_tup_inserted":        ds.DBTupInserted,
+		"db_tup_updated":         ds.DBTupUpdated,
+		"db_tup_deleted":         ds.DBTupDeleted,
 	}
 }
 
@@ -222,13 +221,33 @@ func (ds *DashboardStats) SetDBConnected(connected bool) {
 	ds.DBConnected = connected
 }
 
+// ANSI color codes for terminal styling
+const (
+	colorReset   = "\033[0m"
+	colorBold    = "\033[1m"
+	colorDim     = "\033[2m"
+	colorRed     = "\033[31m"
+	colorGreen   = "\033[32m"
+	colorYellow  = "\033[33m"
+	colorBlue    = "\033[34m"
+	colorMagenta = "\033[35m"
+	colorCyan    = "\033[36m"
+	colorWhite   = "\033[37m"
+	colorBgBlue  = "\033[44m"
+)
+
 // PrintBanner prints a stylish ASCII banner.
 func PrintBanner() {
-	banner := `
-╔═══════════════════════════════════════════════════════════════╗
-║                 🎮 SPAWNER REGISTRY 🎮                        ║
-║              xx             ║
-╚═══════════════════════════════════════════════════════════════╝
+	banner := colorCyan + colorBold + `
+    ███████╗██╗  ██╗██╗██╗     ███████╗
+    ██╔════╝╚██╗██╔╝██║██║     ██╔════╝
+    █████╗   ╚███╔╝ ██║██║     █████╗
+    ██╔══╝   ██╔██╗ ██║██║     ██╔══╝
+    ███████╗██╔╝ ██╗██║███████╗███████╗
+    ╚══════╝╚═╝  ╚═╝╚═╝╚══════╝╚══════╝` + colorReset + `
+` + colorDim + `    ─────────────────────────────────────` + colorReset + `
+` + colorWhite + `       Master Server ` + colorCyan + `v1.0.0` + colorReset + colorDim + ` │ ` + colorGreen + `Ready` + colorReset + `
+` + colorDim + `    ─────────────────────────────────────` + colorReset + `
 `
 	fmt.Println(banner)
 }
@@ -355,38 +374,46 @@ func truncate(s string, maxLen int) string {
 	return s[:maxLen-2] + ".."
 }
 
-// PrintConfig prints server configuration.
-func PrintConfig(port string, dbPath string) {
-	config := fmt.Sprintf(`
-╔════════════════════════════════════════════════════════════════╗
-║                   ⚙️  CONFIGURATION ⚙️                        ║
-╠════════════════════════════════════════════════════════════════╣
-║                                                                ║
-║  🌐 HTTP Port:         %-42s║
-║  🗄️  Database Path:     %-42s║
-║  🔧 Server TTL:        %-42ds║
-║  🧹 Cleanup Interval:  %-42ds║
-║                                                                ║
-╚════════════════════════════════════════════════════════════════╝
-`,
-		port,
-		dbPath,
-		serverTTL,
-		cleanupInterval,
-	)
-	fmt.Println(config)
+// PrintStartupComplete prints the final startup message
+func PrintStartupComplete(port string) {
+	fmt.Println()
+	fmt.Printf("  %s%s▸ Server Ready%s\n", colorBold, colorGreen, colorReset)
+	fmt.Printf("  %s────────────────────────────────────────%s\n", colorDim, colorReset)
+	fmt.Printf("  %s●%s API      %shttp://localhost:%s%s\n", colorGreen, colorReset, colorCyan, port, colorReset)
+	fmt.Printf("  %s●%s Health   %shttp://localhost:%s/health%s\n", colorGreen, colorReset, colorCyan, port, colorReset)
+	fmt.Printf("  %s●%s Stats    %shttp://localhost:%s/api/stats%s\n", colorGreen, colorReset, colorCyan, port, colorReset)
+	fmt.Println()
+	fmt.Printf("  %sPress Ctrl+C to stop%s\n", colorDim, colorReset)
+	fmt.Printf("  %s────────────────────────────────────────%s\n", colorDim, colorReset)
+	fmt.Println()
+}
+
+// PrintSection prints a section header during startup
+func PrintSection(title string, status string, isSuccess bool) {
+	statusColor := colorGreen
+	statusIcon := "✓"
+	if !isSuccess {
+		statusColor = colorYellow
+		statusIcon = "○"
+	}
+	fmt.Printf("  %s%s%s %s%s%s\n", statusColor, statusIcon, colorReset, colorWhite, title, colorReset)
+}
+
+// PrintSubItem prints a sub-item under a section
+func PrintSubItem(text string) {
+	fmt.Printf("    %s└─%s %s%s%s\n", colorDim, colorReset, colorDim, text, colorReset)
 }
 
 // SendEmail sends a verification code via SMTP.
 func SendEmail(authConfig AuthConfig, code string) error {
 	auth := smtp.PlainAuth("", authConfig.SMTPUser, authConfig.SMTPPass, authConfig.SMTPHost)
-	
+
 	to := []string{authConfig.Email}
 	msg := []byte("To: " + authConfig.Email + "\r\n" +
 		"Subject: Dashboard Verification Code\r\n" +
 		"\r\n" +
 		"Your verification code is: " + code + "\r\n")
-		
+
 	addr := fmt.Sprintf("%s:%s", authConfig.SMTPHost, authConfig.SMTPPort)
 	return smtp.SendMail(addr, auth, authConfig.SMTPFrom, to, msg)
 }
@@ -408,10 +435,8 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, authConfig AuthConfig, 
 	}
 
 	// Rate Limiting: 5 attempts per 15 minutes per IP
-	ip := r.RemoteAddr
-	if host, _, err := net.SplitHostPort(ip); err == nil {
-		ip = host
-	}
+	// Use GetClientIP to properly handle reverse proxy headers
+	ip := GetClientIP(r)
 
 	allowed, count := LoginRateLimiter.Allow(ip)
 	if !allowed {
@@ -505,7 +530,7 @@ func Handle2FAVerify(w http.ResponseWriter, r *http.Request, authConfig AuthConf
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
-	
+
 	if authStep != AuthStepTOTP {
 		// Wrong step (maybe stuck in email step?)
 		// Just let them try email verify if they are there, but here we expect TOTP.
@@ -516,9 +541,7 @@ func Handle2FAVerify(w http.ResponseWriter, r *http.Request, authConfig AuthConf
 	// Rate Limiting: 3 attempts per 15 minutes per Session
 	allowed, _ := TwoFactorRateLimiter.Allow(cookie.Value)
 	if !allowed {
-		log.Printf("2FA rate limit exceeded for session: %s", cookie.Value)
-		sessionStore.RevokeSession(cookie.Value)
-		writeError(w, r, http.StatusTooManyRequests, "Too many failed attempts. Session revoked.")
+		http.Error(w, `{"error": "Too many attempts. Please try again later."}`, http.StatusTooManyRequests)
 		return
 	}
 
@@ -560,21 +583,21 @@ func Handle2FAVerify(w http.ResponseWriter, r *http.Request, authConfig AuthConf
 	if valid {
 		// Reset rate limit on success
 		TwoFactorRateLimiter.Reset(cookie.Value)
-		
+
 		// 3-Step Auth: Email Verification
 		if authConfig.SMTPHost != "" {
 			emailCode := generateSecureCode()
 			sessionStore.SetEmailCode(cookie.Value, emailCode)
 			sessionStore.SetSessionStep(cookie.Value, AuthStepEmail)
-			
+
 			if err := SendEmail(authConfig, emailCode); err != nil {
 				log.Printf("Failed to send email: %v", err)
 				writeError(w, r, http.StatusInternalServerError, "Failed to send verification email")
 				return
 			}
-			
+
 			writeJSON(w, http.StatusOK, map[string]string{
-				"message": "email_step_required",
+				"message":   "email_step_required",
 				"next_step": "email",
 			})
 			return
@@ -585,9 +608,10 @@ func Handle2FAVerify(w http.ResponseWriter, r *http.Request, authConfig AuthConf
 		return
 	}
 
-	log.Printf("2FA Failed. Session: %s... CodeLen: %d Content-Type: %s", 
-		cookie.Value[:8], len(code), r.Header.Get("Content-Type"))
-	writeError(w, r, http.StatusUnauthorized, "Invalid code")
+		if !valid {
+			http.Error(w, `{"error": "Invalid 2FA code"}`, http.StatusUnauthorized)
+			return
+		}
 }
 
 // HandleEmailVerify processes Email verification requests.

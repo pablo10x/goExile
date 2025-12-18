@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"spawner/api"
 	"spawner/internal/config"
+	"spawner/internal/enrollment"
 	"spawner/internal/game"
 	"spawner/internal/updater"
 	"spawner/internal/ws"
@@ -26,7 +27,7 @@ func main() {
 		panic(fmt.Sprintf("Failed to open log file: %v", err))
 	}
 	defer logFile.Close()
-	
+
 	logger := slog.New(slog.NewJSONHandler(logFile, nil))
 	slog.SetDefault(logger)
 
@@ -38,7 +39,29 @@ func main() {
 	}
 	logger.Info("Starting Spawner", "region", cfg.Region, "port", cfg.Port, "master_url", cfg.MasterURL)
 
-	// 2.5 Ensure Game Server Files are Installed
+	// 2.5 Handle Enrollment if enrollment key is provided
+	if cfg.EnrollmentKey != "" {
+		logger.Info("Enrollment key provided, initiating enrollment process...")
+		result, err := enrollment.Enroll(cfg, logger)
+		if err != nil {
+			logger.Error("Enrollment failed", "error", err)
+			os.Exit(1)
+		}
+
+		// Update config with the received API key
+		cfg.MasterAPIKey = result.APIKey
+		logger.Info("Enrollment complete, API key received", "spawner_id", result.ID)
+
+		// Save the API key to .env for future runs
+		if err := saveAPIKeyToEnv(result.APIKey); err != nil {
+			logger.Warn("Failed to save API key to .env file", "error", err)
+			logger.Info("Please manually set MASTER_API_KEY=" + result.APIKey + " in your .env file")
+		} else {
+			logger.Info("API key saved to .env file for future runs")
+		}
+	}
+
+	// 2.6 Ensure Game Server Files are Installed
 	if err := updater.EnsureInstalled(cfg, logger); err != nil {
 		logger.Error("Failed to ensure game server files", "error", err)
 		os.Exit(1)
@@ -117,4 +140,64 @@ func main() {
 	manager.Shutdown()
 
 	logger.Info("Server exiting")
+}
+
+// saveAPIKeyToEnv saves the API key to the .env file
+func saveAPIKeyToEnv(apiKey string) error {
+	envFile := ".env"
+
+	// Read existing content
+	content, err := os.ReadFile(envFile)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	// Check if MASTER_API_KEY already exists
+	lines := []string{}
+	found := false
+	if len(content) > 0 {
+		for _, line := range splitLines(string(content)) {
+			if len(line) >= 14 && line[:14] == "MASTER_API_KEY" {
+				lines = append(lines, "MASTER_API_KEY="+apiKey)
+				found = true
+			} else {
+				lines = append(lines, line)
+			}
+		}
+	}
+
+	if !found {
+		lines = append(lines, "MASTER_API_KEY="+apiKey)
+	}
+
+	// Write back
+	newContent := ""
+	for i, line := range lines {
+		newContent += line
+		if i < len(lines)-1 {
+			newContent += "\n"
+		}
+	}
+
+	return os.WriteFile(envFile, []byte(newContent), 0644)
+}
+
+// splitLines splits a string into lines
+func splitLines(s string) []string {
+	var lines []string
+	start := 0
+	for i := 0; i < len(s); i++ {
+		if s[i] == '\n' {
+			line := s[start:i]
+			if len(line) > 0 && line[len(line)-1] == '\r' {
+				line = line[:len(line)-1]
+			}
+			lines = append(lines, line)
+			start = i + 1
+		}
+	}
+	if start < len(s) {
+		lines = append(lines, s[start:])
+	}
+	return lines
 }

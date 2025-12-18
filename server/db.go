@@ -39,10 +39,10 @@ func InitDB(dsn string) (*sqlx.DB, error) {
 		db.Close()
 		return nil, err
 	}
-    
-    // ... rest of function ...
 
-    // Migrations
+	// ... rest of function ...
+
+	// Migrations
 	// Check if 'version' column exists in server_versions
 	var hasVersionCol int
 	err = db.QueryRow(`SELECT COUNT(*) FROM information_schema.columns WHERE table_name='server_versions' AND column_name='version'`).Scan(&hasVersionCol)
@@ -86,33 +86,33 @@ func InitDB(dsn string) (*sqlx.DB, error) {
 
 // AdvancedDBStats holds Postgres specific metrics
 type AdvancedDBStats struct {
-	DatabaseSize string  `db:"db_size"`
-	XactCommit   int64   `db:"xact_commit"`
-	XactRollback int64   `db:"xact_rollback"`
-	BlksHit      int64   `db:"blks_hit"`
-	BlksRead     int64   `db:"blks_read"`
-	TupReturned  int64   `db:"tup_returned"`
-	TupFetched   int64   `db:"tup_fetched"`
-	TupInserted  int64   `db:"tup_inserted"`
-	TupUpdated   int64   `db:"tup_updated"`
-	TupDeleted   int64   `db:"tup_deleted"`
-    CacheHitRatio float64 // Calculated
+	DatabaseSize  string  `db:"db_size"`
+	XactCommit    int64   `db:"xact_commit"`
+	XactRollback  int64   `db:"xact_rollback"`
+	BlksHit       int64   `db:"blks_hit"`
+	BlksRead      int64   `db:"blks_read"`
+	TupReturned   int64   `db:"tup_returned"`
+	TupFetched    int64   `db:"tup_fetched"`
+	TupInserted   int64   `db:"tup_inserted"`
+	TupUpdated    int64   `db:"tup_updated"`
+	TupDeleted    int64   `db:"tup_deleted"`
+	CacheHitRatio float64 // Calculated
 }
 
 func GetAdvancedDBStats(db *sqlx.DB) (*AdvancedDBStats, error) {
-    if db == nil {
-        return nil, fmt.Errorf("db is nil")
-    }
+	if db == nil {
+		return nil, fmt.Errorf("db is nil")
+	}
 
-    // Get current DB name to filter stats
-    var dbName string
-    if err := db.Get(&dbName, "SELECT current_database()"); err != nil {
-        return nil, err
-    }
+	// Get current DB name to filter stats
+	var dbName string
+	if err := db.Get(&dbName, "SELECT current_database()"); err != nil {
+		return nil, err
+	}
 
-    var stats AdvancedDBStats
-    query := `
-        SELECT 
+	var stats AdvancedDBStats
+	query := `
+        SELECT
             pg_size_pretty(pg_database_size($1)) as db_size,
             xact_commit,
             xact_rollback,
@@ -123,18 +123,18 @@ func GetAdvancedDBStats(db *sqlx.DB) (*AdvancedDBStats, error) {
             tup_inserted,
             tup_updated,
             tup_deleted
-        FROM pg_stat_database 
+        FROM pg_stat_database
         WHERE datname = $1
     `
-    if err := db.Get(&stats, query, dbName); err != nil {
-        return nil, err
-    }
+	if err := db.Get(&stats, query, dbName); err != nil {
+		return nil, err
+	}
 
-    if stats.BlksHit+stats.BlksRead > 0 {
-        stats.CacheHitRatio = float64(stats.BlksHit) / float64(stats.BlksHit+stats.BlksRead) * 100
-    }
+	if stats.BlksHit+stats.BlksRead > 0 {
+		stats.CacheHitRatio = float64(stats.BlksHit) / float64(stats.BlksHit+stats.BlksRead) * 100
+	}
 
-    return &stats, nil
+	return &stats, nil
 }
 
 func createTables(db *sqlx.DB) error {
@@ -233,7 +233,7 @@ func SaveSpawner(db *sqlx.DB, s *Spawner) (int, error) {
 		defer tx.Rollback()
 
 		if s.ID == 0 {
-			query := `INSERT INTO spawners (region, host, port, max_instances, current_instances, status, last_seen, game_version) 
+			query := `INSERT INTO spawners (region, host, port, max_instances, current_instances, status, last_seen, game_version)
 				VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 				ON CONFLICT(host, port) DO UPDATE SET
 				region=excluded.region,
@@ -243,7 +243,7 @@ func SaveSpawner(db *sqlx.DB, s *Spawner) (int, error) {
 				last_seen=excluded.last_seen,
 				game_version=excluded.game_version
 				RETURNING id`
-		
+
 			var id int64
 			err = tx.QueryRow(query, s.Region, s.Host, s.Port, s.MaxInstances, s.CurrentInstances, s.Status, s.LastSeen.Unix(), s.GameVersion).Scan(&id)
 			if err != nil {
@@ -256,7 +256,7 @@ func SaveSpawner(db *sqlx.DB, s *Spawner) (int, error) {
 			return nil
 		}
 
-		query := `INSERT INTO spawners (id, region, host, port, max_instances, current_instances, status, last_seen, game_version) 
+		query := `INSERT INTO spawners (id, region, host, port, max_instances, current_instances, status, last_seen, game_version)
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 			ON CONFLICT(id) DO UPDATE SET
 			region=excluded.region,
@@ -267,7 +267,7 @@ func SaveSpawner(db *sqlx.DB, s *Spawner) (int, error) {
 			status=excluded.status,
 			last_seen=excluded.last_seen,
 			game_version=excluded.game_version`
-		
+
 		_, err = tx.Exec(query,
 			s.ID, s.Region, s.Host, s.Port, s.MaxInstances, s.CurrentInstances, s.Status, s.LastSeen.Unix(), s.GameVersion)
 		if err != nil {
@@ -343,7 +343,7 @@ func SaveInstanceAction(db *sqlx.DB, a *InstanceAction) error {
 
 func GetInstanceActions(db *sqlx.DB, spawnerID int, instanceID string) ([]InstanceAction, error) {
 
-rows, err := db.Queryx(`SELECT id, spawner_id, instance_id, action, timestamp, status, details FROM instance_actions WHERE spawner_id = $1 AND instance_id = $2 ORDER BY timestamp DESC LIMIT 50`, spawnerID, instanceID)
+	rows, err := db.Queryx(`SELECT id, spawner_id, instance_id, action, timestamp, status, details FROM instance_actions WHERE spawner_id = $1 AND instance_id = $2 ORDER BY timestamp DESC LIMIT 50`, spawnerID, instanceID)
 	if err != nil {
 		return nil, fmt.Errorf("query instance actions: %w", err)
 	}
@@ -415,14 +415,11 @@ func ListServerVersions(db *sqlx.DB) ([]GameServerVersion, error) {
 
 	defer rows.Close()
 
-
-
 	out := make([]GameServerVersion, 0)
 
 	for rows.Next() {
 
 		var v GameServerVersion
-
 
 		var uploadedAtUnix int64
 		// Handle NULL version if migration hasn't happened or older records
@@ -575,14 +572,14 @@ func SeedDefaultConfig(db *sqlx.DB) error {
 
 func SaveConfig(db *sqlx.DB, c *ServerConfig) error {
 	do := func() error {
-		query := `INSERT INTO server_config 
-			(key, value, type, category, description, is_read_only, requires_restart, updated_at, updated_by) 
+		query := `INSERT INTO server_config
+			(key, value, type, category, description, is_read_only, requires_restart, updated_at, updated_by)
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 			ON CONFLICT(key) DO UPDATE SET
 			value=excluded.value,
 			updated_at=excluded.updated_at,
 			updated_by=excluded.updated_by`
-		
+
 		_, err := db.Exec(query,
 			c.Key, c.Value, c.Type, c.Category, c.Description, boolToInt(c.IsReadOnly), boolToInt(c.RequiresRestart), c.UpdatedAt.Unix(), c.UpdatedBy)
 		if err != nil {
@@ -595,7 +592,7 @@ func SaveConfig(db *sqlx.DB, c *ServerConfig) error {
 
 func GetAllConfig(db *sqlx.DB) ([]ServerConfig, error) {
 
-rows, err := db.Queryx(`SELECT id, key, value, type, category, description, is_read_only, requires_restart, updated_at, updated_by FROM server_config ORDER BY category, key`)
+	rows, err := db.Queryx(`SELECT id, key, value, type, category, description, is_read_only, requires_restart, updated_at, updated_by FROM server_config ORDER BY category, key`)
 	if err != nil {
 		return nil, fmt.Errorf("query config: %w", err)
 	}
@@ -623,7 +620,7 @@ rows, err := db.Queryx(`SELECT id, key, value, type, category, description, is_r
 
 func GetConfigByCategory(db *sqlx.DB, category string) ([]ServerConfig, error) {
 
-rows, err := db.Queryx(`SELECT id, key, value, type, category, description, is_read_only, requires_restart, updated_at, updated_by FROM server_config WHERE category = $1 ORDER BY key`, category)
+	rows, err := db.Queryx(`SELECT id, key, value, type, category, description, is_read_only, requires_restart, updated_at, updated_by FROM server_config WHERE category = $1 ORDER BY key`, category)
 	if err != nil {
 		return nil, fmt.Errorf("query config by category: %w", err)
 	}
@@ -688,236 +685,304 @@ func ListTables(db *sqlx.DB) ([]string, error) {
 }
 
 func ListSchemas(db *sqlx.DB) ([]string, error) {
-    query := "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT IN ('information_schema', 'pg_catalog', 'pg_toast') AND schema_name NOT LIKE 'pg_temp_%' AND schema_name NOT LIKE 'pg_toast_temp_%'"
-    var schemas []string
-    err := db.Select(&schemas, query)
-    return schemas, err
+	query := "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT IN ('information_schema', 'pg_catalog', 'pg_toast') AND schema_name NOT LIKE 'pg_temp_%' AND schema_name NOT LIKE 'pg_toast_temp_%'"
+	var schemas []string
+	err := db.Select(&schemas, query)
+	return schemas, err
 }
 
 func ListAllTables(db *sqlx.DB) ([]map[string]string, error) {
-    query := `
-        SELECT 
+	query := `
+        SELECT
             n.nspname AS schema_name,
             c.relname AS table_name
-        FROM 
+        FROM
             pg_catalog.pg_class c
-        JOIN 
+        JOIN
             pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-        WHERE 
+        WHERE
             c.relkind = 'r'
             AND n.nspname NOT IN ('pg_catalog', 'information_schema')
-            AND n.nspname NOT LIKE 'pg_temp_%' 
+            AND n.nspname NOT LIKE 'pg_temp_%'
             AND n.nspname NOT LIKE 'pg_toast_temp_%'
-        ORDER BY 
+        ORDER BY
             n.nspname,
             c.relname;
     `
-    
-    rows, err := db.Queryx(query)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
 
-    results := []map[string]string{}
-    for rows.Next() {
-        var schema, table string
-        if err := rows.Scan(&schema, &table); err != nil {
-            return nil, err
-        }
-        results = append(results, map[string]string{"schema": schema, "table": table})
-    }
-    return results, nil
+	rows, err := db.Queryx(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	results := []map[string]string{}
+	for rows.Next() {
+		var schema, table string
+		if err := rows.Scan(&schema, &table); err != nil {
+			return nil, err
+		}
+		results = append(results, map[string]string{"schema": schema, "table": table})
+	}
+	return results, nil
 }
 
 func CreateSchema(db *sqlx.DB, name, owner string) error {
-    // Basic validation to prevent SQL injection (alphanumeric + underscore)
-    for _, r := range name {
-        if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_') {
-            return fmt.Errorf("invalid schema name")
-        }
-    }
-    
-    query := fmt.Sprintf("CREATE SCHEMA %s", name)
-    if owner != "" {
-        // Validate owner name as well
-        for _, r := range owner {
-            if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_') {
-                return fmt.Errorf("invalid owner name")
-            }
-        }
-        query += fmt.Sprintf(" AUTHORIZATION %s", owner)
-    }
-    
-    _, err := db.Exec(query)
-    return err
+	// Basic validation to prevent SQL injection (alphanumeric + underscore)
+	for _, r := range name {
+		if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_') {
+			return fmt.Errorf("invalid schema name")
+		}
+	}
+
+	query := fmt.Sprintf("CREATE SCHEMA %s", name)
+	if owner != "" {
+		// Validate owner name as well
+		for _, r := range owner {
+			if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_') {
+				return fmt.Errorf("invalid owner name")
+			}
+		}
+		query += fmt.Sprintf(" AUTHORIZATION %s", owner)
+	}
+
+	_, err := db.Exec(query)
+	return err
 }
 
 func DropSchema(db *sqlx.DB, name string) error {
-    for _, r := range name {
-        if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_') {
-            return fmt.Errorf("invalid schema name")
-        }
-    }
-    // CASCADE to drop tables inside
-    _, err := db.Exec(fmt.Sprintf("DROP SCHEMA %s CASCADE", name))
-    return err
+	for _, r := range name {
+		if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_') {
+			return fmt.Errorf("invalid schema name")
+		}
+	}
+	// CASCADE to drop tables inside
+	_, err := db.Exec(fmt.Sprintf("DROP SCHEMA %s CASCADE", name))
+	return err
 }
 
 type Role struct {
-    Name        string `db:"rolname" json:"name"`
-    Superuser   bool   `db:"rolsuper" json:"superuser"`
-    Inherit     bool   `db:"rolinherit" json:"inherit"`
-    CreateRole  bool   `db:"rolcreaterole" json:"create_role"`
-    CreateDB    bool   `db:"rolcreatedb" json:"create_db"`
-    CanLogin    bool   `db:"rolcanlogin" json:"can_login"`
-    Replication bool   `db:"rolreplication" json:"replication"`
-    BypassRLS   bool   `db:"rolbypassrls" json:"bypass_rls"`
+	Name        string `db:"rolname" json:"name"`
+	Superuser   bool   `db:"rolsuper" json:"superuser"`
+	Inherit     bool   `db:"rolinherit" json:"inherit"`
+	CreateRole  bool   `db:"rolcreaterole" json:"create_role"`
+	CreateDB    bool   `db:"rolcreatedb" json:"create_db"`
+	CanLogin    bool   `db:"rolcanlogin" json:"can_login"`
+	Replication bool   `db:"rolreplication" json:"replication"`
+	BypassRLS   bool   `db:"rolbypassrls" json:"bypass_rls"`
 }
 
 func ListRoles(db *sqlx.DB) ([]Role, error) {
-    var roles []Role
-    err := db.Select(&roles, "SELECT rolname, rolsuper, rolinherit, rolcreaterole, rolcreatedb, rolcanlogin, rolreplication, rolbypassrls FROM pg_roles")
-    return roles, err
+	var roles []Role
+	err := db.Select(&roles, "SELECT rolname, rolsuper, rolinherit, rolcreaterole, rolcreatedb, rolcanlogin, rolreplication, rolbypassrls FROM pg_roles")
+	return roles, err
 }
 
 func CreateRole(db *sqlx.DB, name, password string, options []string) error {
-    // Validate name
-    for _, r := range name {
-        if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_') {
-            return fmt.Errorf("invalid role name")
-        }
-    }
-    
-    q := fmt.Sprintf("CREATE ROLE %s WITH LOGIN PASSWORD '%s'", name, strings.ReplaceAll(password, "'", "''"))
-    if len(options) > 0 {
-        // Validate options (only allow specific keywords)
-        allowed := map[string]bool{"SUPERUSER": true, "NOSUPERUSER": true, "CREATEDB": true, "NOCREATEDB": true, "CREATEROLE": true, "NOCREATEROLE": true, "INHERIT": true, "NOINHERIT": true, "LOGIN": true, "NOLOGIN": true, "REPLICATION": true, "NOREPLICATION": true, "BYPASSRLS": true, "NOBYPASSRLS": true}
-        safeOpts := []string{}
-        for _, opt := range options {
-            opt = strings.ToUpper(opt)
-            if allowed[opt] {
-                safeOpts = append(safeOpts, opt)
-            }
-        }
-        if len(safeOpts) > 0 {
-            q += " " + strings.Join(safeOpts, " ")
-        }
-    }
-    
-    _, err := db.Exec(q)
-    return err
+	// Validate role name using security helper
+	if err := ValidateRoleName(name); err != nil {
+		return err
+	}
+
+	// Validate password meets security requirements
+	if err := ValidatePassword(password); err != nil {
+		return fmt.Errorf("password validation failed: %w", err)
+	}
+
+	// Build options string with strict whitelist validation
+	allowed := map[string]bool{
+		"NOSUPERUSER": true, "CREATEDB": true, "NOCREATEDB": true,
+		"CREATEROLE": true, "NOCREATEROLE": true, "INHERIT": true,
+		"NOINHERIT": true, "LOGIN": true, "NOLOGIN": true,
+		"NOREPLICATION": true, "NOBYPASSRLS": true,
+	}
+	// Note: SUPERUSER, REPLICATION, BYPASSRLS are intentionally excluded for security
+
+	safeOpts := []string{}
+	for _, opt := range options {
+		opt = strings.ToUpper(strings.TrimSpace(opt))
+		if allowed[opt] {
+			safeOpts = append(safeOpts, opt)
+		}
+	}
+
+	// Use quoted identifier for role name and parameterized password
+	// PostgreSQL doesn't support $1 for passwords in CREATE ROLE, so we use format()
+	// which is safer than string concatenation
+	optStr := ""
+	if len(safeOpts) > 0 {
+		optStr = " " + strings.Join(safeOpts, " ")
+	}
+
+	// Use PostgreSQL's format() function with %I for identifier and %L for literal
+	// This provides server-side escaping which is more robust
+	q := fmt.Sprintf(`DO $$
+        BEGIN
+            EXECUTE format('CREATE ROLE %%I WITH LOGIN PASSWORD %%L%s', $1, $2);
+        END $$`, optStr)
+
+	_, err := db.Exec(q, name, password)
+	return err
 }
 
 func DeleteRole(db *sqlx.DB, name string) error {
-    // Validate name
-    for _, r := range name {
-        if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_') {
-            return fmt.Errorf("invalid role name")
-        }
-    }
-    _, err := db.Exec(fmt.Sprintf("DROP ROLE %s", name))
-    return err
+	// Validate role name using security helper
+	if err := ValidateRoleName(name); err != nil {
+		return err
+	}
+
+	// Use PostgreSQL's format() function with %I for identifier escaping
+	q := `DO $$ BEGIN EXECUTE format('DROP ROLE %I', $1); END $$`
+	_, err := db.Exec(q, name)
+	return err
 }
 
 func ListTablesBySchema(db *sqlx.DB, schema string) ([]string, error) {
-    // Use pg_catalog.pg_tables as the authoritative source
-    query := "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = $1 ORDER BY tablename"
-    
-    rows, err := db.Queryx(query, schema)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
+	// Use pg_catalog.pg_tables as the authoritative source
+	query := "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = $1 ORDER BY tablename"
 
-    tables := []string{} // Initialize as empty slice
-    for rows.Next() {
-        var name string
-        if err := rows.Scan(&name); err != nil {
-            return nil, err
-        }
-        tables = append(tables, name)
-    }
-    return tables, nil
+	rows, err := db.Queryx(query, schema)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	tables := []string{} // Initialize as empty slice
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, err
+		}
+		tables = append(tables, name)
+	}
+	return tables, nil
 }
 
 type ColumnInfo struct {
-    Name     string `db:"column_name" json:"name"`
-    DataType string `db:"data_type" json:"type"`
-    IsNullable string `db:"is_nullable" json:"nullable"`
+	Name         string `db:"column_name" json:"name"`
+	DataType     string `db:"data_type" json:"type"`
+	IsNullable   string `db:"is_nullable" json:"nullable"`
+	IsPrimaryKey bool   `json:"is_pk"`
 }
 
 func ListColumns(db *sqlx.DB, schema, table string) ([]ColumnInfo, error) {
-    query := "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_schema = $1 AND table_name = $2 ORDER BY ordinal_position"
-    cols := []ColumnInfo{}
-    err := db.Select(&cols, query, schema, table)
-    return cols, err
+	// First get basic column info
+	query := "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_schema = $1 AND table_name = $2 ORDER BY ordinal_position"
+	cols := []ColumnInfo{}
+	err := db.Select(&cols, query, schema, table)
+	if err != nil {
+		return nil, err
+	}
+
+	// Then get primary key columns
+	pkQuery := `
+		SELECT kcu.column_name
+		FROM information_schema.table_constraints tc
+		JOIN information_schema.key_column_usage kcu
+			ON tc.constraint_name = kcu.constraint_name
+			AND tc.table_schema = kcu.table_schema
+		WHERE tc.constraint_type = 'PRIMARY KEY'
+			AND tc.table_schema = $1
+			AND tc.table_name = $2
+	`
+	pkCols := []string{}
+	rows, err := db.Query(pkQuery, schema, table)
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var colName string
+			if err := rows.Scan(&colName); err == nil {
+				pkCols = append(pkCols, colName)
+			}
+		}
+	}
+
+	// Mark primary key columns
+	pkSet := make(map[string]bool)
+	for _, pk := range pkCols {
+		pkSet[pk] = true
+	}
+	for i := range cols {
+		cols[i].IsPrimaryKey = pkSet[cols[i].Name]
+	}
+
+	return cols, nil
 }
 
 func ExecuteSQL(db *sqlx.DB, query string) ([]map[string]interface{}, error) {
-    rows, err := db.Queryx(query)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
+	rows, err := db.Queryx(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-    results := []map[string]interface{}{}
-    for rows.Next() {
-        row := make(map[string]interface{})
-        if err := rows.MapScan(row); err != nil {
-            return nil, err
-        }
-        // Handle []byte for text columns (common in sqlx/drivers)
-        for k, v := range row {
-            if b, ok := v.([]byte); ok {
-                row[k] = string(b)
-            }
-        }
-        results = append(results, row)
-    }
-    return results, nil
+	results := []map[string]interface{}{}
+	for rows.Next() {
+		row := make(map[string]interface{})
+		if err := rows.MapScan(row); err != nil {
+			return nil, err
+		}
+		// Handle []byte for text columns (common in sqlx/drivers)
+		for k, v := range row {
+			if b, ok := v.([]byte); ok {
+				row[k] = string(b)
+			}
+		}
+		results = append(results, row)
+	}
+	return results, nil
 }
 
 func GetTableCounts(db *sqlx.DB) (map[string]int, error) {
-    tables, err := ListTables(db)
-    if err != nil {
-        return nil, err
-    }
-    
-    counts := make(map[string]int)
-    for _, table := range tables {
-        var count int
-        // Postgres: SELECT count(*) FROM "table"
-        if err := db.Get(&count, fmt.Sprintf("SELECT count(*) FROM %q", table)); err == nil {
-            counts[table] = count
-        }
-    }
-    return counts, nil
+	tables, err := ListTables(db)
+	if err != nil {
+		return nil, err
+	}
+
+	counts := make(map[string]int)
+	for _, table := range tables {
+		var count int
+		// Postgres: SELECT count(*) FROM "table"
+		if err := db.Get(&count, fmt.Sprintf("SELECT count(*) FROM %q", table)); err == nil {
+			counts[table] = count
+		}
+	}
+	return counts, nil
 }
 
 // DDL Helpers
 
 func CreateTable(db *sqlx.DB, schema, name string, columns []string) error {
-	// Basic validation
-	if !isValidName(schema) || !isValidName(name) {
-		return fmt.Errorf("invalid schema or table name")
+	// Use security helpers for validation
+	if err := ValidateSchemaName(schema); err != nil {
+		return err
+	}
+	if err := ValidateTableName(name); err != nil {
+		return err
 	}
 	if len(columns) == 0 {
 		return fmt.Errorf("columns definition required")
 	}
 
-	// Columns should be validated/sanitized in handler, but we can do a quick check here if needed
-	// For now, assuming handler constructs safe column definitions or we use raw input if admin trusted.
-	// But let's assume columns array strings are like "id SERIAL PRIMARY KEY", "name TEXT NOT NULL"
-	
+	// Validate each column definition
+	for _, col := range columns {
+		if err := ValidateColumnDefinition(col); err != nil {
+			return fmt.Errorf("invalid column definition: %w", err)
+		}
+	}
+
 	q := fmt.Sprintf("CREATE TABLE %q.%q (%s)", schema, name, strings.Join(columns, ", "))
 	_, err := db.Exec(q)
 	return err
 }
 
 func DropTable(db *sqlx.DB, schema, name string) error {
-	if !isValidName(schema) || !isValidName(name) {
-		return fmt.Errorf("invalid schema or table name")
+	// Use security helpers for validation
+	if err := ValidateSchemaName(schema); err != nil {
+		return err
+	}
+	if err := ValidateTableName(name); err != nil {
+		return err
 	}
 	q := fmt.Sprintf("DROP TABLE %q.%q", schema, name)
 	_, err := db.Exec(q)
@@ -925,21 +990,36 @@ func DropTable(db *sqlx.DB, schema, name string) error {
 }
 
 func AddColumn(db *sqlx.DB, schema, table, colName, colType string) error {
-	if !isValidName(schema) || !isValidName(table) || !isValidName(colName) {
-		return fmt.Errorf("invalid identifiers")
+	// Use security helpers for validation
+	if err := ValidateSchemaName(schema); err != nil {
+		return err
 	}
-	// colType needs to be validated or allowed list? Postgres types are many.
-	// We'll trust admin input for now but prevent obvious injection if possible.
-	// Simple allow-list for basic types or just trust. Admin tool = trust.
-	
+	if err := ValidateTableName(table); err != nil {
+		return err
+	}
+	if err := ValidateColumnName(colName); err != nil {
+		return err
+	}
+	// Validate column type against whitelist
+	if err := ValidateSQLType(colType); err != nil {
+		return fmt.Errorf("invalid column type: %w", err)
+	}
+
 	q := fmt.Sprintf("ALTER TABLE %q.%q ADD COLUMN %q %s", schema, table, colName, colType)
 	_, err := db.Exec(q)
 	return err
 }
 
 func DropColumn(db *sqlx.DB, schema, table, colName string) error {
-	if !isValidName(schema) || !isValidName(table) || !isValidName(colName) {
-		return fmt.Errorf("invalid identifiers")
+	// Use security helpers for validation
+	if err := ValidateSchemaName(schema); err != nil {
+		return err
+	}
+	if err := ValidateTableName(table); err != nil {
+		return err
+	}
+	if err := ValidateColumnName(colName); err != nil {
+		return err
 	}
 	q := fmt.Sprintf("ALTER TABLE %q.%q DROP COLUMN %q", schema, table, colName)
 	_, err := db.Exec(q)
@@ -947,8 +1027,18 @@ func DropColumn(db *sqlx.DB, schema, table, colName string) error {
 }
 
 func RenameColumn(db *sqlx.DB, schema, table, oldName, newName string) error {
-	if !isValidName(schema) || !isValidName(table) || !isValidName(oldName) || !isValidName(newName) {
-		return fmt.Errorf("invalid identifiers")
+	// Use security helpers for validation
+	if err := ValidateSchemaName(schema); err != nil {
+		return err
+	}
+	if err := ValidateTableName(table); err != nil {
+		return err
+	}
+	if err := ValidateColumnName(oldName); err != nil {
+		return err
+	}
+	if err := ValidateColumnName(newName); err != nil {
+		return err
 	}
 	q := fmt.Sprintf("ALTER TABLE %q.%q RENAME COLUMN %q TO %q", schema, table, oldName, newName)
 	_, err := db.Exec(q)
@@ -956,43 +1046,69 @@ func RenameColumn(db *sqlx.DB, schema, table, oldName, newName string) error {
 }
 
 func AlterColumnType(db *sqlx.DB, schema, table, column, newType string) error {
-	if !isValidName(schema) || !isValidName(table) || !isValidName(column) {
-		return fmt.Errorf("invalid identifiers")
+	// Use security helpers for validation
+	if err := ValidateSchemaName(schema); err != nil {
+		return err
 	}
-    // Using CAST for safety when converting types
+	if err := ValidateTableName(table); err != nil {
+		return err
+	}
+	if err := ValidateColumnName(column); err != nil {
+		return err
+	}
+	// Validate new type against whitelist
+	if err := ValidateSQLType(newType); err != nil {
+		return fmt.Errorf("invalid column type: %w", err)
+	}
+
+	// Using CAST for safety when converting types
 	q := fmt.Sprintf("ALTER TABLE %q.%q ALTER COLUMN %q TYPE %s USING %q::%s", schema, table, column, newType, column, newType)
 	_, err := db.Exec(q)
 	return err
 }
 
 func AlterColumnNullable(db *sqlx.DB, schema, table, column string, notNull bool) error {
-	if !isValidName(schema) || !isValidName(table) || !isValidName(column) {
-		return fmt.Errorf("invalid identifiers")
+	// Use security helpers for validation
+	if err := ValidateSchemaName(schema); err != nil {
+		return err
 	}
-    action := "DROP NOT NULL"
-    if notNull {
-        action = "SET NOT NULL"
-    }
+	if err := ValidateTableName(table); err != nil {
+		return err
+	}
+	if err := ValidateColumnName(column); err != nil {
+		return err
+	}
+	action := "DROP NOT NULL"
+	if notNull {
+		action = "SET NOT NULL"
+	}
 	q := fmt.Sprintf("ALTER TABLE %q.%q ALTER COLUMN %q %s", schema, table, column, action)
 	_, err := db.Exec(q)
 	return err
 }
 
 func AlterColumnDefault(db *sqlx.DB, schema, table, column, defaultVal string) error {
-	if !isValidName(schema) || !isValidName(table) || !isValidName(column) {
-		return fmt.Errorf("invalid identifiers")
+	// Use security helpers for validation
+	if err := ValidateSchemaName(schema); err != nil {
+		return err
 	}
-    var q string
-    if defaultVal == "" {
-        q = fmt.Sprintf("ALTER TABLE %q.%q ALTER COLUMN %q DROP DEFAULT", schema, table, column)
-    } else {
-        // defaultVal needs to be sanitized or handled carefully. 
-        // For simplicity, we assume it's a raw SQL string (e.g. "0" or "'text'" or "NOW()").
-        // A robust editor usually passes this as a safe string. 
-        // We will simple-quote it if it looks like a string but users might want expressions.
-        // Let's rely on client sending valid SQL value expression for now.
-        q = fmt.Sprintf("ALTER TABLE %q.%q ALTER COLUMN %q SET DEFAULT %s", schema, table, column, defaultVal)
-    }
+	if err := ValidateTableName(table); err != nil {
+		return err
+	}
+	if err := ValidateColumnName(column); err != nil {
+		return err
+	}
+
+	var q string
+	if defaultVal == "" {
+		q = fmt.Sprintf("ALTER TABLE %q.%q ALTER COLUMN %q DROP DEFAULT", schema, table, column)
+	} else {
+		// Validate default value against allowlist of safe patterns
+		if err := ValidateDefaultValue(defaultVal); err != nil {
+			return fmt.Errorf("invalid default value: %w", err)
+		}
+		q = fmt.Sprintf("ALTER TABLE %q.%q ALTER COLUMN %q SET DEFAULT %s", schema, table, column, defaultVal)
+	}
 	_, err := db.Exec(q)
 	return err
 }

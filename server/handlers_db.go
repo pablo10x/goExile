@@ -61,13 +61,13 @@ func GetTableDataHandler(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	tableName := vars["table"]
-    schema := r.URL.Query().Get("schema")
-    if schema == "" {
-        schema = "public"
-    }
+	schema := r.URL.Query().Get("schema")
+	if schema == "" {
+		schema = "public"
+	}
 
 	// Security: Validate table name
-    // We validate against the list of tables in that schema
+	// We validate against the list of tables in that schema
 	tables, err := ListTablesBySchema(dbConn, schema)
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, "failed to list tables")
@@ -100,7 +100,7 @@ func GetTableDataHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fetch Data
-    // Use fully qualified name: "schema"."table"
+	// Use fully qualified name: "schema"."table"
 	rows, err := dbConn.Queryx(fmt.Sprintf(`SELECT * FROM %q.%q LIMIT %d OFFSET %d`, schema, tableName, limit, offset))
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, err.Error())
@@ -108,18 +108,18 @@ func GetTableDataHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	results := []map[string]interface{}{} 
+	results := []map[string]interface{}{}
 	for rows.Next() {
 		row := make(map[string]interface{})
 		if err := rows.MapScan(row); err != nil {
 			continue
 		}
-        // Handle []byte for text columns (common in sqlx/drivers)
-        for k, v := range row {
-            if b, ok := v.([]byte); ok {
-                row[k] = string(b)
-            }
-        }
+		// Handle []byte for text columns (common in sqlx/drivers)
+		for k, v := range row {
+			if b, ok := v.([]byte); ok {
+				row[k] = string(b)
+			}
+		}
 		results = append(results, row)
 	}
 
@@ -188,8 +188,8 @@ func ListInternalBackupsHandler(w http.ResponseWriter, r *http.Request) {
 func DownloadInternalBackupHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	filename := vars["filename"]
-	if filename == "" || strings.Contains(filename, "..") || strings.Contains(filename, "/") {
-		writeError(w, r, http.StatusBadRequest, "invalid filename")
+	if err := ValidateFilename(filename); err != nil {
+		writeError(w, r, http.StatusBadRequest, "invalid filename: "+err.Error())
 		return
 	}
 
@@ -206,8 +206,8 @@ func DownloadInternalBackupHandler(w http.ResponseWriter, r *http.Request) {
 func DeleteInternalBackupHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	filename := vars["filename"]
-	if filename == "" || strings.Contains(filename, "..") {
-		writeError(w, r, http.StatusBadRequest, "invalid filename")
+	if err := ValidateFilename(filename); err != nil {
+		writeError(w, r, http.StatusBadRequest, "invalid filename: "+err.Error())
 		return
 	}
 
@@ -230,8 +230,8 @@ func RestoreInternalBackupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Filename == "" || strings.Contains(req.Filename, "..") {
-		writeError(w, r, http.StatusBadRequest, "invalid filename")
+	if err := ValidateFilename(req.Filename); err != nil {
+		writeError(w, r, http.StatusBadRequest, "invalid filename: "+err.Error())
 		return
 	}
 
@@ -266,8 +266,7 @@ func GetPostgresConfigHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
-rows, err := dbConn.Queryx("SHOW ALL")
+	rows, err := dbConn.Queryx("SHOW ALL")
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, err.Error())
 		return
@@ -312,10 +311,10 @@ func UpdatePostgresConfigHandler(w http.ResponseWriter, r *http.Request) {
 	// ALTER SYSTEM SET parameter = 'value'
 	// Note: Some values might need different quoting, but 'value' works for most strings/numbers in Postgres.
 	// For integers, '10' is fine.
-    // Sanitize value to prevent SQL injection or syntax errors via single quotes
-    safeValue := strings.ReplaceAll(req.Value, "'", "''")
+	// Sanitize value to prevent SQL injection or syntax errors via single quotes
+	safeValue := strings.ReplaceAll(req.Value, "'", "''")
 	query := fmt.Sprintf("ALTER SYSTEM SET %s = '%s'", req.Name, safeValue)
-	
+
 	if _, err := dbConn.Exec(query); err != nil {
 		writeError(w, r, http.StatusInternalServerError, fmt.Sprintf("failed to update config: %v", err))
 		return
@@ -341,209 +340,209 @@ func RestartPostgresHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ListSchemasHandler(w http.ResponseWriter, r *http.Request) {
-    if dbConn == nil {
-        writeError(w, r, http.StatusServiceUnavailable, "database not connected")
-        return
-    }
-    schemas, err := ListSchemas(dbConn)
-    if err != nil {
-        writeError(w, r, http.StatusInternalServerError, err.Error())
-        return
-    }
-    writeJSON(w, http.StatusOK, schemas)
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+	schemas, err := ListSchemas(dbConn)
+	if err != nil {
+		writeError(w, r, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, schemas)
 }
 
 func CreateSchemaHandler(w http.ResponseWriter, r *http.Request) {
-    if dbConn == nil {
-        writeError(w, r, http.StatusServiceUnavailable, "database not connected")
-        return
-    }
-    var req struct {
-        Name  string `json:"name"`
-        Owner string `json:"owner"`
-    }
-    if err := decodeJSON(r, &req); err != nil {
-        writeError(w, r, http.StatusBadRequest, "invalid json")
-        return
-    }
-    if err := CreateSchema(dbConn, req.Name, req.Owner); err != nil {
-        writeError(w, r, http.StatusInternalServerError, err.Error())
-        return
-    }
-    writeJSON(w, http.StatusCreated, map[string]string{"message": "schema created"})
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+	var req struct {
+		Name  string `json:"name"`
+		Owner string `json:"owner"`
+	}
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, r, http.StatusBadRequest, "invalid json")
+		return
+	}
+	if err := CreateSchema(dbConn, req.Name, req.Owner); err != nil {
+		writeError(w, r, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusCreated, map[string]string{"message": "schema created"})
 }
 
 func DeleteSchemaHandler(w http.ResponseWriter, r *http.Request) {
-    if dbConn == nil {
-        writeError(w, r, http.StatusServiceUnavailable, "database not connected")
-        return
-    }
-    vars := mux.Vars(r)
-    name := vars["name"]
-    if err := DropSchema(dbConn, name); err != nil {
-        writeError(w, r, http.StatusInternalServerError, err.Error())
-        return
-    }
-    writeJSON(w, http.StatusOK, map[string]string{"message": "schema deleted"})
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+	vars := mux.Vars(r)
+	name := vars["name"]
+	if err := DropSchema(dbConn, name); err != nil {
+		writeError(w, r, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"message": "schema deleted"})
 }
 
 func ListRolesHandler(w http.ResponseWriter, r *http.Request) {
-    if dbConn == nil {
-        writeError(w, r, http.StatusServiceUnavailable, "database not connected")
-        return
-    }
-    roles, err := ListRoles(dbConn)
-    if err != nil {
-        writeError(w, r, http.StatusInternalServerError, err.Error())
-        return
-    }
-    writeJSON(w, http.StatusOK, roles)
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+	roles, err := ListRoles(dbConn)
+	if err != nil {
+		writeError(w, r, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, roles)
 }
 
 func CreateRoleHandler(w http.ResponseWriter, r *http.Request) {
-    if dbConn == nil {
-        writeError(w, r, http.StatusServiceUnavailable, "database not connected")
-        return
-    }
-    var req struct {
-        Name     string   `json:"name"`
-        Password string   `json:"password"`
-        Options  []string `json:"options"`
-    }
-    if err := decodeJSON(r, &req); err != nil {
-        writeError(w, r, http.StatusBadRequest, "invalid json")
-        return
-    }
-    if err := CreateRole(dbConn, req.Name, req.Password, req.Options); err != nil {
-        writeError(w, r, http.StatusInternalServerError, err.Error())
-        return
-    }
-    writeJSON(w, http.StatusCreated, map[string]string{"message": "role created"})
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+	var req struct {
+		Name     string   `json:"name"`
+		Password string   `json:"password"`
+		Options  []string `json:"options"`
+	}
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, r, http.StatusBadRequest, "invalid json")
+		return
+	}
+	if err := CreateRole(dbConn, req.Name, req.Password, req.Options); err != nil {
+		writeError(w, r, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusCreated, map[string]string{"message": "role created"})
 }
 
 func DeleteRoleHandler(w http.ResponseWriter, r *http.Request) {
-    if dbConn == nil {
-        writeError(w, r, http.StatusServiceUnavailable, "database not connected")
-        return
-    }
-    vars := mux.Vars(r)
-    name := vars["name"]
-    if err := DeleteRole(dbConn, name); err != nil {
-        writeError(w, r, http.StatusInternalServerError, err.Error())
-        return
-    }
-    writeJSON(w, http.StatusOK, map[string]string{"message": "role deleted"})
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+	vars := mux.Vars(r)
+	name := vars["name"]
+	if err := DeleteRole(dbConn, name); err != nil {
+		writeError(w, r, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"message": "role deleted"})
 }
 
 func ListTablesBySchemaHandler(w http.ResponseWriter, r *http.Request) {
-    if dbConn == nil {
-        writeError(w, r, http.StatusServiceUnavailable, "database not connected")
-        return
-    }
-    rawSchema := r.URL.Query().Get("schema")
-    schema := strings.TrimSpace(rawSchema)
-    if schema == "" {
-        // STRICT MODE: Do not default to public. Force frontend to specify.
-        writeError(w, r, http.StatusBadRequest, "schema parameter required")
-        return
-    }
-    
-    tables, err := ListTablesBySchema(dbConn, schema)
-    if err != nil {
-        writeError(w, r, http.StatusInternalServerError, err.Error())
-        return
-    }
-    
-    // Debug header to help frontend verify what happened
-    w.Header().Set("X-Resolved-Schema", schema)
-    
-    writeJSON(w, http.StatusOK, tables)
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+	rawSchema := r.URL.Query().Get("schema")
+	schema := strings.TrimSpace(rawSchema)
+	if schema == "" {
+		// STRICT MODE: Do not default to public. Force frontend to specify.
+		writeError(w, r, http.StatusBadRequest, "schema parameter required")
+		return
+	}
+
+	tables, err := ListTablesBySchema(dbConn, schema)
+	if err != nil {
+		writeError(w, r, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Debug header to help frontend verify what happened
+	w.Header().Set("X-Resolved-Schema", schema)
+
+	writeJSON(w, http.StatusOK, tables)
 }
 
 func GetAllTablesHandler(w http.ResponseWriter, r *http.Request) {
-    if dbConn == nil {
-        writeError(w, r, http.StatusServiceUnavailable, "database not connected")
-        return
-    }
-    
-    tables, err := ListAllTables(dbConn)
-    if err != nil {
-        writeError(w, r, http.StatusInternalServerError, err.Error())
-        return
-    }
-    writeJSON(w, http.StatusOK, tables)
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+
+	tables, err := ListAllTables(dbConn)
+	if err != nil {
+		writeError(w, r, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, tables)
 }
 
 func ListColumnsHandler(w http.ResponseWriter, r *http.Request) {
-    if dbConn == nil {
-        writeError(w, r, http.StatusServiceUnavailable, "database not connected")
-        return
-    }
-    schema := r.URL.Query().Get("schema")
-    table := r.URL.Query().Get("table")
-    if schema == "" || table == "" {
-        writeError(w, r, http.StatusBadRequest, "schema and table required")
-        return
-    }
-    
-    cols, err := ListColumns(dbConn, schema, table)
-    if err != nil {
-        writeError(w, r, http.StatusInternalServerError, err.Error())
-        return
-    }
-    writeJSON(w, http.StatusOK, cols)
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+	schema := r.URL.Query().Get("schema")
+	table := r.URL.Query().Get("table")
+	if schema == "" || table == "" {
+		writeError(w, r, http.StatusBadRequest, "schema and table required")
+		return
+	}
+
+	cols, err := ListColumns(dbConn, schema, table)
+	if err != nil {
+		writeError(w, r, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, cols)
 }
 
 func ExecuteSQLHandler(w http.ResponseWriter, r *http.Request) {
-    if dbConn == nil {
-        writeError(w, r, http.StatusServiceUnavailable, "database not connected")
-        return
-    }
-    var req struct {
-        Query string `json:"query"`
-    }
-    if err := decodeJSON(r, &req); err != nil {
-        writeError(w, r, http.StatusBadRequest, "invalid json")
-        return
-    }
-    
-    // Basic safety check (very minimal, relying on admin auth)
-    if req.Query == "" {
-        writeError(w, r, http.StatusBadRequest, "empty query")
-        return
-    }
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+	var req struct {
+		Query string `json:"query"`
+	}
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, r, http.StatusBadRequest, "invalid json")
+		return
+	}
 
-    results, err := ExecuteSQL(dbConn, req.Query)
-    if err != nil {
-        writeError(w, r, http.StatusBadRequest, err.Error())
-        return
-    }
-    writeJSON(w, http.StatusOK, results)
+	// Validate query is read-only to prevent destructive operations
+	if err := IsSafeReadOnlyQuery(req.Query); err != nil {
+		writeError(w, r, http.StatusForbidden, "query not allowed: "+err.Error())
+		return
+	}
+
+	results, err := ExecuteSQL(dbConn, req.Query)
+	if err != nil {
+		writeError(w, r, http.StatusBadRequest, SanitizeDBError(err))
+		return
+	}
+	writeJSON(w, http.StatusOK, results)
 }
 
 func DebugListAllTablesHandler(w http.ResponseWriter, r *http.Request) {
-    if dbConn == nil {
-        writeError(w, r, http.StatusServiceUnavailable, "database not connected")
-        return
-    }
-    
-    query := "SELECT table_schema, table_name FROM information_schema.tables WHERE table_schema NOT IN ('information_schema', 'pg_catalog')"
-    rows, err := dbConn.Queryx(query)
-    if err != nil {
-        writeError(w, r, http.StatusInternalServerError, err.Error())
-        return
-    }
-    defer rows.Close()
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
 
-    results := []map[string]string{}
-    for rows.Next() {
-        var schema, name string
-        if err := rows.Scan(&schema, &name); err != nil {
-            continue
-        }
-        results = append(results, map[string]string{"schema": schema, "table": name})
-    }
-    writeJSON(w, http.StatusOK, results)
+	query := "SELECT table_schema, table_name FROM information_schema.tables WHERE table_schema NOT IN ('information_schema', 'pg_catalog')"
+	rows, err := dbConn.Queryx(query)
+	if err != nil {
+		writeError(w, r, http.StatusInternalServerError, err.Error())
+		return
+	}
+	defer rows.Close()
+
+	results := []map[string]string{}
+	for rows.Next() {
+		var schema, name string
+		if err := rows.Scan(&schema, &name); err != nil {
+			continue
+		}
+		results = append(results, map[string]string{"schema": schema, "table": name})
+	}
+	writeJSON(w, http.StatusOK, results)
 }
 
 // --- Table Editor ---
@@ -566,11 +565,15 @@ func UpdateTableRowHandler(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	tableName := vars["table"]
-	id := vars["id"]
-    schema := r.URL.Query().Get("schema")
-    if schema == "" {
-        schema = "public"
-    }
+	pkValue := vars["id"] // This is actually the primary key value, not necessarily "id"
+	schema := r.URL.Query().Get("schema")
+	pkColumn := r.URL.Query().Get("pk") // Primary key column name
+	if schema == "" {
+		schema = "public"
+	}
+	if pkColumn == "" {
+		pkColumn = "id" // Default to "id" for backward compatibility
+	}
 
 	// Security: Validate table name
 	tables, err := ListTablesBySchema(dbConn, schema)
@@ -590,6 +593,30 @@ func UpdateTableRowHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Security: Validate primary key column name
+	if !isValidColumnName(pkColumn) {
+		writeError(w, r, http.StatusBadRequest, "invalid primary key column name")
+		return
+	}
+
+	// Verify the pk column exists in this table
+	cols, err := ListColumns(dbConn, schema, tableName)
+	if err != nil {
+		writeError(w, r, http.StatusInternalServerError, "failed to get columns")
+		return
+	}
+	pkColumnExists := false
+	for _, col := range cols {
+		if col.Name == pkColumn {
+			pkColumnExists = true
+			break
+		}
+	}
+	if !pkColumnExists {
+		writeError(w, r, http.StatusBadRequest, fmt.Sprintf("primary key column '%s' does not exist in table", pkColumn))
+		return
+	}
+
 	var data map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		writeError(w, r, http.StatusBadRequest, "invalid json")
@@ -601,22 +628,20 @@ func UpdateTableRowHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Build query
+	// Build query using ? placeholders and Rebind
 	setParts := []string{}
 	args := []interface{}{}
-	i := 1
 	for k, v := range data {
 		if !isValidColumnName(k) {
 			writeError(w, r, http.StatusBadRequest, "invalid column name: "+k)
 			return
 		}
-		// Skip 'id' in update
-		if k == "id" {
+		// Skip the primary key column in SET clause
+		if k == pkColumn {
 			continue
 		}
-		setParts = append(setParts, fmt.Sprintf("%q = $%d", k, i))
+		setParts = append(setParts, fmt.Sprintf("%q = ?", k))
 		args = append(args, v)
-		i++
 	}
 
 	if len(setParts) == 0 {
@@ -624,25 +649,12 @@ func UpdateTableRowHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	args = append(args, id) // Add ID as last arg
-	query := fmt.Sprintf("UPDATE %q.%q SET %s WHERE id = $%d", schema, tableName, strings.Join(setParts, ", "), i)
-
-	// Rebind for driver (pgx uses $n, but sqlx Rebind helps if we switched drivers, though we manually built $n here for Postgres)
-	// Actually, Rebind is better if we build with `?`.
-	// Let's rebuild with `?` and use Rebind.
-	setParts = []string{}
-	args = []interface{}{}
-	for k, v := range data {
-		if k == "id" { continue }
-		setParts = append(setParts, fmt.Sprintf("%q = ?", k))
-		args = append(args, v)
-	}
-	args = append(args, id)
-	query = fmt.Sprintf("UPDATE %q.%q SET %s WHERE id = ?", schema, tableName, strings.Join(setParts, ", "))
+	args = append(args, pkValue) // Add PK value as last arg
+	query := fmt.Sprintf("UPDATE %q.%q SET %s WHERE %q = ?", schema, tableName, strings.Join(setParts, ", "), pkColumn)
 	query = dbConn.Rebind(query)
 
 	if _, err := dbConn.Exec(query, args...); err != nil {
-		writeError(w, r, http.StatusInternalServerError, err.Error())
+		writeError(w, r, http.StatusInternalServerError, SanitizeDBError(err))
 		return
 	}
 
@@ -657,10 +669,10 @@ func InsertTableRowHandler(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	tableName := vars["table"]
-    schema := r.URL.Query().Get("schema")
-    if schema == "" {
-        schema = "public"
-    }
+	schema := r.URL.Query().Get("schema")
+	if schema == "" {
+		schema = "public"
+	}
 
 	// Security: Validate table name
 	tables, err := ListTablesBySchema(dbConn, schema)
@@ -689,13 +701,15 @@ func InsertTableRowHandler(w http.ResponseWriter, r *http.Request) {
 	cols := []string{}
 	placeholders := []string{}
 	args := []interface{}{}
-	
+
 	for k, v := range data {
 		if !isValidColumnName(k) {
 			writeError(w, r, http.StatusBadRequest, "invalid column name: "+k)
 			return
 		}
-		if k == "id" { continue } // Let DB handle ID generation (SERIAL) usually
+		if k == "id" {
+			continue
+		} // Let DB handle ID generation (SERIAL) usually
 		cols = append(cols, fmt.Sprintf("%q", k))
 		placeholders = append(placeholders, "?")
 		args = append(args, v)
@@ -720,11 +734,15 @@ func DeleteTableRowHandler(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	tableName := vars["table"]
-	id := vars["id"]
-    schema := r.URL.Query().Get("schema")
-    if schema == "" {
-        schema = "public"
-    }
+	pkValue := vars["id"] // This is actually the primary key value, not necessarily "id"
+	schema := r.URL.Query().Get("schema")
+	pkColumn := r.URL.Query().Get("pk") // Primary key column name
+	if schema == "" {
+		schema = "public"
+	}
+	if pkColumn == "" {
+		pkColumn = "id" // Default to "id" for backward compatibility
+	}
 
 	// Security: Validate table name
 	tables, err := ListTablesBySchema(dbConn, schema)
@@ -744,11 +762,35 @@ func DeleteTableRowHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query := fmt.Sprintf("DELETE FROM %q.%q WHERE id = ?", schema, tableName)
+	// Security: Validate primary key column name
+	if !isValidColumnName(pkColumn) {
+		writeError(w, r, http.StatusBadRequest, "invalid primary key column name")
+		return
+	}
+
+	// Verify the pk column exists in this table
+	cols, err := ListColumns(dbConn, schema, tableName)
+	if err != nil {
+		writeError(w, r, http.StatusInternalServerError, "failed to get columns")
+		return
+	}
+	pkColumnExists := false
+	for _, col := range cols {
+		if col.Name == pkColumn {
+			pkColumnExists = true
+			break
+		}
+	}
+	if !pkColumnExists {
+		writeError(w, r, http.StatusBadRequest, fmt.Sprintf("primary key column '%s' does not exist in table", pkColumn))
+		return
+	}
+
+	query := fmt.Sprintf("DELETE FROM %q.%q WHERE %q = ?", schema, tableName, pkColumn)
 	query = dbConn.Rebind(query)
 
-	if _, err := dbConn.Exec(query, id); err != nil {
-		writeError(w, r, http.StatusInternalServerError, err.Error())
+	if _, err := dbConn.Exec(query, pkValue); err != nil {
+		writeError(w, r, http.StatusInternalServerError, SanitizeDBError(err))
 		return
 	}
 
@@ -774,8 +816,27 @@ func CreateTableHandler(w http.ResponseWriter, r *http.Request) {
 	if req.Schema == "" {
 		req.Schema = "public"
 	}
+
+	// Validate schema and table names
+	if err := ValidateSchemaName(req.Schema); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := ValidateTableName(req.Name); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// Validate each column definition
+	for _, col := range req.Columns {
+		if err := ValidateColumnDefinition(col); err != nil {
+			writeError(w, r, http.StatusBadRequest, "invalid column definition: "+err.Error())
+			return
+		}
+	}
+
 	if err := CreateTable(dbConn, req.Schema, req.Name, req.Columns); err != nil {
-		writeError(w, r, http.StatusInternalServerError, err.Error())
+		writeError(w, r, http.StatusInternalServerError, SanitizeDBError(err))
 		return
 	}
 	writeJSON(w, http.StatusCreated, map[string]string{"message": "table created"})
@@ -792,7 +853,7 @@ func DropTableHandler(w http.ResponseWriter, r *http.Request) {
 	if schema == "" {
 		schema = "public"
 	}
-	
+
 	if err := DropTable(dbConn, schema, table); err != nil {
 		writeError(w, r, http.StatusInternalServerError, err.Error())
 		return
@@ -807,15 +868,15 @@ func AlterTableHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	vars := mux.Vars(r)
 	table := vars["table"]
-	
+
 	var req struct {
-		Schema    string `json:"schema"`
-		Action    string `json:"action"` // add_column, drop_column, rename_column, alter_column_type, alter_column_nullable, alter_column_default
-		Column    string `json:"column"`
-		Type      string `json:"type,omitempty"` // for add_column, alter_column_type
-		NewName   string `json:"new_name,omitempty"` // for rename_column
-        NotNull   bool   `json:"not_null,omitempty"` // for alter_column_nullable
-        Default   string `json:"default,omitempty"` // for alter_column_default
+		Schema  string `json:"schema"`
+		Action  string `json:"action"` // add_column, drop_column, rename_column, alter_column_type, alter_column_nullable, alter_column_default
+		Column  string `json:"column"`
+		Type    string `json:"type,omitempty"`     // for add_column, alter_column_type
+		NewName string `json:"new_name,omitempty"` // for rename_column
+		NotNull bool   `json:"not_null,omitempty"` // for alter_column_nullable
+		Default string `json:"default,omitempty"`  // for alter_column_default
 	}
 	if err := decodeJSON(r, &req); err != nil {
 		writeError(w, r, http.StatusBadRequest, "invalid json")
@@ -825,28 +886,531 @@ func AlterTableHandler(w http.ResponseWriter, r *http.Request) {
 		req.Schema = "public"
 	}
 
+	// Validate schema and table names
+	if err := ValidateSchemaName(req.Schema); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := ValidateTableName(table); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// Validate column name
+	if req.Column != "" {
+		if err := ValidateColumnName(req.Column); err != nil {
+			writeError(w, r, http.StatusBadRequest, err.Error())
+			return
+		}
+	}
+
 	var err error
 	switch req.Action {
 	case "add_column":
+		// Validate type for add_column
+		if err := ValidateSQLType(req.Type); err != nil {
+			writeError(w, r, http.StatusBadRequest, "invalid column type: "+err.Error())
+			return
+		}
 		err = AddColumn(dbConn, req.Schema, table, req.Column, req.Type)
 	case "drop_column":
 		err = DropColumn(dbConn, req.Schema, table, req.Column)
 	case "rename_column":
+		// Validate new column name
+		if err := ValidateColumnName(req.NewName); err != nil {
+			writeError(w, r, http.StatusBadRequest, "invalid new column name: "+err.Error())
+			return
+		}
 		err = RenameColumn(dbConn, req.Schema, table, req.Column, req.NewName)
 	case "alter_column_type":
-        err = AlterColumnType(dbConn, req.Schema, table, req.Column, req.Type)
-    case "alter_column_nullable":
-        err = AlterColumnNullable(dbConn, req.Schema, table, req.Column, req.NotNull)
-    case "alter_column_default":
-        err = AlterColumnDefault(dbConn, req.Schema, table, req.Column, req.Default)
+		// Validate type
+		if err := ValidateSQLType(req.Type); err != nil {
+			writeError(w, r, http.StatusBadRequest, "invalid column type: "+err.Error())
+			return
+		}
+		err = AlterColumnType(dbConn, req.Schema, table, req.Column, req.Type)
+	case "alter_column_nullable":
+		err = AlterColumnNullable(dbConn, req.Schema, table, req.Column, req.NotNull)
+	case "alter_column_default":
+		// Validate default value
+		if err := ValidateDefaultValue(req.Default); err != nil {
+			writeError(w, r, http.StatusBadRequest, "invalid default value: "+err.Error())
+			return
+		}
+		err = AlterColumnDefault(dbConn, req.Schema, table, req.Column, req.Default)
 	default:
 		writeError(w, r, http.StatusBadRequest, "invalid action")
 		return
 	}
 
 	if err != nil {
-		writeError(w, r, http.StatusInternalServerError, err.Error())
+		writeError(w, r, http.StatusInternalServerError, SanitizeDBError(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"message": "table altered successfully"})
+}
+
+// PostgreSQL Function represents a database function
+type PGFunction struct {
+	OID           int64  `json:"oid" db:"oid"`
+	Schema        string `json:"schema" db:"schema"`
+	Name          string `json:"name" db:"name"`
+	ResultType    string `json:"result_type" db:"result_type"`
+	ArgumentTypes string `json:"argument_types" db:"argument_types"`
+	Type          string `json:"type" db:"type"`             // func, proc, agg, window
+	Volatility    string `json:"volatility" db:"volatility"` // immutable, stable, volatile
+	Language      string `json:"language" db:"language"`
+	Source        string `json:"source" db:"source"`
+	Owner         string `json:"owner" db:"owner"`
+	Description   string `json:"description" db:"description"`
+}
+
+// ListFunctionsHandler returns all functions in the database
+func ListFunctionsHandler(w http.ResponseWriter, r *http.Request) {
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+
+	schema := r.URL.Query().Get("schema")
+	if schema == "" {
+		schema = "public"
+	}
+
+	// Compatible query for PostgreSQL 11+ (prokind) and older versions (proisagg, proiswindow)
+	query := `
+		SELECT
+			p.oid::bigint as oid,
+			n.nspname as schema,
+			p.proname as name,
+			COALESCE(pg_catalog.pg_get_function_result(p.oid), 'void') as result_type,
+			COALESCE(pg_catalog.pg_get_function_identity_arguments(p.oid), '') as argument_types,
+			CASE
+				WHEN p.prokind = 'p' THEN 'procedure'
+				WHEN p.prokind = 'a' THEN 'aggregate'
+				WHEN p.prokind = 'w' THEN 'window'
+				ELSE 'function'
+			END as type,
+			CASE p.provolatile
+				WHEN 'i' THEN 'immutable'
+				WHEN 's' THEN 'stable'
+				ELSE 'volatile'
+			END as volatility,
+			l.lanname as language,
+			'' as source,
+			pg_catalog.pg_get_userbyid(p.proowner) as owner,
+			COALESCE(obj_description(p.oid, 'pg_proc'), '') as description
+		FROM pg_catalog.pg_proc p
+		LEFT JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+		LEFT JOIN pg_catalog.pg_language l ON l.oid = p.prolang
+		WHERE n.nspname = $1
+		ORDER BY p.proname
+	`
+
+	rows, err := dbConn.Queryx(query, schema)
+	if err != nil {
+		writeError(w, r, http.StatusInternalServerError, err.Error())
+		return
+	}
+	defer rows.Close()
+
+	functions := []PGFunction{}
+	for rows.Next() {
+		var fn PGFunction
+		if err := rows.StructScan(&fn); err != nil {
+			// Log error but continue with other rows
+			continue
+		}
+
+		// Try to get function definition separately (only works for regular functions)
+		if fn.Type == "function" {
+			var source string
+			sourceQuery := "SELECT pg_catalog.pg_get_functiondef($1::oid)"
+			if err := dbConn.Get(&source, sourceQuery, fn.OID); err == nil {
+				fn.Source = source
+			}
+		}
+
+		functions = append(functions, fn)
+	}
+
+	writeJSON(w, http.StatusOK, functions)
+}
+
+// GetFunctionHandler returns details of a specific function
+func GetFunctionHandler(w http.ResponseWriter, r *http.Request) {
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+
+	oid := r.URL.Query().Get("oid")
+	if oid == "" {
+		writeError(w, r, http.StatusBadRequest, "oid is required")
+		return
+	}
+
+	query := `
+		SELECT
+			p.oid::bigint as oid,
+			n.nspname as schema,
+			p.proname as name,
+			COALESCE(pg_catalog.pg_get_function_result(p.oid), 'void') as result_type,
+			COALESCE(pg_catalog.pg_get_function_identity_arguments(p.oid), '') as argument_types,
+			CASE
+				WHEN p.prokind = 'p' THEN 'procedure'
+				WHEN p.prokind = 'a' THEN 'aggregate'
+				WHEN p.prokind = 'w' THEN 'window'
+				ELSE 'function'
+			END as type,
+			CASE p.provolatile
+				WHEN 'i' THEN 'immutable'
+				WHEN 's' THEN 'stable'
+				ELSE 'volatile'
+			END as volatility,
+			l.lanname as language,
+			'' as source,
+			pg_catalog.pg_get_userbyid(p.proowner) as owner,
+			COALESCE(obj_description(p.oid, 'pg_proc'), '') as description
+		FROM pg_catalog.pg_proc p
+		LEFT JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+		LEFT JOIN pg_catalog.pg_language l ON l.oid = p.prolang
+		WHERE p.oid = $1
+	`
+
+	var fn PGFunction
+	if err := dbConn.Get(&fn, query, oid); err != nil {
+		writeError(w, r, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Try to get function definition separately (only works for regular functions)
+	if fn.Type == "function" {
+		var source string
+		sourceQuery := "SELECT pg_catalog.pg_get_functiondef($1::oid)"
+		if err := dbConn.Get(&source, sourceQuery, fn.OID); err == nil {
+			fn.Source = source
+		}
+	}
+
+	writeJSON(w, http.StatusOK, fn)
+}
+
+// CreateFunctionHandler creates a new function
+func CreateFunctionHandler(w http.ResponseWriter, r *http.Request) {
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+
+	var req struct {
+		Schema          string `json:"schema"`
+		Name            string `json:"name"`
+		Arguments       string `json:"arguments"`
+		Returns         string `json:"returns"`
+		Language        string `json:"language"`
+		Body            string `json:"body"`
+		Volatility      string `json:"volatility"`
+		IsStrict        bool   `json:"is_strict"`
+		SecurityDefiner bool   `json:"security_definer"`
+	}
+
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if req.Name == "" || req.Returns == "" || req.Body == "" {
+		writeError(w, r, http.StatusBadRequest, "name, returns, and body are required")
+		return
+	}
+
+	if req.Schema == "" {
+		req.Schema = "public"
+	}
+	if req.Language == "" {
+		req.Language = "plpgsql"
+	}
+	if req.Volatility == "" {
+		req.Volatility = "VOLATILE"
+	}
+
+	// Security: Validate all inputs
+	if err := ValidateSchemaName(req.Schema); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := ValidateFunctionName(req.Name); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := ValidateFunctionLanguage(req.Language); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := ValidateVolatility(req.Volatility); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := ValidateFunctionArguments(req.Arguments); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := ValidateFunctionReturnType(req.Returns); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := ValidateFunctionBody(req.Body); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// Security: Disallow SECURITY DEFINER to prevent privilege escalation
+	if req.SecurityDefiner {
+		writeError(w, r, http.StatusForbidden, "SECURITY DEFINER functions are not allowed for security reasons")
+		return
+	}
+
+	// Build the CREATE FUNCTION statement using quoted identifiers
+	sql := fmt.Sprintf(
+		`CREATE OR REPLACE FUNCTION %q.%q(%s) RETURNS %s AS $$ %s $$ LANGUAGE %s %s`,
+		req.Schema, req.Name, req.Arguments, req.Returns, req.Body, req.Language, strings.ToUpper(req.Volatility),
+	)
+
+	if req.IsStrict {
+		sql += " STRICT"
+	}
+
+	if _, err := dbConn.Exec(sql); err != nil {
+		writeError(w, r, http.StatusInternalServerError, SanitizeDBError(err))
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, map[string]string{"message": "function created successfully"})
+}
+
+// UpdateFunctionHandler updates an existing function
+func UpdateFunctionHandler(w http.ResponseWriter, r *http.Request) {
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+
+	var req struct {
+		OID             int64  `json:"oid"`
+		Schema          string `json:"schema"`
+		Name            string `json:"name"`
+		Arguments       string `json:"arguments"`
+		Returns         string `json:"returns"`
+		Language        string `json:"language"`
+		Body            string `json:"body"`
+		Volatility      string `json:"volatility"`
+		IsStrict        bool   `json:"is_strict"`
+		SecurityDefiner bool   `json:"security_definer"`
+	}
+
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if req.Name == "" || req.Returns == "" || req.Body == "" {
+		writeError(w, r, http.StatusBadRequest, "name, returns, and body are required")
+		return
+	}
+
+	if req.Schema == "" {
+		req.Schema = "public"
+	}
+	if req.Language == "" {
+		req.Language = "plpgsql"
+	}
+	if req.Volatility == "" {
+		req.Volatility = "VOLATILE"
+	}
+
+	// Security: Validate all inputs
+	if err := ValidateSchemaName(req.Schema); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := ValidateFunctionName(req.Name); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := ValidateFunctionLanguage(req.Language); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := ValidateVolatility(req.Volatility); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := ValidateFunctionArguments(req.Arguments); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := ValidateFunctionReturnType(req.Returns); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := ValidateFunctionBody(req.Body); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// Security: Disallow SECURITY DEFINER to prevent privilege escalation
+	if req.SecurityDefiner {
+		writeError(w, r, http.StatusForbidden, "SECURITY DEFINER functions are not allowed for security reasons")
+		return
+	}
+
+	// Use CREATE OR REPLACE to update with quoted identifiers
+	sql := fmt.Sprintf(
+		`CREATE OR REPLACE FUNCTION %q.%q(%s) RETURNS %s AS $$ %s $$ LANGUAGE %s %s`,
+		req.Schema, req.Name, req.Arguments, req.Returns, req.Body, req.Language, strings.ToUpper(req.Volatility),
+	)
+
+	if req.IsStrict {
+		sql += " STRICT"
+	}
+
+	if _, err := dbConn.Exec(sql); err != nil {
+		writeError(w, r, http.StatusInternalServerError, SanitizeDBError(err))
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"message": "function updated successfully"})
+}
+
+// DeleteFunctionHandler drops a function
+func DeleteFunctionHandler(w http.ResponseWriter, r *http.Request) {
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+
+	var req struct {
+		Schema    string `json:"schema"`
+		Name      string `json:"name"`
+		Arguments string `json:"arguments"`
+		Cascade   bool   `json:"cascade"`
+	}
+
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if req.Name == "" {
+		writeError(w, r, http.StatusBadRequest, "function name is required")
+		return
+	}
+
+	if req.Schema == "" {
+		req.Schema = "public"
+	}
+
+	// Security: Validate all inputs
+	if err := ValidateSchemaName(req.Schema); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := ValidateFunctionName(req.Name); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	if req.Arguments != "" {
+		if err := ValidateFunctionArguments(req.Arguments); err != nil {
+			writeError(w, r, http.StatusBadRequest, err.Error())
+			return
+		}
+	}
+
+	sql := fmt.Sprintf("DROP FUNCTION %q.%q(%s)", req.Schema, req.Name, req.Arguments)
+	if req.Cascade {
+		sql += " CASCADE"
+	}
+
+	if _, err := dbConn.Exec(sql); err != nil {
+		writeError(w, r, http.StatusInternalServerError, SanitizeDBError(err))
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"message": "function dropped successfully"})
+}
+
+// ExecuteFunctionHandler executes a function and returns results
+func ExecuteFunctionHandler(w http.ResponseWriter, r *http.Request) {
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+
+	var req struct {
+		Schema    string   `json:"schema"`
+		Name      string   `json:"name"`
+		Arguments []string `json:"arguments"`
+	}
+
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if req.Name == "" {
+		writeError(w, r, http.StatusBadRequest, "function name is required")
+		return
+	}
+
+	if req.Schema == "" {
+		req.Schema = "public"
+	}
+
+	// Security: Validate schema and function name
+	if err := ValidateSchemaName(req.Schema); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := ValidateFunctionName(req.Name); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// Build parameterized query to prevent SQL injection
+	// We use positional parameters ($1, $2, etc.) for function arguments
+	placeholders := make([]string, len(req.Arguments))
+	args := make([]interface{}, len(req.Arguments))
+	for i, arg := range req.Arguments {
+		placeholders[i] = fmt.Sprintf("$%d", i+1)
+		args[i] = arg
+	}
+
+	// Use quoted identifiers for schema and function name
+	query := fmt.Sprintf("SELECT * FROM %q.%q(%s)", req.Schema, req.Name, strings.Join(placeholders, ", "))
+
+	rows, err := dbConn.Queryx(query, args...)
+	if err != nil {
+		writeError(w, r, http.StatusInternalServerError, SanitizeDBError(err))
+		return
+	}
+	defer rows.Close()
+
+	results := []map[string]interface{}{}
+	for rows.Next() {
+		row := make(map[string]interface{})
+		if err := rows.MapScan(row); err != nil {
+			writeError(w, r, http.StatusInternalServerError, SanitizeDBError(err))
+			return
+		}
+		// Convert []byte to string for JSON serialization
+		for k, v := range row {
+			if b, ok := v.([]byte); ok {
+				row[k] = string(b)
+			}
+		}
+		results = append(results, row)
+	}
+
+	writeJSON(w, http.StatusOK, results)
 }

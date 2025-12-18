@@ -2,26 +2,18 @@ package main
 
 import (
 	"os"
-	"strings"
 	"testing"
 	"time"
 )
 
 func TestDBVersions(t *testing.T) {
-	f, err := os.CreateTemp("", "version_test_*.db")
-	if err != nil {
-		t.Fatalf("create temp: %v", err)
+	dsn := os.Getenv("DB_DSN")
+	if dsn == "" {
+		t.Skip("DB_DSN not set, skipping DB test")
 	}
-	path := f.Name()
-	f.Close()
-	defer os.Remove(path)
 
-	db, err := InitDB(path)
+	db, err := InitDB(dsn)
 	if err != nil {
-		if strings.Contains(err.Error(), "requires cgo") || strings.Contains(err.Error(), "CGO_ENABLED") {
-			t.Skipf("sqlite3 driver not available: %v", err)
-			return
-		}
 		t.Fatalf("init db: %v", err)
 	}
 	defer CloseDB(db)

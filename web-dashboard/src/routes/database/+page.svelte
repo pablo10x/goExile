@@ -1,156 +1,624 @@
 <script lang="ts">
-	import { Database, Search, Plus, X, Trash2, Table, ChevronLeft, ChevronRight, Settings, LayoutDashboard, Terminal, Users, HardDrive, FileText, Activity, Clock } from 'lucide-svelte';
+	import {
+		Database,
+		Search,
+		Plus,
+		X,
+		Trash2,
+		Table,
+		ChevronLeft,
+		ChevronRight,
+		Settings,
+		LayoutDashboard,
+		Terminal,
+		Users,
+		HardDrive,
+		FileText,
+		Activity,
+		Clock,
+		Code2,
+		Layers,
+		Zap,
+		Server,
+		BarChart3,
+		Shield,
+		FolderTree
+	} from 'lucide-svelte';
 	import SchemaBrowser from '$lib/components/SchemaBrowser.svelte';
 	import QueryTabs from '$lib/components/database/QueryTabs.svelte';
-    import TableTab from '$lib/components/database/TableTab.svelte';
-    import DatabaseBrowserTab from '$lib/components/database/DatabaseBrowserTab.svelte';
-    import SQLEditorTab from '$lib/components/database/SQLEditorTab.svelte';
-    import RolesTab from '$lib/components/database/RolesTab.svelte';
-    import BackupsTab from '$lib/components/database/BackupsTab.svelte';
-    import ConfigTab from '$lib/components/database/ConfigTab.svelte';
-    import TableCreatorModal from '$lib/components/TableCreatorModal.svelte';
-    import ColumnManagerModal from '$lib/components/ColumnManagerModal.svelte';
-    import { notifications } from '$lib/stores';
-    import StatsCard from '$lib/components/StatsCard.svelte';
-    import { formatBytes } from '$lib/utils';
-
-    // Legacy components for Overview/Roles/etc (we'll inline or reuse mostly)
-    // Actually, I'll keep the logic for Overview/Roles simple here or extract if needed.
-    // For now, I'll inline the Overview and keep it simple.
+	import TableTab from '$lib/components/database/TableTab.svelte';
+	import DatabaseBrowserTab from '$lib/components/database/DatabaseBrowserTab.svelte';
+	import SQLEditorTab from '$lib/components/database/SQLEditorTab.svelte';
+	import RolesTab from '$lib/components/database/RolesTab.svelte';
+	import BackupsTab from '$lib/components/database/BackupsTab.svelte';
+	import ConfigTab from '$lib/components/database/ConfigTab.svelte';
+	import FunctionsTab from '$lib/components/database/FunctionsTab.svelte';
+	import TableCreatorModal from '$lib/components/TableCreatorModal.svelte';
+	import ColumnManagerModal from '$lib/components/ColumnManagerModal.svelte';
+	import { notifications } from '$lib/stores';
+	import StatsCard from '$lib/components/StatsCard.svelte';
+	import { formatBytes } from '$lib/utils';
+	import { onMount } from 'svelte';
+	import { fade } from 'svelte/transition';
 
 	// State
 	let isSidebarOpen = $state(true);
-    let tabs = $state<{ id: string; label: string; type: 'table' | 'sql' | 'info' | 'config' | 'roles' | 'backups' | 'browser'; data?: any }[]>([
-        { id: 'overview', label: 'Overview', type: 'info' }
-    ]);
-    let activeTabId = $state<string>('overview');
+	let tabs = $state<
+		{
+			id: string;
+			label: string;
+			type: 'table' | 'sql' | 'info' | 'config' | 'roles' | 'backups' | 'browser' | 'functions';
+			data?: any;
+		}[]
+	>([{ id: 'overview', label: 'Overview', type: 'info' }]);
+	let activeTabId = $state<string>('overview');
+	let isLoaded = $state(false);
 
-    // Overview Data
-    let dbStats = $state({ size_bytes: 0, version: '', connections: 0, uptime_seconds: 0 });
+	// Overview Data
+	let dbStats = $state({
+		size_bytes: 0,
+		version: '',
+		connections: 0,
+		uptime_seconds: 0,
+		active_queries: 0,
+		cache_hit_ratio: 0
+	});
+	let tableCounts = $state<{ name: string; count: number }[]>([]);
 
-    // --- Tab Management ---
+	// Sidebar menu items with categories
+	const menuCategories = [
+		{
+			name: 'Overview',
+			items: [
+				{
+					id: 'overview',
+					label: 'Dashboard',
+					type: 'info',
+					icon: LayoutDashboard,
+					color: 'blue',
+					description: 'Database overview & stats'
+				},
+				{
+					id: 'browser',
+					label: 'Browser',
+					type: 'browser',
+					icon: FolderTree,
+					color: 'indigo',
+					description: 'Browse schemas & tables'
+				}
+			]
+		},
+		{
+			name: 'Development',
+			items: [
+				{
+					id: 'sql',
+					label: 'SQL Editor',
+					type: 'sql',
+					icon: Terminal,
+					color: 'amber',
+					description: 'Execute SQL queries'
+				},
+				{
+					id: 'functions',
+					label: 'Functions',
+					type: 'functions',
+					icon: Code2,
+					color: 'violet',
+					description: 'Manage functions & procedures'
+				}
+			]
+		},
+		{
+			name: 'Administration',
+			items: [
+				{
+					id: 'roles',
+					label: 'Roles',
+					type: 'roles',
+					icon: Users,
+					color: 'emerald',
+					description: 'User & role management'
+				},
+				{
+					id: 'backups',
+					label: 'Backups',
+					type: 'backups',
+					icon: HardDrive,
+					color: 'orange',
+					description: 'Backup & restore'
+				},
+				{
+					id: 'config',
+					label: 'Config',
+					type: 'config',
+					icon: Settings,
+					color: 'purple',
+					description: 'PostgreSQL settings'
+				}
+			]
+		}
+	];
 
-    function openTab(id: string, label: string, type: any, data: any = {}) {
-        const existing = tabs.find(t => t.id === id);
-        if (existing) {
-            activeTabId = id;
-        } else {
-            tabs = [...tabs, { id, label, type, data }];
-            activeTabId = id;
-        }
-    }
+	// --- Tab Management ---
 
-    function closeTab(id: string) {
-        const idx = tabs.findIndex(t => t.id === id);
-        if (idx === -1) return;
-        
-        const newTabs = tabs.filter(t => t.id !== id);
-        tabs = newTabs;
+	function openTab(id: string, label: string, type: any, data: any = {}) {
+		const existing = tabs.find((t) => t.id === id);
+		if (existing) {
+			activeTabId = id;
+		} else {
+			tabs = [...tabs, { id, label, type, data }];
+			activeTabId = id;
+		}
+	}
 
-        if (activeTabId === id) {
-            // Activate neighbor
-            if (newTabs.length > 0) {
-                const newIdx = Math.min(idx, newTabs.length - 1);
-                activeTabId = newTabs[newIdx].id;
-            } else {
-                activeTabId = ''; // Or reopen overview
-                openTab('overview', 'Overview', 'info');
-            }
-        }
-    }
+	function closeTab(id: string) {
+		const idx = tabs.findIndex((t) => t.id === id);
+		if (idx === -1) return;
 
-    function handleSelectTable(schema: string, table: string) {
-        openTab(`table:${schema}.${table}`, `${table}`, 'table', { schema, table });
-    }
+		const newTabs = tabs.filter((t) => t.id !== id);
+		tabs = newTabs;
 
-    // --- Initialization ---
-    $effect(() => {
-        fetch('/api/database/overview').then(r => r.json()).then(d => dbStats = d);
-    });
+		if (activeTabId === id) {
+			// Activate neighbor
+			if (newTabs.length > 0) {
+				const newIdx = Math.min(idx, newTabs.length - 1);
+				activeTabId = newTabs[newIdx].id;
+			} else {
+				activeTabId = ''; // Or reopen overview
+				openTab('overview', 'Dashboard', 'info');
+			}
+		}
+	}
 
+	function handleSelectTable(schema: string, table: string) {
+		openTab(`table:${schema}.${table}`, `${table}`, 'table', { schema, table });
+	}
+
+	function getColorClasses(color: string, isActive: boolean = false) {
+		const colors: Record<string, { bg: string; text: string; hover: string; active: string }> = {
+			blue: {
+				bg: 'bg-blue-500/10',
+				text: 'text-blue-400',
+				hover: 'hover:bg-blue-500/20 hover:text-blue-300',
+				active: 'bg-blue-500/20 text-blue-300 border-blue-500/50'
+			},
+			indigo: {
+				bg: 'bg-indigo-500/10',
+				text: 'text-indigo-400',
+				hover: 'hover:bg-indigo-500/20 hover:text-indigo-300',
+				active: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/50'
+			},
+			amber: {
+				bg: 'bg-amber-500/10',
+				text: 'text-amber-400',
+				hover: 'hover:bg-amber-500/20 hover:text-amber-300',
+				active: 'bg-amber-500/20 text-amber-300 border-amber-500/50'
+			},
+			violet: {
+				bg: 'bg-violet-500/10',
+				text: 'text-violet-400',
+				hover: 'hover:bg-violet-500/20 hover:text-violet-300',
+				active: 'bg-violet-500/20 text-violet-300 border-violet-500/50'
+			},
+			emerald: {
+				bg: 'bg-emerald-500/10',
+				text: 'text-emerald-400',
+				hover: 'hover:bg-emerald-500/20 hover:text-emerald-300',
+				active: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50'
+			},
+			orange: {
+				bg: 'bg-orange-500/10',
+				text: 'text-orange-400',
+				hover: 'hover:bg-orange-500/20 hover:text-orange-300',
+				active: 'bg-orange-500/20 text-orange-300 border-orange-500/50'
+			},
+			purple: {
+				bg: 'bg-purple-500/10',
+				text: 'text-purple-400',
+				hover: 'hover:bg-purple-500/20 hover:text-purple-300',
+				active: 'bg-purple-500/20 text-purple-300 border-purple-500/50'
+			}
+		};
+		return colors[color] || colors.blue;
+	}
+
+	// --- Initialization ---
+	async function loadOverviewData() {
+		try {
+			const res = await fetch('/api/database/overview');
+			if (res.ok) {
+				dbStats = await res.json();
+			}
+		} catch (e) {
+			console.error('Failed to load overview data', e);
+		}
+
+		try {
+			const res = await fetch('/api/database/counts');
+			if (res.ok) {
+				tableCounts = await res.json();
+			}
+		} catch (e) {
+			console.error('Failed to load table counts', e);
+		}
+	}
+
+	onMount(() => {
+		loadOverviewData();
+		setTimeout(() => (isLoaded = true), 100);
+	});
 </script>
 
 <div class="flex h-[calc(100vh-64px)] overflow-hidden bg-slate-950 text-slate-200">
-    <!-- Sidebar -->
-    <div class="flex flex-col border-r border-slate-800 transition-all duration-300 {isSidebarOpen ? 'w-64' : 'w-12'}">
-        <!-- System Menu -->
-        <div class="p-2 space-y-1 border-b border-slate-800 bg-slate-900/50">
-            <button onclick={() => openTab('overview', 'Overview', 'info')} class="w-full flex items-center gap-2 p-2 rounded hover:bg-slate-800 text-slate-400 hover:text-blue-400" title="Overview">
-                <LayoutDashboard class="w-4 h-4" />
-                {#if isSidebarOpen}<span class="text-sm font-medium">Overview</span>{/if}
-            </button>
-            <button onclick={() => openTab('browser', 'Browser', 'browser')} class="w-full flex items-center gap-2 p-2 rounded hover:bg-slate-800 text-slate-400 hover:text-indigo-400" title="Database Browser">
-                <Database class="w-4 h-4" />
-                {#if isSidebarOpen}<span class="text-sm font-medium">Browser</span>{/if}
-            </button>
-            <button onclick={() => openTab('sql', 'SQL Editor', 'sql')} class="w-full flex items-center gap-2 p-2 rounded hover:bg-slate-800 text-slate-400 hover:text-amber-400" title="SQL Editor">
-                <Terminal class="w-4 h-4" />
-                {#if isSidebarOpen}<span class="text-sm font-medium">SQL Editor</span>{/if}
-            </button>
-             <button onclick={() => openTab('roles', 'Roles', 'roles')} class="w-full flex items-center gap-2 p-2 rounded hover:bg-slate-800 text-slate-400 hover:text-emerald-400" title="Roles">
-                <Users class="w-4 h-4" />
-                {#if isSidebarOpen}<span class="text-sm font-medium">Roles</span>{/if}
-            </button>
-             <button onclick={() => openTab('backups', 'Backups', 'backups')} class="w-full flex items-center gap-2 p-2 rounded hover:bg-slate-800 text-slate-400 hover:text-orange-400" title="Backups">
-                <HardDrive class="w-4 h-4" />
-                {#if isSidebarOpen}<span class="text-sm font-medium">Backups</span>{/if}
-            </button>
-             <button onclick={() => openTab('config', 'Config', 'config')} class="w-full flex items-center gap-2 p-2 rounded hover:bg-slate-800 text-slate-400 hover:text-purple-400" title="Config">
-                <Settings class="w-4 h-4" />
-                {#if isSidebarOpen}<span class="text-sm font-medium">Config</span>{/if}
-            </button>
-        </div>
+	<!-- Sidebar -->
+	<div
+		class="flex flex-col border-r border-slate-800/80 transition-all duration-300 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 {isSidebarOpen
+			? 'w-64'
+			: 'w-16'}"
+	>
+		<!-- Sidebar Header -->
+		<div class="p-4 border-b border-slate-800/80 bg-slate-900/50 flex items-center justify-between">
+			{#if isSidebarOpen}
+				<div class="flex items-center gap-3" transition:fade={{ duration: 150 }}>
+					<div class="p-2 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-lg">
+						<Database class="w-5 h-5 text-blue-400" />
+					</div>
+					<div>
+						<h2 class="font-bold text-slate-100">Database</h2>
+						<p class="text-xs text-slate-500">PostgreSQL Manager</p>
+					</div>
+				</div>
+			{/if}
+			<button
+				onclick={() => (isSidebarOpen = !isSidebarOpen)}
+				class="p-2 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-all"
+			>
+				{#if isSidebarOpen}
+					<ChevronLeft class="w-5 h-5" />
+				{:else}
+					<ChevronRight class="w-5 h-5" />
+				{/if}
+			</button>
+		</div>
 
-        <!-- Schema Browser removed from sidebar, now in tab -->
-        <div class="flex-1 overflow-hidden bg-slate-950"></div>
-    </div>
+		<!-- Sidebar Menu -->
+		<div class="flex-1 overflow-y-auto py-4 px-2 space-y-6">
+			{#each menuCategories as category}
+				<div>
+					{#if isSidebarOpen}
+						<h3
+							class="px-3 mb-2 text-xs font-bold text-slate-500 uppercase tracking-wider"
+							transition:fade={{ duration: 100 }}
+						>
+							{category.name}
+						</h3>
+					{/if}
+					<div class="space-y-1">
+						{#each category.items as item}
+							{@const isActive = activeTabId === item.id}
+							{@const colors = getColorClasses(item.color, isActive)}
+							<button
+								onclick={() => openTab(item.id, item.label, item.type)}
+								class="w-full flex items-center gap-3 p-2.5 rounded-xl transition-all duration-200 border border-transparent
+								{isActive
+									? colors.active + ' shadow-lg'
+									: 'text-slate-400 ' + colors.hover + ' hover:border-slate-700/50'}"
+								title={item.description}
+							>
+								<div
+									class="p-1.5 rounded-lg transition-colors {isActive
+										? colors.bg
+										: 'bg-slate-800/50'}"
+								>
+									<item.icon class="w-4 h-4 {isActive ? colors.text : ''}" />
+								</div>
+								{#if isSidebarOpen}
+									<div class="flex-1 text-left" transition:fade={{ duration: 100 }}>
+										<span class="text-sm font-medium">{item.label}</span>
+									</div>
+								{/if}
+							</button>
+						{/each}
+					</div>
+				</div>
+			{/each}
+		</div>
 
-    <!-- Main Content Area -->
-    <div class="flex-1 flex flex-col min-w-0 bg-slate-900">
-        <QueryTabs 
-            {tabs} 
-            {activeTabId} 
-            onSelect={(id) => activeTabId = id} 
-            onClose={closeTab} 
-        />
+		<!-- Sidebar Footer -->
+		{#if isSidebarOpen}
+			<div
+				class="p-4 border-t border-slate-800/80 bg-slate-950/50"
+				transition:fade={{ duration: 150 }}
+			>
+				<div class="flex items-center gap-3 text-xs text-slate-500">
+					<div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+					<span>Connected</span>
+				</div>
+			</div>
+		{/if}
+	</div>
 
-        <div class="flex-1 overflow-auto relative">
-            {#each tabs as tab (tab.id)}
-                <div class="absolute inset-0 bg-slate-900 {activeTabId === tab.id ? 'z-10 block' : 'z-0 hidden'}">
-                    {#if tab.type === 'table'}
-                        <TableTab schema={tab.data.schema} table={tab.data.table} />
-                    {:else if tab.type === 'browser'}
-                        <DatabaseBrowserTab 
-                            onSelectTable={handleSelectTable}
-                        />
-                    {:else if tab.id === 'overview'}
-                        <!-- Overview Content Inline -->
-                        <div class="p-8">
-                            <h1 class="text-2xl font-bold text-white mb-6">Database Overview</h1>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                <StatsCard title="Size" value={formatBytes(dbStats.size_bytes)} Icon={HardDrive} color="blue" />
-                                <StatsCard title="Connections" value={dbStats.connections} Icon={Activity} color="emerald" />
-                                <StatsCard title="Uptime" value={Math.floor(dbStats.uptime_seconds/3600) + 'h'} Icon={Clock} color="purple" />
-                                <StatsCard title="Version" value={dbStats.version.split(' ')[0]} subValue={dbStats.version.split(',')[0]} Icon={Database} color="orange" />
-                            </div>
-                        </div>
-                    {:else if tab.type === 'sql'}
-                        <SQLEditorTab />
-                    {:else if tab.type === 'roles'}
-                        <RolesTab />
-                    {:else if tab.type === 'backups'}
-                        <BackupsTab />
-                    {:else if tab.type === 'config'}
-                        <ConfigTab />
-                    {:else}
-                        <div class="p-8 text-slate-500 flex flex-col items-center justify-center h-full">
-                            <span style="display:none">{console.log('Unknown tab type:', tab.type, tab)}</span>
-                            <FileText class="w-16 h-16 opacity-20 mb-4" />
-                            <p>Feature {tab.label} is currently being upgraded.</p>
-                        </div>
-                    {/if}
-                </div>
-            {/each}
-        </div>
-    </div>
+	<!-- Main Content Area -->
+	<div class="flex-1 flex flex-col min-w-0 bg-slate-900">
+		<QueryTabs {tabs} {activeTabId} onSelect={(id) => (activeTabId = id)} onClose={closeTab} />
+
+		<div class="flex-1 overflow-auto relative">
+			{#each tabs as tab (tab.id)}
+				<div
+					class="absolute inset-0 bg-slate-900 {activeTabId === tab.id
+						? 'z-10 block'
+						: 'z-0 hidden'}"
+				>
+					{#if tab.type === 'table'}
+						<TableTab schema={tab.data.schema} table={tab.data.table} />
+					{:else if tab.type === 'browser'}
+						<DatabaseBrowserTab onSelectTable={handleSelectTable} />
+					{:else if tab.id === 'overview'}
+						<!-- Enhanced Overview Content -->
+						<div
+							class="h-full overflow-auto bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950"
+						>
+							<!-- Header -->
+							<div
+								class="p-8 border-b border-slate-800/50 bg-gradient-to-r from-blue-500/5 via-transparent to-cyan-500/5"
+							>
+								<div class="flex items-center gap-4 mb-2">
+									<div
+										class="p-3 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-xl border border-blue-500/30 shadow-lg shadow-blue-500/10"
+									>
+										<Database class="w-8 h-8 text-blue-400" />
+									</div>
+									<div>
+										<h1 class="text-3xl font-bold text-slate-100">Database Overview</h1>
+										<p class="text-slate-500 mt-1">
+											Monitor your PostgreSQL database performance and health
+										</p>
+									</div>
+								</div>
+							</div>
+
+							<!-- Stats Grid -->
+							<div class="p-8">
+								<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+									<!-- Database Size Card -->
+									<div
+										class="relative overflow-hidden bg-gradient-to-br from-slate-800/80 to-slate-800/40 border border-slate-700/50 rounded-2xl p-6 hover:border-blue-500/30 transition-all group"
+									>
+										<div
+											class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+										></div>
+										<div class="relative">
+											<div class="flex items-center justify-between mb-4">
+												<div class="p-2.5 bg-blue-500/10 rounded-xl">
+													<HardDrive class="w-6 h-6 text-blue-400" />
+												</div>
+												<span
+													class="text-xs font-medium text-blue-400 bg-blue-500/10 px-2 py-1 rounded-full"
+													>Storage</span
+												>
+											</div>
+											<div class="text-3xl font-bold text-slate-100 mb-1">
+												{formatBytes(dbStats.size_bytes)}
+											</div>
+											<div class="text-sm text-slate-500">Database Size</div>
+										</div>
+									</div>
+
+									<!-- Connections Card -->
+									<div
+										class="relative overflow-hidden bg-gradient-to-br from-slate-800/80 to-slate-800/40 border border-slate-700/50 rounded-2xl p-6 hover:border-emerald-500/30 transition-all group"
+									>
+										<div
+											class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+										></div>
+										<div class="relative">
+											<div class="flex items-center justify-between mb-4">
+												<div class="p-2.5 bg-emerald-500/10 rounded-xl">
+													<Activity class="w-6 h-6 text-emerald-400" />
+												</div>
+												<span
+													class="text-xs font-medium text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-full"
+													>Active</span
+												>
+											</div>
+											<div class="text-3xl font-bold text-slate-100 mb-1">
+												{dbStats.connections}
+											</div>
+											<div class="text-sm text-slate-500">Connections</div>
+										</div>
+									</div>
+
+									<!-- Uptime Card -->
+									<div
+										class="relative overflow-hidden bg-gradient-to-br from-slate-800/80 to-slate-800/40 border border-slate-700/50 rounded-2xl p-6 hover:border-purple-500/30 transition-all group"
+									>
+										<div
+											class="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+										></div>
+										<div class="relative">
+											<div class="flex items-center justify-between mb-4">
+												<div class="p-2.5 bg-purple-500/10 rounded-xl">
+													<Clock class="w-6 h-6 text-purple-400" />
+												</div>
+												<span
+													class="text-xs font-medium text-purple-400 bg-purple-500/10 px-2 py-1 rounded-full"
+													>Uptime</span
+												>
+											</div>
+											<div class="text-3xl font-bold text-slate-100 mb-1">
+												{Math.floor(dbStats.uptime_seconds / 3600)}h
+											</div>
+											<div class="text-sm text-slate-500">
+												{Math.floor((dbStats.uptime_seconds % 3600) / 60)}m running
+											</div>
+										</div>
+									</div>
+
+									<!-- Version Card -->
+									<div
+										class="relative overflow-hidden bg-gradient-to-br from-slate-800/80 to-slate-800/40 border border-slate-700/50 rounded-2xl p-6 hover:border-orange-500/30 transition-all group"
+									>
+										<div
+											class="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+										></div>
+										<div class="relative">
+											<div class="flex items-center justify-between mb-4">
+												<div class="p-2.5 bg-orange-500/10 rounded-xl">
+													<Server class="w-6 h-6 text-orange-400" />
+												</div>
+												<span
+													class="text-xs font-medium text-orange-400 bg-orange-500/10 px-2 py-1 rounded-full"
+													>Version</span
+												>
+											</div>
+											<div class="text-3xl font-bold text-slate-100 mb-1">
+												{dbStats.version.split(' ')[0] || 'PostgreSQL'}
+											</div>
+											<div class="text-sm text-slate-500 truncate">
+												{dbStats.version.split(',')[0] || 'Database Server'}
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<!-- Quick Actions -->
+								<div class="mb-8">
+									<h2 class="text-lg font-bold text-slate-100 mb-4">Quick Actions</h2>
+									<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+										<button
+											onclick={() => openTab('sql', 'SQL Editor', 'sql')}
+											class="flex flex-col items-center gap-3 p-6 bg-slate-800/50 border border-slate-700/50 rounded-xl hover:border-amber-500/30 hover:bg-slate-800 transition-all group"
+										>
+											<div
+												class="p-3 bg-amber-500/10 rounded-xl group-hover:bg-amber-500/20 transition-colors"
+											>
+												<Terminal class="w-6 h-6 text-amber-400" />
+											</div>
+											<span class="text-sm font-medium text-slate-300">Run Query</span>
+										</button>
+
+										<button
+											onclick={() => openTab('functions', 'Functions', 'functions')}
+											class="flex flex-col items-center gap-3 p-6 bg-slate-800/50 border border-slate-700/50 rounded-xl hover:border-violet-500/30 hover:bg-slate-800 transition-all group"
+										>
+											<div
+												class="p-3 bg-violet-500/10 rounded-xl group-hover:bg-violet-500/20 transition-colors"
+											>
+												<Code2 class="w-6 h-6 text-violet-400" />
+											</div>
+											<span class="text-sm font-medium text-slate-300">Functions</span>
+										</button>
+
+										<button
+											onclick={() => openTab('backups', 'Backups', 'backups')}
+											class="flex flex-col items-center gap-3 p-6 bg-slate-800/50 border border-slate-700/50 rounded-xl hover:border-orange-500/30 hover:bg-slate-800 transition-all group"
+										>
+											<div
+												class="p-3 bg-orange-500/10 rounded-xl group-hover:bg-orange-500/20 transition-colors"
+											>
+												<HardDrive class="w-6 h-6 text-orange-400" />
+											</div>
+											<span class="text-sm font-medium text-slate-300">Backup DB</span>
+										</button>
+
+										<button
+											onclick={() => openTab('roles', 'Roles', 'roles')}
+											class="flex flex-col items-center gap-3 p-6 bg-slate-800/50 border border-slate-700/50 rounded-xl hover:border-emerald-500/30 hover:bg-slate-800 transition-all group"
+										>
+											<div
+												class="p-3 bg-emerald-500/10 rounded-xl group-hover:bg-emerald-500/20 transition-colors"
+											>
+												<Shield class="w-6 h-6 text-emerald-400" />
+											</div>
+											<span class="text-sm font-medium text-slate-300">Manage Roles</span>
+										</button>
+									</div>
+								</div>
+
+								<!-- Table Stats -->
+								{#if tableCounts.length > 0}
+									<div>
+										<h2 class="text-lg font-bold text-slate-100 mb-4">Table Statistics</h2>
+										<div
+											class="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden"
+										>
+											<div class="overflow-x-auto">
+												<table class="w-full">
+													<thead class="bg-slate-900/50">
+														<tr>
+															<th
+																class="px-6 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider"
+																>Table</th
+															>
+															<th
+																class="px-6 py-3 text-right text-xs font-bold text-slate-400 uppercase tracking-wider"
+																>Row Count</th
+															>
+														</tr>
+													</thead>
+													<tbody class="divide-y divide-slate-700/50">
+														{#each tableCounts.slice(0, 10) as table}
+															<tr class="hover:bg-slate-800/50 transition-colors">
+																<td class="px-6 py-4">
+																	<div class="flex items-center gap-3">
+																		<Table class="w-4 h-4 text-slate-500" />
+																		<span class="font-medium text-slate-200">{table.name}</span>
+																	</div>
+																</td>
+																<td class="px-6 py-4 text-right">
+																	<span class="font-mono text-slate-300"
+																		>{table.count.toLocaleString()}</span
+																	>
+																</td>
+															</tr>
+														{/each}
+													</tbody>
+												</table>
+											</div>
+										</div>
+									</div>
+								{/if}
+							</div>
+						</div>
+					{:else if tab.type === 'sql'}
+						<SQLEditorTab />
+					{:else if tab.type === 'roles'}
+						<RolesTab />
+					{:else if tab.type === 'backups'}
+						<BackupsTab />
+					{:else if tab.type === 'config'}
+						<ConfigTab />
+					{:else if tab.type === 'functions'}
+						<FunctionsTab />
+					{:else}
+						<div class="p-8 text-slate-500 flex flex-col items-center justify-center h-full">
+							<FileText class="w-16 h-16 opacity-20 mb-4" />
+							<p>Feature {tab.label} is currently being upgraded.</p>
+						</div>
+					{/if}
+				</div>
+			{/each}
+		</div>
+	</div>
 </div>
+
+<style>
+	/* Custom scrollbar for sidebar */
+	.overflow-y-auto::-webkit-scrollbar {
+		width: 4px;
+	}
+
+	.overflow-y-auto::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	.overflow-y-auto::-webkit-scrollbar-thumb {
+		background: rgb(51 65 85 / 0.5);
+		border-radius: 2px;
+	}
+
+	.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+		background: rgb(71 85 105 / 0.5);
+	}
+</style>

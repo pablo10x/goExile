@@ -25,6 +25,7 @@ func TestConfig_Validate(t *testing.T) {
 				GameBinaryPath: tmpFile.Name(),
 				MinGamePort:    7000,
 				MaxGamePort:    8000,
+				MasterAPIKey:   "test-key",
 			},
 			wantErr: false,
 		},

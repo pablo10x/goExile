@@ -275,12 +275,6 @@
 	<!-- Shimmer overlay -->
 	<div class="absolute inset-0 opacity-10 pointer-events-none gradient-overlay"></div>
 
-	<!-- Edge Fade Overlays -->
-	<div class="absolute inset-0 pointer-events-none fade-overlay-top"></div>
-	<div class="absolute inset-0 pointer-events-none fade-overlay-bottom"></div>
-	<div class="absolute inset-0 pointer-events-none fade-overlay-left"></div>
-	<div class="absolute inset-0 pointer-events-none fade-overlay-right"></div>
-
 	<!-- Zoomable and pannable content wrapper -->
 	<div 
 		class="absolute inset-0 transition-transform duration-200 ease-out pointer-events-none"
@@ -1151,42 +1145,5 @@
 
 	.animate-ping-slower {
 		animation: ping 5s cubic-bezier(0, 0, 0.2, 1) infinite;
-	}
-
-	.fade-overlay-top {
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		height: 15%; /* Adjust height for desired fade amount */
-		background: linear-gradient(to bottom, rgb(15 23 42 / 1) 0%, rgb(15 23 42 / 0) 100%);
-		z-index: 40; /* Ensure it's above other elements but below hints */
-	}
-	.fade-overlay-bottom {
-		position: absolute;
-		bottom: 0;
-		left: 0;
-		right: 0;
-		height: 15%; /* Adjust height for desired fade amount */
-		background: linear-gradient(to top, rgb(15 23 42 / 1) 0%, rgb(15 23 42 / 0) 100%);
-		z-index: 40;
-	}
-	.fade-overlay-left {
-		position: absolute;
-		top: 0;
-		bottom: 0;
-		left: 0;
-		width: 15%; /* Adjust width for desired fade amount */
-		background: linear-gradient(to right, rgb(15 23 42 / 1) 0%, rgb(15 23 42 / 0) 100%);
-		z-index: 40;
-	}
-	.fade-overlay-right {
-		position: absolute;
-		top: 0;
-		bottom: 0;
-		right: 0;
-		width: 15%; /* Adjust width for desired fade amount */
-		background: linear-gradient(to left, rgb(15 23 42 / 1) 0%, rgb(15 23 42 / 0) 100%);
-		z-index: 40;
 	}
 </style>

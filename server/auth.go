@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/rand"
-	"encoding/base32"
 	"encoding/base64"
 	"log"
 	"net/http"
@@ -28,7 +27,7 @@ type AuthConfig struct {
 	HashedPassword string
 	TOTPSecret     string
 	IsProduction   bool
-	
+
 	// SMTP Settings
 	SMTPHost string
 	SMTPPort string
@@ -254,27 +253,22 @@ func GetAuthConfig() AuthConfig {
 			if p, ok := u.User.Password(); ok {
 				cfg.SMTPPass = p
 			}
-		} else {
-			log.Printf("⚠️  Invalid SMTP_URL: %v", err)
 		}
 	}
 
 	if !isProduction {
-		log.Println("⚠️  Running in DEVELOPMENT mode. Security features are relaxed.")
 		// Dev defaults
 		adminPassword := getEnv("ADMIN_PASSWORD", "admin123")
 		hashed, _ := bcrypt.GenerateFromPassword([]byte(adminPassword), bcrypt.DefaultCost)
-		
+
 		cfg.Email = getEnv("ADMIN_EMAIL", "admin@example.com")
 		cfg.HashedPassword = string(hashed)
 		cfg.TOTPSecret = getEnv("ADMIN_2FA_SECRET", "")
-		
+
 		return cfg
 	}
 
 	// PRODUCTION MODE
-	log.Println("🔒 Running in PRODUCTION mode. Strict security enforced.")
-
 	cfg.Email = os.Getenv("ADMIN_EMAIL")
 	if cfg.Email == "" {
 		log.Fatal("FATAL: ADMIN_EMAIL must be set in production mode")
@@ -286,7 +280,6 @@ func GetAuthConfig() AuthConfig {
 	if passwordHash != "" {
 		cfg.HashedPassword = passwordHash
 	} else if password != "" {
-		log.Println("⚠️  ADMIN_PASSWORD used in plaintext. Consider using ADMIN_PASSWORD_HASH for better security.")
 		hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 		if err != nil {
 			log.Fatalf("FATAL: Failed to hash password: %v", err)
@@ -295,21 +288,8 @@ func GetAuthConfig() AuthConfig {
 	} else {
 		log.Fatal("FATAL: ADMIN_PASSWORD or ADMIN_PASSWORD_HASH must be set in production mode")
 	}
-	
+
 	cfg.TOTPSecret = os.Getenv("ADMIN_2FA_SECRET")
-	if cfg.TOTPSecret == "" {
-		log.Println("⚠️  ADMIN_2FA_SECRET is not set. 2FA will be disabled.")
-	} else {
-		// Validate Secret Format
-		// TOTP secrets are typically Base32. Check if we can decode it.
-		// We try both standard and unpadded.
-		_, err := base32.StdEncoding.DecodeString(cfg.TOTPSecret)
-		if err != nil {
-			if _, err2 := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(cfg.TOTPSecret); err2 != nil {
-				log.Printf("⚠️  ADMIN_2FA_SECRET appears to be invalid Base32. 2FA validation will likely fail.")
-			}
-		}
-	}
 
 	return cfg
 }
@@ -348,20 +328,18 @@ func AuthMiddleware(authConfig AuthConfig, sessionStore *SessionStore) func(http
 						}
 						next.ServeHTTP(w, r)
 						return
-					} else if r.URL.Path == "/events" {
-						log.Printf("AuthMiddleware: /events denied. Valid session but step is '%s'", authStep)
 					}
 
 					// Pending Steps (TOTP or Email)
 					// Allow access to 2FA page and API endpoints for verification
 					allowedPaths := []string{
-						"/login/2fa", 
-						"/api/login/2fa", // TOTP Verify
-						"/login/email", // If separate page (optional)
+						"/login/2fa",
+						"/api/login/2fa",   // TOTP Verify
+						"/login/email",     // If separate page (optional)
 						"/api/login/email", // Email Verify
-						"/_app", // Static assets
+						"/_app",            // Static assets
 					}
-					
+
 					isAllowed := false
 					for _, path := range allowedPaths {
 						if r.URL.Path == path || strings.HasPrefix(r.URL.Path, path) {
@@ -380,7 +358,7 @@ func AuthMiddleware(authConfig AuthConfig, sessionStore *SessionStore) func(http
 						http.Error(w, "Unauthorized: Verification Required", http.StatusUnauthorized)
 						return
 					}
-					
+
 					// Both TOTP and Email steps happen on the /login/2fa page (UI expands)
 					http.Redirect(w, r, "/login/2fa", http.StatusSeeOther)
 					return
@@ -392,7 +370,7 @@ func AuthMiddleware(authConfig AuthConfig, sessionStore *SessionStore) func(http
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
-			
+
 			// Redirect to login for pages
 			// Allow access to /login
 			if strings.HasPrefix(r.URL.Path, "/login") {
