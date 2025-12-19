@@ -52,27 +52,21 @@ func InitDB(dsn string) (*sqlx.DB, error) {
 	var hasVersionCol int
 	err = db.QueryRow(`SELECT COUNT(*) FROM information_schema.columns WHERE table_name='server_versions' AND column_name='version'`).Scan(&hasVersionCol)
 	if err == nil && hasVersionCol == 0 {
-		fmt.Println("Migrating DB: Adding 'version' column to server_versions table...")
+		// Log error internally if needed, but not to console
 		if _, err := db.Exec(`ALTER TABLE server_versions ADD COLUMN version TEXT`); err != nil {
-			if !strings.Contains(err.Error(), "duplicate column") && !strings.Contains(err.Error(), "already exists") {
-				fmt.Printf("warning: failed to migrate server_versions table: %v\n", err)
-			}
+
 		}
 	}
 
 	// Ensure unique index exists
-	if _, err := db.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_spawners_host_port ON spawners(host, port)`); err != nil {
-		fmt.Printf("warning: failed to create unique index: %v\n", err)
-	}
+
 
 	// Check if 'game_version' column exists in spawners
 	err = db.QueryRow(`SELECT COUNT(*) FROM information_schema.columns WHERE table_name='spawners' AND column_name='game_version'`).Scan(&hasVersionCol)
 	if err == nil && hasVersionCol == 0 {
-		fmt.Println("Migrating DB: Adding 'game_version' column to spawners table...")
+		// Log error internally if needed, but not to console
 		if _, err := db.Exec(`ALTER TABLE spawners ADD COLUMN game_version TEXT`); err != nil {
-			if !strings.Contains(err.Error(), "duplicate column") && !strings.Contains(err.Error(), "already exists") {
-				fmt.Printf("warning: failed to migrate spawners table: %v\n", err)
-			}
+
 		}
 	}
 
@@ -80,11 +74,9 @@ func InitDB(dsn string) (*sqlx.DB, error) {
 	var hasNameCol int
 	err = db.QueryRow(`SELECT COUNT(*) FROM information_schema.columns WHERE table_name='spawners' AND column_name='name'`).Scan(&hasNameCol)
 	if err == nil && hasNameCol == 0 {
-		fmt.Println("Migrating DB: Adding 'name' column to spawners table...")
+		// Log error internally if needed, but not to console
 		if _, err := db.Exec(`ALTER TABLE spawners ADD COLUMN name TEXT`); err != nil {
-			if !strings.Contains(err.Error(), "duplicate column") && !strings.Contains(err.Error(), "already exists") {
-				fmt.Printf("warning: failed to migrate spawners table (name): %v\n", err)
-			}
+
 		}
 	}
 
@@ -92,11 +84,9 @@ func InitDB(dsn string) (*sqlx.DB, error) {
 	var hasColorCol int
 	err = db.QueryRow(`SELECT COUNT(*) FROM information_schema.columns WHERE table_name='notes' AND column_name='color'`).Scan(&hasColorCol)
 	if err == nil && hasColorCol == 0 {
-		fmt.Println("Migrating DB: Adding 'color' column to notes table...")
+		// Log error internally if needed, but not to console
 		if _, err := db.Exec(`ALTER TABLE notes ADD COLUMN color TEXT`); err != nil {
-			if !strings.Contains(err.Error(), "duplicate column") && !strings.Contains(err.Error(), "already exists") {
-				fmt.Printf("warning: failed to migrate notes table (color): %v\n", err)
-			}
+
 		}
 	}
 
@@ -104,11 +94,9 @@ func InitDB(dsn string) (*sqlx.DB, error) {
 	var hasStatusCol int
 	err = db.QueryRow(`SELECT COUNT(*) FROM information_schema.columns WHERE table_name='notes' AND column_name='status'`).Scan(&hasStatusCol)
 	if err == nil && hasStatusCol == 0 {
-		fmt.Println("Migrating DB: Adding 'status' column to notes table...")
+		// Log error internally if needed, but not to console
 		if _, err := db.Exec(`ALTER TABLE notes ADD COLUMN status TEXT`); err != nil {
-			if !strings.Contains(err.Error(), "duplicate column") && !strings.Contains(err.Error(), "already exists") {
-				fmt.Printf("warning: failed to migrate notes table (status): %v\n", err)
-			}
+
 		}
 	}
 
@@ -116,11 +104,9 @@ func InitDB(dsn string) (*sqlx.DB, error) {
 	var hasRotationCol int
 	err = db.QueryRow(`SELECT COUNT(*) FROM information_schema.columns WHERE table_name='notes' AND column_name='rotation'`).Scan(&hasRotationCol)
 	if err == nil && hasRotationCol == 0 {
-		fmt.Println("Migrating DB: Adding 'rotation' column to notes table...")
+		// Log error internally if needed, but not to console
 		if _, err := db.Exec(`ALTER TABLE notes ADD COLUMN rotation REAL DEFAULT 0`); err != nil {
-			if !strings.Contains(err.Error(), "duplicate column") && !strings.Contains(err.Error(), "already exists") {
-				fmt.Printf("warning: failed to migrate notes table (rotation): %v\n", err)
-			}
+
 		}
 	}
 
@@ -128,11 +114,9 @@ func InitDB(dsn string) (*sqlx.DB, error) {
 	var hasCreatedAtCol int
 	err = db.QueryRow(`SELECT COUNT(*) FROM information_schema.columns WHERE table_name='notes' AND column_name='created_at'`).Scan(&hasCreatedAtCol)
 	if err == nil && hasCreatedAtCol == 0 {
-		fmt.Println("Migrating DB: Adding 'created_at' column to notes table...")
+		// Log error internally if needed, but not to console
 		if _, err := db.Exec(`ALTER TABLE notes ADD COLUMN created_at INTEGER DEFAULT extract(epoch from now())`); err != nil {
-			if !strings.Contains(err.Error(), "duplicate column") && !strings.Contains(err.Error(), "already exists") {
-				fmt.Printf("warning: failed to migrate notes table (created_at): %v\n", err)
-			}
+
 		}
 	}
 
@@ -140,11 +124,9 @@ func InitDB(dsn string) (*sqlx.DB, error) {
 	var hasUpdatedAtCol int
 	err = db.QueryRow(`SELECT COUNT(*) FROM information_schema.columns WHERE table_name='notes' AND column_name='updated_at'`).Scan(&hasUpdatedAtCol)
 	if err == nil && hasUpdatedAtCol == 0 {
-		fmt.Println("Migrating DB: Adding 'updated_at' column to notes table...")
+		// Log error internally if needed, but not to console
 		if _, err := db.Exec(`ALTER TABLE notes ADD COLUMN updated_at INTEGER DEFAULT extract(epoch from now())`); err != nil {
-			if !strings.Contains(err.Error(), "duplicate column") && !strings.Contains(err.Error(), "already exists") {
-				fmt.Printf("warning: failed to migrate notes table (updated_at): %v\n", err)
-			}
+
 		}
 	}
 
@@ -152,10 +134,8 @@ func InitDB(dsn string) (*sqlx.DB, error) {
 	var configCount int
 	err = db.QueryRow(`SELECT COUNT(*) FROM server_config`).Scan(&configCount)
 	if err == nil && configCount == 0 {
-		fmt.Println("Seeding default configuration...")
-		if err := SeedDefaultConfig(db); err != nil {
-			fmt.Printf("warning: failed to seed default config: %v\n", err)
-		}
+
+
 	}
 
 	return db, nil
@@ -375,7 +355,6 @@ func SaveNote(db *sqlx.DB, n *Note) (int, error) {
 		return nil
 	}
 	if err := execWithRetry(do); err != nil {
-		fmt.Printf("SaveNote error details: %v\n", err)
 		return 0, err
 	}
 	return id, nil
@@ -439,7 +418,6 @@ func SaveTodo(db *sqlx.DB, t *Todo) (int, error) {
 		return nil
 	}
 	if err := execWithRetry(do); err != nil {
-		fmt.Printf("SaveTodo error details: %v\n", err)
 		return 0, err
 	}
 	return id, nil
