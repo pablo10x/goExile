@@ -213,7 +213,8 @@ func GetAdvancedDBStats(db *sqlx.DB) (*AdvancedDBStats, error) {
 func createTables(db *sqlx.DB) error {
 	pkType := "SERIAL PRIMARY KEY"
 
-	q := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS spawners (
+	queries := []string{
+		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS spawners (
 		id %s,
 		name TEXT,
 		region TEXT,
@@ -225,16 +226,16 @@ func createTables(db *sqlx.DB) error {
 		last_seen INTEGER NOT NULL,
 		game_version TEXT,
 		UNIQUE(host, port)
-	);
-	CREATE TABLE IF NOT EXISTS server_versions (
+	)`, pkType),
+		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS server_versions (
 		id %s,
 		filename TEXT NOT NULL,
 		version TEXT,
 		comment TEXT,
 		uploaded_at INTEGER NOT NULL,
 		is_active INTEGER DEFAULT 0
-	);
-	CREATE TABLE IF NOT EXISTS server_config (
+	)`, pkType),
+		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS server_config (
 		id %s,
 		key TEXT UNIQUE NOT NULL,
 		value TEXT NOT NULL,
@@ -245,8 +246,8 @@ func createTables(db *sqlx.DB) error {
 		requires_restart INTEGER DEFAULT 0,
 		updated_at INTEGER NOT NULL,
 		updated_by TEXT
-	);
-	CREATE TABLE IF NOT EXISTS instance_actions (
+	)`, pkType),
+		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS instance_actions (
 		id %s,
 		spawner_id INTEGER NOT NULL,
 		instance_id TEXT NOT NULL,
@@ -255,8 +256,8 @@ func createTables(db *sqlx.DB) error {
 		status TEXT,
 		details TEXT,
 		FOREIGN KEY(spawner_id) REFERENCES spawners(id) ON DELETE CASCADE
-	);
-	CREATE TABLE IF NOT EXISTS notes (
+	)`, pkType),
+		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS notes (
 		id %s,
 		title TEXT,
 		content TEXT,
@@ -265,17 +266,19 @@ func createTables(db *sqlx.DB) error {
 		rotation REAL DEFAULT 0,
 		created_at INTEGER NOT NULL,
 		updated_at INTEGER NOT NULL
-	);
-	CREATE TABLE IF NOT EXISTS todos (
+	)`, pkType),
+		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS todos (
 		id %s,
 		content TEXT NOT NULL,
 		done INTEGER DEFAULT 0,
 		created_at INTEGER NOT NULL
-	);`, pkType, pkType, pkType, pkType, pkType, pkType)
+	)`, pkType),
+	}
 
-	_, err := db.Exec(q)
-	if err != nil {
-		return fmt.Errorf("create tables: %w", err)
+	for _, q := range queries {
+		if _, err := db.Exec(q); err != nil {
+			return fmt.Errorf("create tables: %w", err)
+		}
 	}
 	return nil
 }

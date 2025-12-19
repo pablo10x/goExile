@@ -35,6 +35,17 @@ func CreateNoteHandler(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, http.StatusBadRequest, err.Error())
 		return
 	}
+
+	// Input Validation
+	if len(n.Title) > 255 {
+		writeError(w, r, http.StatusBadRequest, "title too long (max 255 chars)")
+		return
+	}
+	if len(n.Content) > 10000 {
+		writeError(w, r, http.StatusBadRequest, "content too long (max 10000 chars)")
+		return
+	}
+
 	// Defaults/Validation
 	if n.Color == "" {
 		n.Color = "yellow"
@@ -75,6 +86,17 @@ func UpdateNoteHandler(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, http.StatusBadRequest, err.Error())
 		return
 	}
+
+	// Input Validation
+	if len(n.Title) > 255 {
+		writeError(w, r, http.StatusBadRequest, "title too long (max 255 chars)")
+		return
+	}
+	if len(n.Content) > 10000 {
+		writeError(w, r, http.StatusBadRequest, "content too long (max 10000 chars)")
+		return
+	}
+
 	n.ID = id
 	// Set UpdatedAt on the server side
 	n.UpdatedAt = time.Now().UTC()
