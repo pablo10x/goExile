@@ -328,24 +328,30 @@ func SaveNote(db *sqlx.DB, n *Note) (int, error) {
 		// Set UpdatedAt right before saving
 		n.UpdatedAt = time.Now().UTC()
 
+		// Use int/float32 explicitly for Postgres INTEGER/REAL
+		createdUnix := int(n.CreatedAt.Unix())
+		updatedUnix := int(n.UpdatedAt.Unix())
+		rotation32 := float32(n.Rotation)
+
 		// Insert or Update
 		if n.ID == 0 {
 			query := `INSERT INTO notes (title, content, color, status, rotation, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
-			err := db.QueryRow(query, n.Title, n.Content, n.Color, n.Status, n.Rotation, n.CreatedAt.Unix(), n.UpdatedAt.Unix()).Scan(&id)
+			err := db.QueryRow(query, n.Title, n.Content, n.Color, n.Status, rotation32, createdUnix, updatedUnix).Scan(&id)
 			if err != nil {
-				return err
+				return fmt.Errorf("insert query failed: %w", err)
 			}
 		} else {
 			query := `UPDATE notes SET title=$1, content=$2, color=$3, status=$4, rotation=$5, updated_at=$6 WHERE id=$7`
-			_, err := db.Exec(query, n.Title, n.Content, n.Color, n.Status, n.Rotation, n.UpdatedAt.Unix(), n.ID)
+			_, err := db.Exec(query, n.Title, n.Content, n.Color, n.Status, rotation32, updatedUnix, n.ID)
 			if err != nil {
-				return err
+				return fmt.Errorf("update query failed: %w", err)
 			}
 			id = n.ID
 		}
 		return nil
 	}
 	if err := execWithRetry(do); err != nil {
+		fmt.Printf("SaveNote error details: %v\n", err)
 		return 0, err
 	}
 	return id, nil
@@ -390,10 +396,11 @@ func SaveTodo(db *sqlx.DB, t *Todo) (int, error) {
 		if t.Done {
 			doneInt = 1
 		}
+		createdUnix := int(time.Now().Unix())
 
 		if t.ID == 0 {
 			query := `INSERT INTO todos (content, done, created_at) VALUES ($1, $2, $3) RETURNING id`
-			err := db.QueryRow(query, t.Content, doneInt, time.Now().Unix()).Scan(&id)
+			err := db.QueryRow(query, t.Content, doneInt, createdUnix).Scan(&id)
 			if err != nil {
 				return err
 			}
@@ -408,6 +415,7 @@ func SaveTodo(db *sqlx.DB, t *Todo) (int, error) {
 		return nil
 	}
 	if err := execWithRetry(do); err != nil {
+		fmt.Printf("SaveTodo error details: %v\n", err)
 		return 0, err
 	}
 	return id, nil
