@@ -277,6 +277,18 @@ func createTables(db *sqlx.DB) error {
 		done INTEGER DEFAULT 0,
 		created_at INTEGER NOT NULL
 	)`, pkType),
+		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS system_logs (
+		id %s,
+		timestamp INTEGER NOT NULL,
+		level TEXT NOT NULL,
+		category TEXT NOT NULL,
+		source TEXT,
+		message TEXT,
+		details TEXT,
+		client_ip TEXT,
+		path TEXT,
+		method TEXT
+	)`, pkType),
 	}
 
 	for _, q := range queries {
@@ -285,6 +297,64 @@ func createTables(db *sqlx.DB) error {
 		}
 	}
 	return nil
+}
+
+// -- System Logs --
+
+func SaveSystemLog(db *sqlx.DB, l *SystemLog) error {
+	query := `INSERT INTO system_logs (timestamp, level, category, source, message, details, client_ip, path, method)
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
+	_, err := db.Exec(query, l.Timestamp.Unix(), l.Level, l.Category, l.Source, l.Message, l.Details, l.ClientIP, l.Path, l.Method)
+	return err
+}
+
+func GetSystemLogs(db *sqlx.DB, category string, limit, offset int) ([]SystemLog, int64, error) {
+	var logs []SystemLog
+	var total int64
+
+	whereClause := "WHERE 1=1"
+	args := []interface{}{}
+
+	if category != "" && category != "All" {
+		whereClause += " AND category = $1"
+		args = append(args, category)
+	}
+
+	// Count total
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM system_logs %s", whereClause)
+	if err := db.Get(&total, countQuery, args...); err != nil {
+		return nil, 0, fmt.Errorf("count logs: %w", err)
+	}
+
+	// Fetch logs
+	query := fmt.Sprintf(`SELECT id, timestamp, level, category, source, message, details, client_ip, path, method 
+                          FROM system_logs %s ORDER BY timestamp DESC LIMIT $%d OFFSET $%d`,
+		whereClause, len(args)+1, len(args)+2)
+
+	args = append(args, limit, offset)
+
+	rows, err := db.Queryx(query, args...)
+	if err != nil {
+		return nil, 0, fmt.Errorf("query logs: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var l SystemLog
+		var ts int64
+		if err := rows.Scan(&l.ID, &ts, &l.Level, &l.Category, &l.Source, &l.Message, &l.Details, &l.ClientIP, &l.Path, &l.Method); err != nil {
+			return nil, 0, err
+		}
+		l.Timestamp = time.Unix(ts, 0).UTC()
+		logs = append(logs, l)
+	}
+
+	// Return empty slice instead of nil for JSON
+	if logs == nil {
+		logs = []SystemLog{}
+	}
+
+	return logs, total, nil
 }
 
 // ... existing functions ...
