@@ -285,7 +285,21 @@ func createTables(db *sqlx.DB) error {
 // -- Notes --
 
 func GetNotes(db *sqlx.DB) ([]Note, error) {
-	rows, err := db.Queryx(`SELECT id, title, content, color, status, rotation, created_at, updated_at FROM notes ORDER BY created_at DESC`)
+	// Use COALESCE to handle potential NULLs from migration or old data
+	query := `
+		SELECT 
+			id, 
+			COALESCE(title, '') as title, 
+			COALESCE(content, '') as content, 
+			COALESCE(color, 'yellow') as color, 
+			COALESCE(status, 'normal') as status, 
+			COALESCE(rotation, 0) as rotation, 
+			created_at, 
+			updated_at 
+		FROM notes 
+		ORDER BY created_at DESC
+	`
+	rows, err := db.Queryx(query)
 	if err != nil {
 		return nil, fmt.Errorf("query notes: %w", err)
 	}
