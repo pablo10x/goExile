@@ -97,6 +97,13 @@ func run() error {
 				for i := range loaded {
 					s := loaded[i]
 					copyS := s
+					// Reconcile status: if marked online in DB but not actually connected via WS, set to offline
+					if copyS.Status == "Online" && !GlobalWSManager.IsClientConnected(copyS.ID) {
+						log.Printf("INFO: Spawner ID %d was marked 'Online' in DB but not connected to WebSocket. Marking 'Offline'.", copyS.ID)
+						copyS.Status = "Offline"
+						// Optionally, persist this change to DB immediately, but WSManager will handle it on reconnect/disconnect
+						// For now, only update in-memory to reflect reality for the Dashboard
+					}
 					registry.items[copyS.ID] = &copyS
 					if copyS.ID > maxID {
 						maxID = copyS.ID

@@ -93,6 +93,14 @@ type WSManager struct {
 	pendingMu       sync.Mutex
 }
 
+// IsClientConnected checks if a spawner with the given ID is currently connected via WebSocket.
+func (manager *WSManager) IsClientConnected(spawnerID int) bool {
+	manager.mu.RLock()
+	defer manager.mu.RUnlock()
+	_, ok := manager.connections[spawnerID]
+	return ok
+}
+
 type WSMessage struct {
 	Type      string          `json:"type"`
 	RequestID string          `json:"request_id,omitempty"`
