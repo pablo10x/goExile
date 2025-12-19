@@ -2,6 +2,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut, backOut } from 'svelte/easing';
+	import DOMPurify from 'dompurify';
 
 	export let isOpen: boolean = false;
 	export let title: string = 'Confirm Action';
@@ -69,6 +70,10 @@
 	$: icon = isCritical
 		? '<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>'
 		: '<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
+
+	$: sanitizedIcon = DOMPurify.sanitize(icon, {
+		USE_PROFILES: { svg: true, svgFilters: true }
+	});
 </script>
 
 {#if isOpen}
@@ -147,7 +152,7 @@
 						class="icon-wrapper flex-shrink-0 p-3 rounded-full bg-slate-800/50 border border-slate-700/50 backdrop-blur-sm"
 					>
 						<div class="animate-icon-pop">
-							{@html icon}
+							{@html sanitizedIcon}
 						</div>
 					</div>
 					<div class="flex-1">

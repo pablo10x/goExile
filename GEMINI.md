@@ -156,3 +156,10 @@ The following security improvements have been implemented:
 ### Frontend Cleanup
 *   **Removed Component:** Removed `LucideIconWrapper.svelte` as it was redundant.
 *   **LogViewer Refactor:** Updated `LogViewer.svelte` to use Svelte 5 `{@const Icon = tab.icon}` syntax for dynamic icon rendering, fixing deprecation warnings.
+
+### 🔒 Security Enhancements (Post-Audit)
+*   **Spawner RCE Patch:** Implemented strict ID validation in `spawner/internal/game/manager.go` to prevent path traversal vulnerability in `RenameInstance` and `Spawn`.
+*   **Security Headers:** Added `SecurityHeadersMiddleware` in Server to enforce `X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, and `Content-Security-Policy`.
+*   **Server Binding:** Updated `server/main.go` to bind to `127.0.0.1` by default (configurable via `SERVER_HOST`).
+*   **Read-Only Database:** Added support for a separate `READONLY_DB_DSN` in `server/db.go` and `server/main.go`, used by `ExecuteSQLHandler` for safer ad-hoc queries.
+*   **Frontend Sanitization:** Integrated `DOMPurify` in `web-dashboard` (`StatsCard.svelte`, `ConfirmDialog.svelte`) to replace regex-based sanitization.

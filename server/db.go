@@ -13,6 +13,11 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
+var (
+	dbConn       *sqlx.DB
+	readOnlyConn *sqlx.DB // Separate connection for read-only queries if configured
+)
+
 // db.go provides a persistence layer for the registry using PostgreSQL.
 
 // InitDB opens a database connection to PostgreSQL.
@@ -93,6 +98,26 @@ func InitDB(dsn string) (*sqlx.DB, error) {
 		}
 	}
 
+	return db, nil
+}
+
+// InitReadOnlyDB opens a separate read-only connection.
+func InitReadOnlyDB(dsn string) (*sqlx.DB, error) {
+	db, err := sqlx.Open("pgx", dsn)
+	if err != nil {
+		return nil, fmt.Errorf("open ro db: %w", err)
+	}
+
+	db.SetMaxOpenConns(5)
+	db.SetMaxIdleConns(2)
+	db.SetConnMaxLifetime(time.Minute * 5)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := db.PingContext(ctx); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("ping ro db: %w", err)
+	}
 	return db, nil
 }
 

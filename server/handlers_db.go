@@ -494,7 +494,13 @@ func ListColumnsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ExecuteSQLHandler(w http.ResponseWriter, r *http.Request) {
-	if dbConn == nil {
+	// Use readOnlyConn if available, otherwise fall back to dbConn (which should be prevented if not safe)
+	conn := readOnlyConn
+	if conn == nil {
+		conn = dbConn
+	}
+
+	if conn == nil {
 		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
 		return
 	}
@@ -507,12 +513,14 @@ func ExecuteSQLHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate query is read-only to prevent destructive operations
+	// We do this EVEN if we have a separate connection as a defense in depth,
+	// unless we are sure the separate connection permissions are perfect.
 	if err := IsSafeReadOnlyQuery(req.Query); err != nil {
 		writeError(w, r, http.StatusForbidden, "query not allowed: "+err.Error())
 		return
 	}
 
-	results, err := ExecuteSQL(dbConn, req.Query)
+	results, err := ExecuteSQL(conn, req.Query)
 	if err != nil {
 		writeError(w, r, http.StatusBadRequest, SanitizeDBError(err))
 		return

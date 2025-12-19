@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ComponentType } from 'svelte';
+	import DOMPurify from 'dompurify';
 
 	export let title: string;
 	export let value: string | number;
@@ -8,38 +9,10 @@
 	export let subValueClass: string = 'text-slate-400';
 	export let color: 'blue' | 'emerald' | 'orange' | 'red' | 'purple' = 'blue';
 
-	// Sanitize HTML to prevent XSS - only allow safe formatting tags
-	function sanitizeHtml(html: string): string {
-		if (!html) return '';
-
-		// First, escape all HTML
-		const escaped = html
-			.replace(/&/g, '&amp;')
-			.replace(/</g, '&lt;')
-			.replace(/>/g, '&gt;')
-			.replace(/"/g, '&quot;')
-			.replace(/'/g, '&#039;');
-
-		// Then, selectively allow safe tags for formatting
-		// Allow: <br>, <b>, <strong>, <i>, <em>, <span class="...">
-		return (
-			escaped
-				.replace(/&lt;br\s*\/?&gt;/gi, '<br>')
-				.replace(/&lt;b&gt;/gi, '<b>')
-				.replace(/&lt;\/b&gt;/gi, '</b>')
-				.replace(/&lt;strong&gt;/gi, '<strong>')
-				.replace(/&lt;\/strong&gt;/gi, '</strong>')
-				.replace(/&lt;i&gt;/gi, '<i>')
-				.replace(/&lt;\/i&gt;/gi, '</i>')
-				.replace(/&lt;em&gt;/gi, '<em>')
-				.replace(/&lt;\/em&gt;/gi, '</em>')
-				// Allow span with only class attribute (no onclick, style, etc.)
-				.replace(/&lt;span class=&quot;([a-zA-Z0-9\s\-_]+)&quot;&gt;/gi, '<span class="$1">')
-				.replace(/&lt;\/span&gt;/gi, '</span>')
-		);
-	}
-
-	$: sanitizedSubValue = sanitizeHtml(subValue);
+	$: sanitizedSubValue = DOMPurify.sanitize(subValue, {
+		ALLOWED_TAGS: ['br', 'b', 'strong', 'i', 'em', 'span'],
+		ALLOWED_ATTR: ['class']
+	});
 
 	const colorMap = {
 		blue: {

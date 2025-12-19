@@ -6,8 +6,6 @@ import (
 	"sort"
 	"sync"
 	"time"
-
-	"github.com/jmoiron/sqlx"
 )
 
 // Registry manages the lifecycle of Spawner instances in memory.
@@ -22,9 +20,6 @@ var registry = &Registry{
 	nextID: 1,
 	items:  make(map[int]*Spawner),
 }
-
-// dbConn holds the optional SQLite DB connection.
-var dbConn *sqlx.DB
 
 // Register adds a new spawner to the registry.
 //

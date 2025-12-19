@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"spawner/internal/config"
 	spawnerErrors "spawner/internal/errors"
 	"spawner/internal/updater"
@@ -19,6 +20,13 @@ import (
 	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/shirou/gopsutil/v3/process"
 )
+
+// isValidID checks if the instance ID is safe (alphanumeric, hyphens, underscores).
+func isValidID(id string) bool {
+	// Only allow alphanumeric, hyphen, underscore. No dots, slashes, etc.
+	validID := regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+	return validID.MatchString(id)
+}
 
 // HistoryPoint represents a snapshot of resource usage.
 type HistoryPoint struct {
@@ -237,6 +245,9 @@ func (m *Manager) Spawn(ctx context.Context) (*Instance, error) {
 	}
 
 	id := fmt.Sprintf("%s-%d", m.cfg.Region, port)
+	if !isValidID(id) {
+		return nil, fmt.Errorf("generated instance ID '%s' is invalid (check region config)", id)
+	}
 	instanceDir := filepath.Join(m.cfg.InstancesDir, id)
 
 	instance := &Instance{
@@ -418,6 +429,10 @@ func (m *Manager) RenameInstance(id string, newID string) error {
 
 	if m.busy {
 		return fmt.Errorf("spawner is busy updating")
+	}
+
+	if !isValidID(newID) {
+		return fmt.Errorf("invalid instance ID: contains illegal characters")
 	}
 
 	if _, exists := m.instances[newID]; exists {

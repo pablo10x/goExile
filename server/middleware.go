@@ -157,3 +157,26 @@ func UnifiedAuthMiddleware(apiKey string, authConfig AuthConfig, sessionStore *S
 		})
 	}
 }
+
+// SecurityHeadersMiddleware adds security-related headers to responses.
+func SecurityHeadersMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("X-XSS-Protection", "1; mode=block")
+		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+		// CSP allows SvelteKit scripts/styles. Adjust if needed.
+		// 'unsafe-inline' is often needed for Svelte unless nonces are strictly used everywhere.
+		// 'unsafe-eval' might be needed for some dev tools or specific libs.
+		// For now, a reasonable baseline:
+		w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' ws: wss:;")
+		
+		// HSTS (Strict-Transport-Security) - Should only be sent over HTTPS
+		// If behind a proxy that terminates TLS, we might want to set this if X-Forwarded-Proto is https
+		if r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" {
+			w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}

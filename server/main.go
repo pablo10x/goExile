@@ -110,6 +110,24 @@ func run() error {
 				PrintSection("Database", "connected", true)
 			}
 		}
+
+		// Initialize Read-Only Database (Optional but recommended)
+		roDSN := os.Getenv("READONLY_DB_DSN")
+		if roDSN != "" {
+			readOnlyConn, err = InitReadOnlyDB(roDSN)
+			if err != nil {
+				PrintSection("Read-Only DB", "failed", false)
+				PrintSubItem(err.Error())
+			} else {
+				PrintSection("Read-Only DB", "connected", true)
+			}
+		} else {
+			// If not set, use main connection but fallback to regex validation
+			readOnlyConn = dbConn
+			if dbConn != nil {
+				PrintSection("Read-Only DB", "using primary (fallback)", true)
+			}
+		}
 	}
 
 	// Initialize Firebase Remote Config
@@ -337,13 +355,23 @@ func run() error {
 	}()
 
 	// 10. Start HTTP Server
+	// If SERVER_HOST env is set, use it (e.g. "0.0.0.0" for Docker), otherwise default to "127.0.0.1"
+	serverHost := os.Getenv("SERVER_HOST")
+	if serverHost == "" {
+		serverHost = "127.0.0.1"
+	}
+
 	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%s", port),
-		Handler: StatsMiddleware(router),
+		Addr:    fmt.Sprintf("%s:%s", serverHost, port),
+		Handler: SecurityHeadersMiddleware(StatsMiddleware(router)),
 	}
 
 	go func() {
 		PrintStartupComplete(port)
+		// Warn if not binding to localhost
+		if serverHost != "127.0.0.1" && serverHost != "localhost" {
+			fmt.Printf("  %s%s⚠️  WARNING: Server is listening on %s (Potentially public)%s\n", "\033[1m", "\033[33m", serverHost, "\033[0m")
+		}
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server error: %v", err)
 		}
