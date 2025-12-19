@@ -124,6 +124,30 @@ func InitDB(dsn string) (*sqlx.DB, error) {
 		}
 	}
 
+	// Check if 'created_at' column exists in notes
+	var hasCreatedAtCol int
+	err = db.QueryRow(`SELECT COUNT(*) FROM information_schema.columns WHERE table_name='notes' AND column_name='created_at'`).Scan(&hasCreatedAtCol)
+	if err == nil && hasCreatedAtCol == 0 {
+		fmt.Println("Migrating DB: Adding 'created_at' column to notes table...")
+		if _, err := db.Exec(`ALTER TABLE notes ADD COLUMN created_at INTEGER DEFAULT extract(epoch from now())`); err != nil {
+			if !strings.Contains(err.Error(), "duplicate column") && !strings.Contains(err.Error(), "already exists") {
+				fmt.Printf("warning: failed to migrate notes table (created_at): %v\n", err)
+			}
+		}
+	}
+
+	// Check if 'updated_at' column exists in notes
+	var hasUpdatedAtCol int
+	err = db.QueryRow(`SELECT COUNT(*) FROM information_schema.columns WHERE table_name='notes' AND column_name='updated_at'`).Scan(&hasUpdatedAtCol)
+	if err == nil && hasUpdatedAtCol == 0 {
+		fmt.Println("Migrating DB: Adding 'updated_at' column to notes table...")
+		if _, err := db.Exec(`ALTER TABLE notes ADD COLUMN updated_at INTEGER DEFAULT extract(epoch from now())`); err != nil {
+			if !strings.Contains(err.Error(), "duplicate column") && !strings.Contains(err.Error(), "already exists") {
+				fmt.Printf("warning: failed to migrate notes table (updated_at): %v\n", err)
+			}
+		}
+	}
+
 	// Seed default configuration if table is empty
 	var configCount int
 	err = db.QueryRow(`SELECT COUNT(*) FROM server_config`).Scan(&configCount)
@@ -297,8 +321,8 @@ func GetNotes(db *sqlx.DB) ([]Note, error) {
 			COALESCE(color, 'yellow') as color, 
 			COALESCE(status, 'normal') as status, 
 			COALESCE(rotation, 0) as rotation, 
-			created_at, 
-			updated_at 
+			COALESCE(created_at, CAST(extract(epoch from now()) AS INTEGER)) as created_at, 
+			COALESCE(updated_at, CAST(extract(epoch from now()) AS INTEGER)) as updated_at 
 		FROM notes 
 		ORDER BY created_at DESC
 	`
