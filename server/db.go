@@ -88,6 +88,42 @@ func InitDB(dsn string) (*sqlx.DB, error) {
 		}
 	}
 
+	// Check if 'color' column exists in notes
+	var hasColorCol int
+	err = db.QueryRow(`SELECT COUNT(*) FROM information_schema.columns WHERE table_name='notes' AND column_name='color'`).Scan(&hasColorCol)
+	if err == nil && hasColorCol == 0 {
+		fmt.Println("Migrating DB: Adding 'color' column to notes table...")
+		if _, err := db.Exec(`ALTER TABLE notes ADD COLUMN color TEXT`); err != nil {
+			if !strings.Contains(err.Error(), "duplicate column") && !strings.Contains(err.Error(), "already exists") {
+				fmt.Printf("warning: failed to migrate notes table (color): %v\n", err)
+			}
+		}
+	}
+
+	// Check if 'status' column exists in notes
+	var hasStatusCol int
+	err = db.QueryRow(`SELECT COUNT(*) FROM information_schema.columns WHERE table_name='notes' AND column_name='status'`).Scan(&hasStatusCol)
+	if err == nil && hasStatusCol == 0 {
+		fmt.Println("Migrating DB: Adding 'status' column to notes table...")
+		if _, err := db.Exec(`ALTER TABLE notes ADD COLUMN status TEXT`); err != nil {
+			if !strings.Contains(err.Error(), "duplicate column") && !strings.Contains(err.Error(), "already exists") {
+				fmt.Printf("warning: failed to migrate notes table (status): %v\n", err)
+			}
+		}
+	}
+
+	// Check if 'rotation' column exists in notes
+	var hasRotationCol int
+	err = db.QueryRow(`SELECT COUNT(*) FROM information_schema.columns WHERE table_name='notes' AND column_name='rotation'`).Scan(&hasRotationCol)
+	if err == nil && hasRotationCol == 0 {
+		fmt.Println("Migrating DB: Adding 'rotation' column to notes table...")
+		if _, err := db.Exec(`ALTER TABLE notes ADD COLUMN rotation REAL DEFAULT 0`); err != nil {
+			if !strings.Contains(err.Error(), "duplicate column") && !strings.Contains(err.Error(), "already exists") {
+				fmt.Printf("warning: failed to migrate notes table (rotation): %v\n", err)
+			}
+		}
+	}
+
 	// Seed default configuration if table is empty
 	var configCount int
 	err = db.QueryRow(`SELECT COUNT(*) FROM server_config`).Scan(&configCount)
