@@ -468,7 +468,7 @@
 		/>
 	</div>
 	<a
-		href="/errors"
+		href="/logs"
 		class="block transition-all duration-700 hover:scale-[1.05] hover:rotate-1 {animateStats
 			? 'translate-y-0 opacity-100'
 			: 'translate-y-8 opacity-0'}"

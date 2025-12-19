@@ -110,3 +110,17 @@ type AIChatResponse struct {
 	Response    string   `json:"response"`
 	SuggestedTodo string `json:"suggested_todo,omitempty"` // Optional todo to add
 }
+
+// SystemLog represents a log entry for system events and errors.
+type SystemLog struct {
+	ID        int       `json:"id" db:"id"`
+	Timestamp time.Time `json:"timestamp" db:"timestamp"`
+	Level     string    `json:"level" db:"level"`       // INFO, WARN, ERROR, FATAL
+	Category  string    `json:"category" db:"category"` // INTERNAL, SPAWNER, SECURITY, GENERAL
+	Source    string    `json:"source" db:"source"`     // e.g. "middleware", "auth_handler"
+	Message   string    `json:"message" db:"message"`
+	Details   string    `json:"details" db:"details"` // JSON or text details
+	ClientIP  string    `json:"client_ip" db:"client_ip"`
+	Path      string    `json:"path" db:"path"`
+	Method    string    `json:"method" db:"method"`
+}

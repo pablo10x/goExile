@@ -164,6 +164,17 @@ The following security improvements have been implemented:
 *   **Read-Only Database:** Added support for a separate `READONLY_DB_DSN` in `server/db.go` and `server/main.go`, used by `ExecuteSQLHandler` for safer ad-hoc queries.
 *   **Frontend Sanitization:** Integrated `DOMPurify` in `web-dashboard` (`StatsCard.svelte`, `ConfirmDialog.svelte`) to replace regex-based sanitization.
 
+### System Logging & Error Reporting
+*   **Architecture:** Implemented a new persistent, categorized logging system.
+*   **Database:** Added `system_logs` table to store detailed logs (timestamp, level, category, source, message, details, client_ip, path, method).
+*   **Backend:**
+    *   Created `server/logging.go` service for structured logging.
+    *   Updated `StatsMiddleware` to capture and categorize errors (Internal, Spawner, Security).
+    *   Updated `GlobalStats` to only count "Internal" API errors in `TotalErrors` metric, improving "Performance" tab accuracy.
+*   **Frontend:**
+    *   Created new **System Logs** page (`/logs`) with filtering by category and detailed inspection.
+    *   Updated Dashboard "Total Errors" card to link to the new logs page.
+
 ### UI Improvements
 *   **Notes & Tasks:** Refactored `web-dashboard/src/routes/notes/+page.svelte` to feature a 2-column layout (Tasks sidebar, Notes grid).
 *   **Tasks:** Added `TaskItem` component with cleaner styling and animations.

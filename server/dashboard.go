@@ -90,16 +90,18 @@ func (ds *DashboardStats) RecordRequest(statusCode int, bytesIn, bytesOut int64)
 	ds.TotalRequests++
 	ds.BytesReceived += bytesIn
 	ds.BytesSent += bytesOut
-	if statusCode >= 400 {
-		ds.TotalErrors++
-	}
+	// Errors are now recorded separately via RecordError with category check
 	ds.LastRequestTime = time.Now()
 }
 
 // RecordError adds an error to the log.
-func (ds *DashboardStats) RecordError(path string, status int, message string, clientIP string) {
+func (ds *DashboardStats) RecordError(path string, status int, message string, clientIP string, category string) {
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
+
+	if category == "Internal" {
+		ds.TotalErrors++
+	}
 
 	logEntry := ErrorLog{
 		Timestamp: time.Now(),

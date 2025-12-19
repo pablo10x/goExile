@@ -84,6 +84,7 @@ func StatsMiddleware(next http.Handler) http.Handler {
 		// Centralized Error Logging
 		if sw.statusCode >= 400 {
 			message := http.StatusText(sw.statusCode)
+			details := ""
 
 			// Try to parse useful message from body
 			if len(sw.body) > 0 {
@@ -93,6 +94,7 @@ func StatsMiddleware(next http.Handler) http.Handler {
 				}
 				if json.Unmarshal(sw.body, &errResp) == nil && errResp.Error != "" {
 					message = errResp.Error
+					details = errResp.Error
 				} else {
 					// Use raw body if it's text/plain and short, otherwise stick to StatusText
 					// Simple heuristic: if it contains unprintable chars, ignore it.
@@ -100,13 +102,16 @@ func StatsMiddleware(next http.Handler) http.Handler {
 					bodyStr := string(sw.body)
 					if len(bodyStr) < 200 {
 						message = strings.TrimSpace(bodyStr)
+						details = message
 					}
 				}
 			}
 
 			clientIP := GetClientIP(r)
+			category := DetermineCategory(r.URL.Path)
 
-			GlobalStats.RecordError(r.URL.Path, sw.statusCode, message, clientIP)
+			// Log to persistent storage and update stats
+			Logger.Log(LogLevelError, category, message, details, r.URL.Path, r.Method, clientIP, sw.statusCode)
 		}
 	})
 }
