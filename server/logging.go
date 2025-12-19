@@ -56,9 +56,6 @@ func (s *LoggerService) Log(level LogLevel, category LogCategory, msg string, de
 	if level == LogLevelError || level == LogLevelFatal {
 		GlobalStats.RecordError(rPath, statusCode, msg, clientIP, string(category))
 	}
-
-	// Also log to stdout for debugging
-	slog.Info("SystemLog", "level", l.Level, "cat", l.Category, "msg", l.Message)
 }
 
 func DetermineCategory(path string) LogCategory {

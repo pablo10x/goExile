@@ -321,6 +321,9 @@ func run() error {
 		router.Handle("/api/todos/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(UpdateTodoHandler))).Methods("PUT")
 		router.Handle("/api/todos/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DeleteTodoHandler))).Methods("DELETE")
 
+		// Logging
+		router.Handle("/api/logs", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListSystemLogsHandler))).Methods("GET")
+
 		// AI Bot API
 		router.Handle("/api/ai/chat", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(AIChatHandler))).Methods("POST")
 	}
