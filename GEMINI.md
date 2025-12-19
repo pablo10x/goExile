@@ -163,3 +163,8 @@ The following security improvements have been implemented:
 *   **Server Binding:** Updated `server/main.go` to bind to `127.0.0.1` by default (configurable via `SERVER_HOST`).
 *   **Read-Only Database:** Added support for a separate `READONLY_DB_DSN` in `server/db.go` and `server/main.go`, used by `ExecuteSQLHandler` for safer ad-hoc queries.
 *   **Frontend Sanitization:** Integrated `DOMPurify` in `web-dashboard` (`StatsCard.svelte`, `ConfirmDialog.svelte`) to replace regex-based sanitization.
+
+### UI Improvements
+*   **Notes & Tasks:** Refactored `web-dashboard/src/routes/notes/+page.svelte` to feature a 2-column layout (Tasks sidebar, Notes grid).
+*   **Tasks:** Added `TaskItem` component with cleaner styling and animations.
+*   **Notes:** Enhanced `NoteCard` visuals with gradients, shadow effects, and better status indicators.

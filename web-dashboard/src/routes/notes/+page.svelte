@@ -2,19 +2,21 @@
 	import { onMount } from 'svelte';
 	import { fade, slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
-	import { Plus, CheckSquare, Square, Trash2, StickyNote, RefreshCw } from 'lucide-svelte';
+	import { Plus, CheckSquare, Square, Trash2, StickyNote, RefreshCw, Search } from 'lucide-svelte';
 	import NoteCard from '$lib/components/notes/NoteCard.svelte';
-	import NoteModal from '$lib/components/notes/NoteModal.svelte'; // Import the new modal
+	import TaskItem from '$lib/components/notes/TaskItem.svelte';
+	import NoteModal from '$lib/components/notes/NoteModal.svelte';
 	import AIBot from '$lib/components/notes/AIBot.svelte';
 	import { notes, todos } from '$lib/stores';
 	import type { Note, Todo } from '$lib/stores';
 
-	let loading = true;
-	let newTodoContent = '';
+	let loading = $state(true);
+	let newTodoContent = $state('');
+    let searchQuery = $state('');
 
 	// Modal state
-	let showNoteModal = false;
-	let editingNote: Note | null = null; // Stores the note being edited, or null for creation
+	let showNoteModal = $state(false);
+	let editingNote = $state<Note | null>(null);
 
 	async function loadData() {
 		loading = true;
@@ -30,19 +32,17 @@
 	}
 
 	function openCreateNoteModal() {
-		editingNote = null; // Ensure we're in creation mode
+		editingNote = null;
 		showNoteModal = true;
 	}
 
-	function openEditNoteModal(e: CustomEvent<Note>) {
-		editingNote = e.detail;
+	function openEditNoteModal(note: Note) {
+		editingNote = note;
 		showNoteModal = true;
 	}
 
 	async function handleSaveNote(note: Note) {
-		// Determine if it's a new note or an update
 		if (note.id === 0) {
-			// New note - remove the ID as the backend should generate it
 			const { id, ...noteWithoutId } = note;
 			try {
 				const res = await fetch('/api/notes', {
@@ -54,11 +54,8 @@
 					const saved = await res.json();
 					notes.update((n) => [saved, ...n]);
 				}
-			} catch (e) {
-				console.error(e);
-			}
+			} catch (e) { console.error(e); }
 		} else {
-			// Update existing note
 			try {
 				await fetch(`/api/notes/${note.id}`, {
 					method: 'PUT',
@@ -66,20 +63,15 @@
 					body: JSON.stringify(note)
 				});
 				notes.update((n) => n.map((x) => (x.id === note.id ? note : x)));
-			} catch (err) {
-				console.error(err);
-			}
+			} catch (err) { console.error(err); }
 		}
 	}
 
-	async function deleteNote(e: CustomEvent<number>) {
-		const id = e.detail;
+	async function deleteNote(id: number) {
 		try {
 			await fetch(`/api/notes/${id}`, { method: 'DELETE' });
 			notes.update((n) => n.filter((x) => x.id !== id));
-		} catch (err) {
-			console.error(err);
-		}
+		} catch (err) { console.error(err); }
 	}
 
 	async function addTodo() {
@@ -95,9 +87,7 @@
 				todos.update((t) => [...t, saved]);
 				newTodoContent = '';
 			}
-		} catch (e) {
-			console.error(e);
-		}
+		} catch (e) { console.error(e); }
 	}
 
 	async function toggleTodo(todo: Todo) {
@@ -109,133 +99,198 @@
 				body: JSON.stringify(updated)
 			});
 			todos.update((t) => t.map((x) => (x.id === todo.id ? updated : x)));
-		} catch (e) {
-			console.error(e);
-		}
+		} catch (e) { console.error(e); }
 	}
 
 	async function deleteTodo(id: number) {
 		try {
 			await fetch(`/api/todos/${id}`, { method: 'DELETE' });
 			todos.update((t) => t.filter((x) => x.id !== id));
-		} catch (e) {
-			console.error(e);
-		}
+		} catch (e) { console.error(e); }
 	}
+
+    let filteredNotes = $derived($notes.filter(n => 
+        searchQuery === '' || 
+        n.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        n.content.toLowerCase().includes(searchQuery.toLowerCase())
+    ));
+
+    let pendingTodos = $derived($todos.filter(t => !t.done));
+    let completedTodos = $derived($todos.filter(t => t.done));
 
 	onMount(loadData);
 </script>
 
-<div class="min-h-full pb-24">
-	<!-- Header -->
-	<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-		<div>
-			<h1 class="text-3xl font-bold text-white flex items-center gap-3">
-				<StickyNote class="w-8 h-8 text-yellow-400" />
-				Notes & Tasks
-			</h1>
-			<p class="text-slate-400 mt-1">Organize your thoughts and track your progress</p>
-		</div>
-		<button
-			onclick={openCreateNoteModal}
-			class="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white font-semibold rounded-xl shadow-lg shadow-orange-900/20 transition-all transform hover:-translate-y-0.5 active:scale-95"
-		>
-			<Plus class="w-5 h-5" />
-			Add Note
-		</button>
-	</div>
+<div class="h-full flex flex-col lg:flex-row gap-6 p-4 sm:p-6 overflow-hidden relative">
+    
+    <!-- Left Column: Tasks (Fixed width on desktop, stacked on mobile) -->
+    <div class="w-full lg:w-96 flex-shrink-0 flex flex-col bg-slate-900/50 border border-slate-700/50 rounded-2xl overflow-hidden backdrop-blur-xl shadow-xl h-[500px] lg:h-auto">
+        <!-- Tasks Header -->
+        <div class="p-5 border-b border-slate-700/50 bg-slate-800/30 flex justify-between items-center shrink-0">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                <CheckSquare class="w-5 h-5 text-emerald-400" />
+                Tasks
+            </h2>
+            <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-xs font-mono text-slate-400">
+                    {pendingTodos.length} Pending
+                </span>
+            </div>
+        </div>
 
-	{#if loading}
-		<div class="flex items-center justify-center py-20">
-			<RefreshCw class="w-10 h-10 text-slate-500 animate-spin" />
-		</div>
-	{:else}
-		<!-- Notes Board -->
-		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-			{#each $notes as note (note.id)}
-				<div animate:flip={{ duration: 300 }}>
-					<NoteCard {note} on:edit={openEditNoteModal} on:delete={deleteNote} />
-				</div>
-			{/each}
-			{#if $notes.length === 0}
-				<div class="col-span-full py-12 text-center border-2 border-dashed border-slate-700 rounded-2xl">
-					<div class="inline-flex p-4 bg-slate-800/50 rounded-full mb-4">
-						<StickyNote class="w-8 h-8 text-slate-500" />
-					</div>
-					<p class="text-slate-400">No notes yet. Click "Add Note" to get started!</p>
-				</div>
-			{/if}
-		</div>
+        <!-- Task Input -->
+        <div class="p-4 border-b border-slate-700/50 bg-slate-900/30 shrink-0">
+            <form
+                onsubmit={(e) => { e.preventDefault(); addTodo(); }}
+                class="flex gap-2"
+            >
+                <input
+                    type="text"
+                    bind:value={newTodoContent}
+                    placeholder="New task..."
+                    class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all"
+                />
+                <button
+                    type="submit"
+                    disabled={!newTodoContent.trim()}
+                    class="p-2 bg-slate-700 hover:bg-emerald-600 text-white rounded-lg transition-colors disabled:opacity-50"
+                >
+                    <Plus class="w-4 h-4" />
+                </button>
+            </form>
+        </div>
 
-		<!-- Todo List -->
-		<div class="max-w-2xl mx-auto bg-slate-800/40 border border-slate-700/50 rounded-2xl overflow-hidden backdrop-blur-sm">
-			<div class="p-6 border-b border-slate-700/50 bg-slate-900/50 flex items-center gap-3">
-				<CheckSquare class="w-6 h-6 text-emerald-400" />
-				<h2 class="text-xl font-bold text-white">Tasks</h2>
-			</div>
-			
-			<div class="p-6 space-y-4">
-				<form
-					onsubmit={(e) => {
-						e.preventDefault();
-						addTodo();
-					}}
-					class="flex gap-3"
-				>
-					<input
-						type="text"
-						bind:value={newTodoContent}
-						placeholder="Add a new task..."
-						class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-200 placeholder:text-slate-500 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all"
-					/>
-					<button
-						type="submit"
-						disabled={!newTodoContent.trim()}
-						class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
-					>
-						Add
-					</button>
-				</form>
+        <!-- Task List -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+            {#if loading}
+                <div class="flex justify-center py-4"><RefreshCw class="w-5 h-5 animate-spin text-slate-600"/></div>
+            {:else}
+                {#if pendingTodos.length > 0}
+                    <div class="space-y-2">
+                        {#each pendingTodos as todo (todo.id)}
+                            <div animate:flip={{ duration: 300 }}>
+                                <TaskItem {todo} onToggle={toggleTodo} onDelete={deleteTodo} />
+                            </div>
+                        {/each}
+                    </div>
+                {/if}
 
-				<div class="space-y-2">
-					{#each $todos as todo (todo.id)}
-						<div
-							class="flex items-center gap-3 p-3 rounded-xl transition-all group {todo.done
-								? 'bg-slate-800/30 opacity-60'
-								: 'bg-slate-800/80 hover:bg-slate-700/80'}"
-							transition:slide|local
-						>
-							<button
-								onclick={() => toggleTodo(todo)}
-								class="text-slate-400 hover:text-emerald-400 transition-colors"
-							>
-								{#if todo.done}
-									<CheckSquare class="w-5 h-5 text-emerald-500" />
-								{:else}
-									<Square class="w-5 h-5" />
-								{/if}
-							</button>
-							<span class="flex-1 text-sm {todo.done ? 'line-through text-slate-500' : 'text-slate-200'}">
-								{todo.content}
-							</span>
-							<button
-								onclick={() => deleteTodo(todo.id)}
-								class="text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1"
-							>
-								<Trash2 class="w-4 h-4" />
-							</button>
-						</div>
-					{/each}
-					{#if $todos.length === 0}
-						<p class="text-center text-slate-500 text-sm py-4">No tasks pending.</p>
-					{/if}
-				</div>
-			</div>
-		</div>
-	{/if}
+                {#if completedTodos.length > 0}
+                    {#if pendingTodos.length > 0}
+                        <div class="border-t border-slate-800/50 my-4"></div>
+                    {/if}
+                    <div class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 px-1">Completed</div>
+                    <div class="space-y-2 opacity-60">
+                        {#each completedTodos as todo (todo.id)}
+                            <div animate:flip={{ duration: 300 }}>
+                                <TaskItem {todo} onToggle={toggleTodo} onDelete={deleteTodo} />
+                            </div>
+                        {/each}
+                    </div>
+                {/if}
+
+                {#if $todos.length === 0}
+                    <div class="text-center py-8">
+                        <div class="inline-flex p-3 rounded-full bg-slate-800/50 mb-3">
+                            <CheckSquare class="w-6 h-6 text-slate-600" />
+                        </div>
+                        <p class="text-sm text-slate-500">No tasks yet.</p>
+                    </div>
+                {/if}
+            {/if}
+        </div>
+    </div>
+
+    <!-- Right Column: Notes -->
+    <div class="flex-1 flex flex-col min-h-0 bg-transparent">
+        <!-- Notes Toolbar -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 shrink-0">
+            <div>
+                <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+                    <StickyNote class="w-6 h-6 text-yellow-400" />
+                    Notes
+                </h1>
+                <p class="text-slate-400 text-sm mt-0.5">Capture ideas and important info</p>
+            </div>
+
+            <div class="flex items-center gap-3 w-full sm:w-auto">
+                <div class="relative flex-1 sm:w-64">
+                    <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                    <input 
+                        type="text" 
+                        bind:value={searchQuery}
+                        placeholder="Search notes..." 
+                        class="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-200 focus:ring-2 focus:ring-blue-500/50 outline-none backdrop-blur-sm"
+                    />
+                </div>
+                <button
+                    onclick={openCreateNoteModal}
+                    class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-900/20 transition-all hover:-translate-y-0.5"
+                >
+                    <Plus class="w-4 h-4" />
+                    <span class="hidden sm:inline">New Note</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Notes Grid -->
+        <div class="flex-1 overflow-y-auto custom-scrollbar pb-20"> <!-- pb-20 for AI bot clearance -->
+            {#if loading}
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {#each [1,2,3] as _}
+                        <div class="h-48 bg-slate-800/30 rounded-xl animate-pulse border border-slate-700/30"></div>
+                    {/each}
+                </div>
+            {:else if filteredNotes.length > 0}
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+                    {#each filteredNotes as note (note.id)}
+                        <div animate:flip={{ duration: 300 }}>
+                            <NoteCard 
+                                {note} 
+                                onEdit={openEditNoteModal} 
+                                onDelete={deleteNote} 
+                            />
+                        </div>
+                    {/each}
+                </div>
+            {:else}
+                <div class="h-64 flex flex-col items-center justify-center border-2 border-dashed border-slate-800 rounded-2xl bg-slate-900/20">
+                    <div class="p-4 bg-slate-800/50 rounded-full mb-3">
+                        <StickyNote class="w-8 h-8 text-slate-600" />
+                    </div>
+                    <p class="text-slate-500 font-medium">
+                        {searchQuery ? 'No matching notes found.' : 'No notes yet. Create one!'}
+                    </p>
+                </div>
+            {/if}
+        </div>
+    </div>
 
 	<AIBot />
 
 	<!-- Note Modal -->
-	<NoteModal bind:isOpen={showNoteModal} note={editingNote} onSave={handleSaveNote} onClose={() => (showNoteModal = false)} />
+	<NoteModal 
+        bind:isOpen={showNoteModal} 
+        note={editingNote} 
+        onSave={handleSaveNote} 
+        onClose={() => (showNoteModal = false)} 
+    />
 </div>
+
+<style>
+    /* Custom Scrollbar */
+	.custom-scrollbar::-webkit-scrollbar {
+		width: 6px;
+		height: 6px;
+	}
+	.custom-scrollbar::-webkit-scrollbar-track {
+		background: rgba(15, 23, 42, 0.1);
+	}
+	.custom-scrollbar::-webkit-scrollbar-thumb {
+		background: rgba(71, 85, 105, 0.4);
+		border-radius: 3px;
+	}
+	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+		background: rgba(71, 85, 105, 0.6);
+	}
+</style>
