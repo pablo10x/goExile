@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition';
-	import { createEventDispatcher } from 'svelte';
 	import type { ComponentType } from 'svelte';
 
-	export let label: string = 'Actions';
-	export let Icon: ComponentType | null = null;
+	let { label = 'Actions', Icon = null } = $props<{
+		label?: string;
+		Icon?: ComponentType | null;
+		children?: any;
+	}>();
 
-	let isOpen = false;
-	const dispatch = createEventDispatcher();
+	let isOpen = $state(false);
 
 	function toggle() {
 		isOpen = !isOpen;
@@ -24,7 +25,7 @@
 	}
 </script>
 
-<svelte:window on:click={handleClickOutside} />
+<svelte:window onclick={handleClickOutside} />
 
 <div class="relative dropdown-container">
 	<button
@@ -32,7 +33,8 @@
 		class="flex items-center gap-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium transition-colors border border-slate-700"
 	>
 		{#if Icon}
-			<svelte:component this={Icon} class="w-4 h-4" />
+			{@const DropdownIcon = Icon}
+			<DropdownIcon class="w-4 h-4" />
 		{/if}
 		{label}
 		<svg

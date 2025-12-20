@@ -21,7 +21,7 @@ func setupHandler() (*gin.Engine, *Handler) {
 	}
 	manager := game.NewManager(cfg, logger)
 	handler := NewHandler(manager, cfg, logger)
-	
+
 	r := gin.New()
 	handler.RegisterRoutes(r)
 	return r, handler

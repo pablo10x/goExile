@@ -22,14 +22,14 @@ import (
 )
 
 type Client struct {
-	config     *config.Config
-	manager    *game.Manager
-	logger     *slog.Logger
-	conn       *websocket.Conn
-	send       chan []byte
-	id         int
-	metrics    cachedMetrics
-	metricsMu  sync.RWMutex
+	config    *config.Config
+	manager   *game.Manager
+	logger    *slog.Logger
+	conn      *websocket.Conn
+	send      chan []byte
+	id        int
+	metrics   cachedMetrics
+	metricsMu sync.RWMutex
 }
 
 type cachedMetrics struct {

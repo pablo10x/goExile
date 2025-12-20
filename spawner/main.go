@@ -22,7 +22,7 @@ import (
 )
 
 // Define the application version
-const appVersion = "1.0.0" 
+const appVersion = "1.0.0"
 
 func main() {
 	// 0. Handle command-line flags immediately

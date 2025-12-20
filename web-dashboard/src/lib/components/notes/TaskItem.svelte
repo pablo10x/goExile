@@ -15,6 +15,7 @@
 	import { slide, fade } from 'svelte/transition';
 	import type { Todo, TodoComment } from '$lib/stores';
 	import { todos } from '$lib/stores';
+	import TaskItem from './TaskItem.svelte';
 
 	let { todo, onToggle, onDelete, onToggleProgress } = $props<{
 		todo: Todo;
@@ -335,7 +336,7 @@
 	{#if expanded && todo.sub_tasks && todo.sub_tasks.length > 0}
 		<div class="ml-4 mt-1 flex flex-col gap-1 border-l border-slate-700/50 pl-2" transition:slide>
 			{#each todo.sub_tasks as sub (sub.id)}
-				<svelte:self todo={sub} {onToggle} {onDelete} {onToggleProgress} />
+				<TaskItem todo={sub} {onToggle} {onDelete} {onToggleProgress} />
 			{/each}
 		</div>
 	{/if}

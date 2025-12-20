@@ -92,7 +92,7 @@ func zipDir(src string, dest string, excludes []string) error {
 		if err != nil {
 			return err
 		}
-		
+
 		header.Name = headerPath
 		header.Method = zip.Deflate // High compression
 

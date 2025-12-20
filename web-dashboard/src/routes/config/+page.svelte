@@ -612,6 +612,7 @@
 
 					{#each (activeTab === 'master' ? filteredMasterSections : filteredSpawnerSections) as section (section.id)}
 						{@const isExpanded = expandedSections.has(section.id)}
+						{@const SectionIcon = section.icon}
 						<div
 							class="bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-2xl overflow-hidden transition-all duration-300"
 						>
@@ -622,8 +623,8 @@
 							>
 								<div class="flex items-center gap-3 sm:gap-4">
 									<div class="p-2 sm:p-2.5 bg-gradient-to-br {section.gradient} rounded-lg sm:rounded-xl shadow-lg">
-																					<!-- svelte-ignore svelte_component_deprecated -->
-											<svelte:component this={section.icon} class="w-4 h-4 sm:w-5 sm:h-5 text-white" />									</div>
+										<SectionIcon class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+									</div>
 									<div class="text-left">
 										<h3 class="text-sm sm:text-lg font-semibold text-white">{section.title}</h3>
 										<p class="text-xs sm:text-sm text-slate-400 line-clamp-1 sm:line-clamp-none">{section.description}</p>

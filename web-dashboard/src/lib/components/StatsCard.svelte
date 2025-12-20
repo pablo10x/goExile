@@ -2,19 +2,35 @@
 	import type { ComponentType } from 'svelte';
 	import DOMPurify from 'dompurify';
 
-	export let title: string;
-	export let value: string | number;
-	export let Icon: ComponentType | null = null;
-	export let subValue: string = '';
-	export let subValueClass: string = 'text-slate-400';
-	export let color: 'blue' | 'emerald' | 'orange' | 'red' | 'purple' = 'blue';
+	type ColorKey = 'blue' | 'emerald' | 'orange' | 'red' | 'purple';
 
-	$: sanitizedSubValue = DOMPurify.sanitize(subValue, {
-		ALLOWED_TAGS: ['br', 'b', 'strong', 'i', 'em', 'span'],
-		ALLOWED_ATTR: ['class']
-	});
+	let {
+		title,
+		value,
+		Icon = null,
+		subValue = '',
+		subValueClass = 'text-slate-400',
+		color = 'blue'
+	} = $props<{
+		title: string;
+		value: string | number;
+		Icon?: ComponentType | null;
+		subValue?: string;
+		subValueClass?: string;
+		color?: ColorKey;
+	}>();
 
-	const colorMap = {
+	let sanitizedSubValue = $derived(
+		DOMPurify.sanitize(subValue, {
+			ALLOWED_TAGS: ['br', 'b', 'strong', 'i', 'em', 'span'],
+			ALLOWED_ATTR: ['class']
+		})
+	);
+
+	const colorMap: Record<
+		ColorKey,
+		{ border: string; text: string; bg: string; iconBg: string; glow: string }
+	> = {
 		blue: {
 			border: 'border-blue-500/30',
 			text: 'text-blue-300',
@@ -52,7 +68,7 @@
 		}
 	};
 
-	$: colors = colorMap[color] || colorMap.blue;
+	let colors = $derived(colorMap[color as ColorKey] || colorMap.blue);
 </script>
 
 <div
@@ -72,10 +88,11 @@
 		<div class="flex items-center justify-between mb-4">
 			<span class="text-slate-400 text-xs font-bold uppercase tracking-wider">{title}</span>
 			{#if Icon}
+				{@const CardIcon = Icon}
 				<div
 					class={`p-2.5 rounded-xl ${colors.iconBg} shadow-lg ${colors.glow} transition-transform duration-300 group-hover:scale-110`}
 				>
-					<svelte:component this={Icon} class="w-5 h-5 text-white" />
+					<CardIcon class="w-5 h-5 text-white" />
 				</div>
 			{/if}
 		</div>

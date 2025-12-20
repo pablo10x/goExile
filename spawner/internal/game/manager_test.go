@@ -24,7 +24,7 @@ func TestNewManager(t *testing.T) {
 func TestSpawnIntegration(t *testing.T) {
 	// Determine a command that runs for a bit then exits
 	var cmdPath string
-	
+
 	if runtime.GOOS == "windows" {
 		cmdPath = "C:\\Windows\\System32\\timeout.exe"
 		// Check if exists, else skip
@@ -39,22 +39,22 @@ func TestSpawnIntegration(t *testing.T) {
 	}
 
 	/*
-	// Integration test logic temporarily disabled due to hardcoded args in Spawn()
-	
-	cfg := &config.Config{
-		Region:         "Test",
-		GameBinaryPath: cmdPath,
-		MinGamePort:    9000,
-		MaxGamePort:    9005,
-	}
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
-	m := NewManager(cfg, logger)
+		// Integration test logic temporarily disabled due to hardcoded args in Spawn()
 
-	ctx := context.Background()
-	_, err := m.Spawn(ctx)
-	if err != nil {
-		t.Logf("Spawn failed (expected due to args): %v", err)
-	}
+		cfg := &config.Config{
+			Region:         "Test",
+			GameBinaryPath: cmdPath,
+			MinGamePort:    9000,
+			MaxGamePort:    9005,
+		}
+		logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+		m := NewManager(cfg, logger)
+
+		ctx := context.Background()
+		_, err := m.Spawn(ctx)
+		if err != nil {
+			t.Logf("Spawn failed (expected due to args): %v", err)
+		}
 	*/
 
 	// Just skip for now until refactor

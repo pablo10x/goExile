@@ -89,7 +89,7 @@ func TestEnsureInstalled_DownloadAndUnzip(t *testing.T) {
 	if _, err := os.Stat(binPath); os.IsNotExist(err) {
 		t.Errorf("Binary was not installed at %s", binPath)
 	}
-	
+
 	content, _ := os.ReadFile(binPath)
 	if string(content) != "dummy content" {
 		t.Errorf("Binary content mismatch")

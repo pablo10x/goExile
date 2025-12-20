@@ -74,7 +74,7 @@ func Load() (*Config, error) {
 		GameInstallDir: getEnv("GAME_INSTALL_DIR", *gameInstallDirFlag),
 		InstancesDir:   getEnv("INSTANCES_DIR", *instancesDirFlag),
 	}
-	
+
 	// Apply flag overrides to ensure flags always take precedence.
 	// For flags that provide their own non-zero/non-empty defaults, those already take precedence implicitly.
 	// This block handles cases where an empty env var should be overridden by a non-empty flag,

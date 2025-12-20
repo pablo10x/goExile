@@ -49,6 +49,6 @@ func (h *Handler) HandleInstanceWebSocket(c *gin.Context) {
 			}
 		}
 	}
-	
+
 	h.logger.Info("Game server WebSocket disconnected", "id", id)
 }

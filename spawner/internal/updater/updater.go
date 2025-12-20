@@ -50,7 +50,7 @@ func EnsureInstalled(cfg *config.Config, logger *slog.Logger) error {
 	// Save version info if available
 	if version != "" {
 		versionFile := filepath.Join(cfg.GameInstallDir, "version.txt")
-		// We write to a temp location first or just overwrite after unzip? 
+		// We write to a temp location first or just overwrite after unzip?
 		// Unzip happens next. If we write now, unzip might overwrite or be fine.
 		// Actually, let's write it AFTER unzip to ensure it persists.
 		defer func() {
@@ -82,10 +82,10 @@ func EnsureInstalled(cfg *config.Config, logger *slog.Logger) error {
 
 		if foundPath != "" {
 			rel, _ := filepath.Rel(cfg.GameInstallDir, foundPath)
-			logger.Warn("Game binary not found at configured path, but found elsewhere. Auto-correcting configuration.", 
-				"configured", cfg.GameBinaryPath, 
+			logger.Warn("Game binary not found at configured path, but found elsewhere. Auto-correcting configuration.",
+				"configured", cfg.GameBinaryPath,
 				"found", rel)
-			
+
 			// Update config dynamically
 			cfg.GameBinaryPath = rel
 			fullBinaryPath = foundPath // Update local var for chmod below
@@ -124,7 +124,7 @@ func UpdateTemplate(cfg *config.Config, logger *slog.Logger) (string, error) {
 	}
 
 	downloadURL := fmt.Sprintf("%s/api/spawners/download?os=%s", cfg.MasterURL, runtime.GOOS)
-	
+
 	// 2. Check remote version (HEAD request)
 	req, err := http.NewRequest("HEAD", downloadURL, nil)
 	if err != nil {
@@ -133,14 +133,14 @@ func UpdateTemplate(cfg *config.Config, logger *slog.Logger) (string, error) {
 	if cfg.MasterAPIKey != "" {
 		req.Header.Set("X-API-Key", cfg.MasterAPIKey)
 	}
-	
+
 	client := &http.Client{Timeout: 5 * http.DefaultClient.Timeout} // Short timeout for check
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("failed to check update: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	remoteVersion := resp.Header.Get("X-Game-Version")
 	logger.Info("Update Check", "url", downloadURL, "status", resp.Status, "remote_version_header", remoteVersion, "all_headers", resp.Header)
 
