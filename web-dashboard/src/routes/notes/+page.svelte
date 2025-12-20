@@ -10,10 +10,10 @@
 	import { notes, todos } from '$lib/stores';
 	import type { Note, Todo } from '$lib/stores';
 
-	let loading = $state(true);
-	let newTodoContent = $state('');
-    let searchQuery = $state('');
-
+	        let loading = $state(true);
+	        let newTodoContent = $state('');
+	        let newTodoDeadline = $state('');
+	    let searchQuery = $state('');
 	// Modal state
 	let showNoteModal = $state(false);
 	let editingNote = $state<Note | null>(null);
@@ -74,50 +74,104 @@
 		} catch (err) { console.error(err); }
 	}
 
-	async function addTodo() {
-		if (!newTodoContent.trim()) return;
+	        async function addTodo() {
+	                if (!newTodoContent.trim()) return;
+	                try {
+	                        const res = await fetch('/api/todos', {
+	                                method: 'POST',
+	                                headers: { 'Content-Type': 'application/json' },
+	                                body: JSON.stringify({ 
+	                                        content: newTodoContent, 
+	                                        done: false,
+	                                        in_progress: false,
+	                                        deadline: newTodoDeadline || null
+	                                })
+	                        });
+	                        if (res.ok) {
+	                                const saved = await res.json();
+	                                todos.update((t) => [...t, saved]);
+	                                newTodoContent = '';
+	                                newTodoDeadline = '';
+	                        }
+	                } catch (e) { console.error(e); }
+	        }
+	async function deleteTodo(id: number) {
 		try {
-			const res = await fetch('/api/todos', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ content: newTodoContent, done: false })
-			});
+			const res = await fetch(`/api/todos/${id}`, { method: 'DELETE' });
 			if (res.ok) {
-				const saved = await res.json();
-				todos.update((t) => [...t, saved]);
-				newTodoContent = '';
+				todos.update((all) => {
+					const removeFromTree = (nodes: Todo[]): Todo[] => {
+						return nodes.filter((n) => n.id !== id).map((n) => ({
+							...n,
+							sub_tasks: n.sub_tasks ? removeFromTree(n.sub_tasks) : []
+						}));
+					};
+					return removeFromTree(all);
+				});
 			}
-		} catch (e) { console.error(e); }
+		} catch (e) {
+			console.error(e);
+		}
 	}
 
 	async function toggleTodo(todo: Todo) {
-		const updated = { ...todo, done: !todo.done };
+		const updated = {
+			...todo,
+			done: !todo.done,
+			in_progress: !todo.done ? false : todo.in_progress
+		};
 		try {
 			await fetch(`/api/todos/${todo.id}`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(updated)
 			});
-			todos.update((t) => t.map((x) => (x.id === todo.id ? updated : x)));
-		} catch (e) { console.error(e); }
+			todos.update((all) => {
+				const updateTree = (nodes: Todo[]): Todo[] => {
+					return nodes.map((n) => {
+						if (n.id === todo.id) return updated;
+						if (n.sub_tasks) return { ...n, sub_tasks: updateTree(n.sub_tasks) };
+						return n;
+					});
+				};
+					return updateTree(all);
+			});
+		} catch (e) {
+			console.error(e);
+		}
 	}
 
-	async function deleteTodo(id: number) {
+	async function toggleProgress(todo: Todo) {
+		const updated = { ...todo, in_progress: !todo.in_progress, done: false };
 		try {
-			await fetch(`/api/todos/${id}`, { method: 'DELETE' });
-			todos.update((t) => t.filter((x) => x.id !== id));
-		} catch (e) { console.error(e); }
+			await fetch(`/api/todos/${todo.id}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(updated)
+			});
+			todos.update((all) => {
+				const updateTree = (nodes: Todo[]): Todo[] => {
+					return nodes.map((n) => {
+						if (n.id === todo.id) return updated;
+						if (n.sub_tasks) return { ...n, sub_tasks: updateTree(n.sub_tasks) };
+						return n;
+					});
+				};
+				return updateTree(all);
+			});
+		} catch (e) {
+			console.error(e);
+		}
 	}
 
-    let filteredNotes = $derived($notes.filter(n => 
-        searchQuery === '' || 
-        n.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        n.content.toLowerCase().includes(searchQuery.toLowerCase())
-    ));
-
-    let pendingTodos = $derived($todos.filter(t => !t.done));
-    let completedTodos = $derived($todos.filter(t => t.done));
-
+    	let filteredNotes = $derived(($notes || []).filter((n) => 
+    		searchQuery === '' || 
+    		n.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    		n.content.toLowerCase().includes(searchQuery.toLowerCase())
+    	));
+    
+    	let pendingTodos = $derived(($todos || []).filter((t) => !t.done && !t.parent_id));
+    	let completedTodos = $derived(($todos || []).filter((t) => t.done && !t.parent_id));
 	onMount(loadData);
 </script>
 
@@ -138,25 +192,43 @@
             </div>
         </div>
 
-        <!-- Task Input -->
         <div class="p-4 border-b border-slate-700/50 bg-slate-900/30 shrink-0">
             <form
                 onsubmit={(e) => { e.preventDefault(); addTodo(); }}
-                class="flex gap-2"
+                class="flex flex-col gap-2"
             >
-                <input
-                    type="text"
-                    bind:value={newTodoContent}
-                    placeholder="New task..."
-                    class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all"
-                />
-                <button
-                    type="submit"
-                    disabled={!newTodoContent.trim()}
-                    class="p-2 bg-slate-700 hover:bg-emerald-600 text-white rounded-lg transition-colors disabled:opacity-50"
-                >
-                    <Plus class="w-4 h-4" />
-                </button>
+                <div class="flex gap-2">
+                    <input
+                        type="text"
+                        bind:value={newTodoContent}
+                        placeholder="New task..."
+                        class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all"
+                    />
+                    <button
+                        type="submit"
+                        disabled={!newTodoContent.trim()}
+                        class="p-2 bg-slate-700 hover:bg-emerald-600 text-white rounded-lg transition-colors disabled:opacity-50"
+                    >
+                        <Plus class="w-4 h-4" />
+                    </button>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Deadline:</label>
+                    <input
+                        type="date"
+                        bind:value={newTodoDeadline}
+                        class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-[10px] text-slate-300 outline-none focus:border-slate-500 transition-colors"
+                    />
+                    {#if newTodoDeadline}
+                        <button 
+                            type="button" 
+                            onclick={() => newTodoDeadline = ''}
+                            class="text-[10px] text-red-400 hover:text-red-300"
+                        >
+                            Clear
+                        </button>
+                    {/if}
+                </div>
             </form>
         </div>
 
@@ -169,8 +241,7 @@
                     <div class="space-y-2">
                         {#each pendingTodos as todo (todo.id)}
                             <div animate:flip={{ duration: 300 }}>
-                                <TaskItem {todo} onToggle={toggleTodo} onDelete={deleteTodo} />
-                            </div>
+                                								<TaskItem {todo} onToggle={toggleTodo} onDelete={deleteTodo} onToggleProgress={toggleProgress} />                            </div>
                         {/each}
                     </div>
                 {/if}
@@ -183,8 +254,7 @@
                     <div class="space-y-2 opacity-60">
                         {#each completedTodos as todo (todo.id)}
                             <div animate:flip={{ duration: 300 }}>
-                                <TaskItem {todo} onToggle={toggleTodo} onDelete={deleteTodo} />
-                            </div>
+                                								<TaskItem {todo} onToggle={toggleTodo} onDelete={deleteTodo} onToggleProgress={toggleProgress} />                            </div>
                         {/each}
                     </div>
                 {/if}

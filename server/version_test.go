@@ -1,9 +1,12 @@
-package main
+package main_test
 
 import (
 	"os"
 	"testing"
 	"time"
+
+	"exile/server/database"
+	"exile/server/models"
 )
 
 func TestDBVersions(t *testing.T) {
@@ -12,13 +15,14 @@ func TestDBVersions(t *testing.T) {
 		t.Skip("DB_DSN not set, skipping DB test")
 	}
 
-	db, err := InitDB(dsn)
+	err := database.InitDB(dsn)
 	if err != nil {
 		t.Fatalf("init db: %v", err)
 	}
-	defer CloseDB(db)
+	db := database.DBConn
+	defer database.CloseDB(db)
 
-	v1 := &GameServerVersion{
+	v1 := &models.GameServerVersion{
 		Filename:   "test_v1.zip",
 		Comment:    "Initial upload",
 		UploadedAt: time.Now().UTC(),
@@ -26,12 +30,12 @@ func TestDBVersions(t *testing.T) {
 	}
 
 	// 1. Save v1
-	if err := SaveServerVersion(db, v1); err != nil {
+	if err := database.SaveServerVersion(db, v1); err != nil {
 		t.Fatalf("save v1: %v", err)
 	}
 
 	// 2. List
-	list, err := ListServerVersions(db)
+	list, err := database.ListServerVersions(db)
 	if err != nil {
 		t.Fatalf("list: %v", err)
 	}
@@ -45,12 +49,12 @@ func TestDBVersions(t *testing.T) {
 	}
 
 	// 3. Set Active
-	if err := SetActiveVersion(db, v1ID); err != nil {
+	if err := database.SetActiveVersion(db, v1ID); err != nil {
 		t.Fatalf("set active: %v", err)
 	}
 
 	// 4. Get Active
-	active, err := GetActiveServerVersion(db)
+	active, err := database.GetActiveServerVersion(db)
 	if err != nil {
 		t.Fatalf("get active: %v", err)
 	}
@@ -62,19 +66,19 @@ func TestDBVersions(t *testing.T) {
 	}
 
 	// 5. Add v2
-	v2 := &GameServerVersion{
+	v2 := &models.GameServerVersion{
 		Filename:   "test_v2.zip",
 		Comment:    "Second upload",
 		UploadedAt: time.Now().UTC(),
 		IsActive:   false,
 	}
-	if err := SaveServerVersion(db, v2); err != nil {
+	if err := database.SaveServerVersion(db, v2); err != nil {
 		t.Fatalf("save v2: %v", err)
 	}
 
 	// 6. Switch Active to v2
 	// Retrieve v2 ID
-	list, _ = ListServerVersions(db)
+	list, _ = database.ListServerVersions(db)
 	var v2ID int
 	for _, v := range list {
 		if v.Filename == "test_v2.zip" {
@@ -83,11 +87,11 @@ func TestDBVersions(t *testing.T) {
 		}
 	}
 
-	if err := SetActiveVersion(db, v2ID); err != nil {
+	if err := database.SetActiveVersion(db, v2ID); err != nil {
 		t.Fatalf("switch active to v2: %v", err)
 	}
 
-	active, err = GetActiveServerVersion(db)
+	active, err = database.GetActiveServerVersion(db)
 	if err != nil {
 		t.Fatalf("get active 2: %v", err)
 	}
@@ -96,7 +100,7 @@ func TestDBVersions(t *testing.T) {
 	}
 
 	// 7. Delete v1
-	filename, err := DeleteServerVersion(db, v1ID)
+	filename, err := database.DeleteServerVersion(db, v1ID)
 	if err != nil {
 		t.Fatalf("delete v1: %v", err)
 	}
@@ -104,7 +108,7 @@ func TestDBVersions(t *testing.T) {
 		t.Fatalf("expected filename test_v1.zip, got %s", filename)
 	}
 
-	list, _ = ListServerVersions(db)
+	list, _ = database.ListServerVersions(db)
 	if len(list) != 1 {
 		t.Fatalf("expected 1 version after delete, got %d", len(list))
 	}

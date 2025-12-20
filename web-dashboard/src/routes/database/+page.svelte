@@ -588,12 +588,11 @@
 																		<span class="font-medium text-slate-200">{table.name}</span>
 																	</div>
 																</td>
-																<td class="px-6 py-4 text-right">
-																	<span class="font-mono text-slate-300"
-																		>{table.count.toLocaleString()}</span
-																	>
-																</td>
-															</tr>
+																                                                          <td class="px-6 py-4 text-right">
+																                                                          <span class="font-mono text-slate-300"
+																                                                          >{table.count?.toLocaleString() ?? '0'}</span
+																                                                          >
+																                                                          </td>															</tr>
 														{/each}
 													</tbody>
 												</table>

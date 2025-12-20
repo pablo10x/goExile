@@ -1,4 +1,4 @@
-package main
+package main_test
 
 import (
 	"bytes"
@@ -9,14 +9,15 @@ import (
 	"testing"
 	"time"
 
+	"exile/server/handlers"
+	"exile/server/models"
+	"exile/server/registry"
+
 	"github.com/gorilla/mux"
 )
 
 func resetRegistry() {
-	registry = &Registry{
-		nextID: 1,
-		items:  make(map[int]*Spawner),
-	}
+	registry.GlobalRegistry.Reset()
 }
 
 func TestRegisterAndGetSpawner(t *testing.T) {
@@ -33,10 +34,9 @@ func TestRegisterAndGetSpawner(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
-	RegisterSpawner(w, req)
+	handlers.RegisterSpawner(w, req)
 	if w.Code != http.StatusCreated {
 		t.Fatalf("expected 201 Created, got %d, body: %s", w.Code, w.Body.String())
-
 	}
 
 	var resp map[string]int
@@ -52,11 +52,11 @@ func TestRegisterAndGetSpawner(t *testing.T) {
 	req2 := httptest.NewRequest("GET", "/api/spawners/"+strconv.Itoa(id), nil)
 	req2 = mux.SetURLVars(req2, map[string]string{"id": strconv.Itoa(id)})
 	w2 := httptest.NewRecorder()
-	GetSpawner(w2, req2)
+	handlers.GetSpawner(w2, req2)
 	if w2.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK, got %d", w2.Code)
 	}
-	var s Spawner
+	var s models.Spawner
 	if err := json.NewDecoder(w2.Body).Decode(&s); err != nil {
 		t.Fatalf("decode spawner: %v", err)
 	}
@@ -67,8 +67,11 @@ func TestRegisterAndGetSpawner(t *testing.T) {
 
 func TestHeartbeatUpdatesLastSeen(t *testing.T) {
 	resetRegistry()
-	id, _ := registry.Register(&Spawner{Region: "hb", Host: "127.0.0.1", Port: 7777, MaxInstances: 4, CurrentInstances: 0, Status: "active"})
-	old := registry.items[id].LastSeen
+	id, _ := registry.GlobalRegistry.Register(&models.Spawner{Region: "hb", Host: "127.0.0.1", Port: 7777, MaxInstances: 4, CurrentInstances: 0, Status: "active"})
+
+	s, _ := registry.GlobalRegistry.Get(id)
+	old := s.LastSeen
+
 	// small sleep to ensure new timestamp is different
 	time.Sleep(10 * time.Millisecond)
 
@@ -84,28 +87,30 @@ func TestHeartbeatUpdatesLastSeen(t *testing.T) {
 	req = mux.SetURLVars(req, map[string]string{"id": strconv.Itoa(id)})
 	w := httptest.NewRecorder()
 
-	HeartbeatSpawner(w, req)
+	handlers.HeartbeatSpawner(w, req)
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK, got %d, body: %s", w.Code, w.Body.String())
 	}
-	if !registry.items[id].LastSeen.After(old) {
-		t.Fatalf("expected LastSeen to be updated: old=%v new=%v", old, registry.items[id].LastSeen)
+
+	s2, _ := registry.GlobalRegistry.Get(id)
+	if !s2.LastSeen.After(old) {
+		t.Fatalf("expected LastSeen to be updated: old=%v new=%v", old, s2.LastSeen)
 	}
 }
 
 func TestListSpawners(t *testing.T) {
 	resetRegistry()
-	registry.Register(&Spawner{Region: "a", Host: "1.1.1.1", Port: 1111, MaxInstances: 2})
-	registry.Register(&Spawner{Region: "b", Host: "2.2.2.2", Port: 2222, MaxInstances: 4})
+	registry.GlobalRegistry.Register(&models.Spawner{Region: "a", Host: "1.1.1.1", Port: 1111, MaxInstances: 2})
+	registry.GlobalRegistry.Register(&models.Spawner{Region: "b", Host: "2.2.2.2", Port: 2222, MaxInstances: 4})
 
 	req := httptest.NewRequest("GET", "/api/spawners", nil)
 	w := httptest.NewRecorder()
 
-	ListSpawners(w, req)
+	handlers.ListSpawners(w, req)
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK, got %d", w.Code)
 	}
-	var list []Spawner
+	var list []models.Spawner
 	if err := json.NewDecoder(w.Body).Decode(&list); err != nil {
 		t.Fatalf("decode list: %v", err)
 	}
@@ -116,13 +121,13 @@ func TestListSpawners(t *testing.T) {
 
 func TestDeleteSpawner(t *testing.T) {
 	resetRegistry()
-	id, _ := registry.Register(&Spawner{Region: "to-delete", Host: "3.3.3.3", Port: 3333, MaxInstances: 4})
+	id, _ := registry.GlobalRegistry.Register(&models.Spawner{Region: "to-delete", Host: "3.3.3.3", Port: 3333, MaxInstances: 4})
 
 	req := httptest.NewRequest("DELETE", "/api/spawners/"+strconv.Itoa(id), nil)
 	req = mux.SetURLVars(req, map[string]string{"id": strconv.Itoa(id)})
 	w := httptest.NewRecorder()
 
-	DeleteSpawner(w, req)
+	handlers.DeleteSpawner(w, req)
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK, got %d", w.Code)
 	}
@@ -131,7 +136,7 @@ func TestDeleteSpawner(t *testing.T) {
 	req2 := httptest.NewRequest("GET", "/api/spawners/"+strconv.Itoa(id), nil)
 	req2 = mux.SetURLVars(req2, map[string]string{"id": strconv.Itoa(id)})
 	w2 := httptest.NewRecorder()
-	GetSpawner(w2, req2)
+	handlers.GetSpawner(w2, req2)
 	if w2.Code != http.StatusNotFound {
 		t.Fatalf("expected 404 Not Found after delete, got %d", w2.Code)
 	}

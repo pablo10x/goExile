@@ -272,7 +272,7 @@
                                         {/if}
                                     </div>
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap font-mono text-xs text-slate-500">{new Date(log.timestamp).toLocaleString()}</td>
+                                <td class="px-4 py-3 whitespace-nowrap font-mono text-xs text-slate-500">{log.timestamp ? new Date(log.timestamp).toLocaleString() : '-'}</td>
                                 <td class="px-4 py-3 font-bold {getLevelColor(log.level)}">{log.level}</td>
                                 <td class="px-4 py-3">
                                     <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-800 text-xs border border-slate-700">
@@ -323,7 +323,7 @@
                             <span class={getLevelColor(selectedLog.level)}>{selectedLog.level}</span>
                             Log Details
                         </h3>
-                        <p class="text-slate-400 text-sm mt-1">{new Date(selectedLog.timestamp).toLocaleString()}</p>
+                        <p class="text-slate-400 text-sm mt-1">{selectedLog.timestamp ? new Date(selectedLog.timestamp).toLocaleString() : '-'}</p>
                     </div>
                     <button onclick={() => selectedLog = null} class="text-slate-500 hover:text-white">✕</button>
                 </div>

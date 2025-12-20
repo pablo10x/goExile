@@ -1,0 +1,188 @@
+package models
+
+import "time"
+
+// ErrorResponse is a minimal JSON structure used for error payloads.
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
+
+// Spawner instance registered by the Spawner service
+type Spawner struct {
+	ID               int       `json:"id"`
+	Name             string    `json:"name"`   // Giga Chad Name (Identity)
+	Region           string    `json:"region"` // Geographic region (e.g. US-East)
+	Host             string    `json:"host"`
+	Port             int       `json:"port"`
+	MaxInstances     int       `json:"max_instances"`
+	CurrentInstances int       `json:"current_instances"`
+	Status           string    `json:"status"`
+	LastSeen         time.Time `json:"last_seen"`
+	// System Metrics
+	CpuUsage    float64 `json:"cpu_usage"`  // Percent
+	MemUsed     uint64  `json:"mem_used"`   // Bytes
+	MemTotal    uint64  `json:"mem_total"`  // Bytes
+	DiskUsed    uint64  `json:"disk_used"`  // Bytes
+	DiskTotal   uint64  `json:"disk_total"` // Bytes
+	GameVersion string  `json:"game_version"`
+}
+
+// GameServerVersion represents a specific uploaded version of the game server package.
+type GameServerVersion struct {
+	ID         int       `json:"id" db:"id"`
+	Filename   string    `json:"filename" db:"filename"`
+	Version    string    `json:"version" db:"version"`
+	Comment    string    `json:"comment" db:"comment"`
+	UploadedAt time.Time `json:"uploaded_at" db:"-"` // Handled via unix timestamp in DB
+	IsActive   bool      `json:"is_active" db:"is_active"`
+}
+
+// ServerConfig represents a configuration setting for the server.
+type ServerConfig struct {
+	ID              int       `json:"id" db:"id"`
+	Key             string    `json:"key" db:"key"`
+	Value           string    `json:"value" db:"value"`
+	Type            string    `json:"type" db:"type"`         // string, int, bool, duration
+	Category        string    `json:"category" db:"category"` // system, spawner, security
+	Description     string    `json:"description" db:"description"`
+	IsReadOnly      bool      `json:"is_read_only" db:"is_read_only"`
+	RequiresRestart bool      `json:"requires_restart" db:"requires_restart"`
+	UpdatedAt       time.Time `json:"updated_at" db:"updated_at"`
+	UpdatedBy       string    `json:"updated_by" db:"updated_by"`
+}
+
+// InstanceAction represents a recorded action performed on an instance.
+type InstanceAction struct {
+	ID         int       `json:"id" db:"id"`
+	SpawnerID  int       `json:"spawner_id" db:"spawner_id"`
+	InstanceID string    `json:"instance_id" db:"instance_id"`
+	Action     string    `json:"action" db:"action"`
+	Timestamp  time.Time `json:"timestamp" db:"timestamp"`
+	Status     string    `json:"status" db:"status"` // "success" or "failed"
+	Details    string    `json:"details" db:"details"`
+}
+
+// EnrollmentKey represents a temporary key used for spawner enrollment
+type EnrollmentKey struct {
+	Key         string     `json:"key"`
+	ExpiresAt   time.Time  `json:"expires_at"`
+	CreatedAt   time.Time  `json:"created_at"`
+	CreatedBy   string     `json:"created_by"`
+	Used        bool       `json:"used"`
+	UsedAt      *time.Time `json:"used_at,omitempty"`
+	UsedBy      *int       `json:"used_by,omitempty"` // Spawner ID that used the key
+	SpawnerInfo *struct {
+		ID     int    `json:"id"`
+		Region string `json:"region"`
+		Host   string `json:"host"`
+		Port   int    `json:"port"`
+	} `json:"spawner_info,omitempty"` // Info about the spawner that enrolled
+}
+
+// Note represents a sticky note on the dashboard.
+type Note struct {
+	ID        int       `json:"id" db:"id"`
+	Title     string    `json:"title" db:"title"`
+	Content   string    `json:"content" db:"content"`
+	Color     string    `json:"color" db:"color"`           // css class or hex
+	Status    string    `json:"status" db:"status"`         // e.g., "normal", "warn", "critical"
+	Rotation  float64   `json:"rotation" db:"rotation"`     // visual rotation
+	CreatedAt time.Time `json:"created_at" db:"created_at"` // Handle unix conversion in DB layer
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"` // Last update timestamp
+}
+
+// Todo represents a task in the todo list.
+type Todo struct {
+	ID         int           `json:"id" db:"id"`
+	ParentID   *int          `json:"parent_id,omitempty" db:"parent_id"`
+	Content    string        `json:"content" db:"content"`
+	Done       bool          `json:"done" db:"done"`
+	InProgress bool          `json:"in_progress" db:"in_progress"`
+	CreatedAt  time.Time     `json:"created_at" db:"created_at"`
+	Deadline   *time.Time    `json:"deadline,omitempty" db:"deadline"`
+	SubTasks   []Todo        `json:"sub_tasks,omitempty"`
+	Comments   []TodoComment `json:"comments,omitempty"`
+}
+
+type TodoComment struct {
+	ID        int       `json:"id" db:"id"`
+	TodoID    int       `json:"todo_id" db:"todo_id"`
+	Content   string    `json:"content" db:"content"`
+	Author    string    `json:"author" db:"author"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+}
+
+// AIChatRequest represents a message sent to the AI bot.
+type AIChatRequest struct {
+	Message string `json:"message"`
+	Context string `json:"context"` // "notes", "todos", or "general"
+}
+
+// AIChatResponse represents the response from the AI.
+type AIChatResponse struct {
+	Response      string `json:"response"`
+	SuggestedTodo string `json:"suggested_todo,omitempty"` // Optional todo to add
+}
+
+// SystemLog represents a log entry for system events and errors.
+type SystemLog struct {
+	ID        int       `json:"id" db:"id"`
+	Timestamp time.Time `json:"timestamp" db:"timestamp"`
+	Level     string    `json:"level" db:"level"`       // INFO, WARN, ERROR, FATAL
+	Category  string    `json:"category" db:"category"` // INTERNAL, SPAWNER, SECURITY, GENERAL
+	Source    string    `json:"source" db:"source"`     // e.g. "middleware", "auth_handler"
+	Message   string    `json:"message" db:"message"`
+	Details   string    `json:"details" db:"details"` // JSON or text details
+	ClientIP  string    `json:"client_ip" db:"client_ip"`
+	Path      string    `json:"path" db:"path"`
+	Method    string    `json:"method" db:"method"`
+}
+
+// RedEyeRule represents a rule for the RedEye security system.
+type RedEyeRule struct {
+	ID          int       `json:"id" db:"id"`
+	Name        string    `json:"name" db:"name"`
+	CIDR        string    `json:"cidr" db:"cidr"`                 // IP or CIDR
+	Port        string    `json:"port" db:"port"`                 // "80", "80-90", "*"
+	PathPattern string    `json:"path_pattern" db:"path_pattern"` // Regex or prefix for path matching
+	Protocol    string    `json:"protocol" db:"protocol"`         // "TCP", "UDP", "ICMP", "ANY"
+	Action      string    `json:"action" db:"action"`             // "ALLOW", "DENY", "RATE_LIMIT"
+	RateLimit   int       `json:"rate_limit" db:"rate_limit"`     // Requests per second (if Action=RATE_LIMIT)
+	Burst       int       `json:"burst" db:"burst"`               // Burst size
+	Enabled     bool      `json:"enabled" db:"enabled"`
+	CreatedAt   time.Time `json:"created_at" db:"created_at"`
+}
+
+// RedEyeLog represents a log entry for a RedEye event.
+type RedEyeLog struct {
+	ID        int       `json:"id" db:"id"`
+	RuleID    *int      `json:"rule_id" db:"rule_id"`
+	SourceIP  string    `json:"source_ip" db:"source_ip"`
+	DestPort  int       `json:"dest_port" db:"dest_port"`
+	Protocol  string    `json:"protocol" db:"protocol"`
+	Action    string    `json:"action" db:"action"`
+	Timestamp time.Time `json:"timestamp" db:"timestamp"`
+}
+
+// RedEyeAnticheatEvent represents a suspicious activity reported by game servers.
+type RedEyeAnticheatEvent struct {
+	ID           int       `json:"id" db:"id"`
+	PlayerID     string    `json:"player_id" db:"player_id"`
+	GameServerID int       `json:"game_server_id" db:"game_server_id"`
+	EventType    string    `json:"event_type" db:"event_type"` // e.g. "SPEEDHACK"
+	Details      string    `json:"details" db:"details"`
+	ClientIP     string    `json:"client_ip" db:"client_ip"`
+	Severity     int       `json:"severity" db:"severity"` // 1-100
+	Timestamp    time.Time `json:"timestamp" db:"timestamp"`
+}
+
+// RedEyeIPReputation tracks the reputation of IPs based on events.
+type RedEyeIPReputation struct {
+	IP              string     `json:"ip" db:"ip"`
+	ReputationScore int        `json:"reputation_score" db:"reputation_score"` // 0=Good, 100=Bad
+	TotalEvents     int        `json:"total_events" db:"total_events"`
+	LastSeen        time.Time  `json:"last_seen" db:"last_seen"`
+	IsBanned        bool       `json:"is_banned" db:"is_banned"`
+	BanReason       string     `json:"ban_reason" db:"ban_reason"`
+	BanExpiresAt    *time.Time `json:"ban_expires_at" db:"ban_expires_at"`
+}

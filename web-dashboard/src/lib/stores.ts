@@ -92,8 +92,21 @@ export const notes = writable<Note[]>([]);
 
 export interface Todo {
 	id: number;
+	parent_id?: number;
 	content: string;
 	done: boolean;
+	in_progress: boolean;
+	created_at: string;
+	deadline?: string;
+	sub_tasks?: Todo[];
+	comments?: TodoComment[];
+}
+
+export interface TodoComment {
+	id: number;
+	todo_id: number;
+	content: string;
+	author?: string;
 	created_at: string;
 }
 

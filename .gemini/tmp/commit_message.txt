@@ -1,0 +1,23 @@
+feat: Enhance RedEye system with OS-level IP blocking and accessibility improvements
+
+This commit introduces several enhancements to the RedEye security system and improves accessibility across the web-dashboard.
+
+Backend (server):
+- Integrated OS-level IP blocking (UFW on Linux) for RedEye DENY rules.
+- `server/db.go`:
+    - Modified `CreateRedEyeRule`, `UpdateRedEyeRule`, `DeleteRedEyeRule` to automatically apply/remove UFW rules based on rule actions.
+    - Modified `UnbanIP` to remove OS-level blocks upon unbanning.
+    - Added `GetRedEyeRuleByID` helper for rule management.
+- `server/redeye_core.go`:
+    - Implemented `BlockIPSystem` and `UnblockIPSystem` for UFW interaction.
+    - Incorporated `BlockIPSystem` into `RunAnomalyDetection` for automatic blocking.
+
+Frontend (web-dashboard):
+- Fixed `AnticheatEvent` interface in `web-dashboard/src/routes/redeye/+page.svelte` to correctly include `player_id`.
+- Addressed multiple accessibility warnings (`a11y_no_static_element_interactions`, `a11y_click_events_have_key_events`, `a11y_label_has_associated_control`) by:
+    - Adding `role="button"`, `tabindex="0"`, and keyboard event handlers (`onkeydown`) to modal overlay divs in `redeye/+page.svelte`, `NoteCard.svelte`, and `logs/+page.svelte`.
+    - Associating labels with input fields using `for` and `id` attributes in `redeye/+page.svelte`.
+    - Refactoring the "Action" radio button group in `web-dashboard/src/routes/redeye/+page.svelte` to use `<fieldset>` and `<legend>` for semantic grouping.
+    - Removed `tabindex="0"` from `web-dashboard/src/lib/components/QuickActionsTooltip.svelte` as `role="group"` is non-interactive.
+
+This commit ensures better integration of the RedEye system with the underlying OS for enhanced security and improves the usability and accessibility of the web-dashboard.

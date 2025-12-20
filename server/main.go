@@ -10,7 +10,6 @@ package main
 import (
 	"context"
 	"fmt"
-
 	"log"
 	"net/http"
 	"os"
@@ -20,6 +19,18 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
+
+	"exile/server/auth"
+	"exile/server/config"
+	"exile/server/database"
+	"exile/server/enrollment"
+	"exile/server/handlers"
+	"exile/server/middleware"
+	"exile/server/redeye"
+	"exile/server/registry"
+	"exile/server/sse"
+	"exile/server/utils"
+	"exile/server/ws"
 )
 
 // Configuration constants used by the registry.
@@ -52,26 +63,26 @@ func run() error {
 	_ = godotenv.Load()
 
 	// Print startup banner
-	PrintBanner()
+	utils.PrintBanner()
 
 	fmt.Println()
 	fmt.Printf("  %s%s▸ Initializing Services%s\n", "\033[1m", "\033[36m", "\033[0m")
 	fmt.Printf("  %s────────────────────────────────────────%s\n", "\033[2m", "\033[0m")
 
 	// Initialize authentication & session management
-	authConfig := GetAuthConfig()
-	sessionStore := NewSessionStore(authConfig.IsProduction)
+	authConfig := auth.GetAuthConfig()
+	sessionStore := auth.NewSessionStore(authConfig.IsProduction)
 	go sessionStore.CleanupExpiredSessions()
-	PrintSection("Authentication", "ready", true)
+	utils.PrintSection("Authentication", "ready", true)
 
 	// Initialize Enrollment Manager for spawner enrollment
-	InitializeEnrollmentManager()
-	PrintSection("Enrollment Manager", "ready", true)
+	enrollment.InitializeEnrollmentManager()
+	utils.PrintSection("Enrollment Manager", "ready", true)
 
 	// Initialize SSE hub for real-time dashboard updates
-	sseHub := NewSSEHub()
+	sseHub := sse.NewSSEHub()
 	go sseHub.Run()
-	PrintSection("SSE Hub", "ready", true)
+	utils.PrintSection("SSE Hub", "ready", true)
 
 	// Initialize Router
 	router := mux.NewRouter()
@@ -79,76 +90,74 @@ func run() error {
 	// Initialize Database (PostgreSQL)
 	dbDSN := os.Getenv("DB_DSN")
 	if dbDSN == "" {
-		PrintSection("Database", "disabled (no DB_DSN)", false)
+		utils.PrintSection("Database", "disabled (no DB_DSN)", false)
 	} else {
 		var err error
-		dbConn, err = InitDB(dbDSN)
+		err = database.InitDB(dbDSN)
 		if err != nil {
-			PrintSection("Database", "failed", false)
-			PrintSubItem(err.Error())
-			GlobalStats.SetDBConnected(false)
+			utils.PrintSection("Database", "failed", false)
+			utils.PrintSubItem(err.Error())
+			registry.GlobalStats.SetDBConnected(false)
 		} else {
-			GlobalStats.SetDBConnected(true)
+			registry.GlobalStats.SetDBConnected(true)
 			// Load existing spawners from DB to restore state
-			loaded, _ := LoadSpawners(dbConn)
+			loaded, _ := database.LoadSpawners(database.DBConn)
 			if len(loaded) > 0 {
-				maxID := registry.nextID - 1
-				registry.mu.Lock()
+				maxID := registry.GetNextID() - 1
 				for i := range loaded {
 					s := loaded[i]
 					copyS := s
 					// Reconcile status: if marked online in DB but not actually connected via WS, set to offline
-					if copyS.Status == "Online" && !GlobalWSManager.IsClientConnected(copyS.ID) {
+					if copyS.Status == "Online" && !ws.GlobalWSManager.IsClientConnected(copyS.ID) {
 						log.Printf("INFO: Spawner ID %d was marked 'Online' in DB but not connected to WebSocket. Marking 'Offline'.", copyS.ID)
 						copyS.Status = "Offline"
 						// Optionally, persist this change to DB immediately, but WSManager will handle it on reconnect/disconnect
 						// For now, only update in-memory to reflect reality for the Dashboard
 					}
-					registry.items[copyS.ID] = &copyS
+					registry.SetItem(copyS.ID, &copyS)
 					if copyS.ID > maxID {
 						maxID = copyS.ID
 					}
 				}
-				registry.nextID = maxID + 1
-				registry.mu.Unlock()
-				PrintSection("Database", "connected", true)
-				PrintSubItem(fmt.Sprintf("Loaded %d spawners", len(loaded)))
+				utils.PrintSection("Database", "connected", true)
+				utils.PrintSubItem(fmt.Sprintf("Loaded %d spawners", len(loaded)))
 			} else {
-				PrintSection("Database", "connected", true)
+				utils.PrintSection("Database", "connected", true)
 			}
 		}
 
 		// Initialize Read-Only Database (Optional but recommended)
 		roDSN := os.Getenv("READONLY_DB_DSN")
 		if roDSN != "" {
-			readOnlyConn, err = InitReadOnlyDB(roDSN)
+			err = database.InitReadOnlyDB(roDSN)
 			if err != nil {
-				PrintSection("Read-Only DB", "failed", false)
-				PrintSubItem(err.Error())
+				utils.PrintSection("Read-Only DB", "failed", false)
+				utils.PrintSubItem(err.Error())
+
 			} else {
-				PrintSection("Read-Only DB", "connected", true)
+				utils.PrintSection("Read-Only DB", "connected", true)
 			}
 		} else {
 			// If not set, use main connection but fallback to regex validation
-			readOnlyConn = dbConn
-			if dbConn != nil {
-				PrintSection("Read-Only DB", "using primary (fallback)", true)
+			database.ReadOnlyDBConn = database.DBConn
+			if database.DBConn != nil {
+				utils.PrintSection("Read-Only DB", "using primary (fallback)", true)
 			}
 		}
 	}
 
 	// Initialize RedEye Background Tasks
-	if dbConn != nil {
-		StartRedEyeBackground(dbConn)
+	if database.DBConn != nil {
+		redeye.StartRedEyeBackground(database.DBConn)
 	}
 
 	// Initialize Firebase Remote Config
-	_ = InitFirebase()
-	if firebaseManager != nil && firebaseManager.connected {
-		PrintSection("Firebase", "connected", true)
-		PrintSubItem(fmt.Sprintf("Project: %s", firebaseManager.projectID))
+	_ = auth.InitFirebase()
+	if auth.FirebaseMgr != nil && auth.FirebaseMgr.Connected {
+		utils.PrintSection("Firebase", "connected", true)
+		utils.PrintSubItem(fmt.Sprintf("Project: %s", auth.FirebaseMgr.ProjectID))
 	} else {
-		PrintSection("Firebase", "disabled", false)
+		utils.PrintSection("Firebase", "disabled", false)
 	}
 
 	port := "8081"
@@ -162,7 +171,7 @@ func run() error {
 	isProduction := os.Getenv("PRODUCTION_MODE") == "true"
 
 	// Start WS Manager
-	go GlobalWSManager.Run()
+	go ws.GlobalWSManager.Run()
 
 	if isProduction {
 		if apiKey == "" {
@@ -175,198 +184,200 @@ func run() error {
 	}
 
 	// Always enforce Unified Auth (API Key OR Session)
-	apiRouter.Use(UnifiedAuthMiddleware(apiKey, authConfig, sessionStore))
+	apiRouter.Use(middleware.UnifiedAuthMiddleware(apiKey, authConfig, sessionStore))
 
-	apiRouter.HandleFunc("/ws", GlobalWSManager.HandleWS) // WebSocket Endpoint
-	apiRouter.HandleFunc("/download", ServeGameServerFile).Methods("GET", "HEAD")
+	apiRouter.HandleFunc("/ws", ws.GlobalWSManager.HandleWS) // WebSocket Endpoint
+	apiRouter.HandleFunc("/download", handlers.ServeGameServerFile).Methods("GET", "HEAD")
 	// apiRouter.HandleFunc("", RegisterSpawner).Methods("POST") // Disabled to enforce enrollment flow
-	apiRouter.HandleFunc("", ListSpawners).Methods("GET")     // Maybe this should be public or auth? Keeping consistent
-	apiRouter.HandleFunc("/{id}", GetSpawner).Methods("GET")
-	apiRouter.HandleFunc("/{id}", DeleteSpawner).Methods("DELETE")
-	apiRouter.HandleFunc("/{id}/spawn", SpawnInstance).Methods("POST")
-	apiRouter.HandleFunc("/{id}/heartbeat", HeartbeatSpawner).Methods("POST")
-	apiRouter.HandleFunc("/{id}/logs", GetSpawnerLogs).Methods("GET")
-	apiRouter.HandleFunc("/{id}/logs", ClearSpawnerLogs).Methods("DELETE")
-	apiRouter.HandleFunc("/{id}/instances", ListSpawnerInstances).Methods("GET")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/logs", GetInstanceLogs).Methods("GET")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/logs", ClearInstanceLogs).Methods("DELETE")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/stats", GetInstanceStats).Methods("GET")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/start", StartSpawnerInstance).Methods("POST")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/stop", StopSpawnerInstance).Methods("POST")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/restart", RestartSpawnerInstance).Methods("POST")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/update", UpdateSpawnerInstance).Methods("POST")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/rename", RenameSpawnerInstance).Methods("POST")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}", RemoveSpawnerInstance).Methods("DELETE")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/backup", BackupSpawnerInstance).Methods("POST")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/restore", RestoreSpawnerInstance).Methods("POST")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/backups", ListSpawnerBackups).Methods("GET")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/backup/delete", DeleteSpawnerBackup).Methods("POST")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/stats/history", GetInstanceHistory).Methods("GET")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/history", GetInstanceHistoryActions).Methods("GET")
-	apiRouter.HandleFunc("/{id}/update-template", UpdateSpawnerTemplate).Methods("POST")
+	apiRouter.HandleFunc("", handlers.ListSpawners).Methods("GET") // Maybe this should be public or auth? Keeping consistent
+	apiRouter.HandleFunc("/{id}", handlers.GetSpawner).Methods("GET")
+	apiRouter.HandleFunc("/{id}", handlers.DeleteSpawner).Methods("DELETE")
+	apiRouter.HandleFunc("/{id}/spawn", handlers.SpawnInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/heartbeat", handlers.HeartbeatSpawner).Methods("POST")
+	apiRouter.HandleFunc("/{id}/logs", handlers.GetSpawnerLogs).Methods("GET")
+	apiRouter.HandleFunc("/{id}/logs", handlers.ClearSpawnerLogs).Methods("DELETE")
+	apiRouter.HandleFunc("/{id}/instances", handlers.ListSpawnerInstances).Methods("GET")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/logs", handlers.GetInstanceLogs).Methods("GET")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/logs", handlers.ClearInstanceLogs).Methods("DELETE")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/stats", handlers.GetInstanceStats).Methods("GET")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/start", handlers.StartSpawnerInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/stop", handlers.StopSpawnerInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/restart", handlers.RestartSpawnerInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/update", handlers.UpdateSpawnerInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/rename", handlers.RenameSpawnerInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}", handlers.RemoveSpawnerInstance).Methods("DELETE")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/backup", handlers.BackupSpawnerInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/restore", handlers.RestoreSpawnerInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/backups", handlers.ListSpawnerBackups).Methods("GET")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/backup/delete", handlers.DeleteSpawnerBackup).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/stats/history", handlers.GetInstanceHistory).Methods("GET")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/history", handlers.GetInstanceHistoryActions).Methods("GET")
+	apiRouter.HandleFunc("/{id}/update-template", handlers.UpdateSpawnerTemplate).Methods("POST")
 
 	// Liveness check
-	router.HandleFunc("/health", Health).Methods("GET")
+	router.HandleFunc("/health", handlers.Health).Methods("GET")
 
 	// Authentication endpoints
 	router.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
-		HandleLogin(w, r, authConfig, sessionStore)
+		auth.HandleLogin(w, r, authConfig, sessionStore)
 	}).Methods("POST")
 
 	router.HandleFunc("/login/2fa", func(w http.ResponseWriter, r *http.Request) {
-		Handle2FAVerify(w, r, authConfig, sessionStore)
+		auth.Handle2FAVerify(w, r, authConfig, sessionStore)
 	}).Methods("POST")
 
 	router.HandleFunc("/login/email", func(w http.ResponseWriter, r *http.Request) {
-		HandleEmailVerify(w, r, authConfig, sessionStore)
+		auth.HandleEmailVerify(w, r, authConfig, sessionStore)
 	}).Methods("POST")
 
 	router.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
-		HandleLogout(w, r, sessionStore)
+		auth.HandleLogout(w, r, sessionStore)
 	}).Methods("GET")
 
 	// Dashboard & UI endpoints (Protected by AuthMiddleware in dev/prod)
-	statsHandler := http.HandlerFunc(StatsAPI)
-	errorsAPIHandler := http.HandlerFunc(ErrorsAPI) // New API handler
+	statsHandler := http.HandlerFunc(handlers.StatsAPI)
+	errorsAPIHandler := http.HandlerFunc(handlers.ErrorsAPI) // New API handler
 	sseHandler := http.HandlerFunc(sseHub.HandleSSE)
 
 	if authConfig.Enabled {
-		router.Handle("/api/stats", AuthMiddleware(authConfig, sessionStore)(statsHandler))
-		router.Handle("/api/errors", AuthMiddleware(authConfig, sessionStore)(errorsAPIHandler)).Methods("GET")
-		router.Handle("/api/errors", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ClearErrorsAPI))).Methods("DELETE")
-		router.Handle("/events", AuthMiddleware(authConfig, sessionStore)(sseHandler)) // Replaced /ws with /events
-		router.Handle("/api/upload", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(HandleUploadGameServer))).Methods("POST")
+		router.Handle("/api/stats", auth.AuthMiddleware(authConfig, sessionStore)(statsHandler))
+		router.Handle("/api/errors", auth.AuthMiddleware(authConfig, sessionStore)(errorsAPIHandler)).Methods("GET")
+		router.Handle("/api/errors", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ClearErrorsAPI))).Methods("DELETE")
+		router.Handle("/events", auth.AuthMiddleware(authConfig, sessionStore)(sseHandler)) // Replaced /ws with /events
+		router.Handle("/api/upload", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.HandleUploadGameServer))).Methods("POST")
 
 		// Version Management Routes
-		router.Handle("/api/versions", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListVersions))).Methods("GET")
-		router.Handle("/api/versions/{id}/active", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(HandleSetActiveVersion))).Methods("POST")
-		router.Handle("/api/versions/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(HandleDeleteVersion))).Methods("DELETE")
+		router.Handle("/api/versions", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ListVersions))).Methods("GET")
+		router.Handle("/api/versions/{id}/active", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.HandleSetActiveVersion))).Methods("POST")
+		router.Handle("/api/versions/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.HandleDeleteVersion))).Methods("DELETE")
 
 		// Configuration Management Routes
-		router.Handle("/api/config", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetAllConfigHandler))).Methods("GET")
-		router.Handle("/api/config", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(CreateConfigHandler))).Methods("POST")
-		router.Handle("/api/config/{category}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetConfigByCategoryHandler))).Methods("GET")
-		router.Handle("/api/config/{key}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(UpdateConfigHandler))).Methods("PUT")
-		router.Handle("/api/config/key/{key}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetConfigByKeyHandler))).Methods("GET")
+		router.Handle("/api/config", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(config.GetAllConfigHandler))).Methods("GET")
+		router.Handle("/api/config", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(config.CreateConfigHandler))).Methods("POST")
+		router.Handle("/api/config/{category}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(config.GetConfigByCategoryHandler))).Methods("GET")
+		router.Handle("/api/config/{key}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(config.UpdateConfigHandler))).Methods("PUT")
+		router.Handle("/api/config/key/{key}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(config.GetConfigByKeyHandler))).Methods("GET")
 
 		// Database Management Routes
-		router.Handle("/api/database/tables", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListTablesHandler))).Methods("GET")
-		router.Handle("/api/database/counts", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetTableCountsHandler))).Methods("GET")
-		router.Handle("/api/database/backup", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(BackupDatabaseHandler))).Methods("POST")
+		router.Handle("/api/database/tables", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.GetAllTablesHandler))).Methods("GET")
+		router.Handle("/api/database/counts", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.DebugListAllTablesHandler))).Methods("GET")
+		router.Handle("/api/database/backup", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.CreateInternalBackupHandler))).Methods("POST")
 
-		router.Handle("/api/database/overview", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetDatabaseOverviewHandler))).Methods("GET")
-		router.Handle("/api/database/table/{table}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetTableDataHandler))).Methods("GET")
-		router.Handle("/api/database/table/{table}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(InsertTableRowHandler))).Methods("POST")
-		router.Handle("/api/database/table/{table}/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(UpdateTableRowHandler))).Methods("PUT")
-		router.Handle("/api/database/table/{table}/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DeleteTableRowHandler))).Methods("DELETE")
-		router.Handle("/api/database/config", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetPostgresConfigHandler))).Methods("GET")
-		router.Handle("/api/database/config", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(UpdatePostgresConfigHandler))).Methods("PUT")
-		router.Handle("/api/database/config/restart", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(RestartPostgresHandler))).Methods("POST")
+		router.Handle("/api/database/overview", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.GetDatabaseOverviewHandler))).Methods("GET")
+		router.Handle("/api/database/table/{table}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.GetTableDataHandler))).Methods("GET")
+		router.Handle("/api/database/table/{table}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.InsertTableRowHandler))).Methods("POST")
+		router.Handle("/api/database/table/{table}/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.UpdateTableRowHandler))).Methods("PUT")
+		router.Handle("/api/database/table/{table}/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.DeleteTableRowHandler))).Methods("DELETE")
+		router.Handle("/api/database/config", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.GetPostgresConfigHandler))).Methods("GET")
+		router.Handle("/api/database/config", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.UpdatePostgresConfigHandler))).Methods("PUT")
+		router.Handle("/api/database/config/restart", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.RestartPostgresHandler))).Methods("POST")
 
 		// Introspection & SQL
-		router.Handle("/api/database/schemas", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListSchemasHandler))).Methods("GET")
-		router.Handle("/api/database/schemas", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(CreateSchemaHandler))).Methods("POST")
-		router.Handle("/api/database/schemas/{name}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DeleteSchemaHandler))).Methods("DELETE")
-		router.Handle("/api/database/all-tables", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetAllTablesHandler))).Methods("GET")
-		router.Handle("/api/database/tables", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListTablesBySchemaHandler))).Methods("GET")
-		router.Handle("/api/database/tables/create", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(CreateTableHandler))).Methods("POST")
-		router.Handle("/api/database/tables/{table}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DropTableHandler))).Methods("DELETE")
-		router.Handle("/api/database/tables/{table}/alter", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(AlterTableHandler))).Methods("POST")
-		router.Handle("/api/database/columns", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListColumnsHandler))).Methods("GET")
-		router.Handle("/api/database/sql", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ExecuteSQLHandler))).Methods("POST")
-		router.Handle("/api/database/debug/tables", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DebugListAllTablesHandler))).Methods("GET")
+		router.Handle("/api/database/schemas", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.ListSchemasHandler))).Methods("GET")
+		router.Handle("/api/database/schemas", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.CreateSchemaHandler))).Methods("POST")
+		router.Handle("/api/database/schemas/{name}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.DeleteSchemaHandler))).Methods("DELETE")
+		router.Handle("/api/database/all-tables", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.GetAllTablesHandler))).Methods("GET")
+		router.Handle("/api/database/tables", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.ListTablesBySchemaHandler))).Methods("GET")
+		router.Handle("/api/database/tables/create", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.CreateTableHandler))).Methods("POST")
+		router.Handle("/api/database/tables/{table}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.DropTableHandler))).Methods("DELETE")
+		router.Handle("/api/database/tables/{table}/alter", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.AlterTableHandler))).Methods("POST")
+		router.Handle("/api/database/columns", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.ListColumnsHandler))).Methods("GET")
+		router.Handle("/api/database/sql", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.ExecuteSQLHandler))).Methods("POST")
+		router.Handle("/api/database/debug/tables", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.DebugListAllTablesHandler))).Methods("GET")
 
 		// Roles
-		router.Handle("/api/database/roles", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListRolesHandler))).Methods("GET")
-		router.Handle("/api/database/roles", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(CreateRoleHandler))).Methods("POST")
-		router.Handle("/api/database/roles/{name}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DeleteRoleHandler))).Methods("DELETE")
+		router.Handle("/api/database/roles", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.ListRolesHandler))).Methods("GET")
+		router.Handle("/api/database/roles", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.CreateRoleHandler))).Methods("POST")
+		router.Handle("/api/database/roles/{name}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.DeleteRoleHandler))).Methods("DELETE")
 
 		// Functions
-		router.Handle("/api/database/functions", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListFunctionsHandler))).Methods("GET")
-		router.Handle("/api/database/functions/details", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetFunctionHandler))).Methods("GET")
-		router.Handle("/api/database/functions", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(CreateFunctionHandler))).Methods("POST")
-		router.Handle("/api/database/functions", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(UpdateFunctionHandler))).Methods("PUT")
-		router.Handle("/api/database/functions/delete", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DeleteFunctionHandler))).Methods("POST")
-		router.Handle("/api/database/functions/execute", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ExecuteFunctionHandler))).Methods("POST")
+		router.Handle("/api/database/functions", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.ListFunctionsHandler))).Methods("GET")
+		router.Handle("/api/database/functions/details", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.GetFunctionHandler))).Methods("GET")
+		router.Handle("/api/database/functions", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.CreateFunctionHandler))).Methods("POST")
+		router.Handle("/api/database/functions", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.UpdateFunctionHandler))).Methods("PUT")
+		router.Handle("/api/database/functions/delete", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.DeleteFunctionHandler))).Methods("POST")
+		router.Handle("/api/database/functions/execute", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.ExecuteFunctionHandler))).Methods("POST")
 
-		router.Handle("/api/database/backups", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(CreateInternalBackupHandler))).Methods("POST")
-		router.Handle("/api/database/backups", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListInternalBackupsHandler))).Methods("GET")
-		router.Handle("/api/database/backups/{filename}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DownloadInternalBackupHandler))).Methods("GET")
-		router.Handle("/api/database/backups/{filename}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DeleteInternalBackupHandler))).Methods("DELETE")
-		router.Handle("/api/database/restore", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(RestoreInternalBackupHandler))).Methods("POST")
+		router.Handle("/api/database/backups", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.CreateInternalBackupHandler))).Methods("POST")
+		router.Handle("/api/database/backups", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.ListInternalBackupsHandler))).Methods("GET")
+		router.Handle("/api/database/backups/{filename}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.DownloadInternalBackupHandler))).Methods("GET")
+		router.Handle("/api/database/backups/{filename}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.DeleteInternalBackupHandler))).Methods("DELETE")
+		router.Handle("/api/database/restore", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.RestoreInternalBackupHandler))).Methods("POST")
 
 		// System Management
-		router.Handle("/api/restart", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(RestartServerHandler))).Methods("POST")
+		router.Handle("/api/restart", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.RestartServerHandler))).Methods("POST")
 
 		// Performance Metrics API
-		router.Handle("/api/metrics", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetAllMetricsHandler))).Methods("GET")
-		router.Handle("/api/metrics/master", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetMasterMetricsHandler))).Methods("GET")
-		router.Handle("/api/metrics/spawners", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetSpawnerMetricsHandler))).Methods("GET")
-		router.Handle("/api/metrics/database", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetDatabaseMetricsHandler))).Methods("GET")
-		router.Handle("/api/metrics/network", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetNetworkMetricsHandler))).Methods("GET")
-		router.Handle("/api/metrics/gc", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ForceGCHandler))).Methods("POST")
-		router.Handle("/api/metrics/memory/free", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(FreeMemoryHandler))).Methods("POST")
+		router.Handle("/api/metrics", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.GetAllMetricsHandler))).Methods("GET")
+		router.Handle("/api/metrics/master", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.GetMasterMetricsHandler))).Methods("GET")
+		router.Handle("/api/metrics/spawners", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.GetSpawnerMetricsHandler))).Methods("GET")
+		router.Handle("/api/metrics/database", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.GetDatabaseMetricsHandler))).Methods("GET")
+		router.Handle("/api/metrics/network", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.GetNetworkMetricsHandler))).Methods("GET")
+		router.Handle("/api/metrics/gc", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ForceGCHandler))).Methods("POST")
+		router.Handle("/api/metrics/memory/free", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.FreeMemoryHandler))).Methods("POST")
 
 		// Enrollment Key Management (Dashboard authenticated endpoints)
-		router.Handle("/api/enrollment/generate", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GenerateEnrollmentKeyHandler))).Methods("POST")
-		router.Handle("/api/enrollment/keys", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListEnrollmentKeysHandler))).Methods("GET")
-		router.Handle("/api/enrollment/revoke", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(RevokeEnrollmentKeyHandler))).Methods("POST")
-		router.Handle("/api/enrollment/status", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetEnrollmentKeyStatusHandler))).Methods("POST")
+		router.Handle("/api/enrollment/generate", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(enrollment.GenerateEnrollmentKeyHandler))).Methods("POST")
+		router.Handle("/api/enrollment/keys", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(enrollment.ListEnrollmentKeysHandler))).Methods("GET")
+		router.Handle("/api/enrollment/revoke", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(enrollment.RevokeEnrollmentKeyHandler))).Methods("POST")
+		router.Handle("/api/enrollment/status", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(enrollment.GetEnrollmentKeyStatusHandler))).Methods("POST")
 
 		// Firebase Remote Config Routes
-		router.Handle("/api/config/firebase/status", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetFirebaseStatusHandler))).Methods("GET")
-		router.Handle("/api/config/firebase/configs", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetFirebaseConfigsHandler))).Methods("GET")
-		router.Handle("/api/config/firebase/sync", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(SyncFirebaseConfigHandler))).Methods("POST")
-		router.Handle("/api/config/firebase/parameter", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(CreateFirebaseConfigHandler))).Methods("POST")
-		router.Handle("/api/config/firebase/parameter", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(UpdateFirebaseConfigHandler))).Methods("PUT")
-		router.Handle("/api/config/firebase/parameter", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DeleteFirebaseConfigHandler))).Methods("DELETE")
-		router.Handle("/api/config/firebase/publish", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(PublishFirebaseConfigHandler))).Methods("POST")
+		router.Handle("/api/config/firebase/status", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(auth.GetFirebaseStatusHandler))).Methods("GET")
+		router.Handle("/api/config/firebase/configs", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(auth.GetFirebaseConfigsHandler))).Methods("GET")
+		router.Handle("/api/config/firebase/sync", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(auth.SyncFirebaseConfigHandler))).Methods("POST")
+		router.Handle("/api/config/firebase/parameter", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(auth.CreateFirebaseConfigHandler))).Methods("POST")
+		router.Handle("/api/config/firebase/parameter", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(auth.UpdateFirebaseConfigHandler))).Methods("PUT")
+		router.Handle("/api/config/firebase/parameter", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(auth.DeleteFirebaseConfigHandler))).Methods("DELETE")
+		router.Handle("/api/config/firebase/publish", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(auth.PublishFirebaseConfigHandler))).Methods("POST")
 
 		// Notes & Todos API
-		router.Handle("/api/notes", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListNotesHandler))).Methods("GET")
-		router.Handle("/api/notes", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(CreateNoteHandler))).Methods("POST")
-		router.Handle("/api/notes/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(UpdateNoteHandler))).Methods("PUT")
-		router.Handle("/api/notes/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DeleteNoteHandler))).Methods("DELETE")
+		router.Handle("/api/notes", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ListNotesHandler))).Methods("GET")
+		router.Handle("/api/notes", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.CreateNoteHandler))).Methods("POST")
+		router.Handle("/api/notes/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.UpdateNoteHandler))).Methods("PUT")
+		router.Handle("/api/notes/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.DeleteNoteHandler))).Methods("DELETE")
 
-		router.Handle("/api/todos", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListTodosHandler))).Methods("GET")
-		router.Handle("/api/todos", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(CreateTodoHandler))).Methods("POST")
-		router.Handle("/api/todos/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(UpdateTodoHandler))).Methods("PUT")
-		router.Handle("/api/todos/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DeleteTodoHandler))).Methods("DELETE")
+		router.Handle("/api/todos", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ListTodosHandler))).Methods("GET")
+		router.Handle("/api/todos", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.CreateTodoHandler))).Methods("POST")
+		router.Handle("/api/todos/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.UpdateTodoHandler))).Methods("PUT")
+		router.Handle("/api/todos/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.DeleteTodoHandler))).Methods("DELETE")
+		router.Handle("/api/todos/{id}/comments", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.CreateTodoCommentHandler))).Methods("POST")
+		router.Handle("/api/todos/comments/{comment_id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.DeleteTodoCommentHandler))).Methods("DELETE")
 
 		// Logging
-		router.Handle("/api/logs", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListSystemLogsHandler))).Methods("GET")
-		router.Handle("/api/logs/counts", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetSystemLogCountsHandler))).Methods("GET")
-		router.Handle("/api/logs", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ClearSystemLogsHandler))).Methods("DELETE")
-		router.Handle("/api/logs/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DeleteSystemLogHandler))).Methods("DELETE")
+		router.Handle("/api/logs", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ListSystemLogsHandler))).Methods("GET")
+		router.Handle("/api/logs/counts", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.GetSystemLogCountsHandler))).Methods("GET")
+		router.Handle("/api/logs", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ClearSystemLogsHandler))).Methods("DELETE")
+		router.Handle("/api/logs/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.DeleteSystemLogHandler))).Methods("DELETE")
 
 		// RedEye Security System
-		router.Handle("/api/redeye/stats", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetRedEyeStatsHandler))).Methods("GET")
-		router.Handle("/api/redeye/config", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetRedEyeConfigHandler))).Methods("GET")
-		router.Handle("/api/redeye/config", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(UpdateRedEyeConfigHandler))).Methods("PUT")
-		router.Handle("/api/redeye/rules", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListRedEyeRulesHandler))).Methods("GET")
-		router.Handle("/api/redeye/rules", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(CreateRedEyeRuleHandler))).Methods("POST")
-		router.Handle("/api/redeye/rules/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(UpdateRedEyeRuleHandler))).Methods("PUT")
-		router.Handle("/api/redeye/rules/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DeleteRedEyeRuleHandler))).Methods("DELETE")
-		router.Handle("/api/redeye/logs", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListRedEyeLogsHandler))).Methods("GET")
-		router.Handle("/api/redeye/logs", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ClearRedEyeLogsHandler))).Methods("DELETE")
-		
-		router.Handle("/api/redeye/bans", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListBannedIPsHandler))).Methods("GET")
-		router.Handle("/api/redeye/bans/{ip}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(UnbanIPHandler))).Methods("DELETE")
-		
+		router.Handle("/api/redeye/stats", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.GetRedEyeStatsHandler))).Methods("GET")
+		router.Handle("/api/redeye/config", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.GetRedEyeConfigHandler))).Methods("GET")
+		router.Handle("/api/redeye/config", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.UpdateRedEyeConfigHandler))).Methods("PUT")
+		router.Handle("/api/redeye/rules", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.ListRedEyeRulesHandler))).Methods("GET")
+		router.Handle("/api/redeye/rules", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.CreateRedEyeRuleHandler))).Methods("POST")
+		router.Handle("/api/redeye/rules/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.UpdateRedEyeRuleHandler))).Methods("PUT")
+		router.Handle("/api/redeye/rules/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.DeleteRedEyeRuleHandler))).Methods("DELETE")
+		router.Handle("/api/redeye/logs", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.ListRedEyeLogsHandler))).Methods("GET")
+		router.Handle("/api/redeye/logs", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.ClearRedEyeLogsHandler))).Methods("DELETE")
+
+		router.Handle("/api/redeye/bans", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.ListBannedIPsHandler))).Methods("GET")
+		router.Handle("/api/redeye/bans/{ip}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.UnbanIPHandler))).Methods("DELETE")
+
 		// RedEye Anti-Cheat
-		router.Handle("/api/redeye/anticheat/report", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ReportAnticheatEventHandler))).Methods("POST")
-		router.Handle("/api/redeye/anticheat/events", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListAnticheatEventsHandler))).Methods("GET")
+		router.Handle("/api/redeye/anticheat/report", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.ReportAnticheatEventHandler))).Methods("POST")
+		router.Handle("/api/redeye/anticheat/events", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.GetAnticheatEventsHandler))).Methods("GET")
 
 		// AI Bot API
-		router.Handle("/api/ai/chat", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(AIChatHandler))).Methods("POST")
+		router.Handle("/api/ai/chat", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.AIChatHandler))).Methods("POST")
 	}
 
 	// Enrollment endpoints (public - enrollment key IS the auth)
-	router.HandleFunc("/api/enrollment/register", RegisterSpawnerWithKeyHandler).Methods("POST")
-	router.HandleFunc("/api/enrollment/validate", ValidateEnrollmentKeyHandler).Methods("POST")
+	router.HandleFunc("/api/enrollment/register", enrollment.RegisterSpawnerWithKeyHandler).Methods("POST")
+	router.HandleFunc("/api/enrollment/validate", enrollment.ValidateEnrollmentKeyHandler).Methods("POST")
 
 	// CLI-friendly status endpoint
-	router.HandleFunc("/status", PrintStatus).Methods("GET")
+	router.HandleFunc("/status", utils.PrintStatus).Methods("GET")
 
 	// Start proactive health checks
 	// go ProactiveHealthCheck(healthCheckInterval)
@@ -376,13 +387,13 @@ func run() error {
 		ticker := time.NewTicker(5 * time.Second)
 		defer ticker.Stop()
 		for range ticker.C {
-			GlobalStats.UpdateMemoryStats()
-			if dbConn != nil {
-				GlobalStats.UpdateDBStats(dbConn.Stats())
+			registry.GlobalStats.UpdateMemoryStats()
+			if database.DBConn != nil {
+				registry.GlobalStats.UpdateDBStats(database.DBConn.Stats())
 				// Advanced Stats
-				advStats, err := GetAdvancedDBStats(dbConn)
+				advStats, err := database.GetAdvancedDBStats(database.DBConn)
 				if err == nil {
-					GlobalStats.UpdateAdvancedDBStats(advStats)
+					registry.GlobalStats.UpdateAdvancedDBStats(advStats)
 				} else {
 					log.Printf("Failed to get advanced DB stats: %v", err)
 				}
@@ -399,11 +410,11 @@ func run() error {
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf("%s:%s", serverHost, port),
-		Handler: SecurityHeadersMiddleware(RedEyeMiddleware(StatsMiddleware(router))),
+		Handler: middleware.SecurityHeadersMiddleware(redeye.RedEyeMiddleware(middleware.StatsMiddleware(router))),
 	}
 
 	go func() {
-		PrintStartupComplete(port)
+		utils.PrintStartupComplete(port)
 		// Warn if not binding to localhost
 		if serverHost != "127.0.0.1" && serverHost != "localhost" {
 			fmt.Printf("  %s%s⚠️  WARNING: Server is listening on %s (Potentially public)%s\n", "\033[1m", "\033[33m", serverHost, "\033[0m")
@@ -424,8 +435,8 @@ func run() error {
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Printf("error during server shutdown: %v", err)
 	}
-	if dbConn != nil {
-		dbConn.Close()
+	if database.DBConn != nil {
+		database.DBConn.Close()
 	}
 	log.Println("server stopped")
 	return nil
