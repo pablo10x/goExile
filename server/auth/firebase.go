@@ -42,7 +42,7 @@ type RemoteConfigParameter struct {
 
 // FirebaseStatusResponse is the API response for firebase status
 type FirebaseStatusResponse struct {
-	Connected   bool                     `json:"Connected"`
+	Connected   bool                     `json:"connected"`
 	ProjectID   string                   `json:"project_id,omitempty"`
 	LastSync    *time.Time               `json:"last_sync,omitempty"`
 	LastError   string                   `json:"last_error,omitempty"`
