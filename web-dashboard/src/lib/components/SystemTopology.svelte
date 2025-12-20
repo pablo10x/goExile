@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { spawners } from '$lib/stores';
-	import { Server, Activity, Cpu, Skull, Database } from 'lucide-svelte';
+	import { Server, Activity, Cpu, Skull, Database, User } from 'lucide-svelte';
 	import { fade, scale } from 'svelte/transition';
 
 	// Animation state
@@ -57,37 +57,42 @@
 
 	// RedEye Interception State
 	let showInterception = $state(false);
-	let targetPos = $state({ x: 0, y: 0 });
-	let missilePath1 = $state('');
-	let missilePath2 = $state('');
+	let interceptionSeed = $state(0); // Used to trigger re-calculation of random values
 	let interceptionInterval: ReturnType<typeof setInterval>;
 
-	function calculateInterception() {
-		// Target a random spot near the master
-		const offset = 100;
-		const tx = center.x + (Math.random() - 0.5) * offset * 2;
-		const ty = center.y + (Math.random() - 0.5) * offset * 2;
-		targetPos = { x: tx, y: ty };
+	// Derived interception data to ensure everything stays in sync with Master center
+	let interceptionData = $derived.by(() => {
+		// Use the seed to generate new "random" positions but stay reactive to center
+		const s = interceptionSeed; 
+		const offset = 120;
+		// Deterministic random-ish offsets based on seed
+		const rx = ((Math.sin(s * 123.45) + 1) / 2 - 0.5) * offset * 2;
+		const ry = ((Math.cos(s * 678.90) + 1) / 2 - 0.5) * offset * 2;
+		
+		const tx = center.x + rx;
+		const ty = center.y + ry;
 
-		// Calculate curved paths from RedEye to target
-		// Use different control points for each missile for "dual strike" feel
-		const midX = (redeyePos.x + tx) / 2;
-		const midY = (redeyePos.y + ty) / 2;
-		const dx = tx - redeyePos.x;
-		const dy = ty - redeyePos.y;
-		const dist = Math.sqrt(dx * dx + dy * dy);
-		const px = -dy / dist;
-		const py = dx / dist;
+		// Calculate curved paths relative to the start point (RedEye) for animateMotion
+		// animateMotion moves the element *relative* to its initial position.
+		// If the element is at (0,0), the path should be absolute coordinates.
+		// However, SVG paths are usually absolute.
+		// Let's make the path start exactly at RedEye and end at Target.
+		
+		const path1 = `M${redeyePos.x},${redeyePos.y} Q${midX1 + px * 60},${midY1 + py * 60} ${tx},${ty}`;
+		const path2 = `M${redeyePos.x},${redeyePos.y} Q${midX1 - px * 40},${midY1 - py * 40} ${tx},${ty}`;
 
-		missilePath1 = `M${redeyePos.x},${redeyePos.y} Q${midX + px * 40},${midY + py * 40} ${tx},${ty}`;
-		missilePath2 = `M${redeyePos.x},${redeyePos.y} Q${midX - px * 30},${midY - py * 30} ${tx},${ty}`;
-	}
+		return {
+			target: { x: tx, y: ty },
+			path1,
+			path2
+		};
+	});
 
 	onMount(() => {
 		interceptionInterval = setInterval(() => {
-			calculateInterception();
+			interceptionSeed = Math.random();
 			showInterception = true;
-			setTimeout(() => (showInterception = false), 3000);
+			setTimeout(() => (showInterception = false), 3500);
 		}, 7000);
 
 		if (containerElement) {
@@ -480,40 +485,59 @@
 
 				<!-- RedEye Interception (Global SVG) -->
 				{#if showInterception}
-					<g filter="url(#strongGlow)">
-						<!-- Threat -->
-						<rect x={targetPos.x - 4} y={targetPos.y - 4} width="8" height="8" fill="#ef4444" class="animate-threat-appear" style="transform-box: fill-box; transform-origin: center;">
-							<animate attributeName="opacity" values="0;1;1;0" dur="2.5s" repeatCount="1" />
-						</rect>
+					<g filter="url(#strongGlow)" style="pointer-events: none;">
+						<!-- Threat Reticle -->
+						<g class="animate-threat-appear" style="transform-box: fill-box; transform-origin: center;">
+							<rect x={interceptionData.target.x - 15} y={interceptionData.target.y - 15} width="30" height="30" fill="none" stroke="#ef4444" stroke-width="1" rx="4" />
+							<foreignObject x={interceptionData.target.x - 12} y={interceptionData.target.y - 12} width="24" height="24">
+								<div class="flex items-center justify-center w-full h-full text-red-500">
+									<User class="w-full h-full" />
+								</div>
+							</foreignObject>
+						</g>
 
-						<!-- Missile 1 + Trail -->
+						<!-- Missile 1: Plasma Bolt (Orange) -->
 						<g>
-							{#each Array(4) as _, i}
-								<circle r={2 - i*0.3} fill="#fb923c" opacity={0.8 - i*0.2}>
-									<animateMotion dur="2s" repeatCount="1" path={missilePath1} begin="{i * 0.05}s" fill="freeze" />
-								</circle>
-							{/each}
-							<circle r="3" fill="#fb923c">
-								<animateMotion dur="2s" repeatCount="1" path={missilePath1} fill="freeze" />
+							<!-- Energy Trail (Drew along the path) -->
+							<path d={interceptionData.path1} fill="none" stroke="#fb923c" stroke-width="3" opacity="0.6" stroke-dasharray="0, 1000">
+								<!-- Reveal the path as the missile travels -->
+								<animate attributeName="stroke-dasharray" from="0, 1000" to="1000, 0" dur="1s" fill="freeze" />
+								<animate attributeName="stroke-dashoffset" from="0" to="0" dur="1s" fill="freeze" />
+								<animate attributeName="opacity" values="0.6;0" dur="1.5s" fill="freeze" />
+							</path>
+							
+							<!-- Bolt Head -->
+							<circle r="4" fill="#fb923c">
+								<animateMotion dur="1s" repeatCount="1" path={interceptionData.path1} fill="freeze" rotate="auto" />
+							</circle>
+							<circle r="2" fill="#ffffff">
+								<animateMotion dur="1s" repeatCount="1" path={interceptionData.path1} fill="freeze" rotate="auto" />
 							</circle>
 						</g>
 
-						<!-- Missile 2 + Trail -->
+						<!-- Missile 2: Plasma Bolt (Cyan) -->
 						<g>
-							{#each Array(4) as _, i}
-								<circle r={2 - i*0.3} fill="#22d3ee" opacity={0.8 - i*0.2}>
-									<animateMotion dur="2s" repeatCount="1" path={missilePath2} begin="{i * 0.05}s" fill="freeze" />
-								</circle>
-							{/each}
-							<circle r="3" fill="#22d3ee">
-								<animateMotion dur="2s" repeatCount="1" path={missilePath2} fill="freeze" />
+							<!-- Energy Trail -->
+							<path d={interceptionData.path2} fill="none" stroke="#22d3ee" stroke-width="3" opacity="0.6" stroke-dasharray="0, 1000">
+								<animate attributeName="stroke-dasharray" from="0, 1000" to="1000, 0" dur="1s" fill="freeze" begin="0.1s" />
+								<animate attributeName="opacity" values="0.6;0" dur="1.5s" fill="freeze" begin="0.1s" />
+							</path>
+							
+							<!-- Bolt Head -->
+							<circle r="4" fill="#22d3ee">
+								<animateMotion dur="1s" repeatCount="1" path={interceptionData.path2} fill="freeze" begin="0.1s" rotate="auto" />
+							</circle>
+							<circle r="2" fill="#ffffff">
+								<animateMotion dur="1s" repeatCount="1" path={interceptionData.path2} fill="freeze" begin="0.1s" rotate="auto" />
 							</circle>
 						</g>
 
 						<!-- Impact Blast -->
-						<circle cx={targetPos.x} cy={targetPos.y} r="30" fill="none" stroke="#fb923c" stroke-width="2" class="animate-refined-blast">
-							<animate attributeName="opacity" values="0;0.8;0" dur="2.5s" repeatCount="1" />
-						</circle>
+						<g transform="translate({interceptionData.target.x}, {interceptionData.target.y})">
+							<circle r="40" fill="none" stroke="#fb923c" stroke-width="3" class="animate-refined-blast">
+								<animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="1" begin="0.9s" />
+							</circle>
+						</g>
 					</g>
 				{/if}
 
