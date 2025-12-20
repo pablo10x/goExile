@@ -168,9 +168,17 @@ The following security improvements have been implemented:
 *   **Architecture:** Implemented a new persistent, categorized logging system.
 *   **Database:** Added `system_logs` table to store detailed logs.
 *   **RedEye Performance:** Added a new "RedEye Guardian" card and detailed metrics modal to the Performance tab, tracking real-time blocks, rate-limiting, and active bans.
-*   **Firebase Remote Config:** Implemented full CRUD support for Firebase Remote Config from the dashboard. Users can now create, update, delete, and sync parameters directly via the `/config` page.
-*   **Backend:**
-    *   Created `server/logging.go` service for structured logging.
+### Firebase Remote Config
+*   **Feature:** Implemented full CRUD support for Firebase Remote Config from the dashboard. Users can now create, update, delete, and sync parameters directly via the `/config` page.
+
+### Game Player System
+*   **Schema:** Implemented a new `player_system` database schema to isolate player data.
+*   **Entities:** Added `players`, `friendships`, and `friend_requests` tables.
+*   **API:** Created endpoints for player registration (`POST /api/game/players`), retrieval, and friend management (send request, accept).
+*   **Integration:** Initialized schema creation in `main.go` startup sequence.
+
+### Backend
+*   **Created `server/logging.go` service for structured logging.
 
 *   **Backend:**
     *   Created `server/logging.go` service for structured logging.

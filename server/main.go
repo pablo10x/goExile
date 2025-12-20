@@ -124,6 +124,11 @@ func run() error {
 			} else {
 				utils.PrintSection("Database", "connected", true)
 			}
+
+			// Initialize Player System Schema
+			if err := database.InitPlayerSystem(database.DBConn); err != nil {
+				log.Printf("Failed to init player system: %v", err)
+			}
 		}
 
 		// Initialize Read-Only Database (Optional but recommended)
@@ -372,6 +377,14 @@ func run() error {
 
 		// AI Bot API
 		router.Handle("/api/ai/chat", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.AIChatHandler))).Methods("POST")
+
+		// Game Player System
+		router.Handle("/api/game/players", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ListAllPlayersHandler))).Methods("GET")
+		router.Handle("/api/game/players", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.CreateOrGetPlayerHandler))).Methods("POST")
+		router.Handle("/api/game/players/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.GetPlayerDetailsHandler))).Methods("GET")
+		
+		router.Handle("/api/game/friends/request", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.SendFriendRequestHandler))).Methods("POST")
+		router.Handle("/api/game/friends/accept", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.AcceptFriendRequestHandler))).Methods("POST")
 	}
 
 	// Enrollment endpoints (public - enrollment key IS the auth)
