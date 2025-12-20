@@ -13,15 +13,18 @@
         Users,
         Ban,
         BarChart3,
-        ShieldCheck
+        ShieldCheck,
+        Settings,
+        Save,
+        Unlock
     } from 'lucide-svelte';
     
-    // Types would usually be imported, defining locally for speed in prototype
     interface RedEyeRule {
         id: number;
         name: string;
         cidr: string;
         port: string;
+        path_pattern: string;
         protocol: string;
         action: 'ALLOW' | 'DENY' | 'RATE_LIMIT';
         rate_limit: number;
@@ -52,11 +55,27 @@
         reputation_count: number;
     }
 
-    let activeTab = $state<'overview' | 'rules' | 'logs' | 'anticheat'>('overview');
+    interface RedEyeConfig {
+        "redeye.auto_ban_enabled": boolean;
+        "redeye.auto_ban_threshold": number;
+        "redeye.alert_enabled": boolean;
+    }
+
+    interface BannedIP {
+        ip: string;
+        reputation_score: number;
+        ban_reason: string;
+        ban_expires_at: string | null;
+        last_seen: string;
+    }
+
+    let activeTab = $state<'overview' | 'rules' | 'bans' | 'logs' | 'anticheat' | 'config'>('overview');
     let rules = $state<RedEyeRule[]>([]);
     let logs = $state<RedEyeLog[]>([]);
     let events = $state<AnticheatEvent[]>([]);
+    let bans = $state<BannedIP[]>([]);
     let stats = $state<RedEyeStats>({ total_rules: 0, active_bans: 0, events_24h: 0, logs_24h: 0, reputation_count: 0 });
+    let config = $state<RedEyeConfig>({ "redeye.auto_ban_enabled": true, "redeye.auto_ban_threshold": 100, "redeye.alert_enabled": true });
     let loading = $state(true);
 
     // Modal
@@ -66,6 +85,7 @@
         name: '',
         cidr: '',
         port: '*',
+        path_pattern: '',
         protocol: 'ANY',
         action: 'DENY',
         rate_limit: 0,
@@ -77,6 +97,32 @@
         try {
             const res = await fetch('/api/redeye/stats');
             if (res.ok) stats = await res.json();
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async function fetchConfig() {
+        try {
+            const res = await fetch('/api/redeye/config');
+            if (res.ok) config = await res.json();
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async function updateConfig() {
+        try {
+            const res = await fetch('/api/redeye/config', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            });
+            if (res.ok) {
+                alert('Configuration updated successfully');
+            } else {
+                alert('Failed to update configuration');
+            }
         } catch (e) {
             console.error(e);
         }
@@ -124,11 +170,38 @@
         }
     }
 
+    async function fetchBans() {
+        loading = true;
+        try {
+            const res = await fetch('/api/redeye/bans');
+            if (res.ok) bans = await res.json();
+        } catch (e) {
+            console.error(e);
+        } finally {
+            loading = false;
+        }
+    }
+
+    async function unbanIP(ip: string) {
+        if (!confirm(`Unban IP ${ip}?`)) return;
+        try {
+            const res = await fetch(`/api/redeye/bans/${ip}`, { method: 'DELETE' });
+            if (res.ok) {
+                bans = bans.filter(b => b.ip !== ip);
+                fetchStats();
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
     async function refreshAll() {
         fetchStats();
         if (activeTab === 'rules') fetchRules();
         else if (activeTab === 'logs') fetchLogs();
         else if (activeTab === 'anticheat') fetchEvents();
+        else if (activeTab === 'bans') fetchBans();
+        else if (activeTab === 'config') fetchConfig();
     }
 
     async function saveRule() {
@@ -136,7 +209,6 @@
             const url = editingRule ? `/api/redeye/rules/${editingRule.id}` : '/api/redeye/rules';
             const method = editingRule ? 'PUT' : 'POST';
             
-            // Convert strings to ints if needed (svelte binding usually handles this but safety first)
             const payload = { ...form };
             
             const res = await fetch(url, {
@@ -179,6 +251,7 @@
                 name: '',
                 cidr: '',
                 port: '*',
+                path_pattern: '',
                 protocol: 'ANY',
                 action: 'DENY',
                 rate_limit: 10,
@@ -221,7 +294,7 @@
     </div>
 
     <!-- Tabs -->
-    <div class="flex gap-2 mb-4 shrink-0">
+    <div class="flex gap-2 mb-4 shrink-0 overflow-x-auto">
         <button 
             onclick={() => { activeTab = 'overview'; fetchStats(); }}
             class="px-4 py-2 rounded-lg text-sm font-medium transition-all {activeTab === 'overview' ? 'bg-red-600 text-white shadow-lg shadow-red-900/20' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'}"
@@ -235,6 +308,12 @@
             Rules
         </button>
         <button 
+            onclick={() => { activeTab = 'bans'; fetchBans(); }}
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-all {activeTab === 'bans' ? 'bg-red-600 text-white shadow-lg shadow-red-900/20' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'}"
+        >
+            Bans
+        </button>
+        <button 
             onclick={() => { activeTab = 'anticheat'; fetchEvents(); }}
             class="px-4 py-2 rounded-lg text-sm font-medium transition-all {activeTab === 'anticheat' ? 'bg-red-600 text-white shadow-lg shadow-red-900/20' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'}"
         >
@@ -245,6 +324,12 @@
             class="px-4 py-2 rounded-lg text-sm font-medium transition-all {activeTab === 'logs' ? 'bg-red-600 text-white shadow-lg shadow-red-900/20' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'}"
         >
             Logs
+        </button>
+        <button 
+            onclick={() => { activeTab = 'config'; fetchConfig(); }}
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-all {activeTab === 'config' ? 'bg-red-600 text-white shadow-lg shadow-red-900/20' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'}"
+        >
+            Configuration
         </button>
     </div>
 
@@ -301,6 +386,8 @@
                         <tr>
                             <th class="px-4 py-3 font-semibold">Name</th>
                             <th class="px-4 py-3 font-semibold">CIDR / IP</th>
+                            <th class="px-4 py-3 font-semibold">Port</th>
+                            <th class="px-4 py-3 font-semibold">Path</th>
                             <th class="px-4 py-3 font-semibold">Action</th>
                             <th class="px-4 py-3 font-semibold">Rate Limit</th>
                             <th class="px-4 py-3 font-semibold text-right">Actions</th>
@@ -311,6 +398,8 @@
                             <tr class="hover:bg-slate-800/50 transition-colors">
                                 <td class="px-4 py-3 font-medium text-slate-200">{rule.name}</td>
                                 <td class="px-4 py-3 font-mono text-xs">{rule.cidr}</td>
+                                <td class="px-4 py-3 font-mono text-xs">{rule.port}</td>
+                                <td class="px-4 py-3 font-mono text-xs text-slate-300">{rule.path_pattern || '-'}</td>
                                 <td class="px-4 py-3">
                                     <span class="px-2 py-0.5 text-xs font-bold rounded border {getActionColor(rule.action)}">
                                         {rule.action}
@@ -329,6 +418,45 @@
                                     </button>
                                     <button onclick={() => deleteRule(rule.id)} class="p-1.5 hover:bg-red-900/30 rounded text-slate-400 hover:text-red-400 transition-colors">
                                         <Trash2 class="w-4 h-4" />
+                                    </button>
+                                </td>
+                            </tr>
+                        {/each}
+                    </tbody>
+                </table>
+            </div>
+        {:else if activeTab === 'bans'}
+            <div class="flex-1 overflow-auto custom-scrollbar">
+                <table class="w-full text-left text-sm text-slate-400">
+                    <thead class="bg-slate-900 text-slate-200 sticky top-0 z-10">
+                        <tr>
+                            <th class="px-4 py-3 font-semibold">IP Address</th>
+                            <th class="px-4 py-3 font-semibold">Reputation</th>
+                            <th class="px-4 py-3 font-semibold">Reason</th>
+                            <th class="px-4 py-3 font-semibold">Last Seen</th>
+                            <th class="px-4 py-3 font-semibold">Expires</th>
+                            <th class="px-4 py-3 font-semibold text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800">
+                        {#each bans as ban}
+                            <tr class="hover:bg-slate-800/50 transition-colors">
+                                <td class="px-4 py-3 font-mono text-white">{ban.ip}</td>
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-bold text-red-400">{ban.reputation_score}</span>
+                                        <div class="w-16 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                                            <div class="h-full bg-red-500" style="width: {ban.reputation_score}%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-slate-300 max-w-xs truncate" title={ban.ban_reason}>{ban.ban_reason}</td>
+                                <td class="px-4 py-3 font-mono text-xs">{new Date(ban.last_seen).toLocaleString()}</td>
+                                <td class="px-4 py-3 font-mono text-xs text-slate-400">{ban.ban_expires_at ? new Date(ban.ban_expires_at).toLocaleString() : 'Permanent'}</td>
+                                <td class="px-4 py-3 text-right">
+                                    <button onclick={() => unbanIP(ban.ip)} class="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded text-xs transition-colors flex items-center gap-1 ml-auto">
+                                        <Unlock class="w-3 h-3" />
+                                        Unban
                                     </button>
                                 </td>
                             </tr>
@@ -364,6 +492,60 @@
                         {/each}
                     </tbody>
                 </table>
+            </div>
+        {:else if activeTab === 'config'}
+            <div class="p-6 max-w-3xl mx-auto space-y-8">
+                <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <Zap class="w-5 h-5 text-yellow-400" />
+                        Automated Response
+                    </h3>
+                    <div class="space-y-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="block text-slate-200 font-medium">Auto-Ban High Risk IPs</span>
+                                <span class="block text-xs text-slate-400 mt-1">Automatically create DENY rules for IPs that exceed reputation threshold</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" bind:checked={config['redeye.auto_ban_enabled']} class="sr-only peer">
+                                <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label class="block text-slate-200 font-medium mb-2">Reputation Threshold</label>
+                            <div class="flex gap-4 items-center">
+                                <input type="range" min="10" max="200" step="10" bind:value={config['redeye.auto_ban_threshold']} class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500">
+                                <span class="w-12 text-center font-mono bg-slate-900 rounded px-2 py-1 border border-slate-700 text-white">{config['redeye.auto_ban_threshold']}</span>
+                            </div>
+                            <span class="block text-xs text-slate-400 mt-1">Score > {config['redeye.auto_ban_threshold']} triggers ban</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <ShieldAlert class="w-5 h-5 text-blue-400" />
+                        Alerts
+                    </h3>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="block text-slate-200 font-medium">Enable Alerts</span>
+                            <span class="block text-xs text-slate-400 mt-1">Send notifications for critical events</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" bind:checked={config['redeye.alert_enabled']} class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex justify-end">
+                    <button onclick={updateConfig} class="px-6 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg font-medium flex items-center gap-2 transition-colors shadow-lg shadow-red-900/20">
+                        <Save class="w-4 h-4" />
+                        Save Configuration
+                    </button>
+                </div>
             </div>
         {:else}
             <!-- Logs -->
@@ -408,9 +590,19 @@
                     <label class="block text-sm font-medium text-slate-400 mb-1">Name</label>
                     <input type="text" bind:value={form.name} class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500" />
                 </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-1">CIDR / IP</label>
+                        <input type="text" bind:value={form.cidr} class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-1">Port</label>
+                        <input type="text" bind:value={form.port} class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500" placeholder="*" />
+                    </div>
+                </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-400 mb-1">CIDR / IP</label>
-                    <input type="text" bind:value={form.cidr} class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500" />
+                    <label class="block text-sm font-medium text-slate-400 mb-1">Path Pattern (Optional)</label>
+                    <input type="text" bind:value={form.path_pattern} class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500" placeholder="/api/v1/..." />
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-400 mb-1">Action</label>

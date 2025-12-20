@@ -127,16 +127,17 @@ type SystemLog struct {
 
 // RedEyeRule represents a rule for the RedEye security system.
 type RedEyeRule struct {
-	ID        int       `json:"id" db:"id"`
-	Name      string    `json:"name" db:"name"`
-	CIDR      string    `json:"cidr" db:"cidr"`         // IP or CIDR
-	Port      string    `json:"port" db:"port"`         // "80", "80-90", "*"
-	Protocol  string    `json:"protocol" db:"protocol"` // "TCP", "UDP", "ICMP", "ANY"
-	Action    string    `json:"action" db:"action"`     // "ALLOW", "DENY", "RATE_LIMIT"
-	RateLimit int       `json:"rate_limit" db:"rate_limit"` // Requests per second (if Action=RATE_LIMIT)
-	Burst     int       `json:"burst" db:"burst"`           // Burst size
-	Enabled   bool      `json:"enabled" db:"enabled"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	ID          int       `json:"id" db:"id"`
+	Name        string    `json:"name" db:"name"`
+	CIDR        string    `json:"cidr" db:"cidr"`                 // IP or CIDR
+	Port        string    `json:"port" db:"port"`                 // "80", "80-90", "*"
+	PathPattern string    `json:"path_pattern" db:"path_pattern"` // Regex or prefix for path matching
+	Protocol    string    `json:"protocol" db:"protocol"`         // "TCP", "UDP", "ICMP", "ANY"
+	Action      string    `json:"action" db:"action"`             // "ALLOW", "DENY", "RATE_LIMIT"
+	RateLimit   int       `json:"rate_limit" db:"rate_limit"`     // Requests per second (if Action=RATE_LIMIT)
+	Burst       int       `json:"burst" db:"burst"`               // Burst size
+	Enabled     bool      `json:"enabled" db:"enabled"`
+	CreatedAt   time.Time `json:"created_at" db:"created_at"`
 }
 
 // RedEyeLog represents a log entry for a RedEye event.

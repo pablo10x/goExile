@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -256,4 +257,115 @@ func ListAnticheatEventsHandler(w http.ResponseWriter, r *http.Request) {
 		"events": events,
 		"total":  total,
 	})
+}
+
+// -- Config Handlers --
+
+func GetRedEyeConfigHandler(w http.ResponseWriter, r *http.Request) {
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+
+	config := map[string]interface{}{}
+	
+	keys := []string{"redeye.auto_ban_enabled", "redeye.auto_ban_threshold", "redeye.alert_enabled"}
+	for _, key := range keys {
+		cfg, err := GetConfigByKey(dbConn, key)
+		if err == nil && cfg != nil {
+			// Convert to appropriate type if needed, or send as string
+			if key == "redeye.auto_ban_threshold" {
+				val, _ := strconv.Atoi(cfg.Value)
+				config[key] = val
+			} else {
+				config[key] = cfg.Value == "true"
+			}
+		}
+	}
+
+	writeJSON(w, http.StatusOK, config)
+}
+
+func UpdateRedEyeConfigHandler(w http.ResponseWriter, r *http.Request) {
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+
+	var payload map[string]interface{}
+	if err := decodeJSON(r, &payload); err != nil {
+		writeError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// Update specific keys only
+	allowedKeys := map[string]bool{
+		"redeye.auto_ban_enabled": true,
+		"redeye.auto_ban_threshold": true,
+		"redeye.alert_enabled": true,
+	}
+
+	for k, v := range payload {
+		if !allowedKeys[k] {
+			continue
+		}
+		
+		strVal := fmt.Sprintf("%v", v)
+		if k == "redeye.auto_ban_threshold" {
+			// Verify int
+			if _, ok := v.(float64); ok { // JSON numbers are float64
+				strVal = fmt.Sprintf("%d", int(v.(float64)))
+			}
+		}
+
+		// Use "system" or authenticated user as updater. 
+		// Since we use AuthMiddleware, we could extract user, but "admin" is fine for now.
+		if err := UpdateConfig(dbConn, k, strVal, "admin"); err != nil {
+			writeError(w, r, http.StatusInternalServerError, fmt.Sprintf("failed to update %s: %v", k, err))
+			return
+		}
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"status": "updated"})
+}
+
+// -- Ban Management Handlers --
+
+func ListBannedIPsHandler(w http.ResponseWriter, r *http.Request) {
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+
+	bans, err := GetBannedIPsFull(dbConn)
+	if err != nil {
+		writeError(w, r, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, bans)
+}
+
+func UnbanIPHandler(w http.ResponseWriter, r *http.Request) {
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+
+	vars := mux.Vars(r)
+	ip := vars["ip"]
+	if ip == "" {
+		writeError(w, r, http.StatusBadRequest, "IP is required")
+		return
+	}
+
+	if err := UnbanIP(dbConn, ip); err != nil {
+		writeError(w, r, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Refresh cache immediately
+	RefreshBanCache(dbConn)
+
+	writeJSON(w, http.StatusOK, map[string]string{"status": "unbanned"})
 }

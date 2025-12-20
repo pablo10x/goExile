@@ -130,6 +130,15 @@ func InitDB(dsn string) (*sqlx.DB, error) {
 		}
 	}
 
+	// Check if 'path_pattern' column exists in redeye_rules
+	var hasPathPatternCol int
+	err = db.QueryRow(`SELECT COUNT(*) FROM information_schema.columns WHERE table_name='redeye_rules' AND column_name='path_pattern'`).Scan(&hasPathPatternCol)
+	if err == nil && hasPathPatternCol == 0 {
+		if _, err := db.Exec(`ALTER TABLE redeye_rules ADD COLUMN path_pattern TEXT DEFAULT ''`); err != nil {
+			// Log error?
+		}
+	}
+
 	// Seed default configuration if table is empty
 	var configCount int
 	err = db.QueryRow(`SELECT COUNT(*) FROM server_config`).Scan(&configCount)
@@ -294,6 +303,7 @@ func createTables(db *sqlx.DB) error {
 		name TEXT,
 		cidr TEXT NOT NULL,
 		port TEXT NOT NULL,
+		path_pattern TEXT DEFAULT '',
 		protocol TEXT NOT NULL,
 		action TEXT NOT NULL,
 		rate_limit INTEGER DEFAULT 0,
@@ -1014,6 +1024,36 @@ func SeedDefaultConfig(db *sqlx.DB) error {
 			RequiresRestart: false,
 			UpdatedBy:       "system",
 		},
+		{
+			Key:             "redeye.auto_ban_enabled",
+			Value:           "true",
+			Type:            "bool",
+			Category:        "redeye",
+			Description:     "Automatically ban IPs that exceed reputation threshold",
+			IsReadOnly:      false,
+			RequiresRestart: false,
+			UpdatedBy:       "system",
+		},
+		{
+			Key:             "redeye.auto_ban_threshold",
+			Value:           "100",
+			Type:            "int",
+			Category:        "redeye",
+			Description:     "Reputation score threshold for auto-ban",
+			IsReadOnly:      false,
+			RequiresRestart: false,
+			UpdatedBy:       "system",
+		},
+		{
+			Key:             "redeye.alert_enabled",
+			Value:           "true",
+			Type:            "bool",
+			Category:        "redeye",
+			Description:     "Enable alerts for high severity events",
+			IsReadOnly:      false,
+			RequiresRestart: false,
+			UpdatedBy:       "system",
+		},
 	}
 
 	for _, config := range defaultConfigs {
@@ -1582,9 +1622,9 @@ func isValidName(s string) bool {
 func CreateRedEyeRule(db *sqlx.DB, r *RedEyeRule) (int, error) {
 	var id int
 	do := func() error {
-		query := `INSERT INTO redeye_rules (name, cidr, port, protocol, action, rate_limit, burst, enabled, created_at) 
-                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`
-		err := db.QueryRow(query, r.Name, r.CIDR, r.Port, r.Protocol, r.Action, r.RateLimit, r.Burst, boolToInt(r.Enabled), time.Now().Unix()).Scan(&id)
+		query := `INSERT INTO redeye_rules (name, cidr, port, path_pattern, protocol, action, rate_limit, burst, enabled, created_at) 
+                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`
+		err := db.QueryRow(query, r.Name, r.CIDR, r.Port, r.PathPattern, r.Protocol, r.Action, r.RateLimit, r.Burst, boolToInt(r.Enabled), time.Now().Unix()).Scan(&id)
 		return err
 	}
 	if err := execWithRetry(do); err != nil {
@@ -1594,7 +1634,7 @@ func CreateRedEyeRule(db *sqlx.DB, r *RedEyeRule) (int, error) {
 }
 
 func GetRedEyeRules(db *sqlx.DB) ([]RedEyeRule, error) {
-	rows, err := db.Queryx(`SELECT id, name, cidr, port, protocol, action, rate_limit, burst, enabled, created_at FROM redeye_rules ORDER BY created_at DESC`)
+	rows, err := db.Queryx(`SELECT id, name, cidr, port, COALESCE(path_pattern, '') as path_pattern, protocol, action, rate_limit, burst, enabled, created_at FROM redeye_rules ORDER BY created_at DESC`)
 	if err != nil {
 		return nil, fmt.Errorf("query redeye rules: %w", err)
 	}
@@ -1605,7 +1645,7 @@ func GetRedEyeRules(db *sqlx.DB) ([]RedEyeRule, error) {
 		var r RedEyeRule
 		var tsUnix int64
 		var enabledInt int
-		if err := rows.Scan(&r.ID, &r.Name, &r.CIDR, &r.Port, &r.Protocol, &r.Action, &r.RateLimit, &r.Burst, &enabledInt, &tsUnix); err != nil {
+		if err := rows.Scan(&r.ID, &r.Name, &r.CIDR, &r.Port, &r.PathPattern, &r.Protocol, &r.Action, &r.RateLimit, &r.Burst, &enabledInt, &tsUnix); err != nil {
 			return nil, err
 		}
 		r.Enabled = enabledInt == 1
@@ -1617,8 +1657,8 @@ func GetRedEyeRules(db *sqlx.DB) ([]RedEyeRule, error) {
 
 func UpdateRedEyeRule(db *sqlx.DB, r *RedEyeRule) error {
 	do := func() error {
-		query := `UPDATE redeye_rules SET name=$1, cidr=$2, port=$3, protocol=$4, action=$5, rate_limit=$6, burst=$7, enabled=$8 WHERE id=$9`
-		_, err := db.Exec(query, r.Name, r.CIDR, r.Port, r.Protocol, r.Action, r.RateLimit, r.Burst, boolToInt(r.Enabled), r.ID)
+		query := `UPDATE redeye_rules SET name=$1, cidr=$2, port=$3, path_pattern=$4, protocol=$5, action=$6, rate_limit=$7, burst=$8, enabled=$9 WHERE id=$10`
+		_, err := db.Exec(query, r.Name, r.CIDR, r.Port, r.PathPattern, r.Protocol, r.Action, r.RateLimit, r.Burst, boolToInt(r.Enabled), r.ID)
 		return err
 	}
 	return execWithRetry(do)
@@ -1773,9 +1813,51 @@ func UpdateIPReputation(db *sqlx.DB, r *RedEyeIPReputation) error {
 
 func GetBannedIPList(db *sqlx.DB) ([]string, error) {
 	var ips []string
-	query := `SELECT ip FROM redeye_ip_reputation WHERE is_banned = 1`
-	err := db.Select(&ips, query)
+	// Select IPs where is_banned=1 AND (ban_expires_at IS NULL OR ban_expires_at > NOW)
+	query := `SELECT ip FROM redeye_ip_reputation WHERE is_banned = 1 AND (ban_expires_at IS NULL OR ban_expires_at > $1)`
+	err := db.Select(&ips, query, time.Now().Unix())
 	return ips, err
+}
+
+func GetBannedIPsFull(db *sqlx.DB) ([]RedEyeIPReputation, error) {
+	query := `SELECT ip, reputation_score, total_events, last_seen, is_banned, ban_reason, ban_expires_at 
+              FROM redeye_ip_reputation 
+              WHERE is_banned = 1 AND (ban_expires_at IS NULL OR ban_expires_at > $1)
+              ORDER BY last_seen DESC`
+	
+	rows, err := db.Queryx(query, time.Now().Unix())
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []RedEyeIPReputation
+	for rows.Next() {
+		var r RedEyeIPReputation
+		var tsUnix int64
+		var banExpiresUnix sql.NullInt64
+		var isBannedInt int
+		if err := rows.Scan(&r.IP, &r.ReputationScore, &r.TotalEvents, &tsUnix, &isBannedInt, &r.BanReason, &banExpiresUnix); err != nil {
+			return nil, err
+		}
+		r.LastSeen = time.Unix(tsUnix, 0).UTC()
+		r.IsBanned = isBannedInt == 1
+		if banExpiresUnix.Valid {
+			t := time.Unix(banExpiresUnix.Int64, 0).UTC()
+			r.BanExpiresAt = &t
+		}
+		out = append(out, r)
+	}
+	// Return empty slice instead of nil for JSON consistency
+	if out == nil {
+		out = []RedEyeIPReputation{}
+	}
+	return out, nil
+}
+
+func UnbanIP(db *sqlx.DB, ip string) error {
+	_, err := db.Exec(`UPDATE redeye_ip_reputation SET is_banned = 0, ban_expires_at = NULL WHERE ip = $1`, ip)
+	return err
 }
 
 // RedEyeStats holds summary statistics for the dashboard

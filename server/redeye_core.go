@@ -33,8 +33,10 @@ func StartRedEyeBackground(db *sqlx.DB) {
 	go func() {
 		ticker := time.NewTicker(30 * time.Second)
 		cleanupTicker := time.NewTicker(10 * time.Minute)
+		anomalyTicker := time.NewTicker(1 * time.Minute)
 		defer ticker.Stop()
 		defer cleanupTicker.Stop()
+		defer anomalyTicker.Stop()
 
 		for {
 			select {
@@ -42,6 +44,8 @@ func StartRedEyeBackground(db *sqlx.DB) {
 				RefreshBanCache(db)
 			case <-cleanupTicker.C:
 				cleanupLimiters()
+			case <-anomalyTicker.C:
+				RunAnomalyDetection(db)
 			}
 		}
 	}()
@@ -62,6 +66,91 @@ func RefreshBanCache(db *sqlx.DB) {
 	BanCacheMu.Lock()
 	BannedIPCache = newCache
 	BanCacheMu.Unlock()
+}
+
+// RunAnomalyDetection scans for high-frequency blocks and auto-bans IPs.
+func RunAnomalyDetection(db *sqlx.DB) {
+	// Check if enabled
+	cfg, err := GetConfigByKey(db, "redeye.auto_ban_enabled")
+	if err != nil || cfg == nil || cfg.Value != "true" {
+		return
+	}
+
+	// Get threshold
+	threshold := 100
+	cfgThresh, err := GetConfigByKey(db, "redeye.auto_ban_threshold")
+	if err == nil && cfgThresh != nil {
+		if val, err := strconv.Atoi(cfgThresh.Value); err == nil && val > 0 {
+			threshold = val
+		}
+	}
+
+	// Scan logs from last minute
+	lastMinute := time.Now().Add(-1 * time.Minute).Unix()
+	query := `SELECT source_ip, COUNT(*) as count 
+              FROM redeye_logs 
+              WHERE timestamp > $1 AND (action = 'DENY' OR action = 'RATE_LIMIT_HIT') 
+              GROUP BY source_ip 
+              HAVING count > $2`
+	
+	rows, err := db.Query(query, lastMinute, threshold)
+	if err != nil {
+		log.Printf("RedEye Anomaly: Scan failed: %v", err)
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var ip string
+		var count int
+		if err := rows.Scan(&ip, &count); err != nil {
+			continue
+		}
+
+		// Check if already banned (via cache to save DB hits)
+		BanCacheMu.RLock()
+		isBanned := BannedIPCache[ip]
+		BanCacheMu.RUnlock()
+
+		if isBanned {
+			continue
+		}
+
+		log.Printf("RedEye Anomaly: Auto-banning IP %s (Events: %d)", ip, count)
+
+		// Ban logic
+		rep := &RedEyeIPReputation{
+			IP:              ip,
+			ReputationScore: 100,
+			TotalEvents:     count,
+			LastSeen:        time.Now().UTC(),
+			IsBanned:        true,
+			BanReason:       fmt.Sprintf("Auto-ban: High frequency blocks (%d/min)", count),
+		}
+		
+		// Use a transaction or just sequenced calls
+		if err := UpdateIPReputation(db, rep); err != nil {
+			log.Printf("RedEye Anomaly: Failed to update reputation for %s: %v", ip, err)
+			continue
+		}
+
+		// Create Rule
+		rule := &RedEyeRule{
+			Name:      fmt.Sprintf("Auto-Ban %s", ip),
+			CIDR:      ip,
+			Port:      "*",
+			Protocol:  "ANY",
+			Action:    "DENY",
+			Enabled:   true,
+			CreatedAt: time.Now().UTC(),
+		}
+		if _, err := CreateRedEyeRule(db, rule); err != nil {
+			log.Printf("RedEye Anomaly: Failed to create ban rule for %s: %v", ip, err)
+		}
+	}
+	
+	// Refresh cache if we banned anyone (checking if rows iterated? simplified: just refresh)
+	RefreshBanCache(db)
 }
 
 // RedEyeMiddleware serves as the guardian for the backend.

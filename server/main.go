@@ -341,12 +341,17 @@ func run() error {
 
 		// RedEye Security System
 		router.Handle("/api/redeye/stats", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetRedEyeStatsHandler))).Methods("GET")
+		router.Handle("/api/redeye/config", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetRedEyeConfigHandler))).Methods("GET")
+		router.Handle("/api/redeye/config", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(UpdateRedEyeConfigHandler))).Methods("PUT")
 		router.Handle("/api/redeye/rules", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListRedEyeRulesHandler))).Methods("GET")
 		router.Handle("/api/redeye/rules", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(CreateRedEyeRuleHandler))).Methods("POST")
 		router.Handle("/api/redeye/rules/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(UpdateRedEyeRuleHandler))).Methods("PUT")
 		router.Handle("/api/redeye/rules/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DeleteRedEyeRuleHandler))).Methods("DELETE")
 		router.Handle("/api/redeye/logs", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListRedEyeLogsHandler))).Methods("GET")
 		router.Handle("/api/redeye/logs", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ClearRedEyeLogsHandler))).Methods("DELETE")
+		
+		router.Handle("/api/redeye/bans", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListBannedIPsHandler))).Methods("GET")
+		router.Handle("/api/redeye/bans/{ip}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(UnbanIPHandler))).Methods("DELETE")
 		
 		// RedEye Anti-Cheat
 		router.Handle("/api/redeye/anticheat/report", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ReportAnticheatEventHandler))).Methods("POST")
