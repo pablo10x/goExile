@@ -55,8 +55,16 @@
 		delay: Math.random() * 3
 	}));
 
-	// Resize observer to make visualization responsive
+	// RedEye Interception State
+	let showInterception = $state(false);
+	let interceptionInterval: ReturnType<typeof setInterval>;
+
 	onMount(() => {
+		interceptionInterval = setInterval(() => {
+			showInterception = true;
+			setTimeout(() => (showInterception = false), 2500);
+		}, 7000);
+
 		if (containerElement) {
 			const updateDimensions = () => {
 				const rect = containerElement.getBoundingClientRect();
@@ -381,31 +389,6 @@
 					</marker>
 
 					<!-- Gradient for connections -->
-					<!-- RedEye Glitch Filter -->
-					<filter id="redeyeGlitch">
-						<feColorMatrix
-							in="SourceGraphic"
-							type="matrix"
-							values="1 0 0 0 0
-									0 0 0 0 0
-									0 0 0 0 0
-									0 0 0 1 0"
-							result="red"
-						/>
-						<feOffset in="red" dx="-2" dy="0" result="redOffset" />
-						<feColorMatrix
-							in="SourceGraphic"
-							type="matrix"
-							values="0 0 0 0 0
-									0 1 0 0 0
-									0 0 1 0 0
-									0 0 0 1 0"
-							result="cyan"
-						/>
-						<feOffset in="cyan" dx="2" dy="0" result="cyanOffset" />
-						<feBlend in="redOffset" in2="cyanOffset" mode="screen" />
-					</filter>
-
 					<linearGradient id="connectionGradient" x1="0%" y1="0%" x2="100%" y2="0%">
 						<stop offset="0%" style="stop-color:#64748b;stop-opacity:0.3" />
 						<stop offset="50%" style="stop-color:#64748b;stop-opacity:0.6" />
@@ -793,59 +776,72 @@
 				</div>
 			</div>
 
-			<!-- RedEye Node (Aggressive Cyber Design) -->
+			<!-- RedEye Node (Cyber Sentinel) -->
 			<div
-				class="absolute z-30 flex flex-col items-center group cursor-pointer transition-all duration-300 hover:scale-125"
+				class="absolute z-30 flex flex-col items-center group cursor-pointer transition-all duration-300 hover:scale-110"
 				style="top: {redeyePos.y - 40}px; left: {redeyePos.x - 40}px;"
 			>
-				<div class="relative w-20 h-20 flex items-center justify-center animate-redeye-jitter">
-					<!-- Multi-layered octagonal frame (Same as DB) -->
+				<div class="relative w-20 h-20 flex items-center justify-center">
+					<!-- Octagonal frame -->
 					<div 
-						class="absolute inset-0 bg-slate-950 border-2 border-red-600/40 shadow-[0_0_20px_rgba(239,68,68,0.3)] backdrop-blur-xl group-hover:border-red-500 group-hover:shadow-[0_0_40px_rgba(239,68,68,0.6)] transition-all duration-300"
-						style="clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"
-					></div>
-					<div 
-						class="absolute inset-1 border border-red-400/20 animate-redeye-flicker"
+						class="absolute inset-0 bg-slate-950 border-2 border-red-600/40 shadow-[0_0_15px_rgba(239,68,68,0.2)] backdrop-blur-xl group-hover:border-red-500 group-hover:shadow-[0_0_30px_rgba(239,68,68,0.4)] transition-all duration-300"
 						style="clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"
 					></div>
 					
-					<!-- Inner grid background -->
-					<div class="absolute inset-2 opacity-10">
-						<div class="w-full h-full" style="background-image: radial-gradient(circle at 2px 2px, #ef4444 1px, transparent 0); background-size: 8px 8px;"></div>
+					<!-- Inner optical grid -->
+					<div class="absolute inset-2 opacity-5">
+						<div class="w-full h-full" style="background-image: radial-gradient(#ef4444 1.5px, transparent 0); background-size: 8px 8px;"></div>
 					</div>
 
-					<!-- The "Angry Eye" SVG -->
-					<svg viewBox="0 0 100 100" class="w-14 h-14 relative z-10 animate-redeye-glitch filter drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]">
-						<!-- Sclera / Outer Eye shape (narrowed/aggressive) -->
-						<path d="M 10 50 Q 50 20 90 50 Q 50 80 10 50 Z" fill="#1a0000" stroke="#ef4444" stroke-width="2" />
-						
-						<!-- Iris (Neural core) -->
-						<circle cx="50" cy="50" r="18" fill="none" stroke="#ef4444" stroke-width="1" stroke-dasharray="2,2" class="animate-spin" style="animation-duration: 10s" />
-						<circle cx="50" cy="50" r="12" fill="#7f1d1d" class="animate-pulse" />
-						
-						<!-- Pupil (The sharp core) -->
-						<path d="M 50 42 L 54 50 L 50 58 L 46 50 Z" fill="#ef4444" />
-						
-						<!-- Angry Brows -->
-						<path d="M 15 35 L 45 45 M 85 35 L 55 45" stroke="#ef4444" stroke-width="4" stroke-linecap="round" />
-						
-						<!-- Scanning line -->
-						<line x1="15" y1="50" x2="85" y2="50" stroke="#ff0000" stroke-width="1" opacity="0.8">
-							<animate attributeName="y1" values="35;65;35" dur="2s" repeatCount="indefinite" />
-							<animate attributeName="y2" values="35;65;35" dur="2s" repeatCount="indefinite" />
-						</line>
-					</svg>
+					<!-- The Cyber Eye -->
+					<div class="relative z-10 w-14 h-14 flex items-center justify-center filter drop-shadow-[0_0_10px_rgba(239,68,68,0.6)]">
+						<svg viewBox="0 0 100 100" class="w-full h-full">
+							<!-- Outer Shell -->
+							<circle cx="50" cy="50" r="45" fill="none" stroke="#ef4444" stroke-width="1" opacity="0.3" stroke-dasharray="10,5" class="animate-spin" style="animation-duration: 15s" />
+							
+							<!-- Main Lens -->
+							<path d="M 10 50 Q 50 15 90 50 Q 50 85 10 50 Z" fill="#1a0000" stroke="#ef4444" stroke-width="2" />
+							
+							<!-- Iris Array -->
+							<g class="animate-pulse" style="animation-duration: 3s">
+								<circle cx="50" cy="50" r="18" fill="none" stroke="#ef4444" stroke-width="1" opacity="0.6" />
+								<circle cx="50" cy="50" r="12" fill="#7f1d1d" opacity="0.8" />
+							</g>
+							
+							<!-- Vertical Scan Lens -->
+							<rect x="48" y="30" width="4" height="40" fill="#ff0000" opacity="0.4" rx="2" />
+							
+							<!-- Sharp Pupil -->
+							<path d="M 50 40 L 56 50 L 50 60 L 44 50 Z" fill="#ef4444" />
+							
+							<!-- Telemetry Arcs -->
+							<path d="M 20 20 A 40 40 0 0 1 40 10" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" />
+							<path d="M 80 80 A 40 40 0 0 1 60 90" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" />
+						</svg>
+					</div>
 
-					<!-- Energy resonance -->
-					<div class="absolute inset-0 border border-red-500/10 scale-125 animate-ping-slower opacity-20" style="clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"></div>
+					<!-- Interception Animation -->
+					{#if showInterception}
+						<div class="absolute inset-0 z-40 pointer-events-none">
+							<!-- Detected Threat -->
+							<div class="absolute -top-24 -left-12 w-3 h-3 bg-red-500 rounded-sm animate-threat-appear shadow-[0_0_12px_#ef4444]"></div>
+							
+							<!-- Guided Interceptors -->
+							<div class="absolute top-1/2 left-1/2 w-1.5 h-1.5 bg-orange-400 rounded-full animate-interceptor-1 shadow-[0_0_10px_#fb923c]"></div>
+							<div class="absolute top-1/2 left-1/2 w-1.5 h-1.5 bg-cyan-400 rounded-full animate-interceptor-2 shadow-[0_0_10px_#22d3ee]"></div>
+							
+							<!-- Impact Event -->
+							<div class="absolute -top-24 -left-12 w-16 h-16 rounded-full border border-orange-500/50 animate-refined-blast"></div>
+						</div>
+					{/if}
+
+					<!-- Sentinel Status -->
+					<div class="absolute -bottom-3 px-3 py-0.5 bg-slate-900 border border-red-500/30 rounded-full text-[7px] font-bold text-red-400 tracking-widest uppercase">
+						{showInterception ? 'INTERCEPTING' : 'VIGILANT'}
+					</div>
 				</div>
-				<div class="mt-4 flex flex-col items-center">
-					<span class="text-[9px] font-black text-red-500 tracking-[0.3em] uppercase animate-pulse">REDEYE_CORE</span>
-					<div class="flex gap-1 mt-1">
-						{#each Array(3) as _}
-							<div class="w-1 h-1 bg-red-600 animate-redeye-flicker"></div>
-						{/each}
-					</div>
+				<div class="mt-6 flex flex-col items-center">
+					<span class="text-[9px] font-black text-red-500 tracking-[0.3em] uppercase opacity-80">REDEYE_SENTINEL</span>
 				</div>
 			</div>
 
@@ -1638,18 +1634,6 @@
 		animation: scanLine 3s linear infinite;
 	}
 
-	@keyframes redeyeGlitch {
-		0%, 95%, 100% { transform: translate(0); }
-		96% { transform: translate(-2px, 1px) skewX(5deg); }
-		97% { transform: translate(2px, -1px) skewX(-5deg); }
-		98% { transform: translate(-1px, -1px); }
-		99% { transform: translate(1px, 1px); }
-	}
-
-	.animate-redeye-glitch {
-		animation: redeyeGlitch 4s infinite;
-	}
-
 	@keyframes redeyeFlicker {
 		0%, 100% { opacity: 1; }
 		50% { opacity: 0.3; }
@@ -1661,17 +1645,6 @@
 		animation: redeyeFlicker 0.2s infinite;
 	}
 
-	@keyframes redeyeJitter {
-		0%, 100% { transform: translate(0, 0); }
-		25% { transform: translate(-0.5px, 0.5px) rotate(0.1deg); }
-		50% { transform: translate(0.5px, -0.5px) rotate(-0.1deg); }
-		75% { transform: translate(-0.5px, -0.5px); }
-	}
-
-	.animate-redeye-jitter {
-		animation: redeyeJitter 0.15s infinite;
-	}
-
 	@keyframes energySurge {
 		0% { stroke-dashoffset: 100; opacity: 0.2; }
 		50% { opacity: 1; }
@@ -1681,5 +1654,48 @@
 	.animate-energy-surge {
 		stroke-dasharray: 20, 80;
 		animation: energySurge 0.8s linear infinite;
+	}
+
+	@keyframes threatAppear {
+		0% { transform: scale(0) rotate(45deg); opacity: 0; }
+		20% { transform: scale(1) rotate(45deg); opacity: 1; }
+		80% { transform: scale(1) rotate(45deg); opacity: 1; }
+		100% { transform: scale(0) rotate(45deg); opacity: 0; }
+	}
+
+	@keyframes interceptorPath1 {
+		0% { transform: translate(0, 0) scale(0); opacity: 0; }
+		20% { opacity: 1; transform: translate(0, 0) scale(1); }
+		80% { transform: translate(-100px, -100px) scale(1); opacity: 1; }
+		100% { transform: translate(-100px, -100px) scale(0); opacity: 0; }
+	}
+
+	@keyframes interceptorPath2 {
+		0% { transform: translate(0, 0) scale(0); opacity: 0; }
+		30% { opacity: 1; transform: translate(0, 0) scale(1); }
+		80% { transform: translate(-105px, -95px) scale(1); opacity: 1; }
+		100% { transform: translate(-105px, -95px) scale(0); opacity: 0; }
+	}
+
+	@keyframes refinedBlast {
+		0%, 75% { transform: translate(-25px, -25px) scale(0); opacity: 0; }
+		80% { transform: translate(-25px, -25px) scale(1); opacity: 0.8; }
+		100% { transform: translate(-25px, -25px) scale(2); opacity: 0; }
+	}
+
+	.animate-threat-appear {
+		animation: threatAppear 2.5s ease-out forwards;
+	}
+
+	.animate-interceptor-1 {
+		animation: interceptorPath1 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+	}
+
+	.animate-interceptor-2 {
+		animation: interceptorPath2 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+	}
+
+	.animate-refined-blast {
+		animation: refinedBlast 2.5s ease-out forwards;
 	}
 </style>
