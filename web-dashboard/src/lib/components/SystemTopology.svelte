@@ -840,50 +840,71 @@
 				</div>
 			</div>
 
-			<!-- Database Node (Cyber Persistence Core) -->
+			<!-- Database Node (Quantum Persistence Core) -->
 			<div
 				class="absolute z-20 flex flex-col items-center group cursor-pointer transition-all duration-300 hover:scale-110"
 				style="top: {databasePos.y - 40}px; left: {databasePos.x - 40}px;"
 			>
 				<div class="relative w-20 h-20 flex items-center justify-center">
-					<!-- Outer octagonal frame -->
+					<!-- Multi-layered octagonal frame -->
 					<div 
-						class="absolute inset-0 bg-slate-950 border-2 border-emerald-600/80 shadow-[0_0_25px_rgba(16,185,129,0.3)] backdrop-blur-xl group-hover:border-emerald-400 group-hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] transition-all duration-300"
+						class="absolute inset-0 bg-slate-950 border-2 border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.2)] backdrop-blur-xl group-hover:border-emerald-400 group-hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] transition-all duration-300"
+						style="clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"
+					></div>
+					<div 
+						class="absolute inset-1 border border-emerald-400/20 animate-redeye-flicker"
 						style="clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"
 					></div>
 
-					<!-- Data Flow SVG -->
-					<svg viewBox="0 0 100 100" class="w-12 h-12 relative z-10 filter drop-shadow-[0_0_5px_rgba(16,185,129,0.6)]">
-						<!-- Central Data Column -->
-						<rect x="40" y="20" width="20" height="60" fill="none" stroke="#10b981" stroke-width="1" stroke-dasharray="4,2" />
+					<!-- The "Monolith" SVG -->
+					<svg viewBox="0 0 100 100" class="w-14 h-14 relative z-10 filter drop-shadow-[0_0_10px_rgba(16,185,129,0.8)]">
+						<!-- Matrix Grid Pattern -->
+						<defs>
+							<pattern id="dbGrid" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
+								<rect width="10" height="10" fill="none" stroke="#10b981" stroke-width="0.2" opacity="0.3" />
+							</pattern>
+						</defs>
+						<circle cx="50" cy="50" r="35" fill="url(#dbGrid)" opacity="0.4" />
 						
-						<!-- Rotating Data Platters -->
-						<g class="animate-spin" style="transform-origin: center; animation-duration: 8s;">
-							<ellipse cx="50" cy="35" rx="25" ry="8" fill="none" stroke="#10b981" stroke-width="2" opacity="0.8" />
-							<ellipse cx="50" cy="50" rx="25" ry="8" fill="none" stroke="#10b981" stroke-width="2" opacity="0.6" />
-							<ellipse cx="50" cy="65" rx="25" ry="8" fill="none" stroke="#10b981" stroke-width="2" opacity="0.4" />
+						<!-- Shifting Isometric Data Core -->
+						<g transform="translate(50, 50)">
+							<!-- Inner Core -->
+							<path d="M 0 -20 L 18 -10 L 18 10 L 0 20 L -18 10 L -18 -10 Z" fill="#064e3b" stroke="#10b981" stroke-width="2" class="animate-pulse" />
+							
+							<!-- Floating Data Shards -->
+							<g class="animate-spin" style="animation-duration: 12s">
+								<rect x="-28" y="-5" width="6" height="6" fill="#34d399" opacity="0.8">
+									<animate attributeName="y" values="-5;-12;-5" dur="2.5s" repeatCount="indefinite" />
+								</rect>
+								<rect x="22" y="-5" width="6" height="6" fill="#34d399" opacity="0.6">
+									<animate attributeName="y" values="-12;-5;-12" dur="3.5s" repeatCount="indefinite" />
+								</rect>
+							</g>
 						</g>
 
-						<!-- Pulse Core -->
-						<circle cx="50" cy="50" r="5" fill="#10b981" class="animate-pulse" />
-						
-						<!-- Binary stream indicators -->
-						<g class="animate-redeye-flicker">
-							<rect x="42" y="25" width="4" height="4" fill="#10b981" />
-							<rect x="54" y="45" width="4" height="4" fill="#10b981" />
-							<rect x="42" y="65" width="4" height="4" fill="#10b981" />
-						</g>
+						<!-- Vertical Data Flow -->
+						{#each Array(3) as _, i}
+							<circle r="1" fill="#6ee7b7">
+								<animateMotion dur="{1.5 + i}s" repeatCount="indefinite" path="M {40 + (i*10)} 20 L {40 + (i*10)} 80" begin="{i * 0.4}s" />
+								<animate attributeName="opacity" values="0;1;0" dur="{1.5 + i}s" repeatCount="indefinite" />
+							</circle>
+						{/each}
 					</svg>
 
-					<!-- Energy Rings -->
-					<div class="absolute inset-0 border border-emerald-500/20 scale-110 animate-ping-slow opacity-30" style="clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"></div>
+					<!-- Outer energy resonance -->
+					<div class="absolute inset-0 border border-emerald-500/10 scale-125 animate-ping-slower opacity-20" style="clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"></div>
 				</div>
 				<div class="mt-4 flex flex-col items-center">
-					<span class="text-[9px] font-black text-emerald-500 tracking-[0.3em] uppercase">PERSISTENCE_LAYER</span>
-					<div class="flex gap-1 mt-1">
-						<div class="w-16 h-1 bg-slate-800 rounded-full overflow-hidden">
-							<div class="h-full bg-emerald-500 w-2/3 animate-pulse"></div>
-						</div>
+					<div class="flex items-center gap-2 mb-1">
+						<div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
+						<span class="text-[9px] font-black text-emerald-500 tracking-[0.3em] uppercase">SQL_STORAGE_CORE</span>
+					</div>
+					<div class="flex gap-0.5">
+						{#each Array(6) as _, i}
+							<div class="w-2 h-1 bg-emerald-900/40 rounded-sm overflow-hidden">
+								<div class="w-full h-full bg-emerald-500/80 animate-redeye-flicker" style="animation-delay: {i * 0.15}s"></div>
+							</div>
+						{/each}
 					</div>
 				</div>
 			</div>
