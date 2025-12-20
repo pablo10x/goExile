@@ -215,6 +215,7 @@ The following security improvements have been implemented:
 *   **Type Safety**: Resolved all TypeScript indexing and component type errors across modernized components.
 
 ### 🐛 Bug Fixes & Stability
+*   **Database Scanning**: Fixed a `Scan` error in `GetTodos` where `todo_comments`' `created_at` (INTEGER) could not be automatically scanned into `time.Time`. Implemented manual scanning for comments to correctly handle Unix timestamp conversion.
 *   **Frontend Safety**: Added null/undefined checks for `toLocaleString` and `filter` across the dashboard to prevent runtime crashes.
 *   **SQL Repair**: Fixed corrupted SQL queries in the persistence layer.
 *   **JSON Handling**: Ensured API endpoints return empty slices instead of `null` for better frontend compatibility.
