@@ -624,45 +624,59 @@ func SanitizeDBError(err error) string {
 // COLUMN DEFINITION VALIDATION
 // =====================================================
 
-// ValidateColumnDefinition validates a column definition for CREATE TABLE
-// Expected format: "column_name TYPE [constraints]"
-func ValidateColumnDefinition(def string) error {
+// validateColumnNameAndType parses and validates the column name and type from a column definition string.
+// It returns the validated column name, its type, and the index of the last part
+// that belongs to the type definition.
+func validateColumnNameAndType(def string) (string, int, error) {
 	if def == "" {
-		return fmt.Errorf("column definition cannot be empty")
+		return "", 0, fmt.Errorf("column definition cannot be empty")
 	}
 
-	// Split into parts
 	parts := strings.Fields(def)
 	if len(parts) < 2 {
-		return fmt.Errorf("column definition must include name and type")
+		return "", 0, fmt.Errorf("column definition must include name and type")
 	}
 
 	// Validate column name
-	if err := ValidateColumnName(parts[0]); err != nil {
-		return err
+	columnName := parts[0]
+	if err := ValidateColumnName(columnName); err != nil {
+		return "", 0, err
 	}
 
 	// Find and validate the type
-	// Type might be multi-word like "character varying" or have modifiers
 	typeStr := parts[1]
+	typeEndIdx := 1 // Index of the last part belonging to the type
 
-	// Handle multi-word types
-	typeEndIdx := 1
+	// Handle multi-word types like "character varying" or "double precision"
 	for i := 2; i < len(parts); i++ {
-		// Check if this word is part of the type
+		// Check if combining with the next part forms an allowed multi-word type
 		combined := typeStr + " " + parts[i]
 		if allowedSQLTypes[strings.ToLower(combined)] {
 			typeStr = combined
 			typeEndIdx = i
 		} else {
+			// If not a multi-word type, the type definition ends here
 			break
 		}
 	}
 
-	// Validate the type
+	// Validate the determined type
 	if err := ValidateSQLType(typeStr); err != nil {
-		return fmt.Errorf("in column '%s': %w", parts[0], err)
+		return "", 0, fmt.Errorf("in column '%s': %w", columnName, err)
 	}
+
+	return typeStr, typeEndIdx, nil
+}
+
+// ValidateColumnDefinition validates a column definition for CREATE TABLE
+// Expected format: "column_name TYPE [constraints]"
+func ValidateColumnDefinition(def string) error {
+	_, typeEndIdx, err := validateColumnNameAndType(def)
+	if err != nil {
+		return err
+	}
+
+	parts := strings.Fields(def)
 
 	// Validate constraints (remaining parts)
 	allowedConstraints := map[string]bool{

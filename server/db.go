@@ -289,6 +289,47 @@ func createTables(db *sqlx.DB) error {
 		path TEXT,
 		method TEXT
 	)`, pkType),
+		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS redeye_rules (
+		id %s,
+		name TEXT,
+		cidr TEXT NOT NULL,
+		port TEXT NOT NULL,
+		protocol TEXT NOT NULL,
+		action TEXT NOT NULL,
+		rate_limit INTEGER DEFAULT 0,
+		burst INTEGER DEFAULT 0,
+		enabled INTEGER DEFAULT 1,
+		created_at INTEGER NOT NULL
+	)`, pkType),
+		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS redeye_logs (
+		id %s,
+		rule_id INTEGER,
+		source_ip TEXT NOT NULL,
+		dest_port INTEGER NOT NULL,
+		protocol TEXT NOT NULL,
+		action TEXT NOT NULL,
+		timestamp INTEGER NOT NULL,
+		FOREIGN KEY(rule_id) REFERENCES redeye_rules(id) ON DELETE SET NULL
+	)`, pkType),
+		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS redeye_anticheat_events (
+		id %s,
+		player_id TEXT,
+		game_server_id INTEGER,
+		event_type TEXT NOT NULL,
+		details TEXT,
+		client_ip TEXT NOT NULL,
+		severity INTEGER DEFAULT 0,
+		timestamp INTEGER NOT NULL
+	)`, pkType),
+		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS redeye_ip_reputation (
+		ip TEXT PRIMARY KEY,
+		reputation_score INTEGER DEFAULT 0,
+		total_events INTEGER DEFAULT 0,
+		last_seen INTEGER NOT NULL,
+		is_banned INTEGER DEFAULT 0,
+		ban_reason TEXT,
+		ban_expires_at INTEGER
+	)`, pkType),
 	}
 
 	for _, q := range queries {
@@ -355,6 +396,39 @@ func GetSystemLogs(db *sqlx.DB, category string, limit, offset int) ([]SystemLog
 	}
 
 	return logs, total, nil
+}
+
+func GetSystemLogCounts(db *sqlx.DB) (map[string]int, error) {
+	query := `SELECT category, COUNT(*) as count FROM system_logs GROUP BY category`
+	rows, err := db.Queryx(query)
+	if err != nil {
+		return nil, fmt.Errorf("query counts: %w", err)
+	}
+	defer rows.Close()
+
+	counts := make(map[string]int)
+	var total int
+	for rows.Next() {
+		var category string
+		var count int
+		if err := rows.Scan(&category, &count); err != nil {
+			return nil, err
+		}
+		counts[category] = count
+		total += count
+	}
+	counts["All"] = total
+	return counts, nil
+}
+
+func DeleteSystemLog(db *sqlx.DB, id int) error {
+	_, err := db.Exec(`DELETE FROM system_logs WHERE id = $1`, id)
+	return err
+}
+
+func ClearSystemLogs(db *sqlx.DB) error {
+	_, err := db.Exec(`DELETE FROM system_logs`)
+	return err
 }
 
 // ... existing functions ...
@@ -906,6 +980,36 @@ func SeedDefaultConfig(db *sqlx.DB) error {
 			Type:            "int",
 			Category:        "spawner",
 			Description:     "Default maximum instances per spawner",
+			IsReadOnly:      false,
+			RequiresRestart: false,
+			UpdatedBy:       "system",
+		},
+		{
+			Key:             "allowed_origins",
+			Value:           "http://localhost:5173,http://localhost:8081,http://127.0.0.1:5173,http://127.0.0.1:8081",
+			Type:            "string",
+			Category:        "system",
+			Description:     "Comma-separated list of allowed WebSocket origins",
+			IsReadOnly:      false,
+			RequiresRestart: false,
+			UpdatedBy:       "system",
+		},
+		{
+			Key:             "health_check_interval",
+			Value:           "10s",
+			Type:            "duration",
+			Category:        "system",
+			Description:     "Frequency of health checks",
+			IsReadOnly:      false,
+			RequiresRestart: true,
+			UpdatedBy:       "system",
+		},
+		{
+			Key:             "maintenance_mode",
+			Value:           "false",
+			Type:            "bool",
+			Category:        "system",
+			Description:     "Enable maintenance mode (reject new connections)",
 			IsReadOnly:      false,
 			RequiresRestart: false,
 			UpdatedBy:       "system",
@@ -1471,4 +1575,198 @@ func isValidName(s string) bool {
 		}
 	}
 	return len(s) > 0
+}
+
+// -- RedEye Rules --
+
+func CreateRedEyeRule(db *sqlx.DB, r *RedEyeRule) (int, error) {
+	var id int
+	do := func() error {
+		query := `INSERT INTO redeye_rules (name, cidr, port, protocol, action, rate_limit, burst, enabled, created_at) 
+                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`
+		err := db.QueryRow(query, r.Name, r.CIDR, r.Port, r.Protocol, r.Action, r.RateLimit, r.Burst, boolToInt(r.Enabled), time.Now().Unix()).Scan(&id)
+		return err
+	}
+	if err := execWithRetry(do); err != nil {
+		return 0, err
+	}
+	return id, nil
+}
+
+func GetRedEyeRules(db *sqlx.DB) ([]RedEyeRule, error) {
+	rows, err := db.Queryx(`SELECT id, name, cidr, port, protocol, action, rate_limit, burst, enabled, created_at FROM redeye_rules ORDER BY created_at DESC`)
+	if err != nil {
+		return nil, fmt.Errorf("query redeye rules: %w", err)
+	}
+	defer rows.Close()
+
+	out := make([]RedEyeRule, 0)
+	for rows.Next() {
+		var r RedEyeRule
+		var tsUnix int64
+		var enabledInt int
+		if err := rows.Scan(&r.ID, &r.Name, &r.CIDR, &r.Port, &r.Protocol, &r.Action, &r.RateLimit, &r.Burst, &enabledInt, &tsUnix); err != nil {
+			return nil, err
+		}
+		r.Enabled = enabledInt == 1
+		r.CreatedAt = time.Unix(tsUnix, 0).UTC()
+		out = append(out, r)
+	}
+	return out, nil
+}
+
+func UpdateRedEyeRule(db *sqlx.DB, r *RedEyeRule) error {
+	do := func() error {
+		query := `UPDATE redeye_rules SET name=$1, cidr=$2, port=$3, protocol=$4, action=$5, rate_limit=$6, burst=$7, enabled=$8 WHERE id=$9`
+		_, err := db.Exec(query, r.Name, r.CIDR, r.Port, r.Protocol, r.Action, r.RateLimit, r.Burst, boolToInt(r.Enabled), r.ID)
+		return err
+	}
+	return execWithRetry(do)
+}
+
+func DeleteRedEyeRule(db *sqlx.DB, id int) error {
+	do := func() error {
+		_, err := db.Exec(`DELETE FROM redeye_rules WHERE id = $1`, id)
+		return err
+	}
+	return execWithRetry(do)
+}
+
+// -- RedEye Logs --
+
+func SaveRedEyeLog(db *sqlx.DB, l *RedEyeLog) error {
+	query := `INSERT INTO redeye_logs (rule_id, source_ip, dest_port, protocol, action, timestamp) 
+              VALUES ($1, $2, $3, $4, $5, $6)`
+	_, err := db.Exec(query, l.RuleID, l.SourceIP, l.DestPort, l.Protocol, l.Action, l.Timestamp.Unix())
+	return err
+}
+
+func GetRedEyeLogs(db *sqlx.DB, limit, offset int) ([]RedEyeLog, int64, error) {
+	var logs []RedEyeLog
+	var total int64
+
+	if err := db.Get(&total, "SELECT COUNT(*) FROM redeye_logs"); err != nil {
+		return nil, 0, err
+	}
+
+	query := fmt.Sprintf(`SELECT id, rule_id, source_ip, dest_port, protocol, action, timestamp 
+                          FROM redeye_logs ORDER BY timestamp DESC LIMIT $%d OFFSET $%d`, 1, 2)
+	
+	rows, err := db.Queryx(query, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var l RedEyeLog
+		var tsUnix int64
+		if err := rows.Scan(&l.ID, &l.RuleID, &l.SourceIP, &l.DestPort, &l.Protocol, &l.Action, &tsUnix); err != nil {
+			return nil, 0, err
+		}
+		l.Timestamp = time.Unix(tsUnix, 0).UTC()
+		logs = append(logs, l)
+	}
+	
+	if logs == nil {
+		logs = []RedEyeLog{}
+	}
+	
+	return logs, total, nil
+}
+
+func ClearRedEyeLogs(db *sqlx.DB) error {
+	_, err := db.Exec(`DELETE FROM redeye_logs`)
+	return err
+}
+
+// -- RedEye Anti-Cheat & Reputation --
+
+func SaveAnticheatEvent(db *sqlx.DB, e *RedEyeAnticheatEvent) error {
+	do := func() error {
+		query := `INSERT INTO redeye_anticheat_events (player_id, game_server_id, event_type, details, client_ip, severity, timestamp)
+                  VALUES ($1, $2, $3, $4, $5, $6, $7)`
+		_, err := db.Exec(query, e.PlayerID, e.GameServerID, e.EventType, e.Details, e.ClientIP, e.Severity, e.Timestamp.Unix())
+		return err
+	}
+	return execWithRetry(do)
+}
+
+func GetAnticheatEvents(db *sqlx.DB, limit, offset int) ([]RedEyeAnticheatEvent, int64, error) {
+	var events []RedEyeAnticheatEvent
+	var total int64
+
+	if err := db.Get(&total, "SELECT COUNT(*) FROM redeye_anticheat_events"); err != nil {
+		return nil, 0, err
+	}
+
+	query := fmt.Sprintf(`SELECT id, player_id, game_server_id, event_type, details, client_ip, severity, timestamp
+                          FROM redeye_anticheat_events ORDER BY timestamp DESC LIMIT $%d OFFSET $%d`, 1, 2)
+	rows, err := db.Queryx(query, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var e RedEyeAnticheatEvent
+		var tsUnix int64
+		if err := rows.Scan(&e.ID, &e.PlayerID, &e.GameServerID, &e.EventType, &e.Details, &e.ClientIP, &e.Severity, &tsUnix); err != nil {
+			return nil, 0, err
+		}
+		e.Timestamp = time.Unix(tsUnix, 0).UTC()
+		events = append(events, e)
+	}
+
+	if events == nil {
+		events = []RedEyeAnticheatEvent{}
+	}
+	return events, total, nil
+}
+
+func GetIPReputation(db *sqlx.DB, ip string) (*RedEyeIPReputation, error) {
+	var r RedEyeIPReputation
+	var tsUnix int64
+	var banExpiresUnix sql.NullInt64
+	var isBannedInt int
+
+	query := `SELECT ip, reputation_score, total_events, last_seen, is_banned, ban_reason, ban_expires_at FROM redeye_ip_reputation WHERE ip = $1`
+	err := db.QueryRowx(query, ip).Scan(&r.IP, &r.ReputationScore, &r.TotalEvents, &tsUnix, &isBannedInt, &r.BanReason, &banExpiresUnix)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil // Not found
+		}
+		return nil, err
+	}
+	r.LastSeen = time.Unix(tsUnix, 0).UTC()
+	r.IsBanned = isBannedInt == 1
+	if banExpiresUnix.Valid {
+		t := time.Unix(banExpiresUnix.Int64, 0).UTC()
+		r.BanExpiresAt = &t
+	}
+	return &r, nil
+}
+
+func UpdateIPReputation(db *sqlx.DB, r *RedEyeIPReputation) error {
+	do := func() error {
+		var banExpiresUnix *int64
+		if r.BanExpiresAt != nil {
+			t := r.BanExpiresAt.Unix()
+			banExpiresUnix = &t
+		}
+
+		query := `INSERT INTO redeye_ip_reputation (ip, reputation_score, total_events, last_seen, is_banned, ban_reason, ban_expires_at)
+                  VALUES ($1, $2, $3, $4, $5, $6, $7)
+                  ON CONFLICT(ip) DO UPDATE SET
+                  reputation_score=excluded.reputation_score,
+                  total_events=excluded.total_events,
+                  last_seen=excluded.last_seen,
+                  is_banned=excluded.is_banned,
+                  ban_reason=excluded.ban_reason,
+                  ban_expires_at=excluded.ban_expires_at`
+		
+		_, err := db.Exec(query, r.IP, r.ReputationScore, r.TotalEvents, r.LastSeen.Unix(), boolToInt(r.IsBanned), r.BanReason, banExpiresUnix)
+		return err
+	}
+	return execWithRetry(do)
 }

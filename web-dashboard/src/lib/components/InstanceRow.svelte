@@ -4,6 +4,7 @@
 	import { serverVersions } from '$lib/stores';
 	import { compareVersions } from '$lib/semver';
 	import PlayersChart from './PlayersChart.svelte';
+	import QuickActionsTooltip from './QuickActionsTooltip.svelte';
 	import {
 		ChevronRight,
 		Settings,
@@ -158,13 +159,40 @@
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
 		>
-			<button
-				onclick={() => dispatch('tail', { spawnerId, instanceId: instance.id })}
-				class="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
-				title="Manage"
+			<QuickActionsTooltip
+				placement="bottom"
+				title="Quick Actions"
+				actions={[
+					{
+						label: 'Start',
+						icon: Play,
+						onClick: () => dispatch('start', { spawnerId, instanceId: instance.id }),
+						disabled: instance.status === 'Running',
+						variant: 'success'
+					},
+					{
+						label: 'Stop',
+						icon: Square,
+						onClick: () => dispatch('stop', { spawnerId, instanceId: instance.id }),
+						disabled: instance.status !== 'Running',
+						variant: 'warning'
+					},
+					{
+						label: 'Restart',
+						icon: RotateCw,
+						onClick: () => dispatch('restart', { spawnerId, instanceId: instance.id }),
+						disabled: instance.status !== 'Running'
+					}
+				]}
 			>
-				<Settings class="w-4 h-4" />
-			</button>
+				<button
+					onclick={() => dispatch('tail', { spawnerId, instanceId: instance.id })}
+					class="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
+					title="Manage"
+				>
+					<Settings class="w-4 h-4" />
+				</button>
+			</QuickActionsTooltip>
 
 			<button
 				onclick={() => dispatch('start', { spawnerId, instanceId: instance.id })}

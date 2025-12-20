@@ -476,7 +476,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, authConfig AuthConfig, 
 		// Trigger firewall block on first failure
 		if count == LoginRateLimiter.maxAttempts+1 {
 			go func(targetIP string) {
-				if err := BlockIP(targetIP); err != nil {
+				if err := BlockIPSystem(targetIP); err != nil {
 					log.Printf("Failed to block IP %s: %v", targetIP, err)
 				}
 			}(ip)

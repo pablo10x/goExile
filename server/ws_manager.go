@@ -41,6 +41,13 @@ var upgrader = websocket.Upgrader{
 
 // getAllowedOrigins returns the list of allowed WebSocket origins
 func getAllowedOrigins() []string {
+	// Try loading from DB first
+	if dbConn != nil {
+		if c, err := GetConfigByKey(dbConn, "allowed_origins"); err == nil && c != nil {
+			return splitAndTrim(c.Value, ",")
+		}
+	}
+
 	// Default allowed origins for development and production
 	defaults := []string{
 		"http://localhost:5173", // SvelteKit dev server

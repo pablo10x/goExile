@@ -330,6 +330,21 @@ func run() error {
 
 		// Logging
 		router.Handle("/api/logs", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListSystemLogsHandler))).Methods("GET")
+		router.Handle("/api/logs/counts", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetSystemLogCountsHandler))).Methods("GET")
+		router.Handle("/api/logs", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ClearSystemLogsHandler))).Methods("DELETE")
+		router.Handle("/api/logs/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DeleteSystemLogHandler))).Methods("DELETE")
+
+		// RedEye Security System
+		router.Handle("/api/redeye/rules", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListRedEyeRulesHandler))).Methods("GET")
+		router.Handle("/api/redeye/rules", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(CreateRedEyeRuleHandler))).Methods("POST")
+		router.Handle("/api/redeye/rules/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(UpdateRedEyeRuleHandler))).Methods("PUT")
+		router.Handle("/api/redeye/rules/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DeleteRedEyeRuleHandler))).Methods("DELETE")
+		router.Handle("/api/redeye/logs", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListRedEyeLogsHandler))).Methods("GET")
+		router.Handle("/api/redeye/logs", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ClearRedEyeLogsHandler))).Methods("DELETE")
+		
+		// RedEye Anti-Cheat
+		router.Handle("/api/redeye/anticheat/report", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ReportAnticheatEventHandler))).Methods("POST")
+		router.Handle("/api/redeye/anticheat/events", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListAnticheatEventsHandler))).Methods("GET")
 
 		// AI Bot API
 		router.Handle("/api/ai/chat", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(AIChatHandler))).Methods("POST")
@@ -373,7 +388,7 @@ func run() error {
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf("%s:%s", serverHost, port),
-		Handler: SecurityHeadersMiddleware(StatsMiddleware(router)),
+		Handler: SecurityHeadersMiddleware(RedEyeMiddleware(StatsMiddleware(router))),
 	}
 
 	go func() {

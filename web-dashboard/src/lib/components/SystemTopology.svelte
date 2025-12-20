@@ -251,7 +251,7 @@
 			const angle = (i / pieceCount) * Math.PI * 2;
 			const distance = 40 + Math.random() * 60;
 			const rotation = Math.random() * 360;
-			const size = 4 + Math.random() * 8;
+			const size = 4 + Math.random() * 2;
 
 			return {
 				id: i,
@@ -267,14 +267,14 @@
 
 <div
 	bind:this={containerElement}
-	class="relative w-full h-full bg-slate-950 rounded-2xl border border-slate-800/50 overflow-hidden flex items-center justify-center shadow-2xl transition-colors duration-300"
+	class="flex absolute w-full h-full bg-slate-250 rounded-2xl overflow-hidden items-center justify-center shadow-2xl transition-colors duration-300"
 >
 	<!-- Animated gradient blobs in background -->
 
 	<div class="absolute inset-0 overflow-hidden pointer-events-none">
 		<!-- Primary gradient blob -->
 		<div
-			class="gradient-blob blob-1 bg-gradient-to-br from-blue-600/15 via-cyan-600/10 to-transparent"
+			class="gradient-blob blob-1 bg-gradient-to-br from-blue-30000/15 via-cyan-600/10 to-transparent"
 		></div>
 
 		<!-- Secondary gradient blob -->
@@ -312,26 +312,25 @@
 
 	<!-- Animated Grid Background -->
 	<div
-		class="absolute inset-0 opacity-20"
+		class="absolute inset-0 opacity-80"
 		style="background-image:
 			linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
 			linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
-			background-size: 40px 40px;
-			animation: gridMove 20s linear infinite;"
+			background-size: 50px 50px;
+			animation: gridMove 5s linear infinite; "
 	></div>
 
 	<!-- Radial gradient overlay for depth -->
 	<div
-		class="absolute inset-0 bg-radial-gradient opacity-40"
-		style="background: radial-gradient(circle at 50% 50%, transparent 0%, rgba(0, 0, 0, 0.4) 100%);"
+		class="absolute inset-0 bg-radial-gradient opacity-10"
+		style="background: radial-gradient(circle at 90% 50%, transparent 0%, rgba(0, 0, 0, 0.4) 100%);"
 	></div>
 
 	<!-- Shimmer overlay -->
-	<div class="absolute inset-0 opacity-10 pointer-events-none gradient-overlay"></div>
 
 	<!-- Zoomable and pannable content wrapper -->
 	<div
-		class="absolute inset-0 transition-transform duration-200 ease-out pointer-events-none"
+		class="absolute inset-0 transition-transform duration-600 ease-out pointer-events-none"
 		style="transform: scale({zoom}) translate({panOffset.x / zoom}px, {panOffset.y /
 			zoom}px); transform-origin: center center;"
 	>
@@ -391,18 +390,18 @@
 						d={connectionPathD}
 						stroke={colors.stroke}
 						stroke-width={hoveredSpawnerId === spawner.id ? 3 : 2}
-						stroke-dasharray={isActive ? '10, 5' : '5, 5'}
+						stroke-dasharray={isActive ? '25, 5' : '40, 5'}
 						opacity={hoveredSpawnerId === spawner.id ? 0.8 : 0.5}
 						fill="none"
 						filter={hoveredSpawnerId === spawner.id ? 'url(#glow)' : ''}
-						style="transition: all 0.3s ease;"
+						style="transition: all 0.1s ease;"
 					>
 						{#if isActive}
 							<animate
 								attributeName="stroke-dashoffset"
 								from="0"
 								to="-15"
-								dur="1.5s"
+								dur="2.5s"
 								repeatCount="indefinite"
 							/>
 						{:else}
@@ -420,14 +419,14 @@
 					{#if pulsingSpawners.has(spawner.id) && isActive}
 						<g filter="url(#strongGlow)">
 							<!-- Main spark -->
-							<circle r="4" fill="#10b981">
+							<circle r="4" fill="#10b971">
 								<animateMotion dur="1s" repeatCount="1" path={connectionPathD} fill="freeze" />
 								<animate attributeName="r" values="4;5;4" dur="0.3s" repeatCount="3" />
 							</circle>
 							<!-- Trail Effect -->
-							<circle r="3" fill="#34d399" opacity="0.7">
+							<circle r="6" fill="#34d399" opacity="1.7">
 								<animateMotion
-									dur="1s"
+									dur="0.5s"
 									repeatCount="1"
 									path={connectionPathD}
 									fill="freeze"
@@ -436,7 +435,7 @@
 							</circle>
 							<circle r="2" fill="#6ee7b7" opacity="0.5">
 								<animateMotion
-									dur="1s"
+									dur="0.5s"
 									repeatCount="1"
 									path={connectionPathD}
 									fill="freeze"
@@ -455,7 +454,7 @@
 								<animate
 									attributeName="fill"
 									values="#ff6b35;#ffd93d;#ff6b35"
-									dur="0.4s"
+									dur="8.4s"
 									repeatCount="indefinite"
 								/>
 								<animate attributeName="r" values="3;3.5;3" dur="0.3s" repeatCount="indefinite" />
@@ -463,11 +462,11 @@
 
 							<!-- Inner glow (bright yellow) -->
 							<circle r="2" fill="#ffeb3b">
-								<animateMotion dur="2.5s" repeatCount="indefinite" path={connectionPathD} />
+								<animateMotion dur="2.7s" repeatCount="indefinite" path={connectionPathD} />
 								<animate
 									attributeName="opacity"
 									values="0.9;1;0.9"
-									dur="0.2s"
+									dur="8.2s"
 									repeatCount="indefinite"
 								/>
 							</circle>
@@ -870,16 +869,16 @@
 
 <!-- Stats overlay (outside zoom wrapper so it stays fixed) -->
 <div class="absolute top-4 left-4 flex flex-col gap-2 text-xs font-mono z-30">
-	<div class="bg-slate-950/80 backdrop-blur-sm px-3 py-2 rounded-lg">
-		<span class="text-slate-400">Active Spawners:</span>
-		<span class="text-emerald-400 ml-2 font-bold">
+	<div class="backdrop-blur-sm px-3 py-2 rounded-lg">
+		<span class="text-slate-400/30">Active Spawners:</span>
+		<span class="text-emerald-400/30 ml-2 font-bold">
 			{$spawners.filter((s) => s.status === 'online' || s.status === 'Online')
 				.length}/{$spawners.length}
 		</span>
 	</div>
 	<div class="bg-transparent backdrop-blur-sm px-3 py-2 rounded-lg">
-		<span class="text-slate-400">Total Instances:</span>
-		<span class="text-blue-400 ml-2 font-bold">
+		<span class="text-slate-400/30">Total Instances:</span>
+		<span class="text-blue-400/30 ml-2 font-bold">
 			{$spawners.reduce((sum, s) => sum + s.current_instances, 0)}/{$spawners.reduce(
 				(sum, s) => sum + s.max_instances,
 				0
@@ -894,7 +893,7 @@
 			background-position: 0 0;
 		}
 		100% {
-			background-position: 40px 40px;
+			background-position: 250px 80px;
 		}
 	}
 
@@ -1023,13 +1022,13 @@
 	/* Shimmer overlay animation */
 	.gradient-overlay {
 		background: linear-gradient(
-			45deg,
+			20deg,
 			transparent 30%,
 			rgba(56, 189, 248, 0.12) 50%,
-			transparent 70%
+			transparent 90%
 		);
-		background-size: 200% 200%;
-		animation: shimmer 4s ease-in-out infinite;
+		background-size: 100% 100%;
+		animation: shimmer 50s ease-in-out infinite;
 	}
 
 	@keyframes shimmer {

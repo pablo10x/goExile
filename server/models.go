@@ -124,3 +124,51 @@ type SystemLog struct {
 	Path      string    `json:"path" db:"path"`
 	Method    string    `json:"method" db:"method"`
 }
+
+// RedEyeRule represents a rule for the RedEye security system.
+type RedEyeRule struct {
+	ID        int       `json:"id" db:"id"`
+	Name      string    `json:"name" db:"name"`
+	CIDR      string    `json:"cidr" db:"cidr"`         // IP or CIDR
+	Port      string    `json:"port" db:"port"`         // "80", "80-90", "*"
+	Protocol  string    `json:"protocol" db:"protocol"` // "TCP", "UDP", "ICMP", "ANY"
+	Action    string    `json:"action" db:"action"`     // "ALLOW", "DENY", "RATE_LIMIT"
+	RateLimit int       `json:"rate_limit" db:"rate_limit"` // Requests per second (if Action=RATE_LIMIT)
+	Burst     int       `json:"burst" db:"burst"`           // Burst size
+	Enabled   bool      `json:"enabled" db:"enabled"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+}
+
+// RedEyeLog represents a log entry for a RedEye event.
+type RedEyeLog struct {
+	ID        int       `json:"id" db:"id"`
+	RuleID    *int      `json:"rule_id" db:"rule_id"`
+	SourceIP  string    `json:"source_ip" db:"source_ip"`
+	DestPort  int       `json:"dest_port" db:"dest_port"`
+	Protocol  string    `json:"protocol" db:"protocol"`
+	Action    string    `json:"action" db:"action"`
+	Timestamp time.Time `json:"timestamp" db:"timestamp"`
+}
+
+// RedEyeAnticheatEvent represents a suspicious activity reported by game servers.
+type RedEyeAnticheatEvent struct {
+	ID           int       `json:"id" db:"id"`
+	PlayerID     string    `json:"player_id" db:"player_id"`
+	GameServerID int       `json:"game_server_id" db:"game_server_id"`
+	EventType    string    `json:"event_type" db:"event_type"` // e.g. "SPEEDHACK"
+	Details      string    `json:"details" db:"details"`
+	ClientIP     string    `json:"client_ip" db:"client_ip"`
+	Severity     int       `json:"severity" db:"severity"` // 1-100
+	Timestamp    time.Time `json:"timestamp" db:"timestamp"`
+}
+
+// RedEyeIPReputation tracks the reputation of IPs based on events.
+type RedEyeIPReputation struct {
+	IP              string     `json:"ip" db:"ip"`
+	ReputationScore int        `json:"reputation_score" db:"reputation_score"` // 0=Good, 100=Bad
+	TotalEvents     int        `json:"total_events" db:"total_events"`
+	LastSeen        time.Time  `json:"last_seen" db:"last_seen"`
+	IsBanned        bool       `json:"is_banned" db:"is_banned"`
+	BanReason       string     `json:"ban_reason" db:"ban_reason"`
+	BanExpiresAt    *time.Time `json:"ban_expires_at" db:"ban_expires_at"`
+}

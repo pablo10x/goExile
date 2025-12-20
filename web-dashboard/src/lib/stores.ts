@@ -144,3 +144,5 @@ function createNotificationStore() {
 		}
 	};
 }
+
+export const showQuickActions = writable(true);

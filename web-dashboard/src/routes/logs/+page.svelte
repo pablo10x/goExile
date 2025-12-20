@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { fade, slide } from 'svelte/transition';
+	import { fade, slide, fly, scale } from 'svelte/transition';
 	import { 
         AlertTriangle, 
         Shield, 
@@ -10,7 +10,10 @@
         RefreshCw, 
         ChevronLeft, 
         ChevronRight, 
-        Info 
+        Info,
+        Trash2,
+        Check,
+        X
     } from 'lucide-svelte';
 	import type { SystemLog } from '$lib/types/logs';
 
@@ -21,11 +24,14 @@
 	let offset = $state(0);
 	let category = $state<'All' | 'Internal' | 'Spawner' | 'Security'>('All');
     let selectedLog = $state<SystemLog | null>(null);
+    let counts = $state<Record<string, number>>({});
+    let selectedIds = $state(new Set<number>());
 
     const categories = ['All', 'Internal', 'Spawner', 'Security'];
 
 	async function fetchLogs() {
 		loading = true;
+        selectedIds = new Set(); // Clear selection on refresh/filter
 		try {
             const query = new URLSearchParams({
                 limit: limit.toString(),
@@ -44,6 +50,103 @@
 			loading = false;
 		}
 	}
+
+    async function fetchCounts() {
+        try {
+            const res = await fetch('/api/logs/counts');
+            if (res.ok) {
+                counts = await res.json();
+                // console.log("Log counts:", counts);
+            }
+        } catch (e) {
+            console.error("Failed to fetch counts:", e);
+        }
+    }
+
+    function toggleSelection(e: MouseEvent, id: number) {
+        e.stopPropagation();
+        const newSet = new Set(selectedIds);
+        if (newSet.has(id)) {
+            newSet.delete(id);
+        } else {
+            newSet.add(id);
+        }
+        selectedIds = newSet;
+    }
+
+    function toggleSelectAll() {
+        if (selectedIds.size === logs.length && logs.length > 0) {
+            selectedIds = new Set();
+        } else {
+            selectedIds = new Set(logs.map(l => l.id));
+        }
+    }
+
+    async function deleteSelected() {
+        const idsToDelete = Array.from(selectedIds);
+        if (idsToDelete.length === 0) return;
+        
+        // Optimistic UI update
+        const originalLogs = [...logs];
+        logs = logs.filter(l => !selectedIds.has(l.id));
+        selectedIds = new Set();
+
+        // Perform deletions in parallel
+        try {
+            await Promise.all(idsToDelete.map(id => fetch(`/api/logs/${id}`, { method: 'DELETE' })));
+            
+            // Update counts approximately
+            if (counts[category]) counts[category] = Math.max(0, counts[category] - idsToDelete.length);
+            if (counts['All']) counts['All'] = Math.max(0, counts['All'] - idsToDelete.length);
+            
+            fetchCounts(); // accurate count sync
+        } catch (e) {
+            console.error("Failed to delete selected:", e);
+            logs = originalLogs; // Revert on failure
+            fetchLogs();
+        }
+    }
+
+    async function deleteLog(e: MouseEvent, id: number) {
+        e.stopPropagation();
+        // Removed confirmation as requested
+        
+        try {
+            const res = await fetch(`/api/logs/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                // Optimistically remove from UI to feel instant
+                logs = logs.filter(l => l.id !== id);
+                if (selectedIds.has(id)) {
+                    const newSet = new Set(selectedIds);
+                    newSet.delete(id);
+                    selectedIds = newSet;
+                }
+
+                if (counts[category]) counts[category]--;
+                if (counts['All']) counts['All']--;
+                
+                // Only fetch counts to keep numbers accurate, but don't refetch logs
+                // as it interrupts the exit animation
+                fetchCounts();
+            }
+        } catch (e) {
+            console.error("Failed to delete log:", e);
+        }
+    }
+
+    async function clearLogs() {
+        if (!confirm('Are you sure you want to clear ALL logs? This cannot be undone.')) return;
+        
+        try {
+            const res = await fetch('/api/logs', { method: 'DELETE' });
+            if (res.ok) {
+                fetchLogs();
+                fetchCounts();
+            }
+        } catch (e) {
+            console.error("Failed to clear logs:", e);
+        }
+    }
 
     function changeCategory(c: string) {
         category = c as any;
@@ -74,7 +177,10 @@
         }
     }
 
-	onMount(fetchLogs);
+	onMount(() => {
+        fetchLogs();
+        fetchCounts();
+    });
 </script>
 
 <div class="p-6 h-full flex flex-col overflow-hidden">
@@ -87,8 +193,23 @@
             </h1>
             <p class="text-slate-400 text-sm mt-1">Monitor system-wide errors and events</p>
         </div>
-        <div class="flex gap-2">
-            <button onclick={fetchLogs} class="p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors">
+        <div class="flex gap-2 items-center">
+            {#if selectedIds.size > 0}
+                <button 
+                    onclick={deleteSelected}
+                    transition:scale={{ duration: 200, start: 0.9 }}
+                    class="p-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors flex items-center gap-2 px-4 shadow-lg shadow-red-900/20 mr-2"
+                >
+                    <Trash2 class="w-4 h-4" />
+                    <span class="text-xs font-bold">Delete ({selectedIds.size})</span>
+                </button>
+            {/if}
+
+            <button onclick={clearLogs} class="p-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 hover:text-red-200 rounded-lg transition-colors flex items-center gap-2 px-3">
+                <Trash2 class="w-4 h-4" />
+                <span class="text-xs font-semibold">Clear All</span>
+            </button>
+            <button onclick={() => { fetchLogs(); fetchCounts(); }} class="p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors">
                 <RefreshCw class="w-4 h-4 {loading ? 'animate-spin' : ''}" />
             </button>
         </div>
@@ -101,7 +222,7 @@
                 onclick={() => changeCategory(cat)}
                 class="px-4 py-2 rounded-lg text-sm font-medium transition-all border border-transparent {category === cat ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 hover:border-slate-600'}"
             >
-                {cat}
+                {cat} <span class="ml-1 opacity-60 text-xs">({counts[cat] || 0})</span>
             </button>
         {/each}
     </div>
@@ -112,22 +233,46 @@
             <table class="w-full text-left text-sm text-slate-400">
                 <thead class="bg-slate-900 text-slate-200 sticky top-0 z-10">
                     <tr>
+                        <th class="px-4 py-3 font-semibold w-10 text-center">
+                            <button 
+                                onclick={toggleSelectAll}
+                                class="w-5 h-5 rounded border border-slate-600 flex items-center justify-center transition-all {selectedIds.size === logs.length && logs.length > 0 ? 'bg-blue-600 border-blue-500' : 'hover:border-slate-400'}"
+                            >
+                                {#if selectedIds.size === logs.length && logs.length > 0}
+                                    <Check class="w-3.5 h-3.5 text-white" />
+                                {/if}
+                            </button>
+                        </th>
                         <th class="px-4 py-3 font-semibold">Time</th>
                         <th class="px-4 py-3 font-semibold">Level</th>
                         <th class="px-4 py-3 font-semibold">Category</th>
                         <th class="px-4 py-3 font-semibold">Message</th>
                         <th class="px-4 py-3 font-semibold">Path</th>
+                        <th class="px-4 py-3 font-semibold w-10"></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-800">
                     {#if loading && logs.length === 0}
-                        <tr><td colspan="5" class="p-8 text-center">Loading...</td></tr>
+                        <tr><td colspan="7" class="p-8 text-center">Loading...</td></tr>
                     {:else if logs.length === 0}
-                        <tr><td colspan="5" class="p-8 text-center">No logs found</td></tr>
+                        <tr><td colspan="7" class="p-8 text-center">No logs found</td></tr>
                     {:else}
-                        {#each logs as log}
-                            <tr class="hover:bg-slate-800/50 transition-colors cursor-pointer group" onclick={() => selectedLog = log}>
-                                <td class="px-4 py-3 whitespace-nowrap font-mono text-xs">{new Date(log.timestamp).toLocaleString()}</td>
+                        {#each logs as log (log.id)}
+                            <tr 
+                                transition:fly={{ x: 20, duration: 300 }} 
+                                class="hover:bg-slate-800/50 transition-colors cursor-pointer group {selectedIds.has(log.id) ? 'bg-blue-900/10' : ''}" 
+                                onclick={() => selectedLog = log}
+                            >
+                                <td class="px-4 py-3 text-center" onclick={(e) => toggleSelection(e, log.id)}>
+                                    <div class="w-5 h-5 mx-auto rounded border border-slate-600 flex items-center justify-center transition-all relative overflow-hidden {selectedIds.has(log.id) ? 'bg-blue-600 border-blue-500' : 'group-hover:border-slate-400 bg-slate-800/50'}">
+                                        {#if selectedIds.has(log.id)}
+                                            <div transition:scale={{ duration: 200, start: 0.5 }}>
+                                                <Check class="w-3.5 h-3.5 text-white" />
+                                            </div>
+                                        {/if}
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap font-mono text-xs text-slate-500">{new Date(log.timestamp).toLocaleString()}</td>
                                 <td class="px-4 py-3 font-bold {getLevelColor(log.level)}">{log.level}</td>
                                 <td class="px-4 py-3">
                                     <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-800 text-xs border border-slate-700">
@@ -136,6 +281,15 @@
                                 </td>
                                 <td class="px-4 py-3 text-slate-300 max-w-md truncate" title={log.message}>{log.message}</td>
                                 <td class="px-4 py-3 font-mono text-xs text-slate-500">{log.path || '-'}</td>
+                                <td class="px-4 py-3 text-right">
+                                    <button 
+                                        onclick={(e) => deleteLog(e, log.id)} 
+                                        class="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-900/20 rounded transition-all opacity-0 group-hover:opacity-100"
+                                        title="Delete Log"
+                                    >
+                                        <Trash2 class="w-4 h-4" />
+                                    </button>
+                                </td>
                             </tr>
                         {/each}
                     {/if}
