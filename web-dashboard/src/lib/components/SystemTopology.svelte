@@ -240,6 +240,13 @@
 		return `M${startX},${startY} Q${controlX},${controlY} ${endX},${endY}`;
 	}
 
+	function getBusPath(startX: number, startY: number, endX: number, endY: number) {
+		// Create a right-angled "circuit board" style path
+		// Horizontal then Vertical
+		const midY = (startY + endY) / 2;
+		return `M${startX},${startY} L${startX},${midY} L${endX},${midY} L${endX},${endY}`;
+	}
+
 	function getStatusColor(spawner: any, isHovered: boolean) {
 		const isActive = spawner.status === 'online' || spawner.status === 'Online';
 
@@ -383,36 +390,54 @@
 
 				<!-- RedEye Connection -->
 				<path
-					d={getConnectionPath(redeyePos.x, redeyePos.y, center.x, center.y)}
+					d={getBusPath(redeyePos.x, redeyePos.y, center.x, center.y)}
 					stroke="#ef4444"
-					stroke-width="2"
-					stroke-dasharray="5, 5"
-					opacity="0.6"
+					stroke-width="3"
+					opacity="0.4"
 					fill="none"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				/>
+				<path
+					d={getBusPath(redeyePos.x, redeyePos.y, center.x, center.y)}
+					stroke="#ef4444"
+					stroke-width="1"
+					opacity="0.8"
+					fill="none"
+					stroke-linecap="round"
+					stroke-linejoin="round"
 				>
 					<animate
-						attributeName="stroke-dashoffset"
-						from="0"
-						to="-20"
-						dur="3s"
+						attributeName="stroke-dasharray"
+						values="0, 100; 100, 0"
+						dur="4s"
 						repeatCount="indefinite"
 					/>
 				</path>
 
 				<!-- Database Connection -->
 				<path
-					d={getConnectionPath(databasePos.x, databasePos.y, center.x, center.y)}
+					d={getBusPath(databasePos.x, databasePos.y, center.x, center.y)}
 					stroke="#10b981"
-					stroke-width="2"
-					stroke-dasharray="5, 5"
-					opacity="0.6"
+					stroke-width="3"
+					opacity="0.4"
 					fill="none"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				/>
+				<path
+					d={getBusPath(databasePos.x, databasePos.y, center.x, center.y)}
+					stroke="#10b981"
+					stroke-width="1"
+					opacity="0.8"
+					fill="none"
+					stroke-linecap="round"
+					stroke-linejoin="round"
 				>
 					<animate
-						attributeName="stroke-dashoffset"
-						from="0"
-						to="20"
-						dur="3s"
+						attributeName="stroke-dasharray"
+						values="0, 100; 100, 0"
+						dur="4s"
 						repeatCount="indefinite"
 					/>
 				</path>
@@ -745,7 +770,7 @@
 				class="absolute z-20 flex flex-col items-center group cursor-pointer transition-all duration-300 hover:scale-110"
 				style="top: {redeyePos.y - 30}px; left: {redeyePos.x - 30}px;"
 			>
-				<div class="relative w-15 h-15 bg-slate-900/90 border-2 border-red-500/50 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(239,68,68,0.2)] backdrop-blur-md overflow-hidden">
+				<div class="relative w-16 h-16 bg-slate-900/90 border-2 border-red-500/50 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(239,68,68,0.2)] backdrop-blur-md overflow-hidden">
 					<div class="absolute inset-0 bg-red-500/5 animate-pulse"></div>
 					<Eye class="w-7 h-7 text-red-500 animate-pulse" />
 					
@@ -760,7 +785,7 @@
 				class="absolute z-20 flex flex-col items-center group cursor-pointer transition-all duration-300 hover:scale-110"
 				style="top: {databasePos.y - 30}px; left: {databasePos.x - 30}px;"
 			>
-				<div class="relative w-15 h-15 bg-slate-900/90 border-2 border-emerald-500/50 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.2)] backdrop-blur-md">
+				<div class="relative w-16 h-16 bg-slate-900/90 border-2 border-emerald-500/50 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.2)] backdrop-blur-md">
 					<Database class="w-7 h-7 text-emerald-500" />
 					
 					<!-- Database activity rings -->
