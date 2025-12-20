@@ -166,7 +166,11 @@ The following security improvements have been implemented:
 
 ### System Logging & Error Reporting
 *   **Architecture:** Implemented a new persistent, categorized logging system.
-*   **Database:** Added `system_logs` table to store detailed logs (timestamp, level, category, source, message, details, client_ip, path, method).
+*   **Database:** Added `system_logs` table to store detailed logs.
+*   **RedEye Performance:** Added a new "RedEye Guardian" card and detailed metrics modal to the Performance tab, tracking real-time blocks, rate-limiting, and active bans.
+*   **Backend:**
+    *   Created `server/logging.go` service for structured logging.
+
 *   **Backend:**
     *   Created `server/logging.go` service for structured logging.
     *   Updated `StatsMiddleware` to capture and categorize errors (Internal, Spawner, Security).
