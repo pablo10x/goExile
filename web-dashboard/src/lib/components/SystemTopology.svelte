@@ -840,18 +840,52 @@
 				</div>
 			</div>
 
-			<!-- Database Node -->
+			<!-- Database Node (Cyber Persistence Core) -->
 			<div
 				class="absolute z-20 flex flex-col items-center group cursor-pointer transition-all duration-300 hover:scale-110"
-				style="top: {databasePos.y - 30}px; left: {databasePos.x - 30}px;"
+				style="top: {databasePos.y - 40}px; left: {databasePos.x - 40}px;"
 			>
-				<div class="relative w-16 h-16 bg-slate-900/90 border-2 border-emerald-500/50 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.2)] backdrop-blur-md">
-					<Database class="w-7 h-7 text-emerald-500" />
-					
-					<!-- Database activity rings -->
-					<div class="absolute inset-0 border border-emerald-500/20 rounded-xl scale-75 animate-ping-slow"></div>
+				<div class="relative w-20 h-20 flex items-center justify-center">
+					<!-- Outer octagonal frame -->
+					<div 
+						class="absolute inset-0 bg-slate-950 border-2 border-emerald-600/80 shadow-[0_0_25px_rgba(16,185,129,0.3)] backdrop-blur-xl group-hover:border-emerald-400 group-hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] transition-all duration-300"
+						style="clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"
+					></div>
+
+					<!-- Data Flow SVG -->
+					<svg viewBox="0 0 100 100" class="w-12 h-12 relative z-10 filter drop-shadow-[0_0_5px_rgba(16,185,129,0.6)]">
+						<!-- Central Data Column -->
+						<rect x="40" y="20" width="20" height="60" fill="none" stroke="#10b981" stroke-width="1" stroke-dasharray="4,2" />
+						
+						<!-- Rotating Data Platters -->
+						<g class="animate-spin" style="transform-origin: center; animation-duration: 8s;">
+							<ellipse cx="50" cy="35" rx="25" ry="8" fill="none" stroke="#10b981" stroke-width="2" opacity="0.8" />
+							<ellipse cx="50" cy="50" rx="25" ry="8" fill="none" stroke="#10b981" stroke-width="2" opacity="0.6" />
+							<ellipse cx="50" cy="65" rx="25" ry="8" fill="none" stroke="#10b981" stroke-width="2" opacity="0.4" />
+						</g>
+
+						<!-- Pulse Core -->
+						<circle cx="50" cy="50" r="5" fill="#10b981" class="animate-pulse" />
+						
+						<!-- Binary stream indicators -->
+						<g class="animate-redeye-flicker">
+							<rect x="42" y="25" width="4" height="4" fill="#10b981" />
+							<rect x="54" y="45" width="4" height="4" fill="#10b981" />
+							<rect x="42" y="65" width="4" height="4" fill="#10b981" />
+						</g>
+					</svg>
+
+					<!-- Energy Rings -->
+					<div class="absolute inset-0 border border-emerald-500/20 scale-110 animate-ping-slow opacity-30" style="clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"></div>
 				</div>
-				<span class="text-[8px] font-bold text-emerald-400 mt-2 tracking-widest uppercase">Persistence</span>
+				<div class="mt-4 flex flex-col items-center">
+					<span class="text-[9px] font-black text-emerald-500 tracking-[0.3em] uppercase">PERSISTENCE_LAYER</span>
+					<div class="flex gap-1 mt-1">
+						<div class="w-16 h-1 bg-slate-800 rounded-full overflow-hidden">
+							<div class="h-full bg-emerald-500 w-2/3 animate-pulse"></div>
+						</div>
+					</div>
+				</div>
 			</div>
 
 			<!-- Spawner Nodes -->
