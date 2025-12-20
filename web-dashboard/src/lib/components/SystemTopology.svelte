@@ -57,12 +57,37 @@
 
 	// RedEye Interception State
 	let showInterception = $state(false);
+	let targetPos = $state({ x: 0, y: 0 });
+	let missilePath1 = $state('');
+	let missilePath2 = $state('');
 	let interceptionInterval: ReturnType<typeof setInterval>;
+
+	function calculateInterception() {
+		// Target a random spot near the master
+		const offset = 100;
+		const tx = center.x + (Math.random() - 0.5) * offset * 2;
+		const ty = center.y + (Math.random() - 0.5) * offset * 2;
+		targetPos = { x: tx, y: ty };
+
+		// Calculate curved paths from RedEye to target
+		// Use different control points for each missile for "dual strike" feel
+		const midX = (redeyePos.x + tx) / 2;
+		const midY = (redeyePos.y + ty) / 2;
+		const dx = tx - redeyePos.x;
+		const dy = ty - redeyePos.y;
+		const dist = Math.sqrt(dx * dx + dy * dy);
+		const px = -dy / dist;
+		const py = dx / dist;
+
+		missilePath1 = `M${redeyePos.x},${redeyePos.y} Q${midX + px * 40},${midY + py * 40} ${tx},${ty}`;
+		missilePath2 = `M${redeyePos.x},${redeyePos.y} Q${midX - px * 30},${midY - py * 30} ${tx},${ty}`;
+	}
 
 	onMount(() => {
 		interceptionInterval = setInterval(() => {
+			calculateInterception();
 			showInterception = true;
-			setTimeout(() => (showInterception = false), 2500);
+			setTimeout(() => (showInterception = false), 3000);
 		}, 7000);
 
 		if (containerElement) {
@@ -453,6 +478,45 @@
 					/>
 				</path>
 
+				<!-- RedEye Interception (Global SVG) -->
+				{#if showInterception}
+					<g filter="url(#strongGlow)">
+						<!-- Threat -->
+						<rect x={targetPos.x - 4} y={targetPos.y - 4} width="8" height="8" fill="#ef4444" class="animate-threat-appear" style="transform-box: fill-box; transform-origin: center;">
+							<animate attributeName="opacity" values="0;1;1;0" dur="2.5s" repeatCount="1" />
+						</rect>
+
+						<!-- Missile 1 + Trail -->
+						<g>
+							{#each Array(4) as _, i}
+								<circle r={2 - i*0.3} fill="#fb923c" opacity={0.8 - i*0.2}>
+									<animateMotion dur="2s" repeatCount="1" path={missilePath1} begin="{i * 0.05}s" fill="freeze" />
+								</circle>
+							{/each}
+							<circle r="3" fill="#fb923c">
+								<animateMotion dur="2s" repeatCount="1" path={missilePath1} fill="freeze" />
+							</circle>
+						</g>
+
+						<!-- Missile 2 + Trail -->
+						<g>
+							{#each Array(4) as _, i}
+								<circle r={2 - i*0.3} fill="#22d3ee" opacity={0.8 - i*0.2}>
+									<animateMotion dur="2s" repeatCount="1" path={missilePath2} begin="{i * 0.05}s" fill="freeze" />
+								</circle>
+							{/each}
+							<circle r="3" fill="#22d3ee">
+								<animateMotion dur="2s" repeatCount="1" path={missilePath2} fill="freeze" />
+							</circle>
+						</g>
+
+						<!-- Impact Blast -->
+						<circle cx={targetPos.x} cy={targetPos.y} r="30" fill="none" stroke="#fb923c" stroke-width="2" class="animate-refined-blast">
+							<animate attributeName="opacity" values="0;0.8;0" dur="2.5s" repeatCount="1" />
+						</circle>
+					</g>
+				{/if}
+
 				<!-- Connections -->
 				{#each $spawners as spawner, i (spawner.id)}
 					{@const pos = getPosition(i, $spawners.length)}
@@ -819,21 +883,6 @@
 							<path d="M 80 80 A 40 40 0 0 1 60 90" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" />
 						</svg>
 					</div>
-
-					<!-- Interception Animation -->
-					{#if showInterception}
-						<div class="absolute inset-0 z-40 pointer-events-none">
-							<!-- Detected Threat -->
-							<div class="absolute -top-24 -left-12 w-3 h-3 bg-red-500 rounded-sm animate-threat-appear shadow-[0_0_12px_#ef4444]"></div>
-							
-							<!-- Guided Interceptors -->
-							<div class="absolute top-1/2 left-1/2 w-1.5 h-1.5 bg-orange-400 rounded-full animate-interceptor-1 shadow-[0_0_10px_#fb923c]"></div>
-							<div class="absolute top-1/2 left-1/2 w-1.5 h-1.5 bg-cyan-400 rounded-full animate-interceptor-2 shadow-[0_0_10px_#22d3ee]"></div>
-							
-							<!-- Impact Event -->
-							<div class="absolute -top-24 -left-12 w-16 h-16 rounded-full border border-orange-500/50 animate-refined-blast"></div>
-						</div>
-					{/if}
 
 					<!-- Sentinel Status -->
 					<div class="absolute -bottom-3 px-3 py-0.5 bg-slate-900 border border-red-500/30 rounded-full text-[7px] font-bold text-red-400 tracking-widest uppercase">
@@ -1658,44 +1707,24 @@
 
 	@keyframes threatAppear {
 		0% { transform: scale(0) rotate(45deg); opacity: 0; }
-		20% { transform: scale(1) rotate(45deg); opacity: 1; }
+		10% { transform: scale(1) rotate(45deg); opacity: 1; }
 		80% { transform: scale(1) rotate(45deg); opacity: 1; }
 		100% { transform: scale(0) rotate(45deg); opacity: 0; }
 	}
 
-	@keyframes interceptorPath1 {
-		0% { transform: translate(0, 0) scale(0); opacity: 0; }
-		20% { opacity: 1; transform: translate(0, 0) scale(1); }
-		80% { transform: translate(-100px, -100px) scale(1); opacity: 1; }
-		100% { transform: translate(-100px, -100px) scale(0); opacity: 0; }
-	}
-
-	@keyframes interceptorPath2 {
-		0% { transform: translate(0, 0) scale(0); opacity: 0; }
-		30% { opacity: 1; transform: translate(0, 0) scale(1); }
-		80% { transform: translate(-105px, -95px) scale(1); opacity: 1; }
-		100% { transform: translate(-105px, -95px) scale(0); opacity: 0; }
-	}
-
 	@keyframes refinedBlast {
-		0%, 75% { transform: translate(-25px, -25px) scale(0); opacity: 0; }
-		80% { transform: translate(-25px, -25px) scale(1); opacity: 0.8; }
-		100% { transform: translate(-25px, -25px) scale(2); opacity: 0; }
+		0%, 70% { transform: scale(0); opacity: 0; }
+		75% { transform: scale(1); opacity: 0.8; }
+		100% { transform: scale(3); opacity: 0; }
 	}
 
 	.animate-threat-appear {
-		animation: threatAppear 2.5s ease-out forwards;
-	}
-
-	.animate-interceptor-1 {
-		animation: interceptorPath1 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-	}
-
-	.animate-interceptor-2 {
-		animation: interceptorPath2 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+		animation: threatAppear 3s ease-out forwards;
 	}
 
 	.animate-refined-blast {
-		animation: refinedBlast 2.5s ease-out forwards;
+		animation: refinedBlast 3s ease-out forwards;
+		transform-box: fill-box;
+		transform-origin: center;
 	}
 </style>
