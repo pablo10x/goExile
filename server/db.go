@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -143,7 +144,6 @@ func InitDB(dsn string) (*sqlx.DB, error) {
 	var configCount int
 	err = db.QueryRow(`SELECT COUNT(*) FROM server_config`).Scan(&configCount)
 	if err == nil && configCount == 0 {
-
 
 	}
 
@@ -1619,6 +1619,23 @@ func isValidName(s string) bool {
 
 // -- RedEye Rules --
 
+func GetRedEyeRuleByID(db *sqlx.DB, id int) (*RedEyeRule, error) {
+	var r RedEyeRule
+	var tsUnix int64
+	var enabledInt int
+	query := `SELECT id, name, cidr, port, COALESCE(path_pattern, '') as path_pattern, protocol, action, rate_limit, burst, enabled, created_at FROM redeye_rules WHERE id = $1`
+	err := db.QueryRowx(query, id).Scan(&r.ID, &r.Name, &r.CIDR, &r.Port, &r.PathPattern, &r.Protocol, &r.Action, &r.RateLimit, &r.Burst, &enabledInt, &tsUnix)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil // Rule not found
+		}
+		return nil, err
+	}
+	r.Enabled = enabledInt == 1
+	r.CreatedAt = time.Unix(tsUnix, 0).UTC()
+	return &r, nil
+}
+
 func CreateRedEyeRule(db *sqlx.DB, r *RedEyeRule) (int, error) {
 	var id int
 	do := func() error {
@@ -1629,6 +1646,13 @@ func CreateRedEyeRule(db *sqlx.DB, r *RedEyeRule) (int, error) {
 	}
 	if err := execWithRetry(do); err != nil {
 		return 0, err
+	}
+
+	// Apply OS-level block if it's a DENY rule
+	if r.Action == "DENY" {
+		if err := BlockIPSystem(r.CIDR); err != nil {
+			log.Printf("RedEye: Failed to apply OS block for new rule (CIDR: %s): %v", r.CIDR, err)
+		}
 	}
 	return id, nil
 }
@@ -1656,20 +1680,77 @@ func GetRedEyeRules(db *sqlx.DB) ([]RedEyeRule, error) {
 }
 
 func UpdateRedEyeRule(db *sqlx.DB, r *RedEyeRule) error {
+	var oldRule *RedEyeRule
+	var err error
+
+	// Retrieve the old rule before updating
+	oldRule, err = GetRedEyeRuleByID(db, r.ID)
+	if err != nil {
+		return fmt.Errorf("failed to get old rule for update: %w", err)
+	}
+	if oldRule == nil {
+		return fmt.Errorf("rule with ID %d not found for update", r.ID)
+	}
+
 	do := func() error {
 		query := `UPDATE redeye_rules SET name=$1, cidr=$2, port=$3, path_pattern=$4, protocol=$5, action=$6, rate_limit=$7, burst=$8, enabled=$9 WHERE id=$10`
 		_, err := db.Exec(query, r.Name, r.CIDR, r.Port, r.PathPattern, r.Protocol, r.Action, r.RateLimit, r.Burst, boolToInt(r.Enabled), r.ID)
 		return err
 	}
-	return execWithRetry(do)
+
+	if err := execWithRetry(do); err != nil {
+		return err
+	}
+
+	// Logic for UFW updates based on rule changes
+	oldWasDeny := oldRule.Action == "DENY" && oldRule.Enabled
+	newIsDeny := r.Action == "DENY" && r.Enabled
+
+	// Case 1: Rule changed from DENY to non-DENY, or CIDR changed
+	if oldWasDeny && (!newIsDeny || oldRule.CIDR != r.CIDR) {
+		if err := UnblockIPSystem(oldRule.CIDR); err != nil {
+			log.Printf("RedEye: Failed to remove old OS block for rule ID %d (CIDR: %s): %v", r.ID, oldRule.CIDR, err)
+		}
+	}
+
+	// Case 2: Rule changed to DENY, or CIDR changed for an existing DENY rule
+	if newIsDeny && (!oldWasDeny || oldRule.CIDR != r.CIDR) {
+		if err := BlockIPSystem(r.CIDR); err != nil {
+			log.Printf("RedEye: Failed to apply new OS block for rule ID %d (CIDR: %s): %v", r.ID, r.CIDR, err)
+		}
+	}
+
+	return nil
 }
 
 func DeleteRedEyeRule(db *sqlx.DB, id int) error {
+	var ruleToDelete *RedEyeRule
+	var err error
+
+	// Retrieve the rule before deleting
+	ruleToDelete, err = GetRedEyeRuleByID(db, id)
+	if err != nil {
+		return fmt.Errorf("failed to get rule for deletion: %w", err)
+	}
+	// If ruleToDelete is nil, it means the rule wasn't found, which is fine for a delete operation,
+	// but we can't unblock what doesn't exist or wasn't a DENY rule.
+	
 	do := func() error {
 		_, err := db.Exec(`DELETE FROM redeye_rules WHERE id = $1`, id)
 		return err
 	}
-	return execWithRetry(do)
+
+	if err := execWithRetry(do); err != nil {
+		return err
+	}
+
+	// If the deleted rule was a DENY rule, unblock the IP at the OS level
+	if ruleToDelete != nil && ruleToDelete.Action == "DENY" {
+		if err := UnblockIPSystem(ruleToDelete.CIDR); err != nil {
+			log.Printf("RedEye: Failed to remove OS block for deleted rule (CIDR: %s): %v", ruleToDelete.CIDR, err)
+		}
+	}
+	return nil
 }
 
 // -- RedEye Logs --
@@ -1857,7 +1938,15 @@ func GetBannedIPsFull(db *sqlx.DB) ([]RedEyeIPReputation, error) {
 
 func UnbanIP(db *sqlx.DB, ip string) error {
 	_, err := db.Exec(`UPDATE redeye_ip_reputation SET is_banned = 0, ban_expires_at = NULL WHERE ip = $1`, ip)
-	return err
+	if err != nil {
+		return err
+	}
+
+	// Also remove OS-level block
+	if err := UnblockIPSystem(ip); err != nil {
+		log.Printf("RedEye: Failed to remove OS block for unbanned IP (CIDR: %s): %v", ip, err)
+	}
+	return nil
 }
 
 // RedEyeStats holds summary statistics for the dashboard

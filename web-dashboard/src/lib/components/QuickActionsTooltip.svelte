@@ -105,6 +105,7 @@
 			style="top: {coords.y}px; left: {coords.x}px;"
 			onmouseenter={show} 
 			onmouseleave={hide}
+			role="group"
 		>
 			{#if title}
 				<div class="px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-700/50 mb-1 flex items-center gap-2">

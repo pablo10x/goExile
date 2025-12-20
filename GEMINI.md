@@ -179,3 +179,31 @@ The following security improvements have been implemented:
 *   **Notes & Tasks:** Refactored `web-dashboard/src/routes/notes/+page.svelte` to feature a 2-column layout (Tasks sidebar, Notes grid).
 *   **Tasks:** Added `TaskItem` component with cleaner styling and animations.
 *   **Notes:** Enhanced `NoteCard` visuals with gradients, shadow effects, and better status indicators.
+
+## 🔴 RedEye System Architecture Analysis
+
+**Question:** Should the RedEye system in the backend be its own service?
+
+**Conclusion:** **No, it is not recommended to separate the RedEye system into its own service at this time.**
+
+**Reasoning:**
+
+The RedEye system, as implemented in `server/redeye_core.go` and `server/handlers_redeye.go`, is an intrinsic and deeply integrated part of the Master Server. Key factors influencing this conclusion include:
+
+1.  **Tight Database Coupling:** RedEye relies heavily on the Master Server's `dbConn` for storing and retrieving rules, logs, statistics, configuration, and IP reputation data. Separating it would necessitate either:
+    *   A dedicated RedEye database, leading to data duplication and synchronization challenges.
+    *   An additional network hop for the RedEye service to communicate with the Master Server's database, introducing latency and complexity.
+
+2.  **Core Middleware Functionality:** The `RedEyeMiddleware` is a critical security and traffic management layer. It intercepts all incoming HTTP requests to the Master Server to perform IP banning, rule enforcement, and rate limiting *before* requests reach other handlers. Extracting this into a separate service would mean:
+    *   Either duplicating the middleware logic within the Master Server, negating the purpose of separation.
+    *   Or routing *all* Master Server traffic through the RedEye service, adding significant overhead, increasing latency, and creating a single point of failure.
+
+3.  **Real-time Interaction:** Features such as real-time auto-banning and immediate cache refreshing for IP bans and rules require minimal latency to be effective. An additional service would introduce communication delays, potentially impacting the responsiveness of security measures.
+
+4.  **Shared Configuration:** RedEye utilizes the Master Server's existing configuration mechanisms (`GetConfigByKey`, `UpdateConfig`), indicating a shared operational context.
+
+5.  **Anti-Cheat Event Reporting:** The `ReportAnticheatEventHandler` suggests that other parts of the Master Server (or external components interacting with the Master Server) report events directly to this endpoint. This tight integration ensures timely updates to RedEye's reputation system.
+
+While separating services can offer benefits like independent scalability and improved modularity, these advantages would likely require a substantial re-architecture of RedEye (e.g., transitioning to an event-driven model, introducing a dedicated, synchronized database) to overcome the challenges posed by its current deep integration. The current implementation does not indicate that RedEye's resource consumption or operational independence is a significant bottleneck that would justify such a complex undertaking.
+
+Therefore, for the current architecture, RedEye is most appropriately managed as an internal component of the Master Server.

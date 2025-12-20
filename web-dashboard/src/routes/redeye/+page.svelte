@@ -45,6 +45,7 @@
         client_ip: string;
         severity: number;
         timestamp: string;
+        player_id: string;
     }
 
     interface RedEyeStats {
@@ -513,9 +514,9 @@
                         </div>
 
                         <div>
-                            <label class="block text-slate-200 font-medium mb-2">Reputation Threshold</label>
+                            <label for="autoBanThreshold" class="block text-slate-200 font-medium mb-2">Reputation Threshold</label>
                             <div class="flex gap-4 items-center">
-                                <input type="range" min="10" max="200" step="10" bind:value={config['redeye.auto_ban_threshold']} class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500">
+                                <input id="autoBanThreshold" type="range" min="10" max="200" step="10" bind:value={config['redeye.auto_ban_threshold']} class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500">
                                 <span class="w-12 text-center font-mono bg-slate-900 rounded px-2 py-1 border border-slate-700 text-white">{config['redeye.auto_ban_threshold']}</span>
                             </div>
                             <span class="block text-xs text-slate-400 mt-1">Score > {config['redeye.auto_ban_threshold']} triggers ban</span>
@@ -579,7 +580,7 @@
 
 <!-- Modal -->
 {#if showModal}
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" transition:fade>
+    <div class="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" transition:fade onclick={() => showModal = false} role="button" tabindex="0" onkeydown={(e) => { if (e.key === 'Escape') showModal = false; }}>
         <div class="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden" onclick={(e) => e.stopPropagation()}>
             <div class="p-6 border-b border-slate-800 flex justify-between items-center">
                 <h3 class="text-lg font-bold text-white">{editingRule ? 'Edit Rule' : 'New Rule'}</h3>
@@ -587,49 +588,49 @@
             </div>
             <div class="p-6 space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-slate-400 mb-1">Name</label>
-                    <input type="text" bind:value={form.name} class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500" />
+                    <label for="ruleName" class="block text-sm font-medium text-slate-400 mb-1">Name</label>
+                    <input id="ruleName" type="text" bind:value={form.name} class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500" />
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-slate-400 mb-1">CIDR / IP</label>
-                        <input type="text" bind:value={form.cidr} class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500" />
+                        <label for="ruleCidrIp" class="block text-sm font-medium text-slate-400 mb-1">CIDR / IP</label>
+                        <input id="ruleCidrIp" type="text" bind:value={form.cidr} class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500" />
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-400 mb-1">Port</label>
-                        <input type="text" bind:value={form.port} class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500" placeholder="*" />
+                        <label for="rulePort" class="block text-sm font-medium text-slate-400 mb-1">Port</label>
+                        <input id="rulePort" type="text" bind:value={form.port} class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500" placeholder="*" />
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-400 mb-1">Path Pattern (Optional)</label>
-                    <input type="text" bind:value={form.path_pattern} class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500" placeholder="/api/v1/..." />
+                    <label for="rulePathPattern" class="block text-sm font-medium text-slate-400 mb-1">Path Pattern (Optional)</label>
+                    <input id="rulePathPattern" type="text" bind:value={form.path_pattern} class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500" placeholder="/api/v1/..." />
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-400 mb-1">Action</label>
+                <fieldset>
+                    <legend class="block text-sm font-medium text-slate-400 mb-1">Action</legend>
                     <div class="flex gap-4">
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" bind:group={form.action} value="ALLOW" class="text-green-500 focus:ring-green-500" />
+                        <label for="actionAllow" class="flex items-center gap-2 cursor-pointer">
+                            <input id="actionAllow" type="radio" bind:group={form.action} value="ALLOW" class="text-green-500 focus:ring-green-500" />
                             <span class="text-slate-300">Allow</span>
                         </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" bind:group={form.action} value="DENY" class="text-red-500 focus:ring-red-500" />
+                        <label for="actionDeny" class="flex items-center gap-2 cursor-pointer">
+                            <input id="actionDeny" type="radio" bind:group={form.action} value="DENY" class="text-red-500 focus:ring-red-500" />
                             <span class="text-slate-300">Deny</span>
                         </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" bind:group={form.action} value="RATE_LIMIT" class="text-yellow-500 focus:ring-yellow-500" />
+                        <label for="actionRateLimit" class="flex items-center gap-2 cursor-pointer">
+                            <input id="actionRateLimit" type="radio" bind:group={form.action} value="RATE_LIMIT" class="text-yellow-500 focus:ring-yellow-500" />
                             <span class="text-slate-300">Rate Limit</span>
                         </label>
                     </div>
-                </div>
+                </fieldset>
                 {#if form.action === 'RATE_LIMIT'}
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-slate-400 mb-1">Limit (req/s)</label>
-                            <input type="number" bind:value={form.rate_limit} class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500" />
+                            <label for="ruleLimit" class="block text-sm font-medium text-slate-400 mb-1">Limit (req/s)</label>
+                            <input id="ruleLimit" type="number" bind:value={form.rate_limit} class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500" />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-slate-400 mb-1">Burst</label>
-                            <input type="number" bind:value={form.burst} class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500" />
+                            <label for="ruleBurst" class="block text-sm font-medium text-slate-400 mb-1">Burst</label>
+                            <input id="ruleBurst" type="number" bind:value={form.burst} class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500" />
                         </div>
                     </div>
                 {/if}

@@ -315,7 +315,7 @@
 
     <!-- Detail Modal -->
     {#if selectedLog}
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" transition:fade onclick={() => selectedLog = null}>
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" transition:fade onclick={() => selectedLog = null} role="button" tabindex="0" onkeydown={(e) => { if (e.key === 'Escape') selectedLog = null; }}>
             <div class="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden" onclick={(e) => e.stopPropagation()}>
                 <div class="p-6 border-b border-slate-800 flex justify-between items-start">
                     <div>

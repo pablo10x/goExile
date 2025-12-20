@@ -313,7 +313,7 @@
 
 <!-- Beautiful Modal for Full Note View -->
 {#if showModal}
-	<div class="modal-overlay" onclick={closeModal} transition:fade={{ duration: 200 }}>
+	<div class="modal-overlay" onclick={closeModal} transition:fade={{ duration: 200 }} role="button" tabindex="0" onkeydown={(e) => { if (e.key === 'Escape') showModal = false; }}>
 		<div
 			class="modal-content"
 			onclick={(e) => e.stopPropagation()}

@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -147,6 +148,10 @@ func RunAnomalyDetection(db *sqlx.DB) {
 		if _, err := CreateRedEyeRule(db, rule); err != nil {
 			log.Printf("RedEye Anomaly: Failed to create ban rule for %s: %v", ip, err)
 		}
+		// Also apply system-level block
+		if err := BlockIPSystem(ip); err != nil {
+			log.Printf("RedEye Anomaly: Failed to apply system block for %s: %v", ip, err)
+		}
 	}
 	
 	// Refresh cache if we banned anyone (checking if rows iterated? simplified: just refresh)
@@ -247,7 +252,7 @@ func RedEyeMiddleware(next http.Handler) http.Handler {
 		if rateLimited {
 			http.Error(w, "Rate Limit Exceeded (RedEye)", http.StatusTooManyRequests)
 			return
-		}
+			}
 
 		next.ServeHTTP(w, r)
 	})
@@ -328,6 +333,10 @@ func cleanupLimiters() {
 
 // BlockIPSystem executes OS-level blocking (UFW).
 func BlockIPSystem(ip string) error {
+	if runtime.GOOS != "linux" {
+		return fmt.Errorf("ufw is only supported on Linux. Current OS: %s", runtime.GOOS)
+	}
+
 	parsedIP := net.ParseIP(ip)
 	if parsedIP == nil {
 		return fmt.Errorf("invalid IP: %s", ip)
@@ -338,11 +347,6 @@ func BlockIPSystem(ip string) error {
 		return err
 	}
 
-	// Windows support? 
-	// For now, only Linux UFW is implemented.
-	// We could add netsh/PowerShell for Windows but that's complex.
-	// We'll keep UFW logic for Linux hosts.
-	
 	cmd := exec.Command("ufw", "deny", "from", ipStr, "to", "any")
 	if output, err := cmd.CombinedOutput(); err != nil {
 		// Try sudo
@@ -353,6 +357,45 @@ func BlockIPSystem(ip string) error {
 			}
 		} else {
 			return fmt.Errorf("ufw failed: %v %s", err, string(output))
+		}
+	}
+	
+	return nil
+}
+
+// UnblockIPSystem removes an OS-level block (UFW).
+func UnblockIPSystem(ip string) error {
+	if runtime.GOOS != "linux" {
+		return fmt.Errorf("ufw is only supported on Linux. Current OS: %s", runtime.GOOS)
+	}
+
+	parsedIP := net.ParseIP(ip)
+	if parsedIP == nil {
+		return fmt.Errorf("invalid IP: %s", ip)
+	}
+	ipStr := parsedIP.String()
+
+	if err := ValidateIP(ipStr); err != nil {
+		return err
+	}
+
+	// ufw delete command will remove the specific rule
+	cmd := exec.Command("ufw", "delete", "deny", "from", ipStr, "to", "any")
+	if output, err := cmd.CombinedOutput(); err != nil {
+		// Try sudo
+		if strings.Contains(string(output), "root") || strings.Contains(string(output), "permission") {
+			cmd = exec.Command("sudo", "ufw", "delete", "deny", "from", ipStr, "to", "any")
+			if out, err := cmd.CombinedOutput(); err != nil {
+				return fmt.Errorf("ufw delete failed: %v %s", err, string(out))
+			}
+		} else {
+			// It's possible the rule simply doesn't exist, which isn't an error for unblocking
+			// We can check for a specific output from ufw to confirm this.
+			if strings.Contains(string(output), "Rule not found") {
+				log.Printf("UFW rule for %s not found, no need to unblock.", ipStr)
+				return nil
+			}
+			return fmt.Errorf("ufw delete failed: %v %s", err, string(output))
 		}
 	}
 	
