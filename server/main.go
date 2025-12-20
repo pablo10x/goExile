@@ -137,6 +137,11 @@ func run() error {
 		}
 	}
 
+	// Initialize RedEye Background Tasks
+	if dbConn != nil {
+		StartRedEyeBackground(dbConn)
+	}
+
 	// Initialize Firebase Remote Config
 	_ = InitFirebase()
 	if firebaseManager != nil && firebaseManager.connected {
@@ -335,6 +340,7 @@ func run() error {
 		router.Handle("/api/logs/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(DeleteSystemLogHandler))).Methods("DELETE")
 
 		// RedEye Security System
+		router.Handle("/api/redeye/stats", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(GetRedEyeStatsHandler))).Methods("GET")
 		router.Handle("/api/redeye/rules", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(ListRedEyeRulesHandler))).Methods("GET")
 		router.Handle("/api/redeye/rules", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(CreateRedEyeRuleHandler))).Methods("POST")
 		router.Handle("/api/redeye/rules/{id}", AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(UpdateRedEyeRuleHandler))).Methods("PUT")

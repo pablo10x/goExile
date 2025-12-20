@@ -8,6 +8,23 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// -- Stats Handler --
+
+func GetRedEyeStatsHandler(w http.ResponseWriter, r *http.Request) {
+	if dbConn == nil {
+		writeError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+
+	stats, err := GetRedEyeStats(dbConn)
+	if err != nil {
+		writeError(w, r, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, stats)
+}
+
 // -- Rules Handlers --
 
 func ListRedEyeRulesHandler(w http.ResponseWriter, r *http.Request) {
@@ -54,6 +71,8 @@ func CreateRedEyeRuleHandler(w http.ResponseWriter, r *http.Request) {
 
 	rule.ID = id
 	rule.CreatedAt = time.Now().UTC()
+	// Trigger refresh for immediate effect
+	RefreshBanCache(dbConn)
 	writeJSON(w, http.StatusCreated, rule)
 }
 
@@ -82,6 +101,7 @@ func UpdateRedEyeRuleHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	RefreshBanCache(dbConn)
 	writeJSON(w, http.StatusOK, rule)
 }
 
@@ -103,6 +123,7 @@ func DeleteRedEyeRuleHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	RefreshBanCache(dbConn)
 	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
 }
 
@@ -205,17 +226,8 @@ func ReportAnticheatEventHandler(w http.ResponseWriter, r *http.Request) {
 		if rep.ReputationScore >= 100 && !rep.IsBanned {
 			rep.IsBanned = true
 			rep.BanReason = "Auto-banned by RedEye: Reputation Score exceeded 100"
-			// Create a DENY rule
-			rule := &RedEyeRule{
-				Name:      "Auto-Ban " + event.ClientIP,
-				CIDR:      event.ClientIP,
-				Port:      "*",
-				Protocol:  "ANY",
-				Action:    "DENY",
-				Enabled:   true,
-				CreatedAt: time.Now().UTC(),
-			}
-			CreateRedEyeRule(dbConn, rule)
+			// Refresh cache to enforce ban immediately
+			defer RefreshBanCache(dbConn)
 		}
 
 		UpdateIPReputation(dbConn, rep)

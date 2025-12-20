@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { fade, fly } from 'svelte/transition';
+    import { fade, fly, slide } from 'svelte/transition';
     import { 
         Eye, 
         Plus, 
@@ -11,7 +11,9 @@
         Activity,
         Zap,
         Users,
-        Ban
+        Ban,
+        BarChart3,
+        ShieldCheck
     } from 'lucide-svelte';
     
     // Types would usually be imported, defining locally for speed in prototype
@@ -42,10 +44,19 @@
         timestamp: string;
     }
 
-    let activeTab = $state<'rules' | 'logs' | 'anticheat'>('rules');
+    interface RedEyeStats {
+        total_rules: number;
+        active_bans: number;
+        events_24h: number;
+        logs_24h: number;
+        reputation_count: number;
+    }
+
+    let activeTab = $state<'overview' | 'rules' | 'logs' | 'anticheat'>('overview');
     let rules = $state<RedEyeRule[]>([]);
     let logs = $state<RedEyeLog[]>([]);
     let events = $state<AnticheatEvent[]>([]);
+    let stats = $state<RedEyeStats>({ total_rules: 0, active_bans: 0, events_24h: 0, logs_24h: 0, reputation_count: 0 });
     let loading = $state(true);
 
     // Modal
@@ -61,6 +72,15 @@
         burst: 0,
         enabled: true
     });
+
+    async function fetchStats() {
+        try {
+            const res = await fetch('/api/redeye/stats');
+            if (res.ok) stats = await res.json();
+        } catch (e) {
+            console.error(e);
+        }
+    }
 
     async function fetchRules() {
         loading = true;
@@ -104,6 +124,13 @@
         }
     }
 
+    async function refreshAll() {
+        fetchStats();
+        if (activeTab === 'rules') fetchRules();
+        else if (activeTab === 'logs') fetchLogs();
+        else if (activeTab === 'anticheat') fetchEvents();
+    }
+
     async function saveRule() {
         try {
             const url = editingRule ? `/api/redeye/rules/${editingRule.id}` : '/api/redeye/rules';
@@ -121,6 +148,7 @@
             if (res.ok) {
                 showModal = false;
                 fetchRules();
+                fetchStats();
             } else {
                 alert('Failed to save rule');
             }
@@ -135,6 +163,7 @@
             const res = await fetch(`/api/redeye/rules/${id}`, { method: 'DELETE' });
             if (res.ok) {
                 rules = rules.filter(r => r.id !== id);
+                fetchStats();
             }
         } catch (e) {
             console.error(e);
@@ -170,7 +199,7 @@
     }
 
     onMount(() => {
-        fetchRules();
+        fetchStats();
     });
 </script>
 
@@ -185,7 +214,7 @@
             <p class="text-slate-400 text-sm mt-1">Advanced threat detection and access control</p>
         </div>
         <div class="flex gap-2">
-            <button onclick={() => activeTab === 'rules' ? fetchRules() : activeTab === 'logs' ? fetchLogs() : fetchEvents()} class="p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors">
+            <button onclick={refreshAll} class="p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors">
                 <RefreshCw class="w-4 h-4 {loading ? 'animate-spin' : ''}" />
             </button>
         </div>
@@ -193,6 +222,12 @@
 
     <!-- Tabs -->
     <div class="flex gap-2 mb-4 shrink-0">
+        <button 
+            onclick={() => { activeTab = 'overview'; fetchStats(); }}
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-all {activeTab === 'overview' ? 'bg-red-600 text-white shadow-lg shadow-red-900/20' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'}"
+        >
+            Overview
+        </button>
         <button 
             onclick={() => { activeTab = 'rules'; fetchRules(); }}
             class="px-4 py-2 rounded-lg text-sm font-medium transition-all {activeTab === 'rules' ? 'bg-red-600 text-white shadow-lg shadow-red-900/20' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'}"
@@ -215,7 +250,45 @@
 
     <!-- Content -->
     <div class="flex-1 bg-slate-900/50 border border-slate-800 rounded-xl overflow-hidden flex flex-col relative">
-        {#if activeTab === 'rules'}
+        {#if activeTab === 'overview'}
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 overflow-auto">
+                <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 flex flex-col items-center justify-center text-center">
+                    <ShieldCheck class="w-8 h-8 text-green-400 mb-2" />
+                    <span class="text-3xl font-bold text-white">{stats.total_rules}</span>
+                    <span class="text-xs text-slate-400 uppercase tracking-wider">Active Rules</span>
+                </div>
+                <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 flex flex-col items-center justify-center text-center">
+                    <Ban class="w-8 h-8 text-red-500 mb-2" />
+                    <span class="text-3xl font-bold text-white">{stats.active_bans}</span>
+                    <span class="text-xs text-slate-400 uppercase tracking-wider">Banned IPs</span>
+                </div>
+                <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 flex flex-col items-center justify-center text-center">
+                    <ShieldAlert class="w-8 h-8 text-yellow-400 mb-2" />
+                    <span class="text-3xl font-bold text-white">{stats.events_24h}</span>
+                    <span class="text-xs text-slate-400 uppercase tracking-wider">Events (24h)</span>
+                </div>
+                <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 flex flex-col items-center justify-center text-center">
+                    <Activity class="w-8 h-8 text-blue-400 mb-2" />
+                    <span class="text-3xl font-bold text-white">{stats.logs_24h}</span>
+                    <span class="text-xs text-slate-400 uppercase tracking-wider">Traffic Logs (24h)</span>
+                </div>
+
+                <!-- Threat Map Placeholder -->
+                <div class="col-span-1 md:col-span-2 lg:col-span-4 bg-slate-950/50 border border-slate-800 rounded-xl p-6 flex flex-col items-center justify-center h-64 mt-4 relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent"></div>
+                    
+                    <div class="relative z-10 text-center">
+                        <Activity class="w-12 h-12 text-red-500 mx-auto mb-4 animate-pulse" />
+                        <h3 class="text-xl font-bold text-white">Live Threat Monitor</h3>
+                        <p class="text-slate-400 text-sm max-w-md mx-auto mt-2">
+                            System is actively monitoring traffic and enforcing {stats.total_rules} rules.
+                            Reputation system tracking {stats.reputation_count} IPs.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        {:else if activeTab === 'rules'}
             <div class="p-4 border-b border-slate-800 flex justify-end">
                 <button onclick={() => openModal()} class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-lg shadow-red-900/20">
                     <Plus class="w-4 h-4" />

@@ -10,7 +10,59 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/jmoiron/sqlx"
 )
+
+// -- Caching --
+
+var (
+	BannedIPCache = make(map[string]bool)
+	BanCacheMu    sync.RWMutex
+)
+
+// StartRedEyeBackground initializes background tasks for RedEye.
+func StartRedEyeBackground(db *sqlx.DB) {
+	if db == nil {
+		return
+	}
+	
+	// Initial load
+	RefreshBanCache(db)
+
+	go func() {
+		ticker := time.NewTicker(30 * time.Second)
+		cleanupTicker := time.NewTicker(10 * time.Minute)
+		defer ticker.Stop()
+		defer cleanupTicker.Stop()
+
+		for {
+			select {
+			case <-ticker.C:
+				RefreshBanCache(db)
+			case <-cleanupTicker.C:
+				cleanupLimiters()
+			}
+		}
+	}()
+}
+
+func RefreshBanCache(db *sqlx.DB) {
+	ips, err := GetBannedIPList(db)
+	if err != nil {
+		log.Printf("RedEye: Failed to refresh ban cache: %v", err)
+		return
+	}
+
+	newCache := make(map[string]bool)
+	for _, ip := range ips {
+		newCache[ip] = true
+	}
+
+	BanCacheMu.Lock()
+	BannedIPCache = newCache
+	BanCacheMu.Unlock()
+}
 
 // RedEyeMiddleware serves as the guardian for the backend.
 // It handles IP blocking, Rule enforcement (Allow/Deny), and Rate Limiting.
@@ -29,10 +81,17 @@ func RedEyeMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// 1. Check IP Reputation / Ban List
-		// (Optional: Load from DB if we want strict blocking based on reputation)
-		// For MVP, we check Rules first.
+		// 1. Check IP Reputation / Ban List (Cached)
+		BanCacheMu.RLock()
+		isBanned := BannedIPCache[clientIP]
+		BanCacheMu.RUnlock()
 
+		if isBanned {
+			http.Error(w, "Access Denied (Banned)", http.StatusForbidden)
+			return
+		}
+
+		// 2. Rules
 		rules, err := GetRedEyeRules(dbConn)
 		if err != nil {
 			log.Printf("RedEye error fetching rules: %v", err)
@@ -63,11 +122,6 @@ func RedEyeMiddleware(next http.Handler) http.Handler {
 						rateLimited = true
 						break
 					}
-					// If rate limit passes, we continue? Or treat as allowed?
-					// Usually specific rules override general ones. 
-					// Let's say if it matches RATE_LIMIT, we enforce it. 
-					// If passed, does it mean allowed? 
-					// Assume default allow, so yes.
 					break 
 				}
 
@@ -172,20 +226,13 @@ func checkRateLimit(ip string, limit int, burst int) bool {
 
 // cleanupLimiters cleans up old entries to prevent memory leak
 func cleanupLimiters() {
-	for {
-		time.Sleep(10 * time.Minute)
-		limitMu.Lock()
-		for ip, lim := range limiters {
-			if time.Since(lim.lastUpdate) > 10*time.Minute {
-				delete(limiters, ip)
-			}
+	limitMu.Lock()
+	for ip, lim := range limiters {
+		if time.Since(lim.lastUpdate) > 10*time.Minute {
+			delete(limiters, ip)
 		}
-		limitMu.Unlock()
 	}
-}
-
-func init() {
-	go cleanupLimiters()
+	limitMu.Unlock()
 }
 
 // -- Helpers --

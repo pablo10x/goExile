@@ -321,7 +321,7 @@ func createTables(db *sqlx.DB) error {
 		severity INTEGER DEFAULT 0,
 		timestamp INTEGER NOT NULL
 	)`, pkType),
-		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS redeye_ip_reputation (
+		`CREATE TABLE IF NOT EXISTS redeye_ip_reputation (
 		ip TEXT PRIMARY KEY,
 		reputation_score INTEGER DEFAULT 0,
 		total_events INTEGER DEFAULT 0,
@@ -329,7 +329,7 @@ func createTables(db *sqlx.DB) error {
 		is_banned INTEGER DEFAULT 0,
 		ban_reason TEXT,
 		ban_expires_at INTEGER
-	)`, pkType),
+	)`,
 	}
 
 	for _, q := range queries {
@@ -1769,4 +1769,50 @@ func UpdateIPReputation(db *sqlx.DB, r *RedEyeIPReputation) error {
 		return err
 	}
 	return execWithRetry(do)
+}
+
+func GetBannedIPList(db *sqlx.DB) ([]string, error) {
+	var ips []string
+	query := `SELECT ip FROM redeye_ip_reputation WHERE is_banned = 1`
+	err := db.Select(&ips, query)
+	return ips, err
+}
+
+// RedEyeStats holds summary statistics for the dashboard
+type RedEyeStats struct {
+	TotalRules      int   `json:"total_rules"`
+	ActiveBans      int   `json:"active_bans"`
+	Events24h       int   `json:"events_24h"`
+	Logs24h         int   `json:"logs_24h"`
+	ReputationCount int   `json:"reputation_count"`
+}
+
+func GetRedEyeStats(db *sqlx.DB) (*RedEyeStats, error) {
+	stats := &RedEyeStats{}
+	
+	// Run queries in parallel or sequence (sequence is fine for sqlite/low load)
+	// Rules
+	if err := db.Get(&stats.TotalRules, "SELECT COUNT(*) FROM redeye_rules"); err != nil {
+		return nil, err
+	}
+	// Bans
+	if err := db.Get(&stats.ActiveBans, "SELECT COUNT(*) FROM redeye_ip_reputation WHERE is_banned = 1"); err != nil {
+		return nil, err
+	}
+	// Reputation entries
+	if err := db.Get(&stats.ReputationCount, "SELECT COUNT(*) FROM redeye_ip_reputation"); err != nil {
+		return nil, err
+	}
+	
+	// Events 24h
+	yesterday := time.Now().Add(-24 * time.Hour).Unix()
+	if err := db.Get(&stats.Events24h, "SELECT COUNT(*) FROM redeye_anticheat_events WHERE timestamp > $1", yesterday); err != nil {
+		return nil, err
+	}
+	// Logs 24h
+	if err := db.Get(&stats.Logs24h, "SELECT COUNT(*) FROM redeye_logs WHERE timestamp > $1", yesterday); err != nil {
+		return nil, err
+	}
+
+	return stats, nil
 }
