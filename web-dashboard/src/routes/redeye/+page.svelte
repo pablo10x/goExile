@@ -256,7 +256,15 @@
 	function openModal(rule: RedEyeRule | null = null) {
 		editingRule = rule;
 		if (rule) {
-			form = { ...rule };
+			form.name = rule.name;
+			form.cidr = rule.cidr;
+			form.port = rule.port;
+			form.path_pattern = rule.path_pattern;
+			form.protocol = rule.protocol;
+			form.action = rule.action;
+			form.rate_limit = rule.rate_limit;
+			form.burst = rule.burst;
+			form.enabled = rule.enabled;
 		} else {
 			form = {
 				name: '',
@@ -334,6 +342,7 @@
 			<button
 				onclick={refreshAll}
 				class="p-2.5 bg-slate-900 border border-slate-800 hover:border-red-500/50 text-slate-400 hover:text-white rounded-xl transition-all shadow-lg"
+				aria-label="Refresh security data"
 			>
 				<RefreshCw class="w-5 h-5 {loading ? 'animate-spin' : ''}" />
 			</button>
@@ -643,6 +652,7 @@
 							<button 
 								onclick={() => { config['redeye.auto_ban_enabled'] = !config['redeye.auto_ban_enabled']; updateConfig(); }}
 								class="w-14 h-7 rounded-full transition-all relative {config['redeye.auto_ban_enabled'] ? 'bg-red-600 shadow-[0_0_15px_rgba(220,38,38,0.4)]' : 'bg-slate-800'}"
+								aria-label="Toggle autonomous neutralization"
 							>
 								<div class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-all {config['redeye.auto_ban_enabled'] ? 'translate-x-7' : ''}"></div>
 							</button>
@@ -659,6 +669,7 @@
 									bind:value={config['redeye.auto_ban_threshold']} 
 									onchange={updateConfig}
 									class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-red-500"
+									aria-label="Threat sensitivity threshold"
 								>
 							</div>
 							<div class="flex justify-between text-[10px] font-mono text-slate-600 uppercase">
@@ -675,6 +686,7 @@
 							<button 
 								onclick={() => { config['redeye.alert_enabled'] = !config['redeye.alert_enabled']; updateConfig(); }}
 								class="w-14 h-7 rounded-full transition-all relative {config['redeye.alert_enabled'] ? 'bg-emerald-600 shadow-[0_0_15px_rgba(5,150,105,0.4)]' : 'bg-slate-800'}"
+								aria-label="Toggle alert notifications"
 							>
 								<div class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-all {config['redeye.alert_enabled'] ? 'translate-x-7' : ''}"></div>
 							</button>

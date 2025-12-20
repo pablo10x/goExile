@@ -217,22 +217,24 @@ func run() error {
 	// Liveness check
 	router.HandleFunc("/health", handlers.Health).Methods("GET")
 
-	// Authentication endpoints
-	router.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+	// Authentication endpoints (API)
+	authRouter := router.PathPrefix("/api/auth").Subrouter()
+
+	authRouter.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		auth.HandleLogin(w, r, authConfig, sessionStore)
 	}).Methods("POST")
 
-	router.HandleFunc("/login/2fa", func(w http.ResponseWriter, r *http.Request) {
+	authRouter.HandleFunc("/2fa", func(w http.ResponseWriter, r *http.Request) {
 		auth.Handle2FAVerify(w, r, authConfig, sessionStore)
 	}).Methods("POST")
 
-	router.HandleFunc("/login/email", func(w http.ResponseWriter, r *http.Request) {
+	authRouter.HandleFunc("/email", func(w http.ResponseWriter, r *http.Request) {
 		auth.HandleEmailVerify(w, r, authConfig, sessionStore)
 	}).Methods("POST")
 
-	router.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
+	authRouter.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
 		auth.HandleLogout(w, r, sessionStore)
-	}).Methods("GET")
+	}).Methods("GET", "POST")
 
 	// Dashboard & UI endpoints (Protected by AuthMiddleware in dev/prod)
 	statsHandler := http.HandlerFunc(handlers.StatsAPI)

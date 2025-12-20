@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition';
-	import type { ComponentType } from 'svelte';
+	import type { ComponentType, Snippet } from 'svelte';
 
-	let { label = 'Actions', Icon = null } = $props<{
+	let { label = 'Actions', Icon = null, children } = $props<{
 		label?: string;
 		Icon?: ComponentType | null;
-		children?: any;
+		children?: Snippet;
 	}>();
 
 	let isOpen = $state(false);
@@ -54,7 +54,9 @@
 			transition:slide={{ duration: 150 }}
 			class="absolute right-0 mt-2 w-48 bg-slate-900 border border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden"
 		>
-			<slot {close} />
+			{#if children}
+				{@render children()}
+			{/if}
 		</div>
 	{/if}
 </div>

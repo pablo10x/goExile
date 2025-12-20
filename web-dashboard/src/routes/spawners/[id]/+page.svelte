@@ -446,11 +446,10 @@
 				<div class="flex items-center gap-3 w-full sm:w-auto">
 					<div class="flex-1 sm:flex-initial">
 						<Dropdown label="Bulk Actions" Icon={List}>
-							<div slot="default" let:close>
+							{#snippet children()}
 								<button
 									onclick={() => {
 										dispatchBulkAction('start');
-										close();
 									}}
 									class="w-full text-left px-4 py-2 text-sm text-emerald-400 hover:bg-emerald-500/10"
 									>Start All</button
@@ -458,7 +457,6 @@
 								<button
 									onclick={() => {
 										dispatchBulkAction('stop');
-										close();
 									}}
 									class="w-full text-left px-4 py-2 text-sm text-yellow-400 hover:bg-yellow-500/10"
 									>Stop All</button
@@ -466,7 +464,6 @@
 								<button
 									onclick={() => {
 										dispatchBulkAction('restart');
-										close();
 									}}
 									class="w-full text-left px-4 py-2 text-sm text-blue-400 hover:bg-blue-500/10"
 									>Restart All</button
@@ -474,12 +471,11 @@
 								<button
 									onclick={() => {
 										dispatchBulkAction('update');
-										close();
 									}}
 									class="w-full text-left px-4 py-2 text-sm text-purple-400 hover:bg-purple-500/10 border-t border-slate-700"
 									>Update Outdated</button
 								>
-							</div>
+							{/snippet}
 						</Dropdown>
 					</div>
 

@@ -41,7 +41,7 @@
 		formData.append('code', code);
 
 		try {
-			const response = await fetch('/login/2fa', {
+			const response = await fetch('/api/auth/2fa', {
 				method: 'POST',
 				body: formData,
 				headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
@@ -57,7 +57,6 @@
 			if (response.ok) {
 				if (data.next_step === 'email') {
 					showEmailSection = true;
-					// Clear code to avoid re-triggering watcher, though !showEmailSection guard handles it
 					code = '';
 				} else {
 					isAuthenticated.set(true);
@@ -66,7 +65,7 @@
 			} else {
 				triggerShake();
 				code = '';
-				if (response.url.includes('/login') && !response.url.includes('2fa')) {
+				if (response.status === 401) {
 					goto('/login');
 				}
 			}
@@ -89,7 +88,7 @@
 		formData.append('code', emailCode);
 
 		try {
-			const response = await fetch('/login/email', {
+			const response = await fetch('/api/auth/email', {
 				method: 'POST',
 				body: formData,
 				headers: { 'Content-Type': 'application/x-www-form-urlencoded' }

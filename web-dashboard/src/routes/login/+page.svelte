@@ -66,7 +66,7 @@
 		formData.append('password', password);
 
 		try {
-			const response = await fetch('/login', {
+			const response = await fetch('/api/auth/login', {
 				method: 'POST',
 				body: formData,
 				headers: {
@@ -77,20 +77,16 @@
 			const elapsed = Date.now() - start;
 			if (elapsed < 800) await new Promise((r) => setTimeout(r, 800 - elapsed));
 
-			if (response.redirected && response.url.includes('/login/2fa')) {
-				goto('/login/2fa');
-				return;
-			}
-
-			if (response.redirected && response.url.includes('/login')) {
-				// Add shake animation for failed login
-				formShake = true;
-				setTimeout(() => (formShake = false), 600);
-				password = '';
-			} else if (response.ok || response.redirected) {
-				isAuthenticated.set(true);
-				goto('/');
+			if (response.ok) {
+				const data = await response.json();
+				if (data.next_step === 'totp') {
+					goto('/login/2fa');
+				} else {
+					isAuthenticated.set(true);
+					goto('/');
+				}
 			} else {
+				// Failed login
 				formShake = true;
 				setTimeout(() => (formShake = false), 600);
 				password = '';

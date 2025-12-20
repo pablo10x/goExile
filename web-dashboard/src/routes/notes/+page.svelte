@@ -213,9 +213,10 @@
                     </button>
                 </div>
                 <div class="flex items-center gap-2">
-                    <label class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Deadline:</label>
+                    <label for="todo-deadline" class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Deadline:</label>
                     <input
                         type="date"
+                        id="todo-deadline"
                         bind:value={newTodoDeadline}
                         class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-[10px] text-slate-300 outline-none focus:border-slate-500 transition-colors"
                     />

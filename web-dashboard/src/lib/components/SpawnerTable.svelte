@@ -257,15 +257,41 @@
 							<div class="flex items-center justify-between mb-3">
 								<h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Instances</h4>
 								<!-- Mobile Bulk Actions -->
-								<Dropdown label="Actions">
-									<div slot="default" let:close>
-										<button onclick={() => { dispatchBulkAction('start', spawner.id); close(); }} class="w-full text-left px-4 py-2 text-sm text-emerald-400 hover:bg-emerald-500/10">Start All</button>
-										<button onclick={() => { dispatchBulkAction('stop', spawner.id); close(); }} class="w-full text-left px-4 py-2 text-sm text-yellow-400 hover:bg-yellow-500/10">Stop All</button>
-										<button onclick={() => { dispatchBulkAction('restart', spawner.id); close(); }} class="w-full text-left px-4 py-2 text-sm text-blue-400 hover:bg-blue-500/10">Restart All</button>
-										<button onclick={() => { dispatchBulkAction('update', spawner.id); close(); }} class="w-full text-left px-4 py-2 text-sm text-purple-400 hover:bg-purple-500/10 border-t border-slate-800">Update All</button>
-									</div>
-								</Dropdown>
-							</div>
+								                                <div class="flex justify-end pr-2">
+								                                    <Dropdown label="Actions">
+								                                        {#snippet children()}
+								                                            <button
+								                                                onclick={() => {
+								                                                    dispatchBulkAction('start', spawner.id);
+								                                                }}
+								                                                class="w-full text-left px-4 py-2 text-sm text-emerald-400 hover:bg-emerald-500/10"
+								                                                >Start All</button
+								                                            >
+								                                            <button
+								                                                onclick={() => {
+								                                                    dispatchBulkAction('stop', spawner.id);
+								                                                }}
+								                                                class="w-full text-left px-4 py-2 text-sm text-rose-400 hover:bg-rose-500/10"
+								                                                >Stop All</button
+								                                            >
+								                                            <button
+								                                                onclick={() => {
+								                                                    dispatchBulkAction('restart', spawner.id);
+								                                                }}
+								                                                class="w-full text-left px-4 py-2 text-sm text-blue-400 hover:bg-blue-500/10"
+								                                                >Restart All</button
+								                                            >
+								                                            <div class="border-t border-slate-800 my-1"></div>
+								                                            <button
+								                                                onclick={() => {
+								                                                    dispatchBulkAction('update', spawner.id);
+								                                                }}
+								                                                class="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-800"
+								                                                >Update All</button
+								                                            >
+								                                        {/snippet}
+								                                    </Dropdown>
+								                                </div>							</div>
 
 							{#if loadingInstances[spawner.id] && (!activeInstances[spawner.id] || activeInstances[spawner.id].length === 0)}
 								<div class="p-4 text-center text-slate-500 text-xs bg-slate-800/30 rounded-lg">Loading...</div>
@@ -401,15 +427,14 @@
 									<div class="flex justify-between items-center mb-2 px-1">
 										<h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Active Instances</h4>
 										<div class="flex items-center gap-2">
-											<Dropdown label="Bulk Actions">
-												<div slot="default" let:close>
-													<button onclick={() => { dispatchBulkAction('start', spawner.id); close(); }} class="w-full text-left px-4 py-2 text-sm text-emerald-400 hover:bg-emerald-500/10">Start All</button>
-													<button onclick={() => { dispatchBulkAction('stop', spawner.id); close(); }} class="w-full text-left px-4 py-2 text-sm text-yellow-400 hover:bg-yellow-500/10">Stop All</button>
-													<button onclick={() => { dispatchBulkAction('restart', spawner.id); close(); }} class="w-full text-left px-4 py-2 text-sm text-blue-400 hover:bg-blue-500/10">Restart All</button>
-													<button onclick={() => { dispatchBulkAction('update', spawner.id); close(); }} class="w-full text-left px-4 py-2 text-sm text-purple-400 hover:bg-purple-500/10 border-t border-slate-800">Update All</button>
-												</div>
-											</Dropdown>
-											<div class="w-px h-4 bg-slate-700 mx-1"></div>
+											                                                                                        <Dropdown label="Bulk Actions">
+											                                                                                         {#snippet children()}
+											                                                                                         <button onclick={() => { dispatchBulkAction('start', spawner.id); }} class="w-full text-left px-4 py-2 text-sm text-emerald-400 hover:bg-emerald-500/10">Start All</button>
+											                                                                                         <button onclick={() => { dispatchBulkAction('stop', spawner.id); }} class="w-full text-left px-4 py-2 text-sm text-yellow-400 hover:bg-yellow-500/10">Stop All</button>
+											                                                                                         <button onclick={() => { dispatchBulkAction('restart', spawner.id); }} class="w-full text-left px-4 py-2 text-sm text-blue-400 hover:bg-blue-500/10">Restart All</button>
+											                                                                                         <button onclick={() => { dispatchBulkAction('update', spawner.id); }} class="w-full text-left px-4 py-2 text-sm text-purple-400 hover:bg-purple-500/10 border-t border-slate-800">Update All</button>
+											                                                                                         {/snippet}
+											                                                                                        </Dropdown>											<div class="w-px h-4 bg-slate-700 mx-1"></div>
 											{#if loadingInstances[spawner.id]}
 												<div class="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
 											{/if}

@@ -310,7 +310,7 @@
 	});
 
 	async function logout() {
-		await fetch('/logout');
+		await fetch('/api/auth/logout', { method: 'POST' });
 		isAuthenticated.set(false);
 		goto('/login');
 	}
@@ -692,84 +692,84 @@
 									<polyline points="7 10 12 15 17 10"></polyline>
 									<line x1="12" y1="15" x2="12" y2="3"></line>
 								</svg>
-								{#if !isSidebarCollapsed}
-									<span class="animate-in fade-in slide-in-from-left-2 duration-300"
-										>Server Files</span
-									>
-								{/if}
-							</a>
-						</QuickActionsTooltip>
-
-						<QuickActionsTooltip
-							placement="right"
-							title="Databases"
-							class="w-full"
-							enabled={$showQuickActions}
-							actions={[{ label: 'Backup All', icon: HardDrive, onClick: handleBackupDB }]}
-						>
-							<a
-								href="/database"
-								class="nav-link w-full {isSidebarCollapsed ? 'justify-center px-2' : ''}"
-								class:nav-active={isRouteActive('/database')}
-								style="animation-delay: 0.5s;"
-								title={isSidebarCollapsed ? 'Databases' : ''}
-							>
-								{#if isRouteActive('/database')}
-									<div class="nav-indicator"></div>
-								{/if}
-								<Database class="nav-icon" />
-								{#if !isSidebarCollapsed}
-									<span class="animate-in fade-in slide-in-from-left-2 duration-300">Databases</span>
-								{/if}
-							</a>
-						</QuickActionsTooltip>
-							
-							                        						<QuickActionsTooltip
-							                        							placement="right"
-							                        							title="RedEye"
-							                        							class="w-full"
-							                        							enabled={$showQuickActions}
-							                        							actions={[]}
-							                        						>
-							                        							<a
-							                        								href="/redeye"
-							                        								class="nav-link w-full {isSidebarCollapsed ? 'justify-center px-2' : ''}"
-							                        								class:nav-active={isRouteActive('/redeye')}
-							                        								style="animation-delay: 0.52s;"
-							                        								title={isSidebarCollapsed ? 'RedEye' : ''}
-							                        							>
-							                        								{#if isRouteActive('/redeye')}
-							                        									<div class="nav-indicator"></div>
-							                        								{/if}
-							                        								<Eye class="nav-icon" />
-							                        								{#if !isSidebarCollapsed}
-							                        									<span class="animate-in fade-in slide-in-from-left-2 duration-300">RedEye</span>
-							                        								{/if}
-							                        							</a>
-							                        						</QuickActionsTooltip>							
-							                        <QuickActionsTooltip
-							                            placement="right"
-							                            title="Notes"							class="w-full"
-							enabled={$showQuickActions}
-							actions={[{ label: 'New Note', icon: Plus, onClick: () => (showGlobalNoteModal = true) }]}
-						>
-							<a
-								href="/notes"
-								class="nav-link w-full {isSidebarCollapsed ? 'justify-center px-2' : ''}"
-								class:nav-active={isRouteActive('/notes')}
-								style="animation-delay: 0.55s;"
-								title={isSidebarCollapsed ? 'Notes' : ''}
-							>
-								{#if isRouteActive('/notes')}
-									<div class="nav-indicator"></div>
-								{/if}
-								<StickyNote class="nav-icon" />
-								{#if !isSidebarCollapsed}
-									<span class="animate-in fade-in slide-in-from-left-2 duration-300">Notes</span>
-								{/if}
-							</a>
-						</QuickActionsTooltip>
-					</nav>
+																{#if !isSidebarCollapsed}
+																	<span class="animate-in fade-in slide-in-from-left-2 duration-300"
+																		>Server Files</span
+																	>
+																{/if}
+															</a>
+														</QuickActionsTooltip>
+								
+														<QuickActionsTooltip
+															placement="right"
+															title="Databases"
+															class="w-full"
+															enabled={$showQuickActions}
+															actions={[{ label: 'Backup All', icon: HardDrive, onClick: handleBackupDB }]}
+														>
+															<a
+																href="/database"
+																class="nav-link w-full {isSidebarCollapsed ? 'justify-center px-2' : ''}"
+																class:nav-active={isRouteActive('/database')}
+																style="animation-delay: 0.5s;"
+																title={isSidebarCollapsed ? 'Databases' : ''}
+															>
+																{#if isRouteActive('/database')}
+																	<div class="nav-indicator"></div>
+																{/if}
+																<Database class="nav-icon" />
+																{#if !isSidebarCollapsed}
+																	<span class="animate-in fade-in slide-in-from-left-2 duration-300">Databases</span>
+																{/if}
+															</a>
+														</QuickActionsTooltip>
+								
+														<QuickActionsTooltip
+															placement="right"
+															title="RedEye"
+															class="w-full"
+															enabled={$showQuickActions}
+															actions={[]}
+														>													<a
+														href="/redeye"
+														class="nav-link w-full {isSidebarCollapsed ? 'justify-center px-2' : ''}"
+														class:nav-active={isRouteActive('/redeye')}
+														style="animation-delay: 0.6s;"
+														title={isSidebarCollapsed ? 'RedEye' : ''}
+													>
+														{#if isRouteActive('/redeye')}
+															<div class="nav-indicator"></div>
+														{/if}
+														<Eye class="nav-icon" />
+														{#if !isSidebarCollapsed}
+															<span class="animate-in fade-in slide-in-from-left-2 duration-300">RedEye</span>
+														{/if}
+													</a>
+												</QuickActionsTooltip>
+						
+												<QuickActionsTooltip
+													placement="right"
+													title="Notes"
+													class="w-full"
+													enabled={$showQuickActions}
+													actions={[{ label: 'New Note', icon: Plus, onClick: () => (showGlobalNoteModal = true) }]}
+												>
+													<a
+														href="/notes"
+														class="nav-link w-full {isSidebarCollapsed ? 'justify-center px-2' : ''}"
+														class:nav-active={isRouteActive('/notes')}
+														style="animation-delay: 0.7s;"
+														title={isSidebarCollapsed ? 'Notes' : ''}
+													>
+														{#if isRouteActive('/notes')}
+															<div class="nav-indicator"></div>
+														{/if}
+														<StickyNote class="nav-icon" />
+														{#if !isSidebarCollapsed}
+															<span class="animate-in fade-in slide-in-from-left-2 duration-300">Notes</span>
+														{/if}
+													</a>
+												</QuickActionsTooltip>					</nav>
 
 					<div
 						class="p-4 border-t border-white/5 bg-black/20 backdrop-blur-md flex flex-col gap-2 transform transition-all duration-700 {sidebarLoaded

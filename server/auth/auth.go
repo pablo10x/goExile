@@ -3,6 +3,7 @@ package auth
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"net/http"
 	"os"
 	"strings"
@@ -162,34 +163,36 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, cfg AuthConfig, ss *Ses
 		}
 		sid, _ := ss.CreateSession(step)
 		http.SetCookie(w, &http.Cookie{Name: "session", Value: sid, Path: "/", HttpOnly: true})
-		if step == AuthStepTOTP {
-			http.Redirect(w, r, "/login/2fa", http.StatusSeeOther)
-		} else {
-			http.Redirect(w, r, "/", http.StatusSeeOther)
-		}
+		
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{
+			"status": "ok",
+			"next_step": step,
+		})
 		return
 	}
-	http.Redirect(w, r, "/login?error=1", http.StatusSeeOther)
+	http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 }
 
 func Handle2FAVerify(w http.ResponseWriter, r *http.Request, cfg AuthConfig, ss *SessionStore) {
 	cookie, _ := r.Cookie("session")
 	if cookie == nil {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Error(w, "No session", http.StatusUnauthorized)
 		return
 	}
 	valid, step := ss.ValidateSession(cookie.Value)
 	if !valid || step != AuthStepTOTP {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Error(w, "Invalid session or step", http.StatusUnauthorized)
 		return
 	}
 	code := r.FormValue("code")
 	if totp.Validate(code, cfg.TOTPSecret) {
 		ss.MarkSessionAuthenticated(cookie.Value)
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 		return
 	}
-	http.Redirect(w, r, "/login/2fa?error=1", http.StatusSeeOther)
+	http.Error(w, "Invalid code", http.StatusUnauthorized)
 }
 
 func HandleEmailVerify(w http.ResponseWriter, r *http.Request, cfg AuthConfig, ss *SessionStore) {
@@ -201,7 +204,8 @@ func HandleLogout(w http.ResponseWriter, r *http.Request, ss *SessionStore) {
 		ss.RevokeSession(c.Value)
 	}
 	http.SetCookie(w, &http.Cookie{Name: "session", Value: "", Path: "/", MaxAge: -1})
-	http.Redirect(w, r, "/login", http.StatusSeeOther)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 }
 
 func AuthMiddleware(cfg AuthConfig, ss *SessionStore) func(http.Handler) http.Handler {
@@ -217,7 +221,7 @@ func AuthMiddleware(cfg AuthConfig, ss *SessionStore) func(http.Handler) http.Ha
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
-			if r.URL.Path == "/login" || r.URL.Path == "/login/2fa" {
+			if strings.HasPrefix(r.URL.Path, "/api/auth") {
 				next.ServeHTTP(w, r)
 				return
 			}

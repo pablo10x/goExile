@@ -264,7 +264,6 @@
 					bind:value={newSubTaskContent}
 					placeholder="New sub-task..."
 					class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-200 outline-none focus:border-emerald-500 transition-all"
-					autoFocus
 				/>
 				<button
 					type="submit"
