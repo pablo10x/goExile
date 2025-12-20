@@ -26,7 +26,13 @@
 		PieChart,
 		ArrowUp,
 		ArrowDown,
-		Minus
+		Minus,
+		Eye,
+		ShieldAlert,
+		Lock,
+		ShieldCheck,
+		Search,
+		Info
 	} from 'lucide-svelte';
 	import { fade, fly, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -133,6 +139,9 @@
 		bytes_received: number;
 		requests_per_second: number;
 		active_connections: number;
+		redeye_total_blocks: number;
+		redeye_total_rate_limit: number;
+		redeye_active_bans: number;
 	}
 
 	interface CombinedMetrics {
@@ -152,6 +161,7 @@
 	let refreshRate = $state(5000);
 	let gcLoading = $state(false);
 	let freeMemLoading = $state(false);
+	let showRedEyeModal = $state(false);
 
 	// Previous values for trend calculation
 	let prevMetrics = $state<CombinedMetrics | null>(null);
@@ -850,6 +860,70 @@
 					</div>
 				</div>
 			</div>
+
+			<!-- RedEye Guardian Performance Card -->
+			<div
+				class="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden"
+				transition:fly={{ y: 20, duration: 400, delay: 275 }}
+			>
+				<div class="p-4 border-b border-slate-700/50 flex items-center justify-between">
+					<div class="flex items-center gap-3">
+						<div class="p-2 bg-red-500/20 rounded-lg">
+							<Eye class="w-5 h-5 text-red-400" />
+						</div>
+						<div>
+							<h3 class="font-semibold text-white text-sm sm:text-base">RedEye Guardian</h3>
+							<p class="text-[10px] sm:text-xs text-slate-500">Security & Traffic Shield</p>
+						</div>
+					</div>
+					<button
+						onclick={() => showRedEyeModal = true}
+						class="px-3 py-1.5 text-[10px] sm:text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-colors flex items-center gap-1.5"
+					>
+						<BarChart3 class="w-3 h-3" />
+						Details
+					</button>
+				</div>
+
+				<div class="p-4 space-y-4">
+					<!-- Active Bans -->
+					<div>
+						<div class="flex items-center justify-between text-xs sm:text-sm mb-2">
+							<span class="text-slate-400">Security Shield</span>
+							<span class="text-emerald-400 font-medium flex items-center gap-1.5">
+								<ShieldCheck class="w-3.5 h-3.5" />
+								Active
+							</span>
+						</div>
+						<div class="grid grid-cols-2 gap-3">
+							<div class="bg-slate-900/30 rounded-lg p-3">
+								<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Total Blocks</div>
+								<div class="text-sm sm:text-lg font-semibold text-red-400">
+									{formatNumber(metrics.network.redeye_total_blocks)}
+								</div>
+							</div>
+							<div class="bg-slate-900/30 rounded-lg p-3">
+								<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Active Bans</div>
+								<div class="text-sm sm:text-lg font-semibold text-white">
+									{metrics.network.redeye_active_bans}
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Rate Limiting Impact -->
+					<div class="bg-amber-500/5 border border-amber-500/10 rounded-lg p-3">
+						<div class="flex items-center justify-between mb-1">
+							<span class="text-[10px] text-amber-500/70 uppercase tracking-wider font-bold">Traffic Throttling</span>
+							<Lock class="w-3 h-3 text-amber-500/50" />
+						</div>
+						<div class="text-xl font-bold text-amber-400">
+							{formatNumber(metrics.network.redeye_total_rate_limit)}
+						</div>
+						<div class="text-[10px] text-slate-500 mt-1">Total requests rate-limited</div>
+					</div>
+				</div>
+			</div>
 		</div>
 
 		<!-- Spawners Detail Section -->
@@ -1045,14 +1119,181 @@
 					<span>{formatNumber(metrics.master.frees)} frees</span>
 				</div>
 			</div>
+				</div>
+			{:else if loading}
+				<!-- Loading State -->
+				<div class="flex items-center justify-center py-20">
+					<div class="flex flex-col items-center gap-4">
+						<RefreshCw class="w-10 h-10 text-blue-400 animate-spin" />
+						<p class="text-slate-400">Loading metrics...</p>
+					</div>
+				</div>
+			{/if}
 		</div>
-	{:else if loading}
-		<!-- Loading State -->
-		<div class="flex items-center justify-center py-20">
-			<div class="flex flex-col items-center gap-4">
-				<RefreshCw class="w-10 h-10 text-blue-400 animate-spin" />
-				<p class="text-slate-400">Loading metrics...</p>
+		
+		{#if showRedEyeModal && metrics}
+			<div 
+				class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+				transition:fade={{ duration: 200 }}
+			>
+				<div 
+					class="bg-slate-900 border border-red-500/30 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col relative"
+					transition:scale={{ duration: 300, start: 0.95, easing: cubicOut }}
+				>
+					<!-- Neural Grid Background -->
+					<div class="absolute inset-0 opacity-10 pointer-events-none">
+						<div class="absolute inset-0" style="background-image: radial-gradient(circle at 2px 2px, #ef4444 1px, transparent 0); background-size: 24px 24px;"></div>
+					</div>
+		
+					<!-- Header -->
+					<div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-950/50 relative z-10">
+						<div class="flex items-center gap-4">
+							<div class="p-3 bg-red-500/20 rounded-2xl relative overflow-hidden group">
+								<Eye class="w-6 h-6 text-red-500 relative z-10" />
+								<div class="absolute inset-0 bg-red-500/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
+							</div>
+							<div>
+								<h2 class="text-2xl font-black text-white uppercase tracking-tighter">RedEye Neural Core</h2>
+								<p class="text-[10px] text-red-500/70 font-mono uppercase tracking-[0.2em]">Active Defense Subsystem Metrics</p>
+							</div>
+						</div>
+						<button 
+							onclick={() => showRedEyeModal = false}
+							class="p-2 hover:bg-white/5 rounded-xl text-slate-500 hover:text-white transition-all"
+						>
+							<XCircle class="w-6 h-6" />
+						</button>
+					</div>
+		
+					<!-- Body -->
+					<div class="p-8 overflow-y-auto relative z-10 flex-1 custom-scrollbar">
+						<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+							<!-- Threat Level -->
+							<div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 relative group overflow-hidden">
+								<div class="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
+								<div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Threat Level</div>
+								<div class="flex items-end gap-2">
+									<div class="text-4xl font-black text-white font-mono">
+										{metrics.network.redeye_total_blocks > 1000 ? 'ELEVATED' : 'STABLE'}
+									</div>
+								</div>
+								<div class="mt-4 flex gap-1">
+									{#each Array(5) as _, i}
+										<div class="h-1 flex-1 rounded-full {i < (metrics.network.redeye_total_blocks > 1000 ? 4 : 2) ? 'bg-red-500' : 'bg-slate-800'}"></div>
+									{/each}
+								</div>
+							</div>
+		
+							<!-- Block Efficiency -->
+							<div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
+								<div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+								<div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Shield Integrity</div>
+								<div class="text-4xl font-black text-white font-mono">99.9%</div>
+								<div class="mt-4 text-[10px] text-emerald-500 font-mono">AUTOMATED DEFENSE ACTIVE</div>
+							</div>
+		
+							<!-- Active Bans -->
+							<div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
+								<div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+								<div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Neural Bans</div>
+								<div class="text-4xl font-black text-white font-mono">{metrics.network.redeye_active_bans}</div>
+								<div class="mt-4 text-[10px] text-blue-500 font-mono">ACTIVE REPUTATION QUARANTINE</div>
+							</div>
+						</div>
+		
+						<!-- Detailed Metrics Section -->
+						<div class="space-y-6">
+							<h3 class="text-xs font-black text-slate-400 uppercase tracking-[0.3em] flex items-center gap-3">
+								<BarChart3 class="w-4 h-4 text-red-500" />
+								Interception Analytics
+							</h3>
+		
+							<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+								<!-- Total Interceptions -->
+								<div class="bg-slate-950/50 border border-slate-800 rounded-2xl p-6">
+									<div class="flex justify-between items-start mb-6">
+										<div>
+											<h4 class="text-sm font-bold text-white uppercase tracking-wider">Total Interceptions</h4>
+											<p class="text-[10px] text-slate-500 font-mono">Cumulative DENY operations</p>
+										</div>
+										<ShieldAlert class="w-5 h-5 text-red-500" />
+									</div>
+									<div class="text-3xl font-black text-white mb-2">{formatNumber(metrics.network.redeye_total_blocks)}</div>
+									<div class="h-1.5 bg-slate-900 rounded-full overflow-hidden">
+										<div class="h-full bg-red-500 w-[65%] animate-pulse"></div>
+									</div>
+								</div>
+		
+								<!-- Rate Limiting -->
+								<div class="bg-slate-950/50 border border-slate-800 rounded-2xl p-6">
+									<div class="flex justify-between items-start mb-6">
+										<div>
+											<h4 class="text-sm font-bold text-white uppercase tracking-wider">Throttling Events</h4>
+											<p class="text-[10px] text-slate-500 font-mono">Traffic shaping triggers</p>
+										</div>
+										<Gauge class="w-5 h-5 text-amber-500" />
+									</div>
+									<div class="text-3xl font-black text-white mb-2">{formatNumber(metrics.network.redeye_total_rate_limit)}</div>
+									<div class="h-1.5 bg-slate-900 rounded-full overflow-hidden">
+										<div class="h-full bg-amber-500 w-[42%]"></div>
+									</div>
+								</div>
+							</div>
+		
+							<!-- System Status -->
+												<div class="bg-red-500/5 border border-red-500/10 rounded-2xl p-6">
+													<div class="flex items-start gap-4">
+														<div class="p-3 bg-red-500/10 rounded-xl">
+															<Info class="w-6 h-6 text-red-400" />
+														</div>
+														<div class="flex-1">
+							
+										<h4 class="text-sm font-bold text-white uppercase tracking-wider mb-2">Automated Anomaly Detection</h4>
+										<p class="text-xs text-slate-400 leading-relaxed">
+											The RedEye neural core is currently monitoring for high-frequency traffic anomalies. 
+											Autonomous ban protocols are active with a threshold of <span class="text-red-400 font-mono">100 events/min</span>.
+											Current system entropy is within nominal parameters.
+										</p>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+		
+					<!-- Footer -->
+					<div class="p-6 border-t border-slate-800 bg-slate-950/80 flex justify-between items-center">
+						<div class="flex items-center gap-4 text-[10px] font-mono text-slate-500 uppercase tracking-widest">
+							<span class="flex items-center gap-1.5">
+								<div class="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></div>
+								Core Online
+							</span>
+							<span>CRC: 0x8F22A1</span>
+							<span>Lat: 0.24ms</span>
+						</div>
+						<button 
+							onclick={() => showRedEyeModal = false}
+							class="px-8 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-xl shadow-red-900/20"
+						>
+							Acknowledge
+						</button>
+					</div>
+				</div>
 			</div>
-		</div>
-	{/if}
-</div>
+		{/if}
+		
+		<style>
+			.custom-scrollbar::-webkit-scrollbar {
+				width: 6px;
+			}
+			.custom-scrollbar::-webkit-scrollbar-track {
+				background: transparent;
+			}
+			.custom-scrollbar::-webkit-scrollbar-thumb {
+				background: rgba(239, 68, 68, 0.1);
+				border-radius: 10px;
+			}
+			.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+				background: rgba(239, 68, 68, 0.2);
+			}
+		</style>
+		

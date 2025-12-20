@@ -139,16 +139,20 @@ type DatabaseMetrics struct {
 
 // NetworkMetrics holds network-related statistics
 type NetworkMetrics struct {
-	TotalRequests     int64   `json:"total_requests"`
-	TotalErrors       int64   `json:"total_errors"`
-	ErrorRate         float64 `json:"error_rate"`
-	BytesSent         uint64  `json:"bytes_sent"`
-	BytesReceived     uint64  `json:"bytes_received"`
-	RequestsPerSecond float64 `json:"requests_per_second"`
-	AvgResponseTimeMs float64 `json:"avg_response_time_ms"`
-	ActiveConnections int     `json:"active_connections"`
-}
+        TotalRequests     int64   `json:"total_requests"`
+        TotalErrors       int64   `json:"total_errors"`
+        ErrorRate         float64 `json:"error_rate"`
+        BytesSent         uint64  `json:"bytes_sent"`
+        BytesReceived     uint64  `json:"bytes_received"`
+        RequestsPerSecond float64 `json:"requests_per_second"`
+        AvgResponseTimeMs float64 `json:"avg_response_time_ms"`
+        ActiveConnections int     `json:"active_connections"`
 
+        // RedEye Stats
+        RedEyeTotalBlocks    int64 `json:"redeye_total_blocks"`
+        RedEyeTotalRateLimit int64 `json:"redeye_total_rate_limit"`
+        RedEyeActiveBans     int   `json:"redeye_active_bans"`
+}
 // MetricsCollector manages metrics collection
 type MetricsCollector struct {
 	mu               sync.RWMutex
@@ -415,14 +419,16 @@ func (mc *MetricsCollector) CollectDatabaseMetrics() DatabaseMetrics {
 
 // CollectNetworkMetrics gathers network-related statistics
 func (mc *MetricsCollector) CollectNetworkMetrics() NetworkMetrics {
-	registry.GlobalStats.Mu.RLock()
-	totalReqs := registry.GlobalStats.TotalRequests
-	totalErrs := registry.GlobalStats.TotalErrors
-	bytesSent := registry.GlobalStats.BytesSent
-	bytesRecv := registry.GlobalStats.BytesReceived
-	registry.GlobalStats.Mu.RUnlock()
-
-	mc.mu.Lock()
+	        registry.GlobalStats.Mu.RLock()
+	        totalReqs := registry.GlobalStats.TotalRequests
+	        totalErrs := registry.GlobalStats.TotalErrors
+	        bytesSent := registry.GlobalStats.BytesSent
+	        bytesRecv := registry.GlobalStats.BytesReceived
+	        redeyeBlocks := registry.GlobalStats.RedEyeTotalBlocks
+	        redeyeRateLimit := registry.GlobalStats.RedEyeTotalRateLimit
+	        redeyeActiveBans := registry.GlobalStats.RedEyeActiveBans
+	        registry.GlobalStats.Mu.RUnlock()
+		mc.mu.Lock()
 	// Calculate request rate
 	timeDelta := time.Since(mc.lastCollectTime).Seconds()
 	if timeDelta == 0 {
@@ -446,15 +452,31 @@ func (mc *MetricsCollector) CollectNetworkMetrics() NetworkMetrics {
 	activeConnections = len(ws.GlobalWSManager.Connections)
 	ws.GlobalWSManager.Mu.RUnlock()
 
-	return NetworkMetrics{
-		TotalRequests:     totalReqs,
-		TotalErrors:       totalErrs,
-		ErrorRate:         errorRate,
-		BytesSent:         uint64(bytesSent),
-		BytesReceived:     uint64(bytesRecv),
-		RequestsPerSecond: requestRate,
-		ActiveConnections: activeConnections,
-	}
+	        return NetworkMetrics{
+
+	                TotalRequests:        totalReqs,
+
+	                TotalErrors:          totalErrs,
+
+	                ErrorRate:            errorRate,
+
+	                BytesSent:            uint64(bytesSent),
+
+	                BytesReceived:        uint64(bytesRecv),
+
+	                RequestsPerSecond:    requestRate,
+
+	                ActiveConnections:    activeConnections,
+
+	                RedEyeTotalBlocks:    redeyeBlocks,
+
+	                RedEyeTotalRateLimit: redeyeRateLimit,
+
+	                RedEyeActiveBans:     redeyeActiveBans,
+
+	        }
+
+	
 }
 
 // CollectAllMetrics gathers all metrics in one call

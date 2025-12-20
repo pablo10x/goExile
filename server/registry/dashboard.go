@@ -62,13 +62,17 @@ type DashboardStats struct {
 	DBTupUpdated  int64
 	DBTupDeleted  int64
 
-	Uptime       time.Duration
-	StartTime    time.Time
-	ErrorLogs    []ErrorLog
-	SecurityLogs []SecurityLog
-}
-
-// GlobalStats is the global dashboard stats instance.
+	        Uptime       time.Duration
+	        StartTime    time.Time
+	        ErrorLogs    []ErrorLog
+	        SecurityLogs []SecurityLog
+	
+	        // RedEye Stats
+	        RedEyeTotalBlocks    int64
+	        RedEyeTotalRateLimit int64
+	        RedEyeActiveBans     int
+	}
+	// GlobalStats is the global dashboard stats instance.
 var GlobalStats = &DashboardStats{
 	StartTime:    time.Now(),
 	ErrorLogs:    make([]ErrorLog, 0),
@@ -112,23 +116,43 @@ func (ds *DashboardStats) RecordError(path string, status int, message string, c
 
 // RecordSecurityEvent adds a security event to the log.
 func (ds *DashboardStats) RecordSecurityEvent(event string, details string, clientIP string) {
-	ds.Mu.Lock()
-	defer ds.Mu.Unlock()
+        ds.Mu.Lock()
+        defer ds.Mu.Unlock()
 
-	logEntry := SecurityLog{
-		Timestamp: time.Now(),
-		Event:     event,
-		Details:   details,
-		ClientIP:  clientIP,
-	}
+        logEntry := SecurityLog{
+                Timestamp: time.Now(),
+                Event:     event,
+                Details:   details,
+                ClientIP:  clientIP,
+        }
 
-	// Prepend and keep last 50
-	ds.SecurityLogs = append([]SecurityLog{logEntry}, ds.SecurityLogs...)
-	if len(ds.SecurityLogs) > 50 {
-		ds.SecurityLogs = ds.SecurityLogs[:50]
-	}
+        // Prepend and keep last 50
+        ds.SecurityLogs = append([]SecurityLog{logEntry}, ds.SecurityLogs...)
+        if len(ds.SecurityLogs) > 50 {
+                ds.SecurityLogs = ds.SecurityLogs[:50]
+        }
 }
 
+// RecordRedEyeBlock increments the RedEye block counter.
+func (ds *DashboardStats) RecordRedEyeBlock() {
+        ds.Mu.Lock()
+        defer ds.Mu.Unlock()
+        ds.RedEyeTotalBlocks++
+}
+
+// RecordRedEyeRateLimit increments the RedEye rate limit counter.
+func (ds *DashboardStats) RecordRedEyeRateLimit() {
+        ds.Mu.Lock()
+        defer ds.Mu.Unlock()
+        ds.RedEyeTotalRateLimit++
+}
+
+// UpdateRedEyeActiveBans updates the count of active bans.
+func (ds *DashboardStats) UpdateRedEyeActiveBans(count int) {
+        ds.Mu.Lock()
+        defer ds.Mu.Unlock()
+        ds.RedEyeActiveBans = count
+}
 // UpdateMemoryStats updates the memory usage stat.
 func (ds *DashboardStats) UpdateMemoryStats() {
 	var m runtime.MemStats
