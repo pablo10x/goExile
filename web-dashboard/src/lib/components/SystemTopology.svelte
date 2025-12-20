@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { spawners } from '$lib/stores';
-	import { Server, Activity, Cpu, Skull, Eye, Database } from 'lucide-svelte';
+	import { Server, Activity, Cpu, Skull, Database } from 'lucide-svelte';
 	import { fade, scale } from 'svelte/transition';
 
 	// Animation state
@@ -381,6 +381,31 @@
 					</marker>
 
 					<!-- Gradient for connections -->
+					<!-- RedEye Glitch Filter -->
+					<filter id="redeyeGlitch">
+						<feColorMatrix
+							in="SourceGraphic"
+							type="matrix"
+							values="1 0 0 0 0
+									0 0 0 0 0
+									0 0 0 0 0
+									0 0 0 1 0"
+							result="red"
+						/>
+						<feOffset in="red" dx="-2" dy="0" result="redOffset" />
+						<feColorMatrix
+							in="SourceGraphic"
+							type="matrix"
+							values="0 0 0 0 0
+									0 1 0 0 0
+									0 0 1 0 0
+									0 0 0 1 0"
+							result="cyan"
+						/>
+						<feOffset in="cyan" dx="2" dy="0" result="cyanOffset" />
+						<feBlend in="redOffset" in2="cyanOffset" mode="screen" />
+					</filter>
+
 					<linearGradient id="connectionGradient" x1="0%" y1="0%" x2="100%" y2="0%">
 						<stop offset="0%" style="stop-color:#64748b;stop-opacity:0.3" />
 						<stop offset="50%" style="stop-color:#64748b;stop-opacity:0.6" />
@@ -393,7 +418,7 @@
 					d={getBusPath(redeyePos.x, redeyePos.y, center.x, center.y)}
 					stroke="#ef4444"
 					stroke-width="3"
-					opacity="0.4"
+					opacity="0.2"
 					fill="none"
 					stroke-linecap="round"
 					stroke-linejoin="round"
@@ -401,16 +426,17 @@
 				<path
 					d={getBusPath(redeyePos.x, redeyePos.y, center.x, center.y)}
 					stroke="#ef4444"
-					stroke-width="1"
+					stroke-width="1.5"
 					opacity="0.8"
 					fill="none"
 					stroke-linecap="round"
 					stroke-linejoin="round"
+					class="animate-redeye-flicker"
 				>
 					<animate
 						attributeName="stroke-dasharray"
-						values="0, 100; 100, 0"
-						dur="4s"
+						values="0, 50; 50, 0; 0, 50"
+						dur="0.5s"
 						repeatCount="indefinite"
 					/>
 				</path>
@@ -765,19 +791,53 @@
 				</div>
 			</div>
 
-			<!-- RedEye Node -->
+			<!-- RedEye Node (Aggressive Cyber Design) -->
 			<div
-				class="absolute z-20 flex flex-col items-center group cursor-pointer transition-all duration-300 hover:scale-110"
-				style="top: {redeyePos.y - 30}px; left: {redeyePos.x - 30}px;"
+				class="absolute z-30 flex flex-col items-center group cursor-pointer transition-all duration-300 hover:scale-125"
+				style="top: {redeyePos.y - 40}px; left: {redeyePos.x - 40}px;"
 			>
-				<div class="relative w-16 h-16 bg-slate-900/90 border-2 border-red-500/50 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(239,68,68,0.2)] backdrop-blur-md overflow-hidden">
-					<div class="absolute inset-0 bg-red-500/5 animate-pulse"></div>
-					<Eye class="w-7 h-7 text-red-500 animate-pulse" />
+				<div class="relative w-20 h-20 flex items-center justify-center">
+					<!-- Outer diamond frame -->
+					<div class="absolute inset-0 bg-slate-950 border-2 border-red-600/80 rotate-45 shadow-[0_0_25px_rgba(239,68,68,0.4)] backdrop-blur-xl group-hover:border-red-500 group-hover:shadow-[0_0_40px_rgba(239,68,68,0.6)] transition-all duration-300"></div>
 					
-					<!-- Scanner line -->
-					<div class="absolute inset-x-0 h-0.5 bg-red-500/50 shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-scan-line"></div>
+					<!-- Inner hexagonal grid background -->
+					<div class="absolute inset-2 overflow-hidden rotate-45 opacity-20">
+						<div class="w-full h-full" style="background-image: radial-gradient(circle at 2px 2px, #ef4444 1px, transparent 0); background-size: 8px 8px;"></div>
+					</div>
+
+					<!-- The "Angry Eye" SVG -->
+					<svg viewBox="0 0 100 100" class="w-14 h-14 relative z-10 animate-redeye-glitch filter drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]">
+						<!-- Sclera / Outer Eye shape (narrowed/aggressive) -->
+						<path d="M 10 50 Q 50 20 90 50 Q 50 80 10 50 Z" fill="#1a0000" stroke="#ef4444" stroke-width="2" />
+						
+						<!-- Iris (Neural core) -->
+						<circle cx="50" cy="50" r="18" fill="none" stroke="#ef4444" stroke-width="1" stroke-dasharray="2,2" class="animate-spin" style="animation-duration: 10s" />
+						<circle cx="50" cy="50" r="12" fill="#7f1d1d" class="animate-pulse" />
+						
+						<!-- Pupil (The sharp core) -->
+						<path d="M 50 42 L 54 50 L 50 58 L 46 50 Z" fill="#ef4444" />
+						
+						<!-- Angry Brows -->
+						<path d="M 15 35 L 45 45 M 85 35 L 55 45" stroke="#ef4444" stroke-width="4" stroke-linecap="round" />
+						
+						<!-- Scanning line -->
+						<line x1="15" y1="50" x2="85" y2="50" stroke="#ff0000" stroke-width="1" opacity="0.8">
+							<animate attributeName="y1" values="35;65;35" dur="2s" repeatCount="indefinite" />
+							<animate attributeName="y2" values="35;65;35" dur="2s" repeatCount="indefinite" />
+						</line>
+					</svg>
+
+					<!-- Glitchy ring -->
+					<div class="absolute inset-0 border border-red-500/30 rotate-45 scale-110 animate-ping-slow opacity-50"></div>
 				</div>
-				<span class="text-[8px] font-bold text-red-400 mt-2 tracking-widest uppercase">RedEye Core</span>
+				<div class="mt-4 flex flex-col items-center">
+					<span class="text-[9px] font-black text-red-500 tracking-[0.3em] uppercase animate-pulse">REDEYE_CORE</span>
+					<div class="flex gap-1 mt-1">
+						{#each Array(3) as _}
+							<div class="w-1 h-1 bg-red-600 animate-redeye-flicker"></div>
+						{/each}
+					</div>
+				</div>
 			</div>
 
 			<!-- Database Node -->
@@ -1512,5 +1572,28 @@
 
 	.animate-scan-line {
 		animation: scanLine 3s linear infinite;
+	}
+
+	@keyframes redeyeGlitch {
+		0%, 95%, 100% { transform: translate(0); }
+		96% { transform: translate(-2px, 1px) skewX(5deg); }
+		97% { transform: translate(2px, -1px) skewX(-5deg); }
+		98% { transform: translate(-1px, -1px); }
+		99% { transform: translate(1px, 1px); }
+	}
+
+	.animate-redeye-glitch {
+		animation: redeyeGlitch 4s infinite;
+	}
+
+	@keyframes redeyeFlicker {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0.3; }
+		55% { opacity: 1; }
+		60% { opacity: 0.4; }
+	}
+
+	.animate-redeye-flicker {
+		animation: redeyeFlicker 0.2s infinite;
 	}
 </style>
