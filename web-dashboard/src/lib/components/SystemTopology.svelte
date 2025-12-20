@@ -1,12 +1,16 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { spawners } from '$lib/stores';
-	import { Server, Activity, Cpu, Skull } from 'lucide-svelte';
+	import { Server, Activity, Cpu, Skull, Eye, Database } from 'lucide-svelte';
 	import { fade, scale } from 'svelte/transition';
 
 	// Animation state
 	let center = $state({ x: 300, y: 300 }); // Master node position
 	let spawnerRadius = $state(250); // Radius for spawner placement around the master
+
+	// RedEye and Database node positions (relative to master)
+	let redeyePos = $derived({ x: center.x - 220, y: center.y + 120 });
+	let databasePos = $derived({ x: center.x + 220, y: center.y + 120 });
 
 	// Track heartbeats for pulse animation
 	let lastHeartbeats: Record<number, number> = $state({});
@@ -377,6 +381,42 @@
 					</linearGradient>
 				</defs>
 
+				<!-- RedEye Connection -->
+				<path
+					d={getConnectionPath(redeyePos.x, redeyePos.y, center.x, center.y)}
+					stroke="#ef4444"
+					stroke-width="2"
+					stroke-dasharray="5, 5"
+					opacity="0.6"
+					fill="none"
+				>
+					<animate
+						attributeName="stroke-dashoffset"
+						from="0"
+						to="-20"
+						dur="3s"
+						repeatCount="indefinite"
+					/>
+				</path>
+
+				<!-- Database Connection -->
+				<path
+					d={getConnectionPath(databasePos.x, databasePos.y, center.x, center.y)}
+					stroke="#10b981"
+					stroke-width="2"
+					stroke-dasharray="5, 5"
+					opacity="0.6"
+					fill="none"
+				>
+					<animate
+						attributeName="stroke-dashoffset"
+						from="0"
+						to="20"
+						dur="3s"
+						repeatCount="indefinite"
+					/>
+				</path>
+
 				<!-- Connections -->
 				{#each $spawners as spawner, i (spawner.id)}
 					{@const pos = getPosition(i, $spawners.length)}
@@ -698,6 +738,35 @@
 						></div>
 					{/if}
 				</div>
+			</div>
+
+			<!-- RedEye Node -->
+			<div
+				class="absolute z-20 flex flex-col items-center group cursor-pointer transition-all duration-300 hover:scale-110"
+				style="top: {redeyePos.y - 30}px; left: {redeyePos.x - 30}px;"
+			>
+				<div class="relative w-15 h-15 bg-slate-900/90 border-2 border-red-500/50 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(239,68,68,0.2)] backdrop-blur-md overflow-hidden">
+					<div class="absolute inset-0 bg-red-500/5 animate-pulse"></div>
+					<Eye class="w-7 h-7 text-red-500 animate-pulse" />
+					
+					<!-- Scanner line -->
+					<div class="absolute inset-x-0 h-0.5 bg-red-500/50 shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-scan-line"></div>
+				</div>
+				<span class="text-[8px] font-bold text-red-400 mt-2 tracking-widest uppercase">RedEye Core</span>
+			</div>
+
+			<!-- Database Node -->
+			<div
+				class="absolute z-20 flex flex-col items-center group cursor-pointer transition-all duration-300 hover:scale-110"
+				style="top: {databasePos.y - 30}px; left: {databasePos.x - 30}px;"
+			>
+				<div class="relative w-15 h-15 bg-slate-900/90 border-2 border-emerald-500/50 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.2)] backdrop-blur-md">
+					<Database class="w-7 h-7 text-emerald-500" />
+					
+					<!-- Database activity rings -->
+					<div class="absolute inset-0 border border-emerald-500/20 rounded-xl scale-75 animate-ping-slow"></div>
+				</div>
+				<span class="text-[8px] font-bold text-emerald-400 mt-2 tracking-widest uppercase">Persistence</span>
 			</div>
 
 			<!-- Spawner Nodes -->
@@ -1397,5 +1466,26 @@
 
 	.animate-spark-fly {
 		animation: sparkFly 0.8s ease-out forwards;
+	}
+
+	@keyframes scanLine {
+		0% {
+			top: 0%;
+			opacity: 0;
+		}
+		10% {
+			opacity: 1;
+		}
+		90% {
+			opacity: 1;
+		}
+		100% {
+			top: 100%;
+			opacity: 0;
+		}
+	}
+
+	.animate-scan-line {
+		animation: scanLine 3s linear infinite;
 	}
 </style>
