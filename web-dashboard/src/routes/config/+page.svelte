@@ -374,16 +374,85 @@
 	}
 
 	async function saveFirebaseParameter() {
-		// (Implementation same as before)
-		closeFirebaseModal();
+		firebaseSaving = true;
+		try {
+			const method = firebaseModalMode === 'create' ? 'POST' : 'PUT';
+			const response = await fetch('/api/config/firebase/parameter', {
+				method: method,
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(firebaseForm)
+			});
+
+			if (!response.ok) {
+				const data = await response.json();
+				throw new Error(data.error || 'Failed to save parameter');
+			}
+
+			notifications.add({
+				type: 'success',
+				message: `Parameter ${firebaseModalMode === 'create' ? 'created' : 'updated'} successfully`
+			});
+			closeFirebaseModal();
+			await loadFirebaseStatus();
+		} catch (e: any) {
+			notifications.add({
+				type: 'error',
+				message: 'Failed to save parameter',
+				details: e.message
+			});
+		} finally {
+			firebaseSaving = false;
+		}
 	}
 
 	async function deleteFirebaseParameter(key: string) {
-		// (Implementation same as before)
+		if (!confirm(`Are you sure you want to delete parameter "${key}"?`)) return;
+
+		try {
+			const response = await fetch('/api/config/firebase/parameter', {
+				method: 'DELETE',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ key })
+			});
+
+			if (!response.ok) {
+				const data = await response.json();
+				throw new Error(data.error || 'Failed to delete parameter');
+			}
+
+			notifications.add({
+				type: 'success',
+				message: 'Parameter deleted successfully'
+			});
+			await loadFirebaseStatus();
+		} catch (e: any) {
+			notifications.add({
+				type: 'error',
+				message: 'Failed to delete parameter',
+				details: e.message
+			});
+		}
 	}
 
 	async function syncFirebaseConfig() {
-		// (Implementation same as before)
+		loading = true;
+		try {
+			const response = await fetch('/api/config/firebase/sync', { method: 'POST' });
+			if (!response.ok) {
+				const data = await response.json();
+				throw new Error(data.error || 'Sync failed');
+			}
+			notifications.add({ type: 'success', message: 'Synced with Firebase successfully' });
+			await loadFirebaseStatus();
+		} catch (e: any) {
+			notifications.add({
+				type: 'error',
+				message: 'Failed to sync with Firebase',
+				details: e.message
+			});
+		} finally {
+			loading = false;
+		}
 	}
 
 	function handleValueChange(key: string, value: string, originalValue: string) {

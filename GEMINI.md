@@ -168,6 +168,7 @@ The following security improvements have been implemented:
 *   **Architecture:** Implemented a new persistent, categorized logging system.
 *   **Database:** Added `system_logs` table to store detailed logs.
 *   **RedEye Performance:** Added a new "RedEye Guardian" card and detailed metrics modal to the Performance tab, tracking real-time blocks, rate-limiting, and active bans.
+*   **Firebase Remote Config:** Implemented full CRUD support for Firebase Remote Config from the dashboard. Users can now create, update, delete, and sync parameters directly via the `/config` page.
 *   **Backend:**
     *   Created `server/logging.go` service for structured logging.
 
