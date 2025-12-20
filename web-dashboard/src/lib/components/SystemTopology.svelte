@@ -418,7 +418,7 @@
 					d={getBusPath(redeyePos.x, redeyePos.y, center.x, center.y)}
 					stroke="#ef4444"
 					stroke-width="3"
-					opacity="0.2"
+					opacity="0.1"
 					fill="none"
 					stroke-linecap="round"
 					stroke-linejoin="round"
@@ -426,20 +426,22 @@
 				<path
 					d={getBusPath(redeyePos.x, redeyePos.y, center.x, center.y)}
 					stroke="#ef4444"
-					stroke-width="1.5"
-					opacity="0.8"
+					stroke-width="2"
+					fill="none"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					class="animate-energy-surge"
+				/>
+				<path
+					d={getBusPath(redeyePos.x, redeyePos.y, center.x, center.y)}
+					stroke="#ff0000"
+					stroke-width="1"
+					opacity="0.5"
 					fill="none"
 					stroke-linecap="round"
 					stroke-linejoin="round"
 					class="animate-redeye-flicker"
-				>
-					<animate
-						attributeName="stroke-dasharray"
-						values="0, 50; 50, 0; 0, 50"
-						dur="0.5s"
-						repeatCount="indefinite"
-					/>
-				</path>
+				/>
 
 				<!-- Database Connection -->
 				<path
@@ -796,10 +798,10 @@
 				class="absolute z-30 flex flex-col items-center group cursor-pointer transition-all duration-300 hover:scale-125"
 				style="top: {redeyePos.y - 40}px; left: {redeyePos.x - 40}px;"
 			>
-				<div class="relative w-20 h-20 flex items-center justify-center">
+				<div class="relative w-20 h-20 flex items-center justify-center animate-redeye-jitter">
 					<!-- Multi-layered octagonal frame (Same as DB) -->
 					<div 
-						class="absolute inset-0 bg-slate-950 border-2 border-red-600/40 shadow-[0_0_15px_rgba(239,68,68,0.2)] backdrop-blur-xl group-hover:border-red-500 group-hover:shadow-[0_0_40px_rgba(239,68,68,0.5)] transition-all duration-300"
+						class="absolute inset-0 bg-slate-950 border-2 border-red-600/40 shadow-[0_0_20px_rgba(239,68,68,0.3)] backdrop-blur-xl group-hover:border-red-500 group-hover:shadow-[0_0_40px_rgba(239,68,68,0.6)] transition-all duration-300"
 						style="clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"
 					></div>
 					<div 
@@ -1657,5 +1659,27 @@
 
 	.animate-redeye-flicker {
 		animation: redeyeFlicker 0.2s infinite;
+	}
+
+	@keyframes redeyeJitter {
+		0%, 100% { transform: translate(0, 0); }
+		25% { transform: translate(-0.5px, 0.5px) rotate(0.1deg); }
+		50% { transform: translate(0.5px, -0.5px) rotate(-0.1deg); }
+		75% { transform: translate(-0.5px, -0.5px); }
+	}
+
+	.animate-redeye-jitter {
+		animation: redeyeJitter 0.15s infinite;
+	}
+
+	@keyframes energySurge {
+		0% { stroke-dashoffset: 100; opacity: 0.2; }
+		50% { opacity: 1; }
+		100% { stroke-dashoffset: 0; opacity: 0.2; }
+	}
+
+	.animate-energy-surge {
+		stroke-dasharray: 20, 80;
+		animation: energySurge 0.8s linear infinite;
 	}
 </style>
