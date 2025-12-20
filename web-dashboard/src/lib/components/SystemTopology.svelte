@@ -797,11 +797,18 @@
 				style="top: {redeyePos.y - 40}px; left: {redeyePos.x - 40}px;"
 			>
 				<div class="relative w-20 h-20 flex items-center justify-center">
-					<!-- Outer diamond frame -->
-					<div class="absolute inset-0 bg-slate-950 border-2 border-red-600/80 rotate-45 shadow-[0_0_25px_rgba(239,68,68,0.4)] backdrop-blur-xl group-hover:border-red-500 group-hover:shadow-[0_0_40px_rgba(239,68,68,0.6)] transition-all duration-300"></div>
+					<!-- Multi-layered octagonal frame (Same as DB) -->
+					<div 
+						class="absolute inset-0 bg-slate-950 border-2 border-red-600/40 shadow-[0_0_15px_rgba(239,68,68,0.2)] backdrop-blur-xl group-hover:border-red-500 group-hover:shadow-[0_0_40px_rgba(239,68,68,0.5)] transition-all duration-300"
+						style="clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"
+					></div>
+					<div 
+						class="absolute inset-1 border border-red-400/20 animate-redeye-flicker"
+						style="clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"
+					></div>
 					
-					<!-- Inner hexagonal grid background -->
-					<div class="absolute inset-2 overflow-hidden rotate-45 opacity-20">
+					<!-- Inner grid background -->
+					<div class="absolute inset-2 opacity-10">
 						<div class="w-full h-full" style="background-image: radial-gradient(circle at 2px 2px, #ef4444 1px, transparent 0); background-size: 8px 8px;"></div>
 					</div>
 
@@ -827,8 +834,8 @@
 						</line>
 					</svg>
 
-					<!-- Glitchy ring -->
-					<div class="absolute inset-0 border border-red-500/30 rotate-45 scale-110 animate-ping-slow opacity-50"></div>
+					<!-- Energy resonance -->
+					<div class="absolute inset-0 border border-red-500/10 scale-125 animate-ping-slower opacity-20" style="clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"></div>
 				</div>
 				<div class="mt-4 flex flex-col items-center">
 					<span class="text-[9px] font-black text-red-500 tracking-[0.3em] uppercase animate-pulse">REDEYE_CORE</span>
@@ -897,7 +904,7 @@
 				<div class="mt-4 flex flex-col items-center">
 					<div class="flex items-center gap-2 mb-1">
 						<div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
-						<span class="text-[9px] font-black text-emerald-500 tracking-[0.3em] uppercase">SQL_STORAGE_CORE</span>
+						<span class="text-[9px] font-black text-emerald-500 tracking-[0.3em] uppercase">DATABASE</span>
 					</div>
 					<div class="flex gap-0.5">
 						{#each Array(6) as _, i}
