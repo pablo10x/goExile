@@ -229,6 +229,11 @@ func ListAllPlayersHandler(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, r, http.StatusInternalServerError, err.Error())
 		return
 	}
+
+	for i := range players {
+		players[i].Online = ws_player.GlobalPlayerWS.IsPlayerOnline(players[i].ID)
+	}
+
 	utils.WriteJSON(w, http.StatusOK, players)
 }
 

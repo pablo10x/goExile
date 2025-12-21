@@ -172,3 +172,11 @@ func (pm *PlayerWSManager) SendMessage(playerID int64, payload interface{}) {
 		// Buffer full, drop message or handle overflow
 	}
 }
+
+// IsPlayerOnline checks if a player is currently connected
+func (pm *PlayerWSManager) IsPlayerOnline(playerID int64) bool {
+	pm.mu.RLock()
+	defer pm.mu.RUnlock()
+	_, exists := pm.Connections[playerID]
+	return exists
+}

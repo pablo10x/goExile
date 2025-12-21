@@ -723,6 +723,30 @@
 																{/if}
 															</a>
 														</QuickActionsTooltip>
+
+														<QuickActionsTooltip
+															placement="right"
+															title="Players"
+															class="w-full"
+															enabled={$showQuickActions}
+															actions={[]}
+														>
+															<a
+																href="/users"
+																class="nav-link w-full {isSidebarCollapsed ? 'justify-center px-2' : ''}"
+																class:nav-active={isRouteActive('/users')}
+																style="animation-delay: 0.55s;"
+																title={isSidebarCollapsed ? 'Players' : ''}
+															>
+																{#if isRouteActive('/users')}
+																	<div class="nav-indicator"></div>
+																{/if}
+																<Users class="nav-icon" />
+																{#if !isSidebarCollapsed}
+																	<span class="animate-in fade-in slide-in-from-left-2 duration-300">Players</span>
+																{/if}
+															</a>
+														</QuickActionsTooltip>
 								
 														<QuickActionsTooltip
 															placement="right"
@@ -1128,6 +1152,17 @@
 							<path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
 						</svg>
 						<span class="text-[10px] font-medium">DB</span>
+					</a>
+					<a
+						href="/users"
+						class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive(
+							'/users'
+						)
+							? 'text-blue-400'
+							: 'text-slate-500 hover:text-slate-300'} transition-colors"
+					>
+						<Users class="w-5 h-5" />
+						<span class="text-[10px] font-medium">Players</span>
 					</a>
 					<a
 						href="/redeye"

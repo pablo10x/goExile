@@ -13,6 +13,7 @@ type Player struct {
 	LastJoinedServer string    `json:"last_joined_server" db:"last_joined_server"`
 	CreatedAt        time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt        time.Time `json:"updated_at" db:"updated_at"`
+	Online           bool      `json:"online"` // Computed field, not in DB
 
 	// Enriched fields (not in DB table directly)
 	Friends                []Player `json:"friends,omitempty"`
