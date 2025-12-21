@@ -402,18 +402,20 @@ func run() error {
 		// AI Bot API
 		router.Handle("/api/ai/chat", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.AIChatHandler))).Methods("POST")
 
+		// Dashboard: Player Management (Session Protected)
+		router.Handle("/api/game/players", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ListAllPlayersHandler))).Methods("GET")
+		router.Handle("/api/game/players/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.GetPlayerDetailsHandler))).Methods("GET")
+		
+		// Dashboard: Reports (Session Protected)
+		router.Handle("/api/reports", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ListReportsHandler))).Methods("GET")
+
 		// Game client routes - Secured via Game API Key
 		gameRouter := router.PathPrefix("/api/game").Subrouter()
 		gameRouter.Use(middleware.Auth_GameMiddleware(gameAPIKey))
 
 		gameRouter.Handle("/auth", http.HandlerFunc(handlers.AuthenticatePlayerHandler)).Methods("POST")
 		gameRouter.Handle("/ws", http.HandlerFunc(ws_player.GlobalPlayerWS.HandleWS))
-		gameRouter.Handle("/players", http.HandlerFunc(handlers.ListAllPlayersHandler)).Methods("GET")
-		gameRouter.Handle("/players", http.HandlerFunc(handlers.CreateOrGetPlayerHandler)).Methods("POST")
-		gameRouter.Handle("/players/{id}", http.HandlerFunc(handlers.GetPlayerDetailsHandler)).Methods("GET")
-		gameRouter.Handle("/friends/request", http.HandlerFunc(handlers.SendFriendRequestHandler)).Methods("POST")
-		gameRouter.Handle("/friends/accept", http.HandlerFunc(handlers.AcceptFriendRequestHandler)).Methods("POST")
-		gameRouter.Handle("/reports", http.HandlerFunc(handlers.CreateReportHandler)).Methods("POST")
+		// Note: All other player interactions (friends, etc.) are handled via WebSocket messages.
 	}
 
 	// Enrollment endpoints (public - enrollment key IS the auth)
