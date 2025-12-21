@@ -43,8 +43,8 @@ type cachedMetrics struct {
 	DiskTotal uint64
 }
 
-// WSMessage represents a message sent over the WebSocket connection.
-type WSMessage struct {
+// Message represents a message sent over the WebSocket connection.
+type Message struct {
 	Type      string          `json:"type"`
 	RequestID string          `json:"request_id,omitempty"`
 	Payload   json.RawMessage `json:"payload"`
@@ -140,7 +140,7 @@ func (c *Client) sendRegister() error {
 		"status":            "Online",
 	}
 	data, _ := json.Marshal(payload)
-	msg := WSMessage{Type: "REGISTER", Payload: data}
+	msg := Message{Type: "REGISTER", Payload: data}
 	bytes, _ := json.Marshal(msg)
 	return c.conn.WriteMessage(websocket.TextMessage, bytes)
 }
@@ -154,7 +154,7 @@ func (c *Client) readPump() {
 			return
 		}
 
-		var msg WSMessage
+		var msg Message
 		if err := json.Unmarshal(message, &msg); err != nil {
 			continue
 		}
@@ -224,7 +224,7 @@ func (c *Client) rotateLogs() {
 	lines := strings.Split(string(content), "\n")
 	if len(lines) > keepLines {
 		newContent := strings.Join(lines[len(lines)-keepLines:], "\n")
-		if err := os.WriteFile("spawner.log", []byte(newContent), 0666); err != nil {
+		if err := os.WriteFile("spawner.log", []byte(newContent), 0600); err != nil {
 			c.logger.Error("Failed to write rotated log file", "error", err)
 		} else {
 			c.logger.Info("Log file rotated", "new_lines", keepLines)
@@ -302,7 +302,7 @@ func (c *Client) heartbeatLoop(done chan struct{}) {
 				"game_version":      currentGameVersion,
 			}
 			data, _ := json.Marshal(payload)
-			msg := WSMessage{Type: "HEARTBEAT", Payload: data}
+			msg := Message{Type: "HEARTBEAT", Payload: data}
 			bytes, _ := json.Marshal(msg)
 
 			c.logger.Debug("Sending heartbeat", "timestamp", time.Now().UnixMilli())
@@ -316,7 +316,7 @@ func (c *Client) heartbeatLoop(done chan struct{}) {
 	}
 }
 
-func (c *Client) handleMessage(msg WSMessage) {
+func (c *Client) handleMessage(msg Message) {
 	if msg.Type != "get_instance_logs" && msg.Type != "get_logs" && msg.Type != "get_instance_stats" {
 		c.logger.Info("Received message", "type", msg.Type, "req_id", msg.RequestID)
 	}
@@ -652,7 +652,7 @@ func (c *Client) sendResponse(reqID, status string, data json.RawMessage, errStr
 	}
 
 	payload, _ := json.Marshal(resp)
-	msg := WSMessage{Type: "RESPONSE", Payload: payload}
+	msg := Message{Type: "RESPONSE", Payload: payload}
 	bytes, _ := json.Marshal(msg)
 
 	select {

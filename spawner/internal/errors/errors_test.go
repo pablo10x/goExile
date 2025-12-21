@@ -25,7 +25,7 @@ func TestSpawnerError(t *testing.T) {
 	}
 
 	// Test context addition
-	err.WithContext("instance_id", "test-123").
+	err = err.WithContext("instance_id", "test-123").
 		WithContext("port", 8080)
 	if err.Context["instance_id"] != "test-123" {
 		t.Error("Context not properly added")

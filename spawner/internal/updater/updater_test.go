@@ -17,7 +17,7 @@ func TestEnsureInstalled_AlreadyExists(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Create dummy binary
 	binPath := filepath.Join(tmpDir, "game.exe")
@@ -41,7 +41,7 @@ func TestEnsureInstalled_DownloadAndUnzip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.Remove(tmpZip.Name())
+	defer func() { _ = os.Remove(tmpZip.Name()) }()
 
 	zw := zip.NewWriter(tmpZip)
 	f, err := zw.Create("game.exe")
@@ -52,8 +52,8 @@ func TestEnsureInstalled_DownloadAndUnzip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	zw.Close()
-	tmpZip.Close() // Close file so we can serve it
+	_ = zw.Close()
+	_ = tmpZip.Close() // Close file so we can serve it
 
 	// 2. Start Mock Master Server
 	masterServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -70,7 +70,7 @@ func TestEnsureInstalled_DownloadAndUnzip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(installDir)
+	defer func() { _ = os.RemoveAll(installDir) }()
 
 	binPath := filepath.Join(installDir, "game.exe")
 	cfg := &config.Config{

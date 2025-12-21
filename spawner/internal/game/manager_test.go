@@ -74,7 +74,7 @@ func TestFindAvailablePort(t *testing.T) {
 	if err != nil {
 		t.Skipf("Could not bind port 9010 for test: %v", err)
 	}
-	defer l.Close()
+	defer func() { _ = l.Close() }()
 
 	port, err := m.findAvailablePort()
 	if err != nil {

@@ -76,6 +76,7 @@ func (h *Handler) HandleUpdateTemplate(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": message, "version": updatedVersion})
 }
 
+// HandleUpdateInstance handles the update request for a specific instance.
 func (h *Handler) HandleUpdateInstance(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -92,6 +93,7 @@ func (h *Handler) HandleUpdateInstance(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "instance updated"})
 }
 
+// HandleRenameInstance handles the rename request for a specific instance.
 func (h *Handler) HandleRenameInstance(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -121,6 +123,7 @@ func (h *Handler) HandleRenameInstance(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "instance renamed", "new_id": req.NewID})
 }
 
+// HandleRemoveInstance handles the removal request for a specific instance.
 func (h *Handler) HandleRemoveInstance(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -137,6 +140,7 @@ func (h *Handler) HandleRemoveInstance(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "instance removed", "id": id})
 }
 
+// HandleStopInstance handles the stop request for a specific instance.
 func (h *Handler) HandleStopInstance(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -153,6 +157,7 @@ func (h *Handler) HandleStopInstance(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "instance stopped", "id": id})
 }
 
+// HandleStartInstance handles the start request for a specific instance.
 func (h *Handler) HandleStartInstance(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -170,6 +175,7 @@ func (h *Handler) HandleStartInstance(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "instance started", "id": id})
 }
 
+// HandleRestartInstance handles the restart request for a specific instance.
 func (h *Handler) HandleRestartInstance(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -190,6 +196,7 @@ func (h *Handler) HandleRestartInstance(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "instance restarted", "id": id})
 }
 
+// HandleInstanceStats handles the stats request for a specific instance.
 func (h *Handler) HandleInstanceStats(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -206,6 +213,7 @@ func (h *Handler) HandleInstanceStats(c *gin.Context) {
 	c.JSON(http.StatusOK, stats)
 }
 
+// HandleInstanceHistory handles the history request for a specific instance.
 func (h *Handler) HandleInstanceHistory(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -222,6 +230,7 @@ func (h *Handler) HandleInstanceHistory(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"history": history})
 }
 
+// HandleInstanceLogs handles the log streaming request for a specific instance.
 func (h *Handler) HandleInstanceLogs(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -270,6 +279,7 @@ func (h *Handler) HandleInstanceLogs(c *gin.Context) {
 	})
 }
 
+// HandleClearInstanceLogs handles the log clear request for a specific instance.
 func (h *Handler) HandleClearInstanceLogs(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -285,6 +295,7 @@ func (h *Handler) HandleClearInstanceLogs(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "logs cleared"})
 }
 
+// HandleHealth handles the health check request.
 func (h *Handler) HandleHealth(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status": "online",
@@ -293,6 +304,7 @@ func (h *Handler) HandleHealth(c *gin.Context) {
 	})
 }
 
+// HandleGetLogs handles the spawner log retrieval request.
 func (h *Handler) HandleGetLogs(c *gin.Context) {
 	content, err := os.ReadFile("spawner.log")
 	if err != nil {
@@ -307,6 +319,7 @@ func (h *Handler) HandleGetLogs(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"logs": string(content)})
 }
 
+// HandleClearLogs handles the spawner log clear request.
 func (h *Handler) HandleClearLogs(c *gin.Context) {
 	if err := os.Truncate("spawner.log", 0); err != nil {
 		h.logger.Error("Failed to clear logs", "error", err)
@@ -317,6 +330,7 @@ func (h *Handler) HandleClearLogs(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "logs cleared"})
 }
 
+// HandleSpawn handles the instance spawn request.
 func (h *Handler) HandleSpawn(c *gin.Context) {
 	instance, err := h.manager.Spawn(c.Request.Context())
 	if err != nil {
@@ -328,11 +342,13 @@ func (h *Handler) HandleSpawn(c *gin.Context) {
 	c.JSON(http.StatusOK, instance)
 }
 
+// HandleListInstances handles the request to list all instances.
 func (h *Handler) HandleListInstances(c *gin.Context) {
 	instances := h.manager.ListInstances()
 	c.JSON(http.StatusOK, gin.H{"instances": instances})
 }
 
+// HandleBackupInstance handles the backup request for a specific instance.
 func (h *Handler) HandleBackupInstance(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -349,6 +365,7 @@ func (h *Handler) HandleBackupInstance(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "backup created"})
 }
 
+// HandleRestoreInstance handles the restore request for a specific instance.
 func (h *Handler) HandleRestoreInstance(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -378,6 +395,7 @@ func (h *Handler) HandleRestoreInstance(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "instance restored"})
 }
 
+// HandleListBackups handles the request to list backups for a specific instance.
 func (h *Handler) HandleListBackups(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -395,6 +413,7 @@ func (h *Handler) HandleListBackups(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"backups": backups})
 }
 
+// HandleDeleteBackup handles the request to delete a specific backup.
 func (h *Handler) HandleDeleteBackup(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {

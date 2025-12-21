@@ -11,7 +11,7 @@ func TestConfig_Validate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.Remove(tmpFile.Name())
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
 
 	tests := []struct {
 		name    string

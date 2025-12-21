@@ -20,7 +20,7 @@ func (m *Manager) saveStateInternal() error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(m.cfg.StateFilePath, data, 0644)
+	return os.WriteFile(m.cfg.StateFilePath, data, 0600)
 }
 
 // LoadState reads instances from the JSON file.

@@ -32,13 +32,13 @@ func copyDir(src, dst string) error {
 		if err != nil {
 			return err
 		}
-		defer srcFile.Close()
+		defer func() { _ = srcFile.Close() }()
 
 		dstFile, err := os.Create(newPath)
 		if err != nil {
 			return err
 		}
-		defer dstFile.Close()
+		defer func() { _ = dstFile.Close() }()
 
 		if _, err := io.Copy(dstFile, srcFile); err != nil {
 			return err
@@ -54,10 +54,10 @@ func zipDir(src string, dest string, excludes []string) error {
 	if err != nil {
 		return err
 	}
-	defer zipFile.Close()
+	defer func() { _ = zipFile.Close() }()
 
 	archive := zip.NewWriter(zipFile)
-	defer archive.Close()
+	defer func() { _ = archive.Close() }()
 
 	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -113,7 +113,7 @@ func zipDir(src string, dest string, excludes []string) error {
 		if err != nil {
 			return err
 		}
-		defer file.Close()
+		defer func() { _ = file.Close() }()
 
 		_, err = io.Copy(writer, file)
 		return err
@@ -125,7 +125,7 @@ func unzipDir(src, dest string) error {
 	if err != nil {
 		return err
 	}
-	defer r.Close()
+	defer func() { _ = r.Close() }()
 
 	for _, f := range r.File {
 		fpath := filepath.Join(dest, f.Name)
@@ -134,7 +134,7 @@ func unzipDir(src, dest string) error {
 		}
 
 		if f.FileInfo().IsDir() {
-			os.MkdirAll(fpath, os.ModePerm)
+			_ = os.MkdirAll(fpath, os.ModePerm)
 			continue
 		}
 
@@ -149,13 +149,13 @@ func unzipDir(src, dest string) error {
 
 		rc, err := f.Open()
 		if err != nil {
-			outFile.Close()
+			func() { _ = outFile.Close() }()
 			return err
 		}
 
 		_, err = io.Copy(outFile, rc)
-		outFile.Close()
-		rc.Close()
+		func() { _ = outFile.Close() }()
+		_ = rc.Close()
 
 		if err != nil {
 			return err

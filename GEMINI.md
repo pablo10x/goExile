@@ -120,7 +120,9 @@ npm run dev   # Starts Vite dev server
         *   Added comprehensive error handling for `json.Unmarshal`, `os.Chmod`, and connection closing.
         *   Suppressed noise from non-critical error returns in `defer` and background tasks.
         *   Fixed multiple syntax errors and assignment mismatches introduced during automated refactoring.
-        *   Added missing package-level documentation across all spawner modules.
+        *   Added missing package-level documentation and method comments across all spawner modules.
+        *   Renamed `EnrollmentResult`, `EnrollmentRequest`, and `WSMessage` to avoid stuttering (`Result`, `Request`, `Message`).
+        *   Restricted file permissions for sensitive files (`.env`, state files, logs) to `0600`.
         *   Aligned spawner to Go 1.24.0 for toolchain consistency.
 *   **Theme Engine:** Implemented a full-featured Light/Dark mode system with glassmorphism effects.
     *   Default mode is Dark.

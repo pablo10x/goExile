@@ -53,7 +53,7 @@ func main() {
 	// Note: flag.Parse() is already called above, so explicit usage printing will be done after -v is handled.
 
 	// 1. Setup Logging (File based for production)
-	logFile, err := os.OpenFile("spawner.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	logFile, err := os.OpenFile("spawner.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to open log file: %v", err))
 	}
@@ -208,7 +208,7 @@ func saveAPIKeyToEnv(apiKey string) error {
 		}
 	}
 
-	return os.WriteFile(envFile, []byte(newContent), 0644)
+	return os.WriteFile(envFile, []byte(newContent), 0600)
 }
 
 // splitLines splits a string into lines

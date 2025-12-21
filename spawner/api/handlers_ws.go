@@ -13,6 +13,7 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+// HandleInstanceWebSocket handles the WebSocket connection for a specific instance.
 func (h *Handler) HandleInstanceWebSocket(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {

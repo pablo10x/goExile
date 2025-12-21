@@ -13,14 +13,14 @@ import (
 	"time"
 )
 
-// EnrollmentResult contains the result of a successful enrollment
-type EnrollmentResult struct {
+// Result contains the result of a successful enrollment
+type Result struct {
 	ID     int    `json:"id"`
 	APIKey string `json:"api_key"`
 }
 
-// EnrollmentRequest represents the request body for enrollment
-type EnrollmentRequest struct {
+// Request represents the request body for enrollment
+type Request struct {
 	Key              string `json:"key"`
 	Region           string `json:"region"`
 	Host             string `json:"host"`
@@ -32,7 +32,7 @@ type EnrollmentRequest struct {
 
 // Enroll performs the enrollment process using the provided enrollment key
 // Returns the API key and spawner ID on success
-func Enroll(cfg *config.Config, logger *slog.Logger) (*EnrollmentResult, error) {
+func Enroll(cfg *config.Config, logger *slog.Logger) (*Result, error) {
 	if cfg.EnrollmentKey == "" {
 		return nil, fmt.Errorf("enrollment key is required")
 	}
@@ -56,7 +56,7 @@ func Enroll(cfg *config.Config, logger *slog.Logger) (*EnrollmentResult, error) 
 	}
 
 	// Build request
-	reqBody := EnrollmentRequest{
+	reqBody := Request{
 		Key:              cfg.EnrollmentKey,
 		Region:           cfg.Region,
 		Host:             cfg.Host,
@@ -126,7 +126,7 @@ func Enroll(cfg *config.Config, logger *slog.Logger) (*EnrollmentResult, error) 
 		"message", result.Message,
 	)
 
-	return &EnrollmentResult{
+	return &Result{
 		ID:     result.ID,
 		APIKey: result.APIKey,
 	}, nil

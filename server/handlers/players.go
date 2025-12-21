@@ -18,94 +18,94 @@ import (
 
 // -- Player Handlers --
 
-// AuthenticatePlayerHandler handles player login via Firebase ID Token.
+// AuthenticatePlayerHandler verifies a Firebase ID token and checks if the player account exists.
 //
-// This handler performs three-stage player resolution:
-// 1. Lookup by Firebase UID (primary identifier)
-// 2. Lookup by DeviceID if UID not found (migration/linking scenario)
-// 3. Create new player if neither UID nor DeviceID matches
+// Flow:
+//  1. Validates database and Firebase connections
+//  2. Extracts and verifies the Firebase ID token from the request
+//  3. Checks if a player account exists for the given Firebase UID
+//  4. Generates a WebSocket authentication key for the session
 //
-// Request body supports both JSON and form-encoded data:
+// Request (form-encoded):
 //   - id_token (required): Firebase ID token for authentication
-//   - name (optional): Player display name
-//   - device_id (optional for existing, required for new players): Unique device identifier
 //
-// Response includes:
-//   - player: Full player object with friends and friend requests
+// Response (JSON):
+//   - accountexist: Boolean indicating if the player account exists
 //   - ws_auth_key: WebSocket authentication key for real-time connection
-//   - ws_endpoint: WebSocket endpoint path
 func AuthenticatePlayerHandler(w http.ResponseWriter, r *http.Request) {
-	// Verify database connection is available
+	// ==================== Validation ====================
+
+	// Check database connection
 	if database.DBConn == nil {
 		utils.WriteError(w, r, http.StatusServiceUnavailable, "database not connected")
 		return
 	}
 
-	// Verify Firebase authentication is initialized
+	// Check Firebase manager initialization
 	if auth.FirebaseMgr == nil {
 		utils.WriteError(w, r, http.StatusServiceUnavailable, "firebase not initialized")
 		return
 	}
 
-	// Read request body into memory for potential re-parsing
+	// ==================== Parse Request ====================
+
+	// Read request body
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		utils.WriteError(w, r, http.StatusBadRequest, "failed to read body")
 		return
 	}
 
-	// Restore the body so it can be read again by the decoder
+	// Restore body for subsequent reads
 	r.Body = io.NopCloser(bytes.NewBuffer(body))
 
-	var idToken string
-
-	var accountexist bool
-
-	//form-encoded data
+	// Parse form data to extract id_token
 	if err := r.ParseForm(); err != nil {
 		utils.WriteError(w, r, http.StatusBadRequest, "failed to parse form")
 		return
 	}
-	idToken = r.FormValue("id_token")
 
-	// Validate that ID token is provided
+	idToken := r.FormValue("id_token")
 	if idToken == "" {
 		utils.WriteError(w, r, http.StatusBadRequest, "id_token is required")
 		return
 	}
 
-	// Verify the Firebase ID token and extract the user ID (UID)
+	// ==================== Firebase Authentication ====================
+
+	// Verify Firebase ID token and extract user ID (UID)
 	uid, err := auth.FirebaseMgr.VerifyIDToken(idToken)
 	if err != nil {
 		utils.WriteError(w, r, http.StatusUnauthorized, "invalid token: "+err.Error())
 		return
 	}
 
-	// Stage 1: Attempt to find player by Firebase UID
+	// ==================== Player Lookup ====================
+
+	// Check if player exists with this Firebase UID
 	p, err := database.GetPlayerByUID(database.DBConn, uid)
 	if err != nil {
 		utils.WriteError(w, r, http.StatusInternalServerError, err.Error())
 		return
 	}
 
+	// Set account existence flag
+	accountexist := false
 	if p != nil {
 		accountexist = true
 	}
 
-	// Enrich player data with social information
+	// ==================== WebSocket Session ====================
 
-	/* 	friends, _ := database.GetFriends(database.DBConn, p.ID)
-	   	incoming, outgoing, _ := database.GetFriendRequests(database.DBConn, p.ID)
-
-	   	p.Friends = friends
-	   	p.IncomingFriendRequests = incoming
-	   	p.OutgoingFriendRequests = outgoing*/
-
-	// Generate WebSocket authentication key for real-time communication
+	// Generate and register WebSocket authentication key
 	wsKey := utils.GenerateRandomString(32)
-	ws_player.GlobalPlayerWS.RegisterSession(p.ID, wsKey)
+	if p != nil {
+		ws_player.GlobalPlayerWS.RegisterSession(p.ID, wsKey)
+	}
 
-	// Build response with player data and WebSocket credentials
+	// ==================== Response ====================
+
+	// Build and send response
 	response := map[string]interface{}{
 		"accountexist": accountexist,
 		"ws_auth_key":  wsKey,
