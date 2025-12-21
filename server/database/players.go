@@ -72,7 +72,46 @@ func InitPlayerSystem(db *sqlx.DB) error {
 		return fmt.Errorf("create friend_requests table: %w", err)
 	}
 
+	// Reports Table
+	reportsTable := `CREATE TABLE IF NOT EXISTS player_system.reports (
+		id BIGSERIAL PRIMARY KEY,
+		reporter_id BIGINT NOT NULL REFERENCES player_system.players(id) ON DELETE CASCADE,
+		reported_user_id BIGINT NOT NULL REFERENCES player_system.players(id) ON DELETE CASCADE,
+		reason TEXT NOT NULL,
+		game_server_instance_id TEXT DEFAULT '',
+		timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+	);`
+	if _, err := db.Exec(reportsTable); err != nil {
+		return fmt.Errorf("create reports table: %w", err)
+	}
+
 	return nil
+}
+
+// -- Reports CRUD --
+
+func CreateReport(db *sqlx.DB, r *models.Report) (int64, error) {
+	var id int64
+	query := `INSERT INTO player_system.reports (reporter_id, reported_user_id, reason, game_server_instance_id, timestamp) 
+			  VALUES ($1, $2, $3, $4, $5) RETURNING id`
+	
+	r.Timestamp = time.Now().UTC()
+
+	err := db.QueryRow(query, r.ReporterID, r.ReportedUserID, r.Reason, r.GameServerInstanceID, r.Timestamp).Scan(&id)
+	return id, err
+}
+
+func GetAllReports(db *sqlx.DB) ([]models.Report, error) {
+	var reports []models.Report
+	query := `
+		SELECT r.*, p1.name as reporter_name, p2.name as reported_user_name 
+		FROM player_system.reports r
+		JOIN player_system.players p1 ON r.reporter_id = p1.id
+		JOIN player_system.players p2 ON r.reported_user_id = p2.id
+		ORDER BY r.timestamp DESC
+	`
+	err := db.Select(&reports, query)
+	return reports, err
 }
 
 // -- Player CRUD --

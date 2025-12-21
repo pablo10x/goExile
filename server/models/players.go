@@ -36,3 +36,17 @@ type FriendRequest struct {
 	Status     string    `json:"status" db:"status"` // 'pending', 'rejected'
 	CreatedAt  time.Time `json:"created_at" db:"created_at"`
 }
+
+// Report represents a user report.
+type Report struct {
+	ID                   int64     `json:"id" db:"id"`
+	ReporterID           int64     `json:"reporter_id" db:"reporter_id"`
+	ReportedUserID       int64     `json:"reported_user_id" db:"reported_user_id"`
+	Reason               string    `json:"reason" db:"reason"`
+	GameServerInstanceID string    `json:"game_server_instance_id" db:"game_server_instance_id"`
+	Timestamp            time.Time `json:"timestamp" db:"timestamp"`
+
+	// Enriched fields
+	ReporterName     string `json:"reporter_name,omitempty" db:"reporter_name"`
+	ReportedUserName string `json:"reported_user_name,omitempty" db:"reported_user_name"`
+}

@@ -391,6 +391,10 @@ func run() error {
 		
 		router.Handle("/api/game/friends/request", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.SendFriendRequestHandler))).Methods("POST")
 		router.Handle("/api/game/friends/accept", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.AcceptFriendRequestHandler))).Methods("POST")
+
+		// Reports
+		router.Handle("/api/game/reports", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.CreateReportHandler))).Methods("POST")
+		router.Handle("/api/reports", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ListReportsHandler))).Methods("GET")
 	}
 
 	// Enrollment endpoints (public - enrollment key IS the auth)
