@@ -168,7 +168,7 @@
 							title={color.charAt(0).toUpperCase() + color.slice(1)}
 						>
 							{#if currentNote.color === color}
-								<Check class="w-full h-full text-white p-1" />
+								<Check class="w-full h-full text-slate-900 dark:text-white p-1" />
 							{/if}
 						</button>
 					{/each}
@@ -186,11 +186,11 @@
 							title={status.charAt(0).toUpperCase() + status.slice(1)}
 						>
 							{#if status === 'normal'}
-								<Bell class="w-4 h-4 text-white" />
+								<Bell class="w-4 h-4 text-slate-900 dark:text-white" />
 							{:else if status === 'warn'}
-								<TriangleAlert class="w-4 h-4 text-white" />
+								<TriangleAlert class="w-4 h-4 text-slate-900 dark:text-white" />
 							{:else if status === 'critical'}
-								<ShieldAlert class="w-4 h-4 text-white" />
+								<ShieldAlert class="w-4 h-4 text-slate-900 dark:text-white" />
 							{/if}
 						</button>
 					{/each}
@@ -200,7 +200,7 @@
 				<button
 					onclick={handleSave}
 					disabled={loading || (!currentNote.title.trim() && !currentNote.content.trim())}
-					class="px-5 py-2.5 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg shadow-md transition-colors flex items-center gap-2 disabled:opacity-50"
+					class="px-5 py-2.5 bg-green-500 hover:bg-green-600 text-slate-900 dark:text-white font-semibold rounded-lg shadow-md transition-colors flex items-center gap-2 disabled:opacity-50"
 				>
 					{#if loading}
 						<RotateCw class="w-4 h-4 animate-spin" />

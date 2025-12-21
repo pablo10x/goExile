@@ -178,21 +178,21 @@
 <div class="h-full flex flex-col lg:flex-row gap-6 p-4 sm:p-6 overflow-hidden relative">
     
     <!-- Left Column: Tasks (Fixed width on desktop, stacked on mobile) -->
-    <div class="w-full lg:w-96 flex-shrink-0 flex flex-col bg-slate-900/50 border border-slate-700/50 rounded-2xl overflow-hidden backdrop-blur-xl shadow-xl h-[500px] lg:h-auto">
+    <div class="w-full lg:w-96 flex-shrink-0 flex flex-col bg-slate-900/50 border border-slate-300/50 dark:border-slate-700/50 rounded-2xl overflow-hidden backdrop-blur-xl shadow-xl h-[500px] lg:h-auto">
         <!-- Tasks Header -->
-        <div class="p-5 border-b border-slate-700/50 bg-slate-800/30 flex justify-between items-center shrink-0">
-            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+        <div class="p-5 border-b border-slate-300/50 dark:border-slate-700/50 bg-slate-800/30 flex justify-between items-center shrink-0">
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <CheckSquare class="w-5 h-5 text-emerald-400" />
                 Tasks
             </h2>
             <div class="flex items-center gap-2">
-                <span class="px-2 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-xs font-mono text-slate-400">
+                <span class="px-2 py-0.5 rounded-md bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-mono text-slate-500 dark:text-slate-400">
                     {pendingTodos.length} Pending
                 </span>
             </div>
         </div>
 
-        <div class="p-4 border-b border-slate-700/50 bg-slate-900/30 shrink-0">
+        <div class="p-4 border-b border-slate-300/50 dark:border-slate-700/50 bg-slate-900/30 shrink-0">
             <form
                 onsubmit={(e) => { e.preventDefault(); addTodo(); }}
                 class="flex flex-col gap-2"
@@ -202,12 +202,12 @@
                         type="text"
                         bind:value={newTodoContent}
                         placeholder="New task..."
-                        class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all"
+                        class="flex-1 bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-500 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all"
                     />
                     <button
                         type="submit"
                         disabled={!newTodoContent.trim()}
-                        class="p-2 bg-slate-700 hover:bg-emerald-600 text-white rounded-lg transition-colors disabled:opacity-50"
+                        class="p-2 bg-slate-700 hover:bg-emerald-600 text-slate-900 dark:text-white rounded-lg transition-colors disabled:opacity-50"
                     >
                         <Plus class="w-4 h-4" />
                     </button>
@@ -218,7 +218,7 @@
                         type="date"
                         id="todo-deadline"
                         bind:value={newTodoDeadline}
-                        class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-[10px] text-slate-300 outline-none focus:border-slate-500 transition-colors"
+                        class="bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 text-[10px] text-slate-700 dark:text-slate-300 outline-none focus:border-slate-500 transition-colors"
                     />
                     {#if newTodoDeadline}
                         <button 
@@ -249,7 +249,7 @@
 
                 {#if completedTodos.length > 0}
                     {#if pendingTodos.length > 0}
-                        <div class="border-t border-slate-800/50 my-4"></div>
+                        <div class="border-t border-slate-200/50 dark:border-slate-800/50 my-4"></div>
                     {/if}
                     <div class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 px-1">Completed</div>
                     <div class="space-y-2 opacity-60">
@@ -277,11 +277,11 @@
         <!-- Notes Toolbar -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 shrink-0">
             <div>
-                <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+                <h1 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <StickyNote class="w-6 h-6 text-yellow-400" />
                     Notes
                 </h1>
-                <p class="text-slate-400 text-sm mt-0.5">Capture ideas and important info</p>
+                <p class="text-slate-500 dark:text-slate-400 text-sm mt-0.5">Capture ideas and important info</p>
             </div>
 
             <div class="flex items-center gap-3 w-full sm:w-auto">
@@ -291,12 +291,12 @@
                         type="text" 
                         bind:value={searchQuery}
                         placeholder="Search notes..." 
-                        class="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-200 focus:ring-2 focus:ring-blue-500/50 outline-none backdrop-blur-sm"
+                        class="w-full bg-slate-900/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/50 outline-none backdrop-blur-sm"
                     />
                 </div>
                 <button
                     onclick={openCreateNoteModal}
-                    class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-900/20 transition-all hover:-translate-y-0.5"
+                    class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-slate-900 dark:text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-900/20 transition-all hover:-translate-y-0.5"
                 >
                     <Plus class="w-4 h-4" />
                     <span class="hidden sm:inline">New Note</span>
@@ -309,7 +309,7 @@
             {#if loading}
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     {#each [1,2,3] as _}
-                        <div class="h-48 bg-slate-800/30 rounded-xl animate-pulse border border-slate-700/30"></div>
+                        <div class="h-48 bg-slate-800/30 rounded-xl animate-pulse border border-slate-300/30 dark:border-slate-700/30"></div>
                     {/each}
                 </div>
             {:else if filteredNotes.length > 0}
@@ -325,7 +325,7 @@
                     {/each}
                 </div>
             {:else}
-                <div class="h-64 flex flex-col items-center justify-center border-2 border-dashed border-slate-800 rounded-2xl bg-slate-900/20">
+                <div class="h-64 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-900/20">
                     <div class="p-4 bg-slate-800/50 rounded-full mb-3">
                         <StickyNote class="w-8 h-8 text-slate-600" />
                     </div>

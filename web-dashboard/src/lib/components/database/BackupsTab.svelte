@@ -74,7 +74,7 @@
 </script>
 
 <div class="h-full flex flex-col bg-slate-900">
-    <div class="p-6 border-b border-slate-800 bg-slate-950 flex justify-between items-center">
+    <div class="p-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex justify-between items-center">
         <div class="flex items-center gap-3">
             <div class="p-2 bg-orange-500/10 rounded-lg">
                 <HardDrive class="w-6 h-6 text-orange-400" />
@@ -87,7 +87,7 @@
         <button 
             onclick={createBackup} 
             disabled={loading}
-            class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold flex items-center gap-2 shadow-lg shadow-blue-900/20 disabled:opacity-50"
+            class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-slate-900 dark:text-white rounded-lg font-bold flex items-center gap-2 shadow-lg shadow-blue-900/20 disabled:opacity-50"
         >
             <Plus class="w-4 h-4" /> Create Backup
         </button>
@@ -99,28 +99,28 @@
                 <div class="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
         {:else if backups.length === 0}
-            <div class="flex flex-col items-center justify-center h-64 text-slate-500 border-2 border-dashed border-slate-800 rounded-xl">
+            <div class="flex flex-col items-center justify-center h-64 text-slate-500 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
                 <HardDrive class="w-12 h-12 opacity-20 mb-4" />
                 <p>No backups found. Create one to get started.</p>
             </div>
         {:else}
             <div class="grid grid-cols-1 gap-3">
                 {#each backups as backup}
-                    <div class="flex items-center justify-between p-4 bg-slate-800/50 border border-slate-700/50 rounded-xl hover:bg-slate-800 hover:border-slate-600 transition-all group">
+                    <div class="flex items-center justify-between p-4 bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl hover:bg-slate-800 hover:border-slate-600 transition-all group">
                         <div class="flex items-center gap-4">
-                            <div class="p-3 bg-slate-900 rounded-lg text-slate-400 group-hover:text-blue-400 transition-colors">
+                            <div class="p-3 bg-slate-900 rounded-lg text-slate-500 dark:text-slate-400 group-hover:text-blue-400 transition-colors">
                                 <FileText class="w-6 h-6" />
                             </div>
                             <div>
-                                <div class="font-mono font-bold text-slate-200 text-lg">{backup.name}</div>
+                                <div class="font-mono font-bold text-slate-800 dark:text-slate-200 text-lg">{backup.name}</div>
                                 <div class="text-xs text-slate-500 flex gap-3 mt-1">
-                                    <span class="bg-slate-900 px-2 py-0.5 rounded text-slate-400">{formatBytes(backup.size)}</span>
+                                    <span class="bg-slate-900 px-2 py-0.5 rounded text-slate-500 dark:text-slate-400">{formatBytes(backup.size)}</span>
                                     <span>{new Date(backup.created_at).toLocaleString()}</span>
                                 </div>
                             </div>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick={() => downloadFile(backup.name)} class="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg" title="Download">
+                            <button onclick={() => downloadFile(backup.name)} class="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-700 rounded-lg" title="Download">
                                 <Download class="w-5 h-5" />
                             </button>
                             <button onclick={() => restoreBackup(backup.name)} class="p-2 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 rounded-lg" title="Restore">

@@ -10,9 +10,12 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"exile/server/models"
 )
+
+var StartTime = time.Now()
 
 const (
 	MaxIDValue  = 1000000 // A reasonable upper limit for IDs

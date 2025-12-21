@@ -290,13 +290,13 @@
 
 		<!-- Enhanced Modal Window with glassmorphism -->
 		<div
-			class="relative w-full max-w-7xl h-[90vh] flex bg-slate-900/40 backdrop-blur-2xl border border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden"
+			class="relative w-full max-w-7xl h-[90vh] flex bg-slate-900/40 backdrop-blur-2xl border border-slate-300/50 dark:border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden"
 			transition:scale={{ start: 0.9, duration: 300, easing: elasticOut }}
 			style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;"
 		>
 			<!-- Enhanced Sidebar -->
 			<div
-				class="w-80 bg-gradient-to-b from-slate-950/90 to-slate-900/90 backdrop-blur-xl border-r border-slate-700/50 flex flex-col shrink-0 relative overflow-hidden"
+				class="w-80 bg-gradient-to-b from-slate-950/90 to-slate-900/90 backdrop-blur-xl border-r border-slate-300/50 dark:border-slate-700/50 flex flex-col shrink-0 relative overflow-hidden"
 			>
 				<!-- Ambient glow effect -->
 				<div
@@ -304,7 +304,7 @@
 				></div>
 
 				<!-- Header -->
-				<div class="relative p-6 border-b border-slate-700/50 bg-slate-900/50">
+				<div class="relative p-6 border-b border-slate-300/50 dark:border-slate-700/50 bg-slate-900/50">
 					<div class="flex items-start justify-between mb-3">
 						<h3
 							class="text-xl font-bold text-slate-100 break-all leading-tight bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent"
@@ -335,9 +335,9 @@
 						</div>
 					</div>
 					<div
-						class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/50 backdrop-blur-sm border border-slate-700/50"
+						class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/50 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50"
 					>
-						<span class="text-xs font-semibold font-mono text-slate-300"
+						<span class="text-xs font-semibold font-mono text-slate-700 dark:text-slate-300"
 							>{stats.status || 'Unknown'}</span
 						>
 					</div>
@@ -350,10 +350,10 @@
 							class="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl blur-xl group-hover:blur-2xl transition-all"
 						></div>
 						<div
-							class="relative bg-slate-900/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-4 hover:border-slate-600/50 transition-all"
+							class="relative bg-slate-900/50 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-4 hover:border-slate-600/50 transition-all"
 						>
 							<div
-								class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"
+								class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"
 							>
 								<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path
@@ -381,7 +381,7 @@
 								class="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-red-500/10 rounded-xl blur-lg group-hover:blur-xl transition-all"
 							></div>
 							<div
-								class="relative bg-slate-900/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-4 hover:border-orange-500/30 transition-all"
+								class="relative bg-slate-900/50 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-4 hover:border-orange-500/30 transition-all"
 							>
 								<div class="flex items-center justify-between mb-3">
 									<div class="flex items-center gap-2">
@@ -395,12 +395,12 @@
 												/>
 											</svg>
 										</div>
-										<span class="text-xs font-bold text-slate-300 uppercase tracking-wider"
+										<span class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
 											>CPU Usage</span
 										>
 									</div>
 									<span class="text-lg font-bold font-mono text-orange-400"
-										>{stats.cpu_percent.toFixed(1)}%</span
+										>{(stats.cpu_percent)?.toFixed(1)}%</span
 									>
 								</div>
 								<div
@@ -420,7 +420,7 @@
 								class="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl blur-lg group-hover:blur-xl transition-all"
 							></div>
 							<div
-								class="relative bg-slate-900/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-4 hover:border-purple-500/30 transition-all"
+								class="relative bg-slate-900/50 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-4 hover:border-purple-500/30 transition-all"
 							>
 								<div class="flex items-center justify-between mb-3">
 									<div class="flex items-center gap-2">
@@ -434,7 +434,7 @@
 												/>
 											</svg>
 										</div>
-										<span class="text-xs font-bold text-slate-300 uppercase tracking-wider"
+										<span class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
 											>Memory</span
 										>
 									</div>
@@ -459,7 +459,7 @@
 								class="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-xl blur-lg group-hover:blur-xl transition-all"
 							></div>
 							<div
-								class="relative bg-slate-900/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-4 hover:border-emerald-500/30 transition-all"
+								class="relative bg-slate-900/50 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-4 hover:border-emerald-500/30 transition-all"
 							>
 								<div class="flex items-center justify-between mb-3">
 									<div class="flex items-center gap-2">
@@ -473,7 +473,7 @@
 												/>
 											</svg>
 										</div>
-										<span class="text-xs font-bold text-slate-300 uppercase tracking-wider"
+										<span class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
 											>Disk Space</span
 										>
 									</div>
@@ -496,7 +496,7 @@
 					<!-- Enhanced Provisioning Steps -->
 					{#if isProvisioning}
 						<div
-							class="relative pt-6 border-t border-slate-700/50"
+							class="relative pt-6 border-t border-slate-300/50 dark:border-slate-700/50"
 							in:fly={{ y: 20, duration: 500, easing: cubicOut }}
 						>
 							<div
@@ -523,7 +523,7 @@
 											{#if i < provisioningStep}
 												<div class="relative flex-shrink-0">
 													<div
-														class="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/50"
+														class="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-slate-900 dark:text-white shadow-lg shadow-emerald-500/50"
 													>
 														<svg
 															class="w-3 h-3"
@@ -555,7 +555,7 @@
 												<span class="text-blue-200 font-semibold animate-pulse">{step}</span>
 											{:else}
 												<div
-													class="w-6 h-6 rounded-full border-2 border-slate-800 flex-shrink-0"
+													class="w-6 h-6 rounded-full border-2 border-slate-200 dark:border-slate-800 flex-shrink-0"
 												></div>
 												<span class="text-slate-600 font-medium">{step}</span>
 											{/if}
@@ -568,12 +568,12 @@
 				</div>
 
 				<!-- Enhanced Action Buttons -->
-				<div class="relative p-4 border-t border-slate-700/50 bg-slate-900/70 backdrop-blur-sm">
+				<div class="relative p-4 border-t border-slate-300/50 dark:border-slate-700/50 bg-slate-900/70 backdrop-blur-sm">
 					<div class="grid grid-cols-2 gap-2">
 						<button
 							onclick={() => triggerAction('start')}
 							disabled={stats.status === 'Running' || stats.status === 'Provisioning'}
-							class="col-span-2 relative group px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-sm font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:from-slate-800 disabled:to-slate-800 shadow-lg hover:shadow-emerald-500/50 disabled:shadow-none overflow-hidden"
+							class="col-span-2 relative group px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-slate-900 dark:text-white rounded-xl text-sm font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:from-slate-800 disabled:to-slate-800 shadow-lg hover:shadow-emerald-500/50 disabled:shadow-none overflow-hidden"
 						>
 							<span class="relative z-10 flex items-center justify-center gap-2">
 								<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -588,7 +588,7 @@
 						<button
 							onclick={() => triggerAction('restart')}
 							disabled={stats.status !== 'Running'}
-							class="relative group px-4 py-2.5 bg-slate-800/80 hover:bg-gradient-to-r hover:from-blue-600/20 hover:to-cyan-600/20 text-slate-300 hover:text-blue-400 rounded-xl text-sm font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-slate-700/50 hover:border-blue-500/50 overflow-hidden"
+							class="relative group px-4 py-2.5 bg-slate-800/80 hover:bg-gradient-to-r hover:from-blue-600/20 hover:to-cyan-600/20 text-slate-700 dark:text-slate-300 hover:text-blue-400 rounded-xl text-sm font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-slate-300/50 dark:border-slate-700/50 hover:border-blue-500/50 overflow-hidden"
 						>
 							<span class="relative z-10 flex items-center justify-center gap-2">
 								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -605,7 +605,7 @@
 						<button
 							onclick={() => triggerAction('stop')}
 							disabled={stats.status !== 'Running'}
-							class="relative group px-4 py-2.5 bg-slate-800/80 hover:bg-gradient-to-r hover:from-red-600/20 hover:to-rose-600/20 text-slate-300 hover:text-red-400 rounded-xl text-sm font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-slate-700/50 hover:border-red-500/50 overflow-hidden"
+							class="relative group px-4 py-2.5 bg-slate-800/80 hover:bg-gradient-to-r hover:from-red-600/20 hover:to-rose-600/20 text-slate-700 dark:text-slate-300 hover:text-red-400 rounded-xl text-sm font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-slate-300/50 dark:border-slate-700/50 hover:border-red-500/50 overflow-hidden"
 						>
 							<span class="relative z-10 flex items-center justify-center gap-2">
 								<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -627,14 +627,14 @@
 
 				<!-- Enhanced Tabs -->
 				<div
-					class="relative flex border-b border-slate-700/50 bg-slate-900/40 backdrop-blur-xl shrink-0 z-10"
+					class="relative flex border-b border-slate-300/50 dark:border-slate-700/50 bg-slate-900/40 backdrop-blur-xl shrink-0 z-10"
 				>
 					{#each [{ id: 'console', label: 'Console', icon: 'M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' }, { id: 'metrics', label: 'Metrics', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' }, { id: 'backups', label: 'Backups', icon: 'M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4' }, { id: 'history', label: 'History', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' }, { id: 'node_logs', label: 'Node Logs', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' }] as TabItem[] as tab: TabItem}
 						<button
 							class="relative px-6 py-4 text-xs font-bold uppercase tracking-wider transition-all group {activeTab ===
 							tab.id
 								? 'text-blue-400'
-								: 'text-slate-500 hover:text-slate-300'}"
+								: 'text-slate-500 hover:text-slate-700 dark:text-slate-300'}"
 							onclick={() => (activeTab = tab.id)}
 						>
 							<span class="relative z-10 flex items-center gap-2">
@@ -743,7 +743,7 @@
 								</div>
 								<button
 									onclick={() => handleBackupAction('create')}
-									class="relative group px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg hover:shadow-blue-500/50 overflow-hidden"
+									class="relative group px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-slate-900 dark:text-white rounded-xl text-sm font-bold transition-all shadow-lg hover:shadow-blue-500/50 overflow-hidden"
 								>
 									<span class="relative z-10 flex items-center gap-2">
 										<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -766,7 +766,7 @@
 								<div class="flex items-center justify-center py-20">
 									<div class="relative">
 										<div
-											class="w-12 h-12 rounded-full border-4 border-slate-800 border-t-blue-500 animate-spin"
+											class="w-12 h-12 rounded-full border-4 border-slate-200 dark:border-slate-800 border-t-blue-500 animate-spin"
 										></div>
 										<div
 											class="absolute inset-0 w-12 h-12 rounded-full bg-blue-500/20 blur-lg animate-pulse"
@@ -779,7 +779,7 @@
 										class="absolute inset-0 bg-gradient-to-r from-slate-800/20 to-slate-700/20 rounded-2xl blur-xl"
 									></div>
 									<div
-										class="relative text-center py-20 border-2 border-dashed border-slate-700/50 rounded-2xl bg-slate-900/30 backdrop-blur-sm hover:border-slate-600/50 transition-all"
+										class="relative text-center py-20 border-2 border-dashed border-slate-300/50 dark:border-slate-700/50 rounded-2xl bg-slate-900/30 backdrop-blur-sm hover:border-slate-600/50 transition-all"
 									>
 										<div
 											class="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800/50 flex items-center justify-center"
@@ -821,7 +821,7 @@
 											<div
 												class="relative flex items-center justify-between p-5 rounded-xl border transition-all {outdated
 													? 'bg-orange-500/5 border-orange-500/20 hover:border-orange-500/40'
-													: 'bg-slate-900/50 border-slate-700/50 hover:border-slate-600/50'} backdrop-blur-sm"
+													: 'bg-slate-900/50 border-slate-300/50 dark:border-slate-700/50 hover:border-slate-600/50'} backdrop-blur-sm"
 											>
 												<div class="flex items-center gap-4 flex-1 min-w-0">
 													<div class="relative flex-shrink-0">
@@ -853,10 +853,10 @@
 														</div>
 													</div>
 													<div class="flex-1 min-w-0">
-														<div class="text-sm font-bold text-slate-200 font-mono truncate mb-1">
+														<div class="text-sm font-bold text-slate-800 dark:text-slate-200 font-mono truncate mb-1">
 															{backup.filename}
 														</div>
-														<div class="flex items-center gap-3 flex-wrap text-xs text-slate-400">
+														<div class="flex items-center gap-3 flex-wrap text-xs text-slate-500 dark:text-slate-400">
 															<span class="flex items-center gap-1">
 																<svg
 																	class="w-3 h-3"
@@ -893,7 +893,7 @@
 																<span
 																	class="px-2 py-1 rounded-full font-mono font-bold text-[10px] {outdated
 																		? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
-																		: 'bg-slate-700 text-slate-300 border border-slate-600'}"
+																		: 'bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-600'}"
 																>
 																	v{version}
 																</span>
@@ -904,7 +904,7 @@
 												<div class="flex gap-2 ml-4 flex-shrink-0">
 													<button
 														onclick={() => handleBackupAction('restore', backup.filename)}
-														class="relative group/btn px-4 py-2 bg-slate-800/80 hover:bg-gradient-to-r hover:from-blue-600 hover:to-cyan-600 text-slate-300 hover:text-white rounded-lg text-xs font-semibold transition-all border border-slate-700/50 hover:border-blue-500/50 overflow-hidden"
+														class="relative group/btn px-4 py-2 bg-slate-800/80 hover:bg-gradient-to-r hover:from-blue-600 hover:to-cyan-600 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:text-white rounded-lg text-xs font-semibold transition-all border border-slate-300/50 dark:border-slate-700/50 hover:border-blue-500/50 overflow-hidden"
 													>
 														<span class="relative z-10 flex items-center gap-1">
 															<svg
@@ -955,19 +955,19 @@
 						>
 							<table class="w-full text-left border-collapse">
 								<thead
-									class="sticky top-0 z-10 bg-slate-900/90 backdrop-blur-xl border-b border-slate-700/50"
+									class="sticky top-0 z-10 bg-slate-900/90 backdrop-blur-xl border-b border-slate-300/50 dark:border-slate-700/50"
 								>
 									<tr>
-										<th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest"
+										<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
 											>Action</th
 										>
-										<th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest"
+										<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
 											>Status</th
 										>
-										<th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest"
+										<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
 											>Time</th
 										>
-										<th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest"
+										<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
 											>Details</th
 										>
 									</tr>
@@ -980,7 +980,7 @@
 										>
 											<td class="px-6 py-4">
 												<span
-													class="inline-flex items-center font-mono text-sm text-slate-300 bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700/50 group-hover:border-slate-600/50 transition-colors"
+													class="inline-flex items-center font-mono text-sm text-slate-700 dark:text-slate-300 bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-300/50 dark:border-slate-700/50 group-hover:border-slate-600/50 transition-colors"
 												>
 													{log.action}
 												</span>
@@ -1006,7 +1006,7 @@
 													{log.status}
 												</span>
 											</td>
-											<td class="px-6 py-4 text-sm text-slate-400 font-mono">
+											<td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400 font-mono">
 												{new Date(log.timestamp).toLocaleString()}
 											</td>
 											<td
@@ -1056,7 +1056,7 @@
 			<!-- Enhanced Close Button -->
 			<button
 				onclick={close}
-				class="absolute top-4 right-4 p-2.5 text-slate-400 hover:text-white hover:bg-slate-800/80 backdrop-blur-xl rounded-xl transition-all z-30 border border-slate-700/50 hover:border-slate-600 group"
+				class="absolute top-4 right-4 p-2.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-800/80 backdrop-blur-xl rounded-xl transition-all z-30 border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-600 group"
 				aria-label="Close"
 			>
 				<svg

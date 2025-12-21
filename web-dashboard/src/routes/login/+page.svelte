@@ -189,7 +189,7 @@
 							>
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
-									class="w-20 h-20 text-white"
+									class="w-20 h-20 text-slate-900 dark:text-white"
 									viewBox="0 0 24 24"
 									fill="none"
 									stroke="currentColor"
@@ -201,16 +201,16 @@
 						</div>
 
 						<div class="space-y-4">
-							<h1 class="text-6xl font-black text-white tracking-tight">
+							<h1 class="text-6xl font-black text-slate-900 dark:text-white tracking-tight">
 								<span
 									class="bg-gradient-to-r from-blue-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent animate-gradient"
 									>GoExile</span
 								>
 							</h1>
-							<p class="text-xl text-white/80 font-light max-w-sm mx-auto leading-relaxed">
+							<p class="text-xl text-slate-900/80 dark:text-white/80 font-light max-w-sm mx-auto leading-relaxed">
 								Advanced Game Server Management Registry
 							</p>
-							<div class="flex items-center justify-center gap-6 text-sm text-white/60">
+							<div class="flex items-center justify-center gap-6 text-sm text-slate-900/60 dark:text-white/60">
 								<div class="flex items-center gap-2">
 									<div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
 									<span>Real-time</span>
@@ -237,8 +237,8 @@
 
 					<div class="relative z-10 space-y-8" in:fly={{ x: 30, duration: 1000, delay: 400 }}>
 						<div class="space-y-2">
-							<h2 class="text-4xl font-bold text-white">Welcome Back</h2>
-							<p class="text-white/60 text-lg">Authenticate to access your dashboard</p>
+							<h2 class="text-4xl font-bold text-slate-900 dark:text-white">Welcome Back</h2>
+							<p class="text-slate-900/60 dark:text-white/60 text-lg">Authenticate to access your dashboard</p>
 						</div>
 
 						<form onsubmit={handleLogin} class="space-y-6" class:animate-shake={formShake}>
@@ -246,12 +246,12 @@
 							<div class="space-y-2 group">
 								<label
 									for="email"
-									class="text-sm font-medium text-white/80 uppercase tracking-wider"
+									class="text-sm font-medium text-slate-900/80 dark:text-white/80 uppercase tracking-wider"
 									>Email Address</label
 								>
 								<div class="relative">
 									<div
-										class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-white/50 group-focus-within:text-blue-400 transition-colors duration-300"
+										class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-900/50 dark:text-white/50 group-focus-within:text-blue-400 transition-colors duration-300"
 									>
 										<svg
 											xmlns="http://www.w3.org/2000/svg"
@@ -272,7 +272,7 @@
 										id="email"
 										bind:value={email}
 										required
-										class="w-full pl-12 pr-4 py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300 hover:bg-white/10"
+										class="w-full pl-12 pr-4 py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-slate-900 dark:text-white placeholder-white/40 focus:outline-none focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300 hover:bg-white/10"
 										placeholder="name@example.com"
 									/>
 								</div>
@@ -282,11 +282,11 @@
 							<div class="space-y-2 group">
 								<label
 									for="password"
-									class="text-sm font-medium text-white/80 uppercase tracking-wider">Password</label
+									class="text-sm font-medium text-slate-900/80 dark:text-white/80 uppercase tracking-wider">Password</label
 								>
 								<div class="relative">
 									<div
-										class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-white/50 group-focus-within:text-blue-400 transition-colors duration-300"
+										class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-900/50 dark:text-white/50 group-focus-within:text-blue-400 transition-colors duration-300"
 									>
 										<svg
 											xmlns="http://www.w3.org/2000/svg"
@@ -305,7 +305,7 @@
 										id="password"
 										bind:value={password}
 										required
-										class="w-full pl-12 pr-4 py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300 hover:bg-white/10"
+										class="w-full pl-12 pr-4 py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-slate-900 dark:text-white placeholder-white/40 focus:outline-none focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300 hover:bg-white/10"
 										placeholder="••••••••"
 									/>
 								</div>
@@ -315,7 +315,7 @@
 							<button
 								type="submit"
 								disabled={loading}
-								class="w-full py-4 px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-xl shadow-blue-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 group relative overflow-hidden"
+								class="w-full py-4 px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-slate-900 dark:text-white font-bold rounded-xl shadow-xl shadow-blue-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 group relative overflow-hidden"
 							>
 								<!-- Button Background Effect -->
 								<div
@@ -348,7 +348,7 @@
 
 						<!-- Security Notice -->
 						<div class="pt-6 border-t border-white/10">
-							<div class="flex items-center gap-3 text-sm text-white/50">
+							<div class="flex items-center gap-3 text-sm text-slate-900/50 dark:text-white/50">
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
 									class="w-4 h-4 flex-shrink-0"

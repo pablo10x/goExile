@@ -7,7 +7,9 @@
 *.so
 *.dylib
 server/server_bin
+server/server
 spawner/spawner_bin
+spawner/spawner
 
 # Editor directories and files
 .vscode/
@@ -25,6 +27,8 @@ Thumbs.db
 
 # Environment and local data
 .env
+spawner/.env
+server/.env
 registry.db
 *.db
 *.sqlite
@@ -46,14 +50,15 @@ coverage.out
 
 # Large binary files
 *.zip
+server/files/
 server/files/*.zip
-server/goexile-f09d4-firebase-adminsdk-fbsvc-5502988de4.json
+server/*.json
+!server/.env.example
 
 # Spawner specific
 spawner/lin/
 spawner/instances/
 spawner/game_server/
-spawner/spawner
 spawner/instancesx/
 spawner/examples/
 2fa generator/

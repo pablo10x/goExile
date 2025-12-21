@@ -5,15 +5,17 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os/exec"
 	"strings"
 	"sync"
 	"time"
 
-	        "exile/server/database"
-	        "exile/server/models"
-	        "exile/server/registry"
-	        "exile/server/utils"
-		"github.com/jmoiron/sqlx"
+	"exile/server/database"
+	"exile/server/models"
+	"exile/server/registry"
+	"exile/server/utils"
+
+	"github.com/jmoiron/sqlx"
 )
 
 // -- Caching --
@@ -21,7 +23,30 @@ import (
 var (
 	BannedIPCache = make(map[string]bool)
 	BanCacheMu    sync.RWMutex
+	RedEyeActive  = false
+	RedEyeError   = ""
 )
+
+// CheckSystemRequirements checks if ufw is installed and accessible.
+func CheckSystemRequirements() error {
+	// Check if ufw command exists
+	path, err := exec.LookPath("ufw")
+	if err != nil {
+		return fmt.Errorf("ufw not installed")
+	}
+	_ = path
+
+	// Check permissions by running a harmless ufw command
+	cmd := exec.Command("ufw", "status")
+	if err := cmd.Run(); err != nil {
+		// Try sudo
+		cmd = exec.Command("sudo", "-n", "ufw", "status")
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("permission denied (requires root/sudo)")
+		}
+	}
+	return nil
+}
 
 // StartRedEyeBackground initializes background tasks for RedEye.
 func StartRedEyeBackground(db *sqlx.DB) {
@@ -29,8 +54,14 @@ func StartRedEyeBackground(db *sqlx.DB) {
 		return
 	}
 
-	// Initial load
-	RefreshBanCache(db)
+	if err := CheckSystemRequirements(); err != nil {
+		RedEyeError = err.Error()
+		RedEyeActive = false
+	} else {
+		RedEyeActive = true
+	}
+
+	// Initial load	RefreshBanCache(db)
 
 	go func() {
 		ticker := time.NewTicker(30 * time.Second)
@@ -54,23 +85,24 @@ func StartRedEyeBackground(db *sqlx.DB) {
 }
 
 func RefreshBanCache(db *sqlx.DB) {
-        ips, err := database.GetBannedIPList(db)
-        if err != nil {
-                log.Printf("RedEye: Failed to refresh ban cache: %v", err)
-                return
-        }
+	ips, err := database.GetBannedIPList(db)
+	if err != nil {
+		log.Printf("RedEye: Failed to refresh ban cache: %v", err)
+		return
+	}
 
-        newCache := make(map[string]bool)
-        for _, ip := range ips {
-                newCache[ip] = true
-        }
+	newCache := make(map[string]bool)
+	for _, ip := range ips {
+		newCache[ip] = true
+	}
 
-        BanCacheMu.Lock()
-        BannedIPCache = newCache
-        BanCacheMu.Unlock()
+	BanCacheMu.Lock()
+	BannedIPCache = newCache
+	BanCacheMu.Unlock()
 
-        registry.GlobalStats.UpdateRedEyeActiveBans(len(ips))
+	registry.GlobalStats.UpdateRedEyeActiveBans(len(ips))
 }
+
 // RunAnomalyDetection scans for high-frequency blocks and auto-bans IPs.
 func RunAnomalyDetection(db *sqlx.DB) {
 	// Check if enabled
@@ -90,10 +122,10 @@ func RunAnomalyDetection(db *sqlx.DB) {
 
 	// Scan logs from last minute
 	lastMinute := time.Now().Add(-1 * time.Minute).Unix()
-	query := `SELECT source_ip, COUNT(*) as count 
-              FROM redeye_logs 
-              WHERE timestamp > $1 AND (action = 'DENY' OR action = 'RATE_LIMIT_HIT') 
-              GROUP BY source_ip 
+	query := `SELECT source_ip, COUNT(*) as count
+              FROM redeye_logs
+              WHERE timestamp > $1 AND (action = 'DENY' OR action = 'RATE_LIMIT_HIT')
+              GROUP BY source_ip
               HAVING count > $2`
 
 	rows, err := db.Query(query, lastMinute, threshold)
@@ -172,12 +204,12 @@ func RedEyeMiddleware(next http.Handler) http.Handler {
 		isBanned := BannedIPCache[clientIP]
 		BanCacheMu.RUnlock()
 
-		                if isBanned {
-		                        registry.GlobalStats.RecordRedEyeBlock()
-		                        http.Error(w, "Access Denied (Banned)", http.StatusForbidden)
-		                        return
-		                }
-				rules, err := database.GetRedEyeRules(database.DBConn)
+		if isBanned {
+			registry.GlobalStats.RecordRedEyeBlock()
+			http.Error(w, "Access Denied (Banned)", http.StatusForbidden)
+			return
+		}
+		rules, err := database.GetRedEyeRules(database.DBConn)
 		if err != nil {
 			next.ServeHTTP(w, r)
 			return
@@ -230,18 +262,18 @@ func RedEyeMiddleware(next http.Handler) http.Handler {
 			}(matchedRule.ID, action)
 		}
 
-		                if blocked {
-		                        registry.GlobalStats.RecordRedEyeBlock()
-		                        http.Error(w, "Access Denied (RedEye)", http.StatusForbidden)
-		                        return
-		                }
-		
-		                if rateLimited {
-		                        registry.GlobalStats.RecordRedEyeRateLimit()
-		                        http.Error(w, "Rate Limit Exceeded (RedEye)", http.StatusTooManyRequests)
-		                        return
-		                }
-				next.ServeHTTP(w, r)
+		if blocked {
+			registry.GlobalStats.RecordRedEyeBlock()
+			http.Error(w, "Access Denied (RedEye)", http.StatusForbidden)
+			return
+		}
+
+		if rateLimited {
+			registry.GlobalStats.RecordRedEyeRateLimit()
+			http.Error(w, "Rate Limit Exceeded (RedEye)", http.StatusTooManyRequests)
+			return
+		}
+		next.ServeHTTP(w, r)
 	})
 }
 

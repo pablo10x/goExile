@@ -255,13 +255,13 @@
 		if (value === null || value === undefined) return 'text-slate-500 italic';
 		if (typeof value === 'number') return 'text-emerald-400 font-mono';
 		if (typeof value === 'boolean') return value ? 'text-green-400' : 'text-red-400';
-		return 'text-slate-300';
+		return 'text-slate-700 dark:text-slate-300';
 	}
 </script>
 
 <div class="flex flex-col h-full bg-slate-900">
 	<!-- Enhanced Toolbar -->
-	<div class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-sm sticky top-0 z-20">
+	<div class="border-b border-slate-200 dark:border-slate-800 bg-slate-900/80 backdrop-blur-sm sticky top-0 z-20">
 		<div class="p-3 flex items-center justify-between gap-4">
 			<!-- Left Actions -->
 			<div class="flex items-center gap-2">
@@ -288,7 +288,7 @@
 					<button
 						onclick={applyChanges}
 						disabled={applyingChanges}
-						class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white rounded-lg text-sm font-bold shadow-lg shadow-orange-900/25 transition-all hover:shadow-orange-900/40 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+						class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-slate-900 dark:text-white rounded-lg text-sm font-bold shadow-lg shadow-orange-900/25 transition-all hover:shadow-orange-900/40 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
 					>
 						{#if applyingChanges}
 							<RefreshCw class="w-4 h-4 animate-spin" />
@@ -343,14 +343,14 @@
 					}}
 					class="p-2 rounded-lg transition-colors {showSearch
 						? 'bg-indigo-500/10 text-indigo-400'
-						: 'text-slate-400 hover:text-white hover:bg-slate-800'}"
+						: 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-800'}"
 				>
 					<Search class="w-4 h-4" />
 				</button>
 
 				<!-- Filter Button (placeholder) -->
 				<button
-					class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+					class="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-800 rounded-lg transition-colors"
 				>
 					<Filter class="w-4 h-4" />
 				</button>
@@ -362,7 +362,7 @@
 					<button
 						onclick={onRefresh}
 						disabled={isLoading}
-						class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-50"
+						class="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-50"
 						title="Refresh"
 					>
 						<RefreshCw class="w-4 h-4 {isLoading ? 'animate-spin' : ''}" />
@@ -371,7 +371,7 @@
 
 				<button
 					onclick={onAddRow}
-					class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-lg text-sm font-bold shadow-lg shadow-blue-900/25 transition-all hover:shadow-blue-900/40 hover:scale-[1.02] active:scale-[0.98]"
+					class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-slate-900 dark:text-white rounded-lg text-sm font-bold shadow-lg shadow-blue-900/25 transition-all hover:shadow-blue-900/40 hover:scale-[1.02] active:scale-[0.98]"
 				>
 					<Plus class="w-4 h-4" />
 					<span>Add Row</span>
@@ -390,12 +390,12 @@
 						type="text"
 						bind:value={searchQuery}
 						placeholder="Search in all columns..."
-						class="w-full bg-slate-800/50 border border-slate-700 rounded-lg py-2 pl-10 pr-10 text-sm text-slate-200 placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 outline-none transition-all"
+						class="w-full bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-lg py-2 pl-10 pr-10 text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 outline-none transition-all"
 					/>
 					{#if searchQuery}
 						<button
 							onclick={() => (searchQuery = '')}
-							class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+							class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-900 dark:text-white"
 						>
 							<X class="w-4 h-4" />
 						</button>
@@ -421,16 +421,16 @@
 					<div
 						class="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"
 					></div>
-					<span class="text-sm text-slate-400">Loading data...</span>
+					<span class="text-sm text-slate-500 dark:text-slate-400">Loading data...</span>
 				</div>
 			</div>
 		{/if}
 
 		<table class="w-full text-left text-sm border-collapse">
-			<thead class="bg-slate-950/90 backdrop-blur-sm text-slate-400 sticky top-0 z-10">
+			<thead class="bg-white/90 dark:bg-slate-950/90 backdrop-blur-sm text-slate-500 dark:text-slate-400 sticky top-0 z-10">
 				<tr>
 					<!-- Checkbox Column -->
-					<th class="px-4 py-3 border-b border-slate-800 w-12">
+					<th class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 w-12">
 						<button
 							onclick={toggleSelectAll}
 							class="flex items-center justify-center w-5 h-5 hover:text-blue-400 transition-colors"
@@ -450,7 +450,7 @@
 					<!-- Data Columns -->
 					{#each columns as col (col.name)}
 						<th
-							class="px-4 py-3 border-b border-slate-800 font-medium whitespace-nowrap cursor-pointer hover:bg-slate-800/50 transition-colors group"
+							class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 font-medium whitespace-nowrap cursor-pointer hover:bg-slate-800/50 transition-colors group"
 							onclick={() => handleSort(col.name)}
 						>
 							<div class="flex items-center gap-2">
@@ -463,7 +463,7 @@
 									</span>
 								{/if}
 
-								<span class="text-slate-300">{col.name}</span>
+								<span class="text-slate-700 dark:text-slate-300">{col.name}</span>
 
 								<!-- Sort Indicator -->
 								<div class="flex items-center">
@@ -489,7 +489,7 @@
 					{/each}
 
 					<!-- Actions Column -->
-					<th class="px-4 py-3 border-b border-slate-800 w-16"></th>
+					<th class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 w-16"></th>
 				</tr>
 			</thead>
 
@@ -540,7 +540,7 @@
 												if (e.key === 'Enter') saveEdit();
 												if (e.key === 'Escape') cancelEdit();
 											}}
-											class="w-full h-full bg-slate-800 text-white px-3 py-1 outline-none border-2 border-indigo-500 rounded-md text-sm"
+											class="w-full h-full bg-slate-800 text-slate-900 dark:text-white px-3 py-1 outline-none border-2 border-indigo-500 rounded-md text-sm"
 										/>
 									</div>
 								{:else}
@@ -624,7 +624,7 @@
 									<p class="text-sm mt-1">Try adjusting your search query</p>
 									<button
 										onclick={() => (searchQuery = '')}
-										class="mt-4 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm text-slate-300 transition-colors"
+										class="mt-4 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-300 transition-colors"
 									>
 										Clear Search
 									</button>
@@ -638,7 +638,7 @@
 									<p class="text-sm mt-1">Add your first row to get started</p>
 									<button
 										onclick={onAddRow}
-										class="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-sm text-white font-medium transition-colors flex items-center gap-2"
+										class="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-sm text-slate-900 dark:text-white font-medium transition-colors flex items-center gap-2"
 									>
 										<Plus class="w-4 h-4" />
 										Add Row
@@ -653,7 +653,7 @@
 	</div>
 
 	<!-- Enhanced Footer -->
-	<div class="px-4 py-2.5 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
+	<div class="px-4 py-2.5 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
 		<div class="flex items-center gap-4 text-xs text-slate-500">
 			<span class="flex items-center gap-1.5">
 				<div class="w-2 h-2 rounded-full bg-emerald-500"></div>

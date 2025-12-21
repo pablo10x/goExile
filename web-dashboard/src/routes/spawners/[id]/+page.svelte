@@ -311,7 +311,7 @@
 			<a
 				href="/"
 				aria-label="Back to Dashboard"
-				class="p-2 rounded-lg bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition-colors"
+				class="p-2 rounded-lg bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-700 hover:text-slate-900 dark:text-white transition-colors"
 			>
 				<ArrowLeft class="w-5 h-5" />
 			</a>
@@ -327,7 +327,7 @@
 							{spawner.status}
 						</span>
 						<span
-							class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-slate-700 text-slate-300 border border-slate-600 font-mono"
+							class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-600 font-mono"
 							title="Current Game Server Version"
 						>
 							v{spawner.game_version || 'Unknown'}
@@ -340,7 +340,7 @@
 		<div class="flex flex-wrap items-center gap-2 sm:gap-3 md:ml-auto w-full md:w-auto">
 			<button
 				onclick={() => (isLogViewerOpen = true)}
-				class="flex-1 md:flex-none px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs sm:text-sm font-semibold transition-colors border border-slate-700 whitespace-nowrap"
+				class="flex-1 md:flex-none px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg text-xs sm:text-sm font-semibold transition-colors border border-slate-300 dark:border-slate-700 whitespace-nowrap"
 			>
 				View Logs
 			</button>
@@ -351,7 +351,7 @@
 					<button
 						onclick={() => openUpdateSpawnerBuildDialog()}
 						disabled={spawner.status === 'Updating'}
-						class={`flex-1 md:flex-none px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors border shadow-lg whitespace-nowrap ${spawner.status === 'Updating' ? 'bg-slate-700 text-slate-500 border-slate-600 cursor-not-allowed' : cmp > 0 ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500 shadow-emerald-900/20' : 'bg-orange-600 hover:bg-orange-500 text-white border-orange-500 shadow-orange-900/20'}`}
+						class={`flex-1 md:flex-none px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors border shadow-lg whitespace-nowrap ${spawner.status === 'Updating' ? 'bg-slate-700 text-slate-500 border-slate-600 cursor-not-allowed' : cmp > 0 ? 'bg-emerald-600 hover:bg-emerald-500 text-slate-900 dark:text-white border-emerald-500 shadow-emerald-900/20' : 'bg-orange-600 hover:bg-orange-500 text-slate-900 dark:text-white border-orange-500 shadow-orange-900/20'}`}
 						title={spawner.status === 'Updating'
 							? 'Update in progress...'
 							: cmp > 0
@@ -363,7 +363,7 @@
 				{:else}
 					<button
 						disabled
-						class="flex-1 md:flex-none px-3 py-2 bg-slate-800/50 text-slate-500 rounded-lg text-xs sm:text-sm font-semibold border border-slate-700/50 cursor-not-allowed whitespace-nowrap"
+						class="flex-1 md:flex-none px-3 py-2 bg-slate-800/50 text-slate-500 rounded-lg text-xs sm:text-sm font-semibold border border-slate-300/50 dark:border-slate-700/50 cursor-not-allowed whitespace-nowrap"
 					>
 						Build Up-to-Date
 					</button>
@@ -391,7 +391,7 @@
 				subValue={spawner.max_instances > 0
 					? `${((spawner.current_instances / spawner.max_instances) * 100).toFixed(0)}% Cap`
 					: ''}
-				subValueClass="text-slate-400 text-[10px] sm:text-xs mt-1"
+				subValueClass="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs mt-1"
 				Icon={Server}
 				color="blue"
 			/>
@@ -405,7 +405,7 @@
 				title="Memory"
 				value={formatBytes(spawner.mem_used || 0)}
 				subValue={`of ${formatBytes(spawner.mem_total || 0)}`}
-				subValueClass="text-slate-400 text-[10px] sm:text-xs mt-1"
+				subValueClass="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs mt-1"
 				Icon={MemoryStick}
 				color="emerald"
 			/>
@@ -413,7 +413,7 @@
 				title="Disk"
 				value={formatBytes(spawner.disk_used || 0)}
 				subValue={`of ${formatBytes(spawner.disk_total || 0)}`}
-				subValueClass="text-slate-400 text-[10px] sm:text-xs mt-1"
+				subValueClass="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs mt-1"
 				Icon={HardDrive}
 				color="orange"
 			/>
@@ -421,26 +421,26 @@
 
 		<!-- Instances Section -->
 		<div
-			class="bg-slate-800/30 border border-slate-700/50 rounded-xl overflow-hidden backdrop-blur-sm relative"
+			class="bg-slate-800/30 border border-slate-300/50 dark:border-slate-700/50 rounded-xl overflow-hidden backdrop-blur-sm relative"
 		>
 			{#if spawner.status === 'Updating'}
 				<div
-					class="absolute inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center text-slate-300 p-4 text-center"
+					class="absolute inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center text-slate-700 dark:text-slate-300 p-4 text-center"
 				>
 					<div
 						class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"
 					></div>
-					<h3 class="text-lg sm:text-xl font-bold text-white">System Updating</h3>
+					<h3 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">System Updating</h3>
 					<p class="text-sm">Downloading game files. Actions are disabled.</p>
 				</div>
 			{/if}
 
 			<div
-				class="p-4 sm:p-6 border-b border-slate-700/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+				class="p-4 sm:p-6 border-b border-slate-300/50 dark:border-slate-700/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
 			>
 				<div>
 					<h2 class="text-lg sm:text-xl font-bold text-slate-50">Game Instances</h2>
-					<p class="text-xs sm:text-sm text-slate-400 mt-1">Manage game servers on this spawner.</p>
+					<p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Manage game servers on this spawner.</p>
 				</div>
 
 				<div class="flex items-center gap-3 w-full sm:w-auto">
@@ -472,7 +472,7 @@
 									onclick={() => {
 										dispatchBulkAction('update');
 									}}
-									class="w-full text-left px-4 py-2 text-sm text-purple-400 hover:bg-purple-500/10 border-t border-slate-700"
+									class="w-full text-left px-4 py-2 text-sm text-purple-400 hover:bg-purple-500/10 border-t border-slate-300 dark:border-slate-700"
 									>Update Outdated</button
 								>
 							{/snippet}
@@ -481,7 +481,7 @@
 
 					<button
 						onclick={openSpawnDialog}
-						class="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-blue-900/20 whitespace-nowrap"
+						class="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-slate-900 dark:text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-blue-900/20 whitespace-nowrap"
 					>
 						<Plus class="w-4 h-4" />
 						Spawn
@@ -494,7 +494,7 @@
 				<div class="mb-6 sm:mb-8">
 					<div class="flex justify-between items-end mb-4 px-1">
 						<div>
-							<h3 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider">
+							<h3 class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
 								Active Players (24h)
 							</h3>
 							<p class="text-[10px] sm:text-xs text-slate-500 mt-1">
@@ -506,7 +506,7 @@
 						</div>
 					</div>
 					<div
-						class="h-40 sm:h-48 bg-slate-900/50 rounded-xl border border-slate-700/50 overflow-hidden relative shadow-inner"
+						class="h-40 sm:h-48 bg-slate-900/50 rounded-xl border border-slate-300/50 dark:border-slate-700/50 overflow-hidden relative shadow-inner"
 					>
 						<PlayersChart data={chartData} height={192} />
 					</div>
@@ -514,7 +514,7 @@
 
 				{#if instances.length === 0}
 					<div
-						class="text-center py-12 text-slate-500 bg-slate-800/50 rounded-lg border border-slate-700/50 border-dashed"
+						class="text-center py-12 text-slate-500 bg-slate-800/50 rounded-lg border border-slate-300/50 dark:border-slate-700/50 border-dashed"
 					>
 						<p class="text-base sm:text-lg mb-2">No instances running</p>
 						<p class="text-xs sm:text-sm">Click "Spawn Instance" to start a new game server.</p>

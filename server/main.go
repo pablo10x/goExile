@@ -66,10 +66,11 @@ func run() error {
 	// Print startup banner
 	utils.PrintBanner()
 
-	fmt.Println()
-	fmt.Printf("  %s%s▸ Initializing Services%s\n", "\033[1m", "\033[36m", "\033[0m")
-	fmt.Printf("  %s────────────────────────────────────────%s\n", "\033[2m", "\033[0m")
-
+	// Create a root context for the application
+	_, cancel := context.WithCancel(context.Background())
+	// We defer cancel() at the end, but also call it on shutdown signal.
+	// Actually, we need 'cancel' to be available for the shutdown signal handler.
+	
 	// Initialize authentication & session management
 	authConfig := auth.GetAuthConfig()
 	sessionStore := auth.NewSessionStore(authConfig.IsProduction)
@@ -122,8 +123,17 @@ func run() error {
 				}
 				utils.PrintSection("Database", "connected", true)
 				utils.PrintSubItem(fmt.Sprintf("Loaded %d spawners", len(loaded)))
+				
+				// Get initial DB stats for display
+				if advStats, err := database.GetAdvancedDBStats(database.DBConn); err == nil {
+					utils.PrintSubItem(fmt.Sprintf("Size: %s | Cache Hit: %.1f%%", advStats.DatabaseSize, advStats.CacheHitRatio))
+				}
 			} else {
 				utils.PrintSection("Database", "connected", true)
+				// Get initial DB stats for display
+				if advStats, err := database.GetAdvancedDBStats(database.DBConn); err == nil {
+					utils.PrintSubItem(fmt.Sprintf("Size: %s | Cache Hit: %.1f%%", advStats.DatabaseSize, advStats.CacheHitRatio))
+				}
 			}
 
 			// Initialize Player System Schema
@@ -155,6 +165,11 @@ func run() error {
 	// Initialize RedEye Background Tasks
 	if database.DBConn != nil {
 		redeye.StartRedEyeBackground(database.DBConn)
+		if redeye.RedEyeActive {
+			utils.PrintSection("RedEye System", "active", true)
+		} else {
+			utils.PrintSection("RedEye System", "inactive (requires "+redeye.RedEyeError+")", false)
+		}
 	}
 
 	// Initialize Firebase Remote Config
@@ -403,8 +418,10 @@ func run() error {
 		router.Handle("/api/ai/chat", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.AIChatHandler))).Methods("POST")
 
 		// Dashboard: Player Management (Session Protected)
-		router.Handle("/api/game/players", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ListAllPlayersHandler))).Methods("GET")
-		router.Handle("/api/game/players/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.GetPlayerDetailsHandler))).Methods("GET")
+		router.Handle("/api/admin/players", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ListAllPlayersHandler))).Methods("GET")
+		router.Handle("/api/admin/players/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.GetPlayerDetailsHandler))).Methods("GET")
+		router.Handle("/api/admin/players/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.UpdatePlayerDetailsHandler))).Methods("PUT")
+		router.Handle("/api/admin/players/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.DeletePlayerHandler))).Methods("DELETE")
 		
 		// Dashboard: Reports (Session Protected)
 		router.Handle("/api/reports", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ListReportsHandler))).Methods("GET")
@@ -462,9 +479,11 @@ func run() error {
 	go func() {
 		utils.PrintStartupComplete(port)
 		// Warn if not binding to localhost
-		if serverHost != "127.0.0.1" && serverHost != "localhost" {
-			fmt.Printf("  %s%s⚠️  WARNING: Server is listening on %s (Potentially public)%s\n", "\033[1m", "\033[33m", serverHost, "\033[0m")
-		}
+	if serverHost != "127.0.0.1" && serverHost != "localhost" {
+		// Log a note about public binding if needed
+	}
+
+	// Wait for termination signal
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server error: %v", err)
 		}
@@ -473,12 +492,15 @@ func run() error {
 	// 10. Graceful Shutdown
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-	<-stop
+	
+	sig := <-stop
+	log.Printf("received signal: %v", sig)
+	cancel()
 
-	fmt.Printf("\n  %s●%s Shutting down gracefully...%s\n", "\033[33m", "\033[0m", "\033[0m")
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer shutdownCancel()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
 		log.Printf("error during server shutdown: %v", err)
 	}
 	if database.DBConn != nil {

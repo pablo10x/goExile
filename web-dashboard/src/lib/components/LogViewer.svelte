@@ -96,7 +96,7 @@
 	let confirmAction = handleClearLogs;
 
 	const tabs: TabDef[] = [
-		{ id: 'all', label: 'All', icon: BarChart3, color: 'text-slate-400' },
+		{ id: 'all', label: 'All', icon: BarChart3, color: 'text-slate-500 dark:text-slate-400' },
 		{ id: 'info', label: 'Info', icon: Info, color: 'text-blue-400' },
 		{ id: 'warn', label: 'Warn', icon: AlertTriangle, color: 'text-yellow-400' },
 		{ id: 'error', label: 'Error', icon: XCircle, color: 'text-red-400' }
@@ -197,7 +197,7 @@
 			case 'PANIC':
 				return 'text-purple-600 font-bold bg-purple-950/30';
 			default:
-				return 'text-slate-400';
+				return 'text-slate-500 dark:text-slate-400';
 		}
 	}
 
@@ -293,7 +293,7 @@
 
 			<!-- Modal Container - Full screen on mobile, limited on desktop -->
 			<div
-				class="relative w-full h-full sm:h-[85vh] sm:max-w-6xl bg-slate-900 sm:rounded-xl border-0 sm:border border-slate-700 shadow-2xl flex flex-col overflow-hidden"
+				class="relative w-full h-full sm:h-[85vh] sm:max-w-6xl bg-slate-900 sm:rounded-xl border-0 sm:border border-slate-300 dark:border-slate-700 shadow-2xl flex flex-col overflow-hidden"
 				transition:scale={{ start: 0.95, duration: 200, easing: cubicOut }}
 			>
 				<div class="contents">
@@ -312,26 +312,26 @@
 {#snippet content()}
 	<!-- Header -->
 	<div
-		class="px-4 py-3 border-b border-slate-700 flex justify-between items-center bg-slate-800/50"
+		class="px-4 py-3 border-b border-slate-300 dark:border-slate-700 flex justify-between items-center bg-slate-800/50"
 	>
 		<div class="flex items-center gap-3 overflow-hidden">
-			<h2 class="text-white font-semibold text-base sm:text-lg flex items-center gap-2 truncate">
-				<span class="text-slate-400">#{spawnerId}</span> Logs
+			<h2 class="text-slate-900 dark:text-white font-semibold text-base sm:text-lg flex items-center gap-2 truncate">
+				<span class="text-slate-500 dark:text-slate-400">#{spawnerId}</span> Logs
 				{#if fileSize > 0}
 					<span
-						class="text-[10px] text-slate-500 font-mono border border-slate-700 rounded px-1.5 py-0.5 bg-slate-900/50 hidden sm:inline-block"
+						class="text-[10px] text-slate-500 font-mono border border-slate-300 dark:border-slate-700 rounded px-1.5 py-0.5 bg-slate-900/50 hidden sm:inline-block"
 						>{formatBytes(fileSize)}</span
 					>
 				{/if}
 			</h2>
 			{#if loading && parsedLogs.length > 0}
-				<RefreshCw class="w-3.5 h-3.5 text-slate-400 animate-spin shrink-0" />
+				<RefreshCw class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 animate-spin shrink-0" />
 			{/if}
 		</div>
 
 		<div class="flex items-center gap-1 sm:gap-2">
 			<button
-				class="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors"
+				class="p-2 hover:bg-slate-700 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors"
 				title="Refresh Now"
 				onclick={fetchLogs}
 			>
@@ -339,7 +339,7 @@
 			</button>
 
 			<button
-				class="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors"
+				class="p-2 hover:bg-slate-700 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors"
 				title="Clear Logs"
 				onclick={() => (isConfirmOpen = true)}
 			>
@@ -351,7 +351,7 @@
 
 				<button
 					onclick={onClose}
-					class="p-2 hover:bg-red-500/20 hover:text-red-400 rounded-lg text-slate-400 transition-colors"
+					class="p-2 hover:bg-red-500/20 hover:text-red-400 rounded-lg text-slate-500 dark:text-slate-400 transition-colors"
 				>
 					<X class="w-5 h-5" />
 				</button>
@@ -361,17 +361,17 @@
 
 	<!-- Toolbar: Tabs & Search -->
 	<div
-		class="px-3 sm:px-4 py-3 bg-slate-900 border-b border-slate-800 flex flex-col md:flex-row gap-3 md:items-center"
+		class="px-3 sm:px-4 py-3 bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex flex-col md:flex-row gap-3 md:items-center"
 	>
 		<!-- Tabs (Scrollable on mobile) -->
-		<div class="flex p-1 bg-slate-950 rounded-lg border border-slate-800 overflow-x-auto no-scrollbar">
+		<div class="flex p-1 bg-white dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 overflow-x-auto no-scrollbar">
 			{#each tabs as tab}
 				{@const Icon = tab.icon}
 				<button
 					class="px-2.5 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 whitespace-nowrap
 					                        {selectedTab === tab.id
-						? 'bg-slate-800 text-white shadow-sm'
-						: 'text-slate-500 hover:text-slate-300'}"
+						? 'bg-slate-800 text-slate-900 dark:text-white shadow-sm'
+						: 'text-slate-500 hover:text-slate-700 dark:text-slate-300'}"
 					onclick={() => (selectedTab = tab.id)}
 				>
 					<Icon class="w-3.5 h-3.5" />
@@ -390,16 +390,16 @@
 					type="text"
 					placeholder="Search logs..."
 					bind:value={searchTerm}
-					class="w-full pl-9 pr-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs sm:text-sm text-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+					class="w-full pl-9 pr-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs sm:text-sm text-slate-800 dark:text-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
 				/>
 			</div>
 
-			<div class="flex items-center gap-4 text-xs text-slate-400 select-none">
+			<div class="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400 select-none">
 				<label class="flex items-center gap-2 cursor-pointer">
 					<input
 						type="checkbox"
 						bind:checked={shouldAutoScroll}
-						class="rounded bg-slate-800 border-slate-700 text-blue-500 focus:ring-0 w-3.5 h-3.5"
+						class="rounded bg-slate-800 border-slate-300 dark:border-slate-700 text-blue-500 focus:ring-0 w-3.5 h-3.5"
 					/>
 					<span>Auto-scroll</span>
 				</label>
@@ -407,7 +407,7 @@
 					<input
 						type="checkbox"
 						bind:checked={isAutoRefreshing}
-						class="rounded bg-slate-800 border-slate-700 text-blue-500 focus:ring-0 w-3.5 h-3.5"
+						class="rounded bg-slate-800 border-slate-300 dark:border-slate-700 text-blue-500 focus:ring-0 w-3.5 h-3.5"
 					/>
 					<span>Auto-refresh</span>
 				</label>
@@ -416,7 +416,7 @@
 	</div>
 
 	<!-- Logs Area -->
-	<div class="flex-1 relative bg-slate-950 min-h-0">
+	<div class="flex-1 relative bg-white dark:bg-slate-950 min-h-0">
 		{#if loading && parsedLogs.length === 0}
 			<div class="absolute inset-0 flex flex-col items-center justify-center text-slate-500 gap-3">
 				<RefreshCw class="w-8 h-8 animate-spin opacity-50" />
@@ -452,19 +452,19 @@
 						</span>
 
 						<!-- Message -->
-						<div class="flex-1 min-w-0 break-all sm:break-words text-slate-300">
+						<div class="flex-1 min-w-0 break-all sm:break-words text-slate-700 dark:text-slate-300">
 							<span>{l.message}</span>
 
 							<!-- Structured Context -->
 							{#if l.raw && Object.keys(l.raw).length > 3}
 								<div
-									class="mt-1 ml-1 sm:ml-2 text-slate-500 text-[9px] sm:text-[10px] space-y-1 border-l-2 border-slate-800 pl-2 opacity-80 group-hover:opacity-100 transition-opacity"
+									class="mt-1 ml-1 sm:ml-2 text-slate-500 text-[9px] sm:text-[10px] space-y-1 border-l-2 border-slate-200 dark:border-slate-800 pl-2 opacity-80 group-hover:opacity-100 transition-opacity"
 								>
 									{#each Object.entries(l.raw) as [k, v]}
 										{#if !['time', 'level', 'msg', 'message'].includes(k)}
 											<div class="flex gap-2 flex-wrap">
 												<span class="text-slate-600">{k}:</span>
-												<span class="text-slate-400 font-mono whitespace-pre-wrap break-all"
+												<span class="text-slate-500 dark:text-slate-400 font-mono whitespace-pre-wrap break-all"
 														>{JSON.stringify(v)}</span
 													>
 											</div>

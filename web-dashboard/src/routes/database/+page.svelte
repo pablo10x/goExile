@@ -254,9 +254,9 @@
 	});
 </script>
 
-<div class="flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden bg-slate-950 text-slate-200">
+<div class="flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">
 	<!-- Mobile Top Nav (Horizontal Scroll) -->
-	<div class="md:hidden border-b border-slate-800/80 bg-slate-900/50 overflow-x-auto no-scrollbar">
+	<div class="md:hidden border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-900/50 overflow-x-auto no-scrollbar">
 		<div class="flex items-center gap-2 p-2 min-w-max">
 			{#each allMenuItems as item}
 				{@const isActive = activeTabId === item.id}
@@ -264,7 +264,7 @@
 				<button
 					onclick={() => openTab(item.id, item.label, item.type)}
 					class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all
-					{isActive ? colors.active : 'text-slate-400 ' + colors.hover}"
+					{isActive ? colors.active : 'text-slate-500 dark:text-slate-400 ' + colors.hover}"
 				>
 					<item.icon class="w-4 h-4" />
 					{item.label}
@@ -275,12 +275,12 @@
 
 	<!-- Desktop Sidebar -->
 	<div
-		class="hidden md:flex flex-col border-r border-slate-800/80 transition-all duration-300 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 {isSidebarOpen
+		class="hidden md:flex flex-col border-r border-slate-200/80 dark:border-slate-800/80 transition-all duration-300 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 {isSidebarOpen
 			? 'w-64'
 			: 'w-16'}"
 	>
 		<!-- Sidebar Header -->
-		<div class="p-4 border-b border-slate-800/80 bg-slate-900/50 flex items-center justify-between">
+		<div class="p-4 border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-900/50 flex items-center justify-between">
 			{#if isSidebarOpen}
 				<div class="flex items-center gap-3" transition:fade={{ duration: 150 }}>
 					<div class="p-2 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-lg">
@@ -294,7 +294,7 @@
 			{/if}
 			<button
 				onclick={() => (isSidebarOpen = !isSidebarOpen)}
-				class="p-2 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-all"
+				class="p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-300 hover:bg-slate-800/50 transition-all"
 			>
 				{#if isSidebarOpen}
 					<ChevronLeft class="w-5 h-5" />
@@ -325,7 +325,7 @@
 								class="w-full flex items-center gap-3 p-2.5 rounded-xl transition-all duration-200 border border-transparent
 								{isActive
 									? colors.active + ' shadow-lg'
-									: 'text-slate-400 ' + colors.hover + ' hover:border-slate-700/50'}"
+									: 'text-slate-500 dark:text-slate-400 ' + colors.hover + ' hover:border-slate-300/50 dark:border-slate-700/50'}"
 								title={item.description}
 							>
 								<div
@@ -350,7 +350,7 @@
 		<!-- Sidebar Footer -->
 		{#if isSidebarOpen}
 			<div
-				class="p-4 border-t border-slate-800/80 bg-slate-950/50"
+				class="p-4 border-t border-slate-200/80 dark:border-slate-800/80 bg-white/50 dark:bg-slate-950/50"
 				transition:fade={{ duration: 150 }}
 			>
 				<div class="flex items-center gap-3 text-xs text-slate-500">
@@ -383,7 +383,7 @@
 						>
 							<!-- Header -->
 							<div
-								class="p-4 sm:p-8 border-b border-slate-800/50 bg-gradient-to-r from-blue-500/5 via-transparent to-cyan-500/5"
+								class="p-4 sm:p-8 border-b border-slate-200/50 dark:border-slate-800/50 bg-gradient-to-r from-blue-500/5 via-transparent to-cyan-500/5"
 							>
 								<div class="flex items-center gap-4 mb-2">
 									<div
@@ -405,7 +405,7 @@
 								<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
 									<!-- Database Size Card -->
 									<div
-										class="relative overflow-hidden bg-gradient-to-br from-slate-800/80 to-slate-800/40 border border-slate-700/50 rounded-2xl p-6 hover:border-blue-500/30 transition-all group"
+										class="relative overflow-hidden bg-gradient-to-br from-slate-800/80 to-slate-800/40 border border-slate-300/50 dark:border-slate-700/50 rounded-2xl p-6 hover:border-blue-500/30 transition-all group"
 									>
 										<div
 											class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
@@ -429,7 +429,7 @@
 
 									<!-- Connections Card -->
 									<div
-										class="relative overflow-hidden bg-gradient-to-br from-slate-800/80 to-slate-800/40 border border-slate-700/50 rounded-2xl p-6 hover:border-emerald-500/30 transition-all group"
+										class="relative overflow-hidden bg-gradient-to-br from-slate-800/80 to-slate-800/40 border border-slate-300/50 dark:border-slate-700/50 rounded-2xl p-6 hover:border-emerald-500/30 transition-all group"
 									>
 										<div
 											class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
@@ -453,7 +453,7 @@
 
 									<!-- Uptime Card -->
 									<div
-										class="relative overflow-hidden bg-gradient-to-br from-slate-800/80 to-slate-800/40 border border-slate-700/50 rounded-2xl p-6 hover:border-purple-500/30 transition-all group"
+										class="relative overflow-hidden bg-gradient-to-br from-slate-800/80 to-slate-800/40 border border-slate-300/50 dark:border-slate-700/50 rounded-2xl p-6 hover:border-purple-500/30 transition-all group"
 									>
 										<div
 											class="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
@@ -479,7 +479,7 @@
 
 									<!-- Version Card -->
 									<div
-										class="relative overflow-hidden bg-gradient-to-br from-slate-800/80 to-slate-800/40 border border-slate-700/50 rounded-2xl p-6 hover:border-orange-500/30 transition-all group"
+										class="relative overflow-hidden bg-gradient-to-br from-slate-800/80 to-slate-800/40 border border-slate-300/50 dark:border-slate-700/50 rounded-2xl p-6 hover:border-orange-500/30 transition-all group"
 									>
 										<div
 											class="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
@@ -510,50 +510,50 @@
 									<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
 										<button
 											onclick={() => openTab('sql', 'SQL Editor', 'sql')}
-											class="flex flex-col items-center gap-3 p-6 bg-slate-800/50 border border-slate-700/50 rounded-xl hover:border-amber-500/30 hover:bg-slate-800 transition-all group"
+											class="flex flex-col items-center gap-3 p-6 bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl hover:border-amber-500/30 hover:bg-slate-800 transition-all group"
 										>
 											<div
 												class="p-3 bg-amber-500/10 rounded-xl group-hover:bg-amber-500/20 transition-colors"
 											>
 												<Terminal class="w-6 h-6 text-amber-400" />
 											</div>
-											<span class="text-sm font-medium text-slate-300">Run Query</span>
+											<span class="text-sm font-medium text-slate-700 dark:text-slate-300">Run Query</span>
 										</button>
 
 										<button
 											onclick={() => openTab('functions', 'Functions', 'functions')}
-											class="flex flex-col items-center gap-3 p-6 bg-slate-800/50 border border-slate-700/50 rounded-xl hover:border-violet-500/30 hover:bg-slate-800 transition-all group"
+											class="flex flex-col items-center gap-3 p-6 bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl hover:border-violet-500/30 hover:bg-slate-800 transition-all group"
 										>
 											<div
 												class="p-3 bg-violet-500/10 rounded-xl group-hover:bg-violet-500/20 transition-colors"
 											>
 												<Code2 class="w-6 h-6 text-violet-400" />
 											</div>
-											<span class="text-sm font-medium text-slate-300">Functions</span>
+											<span class="text-sm font-medium text-slate-700 dark:text-slate-300">Functions</span>
 										</button>
 
 										<button
 											onclick={() => openTab('backups', 'Backups', 'backups')}
-											class="flex flex-col items-center gap-3 p-6 bg-slate-800/50 border border-slate-700/50 rounded-xl hover:border-orange-500/30 hover:bg-slate-800 transition-all group"
+											class="flex flex-col items-center gap-3 p-6 bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl hover:border-orange-500/30 hover:bg-slate-800 transition-all group"
 										>
 											<div
 												class="p-3 bg-orange-500/10 rounded-xl group-hover:bg-orange-500/20 transition-colors"
 											>
 												<HardDrive class="w-6 h-6 text-orange-400" />
 											</div>
-											<span class="text-sm font-medium text-slate-300">Backup DB</span>
+											<span class="text-sm font-medium text-slate-700 dark:text-slate-300">Backup DB</span>
 										</button>
 
 										<button
 											onclick={() => openTab('roles', 'Roles', 'roles')}
-											class="flex flex-col items-center gap-3 p-6 bg-slate-800/50 border border-slate-700/50 rounded-xl hover:border-emerald-500/30 hover:bg-slate-800 transition-all group"
+											class="flex flex-col items-center gap-3 p-6 bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl hover:border-emerald-500/30 hover:bg-slate-800 transition-all group"
 										>
 											<div
 												class="p-3 bg-emerald-500/10 rounded-xl group-hover:bg-emerald-500/20 transition-colors"
 											>
 												<Shield class="w-6 h-6 text-emerald-400" />
 											</div>
-											<span class="text-sm font-medium text-slate-300">Manage Roles</span>
+											<span class="text-sm font-medium text-slate-700 dark:text-slate-300">Manage Roles</span>
 										</button>
 									</div>
 								</div>
@@ -563,18 +563,18 @@
 									<div>
 										<h2 class="text-lg font-bold text-slate-100 mb-4">Table Statistics</h2>
 										<div
-											class="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden"
+											class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl overflow-hidden"
 										>
 											<div class="overflow-x-auto">
 												<table class="w-full">
 													<thead class="bg-slate-900/50">
 														<tr>
 															<th
-																class="px-6 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider"
+																class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
 																>Table</th
 															>
 															<th
-																class="px-6 py-3 text-right text-xs font-bold text-slate-400 uppercase tracking-wider"
+																class="px-6 py-3 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
 																>Row Count</th
 															>
 														</tr>
@@ -585,11 +585,11 @@
 																<td class="px-6 py-4">
 																	<div class="flex items-center gap-3">
 																		<Table class="w-4 h-4 text-slate-500" />
-																		<span class="font-medium text-slate-200">{table.name}</span>
+																		<span class="font-medium text-slate-800 dark:text-slate-200">{table.name}</span>
 																	</div>
 																</td>
 																                                                          <td class="px-6 py-4 text-right">
-																                                                          <span class="font-mono text-slate-300"
+																                                                          <span class="font-mono text-slate-700 dark:text-slate-300"
 																                                                          >{table.count?.toLocaleString() ?? '0'}</span
 																                                                          >
 																                                                          </td>															</tr>

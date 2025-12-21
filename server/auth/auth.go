@@ -158,7 +158,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, cfg AuthConfig, ss *Ses
 	if email == cfg.Email && bcrypt.CompareHashAndPassword([]byte(cfg.HashedPassword), []byte(password)) == nil {
 		LoginRateLimiter.Reset(ip)
 		step := AuthStepAuthenticated
-		if cfg.TOTPSecret != "" {
+		if cfg.TOTPSecret != "" && cfg.IsProduction {
 			step = AuthStepTOTP
 		}
 		sid, _ := ss.CreateSession(step)

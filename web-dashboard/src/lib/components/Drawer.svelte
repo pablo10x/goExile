@@ -18,15 +18,15 @@
 
 		<!-- Drawer Content -->
 		<div
-			class="relative w-full max-w-2xl bg-slate-900 border-l border-slate-700 shadow-2xl h-full flex flex-col transform transition-transform duration-300 ease-in-out"
+			class="relative w-full max-w-2xl bg-slate-900 border-l border-slate-300 dark:border-slate-700 shadow-2xl h-full flex flex-col transform transition-transform duration-300 ease-in-out"
 		>
 			<div
-				class="flex items-center justify-between px-6 py-4 border-b border-slate-700 bg-slate-800/50"
+				class="flex items-center justify-between px-6 py-4 border-b border-slate-300 dark:border-slate-700 bg-slate-800/50"
 			>
 				<h2 class="text-xl font-bold text-slate-100">{title}</h2>
 				<button
 					onclick={onClose}
-					class="p-2 text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-slate-700"
+					class="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors rounded-lg hover:bg-slate-700"
 				>
 					✕
 				</button>

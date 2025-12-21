@@ -59,7 +59,7 @@
 		transition:fade={{ duration: 200 }}
 	>
 		<div 
-			class="bg-slate-900/90 border border-slate-700/50 rounded-2xl w-full max-w-md shadow-2xl flex flex-col overflow-hidden relative group"
+			class="bg-slate-900/90 border border-slate-300/50 dark:border-slate-700/50 rounded-2xl w-full max-w-md shadow-2xl flex flex-col overflow-hidden relative group"
 			transition:scale={{ duration: 300, start: 0.95, easing: quintOut }}
 		>
 			<!-- Ambient Background Glow -->
@@ -67,19 +67,19 @@
 			<div class="absolute -bottom-20 -left-20 w-64 h-64 bg-blue-500/10 rounded-full blur-[80px] pointer-events-none group-hover:bg-blue-500/20 transition-all duration-700"></div>
 
 			<!-- Header -->
-			<div class="p-6 pb-4 border-b border-slate-800/50 relative z-10 flex justify-between items-start">
+			<div class="p-6 pb-4 border-b border-slate-200/50 dark:border-slate-800/50 relative z-10 flex justify-between items-start">
 				<div>
-					<h3 class="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+					<h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
 						<div class="p-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg shadow-lg shadow-emerald-500/20">
-							<Database class="w-5 h-5 text-white" />
+							<Database class="w-5 h-5 text-slate-900 dark:text-white" />
 						</div>
 						Create New Schema
 					</h3>
-					<p class="text-slate-400 text-sm mt-2">Define a new namespace for your database objects.</p>
+					<p class="text-slate-500 dark:text-slate-400 text-sm mt-2">Define a new namespace for your database objects.</p>
 				</div>
 				<button 
 					onclick={onClose} 
-					class="text-slate-500 hover:text-white hover:bg-slate-800/50 p-2 rounded-full transition-all hover:rotate-90 duration-300"
+					class="text-slate-500 hover:text-slate-900 dark:text-white hover:bg-slate-800/50 p-2 rounded-full transition-all hover:rotate-90 duration-300"
 				>
 					<X class="w-5 h-5" />
 				</button>
@@ -96,7 +96,7 @@
 													<input
 														type="text"
 														bind:value={schemaName}
-														class="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-4 py-3 pl-11 text-slate-200 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 transition-all placeholder:text-slate-600"
+														class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 pl-11 text-slate-800 dark:text-slate-200 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 transition-all placeholder:text-slate-600"
 														placeholder="e.g. analytics_v2"
 													/>						<div class="absolute left-3.5 top-3.5 text-slate-500 group-focus-within/input:text-emerald-500 transition-colors">
 							<Shield class="w-4 h-4" />
@@ -112,7 +112,7 @@
 					<div class="relative">
 						<select
 							bind:value={owner}
-							class="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-4 py-3 pl-11 text-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all appearance-none cursor-pointer hover:bg-slate-900"
+							class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 pl-11 text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all appearance-none cursor-pointer hover:bg-slate-900"
 						>
                             {#each roles as role}
                                 <option value={role} class="bg-slate-900">{role}</option>
@@ -131,17 +131,17 @@
 			</div>
 
 			<!-- Footer -->
-			<div class="p-6 pt-2 border-t border-slate-800/50 bg-slate-950/30 flex justify-end gap-3 relative z-10">
+			<div class="p-6 pt-2 border-t border-slate-200/50 dark:border-slate-800/50 bg-white/30 dark:bg-slate-950/30 flex justify-end gap-3 relative z-10">
 				<button
 					onclick={onClose}
-					class="px-5 py-2.5 text-slate-400 hover:text-white hover:bg-slate-800/80 rounded-xl transition-all font-medium text-sm"
+					class="px-5 py-2.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-800/80 rounded-xl transition-all font-medium text-sm"
 				>
 					Cancel
 				</button>
 				<button
 					onclick={handleSubmit}
 					disabled={loading || !schemaName.trim()}
-					class="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-emerald-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+					class="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-slate-900 dark:text-white rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-emerald-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02] active:scale-[0.98]"
 				>
 					{#if loading}
 						<div class="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></div>

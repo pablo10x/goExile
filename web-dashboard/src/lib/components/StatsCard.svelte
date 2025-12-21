@@ -9,7 +9,7 @@
 		value,
 		Icon = null,
 		subValue = '',
-		subValueClass = 'text-slate-400',
+		subValueClass = 'text-slate-500 dark:text-slate-400',
 		color = 'blue'
 	} = $props<{
 		title: string;
@@ -86,13 +86,13 @@
 
 	<div class="relative z-10 p-6">
 		<div class="flex items-center justify-between mb-4">
-			<span class="text-slate-400 text-xs font-bold uppercase tracking-wider">{title}</span>
+			<span class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">{title}</span>
 			{#if Icon}
 				{@const CardIcon = Icon}
 				<div
 					class={`p-2.5 rounded-xl ${colors.iconBg} shadow-lg ${colors.glow} transition-transform duration-300 group-hover:scale-110`}
 				>
-					<CardIcon class="w-5 h-5 text-white" />
+					<CardIcon class="w-5 h-5 text-slate-900 dark:text-white" />
 				</div>
 			{/if}
 		</div>

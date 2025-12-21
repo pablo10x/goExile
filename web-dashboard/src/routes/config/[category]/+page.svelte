@@ -104,12 +104,12 @@
 			<h1 class="text-3xl font-bold text-slate-100 mb-2">
 				{categoryTitles[category] || 'Configuration'}
 			</h1>
-			<p class="text-slate-400">Manage {category} settings and preferences</p>
+			<p class="text-slate-500 dark:text-slate-400">Manage {category} settings and preferences</p>
 		</div>
 		<div class="flex items-center gap-3">
 			<a
 				href="/config"
-				class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
+				class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-900 dark:text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
 			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -128,7 +128,7 @@
 			<button
 				onclick={loadCategoryConfig}
 				disabled={saving}
-				class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 flex items-center gap-2 disabled:opacity-50"
+				class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-slate-900 dark:text-white rounded-lg transition-colors duration-200 flex items-center gap-2 disabled:opacity-50"
 			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -179,7 +179,7 @@
 		</div>
 	{:else if categoryConfigs.length === 0}
 		<div class="text-center py-12">
-			<div class="text-slate-400 mb-2">No configuration settings found for {category}</div>
+			<div class="text-slate-500 dark:text-slate-400 mb-2">No configuration settings found for {category}</div>
 			<div class="text-slate-500 text-sm">
 				This category may not have any configurable options yet.
 			</div>
@@ -188,13 +188,13 @@
 		<!-- Configuration Settings -->
 		<div class="space-y-4">
 			{#each categoryConfigs as configItem (configItem.key)}
-				<div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
+				<div class="bg-slate-800/50 backdrop-blur-sm border border-slate-300 dark:border-slate-700 rounded-xl p-6">
 					<div class="flex items-start justify-between mb-4">
 						<div class="flex-1">
 							<div class="flex items-center gap-3 mb-2">
 								<h3 class="text-lg font-semibold text-slate-100">{configItem.key}</h3>
 								{#if configItem.is_read_only}
-									<span class="px-2 py-1 bg-slate-700 text-slate-300 text-xs rounded"
+									<span class="px-2 py-1 bg-slate-700 text-slate-700 dark:text-slate-300 text-xs rounded"
 										>Read-only</span
 									>
 								{/if}
@@ -204,7 +204,7 @@
 									>
 								{/if}
 							</div>
-							<p class="text-slate-400 text-sm mb-3">{configItem.description}</p>
+							<p class="text-slate-500 dark:text-slate-400 text-sm mb-3">{configItem.description}</p>
 							<div class="flex items-center gap-4">
 								<div class="flex-1 max-w-md">
 									{#if configItem.type === 'bool'}

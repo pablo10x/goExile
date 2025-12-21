@@ -83,7 +83,7 @@
 			case 'danger': return 'text-red-400 hover:bg-red-500/10 hover:text-red-300';
 			case 'warning': return 'text-yellow-400 hover:bg-yellow-500/10 hover:text-yellow-300';
 			case 'success': return 'text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300';
-			default: return 'text-slate-300 hover:bg-slate-700/50 hover:text-white';
+			default: return 'text-slate-700 dark:text-slate-300 hover:bg-slate-700/50 hover:text-slate-900 dark:text-white';
 		}
 	}
 </script>
@@ -101,14 +101,14 @@
 		<div
 			use:portal
 			transition:scale={{ duration: 200, start: 0.9, opacity: 0, easing: quintOut }}
-			class="fixed z-[9999] w-48 bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 shadow-2xl shadow-black/50 rounded-xl overflow-hidden p-1.5 {getPlacementClass(placement)}"
+			class="fixed z-[9999] w-48 bg-slate-900/95 backdrop-blur-xl border border-slate-300/50 dark:border-slate-700/50 shadow-2xl shadow-black/50 rounded-xl overflow-hidden p-1.5 {getPlacementClass(placement)}"
 			style="top: {coords.y}px; left: {coords.x}px;"
 			onmouseenter={show} 
 			onmouseleave={hide}
 			role="group"
 		>
 			{#if title}
-				<div class="px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-700/50 mb-1 flex items-center gap-2">
+				<div class="px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-300/50 dark:border-slate-700/50 mb-1 flex items-center gap-2">
 					<span class="w-1 h-1 bg-blue-500 rounded-full"></span>
 					{title}
 				</div>

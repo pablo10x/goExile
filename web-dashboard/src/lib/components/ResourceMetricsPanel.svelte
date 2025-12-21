@@ -128,7 +128,7 @@
 							class="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl blur-xl"
 						></div>
 						<div
-							class="relative p-3 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-slate-700/50 shadow-xl"
+							class="relative p-3 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-slate-300/50 dark:border-slate-700/50 shadow-xl"
 						>
 							<Activity class="w-6 h-6 text-blue-400" />
 						</div>
@@ -141,7 +141,7 @@
 							{#if $loading}
 								<div class="relative">
 									<div
-										class="w-4 h-4 rounded-full border-2 border-slate-700 border-t-blue-500 animate-spin"
+										class="w-4 h-4 rounded-full border-2 border-slate-300 dark:border-slate-700 border-t-blue-500 animate-spin"
 									></div>
 									<div
 										class="absolute inset-0 w-4 h-4 rounded-full bg-blue-500/20 blur-sm animate-pulse"
@@ -163,14 +163,14 @@
 							class="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity"
 						></div>
 						<div
-							class="relative flex bg-slate-900/80 backdrop-blur-xl rounded-xl p-1 border border-slate-700/50 shadow-lg"
+							class="relative flex bg-slate-900/80 backdrop-blur-xl rounded-xl p-1 border border-slate-300/50 dark:border-slate-700/50 shadow-lg"
 						>
 							{#each timeRanges as range, i}
 								<button
 									class="relative px-4 py-2 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all overflow-hidden {timeRange ===
 									range
-										? 'text-white'
-										: 'text-slate-500 hover:text-slate-300'}"
+										? 'text-slate-900 dark:text-white'
+										: 'text-slate-500 hover:text-slate-700 dark:text-slate-300'}"
 									onclick={() => (timeRange = range)}
 									in:scale={{ duration: 300, delay: i * 50, easing: elasticOut }}
 								>
@@ -193,14 +193,14 @@
 					<button
 						onclick={refresh}
 						disabled={$loading}
-						class="relative group p-3 bg-slate-900/80 backdrop-blur-xl hover:bg-slate-800 rounded-xl transition-all disabled:opacity-50 border border-slate-700/50 hover:border-slate-600 shadow-lg overflow-hidden"
+						class="relative group p-3 bg-slate-900/80 backdrop-blur-xl hover:bg-slate-800 rounded-xl transition-all disabled:opacity-50 border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-600 shadow-lg overflow-hidden"
 						title="Refresh metrics"
 					>
 						<div
 							class="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity"
 						></div>
 						<RefreshCw
-							class="relative z-10 w-4 h-4 text-slate-400 group-hover:text-slate-200 transition-colors {$loading
+							class="relative z-10 w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:text-slate-200 transition-colors {$loading
 								? 'animate-spin'
 								: ''}"
 						/>
@@ -240,7 +240,7 @@
 						class="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-2xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
 					></div>
 					<div
-						class="relative bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 hover:border-orange-500/50 transition-all duration-300 shadow-xl overflow-hidden"
+						class="relative bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl rounded-2xl p-6 border border-slate-300/50 dark:border-slate-700/50 hover:border-orange-500/50 transition-all duration-300 shadow-xl overflow-hidden"
 					>
 						<!-- Animated background gradient -->
 						<div
@@ -259,7 +259,7 @@
 									</div>
 								</div>
 								<div>
-									<div class="text-xs font-bold text-slate-400 uppercase tracking-widest">
+									<div class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
 										CPU Usage
 									</div>
 									<div class="flex items-center gap-2 mt-1">
@@ -289,9 +289,9 @@
 							<div
 								class="text-4xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent font-mono tracking-tight"
 							>
-								{$stats.cpu_percent.toFixed(1)}<span class="text-2xl">%</span>
+								{($stats.cpu_percent)?.toFixed(1)}<span class="text-2xl">%</span>
 							</div>
-							<div class="text-xs text-slate-500 mt-1">Peak: {$peakStats.peakCpu.toFixed(1)}%</div>
+							<div class="text-xs text-slate-500 mt-1">Peak: {($peakStats.peakCpu)?.toFixed(1)}%</div>
 						</div>
 
 						<!-- Enhanced Progress Bar -->
@@ -344,7 +344,7 @@
 						class="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
 					></div>
 					<div
-						class="relative bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 hover:border-purple-500/50 transition-all duration-300 shadow-xl overflow-hidden"
+						class="relative bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl rounded-2xl p-6 border border-slate-300/50 dark:border-slate-700/50 hover:border-purple-500/50 transition-all duration-300 shadow-xl overflow-hidden"
 					>
 						<!-- Animated background gradient -->
 						<div
@@ -363,7 +363,7 @@
 									</div>
 								</div>
 								<div>
-									<div class="text-xs font-bold text-slate-400 uppercase tracking-widest">
+									<div class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
 										Memory
 									</div>
 									<div class="flex items-center gap-2 mt-1">
@@ -450,7 +450,7 @@
 						class="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-2xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
 					></div>
 					<div
-						class="relative bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 hover:border-emerald-500/50 transition-all duration-300 shadow-xl overflow-hidden"
+						class="relative bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl rounded-2xl p-6 border border-slate-300/50 dark:border-slate-700/50 hover:border-emerald-500/50 transition-all duration-300 shadow-xl overflow-hidden"
 					>
 						<div
 							class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
@@ -468,7 +468,7 @@
 									</div>
 								</div>
 								<div>
-									<div class="text-xs font-bold text-slate-400 uppercase tracking-widest">
+									<div class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
 										Disk Space
 									</div>
 									<div class="text-[10px] text-slate-600 mt-1 font-mono">Storage</div>
@@ -547,7 +547,7 @@
 							class="absolute inset-0 bg-gradient-to-r from-slate-800/30 to-slate-700/30 rounded-2xl blur-xl animate-pulse"
 						></div>
 						<div
-							class="relative h-48 bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 overflow-hidden"
+							class="relative h-48 bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-300/50 dark:border-slate-700/50 overflow-hidden"
 						>
 							<div
 								class="absolute inset-0 bg-gradient-to-r from-transparent via-slate-700/20 to-transparent animate-shimmer"
@@ -566,7 +566,7 @@
 					class="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
 				></div>
 				<div
-					class="relative bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl rounded-2xl border border-slate-700/50 hover:border-slate-600/50 p-6 shadow-xl transition-all duration-300 overflow-hidden"
+					class="relative bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl rounded-2xl border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-600/50 p-6 shadow-xl transition-all duration-300 overflow-hidden"
 				>
 					<!-- Animated background -->
 					<div
@@ -583,7 +583,7 @@
 								</div>
 							</div>
 							<div>
-								<h4 class="text-sm font-bold text-slate-200 uppercase tracking-widest">
+								<h4 class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest">
 									Performance Timeline
 								</h4>
 								<p class="text-xs text-slate-500 mt-0.5">
@@ -594,19 +594,19 @@
 
 						<!-- Legend -->
 						<div
-							class="flex items-center gap-4 px-4 py-2 bg-slate-900/50 backdrop-blur-sm rounded-xl border border-slate-700/50"
+							class="flex items-center gap-4 px-4 py-2 bg-slate-900/50 backdrop-blur-sm rounded-xl border border-slate-300/50 dark:border-slate-700/50"
 						>
 							<div class="flex items-center gap-2">
 								<div
 									class="w-3 h-3 rounded-full bg-gradient-to-r from-orange-500 to-red-500 shadow-lg shadow-orange-500/50"
 								></div>
-								<span class="text-xs font-mono text-slate-400">CPU</span>
+								<span class="text-xs font-mono text-slate-500 dark:text-slate-400">CPU</span>
 							</div>
 							<div class="flex items-center gap-2">
 								<div
 									class="w-3 h-3 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 shadow-lg shadow-blue-500/50"
 								></div>
-								<span class="text-xs font-mono text-slate-400">Memory</span>
+								<span class="text-xs font-mono text-slate-500 dark:text-slate-400">Memory</span>
 							</div>
 						</div>
 					</div>

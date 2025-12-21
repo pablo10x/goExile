@@ -389,7 +389,7 @@
 			<div
 				class={`w-2 h-2 rounded-full ${$isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'} shadow-lg`}
 			></div>
-			<span class="text-xs font-mono text-slate-400 backdrop-blur-sm">{$connectionStatus}</span>
+			<span class="text-xs font-mono text-slate-500 dark:text-slate-400 backdrop-blur-sm">{$connectionStatus}</span>
 		</div>
 	</div>
 
@@ -397,7 +397,7 @@
 		<!-- Add Spawner Button -->
 		<button
 			onclick={() => (showAddSpawnerModal = true)}
-			class="group relative flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-emerald-900/30 hover:shadow-emerald-500/30 transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95 overflow-hidden {isLoaded
+			class="group relative flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-slate-900 dark:text-white font-semibold text-sm rounded-xl shadow-lg shadow-emerald-900/30 hover:shadow-emerald-500/30 transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95 overflow-hidden {isLoaded
 				? 'translate-x-0 opacity-100'
 				: 'translate-x-4 opacity-0'}"
 		>
@@ -530,13 +530,13 @@
 
 <!-- Spawners Section -->
 <div
-	class="card bg-slate-800/60 backdrop-blur-sm border border-slate-700/50 rounded-xl overflow-hidden transform transition-all duration-700 hover:scale-[1.01] hover:border-blue-500/20 hover:shadow-2xl hover:shadow-blue-500/5 {animateStats
+	class="card bg-slate-800/60 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 rounded-xl overflow-hidden transform transition-all duration-700 hover:scale-[1.01] hover:border-blue-500/20 hover:shadow-2xl hover:shadow-blue-500/5 {animateStats
 		? 'translate-y-0 opacity-100'
 		: 'translate-y-12 opacity-0'}"
 	style="animation-delay: 0.7s;"
 >
 	<div
-		class="border-b border-slate-700/50 px-6 py-4 flex justify-between items-center bg-gradient-to-r from-slate-800/80 to-slate-800/60 backdrop-blur-sm"
+		class="border-b border-slate-300/50 dark:border-slate-700/50 px-6 py-4 flex justify-between items-center bg-gradient-to-r from-slate-800/80 to-slate-800/60 backdrop-blur-sm"
 	>
 		<div class="flex items-center gap-3">
 			<div
@@ -545,7 +545,7 @@
 			<h2 class="text-xl font-bold text-slate-50">📦 Registered Spawners</h2>
 		</div>
 		<span
-			class="text-xs text-slate-500 uppercase tracking-widest font-semibold bg-slate-900/80 px-3 py-1 rounded-full border border-slate-700"
+			class="text-xs text-slate-500 uppercase tracking-widest font-semibold bg-slate-900/80 px-3 py-1 rounded-full border border-slate-300 dark:border-slate-700"
 			>Real-time</span
 		>
 	</div>

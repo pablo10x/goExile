@@ -14,7 +14,7 @@
 <div class="relative">
 	<button
 		onclick={toggleNotificationPanel}
-		class="p-2 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700 rounded-lg transition-all border border-slate-700/50 hover:border-blue-500/30"
+		class="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white bg-slate-800/50 hover:bg-slate-700 rounded-lg transition-all border border-slate-300/50 dark:border-slate-700/50 hover:border-blue-500/30"
 	>
 		<Bell class="w-5 h-5" />
 		{#if $notifications.length > 0}
@@ -30,13 +30,13 @@
 	<!-- Notification Dropdown -->
 	{#if isNotificationPanelOpen}
 		<div
-			class="absolute right-0 top-12 w-80 bg-slate-900/95 backdrop-blur-xl border border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden"
+			class="absolute right-0 top-12 w-80 bg-slate-900/95 backdrop-blur-xl border border-slate-300 dark:border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden"
 			transition:slide={{ duration: 200 }}
 		>
 			<div
-				class="p-3 border-b border-slate-700/50 flex justify-between items-center bg-slate-800/30"
+				class="p-3 border-b border-slate-300/50 dark:border-slate-700/50 flex justify-between items-center bg-slate-800/30"
 			>
-				<span class="font-bold text-slate-200 text-sm">Recent Activity</span>
+				<span class="font-bold text-slate-800 dark:text-slate-200 text-sm">Recent Activity</span>
 				<button
 					onclick={() => notifications.clearHistory()}
 					class="text-xs text-blue-400 hover:text-blue-300">Clear</button
@@ -46,7 +46,7 @@
 				{#if $history && $history.length > 0}
 					{#each $history as note (note.id)}
 						<div
-							class="flex gap-3 p-2 rounded-lg bg-slate-800/30 border border-slate-700/30 hover:bg-slate-800/50 transition-colors"
+							class="flex gap-3 p-2 rounded-lg bg-slate-800/30 border border-slate-300/30 dark:border-slate-700/30 hover:bg-slate-800/50 transition-colors"
 						>
 							<div class="mt-0.5">
 								{#if note.type === 'success'}
@@ -60,7 +60,7 @@
 								{/if}
 							</div>
 							<div class="flex-1 min-w-0">
-								<p class="text-xs font-medium text-slate-200 truncate">{note.message}</p>
+								<p class="text-xs font-medium text-slate-800 dark:text-slate-200 truncate">{note.message}</p>
 								{#if note.details}
 									<p class="text-[10px] text-slate-500 truncate">{note.details}</p>
 								{/if}

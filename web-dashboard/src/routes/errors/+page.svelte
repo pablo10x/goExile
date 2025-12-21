@@ -71,7 +71,7 @@
 	function getStatusColor(status: number) {
 		if (status >= 500) return 'text-red-400 bg-red-400/10 border-red-400/20'; // Critical
 		if (status >= 400) return 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20'; // Warning
-		return 'text-slate-300 bg-slate-700/50 border-slate-600'; // Info/Default
+		return 'text-slate-700 dark:text-slate-300 bg-slate-700/50 border-slate-600'; // Info/Default
 	}
 
 	function formatDate(ts: string) {
@@ -89,27 +89,27 @@
 	<div class="flex justify-between items-center mb-6">
 		<div>
 			<h1 class="text-2xl font-bold text-slate-50">Error Logs</h1>
-			<p class="text-slate-400 text-sm mt-1">Recent application errors and warnings</p>
+			<p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Recent application errors and warnings</p>
 		</div>
 
 		<div class="flex gap-4">
 			<a
 				href="/"
-				class="px-4 py-2 bg-slate-700 text-slate-300 hover:bg-slate-600 rounded font-semibold transition-colors"
+				class="px-4 py-2 bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-600 rounded font-semibold transition-colors"
 			>
 				Back to Dashboard
 			</a>
 			<button
 				onclick={requestClearErrors}
 				disabled={clearing || errors.length === 0}
-				class="px-4 py-2 bg-red-600 text-white hover:bg-red-500 rounded font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-900/20"
+				class="px-4 py-2 bg-red-600 text-slate-900 dark:text-white hover:bg-red-500 rounded font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-900/20"
 			>
 				{clearing ? 'Clearing...' : 'Clear All Errors'}
 			</button>
 		</div>
 	</div>
 
-	<div class="card bg-slate-900/50 border border-slate-700/50 shadow-xl overflow-hidden">
+	<div class="card bg-slate-900/50 border border-slate-300/50 dark:border-slate-700/50 shadow-xl overflow-hidden">
 		{#if loading}
 			<div class="p-12 text-center text-slate-500 animate-pulse">Loading error logs...</div>
 		{:else if errors.length === 0}
@@ -120,7 +120,7 @@
 					✓
 				</div>
 				<div>
-					<h3 class="text-lg font-semibold text-slate-200">No Errors Found</h3>
+					<h3 class="text-lg font-semibold text-slate-800 dark:text-slate-200">No Errors Found</h3>
 					<p class="text-sm">The system is running smoothly.</p>
 				</div>
 			</div>
@@ -129,7 +129,7 @@
 				<table class="w-full text-left border-collapse">
 					<thead>
 						<tr
-							class="border-b border-slate-700 bg-slate-800/50 text-xs uppercase tracking-wider text-slate-400 font-semibold"
+							class="border-b border-slate-300 dark:border-slate-700 bg-slate-800/50 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold"
 						>
 							<th class="px-6 py-4">Time</th>
 							<th class="px-6 py-4">Status</th>
@@ -141,7 +141,7 @@
 					<tbody class="divide-y divide-slate-800">
 						{#each errors as error (error.timestamp + error.message)}
 							<tr transition:fade class="hover:bg-slate-800/30 transition-colors group">
-								<td class="px-6 py-4 text-sm text-slate-400 font-mono whitespace-nowrap">
+								<td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap">
 									{formatDate(error.timestamp)}
 								</td>
 								<td class="px-6 py-4">
@@ -151,10 +151,10 @@
 										{error.status}
 									</span>
 								</td>
-								<td class="px-6 py-4 text-sm text-slate-200 font-medium">
+								<td class="px-6 py-4 text-sm text-slate-800 dark:text-slate-200 font-medium">
 									{error.message}
 								</td>
-								<td class="px-6 py-4 text-sm text-slate-400 font-mono">
+								<td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400 font-mono">
 									{error.path}
 								</td>
 								<td class="px-6 py-4 text-sm text-slate-500 font-mono">

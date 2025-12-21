@@ -79,7 +79,7 @@
 </script>
 
 <div class="h-full flex flex-col bg-slate-900">
-	<div class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-950">
+	<div class="p-4 border-b border-slate-300 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-950">
 		<div class="flex items-center gap-3">
             <div class="p-2 bg-blue-500/10 rounded-lg">
                 <Settings class="w-5 h-5 text-blue-400" />
@@ -91,32 +91,32 @@
                 <p class="text-xs text-slate-500">Manage columns, types, and constraints</p>
             </div>
 		</div>
-		<button onclick={onClose} class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors">
+		<button onclick={onClose} class="p-2 hover:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors">
 			<X class="w-5 h-5" />
 		</button>
 	</div>
 
 	<div class="flex-1 overflow-auto p-6">
-		<div class="bg-slate-950/50 border border-slate-800 rounded-xl overflow-hidden shadow-lg">
+		<div class="bg-white/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-lg">
 			<table class="w-full text-left text-sm">
-				<thead class="bg-slate-900 text-slate-400 uppercase text-xs font-bold tracking-wider">
+				<thead class="bg-slate-900 text-slate-500 dark:text-slate-400 uppercase text-xs font-bold tracking-wider">
 					<tr>
-						<th class="px-6 py-4 border-b border-slate-800">Name</th>
-						<th class="px-6 py-4 border-b border-slate-800">Type</th>
-						<th class="px-6 py-4 border-b border-slate-800 text-center">Nullable</th>
-						<th class="px-6 py-4 border-b border-slate-800">Default</th>
-						<th class="px-6 py-4 border-b border-slate-800 text-right">Actions</th>
+						<th class="px-6 py-4 border-b border-slate-200 dark:border-slate-800">Name</th>
+						<th class="px-6 py-4 border-b border-slate-200 dark:border-slate-800">Type</th>
+						<th class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 text-center">Nullable</th>
+						<th class="px-6 py-4 border-b border-slate-200 dark:border-slate-800">Default</th>
+						<th class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 text-right">Actions</th>
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-slate-800/50">
 					{#each columns as col}
 						<tr class="hover:bg-slate-800/30 transition-colors group">
-							<td class="px-6 py-3 font-mono text-slate-200">
+							<td class="px-6 py-3 font-mono text-slate-800 dark:text-slate-200">
                                 {#if editingColName === col.name}
                                     <input 
                                         type="text" 
                                         bind:value={newColNameVal} 
-                                        class="bg-slate-900 border border-blue-500 rounded px-2 py-1 text-white w-full outline-none"
+                                        class="bg-slate-900 border border-blue-500 rounded px-2 py-1 text-slate-900 dark:text-white w-full outline-none"
                                         onkeydown={(e) => e.key === 'Enter' && renameColumn(col.name)}
                                         onblur={() => renameColumn(col.name)}
                                         use:autofocus
@@ -138,7 +138,7 @@
                                         class="bg-transparent border-none text-emerald-400 font-mono cursor-pointer outline-none appearance-none hover:text-emerald-300 w-full"
                                     >
                                         {#each dataTypes as t}
-                                            <option value={t} class="bg-slate-900 text-slate-300">{t}</option>
+                                            <option value={t} class="bg-slate-900 text-slate-700 dark:text-slate-300">{t}</option>
                                         {/each}
                                         <!-- Keep original if not in list -->
                                         {#if !dataTypes.includes(col.type.toUpperCase())}
@@ -150,13 +150,13 @@
 							<td class="px-6 py-3 text-center">
                                 <button 
                                     onclick={() => toggleNullable(col.name, col.nullable)}
-                                    class="px-2 py-1 rounded text-xs font-bold border transition-all {col.nullable === 'YES' ? 'border-slate-700 text-slate-500 hover:border-slate-500' : 'border-purple-500/30 bg-purple-500/10 text-purple-400'}"
+                                    class="px-2 py-1 rounded text-xs font-bold border transition-all {col.nullable === 'YES' ? 'border-slate-300 dark:border-slate-700 text-slate-500 hover:border-slate-500' : 'border-purple-500/30 bg-purple-500/10 text-purple-400'}"
                                 >
                                     {col.nullable === 'YES' ? 'NULL' : 'NOT NULL'}
                                 </button>
                             </td>
-							<td class="px-6 py-3 font-mono text-xs text-slate-400">
-                                <button onclick={() => changeDefault(col.name, col.default)} class="hover:text-white truncate max-w-[150px] block" title={col.default || 'No Default'}>
+							<td class="px-6 py-3 font-mono text-xs text-slate-500 dark:text-slate-400">
+                                <button onclick={() => changeDefault(col.name, col.default)} class="hover:text-slate-900 dark:text-white truncate max-w-[150px] block" title={col.default || 'No Default'}>
                                     {col.default || '-'}
                                 </button>
                             </td>
@@ -171,7 +171,7 @@
 							</td>
 						</tr>
 					{/each}
-                    <tr class="bg-slate-900/30 border-t border-slate-800 border-dashed">
+                    <tr class="bg-slate-900/30 border-t border-slate-200 dark:border-slate-800 border-dashed">
                         <td colspan="5" class="px-6 py-3 text-center">
                             <!-- Helper text or quick add -->
                             <span class="text-slate-600 text-xs">To add a column, use the 'Add Column' button (Coming soon to inline)</span>

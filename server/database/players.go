@@ -13,8 +13,6 @@ import (
 
 // InitPlayerSystem initializes the 'player_system' schema and tables.
 func InitPlayerSystem(db *sqlx.DB) error {
-	log.Println("Initializing Player System Schema...")
-
 	schema := `CREATE SCHEMA IF NOT EXISTS player_system;`
 	if _, err := db.Exec(schema); err != nil {
 		return fmt.Errorf("create schema: %w", err)
@@ -33,6 +31,13 @@ func InitPlayerSystem(db *sqlx.DB) error {
 	);`
 	if _, err := db.Exec(playersTable); err != nil {
 		return fmt.Errorf("create players table: %w", err)
+	}
+
+	// Ensure ID sequence starts at 1,000,000 for nice IDs
+	var maxID int64
+	if err := db.Get(&maxID, "SELECT COALESCE(MAX(id), 0) FROM player_system.players"); err == nil && maxID < 1000000 {
+		// Attempt to alter sequence. Ignore error if sequence name differs (unlikely with Postgres defaults)
+		_, _ = db.Exec("ALTER SEQUENCE player_system.players_id_seq RESTART WITH 1000000")
 	}
 
 	// Migration: Add uid column if it doesn't exist
@@ -176,8 +181,13 @@ func GetAllPlayers(db *sqlx.DB) ([]models.Player, error) {
 
 func UpdatePlayer(db *sqlx.DB, p *models.Player) error {
 	p.UpdatedAt = time.Now().UTC()
-	query := `UPDATE player_system.players SET name=:name, xp=:xp, last_joined_server=:last_joined_server, updated_at=:updated_at WHERE id=:id`
+	query := `UPDATE player_system.players SET uid=:uid, name=:name, device_id=:device_id, xp=:xp, last_joined_server=:last_joined_server, updated_at=:updated_at WHERE id=:id`
 	_, err := db.NamedExec(query, p)
+	return err
+}
+
+func DeletePlayer(db *sqlx.DB, id int64) error {
+	_, err := db.Exec(`DELETE FROM player_system.players WHERE id = $1`, id)
 	return err
 }
 

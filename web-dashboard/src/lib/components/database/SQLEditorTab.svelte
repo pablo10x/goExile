@@ -534,9 +534,9 @@
 	}
 </script>
 
-<div class="h-full flex flex-col bg-slate-950">
+<div class="h-full flex flex-col bg-white dark:bg-slate-950">
 	<!-- Toolbar -->
-	<div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+	<div class="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-900/50">
 		<div class="flex items-center gap-3">
 			<div class="p-2 bg-amber-500/10 rounded-lg">
 				<Terminal class="w-5 h-5 text-amber-400" />
@@ -561,7 +561,7 @@
 			<button
 				onclick={runQuery}
 				disabled={loading || !query.trim()}
-				class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-bold flex items-center gap-2 shadow-lg shadow-amber-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+				class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-slate-900 dark:text-white rounded-lg font-bold flex items-center gap-2 shadow-lg shadow-amber-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
 			>
 				{#if loading}
 					<RefreshCw class="w-4 h-4 animate-spin" /> Executing...
@@ -575,12 +575,12 @@
 	<!-- Editor & Results Split -->
 	<div class="flex-1 flex flex-col overflow-hidden">
 		<!-- Editor Area -->
-		<div class="h-1/3 min-h-[150px] p-4 border-b border-slate-800 bg-slate-900/30 relative">
+		<div class="h-1/3 min-h-[150px] p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-900/30 relative">
 			<div class="relative w-full h-full">
 				<textarea
 					bind:this={textareaEl}
 					bind:value={query}
-					class="w-full h-full bg-slate-950 border border-slate-700 rounded-xl p-4 font-mono text-sm text-blue-300 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none resize-none shadow-inner"
+					class="w-full h-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl p-4 font-mono text-sm text-blue-300 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none resize-none shadow-inner"
 					placeholder="SELECT * FROM table_name LIMIT 10;"
 					onkeydown={handleKeydown}
 					oninput={handleInput}
@@ -601,8 +601,8 @@
 								<button
 									class="w-full px-3 py-2 text-left text-sm font-mono flex items-center gap-2 transition-colors {i ===
 									selectedIndex
-										? 'bg-amber-600 text-white'
-										: 'text-slate-300 hover:bg-slate-700'}"
+										? 'bg-amber-600 text-slate-900 dark:text-white'
+										: 'text-slate-700 dark:text-slate-300 hover:bg-slate-700'}"
 									onmousedown={() => applySuggestion(suggestion)}
 									onmouseenter={() => (selectedIndex = i)}
 								>
@@ -620,16 +620,16 @@
 							{/each}
 						</div>
 						<div
-							class="px-3 py-1.5 bg-slate-900 border-t border-slate-700 text-xs text-slate-500 flex gap-3"
+							class="px-3 py-1.5 bg-slate-900 border-t border-slate-300 dark:border-slate-700 text-xs text-slate-500 flex gap-3"
 						>
 							<span
-								><kbd class="px-1 py-0.5 bg-slate-700 rounded text-slate-400">↑↓</kbd> Navigate</span
+								><kbd class="px-1 py-0.5 bg-slate-700 rounded text-slate-500 dark:text-slate-400">↑↓</kbd> Navigate</span
 							>
 							<span
-								><kbd class="px-1 py-0.5 bg-slate-700 rounded text-slate-400">Tab</kbd> Select</span
+								><kbd class="px-1 py-0.5 bg-slate-700 rounded text-slate-500 dark:text-slate-400">Tab</kbd> Select</span
 							>
 							<span
-								><kbd class="px-1 py-0.5 bg-slate-700 rounded text-slate-400">Esc</kbd> Close</span
+								><kbd class="px-1 py-0.5 bg-slate-700 rounded text-slate-500 dark:text-slate-400">Esc</kbd> Close</span
 							>
 						</div>
 					</div>
@@ -651,22 +651,22 @@
 		<div class="flex-1 flex flex-col overflow-hidden bg-slate-900/50 relative">
 			{#if results.length > 0}
 				<div
-					class="p-2 border-b border-slate-800 bg-slate-900 flex justify-between items-center px-4"
+					class="p-2 border-b border-slate-200 dark:border-slate-800 bg-slate-900 flex justify-between items-center px-4"
 				>
-					<span class="text-xs font-bold text-slate-400 uppercase tracking-wider"
+					<span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
 						>{results.length} Rows</span
 					>
 					<div class="flex gap-2">
 						<button
 							onclick={copyToClipboard}
-							class="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded"
+							class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-800 rounded"
 							title="Copy JSON"
 						>
 							<Copy class="w-4 h-4" />
 						</button>
 						<button
 							onclick={downloadCSV}
-							class="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded"
+							class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-800 rounded"
 							title="Download CSV"
 						>
 							<Download class="w-4 h-4" />
@@ -675,10 +675,10 @@
 				</div>
 				<div class="flex-1 overflow-auto">
 					<table class="w-full text-left text-sm border-collapse">
-						<thead class="bg-slate-950 text-slate-400 sticky top-0 shadow-md z-10">
+						<thead class="bg-white dark:bg-slate-950 text-slate-500 dark:text-slate-400 sticky top-0 shadow-md z-10">
 							<tr>
 								{#each Object.keys(results[0]) as key}
-									<th class="px-4 py-3 font-medium border-b border-slate-800 whitespace-nowrap"
+									<th class="px-4 py-3 font-medium border-b border-slate-200 dark:border-slate-800 whitespace-nowrap"
 										>{key}</th
 									>
 								{/each}
@@ -689,7 +689,7 @@
 								<tr class="hover:bg-slate-800/50 transition-colors">
 									{#each Object.values(row) as val}
 										<td
-											class="px-4 py-2 text-slate-300 font-mono whitespace-nowrap max-w-xs truncate"
+											class="px-4 py-2 text-slate-700 dark:text-slate-300 font-mono whitespace-nowrap max-w-xs truncate"
 											title={String(val)}
 										>
 											{val === null ? 'NULL' : String(val)}

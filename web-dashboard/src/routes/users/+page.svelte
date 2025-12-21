@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { fade, slide } from 'svelte/transition';
-	import { Users, Search, RefreshCw, Circle, FileText, AlertOctagon, Server } from 'lucide-svelte';
+	import { Users, Search, RefreshCw, Circle, FileText, AlertOctagon, Server, Pencil, Trash2 } from 'lucide-svelte';
+	import EditPlayerModal from '$lib/components/players/EditPlayerModal.svelte';
+	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+	import { notifications } from '$lib/stores';
 
 	interface Player {
 		id: number;
@@ -32,6 +35,10 @@
 	let players = $state<Player[]>([]);
 	let playersLoading = $state(true);
 	let playerSearchQuery = $state('');
+	let selectedPlayer = $state<Player | null>(null);
+	let isEditModalOpen = $state(false);
+	let isDeleteConfirmOpen = $state(false);
+	let playerToDelete = $state<Player | null>(null);
 
 	// Reports State
 	let reports = $state<Report[]>([]);
@@ -64,7 +71,7 @@
 	async function fetchPlayers() {
 		playersLoading = true;
 		try {
-			const res = await fetch('/api/game/players');
+			const res = await fetch('/api/admin/players');
 			if (res.ok) {
 				players = (await res.json()) || [];
 			}
@@ -97,6 +104,38 @@
 		}
 	}
 
+	function openEditModal(player: Player) {
+		selectedPlayer = player;
+		isEditModalOpen = true;
+	}
+
+	function handlePlayerUpdated(updatedPlayer: Player) {
+		players = players.map(p => p.id === updatedPlayer.id ? { ...p, ...updatedPlayer } : p);
+	}
+
+	function confirmDelete(player: Player) {
+		playerToDelete = player;
+		isDeleteConfirmOpen = true;
+	}
+
+	async function handleDeletePlayer() {
+		if (!playerToDelete) return;
+		try {
+			const res = await fetch(`/api/admin/players/${playerToDelete.id}`, { method: 'DELETE' });
+			if (res.ok) {
+				players = players.filter(p => p.id !== playerToDelete!.id);
+				notifications.add({ type: 'success', message: 'Player deleted' });
+			} else {
+				throw new Error('Failed to delete player');
+			}
+		} catch (e) {
+			notifications.add({ type: 'error', message: 'Error deleting player' });
+		} finally {
+			isDeleteConfirmOpen = false;
+			playerToDelete = null;
+		}
+	}
+
 	onMount(() => {
 		fetchPlayers();
 		fetchReports();
@@ -112,22 +151,22 @@
 	<!-- Header -->
 	<div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
 		<div>
-			<h1 class="text-3xl font-bold text-white flex items-center gap-3">
+			<h1 class="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
 				<Users class="w-8 h-8 text-blue-400" />
 				User Management
 			</h1>
-			<p class="text-slate-400 mt-1">Manage players and review reports</p>
+			<p class="text-slate-500 dark:text-slate-400 mt-1">Manage players and review reports</p>
 		</div>
 
 		<div class="flex items-center gap-3 w-full md:w-auto">
 			<!-- Tab Switcher -->
-			<div class="flex bg-slate-800/50 p-1 rounded-xl border border-slate-700">
+			<div class="flex bg-slate-800/50 p-1 rounded-xl border border-slate-300 dark:border-slate-700">
 				<button
 					onclick={() => (activeTab = 'players')}
 					class="px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 {activeTab ===
 					'players'
-						? 'bg-blue-600 text-white shadow-lg'
-						: 'text-slate-400 hover:text-white'}"
+						? 'bg-blue-600 text-slate-900 dark:text-white shadow-lg'
+						: 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white'}"
 				>
 					<Users class="w-4 h-4" />
 					Players
@@ -136,8 +175,8 @@
 					onclick={() => (activeTab = 'reports')}
 					class="px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 {activeTab ===
 					'reports'
-						? 'bg-red-600 text-white shadow-lg'
-						: 'text-slate-400 hover:text-white'}"
+						? 'bg-red-600 text-slate-900 dark:text-white shadow-lg'
+						: 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white'}"
 				>
 					<AlertOctagon class="w-4 h-4" />
 					Reports
@@ -147,7 +186,7 @@
 			<button
 				onclick={refreshCurrentTab}
 				disabled={activeTab === 'players' ? playersLoading : reportsLoading}
-				class="p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-slate-400 hover:text-white hover:bg-slate-700 transition-all disabled:opacity-50"
+				class="p-2.5 bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-700 transition-all disabled:opacity-50"
 			>
 				<RefreshCw class="w-5 h-5 {(activeTab === 'players' ? playersLoading : reportsLoading) ? 'animate-spin' : ''}" />
 			</button>
@@ -164,43 +203,44 @@
 					type="text"
 					bind:value={playerSearchQuery}
 					placeholder="Search players by name, UID, or device..."
-					class="w-full pl-10 pr-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-sm text-slate-200 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+					class="w-full pl-10 pr-4 py-3 bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-200 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
 				/>
 			{:else}
 				<input
 					type="text"
 					bind:value={reportSearchQuery}
 					placeholder="Search reports by reason, user, or server..."
-					class="w-full pl-10 pr-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-sm text-slate-200 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+					class="w-full pl-10 pr-4 py-3 bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-200 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
 				/>
 			{/if}
 		</div>
 
 		<!-- Players View -->
 		{#if activeTab === 'players'}
-			<div class="bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-2xl overflow-hidden" transition:fade={{ duration: 200 }}>
+			<div class="bg-slate-800/40 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 rounded-2xl overflow-hidden" transition:fade={{ duration: 200 }}>
 				<div class="overflow-x-auto">
 					<table class="w-full text-left">
 						<thead>
-							<tr class="border-b border-slate-700/50 bg-slate-900/50">
-								<th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
-								<th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Player</th>
-								<th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Identifiers</th>
-								<th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Stats</th>
-								<th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Last Seen</th>
+							<tr class="border-b border-slate-300/50 dark:border-slate-700/50 bg-slate-900/50">
+								<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+								<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Player</th>
+								<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Identifiers</th>
+								<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stats</th>
+								<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Last Seen</th>
+								<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Actions</th>
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-slate-700/50">
 							{#if playersLoading && players.length === 0}
 								<tr>
-									<td colspan="5" class="px-6 py-12 text-center text-slate-500">
+									<td colspan="6" class="px-6 py-12 text-center text-slate-500">
 										<RefreshCw class="w-8 h-8 mx-auto mb-3 animate-spin opacity-50" />
 										Loading players...
 									</td>
 								</tr>
 							{:else if filteredPlayers.length === 0}
 								<tr>
-									<td colspan="5" class="px-6 py-12 text-center text-slate-500">
+									<td colspan="6" class="px-6 py-12 text-center text-slate-500">
 										No players found matching your search.
 									</td>
 								</tr>
@@ -222,38 +262,56 @@
 										</td>
 										<td class="px-6 py-4">
 											<div class="flex items-center gap-3">
-												<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-white text-sm shadow-lg shadow-blue-900/20">
+												<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-slate-900 dark:text-white text-sm shadow-lg shadow-blue-900/20">
 													{player.name.charAt(0).toUpperCase()}
 												</div>
 												<div>
-													<div class="font-medium text-white group-hover:text-blue-400 transition-colors">{player.name}</div>
-													<div class="text-xs text-slate-500 font-mono">ID: {player.id}</div>
+													<div class="font-medium text-slate-900 dark:text-white group-hover:text-blue-400 transition-colors">{player.name}</div>
+													<div class="text-xs text-slate-500 font-mono">UID: {player.id}</div>
 												</div>
 											</div>
 										</td>
 										<td class="px-6 py-4">
 											<div class="space-y-1.5">
-												<div class="flex items-center gap-2 text-xs text-slate-400">
+												<div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
 													<span class="w-12 font-mono text-slate-600 uppercase text-[10px]">UID</span>
-													<code class="px-1.5 py-0.5 bg-slate-900/80 rounded text-slate-300 font-mono text-[10px]">{player.uid || 'N/A'}</code>
+													<code class="px-1.5 py-0.5 bg-slate-900/80 rounded text-slate-700 dark:text-slate-300 font-mono text-[10px]">{player.uid || 'N/A'}</code>
 												</div>
-												<div class="flex items-center gap-2 text-xs text-slate-400">
+												<div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
 													<span class="w-12 font-mono text-slate-600 uppercase text-[10px]">Device</span>
-													<code class="px-1.5 py-0.5 bg-slate-900/80 rounded text-slate-300 font-mono truncate max-w-[140px] text-[10px]" title={player.device_id}>{player.device_id}</code>
+													<code class="px-1.5 py-0.5 bg-slate-900/80 rounded text-slate-700 dark:text-slate-300 font-mono truncate max-w-[140px] text-[10px]" title={player.device_id}>{player.device_id}</code>
 												</div>
 											</div>
 										</td>
 										<td class="px-6 py-4">
 											<div class="flex flex-col gap-1">
-												<span class="text-xs text-slate-300">
+												<span class="text-xs text-slate-700 dark:text-slate-300">
 													<span class="text-amber-400 font-bold text-sm">{player.xp.toLocaleString()}</span> XP
 												</span>
 											</div>
 										</td>
-										<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
+										<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
 											<div class="flex flex-col">
 												<span>{new Date(player.updated_at).toLocaleDateString()}</span>
 												<span class="text-xs text-slate-600">{new Date(player.updated_at).toLocaleTimeString()}</span>
+											</div>
+										</td>
+										<td class="px-6 py-4 whitespace-nowrap text-right">
+											<div class="flex items-center justify-end gap-2">
+												<button
+													onclick={() => openEditModal(player)}
+													class="p-2 rounded-lg text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 transition-all"
+													title="Edit Player"
+												>
+													<Pencil class="w-4 h-4" />
+												</button>
+												<button
+													onclick={() => confirmDelete(player)}
+													class="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all"
+													title="Delete Player"
+												>
+													<Trash2 class="w-4 h-4" />
+												</button>
 											</div>
 										</td>
 									</tr>
@@ -267,16 +325,16 @@
 
 		<!-- Reports View -->
 		{#if activeTab === 'reports'}
-			<div class="bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-2xl overflow-hidden" transition:fade={{ duration: 200 }}>
+			<div class="bg-slate-800/40 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 rounded-2xl overflow-hidden" transition:fade={{ duration: 200 }}>
 				<div class="overflow-x-auto">
 					<table class="w-full text-left">
 						<thead>
-							<tr class="border-b border-slate-700/50 bg-slate-900/50">
-								<th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Report Info</th>
-								<th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Reporter</th>
-								<th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Reported User</th>
-								<th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Context</th>
-								<th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Time</th>
+							<tr class="border-b border-slate-300/50 dark:border-slate-700/50 bg-slate-900/50">
+								<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Report Info</th>
+								<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Reporter</th>
+								<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Reported User</th>
+								<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Context</th>
+								<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Time</th>
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-slate-700/50">
@@ -302,8 +360,8 @@
 													<AlertOctagon class="w-4 h-4" />
 												</div>
 												<div>
-													<div class="font-medium text-white mb-1">Report #{report.id}</div>
-													<div class="text-sm text-slate-300 bg-slate-900/50 p-2 rounded-lg border border-slate-700/50 max-w-xs break-words">
+													<div class="font-medium text-slate-900 dark:text-white mb-1">Report #{report.id}</div>
+													<div class="text-sm text-slate-700 dark:text-slate-300 bg-slate-900/50 p-2 rounded-lg border border-slate-300/50 dark:border-slate-700/50 max-w-xs break-words">
 														"{report.reason}"
 													</div>
 												</div>
@@ -311,10 +369,10 @@
 										</td>
 										<td class="px-6 py-4 whitespace-nowrap">
 											<div class="flex items-center gap-2">
-												<div class="w-6 h-6 rounded bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-300">
+												<div class="w-6 h-6 rounded bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-700 dark:text-slate-300">
 													{(report.reporter_name || 'U').charAt(0).toUpperCase()}
 												</div>
-												<div class="text-sm text-slate-300">{report.reporter_name || 'Unknown'}</div>
+												<div class="text-sm text-slate-700 dark:text-slate-300">{report.reporter_name || 'Unknown'}</div>
 											</div>
 											<div class="text-xs text-slate-500 mt-0.5 ml-8">ID: {report.reporter_id}</div>
 										</td>
@@ -329,15 +387,15 @@
 										</td>
 										<td class="px-6 py-4">
 											{#if report.game_server_instance_id}
-												<div class="flex items-center gap-2 text-xs text-slate-400">
+												<div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
 													<Server class="w-3 h-3 text-slate-500" />
-													<code class="bg-slate-900 px-1.5 py-0.5 rounded text-slate-300 font-mono">{report.game_server_instance_id}</code>
+													<code class="bg-slate-900 px-1.5 py-0.5 rounded text-slate-700 dark:text-slate-300 font-mono">{report.game_server_instance_id}</code>
 												</div>
 											{:else}
 												<span class="text-xs text-slate-600 italic">No server context</span>
 											{/if}
 										</td>
-										<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
+										<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
 											<div>{new Date(report.timestamp).toLocaleDateString()}</div>
 											<div class="text-xs text-slate-600">{new Date(report.timestamp).toLocaleTimeString()}</div>
 										</td>
@@ -350,4 +408,19 @@
 			</div>
 		{/if}
 	</div>
+
+	<EditPlayerModal 
+		isOpen={isEditModalOpen} 
+		player={selectedPlayer} 
+		onClose={() => isEditModalOpen = false} 
+		onSave={handlePlayerUpdated} 
+	/>
+
+	<ConfirmDialog
+		bind:isOpen={isDeleteConfirmOpen}
+		title="Delete Player"
+		message={`Are you sure you want to delete player "${playerToDelete?.name}"? This action cannot be undone.`}
+		onConfirm={handleDeletePlayer}
+		on:close={() => isDeleteConfirmOpen = false}
+	/>
 </div>

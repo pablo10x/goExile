@@ -240,7 +240,7 @@
 
 <div class="h-full flex flex-col bg-slate-900">
 	<!-- Header -->
-	<div class="shrink-0 border-b border-slate-800 bg-slate-950">
+	<div class="shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
 		<!-- Title Bar -->
 		<div class="px-4 py-3 flex items-center justify-between">
 			<div class="flex items-center gap-3">
@@ -256,7 +256,7 @@
 			<button
 				onclick={refresh}
 				disabled={isRefreshing}
-				class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-50"
+				class="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-50"
 				title="Refresh"
 			>
 				<RefreshCw class="w-5 h-5 {isRefreshing ? 'animate-spin' : ''}" />
@@ -267,12 +267,12 @@
 		<div class="px-4 pb-3 flex items-center gap-4">
 			<div class="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 rounded-lg">
 				<Layers class="w-4 h-4 text-purple-400" />
-				<span class="text-sm font-medium text-slate-300">{totalSchemas}</span>
+				<span class="text-sm font-medium text-slate-700 dark:text-slate-300">{totalSchemas}</span>
 				<span class="text-xs text-slate-500">schemas</span>
 			</div>
 			<div class="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 rounded-lg">
 				<Table class="w-4 h-4 text-blue-400" />
-				<span class="text-sm font-medium text-slate-300">{totalTables}</span>
+				<span class="text-sm font-medium text-slate-700 dark:text-slate-300">{totalTables}</span>
 				<span class="text-xs text-slate-500">tables</span>
 			</div>
 		</div>

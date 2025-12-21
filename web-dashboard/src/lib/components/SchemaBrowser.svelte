@@ -62,10 +62,10 @@
 </script>
 
 <div
-	class="bg-slate-950 border-r border-slate-800 flex flex-col h-full transition-all duration-300 ease-in-out {isSidebarOpen ? 'w-full' : 'w-16 bg-transparent border-none'}"
+	class="bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col h-full transition-all duration-300 ease-in-out {isSidebarOpen ? 'w-full' : 'w-16 bg-transparent border-none'}"
 >
 	<!-- Header -->
-	<div class="p-3 border-b border-slate-800/50 flex flex-col gap-3 relative shrink-0">
+	<div class="p-3 border-b border-slate-200/50 dark:border-slate-800/50 flex flex-col gap-3 relative shrink-0">
 		<div class="flex justify-between items-center h-8">
 			{#if isSidebarOpen}
 				<div class="flex items-center gap-2 text-slate-100 font-bold tracking-tight animate-in fade-in slide-in-from-left-2">
@@ -77,14 +77,14 @@
 				<div class="flex gap-1">
 					<button
 						onclick={onCreateSchema}
-						class="p-1.5 hover:bg-emerald-500/10 text-slate-400 hover:text-emerald-400 rounded-lg transition-colors"
+						class="p-1.5 hover:bg-emerald-500/10 text-slate-500 dark:text-slate-400 hover:text-emerald-400 rounded-lg transition-colors"
 						title="New Schema"
 					>
 						<Plus class="w-4 h-4" />
 					</button>
 					<button
 						onclick={onToggleSidebar}
-						class="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg transition-colors"
+						class="p-1.5 hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white rounded-lg transition-colors"
 						title="Collapse"
 					>
 						<ChevronLeft class="w-4 h-4" />
@@ -93,7 +93,7 @@
 			{:else}
 				<button
 					onclick={onToggleSidebar}
-					class="w-10 h-10 flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-xl shadow-lg transition-all mx-auto"
+					class="w-10 h-10 flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white rounded-xl shadow-lg transition-all mx-auto"
 					title="Expand"
 				>
 					<ChevronRight class="w-5 h-5" />
@@ -108,12 +108,12 @@
 					type="text"
 					bind:value={filterText}
 					placeholder="Search..."
-					class="w-full bg-slate-900/50 border border-slate-800 rounded-lg py-2 pl-9 pr-8 text-xs text-slate-300 placeholder:text-slate-600 focus:border-indigo-500/50 focus:bg-slate-900 focus:ring-1 focus:ring-indigo-500/20 outline-none transition-all"
+					class="w-full bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-lg py-2 pl-9 pr-8 text-xs text-slate-700 dark:text-slate-300 placeholder:text-slate-600 focus:border-indigo-500/50 focus:bg-slate-900 focus:ring-1 focus:ring-indigo-500/20 outline-none transition-all"
 				/>
 				{#if filterText}
 					<button
 						onclick={() => (filterText = '')}
-						class="absolute right-2 top-2 text-slate-500 hover:text-white p-0.5"
+						class="absolute right-2 top-2 text-slate-500 hover:text-slate-900 dark:text-white p-0.5"
 					>
 						<X class="w-3.5 h-3.5" />
 					</button>
@@ -152,10 +152,10 @@
                         {#if schema.isOpen}
                             <FolderOpen class="w-4 h-4 text-indigo-400" />
                         {:else}
-                            <Folder class="w-4 h-4 text-slate-500 group-hover/row:text-slate-400" />
+                            <Folder class="w-4 h-4 text-slate-500 group-hover/row:text-slate-500 dark:text-slate-400" />
                         {/if}
 
-                        <span class="truncate font-medium {schema.isOpen ? 'text-indigo-100' : 'text-slate-400'} flex-1">
+                        <span class="truncate font-medium {schema.isOpen ? 'text-indigo-100' : 'text-slate-500 dark:text-slate-400'} flex-1">
                             {schema.name}
                         </span>
 
@@ -187,7 +187,7 @@
                     <!-- Tables List -->
                     {#if schema.isOpen}
                         <div 
-                            class="ml-2 pl-2 border-l border-slate-800/50 space-y-0.5 mt-0.5 mb-1"
+                            class="ml-2 pl-2 border-l border-slate-200/50 dark:border-slate-800/50 space-y-0.5 mt-0.5 mb-1"
                             transition:slide|local={{ duration: 150 }}
                         >
                             {#if schema.tables.length === 0}
@@ -201,7 +201,7 @@
                                     class="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer select-none transition-all group/table text-xs 
                                     {selectedSchema === schema.name && selectedTable === table 
                                         ? 'bg-indigo-500/10 text-indigo-300' 
-                                        : 'text-slate-400 hover:bg-slate-800/30 hover:text-slate-200'}"
+                                        : 'text-slate-500 dark:text-slate-400 hover:bg-slate-800/30 hover:text-slate-800 dark:text-slate-200'}"
                                     onclick={() => onSelectTable(schema.name, table)}
                                     onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelectTable(schema.name, table); }}
                                     role="button"

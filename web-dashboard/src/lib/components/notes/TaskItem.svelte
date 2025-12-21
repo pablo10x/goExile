@@ -136,7 +136,7 @@
 <div
 	class="flex flex-col gap-1 p-2 rounded-xl transition-all group border border-transparent {todo.done
 		? 'bg-slate-800/20 opacity-70'
-		: 'bg-slate-800/60 hover:bg-slate-800/80 hover:border-slate-700'}"
+		: 'bg-slate-800/60 hover:bg-slate-800/80 hover:border-slate-300 dark:border-slate-700'}"
 	transition:slide|local
 >
 	<div class="flex items-center gap-2">
@@ -157,7 +157,7 @@
 
 		<button
 			onclick={() => onToggle(todo)}
-			class="text-slate-400 hover:text-emerald-400 transition-colors shrink-0"
+			class="text-slate-500 dark:text-slate-400 hover:text-emerald-400 transition-colors shrink-0"
 		>
 			{#if todo.done}
 				<CheckSquare class="w-5 h-5 text-emerald-500" />
@@ -171,7 +171,7 @@
 				<span
 					class="text-sm font-medium truncate {todo.done
 						? 'line-through text-slate-500'
-						: 'text-slate-200'}"
+						: 'text-slate-800 dark:text-slate-200'}"
 				>
 					{todo.content}
 				</span>
@@ -263,12 +263,12 @@
 					type="text"
 					bind:value={newSubTaskContent}
 					placeholder="New sub-task..."
-					class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-200 outline-none focus:border-emerald-500 transition-all"
+					class="flex-1 bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-emerald-500 transition-all"
 				/>
 				<button
 					type="submit"
 					disabled={!newSubTaskContent.trim()}
-					class="p-1 bg-slate-700 hover:bg-emerald-600 text-white rounded transition-colors disabled:opacity-50"
+					class="p-1 bg-slate-700 hover:bg-emerald-600 text-slate-900 dark:text-white rounded transition-colors disabled:opacity-50"
 				>
 					<Plus class="w-3 h-3" />
 				</button>
@@ -300,7 +300,7 @@
 								<Trash2 class="w-2.5 h-2.5" />
 							</button>
 						</div>
-						<p class="text-xs text-slate-300 leading-relaxed">
+						<p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
 							{comment.content}
 						</p>
 					</div>
@@ -318,12 +318,12 @@
 					type="text"
 					bind:value={newCommentContent}
 					placeholder="Write a comment..."
-					class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200 outline-none focus:border-indigo-500 transition-all"
+					class="flex-1 bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-indigo-500 transition-all"
 				/>
 				<button
 					type="submit"
 					disabled={!newCommentContent.trim()}
-					class="p-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors disabled:opacity-50"
+					class="p-1.5 bg-indigo-600 hover:bg-indigo-500 text-slate-900 dark:text-white rounded-lg transition-colors disabled:opacity-50"
 				>
 					<Send class="w-3 h-3" />
 				</button>
@@ -333,7 +333,7 @@
 
 	<!-- Recursive Sub-tasks -->
 	{#if expanded && todo.sub_tasks && todo.sub_tasks.length > 0}
-		<div class="ml-4 mt-1 flex flex-col gap-1 border-l border-slate-700/50 pl-2" transition:slide>
+		<div class="ml-4 mt-1 flex flex-col gap-1 border-l border-slate-300/50 dark:border-slate-700/50 pl-2" transition:slide>
 			{#each todo.sub_tasks as sub (sub.id)}
 				<TaskItem todo={sub} {onToggle} {onDelete} {onToggleProgress} />
 			{/each}

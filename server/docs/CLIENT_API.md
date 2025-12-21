@@ -13,7 +13,19 @@ All API requests must include the Game API Key in the header:
 
 Authenticates a player using a Firebase ID Token. This is the entry point for the game client.
 
-**Request:**
+**Supported Content-Types:**
+- `application/json`
+- `application/x-www-form-urlencoded` (Standard Unity `WWWForm`)
+
+**Request Parameters:**
+
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `id_token` | `string` | **Yes** | Firebase ID Token obtained from client SDK. |
+| `name` | `string` | No | Player's display name (used for new accounts or updates). |
+| `device_id` | `string` | No | Unique device identifier (used for guest account linking). |
+
+**Request Example (JSON):**
 ```json
 {
   "id_token": "FIREBASE_ID_TOKEN_FROM_CLIENT_SDK",

@@ -140,7 +140,7 @@
 
 <div class="flex flex-col h-full bg-slate-900">
 	<!-- Header -->
-	<div class="border-b border-slate-800 bg-slate-950">
+	<div class="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
 		<!-- Table Info Bar -->
 		<div class="px-4 py-3 flex items-center justify-between">
 			<div class="flex items-center gap-3">
@@ -170,7 +170,7 @@
 			<button
 				onclick={loadData}
 				disabled={loading}
-				class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-50"
+				class="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-50"
 				title="Refresh Data"
 			>
 				<RefreshCw class="w-5 h-5 {loading ? 'animate-spin' : ''}" />
@@ -184,7 +184,7 @@
 				class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 {view ===
 				'data'
 					? 'border-indigo-500 text-indigo-400 bg-indigo-500/5'
-					: 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'}"
+					: 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-300 hover:bg-slate-800/50'}"
 			>
 				<Table class="w-4 h-4" />
 				Data
@@ -194,7 +194,7 @@
 				class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 {view ===
 				'structure'
 					? 'border-purple-500 text-purple-400 bg-purple-500/5'
-					: 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'}"
+					: 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-300 hover:bg-slate-800/50'}"
 			>
 				<Settings class="w-4 h-4" />
 				Structure

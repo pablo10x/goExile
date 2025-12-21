@@ -93,16 +93,16 @@
 	});
 </script>
 
-<div class="bg-slate-800/50 backdrop-blur-md border border-slate-700/50 rounded-xl p-6">
+<div class="bg-slate-800/50 backdrop-blur-md border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-6">
 	<!-- Header -->
 	<div class="flex items-center justify-between mb-6">
 		<div class="flex items-center gap-3">
-			<div class="p-2 bg-slate-900/50 rounded-lg border border-slate-700/50 text-slate-400">
+			<div class="p-2 bg-slate-900/50 rounded-lg border border-slate-300/50 dark:border-slate-700/50 text-slate-500 dark:text-slate-400">
 				<Icon class="w-6 h-6" />
 			</div>
 			<div>
-				<h3 class="text-lg font-semibold text-slate-200">Top Resource Consumers</h3>
-				<p class="text-sm text-slate-400">
+				<h3 class="text-lg font-semibold text-slate-800 dark:text-slate-200">Top Resource Consumers</h3>
+				<p class="text-sm text-slate-500 dark:text-slate-400">
 					{resourceType === 'cpu' ? 'CPU' : resourceType === 'memory' ? 'Memory' : 'Disk'} Usage
 				</p>
 			</div>
@@ -116,7 +116,7 @@
 			{:else}
 				<button
 					onclick={loadConsumers}
-					class="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+					class="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-700 rounded-lg transition-colors"
 					title="Refresh"
 				>
 					<RefreshCw class="w-4 h-4" />
@@ -151,7 +151,7 @@
 	<!-- Consumers List -->
 	{#if !loading && !error}
 		{#if consumers.length === 0}
-			<div class="text-center py-8 text-slate-400">
+			<div class="text-center py-8 text-slate-500 dark:text-slate-400">
 				<div class="text-lg mb-2">📊</div>
 				<div>No active instances found</div>
 			</div>
@@ -159,12 +159,12 @@
 			<div class="space-y-3">
 				{#each consumers as consumer, index (consumer.id)}
 					<div
-						class="group flex items-center justify-between p-3 bg-slate-900/30 rounded-lg border border-slate-700/50 hover:border-slate-600/50 transition-all duration-300"
+						class="group flex items-center justify-between p-3 bg-slate-900/30 rounded-lg border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-600/50 transition-all duration-300"
 					>
 						<!-- Instance Info -->
 						<div class="flex items-center gap-3 flex-1 min-w-0">
 							<div class="flex-shrink-0">
-								<div class="text-sm font-mono text-slate-400">
+								<div class="text-sm font-mono text-slate-500 dark:text-slate-400">
 									#{consumer.port}
 								</div>
 								<div class="text-xs text-slate-500">
@@ -174,7 +174,7 @@
 
 							{#if !compact}
 								<div class="ml-3">
-									<div class="text-sm font-medium text-slate-200 truncate">
+									<div class="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
 										Instance-{consumer.instanceId}
 									</div>
 								</div>
@@ -190,9 +190,9 @@
 										resourceType
 									)}"
 								>
-									{consumer.cpu_percent.toFixed(1)}%
+									{(consumer.cpu_percent)?.toFixed(1)}%
 								</div>
-								<div class="text-xs text-slate-400">
+								<div class="text-xs text-slate-500 dark:text-slate-400">
 									{resourceType === 'cpu' ? 'CPU' : resourceType === 'memory' ? 'Memory' : 'Disk'}
 								</div>
 							</div>
@@ -221,7 +221,7 @@
 									? 'bg-emerald-500'
 									: 'bg-slate-600'}"
 							></div>
-							<div class="text-xs text-slate-400">
+							<div class="text-xs text-slate-500 dark:text-slate-400">
 								{consumer.status}
 							</div>
 						</div>
@@ -236,7 +236,7 @@
 		<div class="space-y-3">
 			{#each Array(limit) as _, index (index)}
 				<div
-					class="flex items-center justify-between p-3 bg-slate-900/30 rounded-lg border border-slate-700/50"
+					class="flex items-center justify-between p-3 bg-slate-900/30 rounded-lg border border-slate-300/50 dark:border-slate-700/50"
 				>
 					<div class="flex items-center gap-3 flex-1">
 						<div class="w-12 h-4 bg-slate-700/50 rounded animate-pulse"></div>

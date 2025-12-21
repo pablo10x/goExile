@@ -67,7 +67,7 @@
 	}
 </script>
 
-<div class="border border-slate-700/50 rounded-lg bg-slate-800/30 overflow-hidden mb-2">
+<div class="border border-slate-300/50 dark:border-slate-700/50 rounded-lg bg-slate-800/30 overflow-hidden mb-2">
 	<!-- Header / Collapsed View -->
 	<div
 		class="flex flex-col sm:flex-row sm:items-center gap-3 px-3 sm:px-4 py-3 cursor-pointer hover:bg-slate-700/30 transition-colors"
@@ -87,7 +87,7 @@
 			</div>
 
 			<div
-				class="font-mono text-sm sm:text-base text-slate-300 truncate flex-1 sm:flex-initial"
+				class="font-mono text-sm sm:text-base text-slate-700 dark:text-slate-300 truncate flex-1 sm:flex-initial"
 				title={`Exile Gameserver : #${instance.port}`}
 			>
 				<span class="hidden md:inline text-slate-500">Exile Gameserver : </span>#{instance.port}
@@ -97,7 +97,7 @@
 		<!-- Details Grid/Flex -->
 		<div class="flex-1 flex flex-wrap sm:grid sm:grid-cols-9 gap-2 sm:gap-4 items-center text-xs sm:text-sm pl-6 sm:pl-0">
 			<!-- Version -->
-			<div class="col-span-3 text-slate-400 truncate flex items-center gap-2">
+			<div class="col-span-3 text-slate-500 dark:text-slate-400 truncate flex items-center gap-2">
 				<span class="sm:hidden text-slate-500">Ver:</span>
 				{instance.version || 'Unknown'}
 				{#if isOutdated}
@@ -110,7 +110,7 @@
 			</div>
 
 			<!-- Port -->
-			<div class="col-span-2 font-mono text-slate-400">
+			<div class="col-span-2 font-mono text-slate-500 dark:text-slate-400">
 				<span class="sm:hidden text-slate-500">Port:</span>
 				{instance.port}
 			</div>
@@ -137,7 +137,7 @@
 					</span>
 				{:else}
 					<span
-						class="inline-flex items-center px-2 py-0.5 rounded text-[10px] sm:text-xs font-medium bg-slate-700 text-slate-400"
+						class="inline-flex items-center px-2 py-0.5 rounded text-[10px] sm:text-xs font-medium bg-slate-700 text-slate-500 dark:text-slate-400"
 					>
 						{instance.status}
 					</span>
@@ -154,7 +154,7 @@
 		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div
-			class="flex items-center gap-1 ml-auto pl-0 sm:pl-4 border-l-0 sm:border-l border-slate-700/50 w-full sm:w-auto justify-end mt-2 sm:mt-0"
+			class="flex items-center gap-1 ml-auto pl-0 sm:pl-4 border-l-0 sm:border-l border-slate-300/50 dark:border-slate-700/50 w-full sm:w-auto justify-end mt-2 sm:mt-0"
 			role="group"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
@@ -187,7 +187,7 @@
 			>
 				<button
 					onclick={() => dispatch('tail', { spawnerId, instanceId: instance.id })}
-					class="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
+					class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-700 rounded transition-colors"
 					title="Manage"
 				>
 					<Settings class="w-4 h-4" />
@@ -227,13 +227,13 @@
 	{#if expanded}
 		<div
 			transition:slide={{ duration: 200 }}
-			class="bg-slate-900/50 border-t border-slate-700/50 p-3 sm:p-4"
+			class="bg-slate-900/50 border-t border-slate-300/50 dark:border-slate-700/50 p-3 sm:p-4"
 		>
 			<!-- Toolbar -->
-			<div class="flex flex-wrap gap-2 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-slate-700/50">
+			<div class="flex flex-wrap gap-2 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-slate-300/50 dark:border-slate-700/50">
 				<button
 					onclick={() => dispatch('tail', { spawnerId, instanceId: instance.id })}
-					class="btn-toolbar bg-slate-700 hover:bg-slate-600 text-slate-200"
+					class="btn-toolbar bg-slate-700 hover:bg-slate-600 text-slate-800 dark:text-slate-200"
 				>
 					<Settings class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
 					Manage
@@ -278,9 +278,9 @@
 			</div>
 
 			<!-- Stats Chart -->
-			<div class="mb-4 sm:mb-6 bg-slate-950/30 rounded-lg border border-slate-700/50 p-3 sm:p-4">
+			<div class="mb-4 sm:mb-6 bg-white/30 dark:bg-slate-950/30 rounded-lg border border-slate-300/50 dark:border-slate-700/50 p-3 sm:p-4">
 				<div class="flex justify-between items-end mb-2">
-					<h4 class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">
+					<h4 class="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
 						Player Activity (24h)
 					</h4>
 					<div class="text-xs sm:text-sm font-mono text-blue-400">{instance.player_count || 0} active</div>
@@ -302,13 +302,13 @@
 							id={'name-' + instance.id}
 							type="text"
 							bind:value={renameValue}
-							class="flex-1 px-3 py-1.5 bg-slate-900/50 border border-slate-600 rounded text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors placeholder-slate-600"
+							class="flex-1 px-3 py-1.5 bg-slate-900/50 border border-slate-600 rounded text-xs sm:text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors placeholder-slate-600"
 							placeholder={instance.id}
 						/>
 						<button
 							onclick={handleRename}
 							disabled={renameValue === instance.id || !renameValue.trim()}
-							class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+							class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-slate-900 dark:text-white rounded text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 						>
 							Rename
 						</button>
@@ -327,7 +327,7 @@
 						type="text"
 						value={instance.port || 'Auto'}
 						disabled
-						class="w-full px-3 py-1.5 bg-slate-900/30 border border-slate-700/50 rounded text-xs sm:text-sm text-slate-400 cursor-not-allowed"
+						class="w-full px-3 py-1.5 bg-slate-900/30 border border-slate-300/50 dark:border-slate-700/50 rounded text-xs sm:text-sm text-slate-500 dark:text-slate-400 cursor-not-allowed"
 					/>
 				</div>
 			</div>

@@ -88,7 +88,7 @@
 </script>
 
 <div class="h-full flex flex-col bg-slate-900">
-    <div class="p-6 border-b border-slate-800 bg-slate-950 flex justify-between items-center">
+    <div class="p-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex justify-between items-center">
         <div class="flex items-center gap-3">
             <div class="p-2 bg-emerald-500/10 rounded-lg">
                 <Shield class="w-6 h-6 text-emerald-400" />
@@ -100,7 +100,7 @@
         </div>
         <button 
             onclick={() => isCreating = !isCreating}
-            class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold flex items-center gap-2 shadow-lg shadow-emerald-900/20 transition-all"
+            class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-slate-900 dark:text-white rounded-lg font-bold flex items-center gap-2 shadow-lg shadow-emerald-900/20 transition-all"
         >
             {#if isCreating}
                 <X class="w-4 h-4" /> Cancel
@@ -112,39 +112,39 @@
 
     <div class="flex-1 overflow-auto p-6 relative">
         {#if isCreating}
-            <div class="mb-8 bg-slate-800/50 border border-slate-700 rounded-xl p-6 animate-in slide-in-from-top-4 shadow-xl">
-                <h3 class="text-lg font-bold text-slate-200 mb-4 flex items-center gap-2">
+            <div class="mb-8 bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl p-6 animate-in slide-in-from-top-4 shadow-xl">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
                     <UserPlus class="w-5 h-5 text-emerald-400" /> New Role Definition
                 </h3>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div class="space-y-4">
                         <div>
-                            <label for="newRoleName" class="block text-xs font-bold text-slate-400 uppercase mb-1">Role Name</label>
-                            <input id="newRoleName" type="text" bind:value={newRoleName} class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:border-emerald-500 outline-none" placeholder="e.g. app_user" />
+                            <label for="newRoleName" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Role Name</label>
+                            <input id="newRoleName" type="text" bind:value={newRoleName} class="w-full bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-200 focus:border-emerald-500 outline-none" placeholder="e.g. app_user" />
                         </div>
                         <div>
-                            <label for="newRolePass" class="block text-xs font-bold text-slate-400 uppercase mb-1">Password</label>
-                            <input id="newRolePass" type="password" bind:value={newRolePass} class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:border-emerald-500 outline-none" placeholder="••••••••" />
+                            <label for="newRolePass" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Password</label>
+                            <input id="newRolePass" type="password" bind:value={newRolePass} class="w-full bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-200 focus:border-emerald-500 outline-none" placeholder="••••••••" />
                         </div>
                     </div>
                     
                     <div class="space-y-3">
-                        <div class="block text-xs font-bold text-slate-400 uppercase mb-1">Privileges</div>
+                        <div class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Privileges</div>
                         <div class="grid grid-cols-2 gap-2">
-                            <label class="flex items-center gap-2 p-2 rounded bg-slate-900 border border-slate-700 cursor-pointer hover:border-emerald-500/50 transition-colors">
+                            <label class="flex items-center gap-2 p-2 rounded bg-slate-900 border border-slate-300 dark:border-slate-700 cursor-pointer hover:border-emerald-500/50 transition-colors">
                                 <input type="checkbox" bind:checked={roleOptions.login} class="rounded text-emerald-500 focus:ring-emerald-500 bg-slate-800 border-slate-600" />
-                                <span class="text-sm text-slate-300">Can Login</span>
+                                <span class="text-sm text-slate-700 dark:text-slate-300">Can Login</span>
                             </label>
-                            <label class="flex items-center gap-2 p-2 rounded bg-slate-900 border border-slate-700 cursor-pointer hover:border-blue-500/50 transition-colors">
+                            <label class="flex items-center gap-2 p-2 rounded bg-slate-900 border border-slate-300 dark:border-slate-700 cursor-pointer hover:border-blue-500/50 transition-colors">
                                 <input type="checkbox" bind:checked={roleOptions.createdb} class="rounded text-blue-500 focus:ring-blue-500 bg-slate-800 border-slate-600" />
-                                <span class="text-sm text-slate-300">Create DB</span>
+                                <span class="text-sm text-slate-700 dark:text-slate-300">Create DB</span>
                             </label>
-                            <label class="flex items-center gap-2 p-2 rounded bg-slate-900 border border-slate-700 cursor-pointer hover:border-blue-500/50 transition-colors">
+                            <label class="flex items-center gap-2 p-2 rounded bg-slate-900 border border-slate-300 dark:border-slate-700 cursor-pointer hover:border-blue-500/50 transition-colors">
                                 <input type="checkbox" bind:checked={roleOptions.createrole} class="rounded text-blue-500 focus:ring-blue-500 bg-slate-800 border-slate-600" />
-                                <span class="text-sm text-slate-300">Create Role</span>
+                                <span class="text-sm text-slate-700 dark:text-slate-300">Create Role</span>
                             </label>
-                            <label class="flex items-center gap-2 p-2 rounded bg-slate-900 border border-slate-700 cursor-pointer hover:border-amber-500/50 transition-colors">
+                            <label class="flex items-center gap-2 p-2 rounded bg-slate-900 border border-slate-300 dark:border-slate-700 cursor-pointer hover:border-amber-500/50 transition-colors">
                                 <input type="checkbox" bind:checked={roleOptions.superuser} class="rounded text-amber-500 focus:ring-amber-500 bg-slate-800 border-slate-600" />
                                 <span class="text-sm text-amber-400 font-bold">Superuser</span>
                             </label>
@@ -152,8 +152,8 @@
                     </div>
                 </div>
 
-                <div class="flex justify-end pt-4 border-t border-slate-700">
-                    <button onclick={createRole} class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold shadow-lg">Create Role</button>
+                <div class="flex justify-end pt-4 border-t border-slate-300 dark:border-slate-700">
+                    <button onclick={createRole} class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-slate-900 dark:text-white rounded-lg font-bold shadow-lg">Create Role</button>
                 </div>
             </div>
         {/if}
@@ -165,7 +165,7 @@
         {:else}
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {#each roles as role}
-                    <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 hover:border-slate-600 transition-all group">
+                    <div class="bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-4 hover:border-slate-600 transition-all group">
                         <div class="flex justify-between items-start mb-3">
                             <div class="flex items-center gap-3">
                                 <div class="p-2 rounded-lg {role.superuser ? 'bg-amber-500/10 text-amber-400' : 'bg-blue-500/10 text-blue-400'}">

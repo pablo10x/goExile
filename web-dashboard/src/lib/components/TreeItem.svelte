@@ -14,8 +14,8 @@
 <div class="select-none">
 	<div
 		class="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition-colors text-sm {isSelected
-			? 'bg-blue-600 text-white'
-			: 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}"
+			? 'bg-blue-600 text-slate-900 dark:text-white'
+			: 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 hover:bg-slate-800'}"
 		on:click={(e) => {
 			e.stopPropagation();
 			onSelect();
@@ -58,7 +58,7 @@
 	</div>
 
 	{#if isOpen}
-		<div class="ml-4 pl-2 border-l border-slate-700/50" transition:slide={{ duration: 200 }}>
+		<div class="ml-4 pl-2 border-l border-slate-300/50 dark:border-slate-700/50" transition:slide={{ duration: 200 }}>
 			<slot />
 		</div>
 	{/if}

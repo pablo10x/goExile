@@ -94,7 +94,7 @@
 
 	function getFieldColor(type: string) {
 		if (!type)
-			return { bg: 'bg-slate-500/20', text: 'text-slate-400', border: 'border-slate-500/30' };
+			return { bg: 'bg-slate-500/20', text: 'text-slate-500 dark:text-slate-400', border: 'border-slate-500/30' };
 		const t = type.toLowerCase();
 		if (
 			t.includes('int') ||
@@ -117,7 +117,7 @@
 		if (t.includes('text') || t.includes('char') || t === 'uuid') {
 			return { bg: 'bg-cyan-500/20', text: 'text-cyan-400', border: 'border-cyan-500/30' };
 		}
-		return { bg: 'bg-slate-500/20', text: 'text-slate-400', border: 'border-slate-500/30' };
+		return { bg: 'bg-slate-500/20', text: 'text-slate-500 dark:text-slate-400', border: 'border-slate-500/30' };
 	}
 
 	function handleFieldChange(colName: string) {
@@ -183,7 +183,7 @@
 		if (isSuccess) return 'border-emerald-500/50 bg-emerald-500/5';
 		if (isFocused) return 'border-blue-500/50 bg-blue-500/5';
 		if (isModified) return 'border-amber-500/30 bg-amber-500/5';
-		return 'border-slate-700/50 bg-slate-800/30 hover:border-slate-600/50';
+		return 'border-slate-300/50 dark:border-slate-700/50 bg-slate-800/30 hover:border-slate-600/50';
 	}
 
 	function getBoolButtonClass(formValue: any, optionValue: any, optionColor: string): string {
@@ -192,9 +192,9 @@
 				return 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 shadow-lg shadow-emerald-500/10';
 			if (optionColor === 'red')
 				return 'bg-red-500/20 text-red-400 border border-red-500/50 shadow-lg shadow-red-500/10';
-			return 'bg-slate-600/30 text-slate-300 border border-slate-500/50';
+			return 'bg-slate-600/30 text-slate-700 dark:text-slate-300 border border-slate-500/50';
 		}
-		return 'bg-slate-800/50 text-slate-500 border border-slate-700/50 hover:border-slate-600/50 hover:text-slate-400';
+		return 'bg-slate-800/50 text-slate-500 border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-600/50 hover:text-slate-500 dark:text-slate-400';
 	}
 </script>
 
@@ -239,7 +239,7 @@
 			></div>
 
 			<div
-				class="relative bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden"
+				class="relative bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-slate-300/50 dark:border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden"
 			>
 				<div class="relative overflow-hidden">
 					<div
@@ -266,7 +266,7 @@
 							</div>
 
 							<div>
-								<h2 id="modal-title" class="text-xl font-bold text-white flex items-center gap-2">
+								<h2 id="modal-title" class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
 									{#if isEditing}
 										Edit Row
 									{:else}
@@ -276,7 +276,7 @@
 										</span>
 									{/if}
 								</h2>
-								<p class="text-sm text-slate-400 mt-1 flex items-center gap-2">
+								<p class="text-sm text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-2">
 									<span class="px-2 py-0.5 bg-slate-800 rounded-md font-mono text-xs"
 										>{schema}.{table}</span
 									>
@@ -297,7 +297,7 @@
 						<button
 							onclick={onClose}
 							disabled={loading}
-							class="p-2 text-slate-400 hover:text-white hover:bg-slate-800/80 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50"
+							class="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-800/80 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50"
 							aria-label="Close modal"
 						>
 							<X class="w-5 h-5" />
@@ -332,7 +332,7 @@
 							>
 								<Database class="w-8 h-8 text-slate-600" />
 							</div>
-							<p class="text-slate-400 font-medium">No editable columns</p>
+							<p class="text-slate-500 dark:text-slate-400 font-medium">No editable columns</p>
 							<p class="text-slate-500 text-sm mt-1">
 								This table has no columns that can be edited
 							</p>
@@ -362,7 +362,7 @@
 												for="field-{col.name}"
 												class="flex items-center gap-2 text-sm font-medium transition-colors {isFocused
 													? 'text-blue-400'
-													: 'text-slate-300'}"
+													: 'text-slate-700 dark:text-slate-300'}"
 											>
 												<div class="p-1 rounded-md {colors.bg}">
 													<FieldIcon class="w-3.5 h-3.5 {colors.text}" />
@@ -424,7 +424,7 @@
 													oninput={() => handleFieldChange(col.name)}
 													onfocus={() => (focusedField = col.name)}
 													onblur={() => (focusedField = null)}
-													class="w-full bg-slate-950/50 border border-slate-700/50 rounded-lg px-4 py-3 text-slate-200 font-mono text-sm outline-none transition-all duration-200 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 resize-none"
+													class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300/50 dark:border-slate-700/50 rounded-lg px-4 py-3 text-slate-800 dark:text-slate-200 font-mono text-sm outline-none transition-all duration-200 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 resize-none"
 													rows="4"
 													placeholder={'{ "key": "value" }'}
 													spellcheck="false"
@@ -437,7 +437,7 @@
 													oninput={() => handleFieldChange(col.name)}
 													onfocus={() => (focusedField = col.name)}
 													onblur={() => (focusedField = null)}
-													class="w-full bg-slate-950/50 border border-slate-700/50 rounded-lg px-4 py-3 text-slate-200 outline-none transition-all duration-200 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
+													class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300/50 dark:border-slate-700/50 rounded-lg px-4 py-3 text-slate-800 dark:text-slate-200 outline-none transition-all duration-200 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
 												/>
 											{:else if col.type && (col.type.includes('int') || col.type.includes('float') || col.type.includes('numeric') || col.type.includes('decimal') || col.type === 'real')}
 												<input
@@ -447,7 +447,7 @@
 													oninput={() => handleFieldChange(col.name)}
 													onfocus={() => (focusedField = col.name)}
 													onblur={() => (focusedField = null)}
-													class="w-full bg-slate-950/50 border border-slate-700/50 rounded-lg px-4 py-3 text-slate-200 outline-none transition-all duration-200 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
+													class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300/50 dark:border-slate-700/50 rounded-lg px-4 py-3 text-slate-800 dark:text-slate-200 outline-none transition-all duration-200 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
 													placeholder="Enter a number..."
 													step="any"
 												/>
@@ -458,7 +458,7 @@
 													oninput={() => handleFieldChange(col.name)}
 													onfocus={() => (focusedField = col.name)}
 													onblur={() => (focusedField = null)}
-													class="w-full bg-slate-950/50 border border-slate-700/50 rounded-lg px-4 py-3 text-slate-200 outline-none transition-all duration-200 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 resize-none"
+													class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300/50 dark:border-slate-700/50 rounded-lg px-4 py-3 text-slate-800 dark:text-slate-200 outline-none transition-all duration-200 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 resize-none"
 													rows="2"
 													placeholder="Enter text..."
 												></textarea>
@@ -470,7 +470,7 @@
 													oninput={() => handleFieldChange(col.name)}
 													onfocus={() => (focusedField = col.name)}
 													onblur={() => (focusedField = null)}
-													class="w-full bg-slate-950/50 border border-slate-700/50 rounded-lg px-4 py-3 text-slate-200 outline-none transition-all duration-200 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
+													class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300/50 dark:border-slate-700/50 rounded-lg px-4 py-3 text-slate-800 dark:text-slate-200 outline-none transition-all duration-200 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
 													placeholder="Enter value..."
 												/>
 											{/if}
@@ -482,18 +482,18 @@
 					{/if}
 				</div>
 
-				<div class="relative border-t border-slate-700/50 bg-slate-900/80 backdrop-blur-sm p-4">
+				<div class="relative border-t border-slate-300/50 dark:border-slate-700/50 bg-slate-900/80 backdrop-blur-sm p-4">
 					<div
 						class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-slate-600/50 to-transparent"
 					></div>
 
 					<div class="flex items-center justify-between gap-4">
 						<div class="hidden sm:flex items-center gap-2 text-xs text-slate-500">
-							<kbd class="px-2 py-1 bg-slate-800 rounded border border-slate-700 font-mono"
+							<kbd class="px-2 py-1 bg-slate-800 rounded border border-slate-300 dark:border-slate-700 font-mono"
 								>Ctrl</kbd
 							>
 							<span>+</span>
-							<kbd class="px-2 py-1 bg-slate-800 rounded border border-slate-700 font-mono"
+							<kbd class="px-2 py-1 bg-slate-800 rounded border border-slate-300 dark:border-slate-700 font-mono"
 								>Enter</kbd
 							>
 							<span>to save</span>
@@ -503,7 +503,7 @@
 							<button
 								onclick={onClose}
 								disabled={loading}
-								class="px-5 py-2.5 text-slate-400 hover:text-white hover:bg-slate-800/80 rounded-xl font-medium transition-all duration-200 disabled:opacity-50"
+								class="px-5 py-2.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-800/80 rounded-xl font-medium transition-all duration-200 disabled:opacity-50"
 							>
 								Cancel
 							</button>
@@ -511,7 +511,7 @@
 							<button
 								onclick={handleSubmit}
 								disabled={loading || editableColumns.length === 0}
-								class="relative px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-blue-500/25 transition-all duration-200 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 overflow-hidden"
+								class="relative px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-slate-900 dark:text-white rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-blue-500/25 transition-all duration-200 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 overflow-hidden"
 							>
 								<div
 									class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shimmer"

@@ -122,7 +122,7 @@
 
 {#if mounted}
 	<!-- Background: Grey Modern Texture -->
-	<div class="fixed inset-0 -z-50 bg-slate-950 overflow-hidden">
+	<div class="fixed inset-0 -z-50 bg-white dark:bg-slate-950 overflow-hidden">
 		<div
 			class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZmlsdGVyIGlkPSJnoiPjxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjY1IiBudW1PY3RhdmVzPSIzIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+PC9maWx0ZXI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI2cpIiBvcGFjaXR5PSIwLjAzIi8+PC9zdmc+')] opacity-40"
 		></div>
@@ -139,7 +139,7 @@
 		<div class="w-full max-w-[420px] relative">
 			<!-- Card -->
 			<div
-				class="bg-slate-900/50 backdrop-blur-xl border border-slate-800/60 rounded-2xl shadow-2xl overflow-hidden relative group"
+				class="bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-2xl shadow-2xl overflow-hidden relative group"
 			>
 				<!-- Top Highlight Line -->
 				<div
@@ -149,12 +149,12 @@
 				<div class="p-8 pt-10 text-center">
 					<!-- Icon -->
 					<div
-						class="w-16 h-16 mx-auto bg-slate-800/50 rounded-2xl flex items-center justify-center mb-6 shadow-inner border border-slate-700/50 group-hover:border-slate-600/50 transition-colors"
+						class="w-16 h-16 mx-auto bg-slate-800/50 rounded-2xl flex items-center justify-center mb-6 shadow-inner border border-slate-300/50 dark:border-slate-700/50 group-hover:border-slate-600/50 transition-colors"
 					>
 						{#if showEmailSection}
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
-								class="w-7 h-7 text-slate-200"
+								class="w-7 h-7 text-slate-800 dark:text-slate-200"
 								viewBox="0 0 24 24"
 								fill="none"
 								stroke="currentColor"
@@ -166,7 +166,7 @@
 						{:else}
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
-								class="w-7 h-7 text-slate-200"
+								class="w-7 h-7 text-slate-800 dark:text-slate-200"
 								viewBox="0 0 24 24"
 								fill="none"
 								stroke="currentColor"
@@ -179,7 +179,7 @@
 					</div>
 
 					<h1 class="text-2xl font-medium text-slate-100 mb-2 tracking-tight">Authentication</h1>
-					<p class="text-sm text-slate-400 font-light">
+					<p class="text-sm text-slate-500 dark:text-slate-400 font-light">
 						{#if showEmailSection}
 							Code sent to your email
 						{:else}
@@ -200,7 +200,7 @@
 										maxlength="6"
 										inputmode="numeric"
 										autocomplete="one-time-code"
-										class="w-full bg-slate-950/50 border border-slate-700/50 rounded-xl px-4 py-4 text-center text-3xl font-mono tracking-[0.5em] text-white placeholder:text-slate-700 focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500/50 transition-all disabled:opacity-50"
+										class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl px-4 py-4 text-center text-3xl font-mono tracking-[0.5em] text-slate-900 dark:text-white placeholder:text-slate-700 focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500/50 transition-all disabled:opacity-50"
 										placeholder="······"
 										disabled={loading}
 										autofocus
@@ -237,7 +237,7 @@
 										bind:value={emailCode}
 										maxlength="6"
 										inputmode="numeric"
-										class="w-full bg-slate-950/50 border border-slate-700/50 rounded-xl px-4 py-4 text-center text-3xl font-mono tracking-[0.5em] text-white placeholder:text-slate-700 focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500/50 transition-all disabled:opacity-50"
+										class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl px-4 py-4 text-center text-3xl font-mono tracking-[0.5em] text-slate-900 dark:text-white placeholder:text-slate-700 focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500/50 transition-all disabled:opacity-50"
 										placeholder="······"
 										disabled={loading}
 										autofocus
@@ -255,7 +255,7 @@
 					</div>
 
 					<div class="mt-8 text-center">
-						<a href="/login" class="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+						<a href="/login" class="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-300 transition-colors">
 							Return to login
 						</a>
 					</div>

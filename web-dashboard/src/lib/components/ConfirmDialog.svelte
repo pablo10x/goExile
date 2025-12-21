@@ -83,7 +83,7 @@
 	>
 		<!-- Backdrop with blur and subtle animation -->
 		<div
-			class="absolute inset-0 bg-slate-950/60 backdrop-blur-md backdrop-animate"
+			class="absolute inset-0 bg-white/60 dark:bg-slate-950/60 backdrop-blur-md backdrop-animate"
 			onclick={!loading ? close : undefined}
 			onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && !loading && close()}
 			role="button"
@@ -93,7 +93,7 @@
 
 		<!-- Modal Container -->
 		<div
-			class="modal-container relative w-full max-w-lg bg-slate-900/40 border border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-white/10 backdrop-blur-xl"
+			class="modal-container relative w-full max-w-lg bg-slate-900/40 border border-slate-300/50 dark:border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-white/10 backdrop-blur-xl"
 			transition:modalScale
 		>
 			<!-- Animated gradient backgrounds -->
@@ -149,7 +149,7 @@
 			<div class="p-6 sm:p-8 relative z-10">
 				<div class="flex items-start gap-4">
 					<div
-						class="icon-wrapper flex-shrink-0 p-3 rounded-full bg-slate-800/50 border border-slate-700/50 backdrop-blur-sm"
+						class="icon-wrapper flex-shrink-0 p-3 rounded-full bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 backdrop-blur-sm"
 					>
 						<div class="animate-icon-pop">
 							{@html sanitizedIcon}
@@ -159,9 +159,9 @@
 						<h3 class="text-xl font-bold text-slate-100 mb-2 tracking-tight slide-in-text">
 							{title}
 						</h3>
-						<div class="text-slate-400 text-sm leading-relaxed space-y-2 slide-in-text-delayed">
+						<div class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed space-y-2 slide-in-text-delayed">
 							{#if loading && statusMessage}
-								<p class="animate-pulse text-slate-300 font-medium">{statusMessage}</p>
+								<p class="animate-pulse text-slate-700 dark:text-slate-300 font-medium">{statusMessage}</p>
 							{:else}
 								<p>{message}</p>
 							{/if}
@@ -200,13 +200,13 @@
 					<!-- Progress Bar -->
 					<div class="mt-8 space-y-2" transition:fade>
 						<div
-							class="flex justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider"
+							class="flex justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
 						>
 							<span>Progress</span>
 							<span class="tabular-nums">{Math.round(progress)}%</span>
 						</div>
 						<div
-							class="w-full h-2 bg-slate-800/80 rounded-full overflow-hidden border border-slate-700/50 backdrop-blur-sm"
+							class="w-full h-2 bg-slate-800/80 rounded-full overflow-hidden border border-slate-300/50 dark:border-slate-700/50 backdrop-blur-sm"
 						>
 							<div
 								class="h-full bg-gradient-to-r {isCritical
@@ -224,7 +224,7 @@
 
 			<!-- Actions -->
 			<div
-				class="px-6 py-5 bg-slate-950/30 border-t border-slate-800/50 flex justify-end gap-3 relative z-10 backdrop-blur-sm"
+				class="px-6 py-5 bg-white/30 dark:bg-slate-950/30 border-t border-slate-200/50 dark:border-slate-800/50 flex justify-end gap-3 relative z-10 backdrop-blur-sm"
 			>
 				{#if loading && progress !== null}
 					<!-- Locked state during progress -->
@@ -234,10 +234,10 @@
 				{:else if loading}
 					<button
 						disabled
-						class="flex items-center gap-2 px-6 py-2 text-sm font-semibold text-slate-400 bg-slate-800/80 rounded-lg cursor-not-allowed backdrop-blur-sm"
+						class="flex items-center gap-2 px-6 py-2 text-sm font-semibold text-slate-500 dark:text-slate-400 bg-slate-800/80 rounded-lg cursor-not-allowed backdrop-blur-sm"
 					>
 						<svg
-							class="animate-spin h-4 w-4 text-slate-400"
+							class="animate-spin h-4 w-4 text-slate-500 dark:text-slate-400"
 							xmlns="http://www.w3.org/2000/svg"
 							fill="none"
 							viewBox="0 0 24 24"
@@ -261,13 +261,13 @@
 				{:else}
 					<button
 						onclick={close}
-						class="button-hover px-5 py-2 text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 rounded-lg transition-all backdrop-blur-sm"
+						class="button-hover px-5 py-2 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 hover:bg-slate-800/50 rounded-lg transition-all backdrop-blur-sm"
 					>
 						{cancelText}
 					</button>
 					<button
 						onclick={handleConfirm}
-						class={`button-confirm px-5 py-2 text-sm font-semibold text-white rounded-lg shadow-lg hover:shadow-xl transition-all transform active:scale-95 flex items-center gap-2 ${
+						class={`button-confirm px-5 py-2 text-sm font-semibold text-slate-900 dark:text-white rounded-lg shadow-lg hover:shadow-xl transition-all transform active:scale-95 flex items-center gap-2 ${
 							isCritical
 								? 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 shadow-red-900/20'
 								: 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 shadow-blue-900/20'

@@ -143,7 +143,7 @@
 			case 'poor':
 				return 'text-red-400 bg-red-400/10 border-red-400/20';
 			default:
-				return 'text-slate-400 bg-slate-400/10 border-slate-400/20';
+				return 'text-slate-500 dark:text-slate-400 bg-slate-400/10 border-slate-400/20';
 		}
 	}
 
@@ -354,13 +354,13 @@
 	</div>
 
 	<!-- Tabs -->
-	<div class="border-b border-slate-700">
+	<div class="border-b border-slate-300 dark:border-slate-700">
 		<nav class="-mb-px flex space-x-8">
 			<button
 				onclick={() => (activeTab = 'upload')}
 				class="{activeTab === 'upload'
 					? 'border-blue-500 text-blue-400'
-					: 'border-transparent text-slate-400 hover:text-slate-300 hover:border-slate-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
+					: 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-300 hover:border-slate-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
 			>
 				Upload New Version
 			</button>
@@ -368,7 +368,7 @@
 				onclick={() => (activeTab = 'history')}
 				class="{activeTab === 'history'
 					? 'border-blue-500 text-blue-400'
-					: 'border-transparent text-slate-400 hover:text-slate-300 hover:border-slate-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
+					: 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-300 hover:border-slate-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
 			>
 				Version History
 			</button>
@@ -379,10 +379,10 @@
 		<div class="grid lg:grid-cols-3 gap-6">
 			<!-- Upload Area -->
 			<div class="lg:col-span-2">
-				<div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-8">
+				<div class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-8">
 					<div class="mb-6">
 						<h3 class="text-lg font-semibold text-slate-50 mb-2">Upload Game Server Package</h3>
-						<p class="text-slate-400 text-sm">
+						<p class="text-slate-500 dark:text-slate-400 text-sm">
 							Upload a new <code class="px-1 py-0.5 bg-slate-700 rounded text-xs"
 								>game_server.zip</code
 							> package with version information and release notes.
@@ -402,7 +402,7 @@
 						<div
 							class="group relative border-2 border-dashed rounded-xl transition-all duration-200 bg-slate-900/30 hover:bg-slate-900/50 {isDragging
 								? 'border-blue-400 bg-blue-400/5'
-								: 'border-slate-700 hover:border-slate-600'}"
+								: 'border-slate-300 dark:border-slate-700 hover:border-slate-600'}"
 						>
 							<input
 								id="file-upload"
@@ -455,7 +455,7 @@
 											class="w-16 h-16 mx-auto mx-auto flex items-center justify-center rounded-full bg-slate-800 group-hover:bg-slate-700 transition-colors"
 										>
 											<svg
-												class="w-8 h-8 text-slate-400 group-hover:text-slate-300"
+												class="w-8 h-8 text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:text-slate-300"
 												fill="none"
 												stroke="currentColor"
 												viewBox="0 0 24 24"
@@ -469,7 +469,7 @@
 											</svg>
 										</div>
 										<div class="space-y-2">
-											<p class="text-slate-300 font-medium">
+											<p class="text-slate-700 dark:text-slate-300 font-medium">
 												{selectedFile
 													? selectedFile.name
 													: 'Drop your zip file here or click to browse'}
@@ -482,7 +482,7 @@
 										</div>
 										{#if !selectedFile}
 											<button
-												class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors"
+												class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-slate-900 dark:text-white rounded-lg text-sm font-medium transition-colors"
 											>
 												Choose File
 											</button>
@@ -495,26 +495,26 @@
 
 					<!-- File Analysis Results -->
 					{#if fileAnalysis && !uploading}
-						<div class="mt-6 p-4 bg-slate-900/50 rounded-lg border border-slate-700">
-							<h4 class="text-sm font-medium text-slate-300 mb-3">File Analysis</h4>
+						<div class="mt-6 p-4 bg-slate-900/50 rounded-lg border border-slate-300 dark:border-slate-700">
+							<h4 class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">File Analysis</h4>
 							<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
 								<div class="text-center">
 									<p class="text-xs text-slate-500 mb-1">Type</p>
-									<p class="text-sm font-medium text-slate-300">
+									<p class="text-sm font-medium text-slate-700 dark:text-slate-300">
 										{fileAnalysis.isUnity ? 'Unity Server' : 'Game Server'}
 									</p>
 								</div>
 								<div class="text-center">
 									<p class="text-xs text-slate-500 mb-1">Size</p>
-									<p class="text-sm font-medium text-slate-300">{fileAnalysis.size}</p>
+									<p class="text-sm font-medium text-slate-700 dark:text-slate-300">{fileAnalysis.size}</p>
 								</div>
 								<div class="text-center">
 									<p class="text-xs text-slate-500 mb-1">Files</p>
-									<p class="text-sm font-medium text-slate-300">{fileAnalysis.fileCount}</p>
+									<p class="text-sm font-medium text-slate-700 dark:text-slate-300">{fileAnalysis.fileCount}</p>
 								</div>
 								<div class="text-center">
 									<p class="text-xs text-slate-500 mb-1">Est. Time</p>
-									<p class="text-sm font-medium text-slate-300">{fileAnalysis.estimatedTime}</p>
+									<p class="text-sm font-medium text-slate-700 dark:text-slate-300">{fileAnalysis.estimatedTime}</p>
 								</div>
 							</div>
 							{#if fileAnalysis.compatibility}
@@ -534,19 +534,19 @@
 			<!-- Version Details Panel -->
 			<div class="lg:col-span-1 space-y-6">
 				<!-- Version Information -->
-				<div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+				<div class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-6">
 					<h3 class="text-lg font-semibold text-slate-50 mb-4">Version Information</h3>
 
 					<div class="space-y-4">
 						<div>
-							<label for="version" class="block text-sm font-medium text-slate-300 mb-2">
+							<label for="version" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
 								Version Number <span class="text-red-400">*</span>
 							</label>
 							<input
 								type="text"
 								id="version"
 								bind:value={version}
-								class="w-full px-3 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-sm"
+								class="w-full px-3 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-slate-800 dark:text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-sm"
 								placeholder="1.0.0"
 								required
 							/>
@@ -554,14 +554,14 @@
 						</div>
 
 						<div>
-							<label for="comment" class="block text-sm font-medium text-slate-300 mb-2">
+							<label for="comment" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
 								Release Notes
 							</label>
 							<textarea
 								id="comment"
 								bind:value={comment}
 								rows="4"
-								class="w-full px-3 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-sm resize-none"
+								class="w-full px-3 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-slate-800 dark:text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-sm resize-none"
 								placeholder="Describe what's new in this version..."
 							></textarea>
 						</div>
@@ -573,7 +573,7 @@
 					<button
 						onclick={handleUpload}
 						disabled={uploading || !selectedFile || !version}
-						class="w-full px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-lg font-semibold transition-all transform active:scale-95 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 shadow-lg shadow-blue-900/20"
+						class="w-full px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-500 text-slate-900 dark:text-white rounded-lg font-semibold transition-all transform active:scale-95 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 shadow-lg shadow-blue-900/20"
 					>
 						{#if uploading}
 							<div
@@ -610,7 +610,7 @@
 	{:else}
 		<div class="space-y-6">
 			<!-- Filters and Search -->
-			<div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+			<div class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-6">
 				<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 					<div class="flex-1 max-w-md">
 						<div class="relative">
@@ -618,7 +618,7 @@
 								type="text"
 								bind:value={searchQuery}
 								placeholder="Search versions, comments, or filenames..."
-								class="w-full pl-10 pr-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-sm"
+								class="w-full pl-10 pr-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-slate-800 dark:text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-sm"
 							/>
 							<svg
 								class="absolute left-3 top-2.5 w-4 h-4 text-slate-500"
@@ -640,7 +640,7 @@
 						<!-- Status Filter -->
 						<select
 							bind:value={filterStatus}
-							class="px-3 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-slate-200 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+							class="px-3 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
 						>
 							<option value="all">All Status</option>
 							<option value="active">Active Only</option>
@@ -651,7 +651,7 @@
 						<div class="flex items-center gap-2">
 							<select
 								bind:value={sortBy}
-								class="px-3 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-slate-200 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+								class="px-3 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
 							>
 								<option value="date">Sort by Date</option>
 								<option value="version">Sort by Version</option>
@@ -659,7 +659,7 @@
 							</select>
 							<button
 								onclick={() => (sortOrder = sortOrder === 'desc' ? 'asc' : 'desc')}
-								class="p-2 bg-slate-900/50 border border-slate-600 rounded-lg text-slate-400 hover:text-slate-200 hover:border-slate-500 transition-colors"
+								class="p-2 bg-slate-900/50 border border-slate-600 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 hover:border-slate-500 transition-colors"
 								title="Toggle sort order"
 							>
 								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -687,7 +687,7 @@
 
 			<!-- Version Grid -->
 			{#if getFilteredVersions().length === 0}
-				<div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-12 text-center">
+				<div class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-12 text-center">
 					<svg
 						class="w-16 h-16 mx-auto text-slate-600 mb-4"
 						fill="none"
@@ -701,7 +701,7 @@
 							d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
 						/>
 					</svg>
-					<h3 class="text-lg font-medium text-slate-300 mb-2">No versions found</h3>
+					<h3 class="text-lg font-medium text-slate-700 dark:text-slate-300 mb-2">No versions found</h3>
 					<p class="text-slate-500">
 						{searchQuery
 							? 'Try adjusting your search or filters.'
@@ -712,7 +712,7 @@
 				<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 					{#each getFilteredVersions() as version (version.id)}
 						<div
-							class="bg-slate-800/60 border border-slate-700/50 rounded-xl overflow-hidden hover:bg-gradient-to-br hover:from-slate-800/80 hover:via-blue-900/30 hover:to-slate-800/80 hover:border-blue-500/30 transition-all duration-300 group preserve-3d transform-gpu hover:rotate-y-6 hover:scale-105 shadow-lg hover:shadow-2xl hover:shadow-blue-500/10"
+							class="bg-slate-800/60 border border-slate-300/50 dark:border-slate-700/50 rounded-xl overflow-hidden hover:bg-gradient-to-br hover:from-slate-800/80 hover:via-blue-900/30 hover:to-slate-800/80 hover:border-blue-500/30 transition-all duration-300 group preserve-3d transform-gpu hover:rotate-y-6 hover:scale-105 shadow-lg hover:shadow-2xl hover:shadow-blue-500/10"
 							style="transform-style: preserve-3d; perspective: 1000px;"
 						>
 							<!-- Header with Status -->
@@ -731,7 +731,7 @@
 											</div>
 										{:else}
 											<span
-												class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-slate-700 text-slate-400"
+												class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-slate-700 text-slate-500 dark:text-slate-400"
 											>
 												Inactive
 											</span>
@@ -745,7 +745,7 @@
 										{#if !version.is_active}
 											<button
 												onclick={() => requestActivate(version.id)}
-												class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-medium transition-all duration-200 transform hover:scale-110 shadow-lg hover:shadow-emerald-500/25 flex items-center gap-1"
+												class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-slate-900 dark:text-white rounded-lg text-xs font-medium transition-all duration-200 transform hover:scale-110 shadow-lg hover:shadow-emerald-500/25 flex items-center gap-1"
 												title="Activate this version"
 											>
 												<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -761,7 +761,7 @@
 										{/if}
 										<button
 											onclick={() => requestDelete(version.id)}
-											class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-medium transition-all duration-200 transform hover:scale-110 shadow-lg hover:shadow-red-500/25 flex items-center gap-1"
+											class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-slate-900 dark:text-white rounded-lg text-xs font-medium transition-all duration-200 transform hover:scale-110 shadow-lg hover:shadow-red-500/25 flex items-center gap-1"
 											title="Delete this version"
 										>
 											<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -790,13 +790,13 @@
 									<div class="space-y-2">
 										<div class="flex items-center justify-between text-sm">
 											<span class="text-slate-500">Uploaded</span>
-											<span class="text-slate-400"
+											<span class="text-slate-500 dark:text-slate-400"
 												>{new Date(version.uploaded_at).toLocaleDateString()}</span
 											>
 										</div>
 										<div class="flex items-center justify-between text-sm">
 											<span class="text-slate-500">Time</span>
-											<span class="text-slate-400"
+											<span class="text-slate-500 dark:text-slate-400"
 												>{new Date(version.uploaded_at).toLocaleTimeString()}</span
 											>
 										</div>
@@ -804,8 +804,8 @@
 
 									<!-- Comment -->
 									{#if version.comment}
-										<div class="pt-3 border-t border-slate-700">
-											<p class="text-sm text-slate-400 line-clamp-3">{version.comment}</p>
+										<div class="pt-3 border-t border-slate-300 dark:border-slate-700">
+											<p class="text-sm text-slate-500 dark:text-slate-400 line-clamp-3">{version.comment}</p>
 										</div>
 									{/if}
 								</div>
@@ -820,26 +820,26 @@
 	{#if activeTab === 'history'}
 		<!-- Modern Version History -->
 		<div
-			class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-800/40 via-slate-900/40 to-slate-800/40 border border-slate-700/50 backdrop-blur-sm shadow-2xl"
+			class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-800/40 via-slate-900/40 to-slate-800/40 border border-slate-300/50 dark:border-slate-700/50 backdrop-blur-sm shadow-2xl"
 		>
 			<!-- Section Header -->
 			<div
-				class="relative px-8 py-6 border-b border-slate-700/50 bg-gradient-to-r from-slate-800/60 to-slate-900/60 backdrop-blur-sm"
+				class="relative px-8 py-6 border-b border-slate-300/50 dark:border-slate-700/50 bg-gradient-to-r from-slate-800/60 to-slate-900/60 backdrop-blur-sm"
 			>
 				<div class="flex items-center justify-between">
 					<div class="flex items-center gap-4">
 						<div
 							class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/25"
 						>
-							<History class="w-5 h-5 text-white" />
+							<History class="w-5 h-5 text-slate-900 dark:text-white" />
 						</div>
 						<div>
 							<h2 class="text-xl font-bold text-slate-100">Version History</h2>
-							<p class="text-sm text-slate-400">Manage deployed server versions and deployments</p>
+							<p class="text-sm text-slate-500 dark:text-slate-400">Manage deployed server versions and deployments</p>
 						</div>
 					</div>
 					<div
-						class="text-xs text-slate-500 bg-slate-800/50 px-3 py-1 rounded-md border border-slate-700/50"
+						class="text-xs text-slate-500 bg-slate-800/50 px-3 py-1 rounded-md border border-slate-300/50 dark:border-slate-700/50"
 					>
 						{$serverVersions.length} total versions
 					</div>
@@ -852,17 +852,17 @@
 					<!-- Empty State -->
 					<div class="flex flex-col items-center justify-center py-16 text-center">
 						<div
-							class="w-20 h-20 bg-slate-800/30 rounded-full flex items-center justify-center border border-slate-700/30 mb-6"
+							class="w-20 h-20 bg-slate-800/30 rounded-full flex items-center justify-center border border-slate-300/30 dark:border-slate-700/30 mb-6"
 						>
 							<Package class="w-10 h-10 opacity-50 text-slate-500" />
 						</div>
-						<h3 class="text-xl font-semibold text-slate-400 mb-2">No Versions Yet</h3>
+						<h3 class="text-xl font-semibold text-slate-500 dark:text-slate-400 mb-2">No Versions Yet</h3>
 						<p class="text-slate-600 max-w-md">
 							Upload your first game server package to get started with version management.
 						</p>
 						<button
 							onclick={() => (activeTab = 'upload')}
-							class="mt-6 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/25 transition-all duration-300 flex items-center gap-2"
+							class="mt-6 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-slate-900 dark:text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/25 transition-all duration-300 flex items-center gap-2"
 						>
 							<Upload class="w-5 h-5" />
 							Upload First Version
@@ -873,7 +873,7 @@
 					<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
 						{#each $serverVersions as version}
 							<div
-								class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/50 backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-indigo-500/10"
+								class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-300/50 dark:border-slate-700/50 backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-indigo-500/10"
 							>
 								<!-- Status Indicator -->
 								{#if version.is_active}
@@ -899,13 +899,13 @@
 											<h3 class="text-lg font-bold text-slate-100">
 												v{version.version || 'Unknown'}
 											</h3>
-											<p class="text-xs text-slate-400 font-mono">
+											<p class="text-xs text-slate-500 dark:text-slate-400 font-mono">
 												{version.filename}
 											</p>
 										</div>
 										{#if !version.is_active}
 											<div
-												class="px-2 py-1 rounded-md bg-slate-700/50 text-xs text-slate-400 border border-slate-600/30"
+												class="px-2 py-1 rounded-md bg-slate-700/50 text-xs text-slate-500 dark:text-slate-400 border border-slate-600/30"
 											>
 												Inactive
 											</div>
@@ -914,13 +914,13 @@
 
 									<!-- Upload Info -->
 									<div class="space-y-3 mb-6">
-										<div class="flex items-center gap-2 text-sm text-slate-400">
+										<div class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
 											<Clock class="w-4 h-4" />
 											<span>Uploaded {new Date(version.uploaded_at).toLocaleDateString()}</span>
 										</div>
 										{#if version.comment}
-											<div class="p-3 bg-slate-800/50 rounded-lg border border-slate-700/30">
-												<p class="text-sm text-slate-300 leading-relaxed">{version.comment}</p>
+											<div class="p-3 bg-slate-800/50 rounded-lg border border-slate-300/30 dark:border-slate-700/30">
+												<p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{version.comment}</p>
 											</div>
 										{/if}
 									</div>
@@ -930,7 +930,7 @@
 										{#if !version.is_active}
 											<button
 												onclick={() => requestActivate(version.id)}
-												class="flex-1 group/btn relative overflow-hidden bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold py-2.5 px-4 rounded-lg shadow-lg shadow-indigo-500/25 transition-all duration-300 flex items-center justify-center gap-2"
+												class="flex-1 group/btn relative overflow-hidden bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-slate-900 dark:text-white font-semibold py-2.5 px-4 rounded-lg shadow-lg shadow-indigo-500/25 transition-all duration-300 flex items-center justify-center gap-2"
 											>
 												<div
 													class="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"

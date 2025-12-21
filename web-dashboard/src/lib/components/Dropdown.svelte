@@ -30,7 +30,7 @@
 <div class="relative dropdown-container">
 	<button
 		onclick={toggle}
-		class="flex items-center gap-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium transition-colors border border-slate-700"
+		class="flex items-center gap-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-medium transition-colors border border-slate-300 dark:border-slate-700"
 	>
 		{#if Icon}
 			{@const DropdownIcon = Icon}
@@ -52,7 +52,7 @@
 	{#if isOpen}
 		<div
 			transition:slide={{ duration: 150 }}
-			class="absolute right-0 mt-2 w-48 bg-slate-900 border border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden"
+			class="absolute right-0 mt-2 w-48 bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden"
 		>
 			{#if children}
 				{@render children()}

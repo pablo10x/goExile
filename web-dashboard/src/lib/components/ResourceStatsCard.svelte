@@ -58,14 +58,14 @@
 </script>
 
 <div
-	class="bg-slate-900/50 border border-slate-800 rounded-xl p-4 relative overflow-hidden group hover:border-slate-700 transition-colors"
+	class="bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-4 relative overflow-hidden group hover:border-slate-300 dark:border-slate-700 transition-colors"
 >
 	<div class="flex justify-between items-start mb-3">
 		<div>
 			<div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-0.5">
 				{title}
 			</div>
-			<div class="text-2xl font-mono font-medium text-slate-200 tabular-nums tracking-tight">
+			<div class="text-2xl font-mono font-medium text-slate-800 dark:text-slate-200 tabular-nums tracking-tight">
 				{displayCurrent.toFixed(1)}<span class="text-sm text-slate-500 ml-0.5">{unit}</span>
 			</div>
 		</div>

@@ -224,14 +224,14 @@
 	>
 		<!-- Backdrop with blur -->
 		<button
-			class="absolute inset-0 bg-slate-950/70 backdrop-blur-md cursor-default"
+			class="absolute inset-0 bg-white/70 dark:bg-slate-950/70 backdrop-blur-md cursor-default"
 			onclick={close}
 			aria-label="Close modal"
 		></button>
 
 		<!-- Modal Container -->
 		<div
-			class="modal-container relative w-full max-w-xl bg-slate-900/50 border border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-white/10 backdrop-blur-xl"
+			class="modal-container relative w-full max-w-xl bg-slate-900/50 border border-slate-300/50 dark:border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-white/10 backdrop-blur-xl"
 			transition:modalScale
 		>
 			<!-- Animated gradient backgrounds -->
@@ -280,7 +280,7 @@
 			<!-- Close Button -->
 			<button
 				onclick={close}
-				class="absolute top-4 right-4 z-20 p-2 rounded-lg bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 transition-all"
+				class="absolute top-4 right-4 z-20 p-2 rounded-lg bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 hover:bg-slate-700/50 transition-all"
 				aria-label="Close"
 			>
 				<X class="w-5 h-5" />
@@ -301,7 +301,7 @@
 						<h2 class="text-2xl font-bold text-slate-100 tracking-tight slide-in-text">
 							Add New Spawner
 						</h2>
-						<p class="text-slate-400 text-sm mt-0.5 slide-in-text-delayed">
+						<p class="text-slate-500 dark:text-slate-400 text-sm mt-0.5 slide-in-text-delayed">
 							Generate an enrollment key to register a new spawner
 						</p>
 					</div>
@@ -311,13 +311,13 @@
 					<!-- Loading State -->
 					<div class="flex flex-col items-center justify-center py-12" transition:fade>
 						<div class="relative">
-							<div class="w-20 h-20 border-4 border-slate-700 rounded-full animate-pulse"></div>
+							<div class="w-20 h-20 border-4 border-slate-300 dark:border-slate-700 rounded-full animate-pulse"></div>
 							<div
 								class="absolute inset-0 w-20 h-20 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"
 							></div>
 							<Key class="absolute inset-0 m-auto w-8 h-8 text-emerald-400 animate-pulse" />
 						</div>
-						<p class="mt-6 text-slate-400 font-medium">Generating enrollment key...</p>
+						<p class="mt-6 text-slate-500 dark:text-slate-400 font-medium">Generating enrollment key...</p>
 					</div>
 				{:else if error}
 					<!-- Error State -->
@@ -329,10 +329,10 @@
 							<AlertCircle class="w-10 h-10 text-red-400 animate-shake-error" />
 						</div>
 						<h3 class="text-lg font-semibold text-red-400 mb-2">Failed to Generate Key</h3>
-						<p class="text-slate-400 text-sm text-center max-w-sm mb-6">{error}</p>
+						<p class="text-slate-500 dark:text-slate-400 text-sm text-center max-w-sm mb-6">{error}</p>
 						<button
 							onclick={generateKey}
-							class="px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 rounded-lg shadow-lg transition-all transform hover:-translate-y-0.5 active:scale-95"
+							class="px-5 py-2.5 text-sm font-semibold text-slate-900 dark:text-white bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 rounded-lg shadow-lg transition-all transform hover:-translate-y-0.5 active:scale-95"
 						>
 							Try Again
 						</button>
@@ -381,7 +381,7 @@
 							<h3 class="mt-6 text-xl font-bold text-emerald-400 animate-text-slide">
 								Spawner Enrolled Successfully!
 							</h3>
-							<p class="text-slate-400 text-sm mt-1 animate-text-slide-delayed">
+							<p class="text-slate-500 dark:text-slate-400 text-sm mt-1 animate-text-slide-delayed">
 								The spawner is now connected to your master server
 							</p>
 						</div>
@@ -409,7 +409,7 @@
 											ID: {enrolledSpawner.id}
 										</span>
 									</div>
-									<div class="text-sm text-slate-400 font-mono">
+									<div class="text-sm text-slate-500 dark:text-slate-400 font-mono">
 										{enrolledSpawner.host}:{enrolledSpawner.port}
 									</div>
 								</div>
@@ -426,14 +426,14 @@
 						<div class="flex justify-center gap-3 pt-2">
 							<button
 								onclick={generateKey}
-								class="px-4 py-2.5 text-sm font-medium text-slate-300 hover:text-emerald-400 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-emerald-500/30 rounded-lg transition-all flex items-center gap-2"
+								class="px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-emerald-400 bg-slate-800/50 hover:bg-slate-800 border border-slate-300/50 dark:border-slate-700/50 hover:border-emerald-500/30 rounded-lg transition-all flex items-center gap-2"
 							>
 								<Key class="w-4 h-4" />
 								Add Another Spawner
 							</button>
 							<button
 								onclick={close}
-								class="px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 rounded-lg shadow-lg transition-all transform hover:-translate-y-0.5 active:scale-95"
+								class="px-5 py-2.5 text-sm font-semibold text-slate-900 dark:text-white bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 rounded-lg shadow-lg transition-all transform hover:-translate-y-0.5 active:scale-95"
 							>
 								Done
 							</button>
@@ -445,10 +445,10 @@
 						<!-- Status Indicator -->
 						<div class="flex items-center justify-center gap-2 py-2">
 							<div
-								class="flex items-center gap-2 px-4 py-2 bg-slate-800/50 border border-slate-700/50 rounded-full"
+								class="flex items-center gap-2 px-4 py-2 bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-full"
 							>
 								<div class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div>
-								<span class="text-sm font-medium text-slate-300"
+								<span class="text-sm font-medium text-slate-700 dark:text-slate-300"
 									>Waiting for spawner to connect...</span
 								>
 							</div>
@@ -517,7 +517,7 @@
 							>
 								<div class="flex items-center gap-2 mb-2">
 									<Key class="w-4 h-4 text-emerald-400" />
-									<span class="text-xs font-semibold text-slate-400 uppercase tracking-wider"
+									<span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
 										>Enrollment Key</span
 									>
 								</div>
@@ -530,22 +530,22 @@
 						<!-- Command Display -->
 						<div>
 							<div class="flex items-center gap-2 mb-2">
-								<Terminal class="w-4 h-4 text-slate-400" />
-								<span class="text-xs font-semibold text-slate-400 uppercase tracking-wider"
+								<Terminal class="w-4 h-4 text-slate-500 dark:text-slate-400" />
+								<span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
 									>Run this command on your spawner</span
 								>
 							</div>
 							<div
-								class="group relative bg-slate-950/70 border border-slate-700/50 rounded-xl p-4 font-mono text-sm overflow-x-auto"
+								class="group relative bg-white/70 dark:bg-slate-950/70 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-4 font-mono text-sm overflow-x-auto"
 							>
 								<code class="text-cyan-300">./spawner</code>
-								<code class="text-slate-400"> -key </code>
+								<code class="text-slate-500 dark:text-slate-400"> -key </code>
 								<code class="text-emerald-400">{enrollmentKey}</code>
 
 								<!-- Copy Button -->
 								<button
 									onclick={copyToClipboard}
-									class="absolute top-2 right-2 p-2 rounded-lg bg-slate-800/80 border border-slate-700/50 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/50 hover:bg-slate-700/80 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+									class="absolute top-2 right-2 p-2 rounded-lg bg-slate-800/80 border border-slate-300/50 dark:border-slate-700/50 text-slate-500 dark:text-slate-400 hover:text-emerald-400 hover:border-emerald-500/50 hover:bg-slate-700/80 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
 									aria-label="Copy command"
 								>
 									{#if copied}
@@ -564,9 +564,9 @@
 						</div>
 
 						<!-- Instructions -->
-						<div class="bg-slate-800/30 border border-slate-700/30 rounded-xl p-4">
-							<h4 class="text-sm font-semibold text-slate-300 mb-2">Instructions</h4>
-							<ol class="text-xs text-slate-400 space-y-1.5 list-decimal list-inside">
+						<div class="bg-slate-800/30 border border-slate-300/30 dark:border-slate-700/30 rounded-xl p-4">
+							<h4 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Instructions</h4>
+							<ol class="text-xs text-slate-500 dark:text-slate-400 space-y-1.5 list-decimal list-inside">
 								<li>Copy the command above</li>
 								<li>Run it on the machine where your spawner is installed</li>
 								<li>The spawner will automatically register with the master server</li>
@@ -578,7 +578,7 @@
 						<div class="flex justify-center pt-2">
 							<button
 								onclick={generateKey}
-								class="px-4 py-2 text-sm font-medium text-slate-400 hover:text-emerald-400 hover:bg-slate-800/50 rounded-lg transition-all flex items-center gap-2"
+								class="px-4 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-emerald-400 hover:bg-slate-800/50 rounded-lg transition-all flex items-center gap-2"
 							>
 								<Key class="w-4 h-4" />
 								Generate New Key

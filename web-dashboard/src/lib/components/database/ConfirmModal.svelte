@@ -101,7 +101,7 @@
 
 		<!-- Modal -->
 		<div
-			class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md shadow-2xl relative z-10 overflow-hidden"
+			class="bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl w-full max-w-md shadow-2xl relative z-10 overflow-hidden"
 			transition:scale={{ duration: 200, start: 0.95, easing: quintOut }}
 		>
 			<!-- Header -->
@@ -123,7 +123,7 @@
 						<h3 id="confirm-modal-title" class="text-lg font-bold text-slate-100 mb-1">
 							{title}
 						</h3>
-						<p class="text-sm text-slate-400 leading-relaxed">
+						<p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
 							{message}
 						</p>
 					</div>
@@ -132,7 +132,7 @@
 					<button
 						onclick={handleCancel}
 						disabled={loading}
-						class="shrink-0 p-1.5 text-slate-500 hover:text-slate-300 hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-50"
+						class="shrink-0 p-1.5 text-slate-500 hover:text-slate-700 dark:text-slate-300 hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-50"
 					>
 						<X class="w-5 h-5" />
 					</button>
@@ -144,14 +144,14 @@
 				<button
 					onclick={handleCancel}
 					disabled={loading}
-					class="px-4 py-2.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+					class="px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:text-white hover:bg-slate-800 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 				>
 					{cancelText}
 				</button>
 				<button
 					onclick={handleConfirm}
 					disabled={loading}
-					class="px-5 py-2.5 text-sm font-bold text-white rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 {style.buttonBg} {style.buttonShadow}"
+					class="px-5 py-2.5 text-sm font-bold text-slate-900 dark:text-white rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 {style.buttonBg} {style.buttonShadow}"
 				>
 					{#if loading}
 						<div

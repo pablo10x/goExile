@@ -187,18 +187,18 @@
     <!-- Header -->
     <div class="flex justify-between items-center mb-6 shrink-0">
         <div>
-            <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <Activity class="w-6 h-6 text-red-400" />
                 System Logs
             </h1>
-            <p class="text-slate-400 text-sm mt-1">Monitor system-wide errors and events</p>
+            <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Monitor system-wide errors and events</p>
         </div>
         <div class="flex gap-2 items-center">
             {#if selectedIds.size > 0}
                 <button 
                     onclick={deleteSelected}
                     transition:scale={{ duration: 200, start: 0.9 }}
-                    class="p-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors flex items-center gap-2 px-4 shadow-lg shadow-red-900/20 mr-2"
+                    class="p-2 bg-red-600 hover:bg-red-500 text-slate-900 dark:text-white rounded-lg transition-colors flex items-center gap-2 px-4 shadow-lg shadow-red-900/20 mr-2"
                 >
                     <Trash2 class="w-4 h-4" />
                     <span class="text-xs font-bold">Delete ({selectedIds.size})</span>
@@ -209,7 +209,7 @@
                 <Trash2 class="w-4 h-4" />
                 <span class="text-xs font-semibold">Clear All</span>
             </button>
-            <button onclick={() => { fetchLogs(); fetchCounts(); }} class="p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors">
+            <button onclick={() => { fetchLogs(); fetchCounts(); }} class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-900 dark:text-white rounded-lg transition-colors">
                 <RefreshCw class="w-4 h-4 {loading ? 'animate-spin' : ''}" />
             </button>
         </div>
@@ -220,7 +220,7 @@
         {#each categories as cat}
             <button
                 onclick={() => changeCategory(cat)}
-                class="px-4 py-2 rounded-lg text-sm font-medium transition-all border border-transparent {category === cat ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 hover:border-slate-600'}"
+                class="px-4 py-2 rounded-lg text-sm font-medium transition-all border border-transparent {category === cat ? 'bg-blue-600 text-slate-900 dark:text-white shadow-lg shadow-blue-900/20' : 'bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-700 hover:border-slate-600'}"
             >
                 {cat} <span class="ml-1 opacity-60 text-xs">({counts[cat] || 0})</span>
             </button>
@@ -228,10 +228,10 @@
     </div>
 
     <!-- Table -->
-    <div class="flex-1 bg-slate-900/50 border border-slate-800 rounded-xl overflow-hidden flex flex-col">
+    <div class="flex-1 bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden flex flex-col">
         <div class="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
-            <table class="w-full text-left text-sm text-slate-400">
-                <thead class="bg-slate-900 text-slate-200 sticky top-0 z-10">
+            <table class="w-full text-left text-sm text-slate-500 dark:text-slate-400">
+                <thead class="bg-slate-900 text-slate-800 dark:text-slate-200 sticky top-0 z-10">
                     <tr>
                         <th class="px-4 py-3 font-semibold w-10 text-center">
                             <button 
@@ -239,7 +239,7 @@
                                 class="w-5 h-5 rounded border border-slate-600 flex items-center justify-center transition-all {selectedIds.size === logs.length && logs.length > 0 ? 'bg-blue-600 border-blue-500' : 'hover:border-slate-400'}"
                             >
                                 {#if selectedIds.size === logs.length && logs.length > 0}
-                                    <Check class="w-3.5 h-3.5 text-white" />
+                                    <Check class="w-3.5 h-3.5 text-slate-900 dark:text-white" />
                                 {/if}
                             </button>
                         </th>
@@ -267,7 +267,7 @@
                                     <div class="w-5 h-5 mx-auto rounded border border-slate-600 flex items-center justify-center transition-all relative overflow-hidden {selectedIds.has(log.id) ? 'bg-blue-600 border-blue-500' : 'group-hover:border-slate-400 bg-slate-800/50'}">
                                         {#if selectedIds.has(log.id)}
                                             <div transition:scale={{ duration: 200, start: 0.5 }}>
-                                                <Check class="w-3.5 h-3.5 text-white" />
+                                                <Check class="w-3.5 h-3.5 text-slate-900 dark:text-white" />
                                             </div>
                                         {/if}
                                     </div>
@@ -275,11 +275,11 @@
                                 <td class="px-4 py-3 whitespace-nowrap font-mono text-xs text-slate-500">{log.timestamp ? new Date(log.timestamp).toLocaleString() : '-'}</td>
                                 <td class="px-4 py-3 font-bold {getLevelColor(log.level)}">{log.level}</td>
                                 <td class="px-4 py-3">
-                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-800 text-xs border border-slate-700">
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-800 text-xs border border-slate-300 dark:border-slate-700">
                                         {log.category}
                                     </span>
                                 </td>
-                                <td class="px-4 py-3 text-slate-300 max-w-md truncate" title={log.message}>{log.message}</td>
+                                <td class="px-4 py-3 text-slate-700 dark:text-slate-300 max-w-md truncate" title={log.message}>{log.message}</td>
                                 <td class="px-4 py-3 font-mono text-xs text-slate-500">{log.path || '-'}</td>
                                 <td class="px-4 py-3 text-right">
                                     <button 
@@ -298,15 +298,15 @@
         </div>
 
         <!-- Pagination -->
-        <div class="p-3 border-t border-slate-800 bg-slate-900 flex justify-between items-center shrink-0">
+        <div class="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-900 flex justify-between items-center shrink-0">
             <span class="text-xs text-slate-500">
                 Showing {offset + 1}-{Math.min(offset + limit, total)} of {total}
             </span>
             <div class="flex gap-2">
-                <button onclick={prevPage} disabled={offset === 0} class="p-1.5 rounded hover:bg-slate-800 disabled:opacity-50 text-slate-400 hover:text-white transition-colors">
+                <button onclick={prevPage} disabled={offset === 0} class="p-1.5 rounded hover:bg-slate-800 disabled:opacity-50 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors">
                     <ChevronLeft class="w-4 h-4" />
                 </button>
-                <button onclick={nextPage} disabled={offset + limit >= total} class="p-1.5 rounded hover:bg-slate-800 disabled:opacity-50 text-slate-400 hover:text-white transition-colors">
+                <button onclick={nextPage} disabled={offset + limit >= total} class="p-1.5 rounded hover:bg-slate-800 disabled:opacity-50 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors">
                     <ChevronRight class="w-4 h-4" />
                 </button>
             </div>
@@ -316,48 +316,48 @@
     <!-- Detail Modal -->
     {#if selectedLog}
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" transition:fade onclick={() => selectedLog = null} role="button" tabindex="0" onkeydown={(e) => { if (e.key === 'Escape') selectedLog = null; }}>
-            <div class="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden" onclick={(e) => e.stopPropagation()}>
-                <div class="p-6 border-b border-slate-800 flex justify-between items-start">
+            <div class="bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden" onclick={(e) => e.stopPropagation()}>
+                <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-start">
                     <div>
-                        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                             <span class={getLevelColor(selectedLog.level)}>{selectedLog.level}</span>
                             Log Details
                         </h3>
-                        <p class="text-slate-400 text-sm mt-1">{selectedLog.timestamp ? new Date(selectedLog.timestamp).toLocaleString() : '-'}</p>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">{selectedLog.timestamp ? new Date(selectedLog.timestamp).toLocaleString() : '-'}</p>
                     </div>
-                    <button onclick={() => selectedLog = null} class="text-slate-500 hover:text-white">✕</button>
+                    <button onclick={() => selectedLog = null} class="text-slate-500 hover:text-slate-900 dark:text-white">✕</button>
                 </div>
                 <div class="p-6 overflow-y-auto space-y-4">
                     <div class="grid grid-cols-2 gap-4 text-sm">
                         <div>
                             <span class="block text-slate-500 text-xs uppercase tracking-wider">Category</span>
-                            <span class="text-slate-300">{selectedLog.category}</span>
+                            <span class="text-slate-700 dark:text-slate-300">{selectedLog.category}</span>
                         </div>
                         <div>
                             <span class="block text-slate-500 text-xs uppercase tracking-wider">Source</span>
-                            <span class="text-slate-300">{selectedLog.source}</span>
+                            <span class="text-slate-700 dark:text-slate-300">{selectedLog.source}</span>
                         </div>
                         <div>
                             <span class="block text-slate-500 text-xs uppercase tracking-wider">Path</span>
-                            <span class="font-mono text-slate-300">{selectedLog.path || '-'}</span>
+                            <span class="font-mono text-slate-700 dark:text-slate-300">{selectedLog.path || '-'}</span>
                         </div>
                         <div>
                             <span class="block text-slate-500 text-xs uppercase tracking-wider">Method</span>
-                            <span class="font-mono text-slate-300">{selectedLog.method || '-'}</span>
+                            <span class="font-mono text-slate-700 dark:text-slate-300">{selectedLog.method || '-'}</span>
                         </div>
                         <div>
                             <span class="block text-slate-500 text-xs uppercase tracking-wider">Client IP</span>
-                            <span class="font-mono text-slate-300">{selectedLog.client_ip || '-'}</span>
+                            <span class="font-mono text-slate-700 dark:text-slate-300">{selectedLog.client_ip || '-'}</span>
                         </div>
                         <div>
                             <span class="block text-slate-500 text-xs uppercase tracking-wider">Log ID</span>
-                            <span class="font-mono text-slate-300">#{selectedLog.id}</span>
+                            <span class="font-mono text-slate-700 dark:text-slate-300">#{selectedLog.id}</span>
                         </div>
                     </div>
 
                     <div>
                         <span class="block text-slate-500 text-xs uppercase tracking-wider mb-1">Message</span>
-                        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300 font-mono text-sm whitespace-pre-wrap">
+                        <div class="bg-white dark:bg-slate-950 p-3 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-mono text-sm whitespace-pre-wrap">
                             {selectedLog.message}
                         </div>
                     </div>
@@ -365,7 +365,7 @@
                     {#if selectedLog.details}
                         <div>
                             <span class="block text-slate-500 text-xs uppercase tracking-wider mb-1">Details</span>
-                            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300 font-mono text-sm whitespace-pre-wrap overflow-x-auto">
+                            <div class="bg-white dark:bg-slate-950 p-3 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-mono text-sm whitespace-pre-wrap overflow-x-auto">
                                 {selectedLog.details}
                             </div>
                         </div>

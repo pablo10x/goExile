@@ -126,6 +126,8 @@ export const notifications = createNotificationStore();
 export const isConnected = writable(false);
 export const connectionStatus = writable('Connecting...');
 
+export const theme = writable<'light' | 'dark'>('dark');
+
 function createNotificationStore() {
 	const { subscribe, update } = writable<Notification[]>([]);
 	const history = writable<Notification[]>([]);

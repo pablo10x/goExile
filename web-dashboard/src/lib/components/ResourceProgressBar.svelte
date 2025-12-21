@@ -102,7 +102,7 @@
 <div class="space-y-2">
 	<!-- Label and Value -->
 	<div class="flex items-center justify-between text-sm">
-		<span class="text-slate-300 font-medium">{label}</span>
+		<span class="text-slate-700 dark:text-slate-300 font-medium">{label}</span>
 		<div class="flex items-center gap-2">
 			<span class="text-slate-100 font-mono tabular-nums">{displayValue.toFixed(1)}</span>
 			{#if showThreshold}

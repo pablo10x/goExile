@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strconv"
 	"time"
 
 	"exile/server/database"
@@ -40,11 +41,10 @@ func RegisterSpawner(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := registry.GlobalRegistry.Register(&s)
-	if err != nil {
-		// Log the detailed error for debugging
-		fmt.Printf("Registration failed: %v\n", err)
-		utils.WriteError(w, r, http.StatusInternalServerError, "failed to register spawner")
+	var id int
+	var err error
+	if id, err = database.SaveSpawner(database.DBConn, &s); err != nil {
+		utils.WriteError(w, r, http.StatusInternalServerError, "Failed to register")
 		return
 	}
 
@@ -127,10 +127,9 @@ func DeleteSpawner(w http.ResponseWriter, r *http.Request) {
 func SpawnInstance(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	rawID := vars["id"]
-	id, err := utils.ParseID(rawID)
+	id, err := strconv.Atoi(rawID)
 	if err != nil {
-		fmt.Printf("Error parsing ID. Raw: '%s', Error: %v\n", rawID, err)
-		utils.WriteError(w, r, http.StatusBadRequest, err.Error())
+		utils.WriteError(w, r, http.StatusBadRequest, "Invalid spawner ID")
 		return
 	}
 

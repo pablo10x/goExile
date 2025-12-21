@@ -96,15 +96,30 @@ npm run dev   # Starts Vite dev server
 *   **Testing:**
     *   Go: `go test ./...`
     *   Frontend: `npm run check` (Svelte Check), `npm run test` (Vitest).
+*   **Workflow Requirements:**
+    *   Always update `GEMINI.md` with significant changes.
+    *   Commit changes only if: tests pass, `npm run check` passes in `web-dashboard`, and server/spawner build without errors.
+    *   **Client API Enforcement:** Whenever making changes that affect the game client (API endpoints, WebSocket protocol, data models), you **MUST** update `server/docs/CLIENT_API.md` and provide/update C# example scripts in `server/docs/unity/` to ensure frontend/unity alignment.
 
 ## 🔑 Key Configuration
 
 *   **`server/.env`**: Controls Master Server port, database path, admin credentials, and 2FA secrets.
+*   **`PRODUCTION_MODE`**: Set to `true` to enable TOTP 2FA. In development (default), TOTP is bypassed for faster login.
 *   **`X-API-Key`**: Critical security header for Spawner <-> Server communication.
+*   **`X-Game-API-Key`**: Header required for all Game Client -> Server API requests.
 *   **`spawner/internal/ws/client.go`**: Handles Spawner's WebSocket connection logic (Heartbeats, Command handling).
 *   **`server/dashboard.go` & `server/auth.go`**: Core logic for Dashboard API and Authentication.
 
 ## 📝 Recent Context
+*   **Theme Engine:** Implemented a full-featured Light/Dark mode system with glassmorphism effects.
+    *   Default mode is Dark.
+    *   Background animation (particle canvas) is preserved across both modes.
+    *   Added theme toggle buttons to desktop sidebar and mobile header.
+*   **Logging Cleanup:** Removed verbose `fmt.Println` and debug logs from the server codebase (`players.go`, `handlers_upload.go`, `main.go`) to ensure clean production-ready output.
+*   **Authentication Improvements:**
+    *   `AuthenticatePlayerHandler` now supports both JSON and Unity's `WWWForm` (form-data) for better compatibility.
+    *   Disabled TOTP requirement in non-production environments for developer convenience.
+*   **Documentation:** Updated `server/docs/CLIENT_API.md` and created `server/docs/unity/AuthenticationManager.cs` to reflect the latest authentication logic and provide a drop-in Unity implementation.
 *   **Fixed Spawner Panic:** Resolved concurrent write panic in `spawner/internal/ws/client.go` by implementing a `writePump`.
 *   **Fixed Heartbeat:** Improved `heartbeatLoop` resilience in Spawner.
 *   **Stability:** Increased Server heartbeat timeout thresholds and ensured connection keep-alive on any message.

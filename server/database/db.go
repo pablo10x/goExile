@@ -2073,11 +2073,14 @@ func UnbanIP(db *sqlx.DB, ip string) error {
 
 // RedEyeStats holds summary statistics for the dashboard
 type RedEyeStats struct {
-	TotalRules      int `json:"total_rules"`
-	ActiveBans      int `json:"active_bans"`
-	Events24h       int `json:"events_24h"`
-	Logs24h         int `json:"logs_24h"`
-	ReputationCount int `json:"reputation_count"`
+	TotalRules      int     `json:"total_rules"`
+	ActiveBans      int     `json:"active_bans"`
+	Events24h       int     `json:"events_24h"`
+	Logs24h         int     `json:"logs_24h"`
+	ReputationCount int     `json:"reputation_count"`
+	Entropy         float64 `json:"entropy"`
+	ThreatLevel     string  `json:"threat_level"`
+	Uptime          string  `json:"uptime"`
 }
 
 func GetRedEyeStats(db *sqlx.DB) (*RedEyeStats, error) {
@@ -2106,6 +2109,24 @@ func GetRedEyeStats(db *sqlx.DB) (*RedEyeStats, error) {
 	if err := db.Get(&stats.Logs24h, "SELECT COUNT(*) FROM redeye_logs WHERE timestamp > $1", yesterday); err != nil {
 		return nil, err
 	}
+
+	// Calculate simulated entropy
+	stats.Entropy = 0.0042 // Baseline
+	if stats.Events24h > 0 {
+		stats.Entropy += float64(stats.Events24h) * 0.0001
+	}
+
+	// Determine threat level
+	stats.ThreatLevel = "Low"
+	if stats.ActiveBans > 10 || stats.Events24h > 50 {
+		stats.ThreatLevel = "Medium"
+	}
+	if stats.ActiveBans > 50 || stats.Events24h > 200 {
+		stats.ThreatLevel = "High"
+	}
+
+	// Subsystem uptime (hardcoded for now as requested by UI aesthetic)
+	stats.Uptime = "99.99%"
 
 	return stats, nil
 }

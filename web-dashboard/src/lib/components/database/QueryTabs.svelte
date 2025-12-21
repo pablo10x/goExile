@@ -22,16 +22,16 @@
 </script>
 
 <div
-	class="flex items-center w-full bg-slate-950 border-b border-slate-800 overflow-x-auto no-scrollbar"
+	class="flex items-center w-full bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 overflow-x-auto no-scrollbar"
 >
 	{#each tabs as tab (tab.id)}
 		<div
 			animate:flip={{ duration: 200 }}
 			transition:fade={{ duration: 150 }}
-			class="group relative flex items-center gap-2 px-4 py-3 cursor-pointer border-r border-slate-800/50 select-none transition-all min-w-[120px] max-w-[200px] {activeTabId ===
+			class="group relative flex items-center gap-2 px-4 py-3 cursor-pointer border-r border-slate-200/50 dark:border-slate-800/50 select-none transition-all min-w-[120px] max-w-[200px] {activeTabId ===
 			tab.id
 				? 'bg-slate-900 text-blue-400 border-t-2 border-t-blue-500'
-				: 'text-slate-500 hover:bg-slate-900/50 hover:text-slate-300 border-t-2 border-t-transparent'}"
+				: 'text-slate-500 hover:bg-slate-900/50 hover:text-slate-700 dark:text-slate-300 border-t-2 border-t-transparent'}"
 			onclick={() => onSelect(tab.id)}
 			role="button"
 			tabindex="0"

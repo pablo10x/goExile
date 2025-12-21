@@ -13,7 +13,8 @@
 		connectionStatus,
 		notes,
 		showQuickActions,
-		notifications
+		notifications,
+		theme
 	} from '$lib/stores';
 	import type { Note } from '$lib/stores';
 	import {
@@ -37,7 +38,9 @@
 		Plus,
 		Zap,
 		ZapOff,
-		Eye
+		Eye,
+		Sun,
+		Moon
 	} from 'lucide-svelte';
 	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	import QuickActionsTooltip from '$lib/components/QuickActionsTooltip.svelte';
@@ -47,6 +50,22 @@
 	let isChecking = $state(true);
 	let restarting = $state(false);
 	let eventSource: EventSource | null = null;
+
+	// Theme handling
+	$effect(() => {
+		if (typeof window !== 'undefined') {
+			if ($theme === 'dark') {
+				document.documentElement.classList.add('dark');
+			} else {
+				document.documentElement.classList.remove('dark');
+			}
+			localStorage.setItem('theme', $theme);
+		}
+	});
+
+	function toggleTheme() {
+		theme.update((t) => (t === 'dark' ? 'light' : 'dark'));
+	}
 
 	// Animation states
 	let sidebarLoaded = $state(false);
@@ -283,6 +302,11 @@
 	}
 
 	onMount(async () => {
+		const savedTheme = localStorage.getItem('theme');
+		if (savedTheme === 'light' || savedTheme === 'dark') {
+			theme.set(savedTheme);
+		}
+
 		await checkAuth();
 		if ($isAuthenticated) {
 			initialFetch();
@@ -417,7 +441,7 @@
 	</div>
 {:else}
 	{#if $isAuthenticated && page.url.pathname !== '/login'}
-		<div class="flex h-screen text-slate-300 overflow-hidden relative">
+		<div class="flex h-screen text-slate-600 dark:text-slate-300 overflow-hidden relative bg-transparent transition-colors duration-300">
 			<!-- Global Restart Banner -->
 			{#if $restartRequired}
 				<div
@@ -501,17 +525,17 @@
 
 			<!-- Desktop Sidebar -->
 			<aside
-				class="hidden md:flex relative transition-all duration-300 ease-in-out bg-slate-950 border-r border-slate-800 flex-col shrink-0 overflow-hidden shadow-2xl z-20 {isSidebarCollapsed
+				class="hidden md:flex relative transition-all duration-300 ease-in-out bg-white/70 dark:bg-slate-950/70 backdrop-blur-md border-r border-slate-200 dark:border-slate-800 flex-col shrink-0 overflow-hidden shadow-2xl z-20 {isSidebarCollapsed
 					? 'w-20'
 					: 'w-64'}"
 			>
 				<div
-					class="absolute inset-0 bg-slate-900/60 backdrop-blur-[1px] border-r border-white/5"
+					class="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-[1px] border-r border-white/5"
 				></div>
 
 				<div class="relative z-10 flex flex-col h-full">
 					<div
-						class="p-6 border-b border-white/5 bg-white/5 backdrop-blur-md transform transition-all duration-700 {sidebarLoaded
+						class="p-6 border-b border-slate-200 dark:border-white/5 bg-white/5 backdrop-blur-md transform transition-all duration-700 {sidebarLoaded
 							? 'translate-y-0 opacity-100'
 							: '-translate-y-4 opacity-0'} flex items-center justify-between"
 					>
@@ -521,7 +545,7 @@
 									class="w-3 h-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full animate-pulse shadow-lg shadow-blue-500/50"
 								></div>
 								<h1
-									class="text-2xl font-bold text-slate-50 -tracking-wide bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent filter drop-shadow-lg animate-gradient bg-size-200"
+									class="text-2xl font-bold text-slate-900 dark:text-slate-50 -tracking-wide bg-gradient-to-r from-blue-600 via-cyan-600 to-blue-600 dark:from-blue-400 dark:via-cyan-400 dark:to-blue-400 bg-clip-text text-transparent filter drop-shadow-lg animate-gradient bg-size-200"
 								>
 									GoExile
 								</h1>
@@ -529,7 +553,7 @@
 						{/if}
 						<button
 							onclick={toggleSidebar}
-							class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-all duration-300 active:scale-90 border border-transparent hover:border-white/10 group {isSidebarCollapsed
+							class="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-all duration-300 active:scale-90 border border-transparent hover:border-slate-200 dark:hover:border-white/10 group {isSidebarCollapsed
 								? 'mx-auto'
 								: ''}"
 							title={isSidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
@@ -796,19 +820,62 @@
 												</QuickActionsTooltip>					</nav>
 
 					<div
-						class="p-4 border-t border-white/5 bg-black/20 backdrop-blur-md flex flex-col gap-2 transform transition-all duration-700 {sidebarLoaded
+						class="p-4 border-t border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-black/20 backdrop-blur-md flex flex-col gap-2 transform transition-all duration-700 {sidebarLoaded
 							? 'translate-y-0 opacity-100'
 							: 'translate-y-8 opacity-0'}"
 						style="animation-delay: 0.6s;"
 					>
 						{#if !isSidebarCollapsed}
 							<button
+								onmouseenter={() => (hoveredItem = 8)}
+								onmouseleave={() => (hoveredItem = -1)}
+								onclick={toggleTheme}
+								class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-300 group relative overflow-hidden animate-in fade-in zoom-in
+								{hoveredItem === 8
+									? 'bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border-purple-400/40 shadow-lg shadow-purple-500/20 scale-[1.02]'
+									: 'hover:bg-slate-100 dark:hover:bg-slate-800/50'}
+								border border-transparent hover:border-purple-400/20"
+							>
+								<div
+									class="absolute inset-0 bg-gradient-to-r from-purple-600/0 via-purple-400/10 to-purple-600/0 translate-x-[-100%] {hoveredItem ===
+									8
+										? 'translate-x-[100%]'
+										: ''} transition-transform duration-700"
+								></div>
+
+								<div class="relative z-10">
+									{#if $theme === 'dark'}
+										<Moon
+											class="w-5 h-5 transition-all duration-300 text-purple-400 {hoveredItem === 8
+												? 'scale-110 fill-purple-400/20'
+												: ''}"
+										/>
+									{:else}
+										<Sun
+											class="w-5 h-5 transition-all duration-300 text-amber-500 {hoveredItem === 8
+												? 'scale-110 fill-amber-500/20'
+												: ''}"
+										/>
+									{/if}
+								</div>
+
+								<span
+									class="relative z-10 text-sm font-medium transition-all duration-300 {hoveredItem ===
+									8
+										? 'translate-x-1'
+										: ''}"
+								>
+									{$theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
+								</span>
+							</button>
+
+							<button
 								onmouseenter={() => (hoveredItem = 6)}
 								onmouseleave={() => (hoveredItem = -1)}
-								class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-400 hover:text-white transition-all duration-300 group relative overflow-hidden animate-in fade-in zoom-in
+								class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-300 group relative overflow-hidden animate-in fade-in zoom-in
 								{hoveredItem === 6
 									? 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-blue-400/40 shadow-lg shadow-blue-500/20 scale-[1.02]'
-									: 'hover:bg-slate-800/50'}
+									: 'hover:bg-slate-100 dark:hover:bg-slate-800/50'}
 								border border-transparent hover:border-blue-400/20"
 							>
 								<div
@@ -852,10 +919,10 @@
 								onclick={toggleQuickActions}
 								onmouseenter={() => (hoveredItem = 7)}
 								onmouseleave={() => (hoveredItem = -1)}
-								class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-400 hover:text-white transition-all duration-300 group relative overflow-hidden animate-in fade-in zoom-in
+								class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-300 group relative overflow-hidden animate-in fade-in zoom-in
 								{hoveredItem === 7
 									? 'bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border-yellow-400/40 shadow-lg shadow-yellow-500/20 scale-[1.02]'
-									: 'hover:bg-slate-800/50'}
+									: 'hover:bg-slate-100 dark:hover:bg-slate-800/50'}
 								border border-transparent hover:border-yellow-400/20"
 								title={$showQuickActions ? 'Disable Quick Actions' : 'Enable Quick Actions'}
 							>
@@ -895,7 +962,7 @@
 							onclick={logout}
 							onmouseenter={() => (hoveredItem = 5)}
 							onmouseleave={() => (hoveredItem = -1)}
-							class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-slate-400 hover:text-white border transition-all duration-300 group relative overflow-hidden
+							class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border transition-all duration-300 group relative overflow-hidden
 							{hoveredItem === 5
 								? 'bg-gradient-to-r from-red-500/20 to-rose-600/20 border-red-400/50 shadow-lg shadow-red-500/30 scale-[1.02]'
 								: 'border-transparent hover:bg-red-500/10 hover:border-red-500/20'}"
@@ -970,21 +1037,32 @@
 			<div class="flex-1 flex flex-col h-full overflow-hidden relative">
 				<!-- Mobile Top Header -->
 				<header
-					class="md:hidden h-14 bg-slate-950/80 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-4 z-30 shrink-0"
+					class="md:hidden h-14 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-white/5 flex items-center justify-between px-4 z-30 shrink-0"
 				>
 					<div class="flex items-center gap-2">
 						<div
 							class="w-2.5 h-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full animate-pulse shadow-lg shadow-blue-500/50"
 						></div>
 						<h1
-							class="text-lg font-bold text-slate-50 bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent"
+							class="text-lg font-bold text-slate-900 dark:text-slate-50 bg-gradient-to-r from-blue-600 via-cyan-600 to-blue-600 dark:from-blue-400 dark:via-cyan-400 dark:to-blue-400 bg-clip-text text-transparent"
 						>
 							GoExile
 						</h1>
 					</div>
 					<div class="flex items-center gap-2">
 						<button
-							class="relative p-2 text-slate-400 hover:text-white transition-all duration-300 rounded-lg hover:bg-white/5 active:scale-90 group"
+							onclick={toggleTheme}
+							class="relative p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-300 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 active:scale-90 group"
+							aria-label="Toggle Theme"
+						>
+							{#if $theme === 'dark'}
+								<Moon class="w-5 h-5 transition-transform duration-300 group-hover:-rotate-12" />
+							{:else}
+								<Sun class="w-5 h-5 transition-transform duration-300 group-hover:rotate-90" />
+							{/if}
+						</button>
+						<button
+							class="relative p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-300 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 active:scale-90 group"
 							aria-label="Notifications"
 						>
 							<svg
@@ -1006,7 +1084,7 @@
 						</button>
 						<button
 							onclick={logout}
-							class="p-2 text-slate-400 hover:text-red-400 transition-all duration-300 rounded-lg hover:bg-red-500/10 active:scale-90 group"
+							class="p-2 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-all duration-300 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 active:scale-90 group"
 							aria-label="Logout"
 						>
 							<svg
@@ -1036,15 +1114,15 @@
 
 				<!-- Mobile Bottom Nav -->
 				<nav
-					class="md:hidden h-16 bg-slate-950/90 backdrop-blur-xl border-t border-white/10 fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2 safe-area-pb"
+					class="md:hidden h-16 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-t border-slate-200 dark:border-white/10 fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2 safe-area-pb"
 				>
 					<a
 						href="/dashboard"
 						class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive(
 							'/dashboard'
 						) || isRouteActive('/')
-							? 'text-blue-400'
-							: 'text-slate-500 hover:text-slate-300'} transition-colors"
+							? 'text-blue-600 dark:text-blue-400'
+							: 'text-slate-500 hover:text-slate-900 dark:text-slate-500 dark:hover:text-slate-300'} transition-colors"
 					>
 						<svg
 							class="w-5 h-5"
@@ -1067,8 +1145,8 @@
 						class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive(
 							'/performance'
 						)
-							? 'text-blue-400'
-							: 'text-slate-500 hover:text-slate-300'} transition-colors"
+							? 'text-blue-600 dark:text-blue-400'
+							: 'text-slate-500 hover:text-slate-900 dark:text-slate-500 dark:hover:text-slate-300'} transition-colors"
 					>
 						<svg
 							class="w-5 h-5"
@@ -1088,8 +1166,8 @@
 						class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive(
 							'/config'
 						) || isRouteActive('/config/')
-							? 'text-blue-400'
-							: 'text-slate-500 hover:text-slate-300'} transition-colors"
+							? 'text-blue-600 dark:text-blue-400'
+							: 'text-slate-500 hover:text-slate-900 dark:text-slate-500 dark:hover:text-slate-300'} transition-colors"
 					>
 						<svg
 							class="w-5 h-5"
@@ -1112,8 +1190,8 @@
 						class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive(
 							'/server'
 						)
-							? 'text-blue-400'
-							: 'text-slate-500 hover:text-slate-300'} transition-colors"
+							? 'text-blue-600 dark:text-blue-400'
+							: 'text-slate-500 hover:text-slate-900 dark:text-slate-500 dark:hover:text-slate-300'} transition-colors"
 					>
 						<svg
 							class="w-5 h-5"
@@ -1135,8 +1213,8 @@
 						class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive(
 							'/database'
 						)
-							? 'text-blue-400'
-							: 'text-slate-500 hover:text-slate-300'} transition-colors"
+							? 'text-blue-600 dark:text-blue-400'
+							: 'text-slate-500 hover:text-slate-900 dark:text-slate-500 dark:hover:text-slate-300'} transition-colors"
 					>
 						<svg
 							class="w-5 h-5"
@@ -1158,8 +1236,8 @@
 						class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive(
 							'/users'
 						)
-							? 'text-blue-400'
-							: 'text-slate-500 hover:text-slate-300'} transition-colors"
+							? 'text-blue-600 dark:text-blue-400'
+							: 'text-slate-500 hover:text-slate-900 dark:text-slate-500 dark:hover:text-slate-300'} transition-colors"
 					>
 						<Users class="w-5 h-5" />
 						<span class="text-[10px] font-medium">Players</span>
@@ -1169,8 +1247,8 @@
 						class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive(
 							'/redeye'
 						)
-							? 'text-blue-400'
-							: 'text-slate-500 hover:text-slate-300'} transition-colors"
+							? 'text-blue-600 dark:text-blue-400'
+							: 'text-slate-500 hover:text-slate-900 dark:text-slate-500 dark:hover:text-slate-300'} transition-colors"
 					>
 						<Eye class="w-5 h-5" />
 						<span class="text-[10px] font-medium">RedEye</span>
@@ -1180,8 +1258,8 @@
 						class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive(
 							'/notes'
 						)
-							? 'text-blue-400'
-							: 'text-slate-500 hover:text-slate-300'} transition-colors"
+							? 'text-blue-600 dark:text-blue-400'
+							: 'text-slate-500 hover:text-slate-900 dark:text-slate-500 dark:hover:text-slate-300'} transition-colors"
 					>
 						<StickyNote class="w-5 h-5" />
 						<span class="text-[10px] font-medium">Notes</span>
@@ -1194,15 +1272,17 @@
 		{#if $isAuthenticated && !isRouteActive('/login')}
 			<canvas
 				bind:this={particleCanvas}
-				class="fixed inset-0 -z-50 pointer-events-none"
-				style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);"
+				class="fixed inset-0 -z-50 pointer-events-none transition-colors duration-500"
+				style="background: {$theme === 'dark' 
+					? 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)' 
+					: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%)'};"
 			></canvas>
 
 			<!-- Additional atmospheric layers -->
 			<div class="fixed inset-0 -z-40 pointer-events-none">
 				<!-- Radial gradient overlay -->
 				<div
-					class="absolute inset-0 bg-gradient-radial from-transparent via-slate-900/30 to-slate-950/60"
+					class="absolute inset-0 bg-gradient-radial from-transparent via-slate-900/30 to-slate-950/60 opacity-50 dark:opacity-100 transition-opacity duration-500"
 				></div>
 
 				<!-- Animated gradient orbs -->
@@ -1318,12 +1398,18 @@
 		overflow: hidden;
 		backdrop-filter: blur(8px);
 		border: 1px solid transparent;
-		color: rgb(148, 163, 184);
 		opacity: 1;
 		transform: translateX(0);
 	}
 
-	.nav-link:hover {
+	:global(.dark) .nav-link {
+		color: rgb(148, 163, 184);
+	}
+	:global(:not(.dark)) .nav-link {
+		color: rgb(100, 116, 139);
+	}
+
+	:global(.dark) .nav-link:hover {
 		background: linear-gradient(to right, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
 		color: rgb(226, 232, 240);
 		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
@@ -1331,12 +1417,29 @@
 		transform: scale(1.01);
 	}
 
+	:global(:not(.dark)) .nav-link:hover {
+		background: linear-gradient(to right, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.02));
+		color: rgb(15, 23, 42);
+		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+		border-color: rgba(0, 0, 0, 0.1);
+		transform: scale(1.01);
+	}
+
 	.nav-link.nav-active {
+		border-color: rgba(37, 99, 235, 0.4);
+		transform: scale(1.02);
+	}
+
+	:global(.dark) .nav-link.nav-active {
 		background: linear-gradient(to right, rgba(37, 99, 235, 0.3), rgba(37, 99, 235, 0.2));
 		color: rgb(147, 197, 253);
 		box-shadow: 0 25px 50px -12px rgba(37, 99, 235, 0.25);
-		border-color: rgba(37, 99, 235, 0.4);
-		transform: scale(1.02);
+	}
+
+	:global(:not(.dark)) .nav-link.nav-active {
+		background: linear-gradient(to right, rgba(37, 99, 235, 0.15), rgba(37, 99, 235, 0.05));
+		color: rgb(37, 99, 235);
+		box-shadow: 0 25px 50px -12px rgba(37, 99, 235, 0.1);
 	}
 
 	.nav-icon {

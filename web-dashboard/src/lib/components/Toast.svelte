@@ -173,11 +173,11 @@
 
 	<!-- Content -->
 	<div class="flex-1 relative z-10">
-		<p class="font-semibold text-white text-sm slide-in-text drop-shadow-lg">
+		<p class="font-semibold text-slate-900 dark:text-white text-sm slide-in-text drop-shadow-lg">
 			{notification.message}
 		</p>
 		{#if notification.details}
-			<p class="text-xs text-slate-200 mt-1 slide-in-text-delayed drop-shadow">
+			<p class="text-xs text-slate-800 dark:text-slate-200 mt-1 slide-in-text-delayed drop-shadow">
 				{notification.details}
 			</p>
 		{/if}
@@ -186,7 +186,7 @@
 	<!-- Dismiss Button with hover effect -->
 	<button
 		onclick={() => onDismiss(notification.id)}
-		class="dismiss-button flex-shrink-0 text-slate-300 hover:text-white transition-all duration-200 p-1 rounded-full hover:bg-white/20 hover:rotate-90 relative z-10"
+		class="dismiss-button flex-shrink-0 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:text-white transition-all duration-200 p-1 rounded-full hover:bg-white/20 hover:rotate-90 relative z-10"
 	>
 		<X class="w-4 h-4" />
 	</button>

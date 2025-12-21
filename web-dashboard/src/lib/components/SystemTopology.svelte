@@ -75,8 +75,15 @@
 		// Calculate curved paths relative to the start point (RedEye) for animateMotion
 		// animateMotion moves the element *relative* to its initial position.
 		// If the element is at (0,0), the path should be absolute coordinates.
-		// However, SVG paths are usually absolute.
 		// Let's make the path start exactly at RedEye and end at Target.
+		
+		const midX1 = (redeyePos.x + tx) / 2;
+		const midY1 = (redeyePos.y + ty) / 2;
+		const dx = tx - redeyePos.x;
+		const dy = ty - redeyePos.y;
+		const dist = Math.sqrt(dx * dx + dy * dy);
+		const px = -dy / dist;
+		const py = dx / dist;
 		
 		const path1 = `M${redeyePos.x},${redeyePos.y} Q${midX1 + px * 60},${midY1 + py * 60} ${tx},${ty}`;
 		const path2 = `M${redeyePos.x},${redeyePos.y} Q${midX1 - px * 40},${midY1 - py * 40} ${tx},${ty}`;
@@ -872,7 +879,7 @@
 				<div class="relative w-20 h-20 flex items-center justify-center">
 					<!-- Octagonal frame -->
 					<div 
-						class="absolute inset-0 bg-slate-950 border-2 border-red-600/40 shadow-[0_0_15px_rgba(239,68,68,0.2)] backdrop-blur-xl group-hover:border-red-500 group-hover:shadow-[0_0_30px_rgba(239,68,68,0.4)] transition-all duration-300"
+						class="absolute inset-0 bg-white dark:bg-slate-950 border-2 border-red-600/40 shadow-[0_0_15px_rgba(239,68,68,0.2)] backdrop-blur-xl group-hover:border-red-500 group-hover:shadow-[0_0_30px_rgba(239,68,68,0.4)] transition-all duration-300"
 						style="clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"
 					></div>
 					
@@ -926,7 +933,7 @@
 				<div class="relative w-20 h-20 flex items-center justify-center">
 					<!-- Multi-layered octagonal frame -->
 					<div 
-						class="absolute inset-0 bg-slate-950 border-2 border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.2)] backdrop-blur-xl group-hover:border-emerald-400 group-hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] transition-all duration-300"
+						class="absolute inset-0 bg-white dark:bg-slate-950 border-2 border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.2)] backdrop-blur-xl group-hover:border-emerald-400 group-hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] transition-all duration-300"
 						style="clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"
 					></div>
 					<div 
@@ -1042,7 +1049,7 @@
 					`}
 						>
 							{#if isActive}
-								<Cpu class={`w-6 h-6 text-slate-300 transition-colors duration-800`} />
+								<Cpu class={`w-6 h-6 text-slate-700 dark:text-slate-300 transition-colors duration-800`} />
 							{:else}
 								<Skull
 									class={`w-6 h-6 text-red-400 animate-pulse-slow transition-colors duration-800`}
@@ -1061,18 +1068,18 @@
 
 					<!-- Enhanced tooltip -->
 					<div
-						class="absolute top-16 flex flex-col items-center bg-slate-950/95 backdrop-blur-sm px-4 py-2 rounded-xl border border-slate-700/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-40 pointer-events-none shadow-2xl"
+						class="absolute top-16 flex flex-col items-center bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm px-4 py-2 rounded-xl border border-slate-300/50 dark:border-slate-700/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-40 pointer-events-none shadow-2xl"
 					>
-						<span class="text-sm font-bold text-white mb-1">Spawner #{spawner.id}</span>
+						<span class="text-sm font-bold text-slate-900 dark:text-white mb-1">Spawner #{spawner.id}</span>
 						<div
 							class="w-full h-px bg-gradient-to-r from-transparent via-slate-600 to-transparent mb-1"
 						></div>
-						<div class="flex items-center gap-2 text-xs text-slate-300">
+						<div class="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300">
 							<Activity class="w-3 h-3" />
 							<span>{spawner.region}</span>
 						</div>
-						<div class="text-xs text-slate-400 mt-1">
-							Instances: <span class="font-mono text-slate-200">{spawner.current_instances}</span
+						<div class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+							Instances: <span class="font-mono text-slate-800 dark:text-slate-200">{spawner.current_instances}</span
 							>/<span class="font-mono">{spawner.max_instances}</span>
 							<span class="ml-2 text-[10px]">({utilization.toFixed(0)}%)</span>
 						</div>
@@ -1157,14 +1164,14 @@
 <!-- Stats overlay (outside zoom wrapper so it stays fixed) -->
 <div class="absolute top-4 left-4 flex flex-col gap-2 text-xs font-mono z-30">
 	<div class="backdrop-blur-sm px-3 py-2 rounded-lg">
-		<span class="text-slate-400/30">Active Spawners:</span>
+		<span class="text-slate-500/30 dark:text-slate-400/30">Active Spawners:</span>
 		<span class="text-emerald-400/30 ml-2 font-bold">
 			{$spawners.filter((s) => s.status === 'online' || s.status === 'Online')
 				.length}/{$spawners.length}
 		</span>
 	</div>
 	<div class="bg-transparent backdrop-blur-sm px-3 py-2 rounded-lg">
-		<span class="text-slate-400/30">Total Instances:</span>
+		<span class="text-slate-500/30 dark:text-slate-400/30">Total Instances:</span>
 		<span class="text-blue-400/30 ml-2 font-bold">
 			{$spawners.reduce((sum, s) => sum + s.current_instances, 0)}/{$spawners.reduce(
 				(sum, s) => sum + s.max_instances,

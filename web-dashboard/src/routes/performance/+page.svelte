@@ -304,11 +304,11 @@
 	<!-- Header -->
 	<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
 		<div>
-			<h1 class="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
+			<h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
 				<Zap class="w-6 h-6 sm:w-8 sm:h-8 text-yellow-400" />
 				Performance
 			</h1>
-			<p class="text-slate-400 mt-1 sm:mt-2 flex items-center gap-2 text-xs sm:text-sm">
+			<p class="text-slate-500 dark:text-slate-400 mt-1 sm:mt-2 flex items-center gap-2 text-xs sm:text-sm">
 				<Activity class="w-3 h-3 sm:w-4 sm:h-4 text-emerald-400" />
 				Real-time monitoring
 			</p>
@@ -336,7 +336,7 @@
 				onclick={toggleAutoRefresh}
 				class="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border transition-all duration-200 flex items-center gap-2 text-xs sm:text-sm {autoRefresh
 					? 'bg-blue-500/10 border-blue-500/30 text-blue-400'
-					: 'bg-slate-800/50 border-slate-700/50 text-slate-400'}"
+					: 'bg-slate-800/50 border-slate-300/50 dark:border-slate-700/50 text-slate-500 dark:text-slate-400'}"
 			>
 				<RefreshCw
 					class="w-3 h-3 sm:w-4 sm:h-4 {autoRefresh ? 'animate-spin' : ''}"
@@ -349,7 +349,7 @@
 			<button
 				onclick={fetchMetrics}
 				disabled={loading}
-				class="p-1.5 sm:p-2 rounded-xl bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-white hover:border-slate-600 transition-all disabled:opacity-50"
+				class="p-1.5 sm:p-2 rounded-xl bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:border-slate-600 transition-all disabled:opacity-50"
 			>
 				<RefreshCw class="w-4 h-4 sm:w-5 sm:h-5 {loading ? 'animate-spin' : ''}" />
 			</button>
@@ -382,21 +382,21 @@
 			transition:fade={{ duration: 300 }}
 		>
 			<!-- Uptime -->
-			<div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3 sm:p-4">
-				<div class="flex items-center gap-2 text-slate-400 text-[10px] sm:text-xs font-medium mb-1 sm:mb-2">
+			<div class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-3 sm:p-4">
+				<div class="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-medium mb-1 sm:mb-2">
 					<Timer class="w-3 h-3 sm:w-4 sm:h-4" />
 					UPTIME
 				</div>
-				<div class="text-lg sm:text-2xl font-bold text-white truncate">{formatDuration(metrics.master.uptime_ms)}</div>
+				<div class="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white truncate">{formatDuration(metrics.master.uptime_ms)}</div>
 			</div>
 
 			<!-- Goroutines -->
-			<div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3 sm:p-4">
-				<div class="flex items-center gap-2 text-slate-400 text-[10px] sm:text-xs font-medium mb-1 sm:mb-2">
+			<div class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-3 sm:p-4">
+				<div class="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-medium mb-1 sm:mb-2">
 					<GitBranch class="w-3 h-3 sm:w-4 sm:h-4" />
 					GOROUTINES
 				</div>
-				<div class="text-lg sm:text-2xl font-bold text-white flex items-center gap-2">
+				<div class="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
 					{metrics.master.num_goroutine}
 					{#if goroutineTrend === 'up'}
 						<ArrowUp class="w-3 h-3 sm:w-4 sm:h-4 text-amber-400" />
@@ -410,12 +410,12 @@
 			</div>
 
 			<!-- Heap Usage -->
-			<div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3 sm:p-4">
-				<div class="flex items-center gap-2 text-slate-400 text-[10px] sm:text-xs font-medium mb-1 sm:mb-2">
+			<div class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-3 sm:p-4">
+				<div class="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-medium mb-1 sm:mb-2">
 					<MemoryStick class="w-3 h-3 sm:w-4 sm:h-4" />
 					HEAP ALLOC
 				</div>
-				<div class="text-lg sm:text-2xl font-bold text-white flex items-center gap-2 truncate">
+				<div class="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2 truncate">
 					{formatBytes(metrics.master.heap_alloc)}
 					{#if heapTrend === 'up'}
 						<ArrowUp class="w-3 h-3 sm:w-4 sm:h-4 text-amber-400" />
@@ -425,67 +425,66 @@
 						<Minus class="w-3 h-3 sm:w-4 sm:h-4 text-slate-500" />
 					{/if}
 				</div>
-				<div class="text-[10px] sm:text-xs text-slate-500 mt-1">
-					{(metrics.master.heap_usage_ratio * 100).toFixed(1)}% of sys
-				</div>
-			</div>
-
-			<!-- GC Cycles -->
-			<div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3 sm:p-4">
-				<div class="flex items-center gap-2 text-slate-400 text-[10px] sm:text-xs font-medium mb-1 sm:mb-2">
-					<Trash2 class="w-3 h-3 sm:w-4 sm:h-4" />
-					GC CYCLES
-				</div>
-				<div class="text-lg sm:text-2xl font-bold text-white">{metrics.master.num_gc}</div>
-				<div class="text-[10px] sm:text-xs text-slate-500 mt-1">
-					CPU: {(metrics.master.gc_cpu_fraction * 100).toFixed(2)}%
-				</div>
-			</div>
-
-			<!-- Active Spawners -->
-			<div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3 sm:p-4">
-				<div class="flex items-center gap-2 text-slate-400 text-[10px] sm:text-xs font-medium mb-1 sm:mb-2">
-					<Server class="w-3 h-3 sm:w-4 sm:h-4" />
-					SPAWNERS
-				</div>
-				<div class="text-lg sm:text-2xl font-bold text-white">
-					<span class="text-emerald-400">{metrics.spawners.online_spawners}</span>
-					<span class="text-slate-500">/{metrics.spawners.total_spawners}</span>
-				</div>
-				<div class="text-[10px] sm:text-xs text-slate-500 mt-1">
-					{metrics.spawners.running_instances} instances
-				</div>
-			</div>
-
-			<!-- Requests -->
-			<div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3 sm:p-4">
-				<div class="flex items-center gap-2 text-slate-400 text-[10px] sm:text-xs font-medium mb-1 sm:mb-2">
-					<Network class="w-3 h-3 sm:w-4 sm:h-4" />
-					REQUESTS
-				</div>
-				<div class="text-lg sm:text-2xl font-bold text-white truncate">
-					{formatNumber(metrics.network.total_requests)}
-				</div>
-				<div class="text-[10px] sm:text-xs text-slate-500 mt-1">
-					{metrics.network.requests_per_second.toFixed(1)}/s
-				</div>
-			</div>
-		</div>
+				                <div class="text-[10px] sm:text-xs text-slate-500 mt-1">
+				                    {(metrics.master.heap_usage_ratio * 100)?.toFixed(1) || 0}% of sys
+				                </div>
+				            </div>
+				
+				            <!-- GC Cycles -->
+				            <div class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-3 sm:p-4">
+				                <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-medium mb-1 sm:mb-2">
+				                    <Trash2 class="w-3 h-3 sm:w-4 sm:h-4" />
+				                    GC CYCLES
+				                </div>
+				                <div class="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white">{metrics.master.num_gc}</div>
+				                <div class="text-[10px] sm:text-xs text-slate-500 mt-1">
+				                    CPU: {(metrics.master.gc_cpu_fraction * 100)?.toFixed(2) || 0}%
+				                </div>
+				            </div>
+				
+				            <!-- Active Spawners -->
+				            <div class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-3 sm:p-4">
+				                <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-medium mb-1 sm:mb-2">
+				                    <Server class="w-3 h-3 sm:w-4 sm:h-4" />
+				                    SPAWNERS
+				                </div>
+				                <div class="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white">
+				                    <span class="text-emerald-400">{metrics.spawners.online_spawners}</span>
+				                    <span class="text-slate-500">/{metrics.spawners.total_spawners}</span>
+				                </div>
+				                <div class="text-[10px] sm:text-xs text-slate-50">
+				                    {metrics.spawners.running_instances} instances
+				                </div>
+				            </div>
+				
+				            <!-- Requests -->
+				            <div class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-3 sm:p-4">
+				                <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-medium mb-1 sm:mb-2">
+				                    <Network class="w-3 h-3 sm:w-4 sm:h-4" />
+				                    REQUESTS
+				                </div>
+				                <div class="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white truncate">
+				                    {formatNumber(metrics.network.total_requests)}
+				                </div>
+				                <div class="text-[10px] sm:text-xs text-slate-500 mt-1">
+				                    {metrics.network.requests_per_second?.toFixed(1) || 0}/s
+				                </div>
+				            </div>		</div>
 
 		<!-- Main Grid -->
 		<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
 			<!-- Master Server Memory Card -->
 			<div
-				class="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden"
+				class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl overflow-hidden"
 				transition:fly={{ y: 20, duration: 400, delay: 100 }}
 			>
-				<div class="p-4 border-b border-slate-700/50 flex items-center justify-between">
+				<div class="p-4 border-b border-slate-300/50 dark:border-slate-700/50 flex items-center justify-between">
 					<div class="flex items-center gap-3">
 						<div class="p-2 bg-blue-500/20 rounded-lg">
 							<MemoryStick class="w-5 h-5 text-blue-400" />
 						</div>
 						<div>
-							<h3 class="font-semibold text-white text-sm sm:text-base">Memory Management</h3>
+							<h3 class="font-semibold text-slate-900 dark:text-white text-sm sm:text-base">Memory Management</h3>
 							<p class="text-[10px] sm:text-xs text-slate-500">Go Runtime Memory Statistics</p>
 						</div>
 					</div>
@@ -527,7 +526,7 @@
 							style="width: {metrics.master.heap_usage_ratio * 100}%"
 						></div>
 						<div
-							class="absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs font-medium text-white"
+							class="absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs font-medium text-slate-900 dark:text-white"
 						>
 							{formatBytes(metrics.master.heap_inuse)} / {formatBytes(metrics.master.heap_sys)}
 						</div>
@@ -537,35 +536,35 @@
 					<div class="grid grid-cols-2 gap-3">
 						<div class="bg-slate-900/30 rounded-lg p-3">
 							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Heap Allocated</div>
-							<div class="text-sm sm:text-lg font-semibold text-white">
+							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
 								{formatBytes(metrics.master.heap_alloc)}
 							</div>
 						</div>
 						<div class="bg-slate-900/30 rounded-lg p-3">
 							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Heap Idle</div>
-							<div class="text-sm sm:text-lg font-semibold text-white">
+							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
 								{formatBytes(metrics.master.heap_idle)}
 							</div>
 						</div>
 						<div class="bg-slate-900/30 rounded-lg p-3">
 							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Stack In Use</div>
-							<div class="text-sm sm:text-lg font-semibold text-white">
+							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
 								{formatBytes(metrics.master.stack_inuse)}
 							</div>
 						</div>
 						<div class="bg-slate-900/30 rounded-lg p-3">
 							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Total System</div>
-							<div class="text-sm sm:text-lg font-semibold text-white">{formatBytes(metrics.master.sys)}</div>
+							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">{formatBytes(metrics.master.sys)}</div>
 						</div>
 						<div class="bg-slate-900/30 rounded-lg p-3">
 							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Live Objects</div>
-							<div class="text-sm sm:text-lg font-semibold text-white">
+							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
 								{formatNumber(metrics.master.live_objects)}
 							</div>
 						</div>
 						<div class="bg-slate-900/30 rounded-lg p-3">
 							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Alloc Rate</div>
-							<div class="text-sm sm:text-lg font-semibold text-white">
+							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
 								{formatBytes(metrics.master.heap_alloc_rate)}/s
 							</div>
 						</div>
@@ -575,15 +574,15 @@
 
 			<!-- Garbage Collection Card -->
 			<div
-				class="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden"
+				class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl overflow-hidden"
 				transition:fly={{ y: 20, duration: 400, delay: 150 }}
 			>
-				<div class="p-4 border-b border-slate-700/50 flex items-center gap-3">
+				<div class="p-4 border-b border-slate-300/50 dark:border-slate-700/50 flex items-center gap-3">
 					<div class="p-2 bg-amber-500/20 rounded-lg">
 						<Trash2 class="w-5 h-5 text-amber-400" />
 					</div>
 					<div>
-						<h3 class="font-semibold text-white text-sm sm:text-base">Garbage Collection</h3>
+						<h3 class="font-semibold text-slate-900 dark:text-white text-sm sm:text-base">Garbage Collection</h3>
 						<p class="text-[10px] sm:text-xs text-slate-500">GC Performance & Statistics</p>
 					</div>
 				</div>
@@ -592,7 +591,7 @@
 					<!-- GC CPU Impact -->
 					<div>
 						<div class="flex items-center justify-between text-xs sm:text-sm mb-2">
-							<span class="text-slate-400">GC CPU Usage</span>
+							<span class="text-slate-500 dark:text-slate-400">GC CPU Usage</span>
 							<span
 								class="font-medium {metrics.master.gc_cpu_fraction > 0.05
 									? 'text-red-400'
@@ -619,33 +618,33 @@
 					<div class="grid grid-cols-2 gap-3">
 						<div class="bg-slate-900/30 rounded-lg p-3">
 							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Total GC Cycles</div>
-							<div class="text-sm sm:text-lg font-semibold text-white">{metrics.master.num_gc}</div>
+							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">{metrics.master.num_gc}</div>
 						</div>
 						<div class="bg-slate-900/30 rounded-lg p-3">
 							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Forced GC</div>
-							<div class="text-sm sm:text-lg font-semibold text-white">{metrics.master.num_forced_gc}</div>
+							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">{metrics.master.num_forced_gc}</div>
 						</div>
 						<div class="bg-slate-900/30 rounded-lg p-3">
 							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Last Pause</div>
-							<div class="text-sm sm:text-lg font-semibold text-white">
+							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
 								{formatNanoseconds(metrics.master.last_gc_pause_ns)}
 							</div>
 						</div>
 						<div class="bg-slate-900/30 rounded-lg p-3">
 							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Avg Pause</div>
-							<div class="text-sm sm:text-lg font-semibold text-white">
+							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
 								{formatNanoseconds(metrics.master.avg_gc_pause_ns)}
 							</div>
 						</div>
 						<div class="bg-slate-900/30 rounded-lg p-3">
 							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Max Pause</div>
-							<div class="text-sm sm:text-lg font-semibold text-white">
+							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
 								{formatNanoseconds(metrics.master.max_gc_pause_ns)}
 							</div>
 						</div>
 						<div class="bg-slate-900/30 rounded-lg p-3">
 							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Next GC Target</div>
-							<div class="text-sm sm:text-lg font-semibold text-white">
+							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
 								{formatBytes(metrics.master.next_gc_target)}
 							</div>
 						</div>
@@ -655,16 +654,16 @@
 
 			<!-- Database Performance Card -->
 			<div
-				class="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden"
+				class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl overflow-hidden"
 				transition:fly={{ y: 20, duration: 400, delay: 200 }}
 			>
-				<div class="p-4 border-b border-slate-700/50 flex items-center justify-between">
+				<div class="p-4 border-b border-slate-300/50 dark:border-slate-700/50 flex items-center justify-between">
 					<div class="flex items-center gap-3">
 						<div class="p-2 bg-emerald-500/20 rounded-lg">
 							<Database class="w-5 h-5 text-emerald-400" />
 						</div>
 						<div>
-							<h3 class="font-semibold text-white text-sm sm:text-base">Database Performance</h3>
+							<h3 class="font-semibold text-slate-900 dark:text-white text-sm sm:text-base">Database Performance</h3>
 							<p class="text-[10px] sm:text-xs text-slate-500">PostgreSQL Connection Pool</p>
 						</div>
 					</div>
@@ -686,8 +685,8 @@
 					<!-- Connection Pool Visual -->
 					<div>
 						<div class="flex items-center justify-between text-xs sm:text-sm mb-2">
-							<span class="text-slate-400">Connection Pool</span>
-							<span class="text-white font-medium"
+							<span class="text-slate-500 dark:text-slate-400">Connection Pool</span>
+							<span class="text-slate-900 dark:text-white font-medium"
 								>{metrics.database.in_use} / {metrics.database.open_connections}</span
 							>
 						</div>
@@ -707,14 +706,14 @@
 						</div>
 						<div class="flex gap-4 mt-2 text-[10px] sm:text-xs">
 							<span class="text-blue-400">● In Use: {metrics.database.in_use}</span>
-							<span class="text-slate-400">● Idle: {metrics.database.idle}</span>
+							<span class="text-slate-500 dark:text-slate-400">● Idle: {metrics.database.idle}</span>
 						</div>
 					</div>
 
 					<!-- Cache Hit Ratio -->
 					<div>
 						<div class="flex items-center justify-between text-xs sm:text-sm mb-2">
-							<span class="text-slate-400">Cache Hit Ratio</span>
+							<span class="text-slate-500 dark:text-slate-400">Cache Hit Ratio</span>
 							<span
 								class="font-medium {metrics.database.cache_hit_ratio > 95
 									? 'text-emerald-400'
@@ -722,7 +721,7 @@
 										? 'text-amber-400'
 										: 'text-red-400'}"
 							>
-								{metrics.database.cache_hit_ratio.toFixed(2)}%
+								{(metrics.database.cache_hit_ratio)?.toFixed(2)}%
 							</span>
 						</div>
 						<div class="h-2 bg-slate-900/50 rounded-full overflow-hidden">
@@ -741,7 +740,7 @@
 					<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
 						<div class="bg-slate-900/30 rounded-lg p-3">
 							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Size</div>
-							<div class="text-sm sm:text-lg font-semibold text-white">{metrics.database.size || 'N/A'}</div>
+							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">{metrics.database.size || 'N/A'}</div>
 						</div>
 						<div class="bg-slate-900/30 rounded-lg p-3">
 							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Commits</div>
@@ -757,19 +756,19 @@
 						</div>
 						<div class="bg-slate-900/30 rounded-lg p-3">
 							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Rows Fetched</div>
-							<div class="text-sm sm:text-lg font-semibold text-white">
+							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
 								{formatNumber(metrics.database.tup_fetched)}
 							</div>
 						</div>
 						<div class="bg-slate-900/30 rounded-lg p-3">
 							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Rows Inserted</div>
-							<div class="text-sm sm:text-lg font-semibold text-white">
+							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
 								{formatNumber(metrics.database.tup_inserted)}
 							</div>
 						</div>
 						<div class="bg-slate-900/30 rounded-lg p-3">
 							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Wait Count</div>
-							<div class="text-sm sm:text-lg font-semibold text-white">
+							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
 								{formatNumber(metrics.database.wait_count)}
 							</div>
 						</div>
@@ -779,15 +778,15 @@
 
 			<!-- Network & API Card -->
 			<div
-				class="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden"
+				class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl overflow-hidden"
 				transition:fly={{ y: 20, duration: 400, delay: 250 }}
 			>
-				<div class="p-4 border-b border-slate-700/50 flex items-center gap-3">
+				<div class="p-4 border-b border-slate-300/50 dark:border-slate-700/50 flex items-center gap-3">
 					<div class="p-2 bg-purple-500/20 rounded-lg">
 						<Network class="w-5 h-5 text-purple-400" />
 					</div>
 					<div>
-						<h3 class="font-semibold text-white text-sm sm:text-base">Network & API</h3>
+						<h3 class="font-semibold text-slate-900 dark:text-white text-sm sm:text-base">Network & API</h3>
 						<p class="text-[10px] sm:text-xs text-slate-500">Request Statistics & Bandwidth</p>
 					</div>
 				</div>
@@ -796,7 +795,7 @@
 					<!-- Error Rate -->
 					<div>
 						<div class="flex items-center justify-between text-xs sm:text-sm mb-2">
-							<span class="text-slate-400">Error Rate</span>
+							<span class="text-slate-500 dark:text-slate-400">Error Rate</span>
 							<span
 								class="font-medium {metrics.network.error_rate < 1
 									? 'text-emerald-400'
@@ -804,7 +803,7 @@
 										? 'text-amber-400'
 										: 'text-red-400'}"
 							>
-								{metrics.network.error_rate.toFixed(2)}%
+								{(metrics.network.error_rate)?.toFixed(2)}%
 							</span>
 						</div>
 						<div class="h-2 bg-slate-900/50 rounded-full overflow-hidden">
@@ -823,7 +822,7 @@
 					<div class="grid grid-cols-2 gap-3">
 						<div class="bg-slate-900/30 rounded-lg p-3">
 							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Total Requests</div>
-							<div class="text-sm sm:text-lg font-semibold text-white">
+							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
 								{formatNumber(metrics.network.total_requests)}
 							</div>
 						</div>
@@ -835,13 +834,13 @@
 						</div>
 						<div class="bg-slate-900/30 rounded-lg p-3">
 							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Requests/sec</div>
-							<div class="text-sm sm:text-lg font-semibold text-white">
-								{metrics.network.requests_per_second.toFixed(2)}
+							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
+								{(metrics.network.requests_per_second)?.toFixed(2)}
 							</div>
 						</div>
 						<div class="bg-slate-900/30 rounded-lg p-3">
 							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Active WS Connections</div>
-							<div class="text-sm sm:text-lg font-semibold text-white">
+							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
 								{metrics.network.active_connections}
 							</div>
 						</div>
@@ -863,16 +862,16 @@
 
 			<!-- RedEye Guardian Performance Card -->
 			<div
-				class="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden"
+				class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl overflow-hidden"
 				transition:fly={{ y: 20, duration: 400, delay: 275 }}
 			>
-				<div class="p-4 border-b border-slate-700/50 flex items-center justify-between">
+				<div class="p-4 border-b border-slate-300/50 dark:border-slate-700/50 flex items-center justify-between">
 					<div class="flex items-center gap-3">
 						<div class="p-2 bg-red-500/20 rounded-lg">
 							<Eye class="w-5 h-5 text-red-400" />
 						</div>
 						<div>
-							<h3 class="font-semibold text-white text-sm sm:text-base">RedEye Guardian</h3>
+							<h3 class="font-semibold text-slate-900 dark:text-white text-sm sm:text-base">RedEye Guardian</h3>
 							<p class="text-[10px] sm:text-xs text-slate-500">Security & Traffic Shield</p>
 						</div>
 					</div>
@@ -889,7 +888,7 @@
 					<!-- Active Bans -->
 					<div>
 						<div class="flex items-center justify-between text-xs sm:text-sm mb-2">
-							<span class="text-slate-400">Security Shield</span>
+							<span class="text-slate-500 dark:text-slate-400">Security Shield</span>
 							<span class="text-emerald-400 font-medium flex items-center gap-1.5">
 								<ShieldCheck class="w-3.5 h-3.5" />
 								Active
@@ -904,7 +903,7 @@
 							</div>
 							<div class="bg-slate-900/30 rounded-lg p-3">
 								<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Active Bans</div>
-								<div class="text-sm sm:text-lg font-semibold text-white">
+								<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
 									{metrics.network.redeye_active_bans}
 								</div>
 							</div>
@@ -929,16 +928,16 @@
 		<!-- Spawners Detail Section -->
 		{#if metrics.spawners.spawner_details && metrics.spawners.spawner_details.length > 0}
 			<div
-				class="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden"
+				class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl overflow-hidden"
 				transition:fly={{ y: 20, duration: 400, delay: 300 }}
 			>
-				<div class="p-4 border-b border-slate-700/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+				<div class="p-4 border-b border-slate-300/50 dark:border-slate-700/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
 					<div class="flex items-center gap-3">
 						<div class="p-2 bg-cyan-500/20 rounded-lg">
 							<Server class="w-5 h-5 text-cyan-400" />
 						</div>
 						<div>
-							<h3 class="font-semibold text-white text-sm sm:text-base">Spawner Fleet</h3>
+							<h3 class="font-semibold text-slate-900 dark:text-white text-sm sm:text-base">Spawner Fleet</h3>
 							<p class="text-[10px] sm:text-xs text-slate-500">
 								{metrics.spawners.online_spawners} online of {metrics.spawners.total_spawners} total •
 								{metrics.spawners.running_instances} instances running
@@ -949,21 +948,21 @@
 					<!-- Aggregate Stats -->
 					<div class="flex gap-4 text-xs sm:text-sm w-full sm:w-auto justify-around sm:justify-end">
 						<div class="text-center">
-							<div class="text-slate-400 text-[10px] sm:text-xs">Avg CPU</div>
-							<div class="font-semibold text-white">
-								{metrics.spawners.avg_cpu_usage.toFixed(1)}%
+							<div class="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs">Avg CPU</div>
+							<div class="font-semibold text-slate-900 dark:text-white">
+								{(metrics.spawners.avg_cpu_usage)?.toFixed(1)}%
 							</div>
 						</div>
 						<div class="text-center">
-							<div class="text-slate-400 text-[10px] sm:text-xs">Memory</div>
-							<div class="font-semibold text-white">
-								{metrics.spawners.mem_usage_percent.toFixed(1)}%
+							<div class="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs">Memory</div>
+							<div class="font-semibold text-slate-900 dark:text-white">
+								{(metrics.spawners.mem_usage_percent)?.toFixed(1)}%
 							</div>
 						</div>
 						<div class="text-center">
-							<div class="text-slate-400 text-[10px] sm:text-xs">Disk</div>
-							<div class="font-semibold text-white">
-								{metrics.spawners.disk_usage_percent.toFixed(1)}%
+							<div class="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs">Disk</div>
+							<div class="font-semibold text-slate-900 dark:text-white">
+								{(metrics.spawners.disk_usage_percent)?.toFixed(1)}%
 							</div>
 						</div>
 					</div>
@@ -981,14 +980,14 @@
 											: 'bg-red-500'}"
 									></div>
 									<div class="flex-1 sm:flex-initial">
-										<div class="font-medium text-white flex items-center gap-2 text-sm sm:text-base">
+										<div class="font-medium text-slate-900 dark:text-white flex items-center gap-2 text-sm sm:text-base">
 											{spawner.region}
 											<span class="text-[10px] sm:text-xs text-slate-500">#{spawner.id}</span>
 										</div>
 										<div class="text-[10px] sm:text-xs text-slate-500">
 											{spawner.host}:{spawner.port}
 											{#if spawner.game_version}
-												<span class="ml-2 px-1.5 py-0.5 bg-slate-700 rounded text-slate-400"
+												<span class="ml-2 px-1.5 py-0.5 bg-slate-700 rounded text-slate-500 dark:text-slate-400"
 													>v{spawner.game_version}</span
 												>
 											{/if}
@@ -997,7 +996,7 @@
 									<!-- Instances (Mobile: Moved next to name) -->
 									<div class="text-center px-2 sm:hidden">
 										<div class="text-[10px] text-slate-500">Inst.</div>
-										<div class="font-semibold text-white text-sm">
+										<div class="font-semibold text-slate-900 dark:text-white text-sm">
 											{spawner.current_instances}
 										</div>
 									</div>
@@ -1008,7 +1007,7 @@
 									<!-- Instances (Desktop) -->
 									<div class="text-center px-4 hidden sm:block">
 										<div class="text-xs text-slate-500">Instances</div>
-										<div class="font-semibold text-white">
+										<div class="font-semibold text-slate-900 dark:text-white">
 											{spawner.current_instances} / {spawner.max_instances}
 										</div>
 									</div>
@@ -1022,7 +1021,7 @@
 													? 'text-red-400'
 													: spawner.cpu_usage > 60
 														? 'text-amber-400'
-														: 'text-emerald-400'}>{spawner.cpu_usage.toFixed(1)}%</span
+														: 'text-emerald-400'}>{(spawner.cpu_usage)?.toFixed(1)}%</span
 											>
 										</div>
 										<div class="h-1.5 bg-slate-900/50 rounded-full overflow-hidden">
@@ -1046,7 +1045,7 @@
 													? 'text-red-400'
 													: spawner.mem_percent > 70
 														? 'text-amber-400'
-														: 'text-emerald-400'}>{spawner.mem_percent.toFixed(1)}%</span
+														: 'text-emerald-400'}>{(spawner.mem_percent)?.toFixed(1)}%</span
 											>
 										</div>
 										<div class="h-1.5 bg-slate-900/50 rounded-full overflow-hidden">
@@ -1070,7 +1069,7 @@
 													? 'text-red-400'
 													: spawner.disk_percent > 75
 														? 'text-amber-400'
-														: 'text-emerald-400'}>{spawner.disk_percent.toFixed(1)}%</span
+														: 'text-emerald-400'}>{(spawner.disk_percent)?.toFixed(1)}%</span
 											>
 										</div>
 										<div class="h-1.5 bg-slate-900/50 rounded-full overflow-hidden">
@@ -1094,7 +1093,7 @@
 
 		<!-- System Info Footer -->
 		<div
-			class="bg-slate-800/30 border border-slate-700/30 rounded-xl p-4"
+			class="bg-slate-800/30 border border-slate-300/30 dark:border-slate-700/30 rounded-xl p-4"
 			transition:fade={{ duration: 300, delay: 350 }}
 		>
 			<div class="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-[10px] sm:text-xs text-slate-500">
@@ -1125,7 +1124,7 @@
 				<div class="flex items-center justify-center py-20">
 					<div class="flex flex-col items-center gap-4">
 						<RefreshCw class="w-10 h-10 text-blue-400 animate-spin" />
-						<p class="text-slate-400">Loading metrics...</p>
+						<p class="text-slate-500 dark:text-slate-400">Loading metrics...</p>
 					</div>
 				</div>
 			{/if}
@@ -1146,20 +1145,20 @@
 					</div>
 		
 					<!-- Header -->
-					<div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-950/50 relative z-10">
+					<div class="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-white/50 dark:bg-slate-950/50 relative z-10">
 						<div class="flex items-center gap-4">
 							<div class="p-3 bg-red-500/20 rounded-2xl relative overflow-hidden group">
 								<Eye class="w-6 h-6 text-red-500 relative z-10" />
 								<div class="absolute inset-0 bg-red-500/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
 							</div>
 							<div>
-								<h2 class="text-2xl font-black text-white uppercase tracking-tighter">RedEye Neural Core</h2>
+								<h2 class="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">RedEye Neural Core</h2>
 								<p class="text-[10px] text-red-500/70 font-mono uppercase tracking-[0.2em]">Active Defense Subsystem Metrics</p>
 							</div>
 						</div>
 						<button 
 							onclick={() => showRedEyeModal = false}
-							class="p-2 hover:bg-white/5 rounded-xl text-slate-500 hover:text-white transition-all"
+							class="p-2 hover:bg-white/5 rounded-xl text-slate-500 hover:text-slate-900 dark:text-white transition-all"
 						>
 							<XCircle class="w-6 h-6" />
 						</button>
@@ -1169,11 +1168,11 @@
 					<div class="p-8 overflow-y-auto relative z-10 flex-1 custom-scrollbar">
 						<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
 							<!-- Threat Level -->
-							<div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 relative group overflow-hidden">
+							<div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 relative group overflow-hidden">
 								<div class="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
 								<div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Threat Level</div>
 								<div class="flex items-end gap-2">
-									<div class="text-4xl font-black text-white font-mono">
+									<div class="text-4xl font-black text-slate-900 dark:text-white font-mono">
 										{metrics.network.redeye_total_blocks > 1000 ? 'ELEVATED' : 'STABLE'}
 									</div>
 								</div>
@@ -1185,55 +1184,55 @@
 							</div>
 		
 							<!-- Block Efficiency -->
-							<div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
+							<div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 relative overflow-hidden">
 								<div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
 								<div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Shield Integrity</div>
-								<div class="text-4xl font-black text-white font-mono">99.9%</div>
+								<div class="text-4xl font-black text-slate-900 dark:text-white font-mono">99.9%</div>
 								<div class="mt-4 text-[10px] text-emerald-500 font-mono">AUTOMATED DEFENSE ACTIVE</div>
 							</div>
 		
 							<!-- Active Bans -->
-							<div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
+							<div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 relative overflow-hidden">
 								<div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
 								<div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Neural Bans</div>
-								<div class="text-4xl font-black text-white font-mono">{metrics.network.redeye_active_bans}</div>
+								<div class="text-4xl font-black text-slate-900 dark:text-white font-mono">{metrics.network.redeye_active_bans}</div>
 								<div class="mt-4 text-[10px] text-blue-500 font-mono">ACTIVE REPUTATION QUARANTINE</div>
 							</div>
 						</div>
 		
 						<!-- Detailed Metrics Section -->
 						<div class="space-y-6">
-							<h3 class="text-xs font-black text-slate-400 uppercase tracking-[0.3em] flex items-center gap-3">
+							<h3 class="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.3em] flex items-center gap-3">
 								<BarChart3 class="w-4 h-4 text-red-500" />
 								Interception Analytics
 							</h3>
 		
 							<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 								<!-- Total Interceptions -->
-								<div class="bg-slate-950/50 border border-slate-800 rounded-2xl p-6">
+								<div class="bg-white/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
 									<div class="flex justify-between items-start mb-6">
 										<div>
-											<h4 class="text-sm font-bold text-white uppercase tracking-wider">Total Interceptions</h4>
+											<h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Total Interceptions</h4>
 											<p class="text-[10px] text-slate-500 font-mono">Cumulative DENY operations</p>
 										</div>
 										<ShieldAlert class="w-5 h-5 text-red-500" />
 									</div>
-									<div class="text-3xl font-black text-white mb-2">{formatNumber(metrics.network.redeye_total_blocks)}</div>
+									<div class="text-3xl font-black text-slate-900 dark:text-white mb-2">{formatNumber(metrics.network.redeye_total_blocks)}</div>
 									<div class="h-1.5 bg-slate-900 rounded-full overflow-hidden">
 										<div class="h-full bg-red-500 w-[65%] animate-pulse"></div>
 									</div>
 								</div>
 		
 								<!-- Rate Limiting -->
-								<div class="bg-slate-950/50 border border-slate-800 rounded-2xl p-6">
+								<div class="bg-white/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
 									<div class="flex justify-between items-start mb-6">
 										<div>
-											<h4 class="text-sm font-bold text-white uppercase tracking-wider">Throttling Events</h4>
+											<h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Throttling Events</h4>
 											<p class="text-[10px] text-slate-500 font-mono">Traffic shaping triggers</p>
 										</div>
 										<Gauge class="w-5 h-5 text-amber-500" />
 									</div>
-									<div class="text-3xl font-black text-white mb-2">{formatNumber(metrics.network.redeye_total_rate_limit)}</div>
+									<div class="text-3xl font-black text-slate-900 dark:text-white mb-2">{formatNumber(metrics.network.redeye_total_rate_limit)}</div>
 									<div class="h-1.5 bg-slate-900 rounded-full overflow-hidden">
 										<div class="h-full bg-amber-500 w-[42%]"></div>
 									</div>
@@ -1248,8 +1247,8 @@
 														</div>
 														<div class="flex-1">
 							
-										<h4 class="text-sm font-bold text-white uppercase tracking-wider mb-2">Automated Anomaly Detection</h4>
-										<p class="text-xs text-slate-400 leading-relaxed">
+										<h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-2">Automated Anomaly Detection</h4>
+										<p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
 											The RedEye neural core is currently monitoring for high-frequency traffic anomalies. 
 											Autonomous ban protocols are active with a threshold of <span class="text-red-400 font-mono">100 events/min</span>.
 											Current system entropy is within nominal parameters.
@@ -1261,7 +1260,7 @@
 					</div>
 		
 					<!-- Footer -->
-					<div class="p-6 border-t border-slate-800 bg-slate-950/80 flex justify-between items-center">
+					<div class="p-6 border-t border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 flex justify-between items-center">
 						<div class="flex items-center gap-4 text-[10px] font-mono text-slate-500 uppercase tracking-widest">
 							<span class="flex items-center gap-1.5">
 								<div class="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></div>
@@ -1272,7 +1271,7 @@
 						</div>
 						<button 
 							onclick={() => showRedEyeModal = false}
-							class="px-8 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-xl shadow-red-900/20"
+							class="px-8 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-xl shadow-red-900/20"
 						>
 							Acknowledge
 						</button>

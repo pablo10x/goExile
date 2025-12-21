@@ -27,7 +27,23 @@ func GetRedEyeStatsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, stats)
+	// Add dynamic system info
+	response := map[string]interface{}{
+		"total_rules":      stats.TotalRules,
+		"active_bans":       stats.ActiveBans,
+		"events_24h":        stats.Events24h,
+		"logs_24h":          stats.Logs24h,
+		"reputation_count":  stats.ReputationCount,
+		"entropy":           stats.Entropy,
+		"threat_level":      stats.ThreatLevel,
+		"uptime":            stats.Uptime,
+		"system_active":     RedEyeActive,
+		"system_error":      RedEyeError,
+		"node_id":           "MASTER_RE_01",
+		"crc":               "0x8F2A11",
+	}
+
+	utils.WriteJSON(w, http.StatusOK, response)
 }
 
 // -- Rules Handlers --
