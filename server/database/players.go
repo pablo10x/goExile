@@ -41,11 +41,11 @@ func InitPlayerSystem(db *sqlx.DB) error {
 	}
 
 	// Migration: Add uid column if it doesn't exist
-	_, err := db.Exec(`DO $$ 
-	BEGIN 
-		IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='player_system' AND table_name='players' AND column_name='uid') THEN 
-			ALTER TABLE player_system.players ADD COLUMN uid TEXT UNIQUE; 
-		END IF; 
+	_, err := db.Exec(`DO $$
+	BEGIN
+		IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='player_system' AND table_name='players' AND column_name='uid') THEN
+			ALTER TABLE player_system.players ADD COLUMN uid TEXT UNIQUE;
+		END IF;
 	END $$;`)
 	if err != nil {
 		log.Printf("Warning: Failed to add uid column to players: %v", err)
@@ -97,7 +97,7 @@ func InitPlayerSystem(db *sqlx.DB) error {
 
 func CreateReport(db *sqlx.DB, r *models.Report) (int64, error) {
 	var id int64
-	query := `INSERT INTO player_system.reports (reporter_id, reported_user_id, reason, game_server_instance_id, timestamp) 
+	query := `INSERT INTO player_system.reports (reporter_id, reported_user_id, reason, game_server_instance_id, timestamp)
 			  VALUES ($1, $2, $3, $4, $5) RETURNING id`
 
 	r.Timestamp = time.Now().UTC()
@@ -109,7 +109,7 @@ func CreateReport(db *sqlx.DB, r *models.Report) (int64, error) {
 func GetAllReports(db *sqlx.DB) ([]models.Report, error) {
 	var reports []models.Report
 	query := `
-		SELECT r.*, p1.name as reporter_name, p2.name as reported_user_name 
+		SELECT r.*, p1.name as reporter_name, p2.name as reported_user_name
 		FROM player_system.reports r
 		JOIN player_system.players p1 ON r.reporter_id = p1.id
 		JOIN player_system.players p2 ON r.reported_user_id = p2.id
@@ -123,7 +123,7 @@ func GetAllReports(db *sqlx.DB) ([]models.Report, error) {
 
 func CreatePlayer(db *sqlx.DB, p *models.Player) (int64, error) {
 	var id int64
-	query := `INSERT INTO player_system.players (uid, name, device_id, xp, last_joined_server, created_at, updated_at) 
+	query := `INSERT INTO player_system.players (uid, name, device_id, xp, last_joined_server, created_at, updated_at)
 			  VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
 
 	p.CreatedAt = time.Now().UTC()

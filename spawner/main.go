@@ -1,3 +1,4 @@
+// Package main is the entry point for the Spawner service.
 package main
 
 import (
@@ -56,7 +57,7 @@ func main() {
 	if err != nil {
 		panic(fmt.Sprintf("Failed to open log file: %v", err))
 	}
-	defer logFile.Close()
+	defer func() { _ = logFile.Close() }()
 
 	logger := slog.New(slog.NewJSONHandler(logFile, nil))
 	slog.SetDefault(logger)
@@ -129,9 +130,6 @@ func main() {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 				return
 			}
-		} else {
-			// In Production, this should be fatal, but for now we warn
-			// logger.Warn("Running without API Key auth protection!")
 		}
 		c.Next()
 	})
@@ -141,8 +139,9 @@ func main() {
 
 	// 7. Run Server with Graceful Shutdown
 	srv := &http.Server{
-		Addr:    ":" + cfg.Port,
-		Handler: router,
+		Addr:              ":" + cfg.Port,
+		Handler:           router,
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	go func() {

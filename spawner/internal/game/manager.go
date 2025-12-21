@@ -1,3 +1,4 @@
+// Package game manages the lifecycle of game server instances.
 package game
 
 import (
@@ -231,7 +232,7 @@ func (m *Manager) NewContext() context.Context {
 
 // Spawn triggers the spawning of a new game server instance.
 // It initializes the instance record and starts the provisioning process in the background.
-func (m *Manager) Spawn(ctx context.Context) (*Instance, error) {
+func (m *Manager) Spawn(_ context.Context) (*Instance, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -261,7 +262,7 @@ func (m *Manager) Spawn(ctx context.Context) (*Instance, error) {
 
 	m.instances[id] = instance
 	if err := m.saveStateInternal(); err != nil {
-		m.logger.Error("Failed to save state during spawn", "error", err)
+		return nil, fmt.Errorf("failed to save state: %w", err)
 	}
 
 	m.logger.Info("Starting async provisioning for new instance", "id", id, "port", port)
@@ -332,12 +333,12 @@ func (m *Manager) provisionAndStart(inst *Instance) {
 		}
 		m.logger.Error("Failed to start provisioned instance", args...)
 		inst.Status = "Error"
-		m.saveStateInternal()
+		_ = m.saveStateInternal()
 		return
 	}
 
 	m.logger.Info("Instance provisioning complete and started", "id", inst.ID, "port", inst.Port, "path", inst.Path)
-	m.saveStateInternal()
+	_ = m.saveStateInternal()
 }
 
 // UpdateInstance stops the instance if running and re-copies the game files.
@@ -389,14 +390,14 @@ func (m *Manager) UpdateInstance(id string) error {
 	if _, err := updater.UpdateTemplate(m.cfg, m.logger); err != nil {
 		m.logger.Warn("Failed to update template from master", "error", err)
 		inst.Status = "Error"
-		m.saveStateInternal()
+		_ = m.saveStateInternal()
 		return fmt.Errorf("failed to pull update from master: %w", err)
 	}
 
 	m.logger.Info("Updating instance files", "id", id)
 	if err := copyDir(m.cfg.GameInstallDir, inst.Path); err != nil {
 		inst.Status = "Error"
-		m.saveStateInternal()
+		_ = m.saveStateInternal()
 		return fmt.Errorf("failed to update game files: %w", err)
 	}
 
@@ -469,7 +470,7 @@ func (m *Manager) setErrorState(inst *Instance, err error) {
 	m.logger.Error("Provisioning failed", "id", inst.ID, "error", err)
 	m.mu.Lock()
 	inst.Status = "Error"
-	m.saveStateInternal()
+	_ = m.saveStateInternal()
 	m.mu.Unlock()
 }
 
@@ -538,7 +539,7 @@ func (m *Manager) startProcess(inst *Instance) error {
 		m.logger.Error("Failed to open log file", args...)
 		return spawnerErr
 	}
-	defer logFile.Close() // Close parent's handle, child inherits it
+	defer func() { _ = logFile.Close() }() // Close parent's handle, child inherits it
 
 	// Open firewall port
 	m.openFirewallPort(inst.Port)
@@ -571,7 +572,7 @@ func (m *Manager) startProcess(inst *Instance) error {
 	inst.procMu.Lock()
 	if p, err := process.NewProcess(int32(inst.ProcessID)); err == nil {
 		inst.proc = p
-		inst.proc.Percent(0) // Prime CPU calculation
+		_, _ = inst.proc.Percent(0) // Prime CPU calculation
 	}
 	inst.procMu.Unlock()
 
@@ -728,7 +729,7 @@ func (m *Manager) StartInstance(id string) error {
 	if err := m.startProcess(instance); err != nil {
 		m.logger.Error("Failed to start process for instance", "id", id, "error", err)
 		instance.Status = "Error" // Mark as error if starting fails
-		m.saveStateInternal()
+		_ = m.saveStateInternal()
 		return fmt.Errorf("failed to start instance %s: %w", id, err)
 	}
 
@@ -871,7 +872,7 @@ func (m *Manager) GetInstanceStats(id string) (*InstanceStats, error) {
 			// Try to recover handle
 			if p, err := process.NewProcess(int32(inst.ProcessID)); err == nil {
 				inst.proc = p
-				inst.proc.Percent(0) // Prime it
+				_, _ = inst.proc.Percent(0) // Prime it
 			}
 		}
 
@@ -937,7 +938,7 @@ func (m *Manager) findAvailablePort() (int, error) {
 		addr := fmt.Sprintf(":%d", port)
 		ln, err := net.Listen("tcp", addr)
 		if err == nil {
-			ln.Close()
+			_ = ln.Close()
 			return port, nil
 		}
 	}
@@ -945,22 +946,6 @@ func (m *Manager) findAvailablePort() (int, error) {
 		fmt.Errorf("no available ports in range %d-%d (max instances reached)", start, end-1)).
 		WithContext("region", m.cfg.Region)
 	return 0, spawnerErr
-}
-
-// findOutboundIP gets the preferred outbound ip of this machine by simulating a connection.
-func findOutboundIP() (string, error) {
-	conn, err := net.Dial("udp", "8.8.8.8:80")
-	if err != nil {
-		return "", err
-	}
-	defer conn.Close()
-
-	localAddr, ok := conn.LocalAddr().(*net.UDPAddr)
-	if !ok {
-		return "", errors.New("could not cast to UDPAddr")
-	}
-
-	return localAddr.IP.String(), nil
 }
 
 func (m *Manager) openFirewallPort(port int) {
@@ -1081,7 +1066,7 @@ func (m *Manager) RestoreInstance(id string, filename string) error {
 		if entry.Name() == "backups" {
 			continue
 		}
-		os.RemoveAll(filepath.Join(inst.Path, entry.Name()))
+		_ = os.RemoveAll(filepath.Join(inst.Path, entry.Name()))
 	}
 
 	// Unzip
@@ -1091,7 +1076,7 @@ func (m *Manager) RestoreInstance(id string, filename string) error {
 
 	// Refresh version info from the restored files
 	inst.Version = m.readVersionFile(inst.Path)
-	m.saveStateInternal()
+	_ = m.saveStateInternal()
 
 	return nil
 }

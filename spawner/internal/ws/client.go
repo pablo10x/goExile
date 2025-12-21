@@ -1,3 +1,4 @@
+// Package ws provides the WebSocket client for communicating with the master server.
 package ws
 
 import (
@@ -8,12 +9,13 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"spawner/internal/config"
-	"spawner/internal/game"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"spawner/internal/config"
+	"spawner/internal/game"
 
 	"github.com/gorilla/websocket"
 	"github.com/shirou/gopsutil/v3/cpu"
@@ -21,6 +23,7 @@ import (
 	"github.com/shirou/gopsutil/v3/mem"
 )
 
+// Client manages the WebSocket connection to the Master Server.
 type Client struct {
 	config    *config.Config
 	manager   *game.Manager
@@ -33,19 +36,21 @@ type Client struct {
 }
 
 type cachedMetrics struct {
-	CpuUsage  float64
+	CPUUsage  float64
 	MemUsed   uint64
 	MemTotal  uint64
 	DiskUsed  uint64
 	DiskTotal uint64
 }
 
+// WSMessage represents a message sent over the WebSocket connection.
 type WSMessage struct {
 	Type      string          `json:"type"`
 	RequestID string          `json:"request_id,omitempty"`
 	Payload   json.RawMessage `json:"payload"`
 }
 
+// NewClient creates a new WebSocket client.
 func NewClient(cfg *config.Config, m *game.Manager, l *slog.Logger) *Client {
 	return &Client{
 		config:  cfg,
@@ -56,6 +61,7 @@ func NewClient(cfg *config.Config, m *game.Manager, l *slog.Logger) *Client {
 	}
 }
 
+// Start initiates the WebSocket client loop.
 func (c *Client) Start() {
 	for {
 		if err := c.connect(); err != nil {
@@ -68,7 +74,7 @@ func (c *Client) Start() {
 		// Send Register
 		if err := c.sendRegister(); err != nil {
 			c.logger.Error("Failed to send register", "error", err)
-			c.conn.Close()
+			_ = c.conn.Close()
 			continue
 		}
 
@@ -140,7 +146,7 @@ func (c *Client) sendRegister() error {
 }
 
 func (c *Client) readPump() {
-	defer c.conn.Close()
+	defer func() { _ = c.conn.Close() }()
 	for {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
@@ -165,7 +171,7 @@ func (c *Client) writePump(done chan struct{}) {
 		case message := <-c.send:
 			if err := c.conn.WriteMessage(websocket.TextMessage, message); err != nil {
 				c.logger.Error("Write error", "error", err)
-				c.conn.Close() // Force readPump to exit
+				_ = c.conn.Close() // Force readPump to exit
 				return
 			}
 		}
@@ -247,7 +253,7 @@ func (c *Client) collectMetrics() {
 
 	c.metricsMu.Lock()
 	c.metrics = cachedMetrics{
-		CpuUsage:  cpuUsage,
+		CPUUsage:  cpuUsage,
 		MemUsed:   memUsed,
 		MemTotal:  memTotal,
 		DiskUsed:  diskUsed,
@@ -288,7 +294,7 @@ func (c *Client) heartbeatLoop(done chan struct{}) {
 				"current_instances": len(c.manager.ListInstances()),
 				"max_instances":     maxInstances,
 				"status":            status,
-				"cpu_usage":         metrics.CpuUsage,
+				"cpu_usage":         metrics.CPUUsage,
 				"mem_used":          metrics.MemUsed,
 				"mem_total":         metrics.MemTotal,
 				"disk_used":         metrics.DiskUsed,
@@ -333,7 +339,7 @@ func (c *Client) handleMessage(msg WSMessage) {
 					os.Exit(1)
 				}
 				// Close connection to trigger reconnection
-				c.conn.Close()
+				_ = c.conn.Close()
 			}
 		}
 	case "spawn":
@@ -469,7 +475,10 @@ func (c *Client) handleMessage(msg WSMessage) {
 			InstanceID string `json:"instance_id"`
 			NewID      string `json:"new_id"`
 		}
-		json.Unmarshal(msg.Payload, &req)
+		if err := json.Unmarshal(msg.Payload, &req); err != nil {
+			c.sendResponse(msg.RequestID, "error", nil, "invalid payload")
+			return
+		}
 		err := c.manager.RenameInstance(req.InstanceID, req.NewID)
 		if err != nil {
 			c.sendResponse(msg.RequestID, "error", nil, err.Error())
@@ -482,7 +491,10 @@ func (c *Client) handleMessage(msg WSMessage) {
 		var req struct {
 			InstanceID string `json:"instance_id"`
 		}
-		json.Unmarshal(msg.Payload, &req)
+		if err := json.Unmarshal(msg.Payload, &req); err != nil {
+			c.sendResponse(msg.RequestID, "error", nil, "invalid payload")
+			return
+		}
 		err := c.manager.BackupInstance(req.InstanceID)
 		if err != nil {
 			c.sendResponse(msg.RequestID, "error", nil, err.Error())
@@ -496,7 +508,10 @@ func (c *Client) handleMessage(msg WSMessage) {
 			InstanceID string `json:"instance_id"`
 			Filename   string `json:"filename"`
 		}
-		json.Unmarshal(msg.Payload, &req)
+		if err := json.Unmarshal(msg.Payload, &req); err != nil {
+			c.sendResponse(msg.RequestID, "error", nil, "invalid payload")
+			return
+		}
 		err := c.manager.RestoreInstance(req.InstanceID, req.Filename)
 		if err != nil {
 			c.sendResponse(msg.RequestID, "error", nil, err.Error())
@@ -509,7 +524,10 @@ func (c *Client) handleMessage(msg WSMessage) {
 		var req struct {
 			InstanceID string `json:"instance_id"`
 		}
-		json.Unmarshal(msg.Payload, &req)
+		if err := json.Unmarshal(msg.Payload, &req); err != nil {
+			c.sendResponse(msg.RequestID, "error", nil, "invalid payload")
+			return
+		}
 		backups, err := c.manager.ListBackups(req.InstanceID)
 		if err != nil {
 			c.sendResponse(msg.RequestID, "error", nil, err.Error())
@@ -523,7 +541,10 @@ func (c *Client) handleMessage(msg WSMessage) {
 			InstanceID string `json:"instance_id"`
 			Filename   string `json:"filename"`
 		}
-		json.Unmarshal(msg.Payload, &req)
+		if err := json.Unmarshal(msg.Payload, &req); err != nil {
+			c.sendResponse(msg.RequestID, "error", nil, "invalid payload")
+			return
+		}
 		err := c.manager.DeleteBackup(req.InstanceID, req.Filename)
 		if err != nil {
 			c.sendResponse(msg.RequestID, "error", nil, err.Error())
@@ -553,7 +574,7 @@ func (c *Client) handleMessage(msg WSMessage) {
 
 	case "get_logs":
 		content, err := os.ReadFile("spawner.log")
-		var size int64 = 0
+		var size int64
 		if info, sErr := os.Stat("spawner.log"); sErr == nil {
 			size = info.Size()
 		}
@@ -582,7 +603,10 @@ func (c *Client) handleMessage(msg WSMessage) {
 		var req struct {
 			InstanceID string `json:"instance_id"`
 		}
-		json.Unmarshal(msg.Payload, &req)
+		if err := json.Unmarshal(msg.Payload, &req); err != nil {
+			c.sendResponse(msg.RequestID, "error", nil, "invalid payload")
+			return
+		}
 		logPath, err := c.manager.GetInstanceLogPath(req.InstanceID)
 		if err != nil {
 			c.sendResponse(msg.RequestID, "error", nil, err.Error())
@@ -600,7 +624,10 @@ func (c *Client) handleMessage(msg WSMessage) {
 		var req struct {
 			InstanceID string `json:"instance_id"`
 		}
-		json.Unmarshal(msg.Payload, &req)
+		if err := json.Unmarshal(msg.Payload, &req); err != nil {
+			c.sendResponse(msg.RequestID, "error", nil, "invalid payload")
+			return
+		}
 		err := c.manager.ClearInstanceLogs(req.InstanceID)
 		if err != nil {
 			c.sendResponse(msg.RequestID, "error", nil, err.Error())

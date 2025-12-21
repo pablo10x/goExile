@@ -114,11 +114,14 @@ npm run dev   # Starts Vite dev server
 *   **Bug Fixes:**
     *   Fixed a syntax error and missing `fmt` import in `server/auth/auth.go`.
     *   Removed an unreachable and incorrect `os.Chdir()` call in `spawner/main.go`.
-    *   **Spawner Linting:**
-        *   Resolved `copylocks` issue in `Instance` struct by implementing a `clone()` method.
-        *   Fixed shadowing of built-in `max` function in `UpdatePlayerStats`.
-        *   Improved error handling for `json.Unmarshal` and `os.Chmod` across the spawner.
-        *   Downgraded `spawner/go.mod` to Go 1.24.0 for tool compatibility.
+    *   **Spawner Linting & Robustness:**
+        *   Resolved `copylocks` issues in `Instance` struct by implementing a `clone()` method.
+        *   Fixed shadowing of built-in functions and improved variable naming (e.g., `CPUUsage`).
+        *   Added comprehensive error handling for `json.Unmarshal`, `os.Chmod`, and connection closing.
+        *   Suppressed noise from non-critical error returns in `defer` and background tasks.
+        *   Fixed multiple syntax errors and assignment mismatches introduced during automated refactoring.
+        *   Added missing package-level documentation across all spawner modules.
+        *   Aligned spawner to Go 1.24.0 for toolchain consistency.
 *   **Theme Engine:** Implemented a full-featured Light/Dark mode system with glassmorphism effects.
     *   Default mode is Dark.
     *   Background animation (particle canvas) is preserved across both modes.

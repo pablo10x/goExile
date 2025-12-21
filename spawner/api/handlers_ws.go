@@ -8,7 +8,7 @@ import (
 )
 
 var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
+	CheckOrigin: func(_ *http.Request) bool {
 		return true // Allow local connections
 	},
 }
@@ -25,7 +25,7 @@ func (h *Handler) HandleInstanceWebSocket(c *gin.Context) {
 		h.logger.Error("Failed to upgrade to websocket", "id", id, "error", err)
 		return
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	h.logger.Info("Game server connected via WebSocket", "id", id)
 

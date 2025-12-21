@@ -1,3 +1,4 @@
+// Package api provides HTTP handlers for the spawner's REST and WebSocket endpoints.
 package api
 
 import (
@@ -15,12 +16,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Handler manages the spawner API endpoints.
 type Handler struct {
 	manager *game.Manager
 	config  *config.Config
 	logger  *slog.Logger
 }
 
+// NewHandler creates a new API handler.
 func NewHandler(m *game.Manager, c *config.Config, l *slog.Logger) *Handler {
 	return &Handler{manager: m, config: c, logger: l}
 }
@@ -52,6 +55,7 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 	router.POST("/instance/:id/backup/delete", h.HandleDeleteBackup)
 }
 
+// HandleUpdateTemplate performs the update of the game server template.
 func (h *Handler) HandleUpdateTemplate(c *gin.Context) {
 	updatedVersion, err := h.manager.UpdateTemplate()
 	if err != nil {
@@ -174,7 +178,7 @@ func (h *Handler) HandleRestartInstance(c *gin.Context) {
 	}
 
 	// Try stop (ignore error if not running)
-	h.manager.StopInstance(id)
+	_ = h.manager.StopInstance(id)
 
 	// Start
 	if err := h.manager.StartInstance(id); err != nil {
@@ -243,7 +247,7 @@ func (h *Handler) HandleInstanceLogs(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "log file not found"})
 		return
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	c.Writer.Header().Set("Content-Type", "text/event-stream")
 	c.Writer.Header().Set("Cache-Control", "no-cache")
@@ -252,7 +256,7 @@ func (h *Handler) HandleInstanceLogs(c *gin.Context) {
 
 	reader := bufio.NewReader(file)
 
-	c.Stream(func(w io.Writer) bool {
+	c.Stream(func(_ io.Writer) bool {
 		line, err := reader.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {

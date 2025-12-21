@@ -1,3 +1,4 @@
+// Package enrollment handles the initial registration and API key retrieval for the spawner.
 package enrollment
 
 import (
@@ -91,7 +92,7 @@ func Enroll(cfg *config.Config, logger *slog.Logger) (*EnrollmentResult, error) 
 	if err != nil {
 		return nil, fmt.Errorf("enrollment request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Read response body
 	body, err := io.ReadAll(resp.Body)
@@ -150,7 +151,7 @@ func validateKey(cfg *config.Config, logger *slog.Logger) error {
 	if err != nil {
 		return fmt.Errorf("validation request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, _ := io.ReadAll(resp.Body)
 

@@ -1,3 +1,4 @@
+// Package updater manages the downloading and installation of game server files.
 package updater
 
 import (
@@ -37,15 +38,15 @@ func EnsureInstalled(cfg *config.Config, logger *slog.Logger) error {
 	if err != nil {
 		return fmt.Errorf("failed to create temp file: %w", err)
 	}
-	defer os.Remove(tmpFile.Name())
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
 
 	logger.Info("Downloading game server package...", "url", downloadURL, "api_key", cfg.MasterAPIKey)
 	version, err := downloadFile(downloadURL, cfg.MasterAPIKey, tmpFile)
 	if err != nil {
-		tmpFile.Close()
+		func() { _ = tmpFile.Close() }()
 		return fmt.Errorf("download failed: %w", err)
 	}
-	tmpFile.Close()
+	func() { _ = tmpFile.Close() }()
 
 	// Save version info if available
 	if version != "" {
@@ -92,7 +93,7 @@ func EnsureInstalled(cfg *config.Config, logger *slog.Logger) error {
 		} else {
 			// Debug: list files to help diagnose structure issues
 			logger.Error("Binary verification failed. Listing installed files to debug structure:", "root", cfg.GameInstallDir)
-			_ = filepath.Walk(cfg.GameInstallDir, func(path string, info os.FileInfo, err error) error {
+			_ = filepath.Walk(cfg.GameInstallDir, func(path string, _ os.FileInfo, err error) error {
 				if err == nil {
 					// Show relative path
 					rel, _ := filepath.Rel(cfg.GameInstallDir, path)
@@ -141,7 +142,7 @@ func UpdateTemplate(cfg *config.Config, logger *slog.Logger) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to check update: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	remoteVersion := resp.Header.Get("X-Game-Version")
 	logger.Info("Update Check", "url", downloadURL, "status", resp.Status, "remote_version_header", remoteVersion, "all_headers", resp.Header)
@@ -163,13 +164,13 @@ func UpdateTemplate(cfg *config.Config, logger *slog.Logger) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to create temp file: %w", err)
 	}
-	defer os.Remove(tmpFile.Name())
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
 
 	if _, err := downloadFile(downloadURL, cfg.MasterAPIKey, tmpFile); err != nil {
-		tmpFile.Close()
+		func() { _ = tmpFile.Close() }()
 		return "", fmt.Errorf("download failed: %w", err)
 	}
-	tmpFile.Close()
+	func() { _ = tmpFile.Close() }()
 
 	if err := unzip(tmpFile.Name(), cfg.GameInstallDir); err != nil {
 		return "", fmt.Errorf("extraction failed: %w", err)
@@ -206,7 +207,7 @@ func downloadFile(url, apiKey string, dest *os.File) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("server returned status: %s", resp.Status)
@@ -221,7 +222,7 @@ func unzip(src, dest string) error {
 	if err != nil {
 		return err
 	}
-	defer r.Close()
+	defer func() { _ = r.Close() }()
 
 	for _, f := range r.File {
 		fpath := filepath.Join(dest, f.Name)
@@ -230,7 +231,7 @@ func unzip(src, dest string) error {
 		}
 
 		if f.FileInfo().IsDir() {
-			os.MkdirAll(fpath, os.ModePerm)
+			_ = os.MkdirAll(fpath, os.ModePerm)
 			continue
 		}
 
@@ -245,13 +246,13 @@ func unzip(src, dest string) error {
 
 		rc, err := f.Open()
 		if err != nil {
-			outFile.Close()
+			func() { _ = outFile.Close() }()
 			return err
 		}
 
 		_, err = io.Copy(outFile, rc)
-		outFile.Close()
-		rc.Close()
+		func() { _ = outFile.Close() }()
+		_ = rc.Close()
 
 		if err != nil {
 			return err

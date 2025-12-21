@@ -1,3 +1,4 @@
+// Package errors defines custom error types and codes for the spawner.
 package errors
 
 import (

@@ -1,3 +1,4 @@
+// Package config provides configuration loading and management for the spawner.
 package config
 
 import (
@@ -6,11 +7,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"strconv"
-
 	"github.com/joho/godotenv"
 )
 
+// Config holds the configuration parameters for the spawner.
 type Config struct {
 	Region            string
 	Host              string // Hostname/IP reachable by Master Server
@@ -150,21 +150,9 @@ func (c *Config) Validate() error {
 	return nil
 }
 
-func getEnv(key, fallback string) string {
+func getEnv(key string, fallback string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
 	}
 	return fallback
-}
-
-func getEnvAsInt(key string, fallback int) int {
-	valueStr := getEnv(key, "")
-	if valueStr == "" {
-		return fallback
-	}
-	value, err := strconv.Atoi(valueStr)
-	if err != nil {
-		return fallback
-	}
-	return value
 }
