@@ -110,7 +110,13 @@ npm run dev   # Starts Vite dev server
 *   **`spawner/internal/ws/client.go`**: Handles Spawner's WebSocket connection logic (Heartbeats, Command handling).
 *   **`server/dashboard.go` & `server/auth.go`**: Core logic for Dashboard API and Authentication.
 
-## 📝 Recent Context
+*   **Developer Experience:**
+    *   Completely overhauled the **Makefile** for better DX:
+        *   Added colorized output for better readability.
+        *   Implemented a comprehensive `help` command.
+        *   Added `dev-*` commands to quickly start components.
+        *   Streamlined build, test, and linting workflows for all components.
+        *   Added a `check-all` command for full pre-commit verification.
 *   **Dashboard UI:**
     *   Enhanced **SystemTopology** component:
         *   Resized RedEye and Database nodes to be smaller than the Master node for better visual hierarchy.

@@ -686,7 +686,7 @@
 									/>
 									<animateTransform attributeName="transform" type="rotate" from="0" to={Math.random() * 360} dur="1s" begin="0.85s" />
 									<animate attributeName="opacity" values="1;0" dur="1s" begin="0.85s" fill="freeze" />
-								</circle>
+								</rect>
 							{/each}
 						</g>
 					</g>
@@ -1037,7 +1037,7 @@
 						<path d="M 75 5 L 90 5 L 95 20" fill="none" stroke="#ef4444" stroke-width="2.5" class="animate-pulse" />
 						<path d="M 5 80 L 10 95 L 25 95" fill="none" stroke="#ef4444" stroke-width="2.5" class="animate-pulse" />
 						<path d="M 95 80 L 90 95 L 75 95" fill="none" stroke="#ef4444" stroke-width="2.5" class="animate-pulse" />
-						
+
 						<!-- Internal decorative crosshair -->
 						<circle cx="50" cy="50" r="40" fill="none" stroke="#ef4444" stroke-width="0.5" stroke-dasharray="2 4" opacity="0.3" />
 					</svg>
@@ -1153,7 +1153,7 @@
 						<path d="M 75 5 L 90 5 L 95 20" fill="none" stroke="#10b981" stroke-width="2.5" class="animate-pulse" />
 						<path d="M 5 80 L 10 95 L 25 95" fill="none" stroke="#10b981" stroke-width="2.5" class="animate-pulse" />
 						<path d="M 95 80 L 90 95 L 75 95" fill="none" stroke="#10b981" stroke-width="2.5" class="animate-pulse" />
-						
+
 						<!-- Data stream ring -->
 						<circle cx="50" cy="50" r="42" fill="none" stroke="#10b981" stroke-width="0.5" stroke-dasharray="10 5" opacity="0.2">
 							<animateTransform attributeName="transform" type="rotate" from="360 50 50" to="0 50 50" dur="20s" repeatCount="indefinite" />
