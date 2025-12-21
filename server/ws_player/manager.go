@@ -2,13 +2,22 @@ package ws_player
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
 	"time"
 
+	"exile/server/database"
+
 	"github.com/gorilla/websocket"
 )
+
+// WSMessage represents the standard envelope for player websocket communication.
+type WSMessage struct {
+	Type    string          `json:"type"`
+	Payload json.RawMessage `json:"payload"`
+}
 
 // PlayerConnection represents a connected player client.
 type PlayerConnection struct {
@@ -119,10 +128,117 @@ func (c *PlayerConnection) readPump(pm *PlayerWSManager) {
 		if err != nil {
 			break
 		}
-		// Handle incoming messages (e.g. chat, party invites)
-		// For now, we just log them.
-		log.Printf("PlayerWS: Recv from %d: %s", c.PlayerID, string(message))
+
+		var wsMsg WSMessage
+		if err := json.Unmarshal(message, &wsMsg); err != nil {
+			log.Printf("PlayerWS: Invalid message format from %d: %v", c.PlayerID, err)
+			continue
+		}
+
+		pm.handleMessage(c, wsMsg)
 	}
+}
+
+func (pm *PlayerWSManager) handleMessage(c *PlayerConnection, msg WSMessage) {
+	switch msg.Type {
+	case "FRIEND_REQUEST_SEND":
+		var payload struct {
+			ReceiverID int64 `json:"receiver_id"`
+		}
+		if err := json.Unmarshal(msg.Payload, &payload); err != nil {
+			return
+		}
+		pm.handleFriendRequest(c, payload.ReceiverID)
+
+	case "FRIEND_REQUEST_ACCEPT":
+		var payload struct {
+			SenderID int64 `json:"sender_id"`
+		}
+		if err := json.Unmarshal(msg.Payload, &payload); err != nil {
+			return
+		}
+		pm.handleFriendAccept(c, payload.SenderID)
+
+	case "FRIEND_REQUEST_REJECT":
+		var payload struct {
+			SenderID int64 `json:"sender_id"`
+		}
+		if err := json.Unmarshal(msg.Payload, &payload); err != nil {
+			return
+		}
+		// Logic: just delete the request
+		_ = database.DeleteFriendRequest(database.DBConn, payload.SenderID, c.PlayerID)
+
+	case "FRIEND_REMOVE":
+		var payload struct {
+			FriendID int64 `json:"friend_id"`
+		}
+		if err := json.Unmarshal(msg.Payload, &payload); err != nil {
+			return
+		}
+		_ = database.RemoveFriendship(database.DBConn, c.PlayerID, payload.FriendID)
+
+	default:
+		log.Printf("PlayerWS: Unknown message type %s from %d", msg.Type, c.PlayerID)
+	}
+}
+
+func (pm *PlayerWSManager) handleFriendRequest(c *PlayerConnection, receiverID int64) {
+	if err := database.SendFriendRequest(database.DBConn, c.PlayerID, receiverID); err != nil {
+		pm.sendError(c.PlayerID, fmt.Sprintf("Friend request failed: %v", err))
+		return
+	}
+
+	// Notify receiver if online
+	sender, _ := database.GetPlayerByID(database.DBConn, c.PlayerID)
+	pm.SendMessage(receiverID, WSMessage{
+		Type: "NOTIFY_FRIEND_REQUEST",
+		Payload: mustMarshal(map[string]interface{}{
+			"sender_id":   c.PlayerID,
+			"sender_name": sender.Name,
+		}),
+	})
+}
+
+func (pm *PlayerWSManager) handleFriendAccept(c *PlayerConnection, senderID int64) {
+	if err := database.AcceptFriendRequest(database.DBConn, senderID, c.PlayerID); err != nil {
+		pm.sendError(c.PlayerID, fmt.Sprintf("Failed to accept friend: %v", err))
+		return
+	}
+
+	// Notify both parties
+	me, _ := database.GetPlayerByID(database.DBConn, c.PlayerID)
+	them, _ := database.GetPlayerByID(database.DBConn, senderID)
+
+	pm.SendMessage(c.PlayerID, WSMessage{
+		Type: "NOTIFY_FRIEND_ACCEPTED",
+		Payload: mustMarshal(map[string]interface{}{
+			"friend_id":   senderID,
+			"friend_name": them.Name,
+		}),
+	})
+
+	pm.SendMessage(senderID, WSMessage{
+		Type: "NOTIFY_FRIEND_ACCEPTED",
+		Payload: mustMarshal(map[string]interface{}{
+			"friend_id":   c.PlayerID,
+			"friend_name": me.Name,
+		}),
+	})
+}
+
+func (pm *PlayerWSManager) sendError(playerID int64, message string) {
+	pm.SendMessage(playerID, WSMessage{
+		Type: "ERROR",
+		Payload: mustMarshal(map[string]string{
+			"message": message,
+		}),
+	})
+}
+
+func mustMarshal(v interface{}) json.RawMessage {
+	data, _ := json.Marshal(v)
+	return data
 }
 
 func (c *PlayerConnection) writePump() {

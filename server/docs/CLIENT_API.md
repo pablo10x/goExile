@@ -48,48 +48,91 @@ After authentication, connect to the WebSocket endpoint using the provided sessi
 
 ### Message Format
 
-Messages are standard JSON. Structure to be defined as features are added (e.g., chat, lobby invites).
-
-**Server -> Client (Example):**
+All WebSocket messages follow this envelope:
 ```json
 {
-  "type": "FRIEND_REQUEST",
+  "type": "MESSAGE_TYPE",
+  "payload": { ... }
+}
+```
+
+### 1. Friend Management (Client -> Server)
+
+#### Send Friend Request
+```json
+{
+  "type": "FRIEND_REQUEST_SEND",
   "payload": {
-    "sender_id": 456,
-    "sender_name": "FriendName"
+    "receiver_id": 456
   }
 }
 ```
 
-**Client -> Server (Example):**
+#### Accept Friend Request
 ```json
 {
-  "type": "CHAT",
+  "type": "FRIEND_REQUEST_ACCEPT",
   "payload": {
-    "message": "Hello World"
+    "sender_id": 456
   }
 }
 ```
 
-## Player System
+#### Reject Friend Request
+```json
+{
+  "type": "FRIEND_REQUEST_REJECT",
+  "payload": {
+    "sender_id": 456
+  }
+}
+```
+
+#### Remove Friend
+```json
+{
+  "type": "FRIEND_REMOVE",
+  "payload": {
+    "friend_id": 456
+  }
+}
+```
+
+### 2. Notifications (Server -> Client)
+
+#### Incoming Friend Request
+```json
+{
+  "type": "NOTIFY_FRIEND_REQUEST",
+  "payload": {
+    "sender_id": 123,
+    "sender_name": "PlayerName"
+  }
+}
+```
+
+#### Friendship Established
+```json
+{
+  "type": "NOTIFY_FRIEND_ACCEPTED",
+  "payload": {
+    "friend_id": 123,
+    "friend_name": "PlayerName"
+  }
+}
+```
+
+#### Error Message
+```json
+{
+  "type": "ERROR",
+  "payload": {
+    "message": "Friend request failed: already friends"
+  }
+}
+```
+
+## Player System (REST)
 
 ### Get Player Details (`GET /api/game/players/{id}`)
 Returns public details of a player.
-
-### Friend Requests
-
-#### Send Request (`POST /api/game/friends/request`)
-```json
-{
-  "sender_id": 123,
-  "receiver_id": 456
-}
-```
-
-#### Accept Request (`POST /api/game/friends/accept`)
-```json
-{
-  "sender_id": 456,
-  "receiver_id": 123
-}
-```

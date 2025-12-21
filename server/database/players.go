@@ -254,6 +254,17 @@ func GetFriendRequests(db *sqlx.DB, playerID int64) (incoming []models.Player, o
 	return
 }
 
+func DeleteFriendRequest(db *sqlx.DB, senderID, receiverID int64) error {
+	_, err := db.Exec(`DELETE FROM player_system.friend_requests WHERE sender_id=$1 AND receiver_id=$2`, senderID, receiverID)
+	return err
+}
+
+func RemoveFriendship(db *sqlx.DB, p1, p2 int64) error {
+	id1, id2 := sortIDs(p1, p2)
+	_, err := db.Exec(`DELETE FROM player_system.friendships WHERE player1_id=$1 AND player2_id=$2`, id1, id2)
+	return err
+}
+
 func sortIDs(a, b int64) (int64, int64) {
 	if a < b {
 		return a, b
