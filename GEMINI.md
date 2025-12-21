@@ -179,6 +179,9 @@ The following security improvements have been implemented:
     *   `POST /api/game/friends/accept`: Accept a friend request.
     *   `POST /api/game/reports`: Create a new user report.
     *   `GET /api/reports`: List all user reports.
+*   **Frontend**:
+    *   **Users Page**: Implemented a comprehensive user management page with tabs for "Players" and "Reports".
+    *   **Player Details**: Created a detailed player profile page (`/users/[id]`) showing stats, device info, and social graph (friends/requests).
 *   **Integration:** Initialized schema creation in `main.go` startup sequence.
 
 ### Firebase Remote Config
