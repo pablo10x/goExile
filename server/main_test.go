@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strconv"
 	"testing"
 	"time"
 
+	"exile/server/database"
 	"exile/server/handlers"
 	"exile/server/models"
 	"exile/server/registry"
@@ -16,8 +18,17 @@ import (
 	"github.com/gorilla/mux"
 )
 
+func TestMain(m *testing.M) {
+	// Initialize in-memory database for tests
+	_ = database.InitDB(":memory:")
+	os.Exit(m.Run())
+}
+
 func resetRegistry() {
 	registry.GlobalRegistry.Reset()
+	if database.DBConn != nil {
+		_, _ = database.DBConn.Exec("DELETE FROM spawners")
+	}
 }
 
 func TestRegisterAndGetSpawner(t *testing.T) {

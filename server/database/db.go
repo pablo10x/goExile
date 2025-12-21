@@ -10,9 +10,9 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
-	// Drivers
-	_ "github.com/jackc/pgx/v5/stdlib"
-
+	        // Drivers
+	        _ "github.com/jackc/pgx/v5/stdlib"
+	        _ "github.com/mattn/go-sqlite3"
 	"exile/server/models"
 	"exile/server/utils"
 )
@@ -46,12 +46,13 @@ func InitDB(dsn string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err = DBConn.PingContext(ctx); err != nil {
-		return fmt.Errorf("failed to ping database: %w", err)
-	}
-
-	// Schema migration
-	if err = MigrateDB(DBConn); err != nil {
+	                if err = DBConn.PingContext(ctx); err != nil {
+	                        return fmt.Errorf("failed to ping database: %w", err)
+	                }
+	        
+	                        // Schema migration
+	        
+	                        if err = MigrateDB(DBConn); err != nil {
 		return fmt.Errorf("failed to run database migrations: %w", err)
 	}
 
@@ -143,9 +144,11 @@ func GetAdvancedDBStats(db *sqlx.DB) (*AdvancedDBStats, error) {
 
 func MigrateDB(db *sqlx.DB) error {
 	pkType := "SERIAL PRIMARY KEY"
+	if db.DriverName() == "sqlite3" {
+		pkType = "INTEGER PRIMARY KEY AUTOINCREMENT"
+	}
 
-	queries := []string{
-		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS spawners (
+	queries := []string{		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS spawners (
 		id %s,
 		name TEXT,
 		region TEXT,

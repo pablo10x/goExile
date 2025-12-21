@@ -43,7 +43,7 @@ func RegisterSpawner(w http.ResponseWriter, r *http.Request) {
 
 	var id int
 	var err error
-	if id, err = database.SaveSpawner(database.DBConn, &s); err != nil {
+	if id, err = registry.GlobalRegistry.Register(&s); err != nil {
 		utils.WriteError(w, r, http.StatusInternalServerError, "Failed to register")
 		return
 	}

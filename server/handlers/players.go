@@ -1,9 +1,7 @@
 package handlers
 
 import (
-	"bytes"
 	"encoding/json"
-	"io"
 	"net/http"
 	"strconv"
 
@@ -26,7 +24,7 @@ import (
 //  3. Checks if a player account exists for the given Firebase UID
 //  4. Generates a WebSocket authentication key for the session
 //
-// Request (form-encoded):
+// Request (JSON):
 //   - id_token (required): Firebase ID token for authentication
 //
 // Response (JSON):
@@ -49,24 +47,18 @@ func AuthenticatePlayerHandler(w http.ResponseWriter, r *http.Request) {
 
 	// ==================== Parse Request ====================
 
-	// Read request body
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		utils.WriteError(w, r, http.StatusBadRequest, "failed to read body")
+	// Parse JSON request body
+	var req struct {
+		IDToken string `json:"id_token"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.WriteError(w, r, http.StatusBadRequest, "invalid JSON request")
 		return
 	}
 
-	// Restore body for subsequent reads
-	r.Body = io.NopCloser(bytes.NewBuffer(body))
-
-	// Parse form data to extract id_token
-	if err := r.ParseForm(); err != nil {
-		utils.WriteError(w, r, http.StatusBadRequest, "failed to parse form")
-		return
-	}
-
-	idToken := r.FormValue("id_token")
-	if idToken == "" {
+	// Validate that ID token is provided
+	if req.IDToken == "" {
 		utils.WriteError(w, r, http.StatusBadRequest, "id_token is required")
 		return
 	}
@@ -74,7 +66,7 @@ func AuthenticatePlayerHandler(w http.ResponseWriter, r *http.Request) {
 	// ==================== Firebase Authentication ====================
 
 	// Verify Firebase ID token and extract user ID (UID)
-	uid, err := auth.FirebaseMgr.VerifyIDToken(idToken)
+	uid, err := auth.FirebaseMgr.VerifyIDToken(req.IDToken)
 	if err != nil {
 		utils.WriteError(w, r, http.StatusUnauthorized, "invalid token: "+err.Error())
 		return

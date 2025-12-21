@@ -114,8 +114,9 @@ npm run dev   # Starts Vite dev server
 *   **Bug Fixes:**
     *   Fixed a syntax error and missing `fmt` import in `server/auth/auth.go`.
     *   Removed an unreachable and incorrect `os.Chdir()` call in `spawner/main.go`.
-    *   **Spawner Linting & Robustness:**
-        *   Resolved `copylocks` issues in `Instance` struct by implementing a `clone()` method.
+    *   **Master Server Tests:** Fixed failing tests in `server` by adding SQLite support for in-memory testing and initializing the database in `main_test.go`.
+    *   **Registry Sync:** Fixed `RegisterSpawner` handler to correctly sync with the in-memory registry, resolving 404 errors in tests.
+*   **Spawner Linting & Robustness:**        *   Resolved `copylocks` issues in `Instance` struct by implementing a `clone()` method.
         *   Fixed shadowing of built-in functions and improved variable naming (e.g., `CPUUsage`).
         *   Added comprehensive error handling for `json.Unmarshal`, `os.Chmod`, and connection closing.
         *   Suppressed noise from non-critical error returns in `defer` and background tasks.
