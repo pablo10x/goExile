@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,6 +18,20 @@ const (
 	MaxIDValue  = 1000000 // A reasonable upper limit for IDs
 	maxBodySize = 1 << 20 // 1MB
 )
+
+// GenerateRandomString generates a secure random string of the specified length (in bytes).
+// The resulting string is hex-encoded, so it will be twice the requested length.
+func GenerateRandomString(length int) string {
+	b := make([]byte, length)
+	if _, err := rand.Read(b); err != nil {
+		// Fallback or panic in critical failure?
+		// For now, logging and returning empty is safer than panic for non-critical flow,
+		// but auth depends on this.
+		log.Printf("critical: failed to generate random string: %v", err)
+		return ""
+	}
+	return hex.EncodeToString(b)
+}
 
 // WriteJSON encodes data as JSON and writes it to the ResponseWriter with
 // the provided HTTP status code.

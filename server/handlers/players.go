@@ -9,6 +9,7 @@ import (
 	"exile/server/database"
 	"exile/server/models"
 	"exile/server/utils"
+	"exile/server/ws_player"
 
 	"github.com/gorilla/mux"
 )
@@ -60,11 +61,6 @@ func AuthenticatePlayerHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		// If DeviceID changed or wasn't set (migration scenario)
 		if req.DeviceID != "" && p.DeviceID != req.DeviceID {
-			// Check if new DeviceID is already taken by another player?
-			// For now, let's assume we update it.
-			// But DeviceID is unique constraint.
-			// Ideally, we handle link/unlink.
-			// Here we just update it if possible.
 			p.DeviceID = req.DeviceID
 			updated = true
 		}
@@ -88,9 +84,6 @@ func AuthenticatePlayerHandler(w http.ResponseWriter, r *http.Request) {
 			if req.Name != "" {
 				p.Name = req.Name
 			}
-			// We need a way to update UID. UpdatePlayer doesn't update UID currently.
-			// Let's create a specific function or update UpdatePlayer.
-			// For now, assume UpdatePlayer handles it or we do a direct query.
 			_, err := database.DBConn.Exec(`UPDATE player_system.players SET uid=$1, name=$2, updated_at=NOW() WHERE id=$3`, uid, p.Name, p.ID)
 			if err != nil {
 				utils.WriteError(w, r, http.StatusInternalServerError, "failed to link uid: "+err.Error())
@@ -106,11 +99,7 @@ func AuthenticatePlayerHandler(w http.ResponseWriter, r *http.Request) {
 			if newPlayer.Name == "" {
 				newPlayer.Name = "Unknown Player"
 			}
-			// If DeviceID is missing, generate one or fail? 
-			// Schema says DeviceID is NOT NULL.
 			if newPlayer.DeviceID == "" {
-				// Fallback or error?
-				// Let's use UID as DeviceID fallback if needed, or error.
 				utils.WriteError(w, r, http.StatusBadRequest, "device_id required for new account")
 				return
 			}
@@ -133,7 +122,17 @@ func AuthenticatePlayerHandler(w http.ResponseWriter, r *http.Request) {
 	p.IncomingFriendRequests = incoming
 	p.OutgoingFriendRequests = outgoing
 
-	utils.WriteJSON(w, http.StatusOK, p)
+	// Generate WS Session Key
+	wsKey := utils.GenerateRandomString(32)
+	ws_player.GlobalPlayerWS.RegisterSession(p.ID, wsKey)
+
+	response := map[string]interface{}{
+		"player":         p,
+		"ws_auth_key":    wsKey,
+		"ws_endpoint":    "/api/game/ws",
+	}
+
+	utils.WriteJSON(w, http.StatusOK, response)
 }
 
 // CreateOrGetPlayerHandler handles player login/registration via device_id

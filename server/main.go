@@ -31,6 +31,7 @@ import (
 	"exile/server/sse"
 	"exile/server/utils"
 	"exile/server/ws"
+	"exile/server/ws_player"
 )
 
 // Configuration constants used by the registry.
@@ -177,6 +178,9 @@ func run() error {
 
 	// Start WS Manager
 	go ws.GlobalWSManager.Run()
+
+	// Initialize Player WS Manager
+	ws_player.InitPlayerWS()
 
 	if isProduction {
 		if apiKey == "" {
@@ -380,6 +384,7 @@ func run() error {
 
 		// Game Player System
 		router.Handle("/api/game/auth", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.AuthenticatePlayerHandler))).Methods("POST")
+		router.Handle("/api/game/ws", http.HandlerFunc(ws_player.GlobalPlayerWS.HandleWS)) // WebSocket Endpoint
 		router.Handle("/api/game/players", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ListAllPlayersHandler))).Methods("GET")
 		router.Handle("/api/game/players", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.CreateOrGetPlayerHandler))).Methods("POST")
 		router.Handle("/api/game/players/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.GetPlayerDetailsHandler))).Methods("GET")
