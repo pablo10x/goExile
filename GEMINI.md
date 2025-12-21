@@ -168,14 +168,19 @@ The following security improvements have been implemented:
 *   **Architecture:** Implemented a new persistent, categorized logging system.
 *   **Database:** Added `system_logs` table to store detailed logs.
 *   **RedEye Performance:** Added a new "RedEye Guardian" card and detailed metrics modal to the Performance tab, tracking real-time blocks, rate-limiting, and active bans.
-### Firebase Remote Config
-*   **Feature:** Implemented full CRUD support for Firebase Remote Config from the dashboard. Users can now create, update, delete, and sync parameters directly via the `/config` page.
-
 ### Game Player System
 *   **Schema:** Implemented a new `player_system` database schema to isolate player data.
-*   **Entities:** Added `players`, `friendships`, and `friend_requests` tables.
-*   **API:** Created endpoints for player registration (`POST /api/game/players`), retrieval, and friend management (send request, accept).
+*   **Entities:** Added `players`, `friendships`, and `friend_requests` tables. Added `uid` column to `players` table for Firebase integration.
+*   **API:**
+    *   `POST /api/game/auth`: Authenticates a player via Firebase ID Token, links UID, and returns full player profile.
+    *   `POST /api/game/players`: Register or Login via `device_id` (Legacy/Dev).
+    *   `GET /api/game/players/{id}`: Get player details with friends lists.
+    *   `POST /api/game/friends/request`: Send a friend request.
+    *   `POST /api/game/friends/accept`: Accept a friend request.
 *   **Integration:** Initialized schema creation in `main.go` startup sequence.
+
+### Firebase Remote Config
+*   **Feature:** Implemented full CRUD support for Firebase Remote Config from the dashboard. Users can now create, update, delete, and sync parameters directly via the `/config` page.
 
 ### Backend
 *   **Created `server/logging.go` service for structured logging.

@@ -6,6 +6,7 @@ import "time"
 // It is stored in the 'player_system' schema.
 type Player struct {
 	ID               int64     `json:"id" db:"id"`
+	UID              string    `json:"uid" db:"uid"` // Firebase UID
 	Name             string    `json:"name" db:"name"`
 	DeviceID         string    `json:"device_id" db:"device_id"`
 	XP               int64     `json:"xp" db:"xp"`

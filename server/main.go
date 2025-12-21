@@ -379,6 +379,7 @@ func run() error {
 		router.Handle("/api/ai/chat", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.AIChatHandler))).Methods("POST")
 
 		// Game Player System
+		router.Handle("/api/game/auth", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.AuthenticatePlayerHandler))).Methods("POST")
 		router.Handle("/api/game/players", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ListAllPlayersHandler))).Methods("GET")
 		router.Handle("/api/game/players", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.CreateOrGetPlayerHandler))).Methods("POST")
 		router.Handle("/api/game/players/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.GetPlayerDetailsHandler))).Methods("GET")

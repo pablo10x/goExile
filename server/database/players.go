@@ -23,6 +23,7 @@ func InitPlayerSystem(db *sqlx.DB) error {
 	// Players Table
 	playersTable := `CREATE TABLE IF NOT EXISTS player_system.players (
 		id BIGSERIAL PRIMARY KEY,
+		uid TEXT UNIQUE, -- Firebase UID
 		name TEXT NOT NULL,
 		device_id TEXT NOT NULL UNIQUE,
 		xp BIGINT DEFAULT 0,
@@ -32,6 +33,17 @@ func InitPlayerSystem(db *sqlx.DB) error {
 	);`
 	if _, err := db.Exec(playersTable); err != nil {
 		return fmt.Errorf("create players table: %w", err)
+	}
+
+	// Migration: Add uid column if it doesn't exist
+	_, err := db.Exec(`DO $$ 
+	BEGIN 
+		IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='player_system' AND table_name='players' AND column_name='uid') THEN 
+			ALTER TABLE player_system.players ADD COLUMN uid TEXT UNIQUE; 
+		END IF; 
+	END $$;`)
+	if err != nil {
+		log.Printf("Warning: Failed to add uid column to players: %v", err)
 	}
 
 	// Friendships Table (established friends)
@@ -67,14 +79,27 @@ func InitPlayerSystem(db *sqlx.DB) error {
 
 func CreatePlayer(db *sqlx.DB, p *models.Player) (int64, error) {
 	var id int64
-	query := `INSERT INTO player_system.players (name, device_id, xp, last_joined_server, created_at, updated_at) 
-			  VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
+	query := `INSERT INTO player_system.players (uid, name, device_id, xp, last_joined_server, created_at, updated_at) 
+			  VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
 	
 	p.CreatedAt = time.Now().UTC()
 	p.UpdatedAt = time.Now().UTC()
 
-	err := db.QueryRow(query, p.Name, p.DeviceID, p.XP, p.LastJoinedServer, p.CreatedAt, p.UpdatedAt).Scan(&id)
+	err := db.QueryRow(query, p.UID, p.Name, p.DeviceID, p.XP, p.LastJoinedServer, p.CreatedAt, p.UpdatedAt).Scan(&id)
 	return id, err
+}
+
+func GetPlayerByUID(db *sqlx.DB, uid string) (*models.Player, error) {
+	var p models.Player
+	query := `SELECT * FROM player_system.players WHERE uid = $1`
+	err := db.Get(&p, query, uid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &p, nil
 }
 
 func GetPlayerByDeviceID(db *sqlx.DB, deviceID string) (*models.Player, error) {

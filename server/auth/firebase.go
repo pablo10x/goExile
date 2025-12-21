@@ -345,6 +345,39 @@ func (fm *FirebaseManager) publishTemplate(template *remoteConfigTemplate, valid
 	return nil
 }
 
+// VerifyIDToken verifies a Firebase ID token and returns the UID
+func (fm *FirebaseManager) VerifyIDToken(idToken string) (string, error) {
+	// This is a simplified verification using Google's public keys endpoint.
+	// For production, consider using the official Firebase Admin SDK for Go.
+	// However, since we are avoiding extra dependencies, we can verify against Google's token info endpoint.
+	// Endpoint: https://oauth2.googleapis.com/tokeninfo?id_token=XYZ
+
+	resp, err := http.Get(fmt.Sprintf("https://oauth2.googleapis.com/tokeninfo?id_token=%s", idToken))
+	if err != nil {
+		return "", fmt.Errorf("failed to verify token: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("invalid token")
+	}
+
+	var claims struct {
+		Sub string `json:"sub"` // Subject (UID)
+		Aud string `json:"aud"` // Audience (Project ID)
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&claims); err != nil {
+		return "", fmt.Errorf("failed to decode token claims: %w", err)
+	}
+
+	if claims.Aud != fm.ProjectID {
+		return "", fmt.Errorf("token audience mismatch: expected %s, got %s", fm.ProjectID, claims.Aud)
+	}
+
+	return claims.Sub, nil
+}
+
 // detectValueType attempts to determine the type of a value
 func detectValueType(value string) string {
 	if value == "" {
