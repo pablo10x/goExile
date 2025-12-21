@@ -207,10 +207,14 @@
 									>GoExile</span
 								>
 							</h1>
-							<p class="text-xl text-slate-900/80 dark:text-white/80 font-light max-w-sm mx-auto leading-relaxed">
+							<p
+								class="text-xl text-slate-900/80 dark:text-white/80 font-light max-w-sm mx-auto leading-relaxed"
+							>
 								Advanced Game Server Management Registry
 							</p>
-							<div class="flex items-center justify-center gap-6 text-sm text-slate-900/60 dark:text-white/60">
+							<div
+								class="flex items-center justify-center gap-6 text-sm text-slate-900/60 dark:text-white/60"
+							>
 								<div class="flex items-center gap-2">
 									<div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
 									<span>Real-time</span>
@@ -238,7 +242,9 @@
 					<div class="relative z-10 space-y-8" in:fly={{ x: 30, duration: 1000, delay: 400 }}>
 						<div class="space-y-2">
 							<h2 class="text-4xl font-bold text-slate-900 dark:text-white">Welcome Back</h2>
-							<p class="text-slate-900/60 dark:text-white/60 text-lg">Authenticate to access your dashboard</p>
+							<p class="text-slate-900/60 dark:text-white/60 text-lg">
+								Authenticate to access your dashboard
+							</p>
 						</div>
 
 						<form onsubmit={handleLogin} class="space-y-6" class:animate-shake={formShake}>
@@ -282,7 +288,8 @@
 							<div class="space-y-2 group">
 								<label
 									for="password"
-									class="text-sm font-medium text-slate-900/80 dark:text-white/80 uppercase tracking-wider">Password</label
+									class="text-sm font-medium text-slate-900/80 dark:text-white/80 uppercase tracking-wider"
+									>Password</label
 								>
 								<div class="relative">
 									<div

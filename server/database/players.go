@@ -99,7 +99,7 @@ func CreateReport(db *sqlx.DB, r *models.Report) (int64, error) {
 	var id int64
 	query := `INSERT INTO player_system.reports (reporter_id, reported_user_id, reason, game_server_instance_id, timestamp) 
 			  VALUES ($1, $2, $3, $4, $5) RETURNING id`
-	
+
 	r.Timestamp = time.Now().UTC()
 
 	err := db.QueryRow(query, r.ReporterID, r.ReportedUserID, r.Reason, r.GameServerInstanceID, r.Timestamp).Scan(&id)
@@ -125,7 +125,7 @@ func CreatePlayer(db *sqlx.DB, p *models.Player) (int64, error) {
 	var id int64
 	query := `INSERT INTO player_system.players (uid, name, device_id, xp, last_joined_server, created_at, updated_at) 
 			  VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
-	
+
 	p.CreatedAt = time.Now().UTC()
 	p.UpdatedAt = time.Now().UTC()
 

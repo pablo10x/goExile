@@ -304,7 +304,9 @@
 				></div>
 
 				<!-- Header -->
-				<div class="relative p-6 border-b border-slate-300/50 dark:border-slate-700/50 bg-slate-900/50">
+				<div
+					class="relative p-6 border-b border-slate-300/50 dark:border-slate-700/50 bg-slate-900/50"
+				>
 					<div class="flex items-start justify-between mb-3">
 						<h3
 							class="text-xl font-bold text-slate-100 break-all leading-tight bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent"
@@ -395,12 +397,13 @@
 												/>
 											</svg>
 										</div>
-										<span class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
+										<span
+											class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
 											>CPU Usage</span
 										>
 									</div>
 									<span class="text-lg font-bold font-mono text-orange-400"
-										>{(stats.cpu_percent)?.toFixed(1)}%</span
+										>{stats.cpu_percent?.toFixed(1)}%</span
 									>
 								</div>
 								<div
@@ -434,7 +437,8 @@
 												/>
 											</svg>
 										</div>
-										<span class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
+										<span
+											class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
 											>Memory</span
 										>
 									</div>
@@ -473,7 +477,8 @@
 												/>
 											</svg>
 										</div>
-										<span class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
+										<span
+											class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
 											>Disk Space</span
 										>
 									</div>
@@ -568,7 +573,9 @@
 				</div>
 
 				<!-- Enhanced Action Buttons -->
-				<div class="relative p-4 border-t border-slate-300/50 dark:border-slate-700/50 bg-slate-900/70 backdrop-blur-sm">
+				<div
+					class="relative p-4 border-t border-slate-300/50 dark:border-slate-700/50 bg-slate-900/70 backdrop-blur-sm"
+				>
 					<div class="grid grid-cols-2 gap-2">
 						<button
 							onclick={() => triggerAction('start')}
@@ -853,10 +860,14 @@
 														</div>
 													</div>
 													<div class="flex-1 min-w-0">
-														<div class="text-sm font-bold text-slate-800 dark:text-slate-200 font-mono truncate mb-1">
+														<div
+															class="text-sm font-bold text-slate-800 dark:text-slate-200 font-mono truncate mb-1"
+														>
 															{backup.filename}
 														</div>
-														<div class="flex items-center gap-3 flex-wrap text-xs text-slate-500 dark:text-slate-400">
+														<div
+															class="flex items-center gap-3 flex-wrap text-xs text-slate-500 dark:text-slate-400"
+														>
 															<span class="flex items-center gap-1">
 																<svg
 																	class="w-3 h-3"
@@ -958,16 +969,20 @@
 									class="sticky top-0 z-10 bg-slate-900/90 backdrop-blur-xl border-b border-slate-300/50 dark:border-slate-700/50"
 								>
 									<tr>
-										<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
+										<th
+											class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
 											>Action</th
 										>
-										<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
+										<th
+											class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
 											>Status</th
 										>
-										<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
+										<th
+											class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
 											>Time</th
 										>
-										<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
+										<th
+											class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
 											>Details</th
 										>
 									</tr>

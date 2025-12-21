@@ -536,7 +536,9 @@
 
 <div class="h-full flex flex-col bg-white dark:bg-slate-950">
 	<!-- Toolbar -->
-	<div class="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-900/50">
+	<div
+		class="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-900/50"
+	>
 		<div class="flex items-center gap-3">
 			<div class="p-2 bg-amber-500/10 rounded-lg">
 				<Terminal class="w-5 h-5 text-amber-400" />
@@ -575,7 +577,9 @@
 	<!-- Editor & Results Split -->
 	<div class="flex-1 flex flex-col overflow-hidden">
 		<!-- Editor Area -->
-		<div class="h-1/3 min-h-[150px] p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-900/30 relative">
+		<div
+			class="h-1/3 min-h-[150px] p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-900/30 relative"
+		>
 			<div class="relative w-full h-full">
 				<textarea
 					bind:this={textareaEl}
@@ -623,13 +627,19 @@
 							class="px-3 py-1.5 bg-slate-900 border-t border-slate-300 dark:border-slate-700 text-xs text-slate-500 flex gap-3"
 						>
 							<span
-								><kbd class="px-1 py-0.5 bg-slate-700 rounded text-slate-500 dark:text-slate-400">↑↓</kbd> Navigate</span
+								><kbd class="px-1 py-0.5 bg-slate-700 rounded text-slate-500 dark:text-slate-400"
+									>↑↓</kbd
+								> Navigate</span
 							>
 							<span
-								><kbd class="px-1 py-0.5 bg-slate-700 rounded text-slate-500 dark:text-slate-400">Tab</kbd> Select</span
+								><kbd class="px-1 py-0.5 bg-slate-700 rounded text-slate-500 dark:text-slate-400"
+									>Tab</kbd
+								> Select</span
 							>
 							<span
-								><kbd class="px-1 py-0.5 bg-slate-700 rounded text-slate-500 dark:text-slate-400">Esc</kbd> Close</span
+								><kbd class="px-1 py-0.5 bg-slate-700 rounded text-slate-500 dark:text-slate-400"
+									>Esc</kbd
+								> Close</span
 							>
 						</div>
 					</div>
@@ -653,7 +663,8 @@
 				<div
 					class="p-2 border-b border-slate-200 dark:border-slate-800 bg-slate-900 flex justify-between items-center px-4"
 				>
-					<span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+					<span
+						class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
 						>{results.length} Rows</span
 					>
 					<div class="flex gap-2">
@@ -675,10 +686,13 @@
 				</div>
 				<div class="flex-1 overflow-auto">
 					<table class="w-full text-left text-sm border-collapse">
-						<thead class="bg-white dark:bg-slate-950 text-slate-500 dark:text-slate-400 sticky top-0 shadow-md z-10">
+						<thead
+							class="bg-white dark:bg-slate-950 text-slate-500 dark:text-slate-400 sticky top-0 shadow-md z-10"
+						>
 							<tr>
 								{#each Object.keys(results[0]) as key}
-									<th class="px-4 py-3 font-medium border-b border-slate-200 dark:border-slate-800 whitespace-nowrap"
+									<th
+										class="px-4 py-3 font-medium border-b border-slate-200 dark:border-slate-800 whitespace-nowrap"
 										>{key}</th
 									>
 								{/each}

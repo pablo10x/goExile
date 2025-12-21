@@ -99,17 +99,21 @@
 		return { color: 'red', label: 'Critical', emoji: '⨯' };
 	}
 
-    let cpuHealth = $derived(getHealthStatus($stats?.cpu_percent ?? 0));
+	let cpuHealth = $derived(getHealthStatus($stats?.cpu_percent ?? 0));
 
-    let memPercent = $derived(effectiveMemTotal
-        ? Math.min(100, (($stats?.memory_usage ?? 0) / (effectiveMemTotal * 1024 * 1024)) * 100)
-        : 0);
-    let memHealth = $derived(getHealthStatus(memPercent));
+	let memPercent = $derived(
+		effectiveMemTotal
+			? Math.min(100, (($stats?.memory_usage ?? 0) / (effectiveMemTotal * 1024 * 1024)) * 100)
+			: 0
+	);
+	let memHealth = $derived(getHealthStatus(memPercent));
 
-    let diskPercent = $derived(diskTotal
-        ? Math.min(100, (($stats?.disk_usage ?? 0) / (diskTotal * 1024 * 1024 * 1024)) * 100)
-        : 0);
-    let diskHealth = $derived(getHealthStatus(diskPercent));
+	let diskPercent = $derived(
+		diskTotal
+			? Math.min(100, (($stats?.disk_usage ?? 0) / (diskTotal * 1024 * 1024 * 1024)) * 100)
+			: 0
+	);
+	let diskHealth = $derived(getHealthStatus(diskPercent));
 </script>
 
 <div class="space-y-8 relative">
@@ -259,7 +263,9 @@
 									</div>
 								</div>
 								<div>
-									<div class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+									<div
+										class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
+									>
 										CPU Usage
 									</div>
 									<div class="flex items-center gap-2 mt-1">
@@ -289,9 +295,9 @@
 							<div
 								class="text-4xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent font-mono tracking-tight"
 							>
-								{($stats.cpu_percent)?.toFixed(1)}<span class="text-2xl">%</span>
+								{$stats.cpu_percent?.toFixed(1)}<span class="text-2xl">%</span>
 							</div>
-							<div class="text-xs text-slate-500 mt-1">Peak: {($peakStats.peakCpu)?.toFixed(1)}%</div>
+							<div class="text-xs text-slate-500 mt-1">Peak: {$peakStats.peakCpu?.toFixed(1)}%</div>
 						</div>
 
 						<!-- Enhanced Progress Bar -->
@@ -363,7 +369,9 @@
 									</div>
 								</div>
 								<div>
-									<div class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+									<div
+										class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
+									>
 										Memory
 									</div>
 									<div class="flex items-center gap-2 mt-1">
@@ -468,7 +476,9 @@
 									</div>
 								</div>
 								<div>
-									<div class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+									<div
+										class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
+									>
 										Disk Space
 									</div>
 									<div class="text-[10px] text-slate-600 mt-1 font-mono">Storage</div>
@@ -583,7 +593,9 @@
 								</div>
 							</div>
 							<div>
-								<h4 class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest">
+								<h4
+									class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest"
+								>
 									Performance Timeline
 								</h4>
 								<p class="text-xs text-slate-500 mt-0.5">

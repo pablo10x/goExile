@@ -311,13 +311,17 @@
 					<!-- Loading State -->
 					<div class="flex flex-col items-center justify-center py-12" transition:fade>
 						<div class="relative">
-							<div class="w-20 h-20 border-4 border-slate-300 dark:border-slate-700 rounded-full animate-pulse"></div>
+							<div
+								class="w-20 h-20 border-4 border-slate-300 dark:border-slate-700 rounded-full animate-pulse"
+							></div>
 							<div
 								class="absolute inset-0 w-20 h-20 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"
 							></div>
 							<Key class="absolute inset-0 m-auto w-8 h-8 text-emerald-400 animate-pulse" />
 						</div>
-						<p class="mt-6 text-slate-500 dark:text-slate-400 font-medium">Generating enrollment key...</p>
+						<p class="mt-6 text-slate-500 dark:text-slate-400 font-medium">
+							Generating enrollment key...
+						</p>
 					</div>
 				{:else if error}
 					<!-- Error State -->
@@ -329,7 +333,9 @@
 							<AlertCircle class="w-10 h-10 text-red-400 animate-shake-error" />
 						</div>
 						<h3 class="text-lg font-semibold text-red-400 mb-2">Failed to Generate Key</h3>
-						<p class="text-slate-500 dark:text-slate-400 text-sm text-center max-w-sm mb-6">{error}</p>
+						<p class="text-slate-500 dark:text-slate-400 text-sm text-center max-w-sm mb-6">
+							{error}
+						</p>
 						<button
 							onclick={generateKey}
 							class="px-5 py-2.5 text-sm font-semibold text-slate-900 dark:text-white bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 rounded-lg shadow-lg transition-all transform hover:-translate-y-0.5 active:scale-95"
@@ -517,7 +523,8 @@
 							>
 								<div class="flex items-center gap-2 mb-2">
 									<Key class="w-4 h-4 text-emerald-400" />
-									<span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+									<span
+										class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
 										>Enrollment Key</span
 									>
 								</div>
@@ -531,7 +538,8 @@
 						<div>
 							<div class="flex items-center gap-2 mb-2">
 								<Terminal class="w-4 h-4 text-slate-500 dark:text-slate-400" />
-								<span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+								<span
+									class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
 									>Run this command on your spawner</span
 								>
 							</div>
@@ -564,9 +572,15 @@
 						</div>
 
 						<!-- Instructions -->
-						<div class="bg-slate-800/30 border border-slate-300/30 dark:border-slate-700/30 rounded-xl p-4">
-							<h4 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Instructions</h4>
-							<ol class="text-xs text-slate-500 dark:text-slate-400 space-y-1.5 list-decimal list-inside">
+						<div
+							class="bg-slate-800/30 border border-slate-300/30 dark:border-slate-700/30 rounded-xl p-4"
+						>
+							<h4 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+								Instructions
+							</h4>
+							<ol
+								class="text-xs text-slate-500 dark:text-slate-400 space-y-1.5 list-decimal list-inside"
+							>
 								<li>Copy the command above</li>
 								<li>Run it on the machine where your spawner is installed</li>
 								<li>The spawner will automatically register with the master server</li>

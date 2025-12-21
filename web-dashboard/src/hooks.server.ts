@@ -20,7 +20,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	// If session exists but is not fully authenticated (e.g. during 2FA flow)
 	// This part needs to be handled by +layout.server.ts or within API checks
-    // For now, if a session exists, we assume +layout.server.ts will validate its step.
+	// For now, if a session exists, we assume +layout.server.ts will validate its step.
 
 	return await resolve(event);
 };

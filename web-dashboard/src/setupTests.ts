@@ -33,18 +33,19 @@ vi.mock('$app/state', () => ({
 
 // Polyfill for element.animate in jsdom environment
 if (typeof Element !== 'undefined' && !Element.prototype.animate) {
-	Element.prototype.animate = () => ({
-		// Mock the return value to prevent further errors if methods are called on it
-		cancel: () => {},
-		pause: () => {},
-		play: () => {},
-		finish: () => {},
-		reverse: () => {},
-		commitStyles: () => {},
-		add: () => {},
-		// Add other properties that might be accessed, e.g., onfinish
-		onfinish: null,
-		// Mock a Promise-like object for `finished`
-		finished: Promise.resolve(this as any)
-	}) as any;
+	Element.prototype.animate = () =>
+		({
+			// Mock the return value to prevent further errors if methods are called on it
+			cancel: () => {},
+			pause: () => {},
+			play: () => {},
+			finish: () => {},
+			reverse: () => {},
+			commitStyles: () => {},
+			add: () => {},
+			// Add other properties that might be accessed, e.g., onfinish
+			onfinish: null,
+			// Mock a Promise-like object for `finished`
+			finished: Promise.resolve(this as any)
+		}) as any;
 }

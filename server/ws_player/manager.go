@@ -54,7 +54,7 @@ func (pm *PlayerWSManager) RegisterSession(playerID int64, key string) {
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
 	pm.SessionKeys[key] = playerID
-	
+
 	// Auto-expire session key after 1 minute (client should connect immediately)
 	go func(k string) {
 		time.Sleep(1 * time.Minute)
@@ -98,7 +98,7 @@ func (pm *PlayerWSManager) HandleWS(w http.ResponseWriter, r *http.Request) {
 	pm.mu.Lock()
 	// Close existing connection if any (kick old session)
 	if existing, exists := pm.Connections[playerID]; exists {
-		existing.Conn.Close()
+		_ = existing.Conn.Close()
 	}
 	pm.Connections[playerID] = client
 	// Invalidate session key (one-time use)
@@ -119,7 +119,7 @@ func (c *PlayerConnection) readPump(pm *PlayerWSManager) {
 			delete(pm.Connections, c.PlayerID)
 		}
 		pm.mu.Unlock()
-		c.Conn.Close()
+		_ = c.Conn.Close()
 		log.Printf("PlayerWS: Player %d disconnected", c.PlayerID)
 	}()
 
@@ -245,14 +245,14 @@ func (c *PlayerConnection) writePump() {
 	ticker := time.NewTicker(30 * time.Second)
 	defer func() {
 		ticker.Stop()
-		c.Conn.Close()
+		_ = c.Conn.Close()
 	}()
 
 	for {
 		select {
 		case message, ok := <-c.WriteChan:
 			if !ok {
-				c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
+				_ = c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 			if err := c.Conn.WriteMessage(websocket.TextMessage, message); err != nil {

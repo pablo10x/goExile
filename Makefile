@@ -1,38 +1,36 @@
-.PHONY: all build build-server build-spawner run-server-bg clean
+# Exile Project Management
 
-# Directories
-SERVER_DIR := server
-SPAWNER_DIR := spawner
+GOLINT := $(shell which golangci-lint 2>/dev/null || echo $(shell go env GOPATH)/bin/golangci-lint)
 
-# Output binaries
-SERVER_BIN := server
-SPAWNER_BIN := spawner
+.PHONY: lint-backend lint-frontend lint check-all format
 
-all: build
+# Linting for Go components
+lint-backend:
+	@echo "🔍 Linting Server..."
+	@cd server && $(GOLINT) run ./...
+	@echo "🔍 Linting Spawner..."
+	@cd spawner && $(GOLINT) run ./...
 
-build: build-server build-spawner
+# Linting for Svelte component
+lint-frontend:
+	@echo "🔍 Linting Frontend (web-dashboard)..."
+	@cd web-dashboard && npm run lint
 
-build-server:
-	@echo "Building Master Server..."
-	cd $(SERVER_DIR) && go build -o $(SERVER_BIN) .
+# Svelte check (Type checking)
+check-frontend:
+	@echo "🔍 Type checking Frontend..."
+	@cd web-dashboard && npm run check
 
-build-spawner:
-	@echo "Building Spawner..."
-	cd $(SPAWNER_DIR) && go build -o $(SPAWNER_BIN) .
+# Run all linting and checks
+lint: lint-backend lint-frontend check-frontend
 
-run-server-bg: build-server
-	@echo "Starting Master Server in background..."
-	cd $(SERVER_DIR) && (nohup ./$(SERVER_BIN) > server.log 2>&1 & echo $$! > server.pid)
-	@echo "Master Server running. PID stored in $(SERVER_DIR)/server.pid. Logs: $(SERVER_DIR)/server.log"
+# Format all code
+format:
+	@echo "💅 Formatting code..."
+	@cd server && go fmt ./...
+	@cd spawner && go fmt ./...
+	@cd web-dashboard && npm run format
 
-stop-server:
-	@if [ -f $(SERVER_DIR)/server.pid ]; then \
-		kill `cat $(SERVER_DIR)/server.pid` && rm $(SERVER_DIR)/server.pid; \
-		echo "Master Server stopped."; \
-	else \
-		echo "No PID file found for Master Server."; \
-	fi
-
-clean:
-	rm -f $(SERVER_DIR)/$(SERVER_BIN) $(SERVER_DIR)/server.log $(SERVER_DIR)/server.pid
-	rm -f $(SPAWNER_DIR)/$(SPAWNER_BIN)
+# Run everything before commit
+check-all: format lint
+	@echo "✅ All checks passed!"

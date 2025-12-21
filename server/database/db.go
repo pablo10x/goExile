@@ -324,7 +324,7 @@ func GetSystemLogs(db *sqlx.DB, category string, limit, offset int) ([]models.Sy
 	if err != nil {
 		return nil, 0, fmt.Errorf("query logs: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var l models.SystemLog
@@ -350,7 +350,7 @@ func GetSystemLogCounts(db *sqlx.DB) (map[string]int, error) {
 	if err != nil {
 		return nil, fmt.Errorf("query counts: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	counts := make(map[string]int)
 	var total int
@@ -381,6 +381,7 @@ func ClearSystemLogs(db *sqlx.DB) error {
 
 // -- Notes --
 
+// GetNotes retrieves all sticky notes from the database.
 func GetNotes(db *sqlx.DB) ([]models.Note, error) {
 	// Use COALESCE to handle potential NULLs from migration or old data
 	query := `
@@ -400,7 +401,7 @@ func GetNotes(db *sqlx.DB) ([]models.Note, error) {
 	if err != nil {
 		return nil, fmt.Errorf("query notes: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	out := make([]models.Note, 0)
 	for rows.Next() {
@@ -459,6 +460,7 @@ func DeleteNote(db *sqlx.DB, id int) error {
 
 // -- Todos --
 
+// GetTodos retrieves the hierarchical list of tasks and comments.
 func GetTodos(db *sqlx.DB) ([]models.Todo, error) {
 
 	// Fetch all todos
@@ -473,7 +475,7 @@ func GetTodos(db *sqlx.DB) ([]models.Todo, error) {
 
 	}
 
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 
@@ -517,42 +519,41 @@ func GetTodos(db *sqlx.DB) ([]models.Todo, error) {
 
 	}
 
-	        // Fetch all comments
-	
-	        var comments []models.TodoComment
-	
-	        cRows, err := db.Queryx(`SELECT id, todo_id, content, author, created_at FROM todo_comments ORDER BY created_at ASC`)
-	
-	        if err != nil {
-	
-	                log.Printf("Warning: failed to query todo comments: %v", err)
-	
-	        } else {
-	
-	                defer cRows.Close()
-	
-	                for cRows.Next() {
-	
-	                        var c models.TodoComment
-	
-	                        var createdAtUnix int64
-	
-	                        if err := cRows.Scan(&c.ID, &c.TodoID, &c.Content, &c.Author, &createdAtUnix); err != nil {
-	
-	                                log.Printf("Warning: failed to scan todo comment: %v", err)
-	
-	                                continue
-	
-	                        }
-	
-	                        c.CreatedAt = time.Unix(createdAtUnix, 0).UTC()
-	
-	                        comments = append(comments, c)
-	
-	                }
-	
-	        }
-		// Map comments to todos
+	// Fetch all comments
+
+	var comments []models.TodoComment
+
+	cRows, err := db.Queryx(`SELECT id, todo_id, content, author, created_at FROM todo_comments ORDER BY created_at ASC`)
+
+	if err != nil {
+
+		log.Printf("Warning: failed to query todo comments: %v", err)
+
+	} else {
+
+		defer func() { _ = cRows.Close() }()
+
+		for cRows.Next() {
+			var c models.TodoComment
+
+			var createdAtUnix int64
+
+			if err := cRows.Scan(&c.ID, &c.TodoID, &c.Content, &c.Author, &createdAtUnix); err != nil {
+
+				log.Printf("Warning: failed to scan todo comment: %v", err)
+
+				continue
+
+			}
+
+			c.CreatedAt = time.Unix(createdAtUnix, 0).UTC()
+
+			comments = append(comments, c)
+
+		}
+
+	}
+	// Map comments to todos
 
 	commentMap := make(map[int][]models.TodoComment)
 
@@ -746,7 +747,7 @@ func SaveSpawner(db *sqlx.DB, s *models.Spawner) (int, error) {
 		if err != nil {
 			return fmt.Errorf("begin tx: %w", err)
 		}
-		defer tx.Rollback()
+		defer func() { _ = tx.Rollback() }()
 
 		if s.ID == 0 {
 			query := `INSERT INTO spawners (name, region, host, port, max_instances, current_instances, status, last_seen, game_version)
@@ -960,6 +961,7 @@ func SaveServerVersion(db *sqlx.DB, v *models.GameServerVersion) error {
 	return execWithRetry(do)
 }
 
+// ListServerVersions returns all uploaded server binary versions.
 func ListServerVersions(db *sqlx.DB) ([]models.GameServerVersion, error) {
 
 	rows, err := db.Queryx(`SELECT id, filename, version, comment, uploaded_at, is_active FROM server_versions ORDER BY uploaded_at DESC`)
@@ -970,10 +972,9 @@ func ListServerVersions(db *sqlx.DB) ([]models.GameServerVersion, error) {
 
 	}
 
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	out := make([]models.GameServerVersion, 0)
-
 	for rows.Next() {
 
 		var v models.GameServerVersion
@@ -999,7 +1000,7 @@ func SetActiveVersion(db *sqlx.DB, id int) error {
 		if err != nil {
 			return err
 		}
-		defer tx.Rollback()
+		defer func() { _ = tx.Rollback() }()
 
 		// Deactivate all
 		if _, err := tx.Exec(`UPDATE server_versions SET is_active = 0`); err != nil {

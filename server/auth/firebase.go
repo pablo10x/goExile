@@ -23,16 +23,16 @@ import (
 type FirebaseManager struct {
 	mu sync.RWMutex
 
-	ProjectID     string
-	Connected     bool
-	lastError     string
-	lastSync      time.Time
-	configCache   map[string]*RemoteConfigParameter
-	
+	ProjectID   string
+	Connected   bool
+	lastError   string
+	lastSync    time.Time
+	configCache map[string]*RemoteConfigParameter
+
 	// SDK Components
-	app           *firebase.App
-	authClient    *auth.Client
-	
+	app        *firebase.App
+	authClient *auth.Client
+
 	// Legacy REST Components (for Remote Config until SDK supports it fully/easily)
 	httpClient    *http.Client
 	accessToken   string
@@ -126,7 +126,7 @@ func InitFirebase() error {
 	ctx := context.Background()
 	opt := option.WithCredentialsFile(credsPath)
 	config := &firebase.Config{ProjectID: ProjectID}
-	
+
 	app, err := firebase.NewApp(ctx, config, opt)
 	if err != nil {
 		FirebaseMgr.lastError = fmt.Sprintf("Failed to init Firebase App: %v", err)

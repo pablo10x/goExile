@@ -14,7 +14,9 @@
 		style="top: {y + 20}px; left: {x - 192}px;"
 		transition:scale={{ duration: 200, start: 0.95 }}
 	>
-		<div class="flex items-center gap-3 mb-4 border-b border-slate-300/50 dark:border-slate-700/50 pb-3">
+		<div
+			class="flex items-center gap-3 mb-4 border-b border-slate-300/50 dark:border-slate-700/50 pb-3"
+		>
 			<div class="p-2 bg-emerald-500/10 rounded-lg">
 				<Database class="w-5 h-5 text-emerald-400" />
 			</div>
@@ -30,13 +32,17 @@
 		<div class="space-y-4">
 			<!-- Pool Stats -->
 			<div class="grid grid-cols-2 gap-3">
-				<div class="bg-slate-800/50 p-3 rounded-lg border border-slate-300/30 dark:border-slate-700/30">
+				<div
+					class="bg-slate-800/50 p-3 rounded-lg border border-slate-300/30 dark:border-slate-700/30"
+				>
 					<div class="text-xs text-slate-500 dark:text-slate-400 mb-1">Open / Max</div>
 					<div class="text-lg font-bold text-slate-100 font-mono">
 						{stats.db_open_connections} <span class="text-slate-500 text-sm">/ 10</span>
 					</div>
 				</div>
-				<div class="bg-slate-800/50 p-3 rounded-lg border border-slate-300/30 dark:border-slate-700/30">
+				<div
+					class="bg-slate-800/50 p-3 rounded-lg border border-slate-300/30 dark:border-slate-700/30"
+				>
 					<div class="text-xs text-slate-500 dark:text-slate-400 mb-1">In Use / Idle</div>
 					<div class="text-lg font-bold text-emerald-400 font-mono">
 						{stats.db_in_use} <span class="text-slate-500 text-sm">/ {stats.db_idle}</span>
@@ -50,11 +56,15 @@
 			>
 				<div>
 					<div class="text-xs text-slate-500 dark:text-slate-400 mb-1">Wait Duration</div>
-					<div class="text-sm font-bold text-slate-800 dark:text-slate-200">{stats.db_wait_duration}</div>
+					<div class="text-sm font-bold text-slate-800 dark:text-slate-200">
+						{stats.db_wait_duration}
+					</div>
 				</div>
 				<div class="text-right">
 					<div class="text-xs text-slate-500 dark:text-slate-400 mb-1">Wait Count</div>
-					<div class="text-sm font-bold text-slate-800 dark:text-slate-200">{stats.db_wait_count}</div>
+					<div class="text-sm font-bold text-slate-800 dark:text-slate-200">
+						{stats.db_wait_count}
+					</div>
 				</div>
 			</div>
 
@@ -73,7 +83,7 @@
 						><Activity class="w-3 h-3" /> Cache Hit</span
 					>
 					<span class="font-mono text-emerald-400"
-						>{stats.db_cache_hit ? (stats.db_cache_hit)?.toFixed(2) : 0}%</span
+						>{stats.db_cache_hit ? stats.db_cache_hit?.toFixed(2) : 0}%</span
 					>
 				</div>
 				<div class="flex justify-between items-center">
@@ -96,7 +106,9 @@
 			>
 				<div>
 					<div class="text-slate-500 mb-0.5">Fetch</div>
-					<div class="font-mono text-slate-700 dark:text-slate-300">{stats.db_tup_fetched || 0}</div>
+					<div class="font-mono text-slate-700 dark:text-slate-300">
+						{stats.db_tup_fetched || 0}
+					</div>
 				</div>
 				<div>
 					<div class="text-slate-500 mb-0.5">Ins</div>

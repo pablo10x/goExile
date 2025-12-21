@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -58,9 +59,12 @@ func NewSessionStore(isProduction bool) *SessionStore {
 	}
 }
 
+// CreateSession creates a new authentication session.
 func (ss *SessionStore) CreateSession(initialStep string) (string, error) {
 	token := make([]byte, 32)
-	rand.Read(token)
+	if _, err := rand.Read(token); err != nil {
+		return "", fmt.Errorf("failed to generate session token: %w", err)
+	}
 	sessionID := base64.StdEncoding.EncodeToString(token)
 	ss.mu.Lock()
 	defer ss.mu.Unlock()
@@ -163,10 +167,10 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, cfg AuthConfig, ss *Ses
 		}
 		sid, _ := ss.CreateSession(step)
 		http.SetCookie(w, &http.Cookie{Name: "session", Value: sid, Path: "/", HttpOnly: true})
-		
+
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{
-			"status": "ok",
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"status":    "ok",
 			"next_step": step,
 		})
 		return

@@ -11,7 +11,12 @@
 	function toggle() {
 		isOpen = !isOpen;
 		if (isOpen && messages.length === 0) {
-			messages = [{ role: 'ai', text: 'Hello! I can help you organize your notes and tasks. What needs to be done?' }];
+			messages = [
+				{
+					role: 'ai',
+					text: 'Hello! I can help you organize your notes and tasks. What needs to be done?'
+				}
+			];
 		}
 	}
 
@@ -37,17 +42,23 @@
 			if (response.ok) {
 				const data = await response.json();
 				messages = [...messages, { role: 'ai', text: data.response }];
-				
+
 				// If AI suggested a todo, add it automatically or prompt (for now auto-add logic mock)
 				if (data.suggested_todo) {
 					// In a real app, maybe ask user first or show a special UI element
-					messages = [...messages, { role: 'ai', text: `I've suggested a new task: "${data.suggested_todo}"` }];
+					messages = [
+						...messages,
+						{ role: 'ai', text: `I've suggested a new task: "${data.suggested_todo}"` }
+					];
 					// Trigger todo creation via event or store?
 					// For simplicity in this component, we'll just dispatch an event or rely on the user to add it.
 					// Let's dispatch custom event if needed, but for now just chat.
 				}
 			} else {
-				messages = [...messages, { role: 'ai', text: 'Sorry, I encountered an error connecting to the neural network.' }];
+				messages = [
+					...messages,
+					{ role: 'ai', text: 'Sorry, I encountered an error connecting to the neural network.' }
+				];
 			}
 		} catch (e) {
 			messages = [...messages, { role: 'ai', text: 'Connection failed.' }];
@@ -64,18 +75,25 @@
 			transition:scale={{ duration: 300 }}
 		>
 			<!-- Header -->
-			<div class="p-4 bg-gradient-to-r from-violet-600 to-indigo-600 flex items-center justify-between">
+			<div
+				class="p-4 bg-gradient-to-r from-violet-600 to-indigo-600 flex items-center justify-between"
+			>
 				<div class="flex items-center gap-2 text-slate-900 dark:text-white font-semibold">
 					<Bot class="w-5 h-5" />
 					<span>AI Assistant</span>
 				</div>
-				<button onclick={toggle} class="text-slate-900/80 dark:text-white/80 hover:text-slate-900 dark:text-white transition-colors">
+				<button
+					onclick={toggle}
+					class="text-slate-900/80 dark:text-white/80 hover:text-slate-900 dark:text-white transition-colors"
+				>
 					<X class="w-5 h-5" />
 				</button>
 			</div>
 
 			<!-- Chat Area -->
-			<div class="flex-1 p-4 overflow-y-auto space-y-4 bg-white/95 dark:bg-slate-950/95 min-h-[300px]">
+			<div
+				class="flex-1 p-4 overflow-y-auto space-y-4 bg-white/95 dark:bg-slate-950/95 min-h-[300px]"
+			>
 				{#each messages as msg}
 					<div class="flex {msg.role === 'user' ? 'justify-end' : 'justify-start'}">
 						<div
@@ -135,8 +153,10 @@
 			<Bot class="w-7 h-7 group-hover:animate-bounce" />
 			<div class="absolute -top-1 -right-1">
 				<span class="relative flex h-3 w-3">
-				  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
-				  <span class="relative inline-flex rounded-full h-3 w-3 bg-violet-500"></span>
+					<span
+						class="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"
+					></span>
+					<span class="relative inline-flex rounded-full h-3 w-3 bg-violet-500"></span>
 				</span>
 			</div>
 		{/if}

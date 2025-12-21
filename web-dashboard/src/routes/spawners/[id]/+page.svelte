@@ -430,7 +430,9 @@
 					<div
 						class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"
 					></div>
-					<h3 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">System Updating</h3>
+					<h3 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+						System Updating
+					</h3>
 					<p class="text-sm">Downloading game files. Actions are disabled.</p>
 				</div>
 			{/if}
@@ -440,7 +442,9 @@
 			>
 				<div>
 					<h2 class="text-lg sm:text-xl font-bold text-slate-50">Game Instances</h2>
-					<p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Manage game servers on this spawner.</p>
+					<p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+						Manage game servers on this spawner.
+					</p>
 				</div>
 
 				<div class="flex items-center gap-3 w-full sm:w-auto">
@@ -494,7 +498,9 @@
 				<div class="mb-6 sm:mb-8">
 					<div class="flex justify-between items-end mb-4 px-1">
 						<div>
-							<h3 class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+							<h3
+								class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
+							>
 								Active Players (24h)
 							</h3>
 							<p class="text-[10px] sm:text-xs text-slate-500 mt-1">

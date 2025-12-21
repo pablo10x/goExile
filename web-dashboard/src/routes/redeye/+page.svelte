@@ -83,7 +83,9 @@
 		last_seen: string;
 	}
 
-	let activeTab = $state<'overview' | 'rules' | 'bans' | 'logs' | 'anticheat' | 'config'>('overview');
+	let activeTab = $state<'overview' | 'rules' | 'bans' | 'logs' | 'anticheat' | 'config'>(
+		'overview'
+	);
 	let rules = $state<RedEyeRule[]>([]);
 	let logs = $state<RedEyeLog[]>([]);
 	let events = $state<AnticheatEvent[]>([]);
@@ -336,12 +338,18 @@
 					<h1 class="text-3xl font-black tracking-tighter text-slate-900 dark:text-white uppercase">
 						RedEye <span class="text-red-500">Protocol</span>
 					</h1>
-					<div class="px-2 py-0.5 {stats.system_active ? 'bg-red-500 text-black' : 'bg-slate-700 text-slate-300'} text-[10px] font-bold rounded uppercase">
+					<div
+						class="px-2 py-0.5 {stats.system_active
+							? 'bg-red-500 text-black'
+							: 'bg-slate-700 text-slate-300'} text-[10px] font-bold rounded uppercase"
+					>
 						{stats.system_active ? 'Active' : 'Inactive'}
 					</div>
 				</div>
 				<p class="text-slate-500 text-xs font-mono tracking-widest mt-1">
-					NEURAL THREAT MITIGATION SYSTEM // {stats.system_error ? `ERR: ${stats.system_error}` : 'REV 4.0.2'}
+					NEURAL THREAT MITIGATION SYSTEM // {stats.system_error
+						? `ERR: ${stats.system_error}`
+						: 'REV 4.0.2'}
 				</p>
 			</div>
 		</div>
@@ -367,11 +375,20 @@
 	<div
 		class="mb-6 p-4 bg-white/50 dark:bg-slate-950/50 border-y border-slate-200 dark:border-slate-800 flex flex-wrap gap-8 items-center relative overflow-hidden"
 	>
-		<div class="absolute inset-y-0 left-0 w-1 {stats.system_active ? 'bg-red-500' : 'bg-slate-600'}"></div>
+		<div
+			class="absolute inset-y-0 left-0 w-1 {stats.system_active ? 'bg-red-500' : 'bg-slate-600'}"
+		></div>
 		<div class="flex items-center gap-3">
-			<div class="w-2 h-2 rounded-full {stats.system_active ? 'bg-red-500 animate-ping' : 'bg-slate-600'}"></div>
+			<div
+				class="w-2 h-2 rounded-full {stats.system_active
+					? 'bg-red-500 animate-ping'
+					: 'bg-slate-600'}"
+			></div>
 			<span class="text-xs font-mono text-slate-500 dark:text-slate-400 uppercase tracking-widest"
-				>Live Monitoring: <span class={stats.system_active ? 'text-slate-900 dark:text-white' : 'text-slate-600'}>{stats.system_active ? 'Enabled' : 'Disabled'}</span></span
+				>Live Monitoring: <span
+					class={stats.system_active ? 'text-slate-900 dark:text-white' : 'text-slate-600'}
+					>{stats.system_active ? 'Enabled' : 'Disabled'}</span
+				></span
 			>
 		</div>
 		<div class="flex items-center gap-2 text-xs font-mono">
@@ -380,7 +397,13 @@
 		</div>
 		<div class="flex items-center gap-2 text-xs font-mono">
 			<span class="text-slate-500">Threat Level:</span>
-			<span class={stats.threat_level === 'Low' ? 'text-emerald-400' : stats.threat_level === 'Medium' ? 'text-amber-400' : 'text-red-500'}>{stats.threat_level}</span>
+			<span
+				class={stats.threat_level === 'Low'
+					? 'text-emerald-400'
+					: stats.threat_level === 'Medium'
+						? 'text-amber-400'
+						: 'text-red-500'}>{stats.threat_level}</span
+			>
 		</div>
 		<div class="ml-auto text-[10px] font-mono text-slate-600 hidden lg:block">
 			CRC: {stats.crc} - NODE: {stats.node_id}
@@ -388,7 +411,9 @@
 	</div>
 
 	<!-- Navigation Controls -->
-	<div class="flex gap-1 mb-6 shrink-0 bg-white/80 dark:bg-slate-950/80 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+	<div
+		class="flex gap-1 mb-6 shrink-0 bg-white/80 dark:bg-slate-950/80 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800"
+	>
 		{#each [['overview', BarChart3, 'Status'], ['rules', ShieldCheck, 'Rules'], ['bans', Ban, 'Bans'], ['anticheat', AlertTriangle, 'Anti-Cheat'], ['logs', Terminal, 'Logs'], ['config', Settings, 'System']] as [id, icon, label]}
 			{@const Icon = icon as any}
 			<button
@@ -417,11 +442,16 @@
 						<div
 							class="bg-slate-900/40 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl flex items-center gap-4 hover:border-slate-300 dark:border-slate-700 transition-colors group"
 						>
-							<div class="p-3 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 group-hover:border-slate-600 transition-colors">
+							<div
+								class="p-3 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 group-hover:border-slate-600 transition-colors"
+							>
 								<CardIcon class="w-6 h-6 {card.color}" />
 							</div>
 							<div class="flex flex-col">
-								<span class="text-2xl font-black text-slate-900 dark:text-white font-mono leading-none">{card.val}</span>
+								<span
+									class="text-2xl font-black text-slate-900 dark:text-white font-mono leading-none"
+									>{card.val}</span
+								>
 								<span class="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1"
 									>{card.label}</span
 								>
@@ -441,64 +471,96 @@
 						></div>
 
 						<div class="relative z-10 w-full max-w-lg text-center">
-							<div class="inline-flex items-center gap-2 px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-full mb-6">
+							<div
+								class="inline-flex items-center gap-2 px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-full mb-6"
+							>
 								<div class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
-								<span class="text-[10px] font-mono text-red-400 uppercase font-bold">Neural Core Scan Active</span>
+								<span class="text-[10px] font-mono text-red-400 uppercase font-bold"
+									>Neural Core Scan Active</span
+								>
 							</div>
-							
+
 							<div class="relative mx-auto w-48 h-48 mb-8">
-								<div class="absolute inset-0 border-4 border-slate-200 dark:border-slate-800 rounded-full"></div>
-								<div class="absolute inset-0 border-t-4 border-red-500 rounded-full animate-[spin_3s_linear_infinite]"></div>
-								<div class="absolute inset-4 border border-slate-200 dark:border-slate-800 rounded-full border-dashed"></div>
+								<div
+									class="absolute inset-0 border-4 border-slate-200 dark:border-slate-800 rounded-full"
+								></div>
+								<div
+									class="absolute inset-0 border-t-4 border-red-500 rounded-full animate-[spin_3s_linear_infinite]"
+								></div>
+								<div
+									class="absolute inset-4 border border-slate-200 dark:border-slate-800 rounded-full border-dashed"
+								></div>
 								<div class="absolute inset-0 flex items-center justify-center">
 									<Activity class="w-16 h-16 text-red-500 animate-pulse" />
 								</div>
 							</div>
 
-							<h3 class="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Active Neural Defense</h3>
+							<h3
+								class="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight"
+							>
+								Active Neural Defense
+							</h3>
 							<p class="text-slate-500 dark:text-slate-400 text-sm mt-3 leading-relaxed">
-								Autonomous traffic analysis is patrolling all endpoints. Current processing latency: <span class="text-red-400 font-mono">1.2ms</span>.
-								Targeting <span class="text-slate-900 dark:text-white font-mono">{stats.reputation_count}</span> known entities across all regions.
+								Autonomous traffic analysis is patrolling all endpoints. Current processing latency: <span
+									class="text-red-400 font-mono">1.2ms</span
+								>. Targeting
+								<span class="text-slate-900 dark:text-white font-mono"
+									>{stats.reputation_count}</span
+								> known entities across all regions.
 							</p>
 						</div>
 					</div>
 
 					<!-- Quick Tech Stats -->
 					<div class="space-y-4">
-						<div class="bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
-							<h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+						<div
+							class="bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-2xl p-6"
+						>
+							<h4
+								class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2"
+							>
 								<Cpu class="w-3 h-3" /> System Load
 							</h4>
 							<div class="space-y-4">
-								{#each [
-									['Core Analyzer', Number(Math.min(100, 5 + stats.logs_24h / 100)), 'text-emerald-400'], 
-									['Ban Sequencer', Number(Math.min(100, 2 + stats.active_bans * 2)), 'text-red-400'], 
-									['Log Indexer', Number(Math.min(100, 1 + stats.reputation_count / 10)), 'text-blue-400']
-								] as [label, perc, color]}
+								{#each [['Core Analyzer', Number(Math.min(100, 5 + stats.logs_24h / 100)), 'text-emerald-400'], ['Ban Sequencer', Number(Math.min(100, 2 + stats.active_bans * 2)), 'text-red-400'], ['Log Indexer', Number(Math.min(100, 1 + stats.reputation_count / 10)), 'text-blue-400']] as [label, perc, color]}
 									<div class="space-y-1.5">
 										<div class="flex justify-between text-[10px] font-mono uppercase">
 											<span class="text-slate-500 dark:text-slate-400">{label}</span>
-											<span class="text-slate-900 dark:text-white">{Math.round(perc as number)}%</span>
+											<span class="text-slate-900 dark:text-white"
+												>{Math.round(perc as number)}%</span
+											>
 										</div>
 										<div class="h-1 bg-white dark:bg-slate-950 rounded-full overflow-hidden">
-											<div class="h-full bg-slate-700 transition-all duration-1000" style="width: {perc}%"></div>
+											<div
+												class="h-full bg-slate-700 transition-all duration-1000"
+												style="width: {perc}%"
+											></div>
 										</div>
 									</div>
 								{/each}
 							</div>
 						</div>
 
-						<div class="bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
-							<h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+						<div
+							class="bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 flex flex-col justify-between"
+						>
+							<h4
+								class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2"
+							>
 								<Globe class="w-3 h-3" /> Global Reach
 							</h4>
 							<div class="flex items-center gap-4">
 								<div class="text-3xl font-black text-slate-900 dark:text-white font-mono">08</div>
-								<div class="text-[10px] text-slate-500 font-mono leading-tight">ACTIVE<br/>ZONES</div>
+								<div class="text-[10px] text-slate-500 font-mono leading-tight">
+									ACTIVE<br />ZONES
+								</div>
 							</div>
 							<div class="mt-4 flex gap-1">
 								{#each Array(8) as _, i}
-									<div class="h-4 w-1 bg-red-500 rounded-full" style="opacity: {0.2 + (i*0.1)}"></div>
+									<div
+										class="h-4 w-1 bg-red-500 rounded-full"
+										style="opacity: {0.2 + i * 0.1}"
+									></div>
 								{/each}
 							</div>
 						</div>
@@ -506,11 +568,17 @@
 				</div>
 			</div>
 		{:else if activeTab === 'rules'}
-			<div class="h-full flex flex-col bg-white/30 dark:bg-slate-950/30 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-				<div class="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-900/50">
+			<div
+				class="h-full flex flex-col bg-white/30 dark:bg-slate-950/30 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden"
+			>
+				<div
+					class="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-900/50"
+				>
 					<div class="flex items-center gap-2">
 						<div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-						<h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest">Active Rule Set</h3>
+						<h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest">
+							Active Rule Set
+						</h3>
 					</div>
 					<button
 						onclick={() => openModal()}
@@ -523,10 +591,18 @@
 					<table class="w-full text-left text-sm border-separate border-spacing-0">
 						<thead class="bg-slate-900/80 text-slate-500 sticky top-0 z-10">
 							<tr class="text-[10px] uppercase font-mono tracking-tighter">
-								<th class="px-6 py-4 border-b border-slate-200 dark:border-slate-800">Protocol Name</th>
-								<th class="px-6 py-4 border-b border-slate-200 dark:border-slate-800">Destination/Path</th>
-								<th class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 text-center">Action</th>
-								<th class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 text-right">Sequence</th>
+								<th class="px-6 py-4 border-b border-slate-200 dark:border-slate-800"
+									>Protocol Name</th
+								>
+								<th class="px-6 py-4 border-b border-slate-200 dark:border-slate-800"
+									>Destination/Path</th
+								>
+								<th class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 text-center"
+									>Action</th
+								>
+								<th class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 text-right"
+									>Sequence</th
+								>
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-slate-800/50">
@@ -534,15 +610,25 @@
 								<tr class="hover:bg-slate-800/30 transition-all group">
 									<td class="px-6 py-4">
 										<div class="flex flex-col">
-											<span class="font-bold text-slate-800 dark:text-slate-200 group-hover:text-slate-900 dark:text-white transition-colors">{rule.name}</span>
-											<span class="text-[10px] font-mono text-slate-500 mt-0.5 tracking-tighter">{rule.cidr}</span>
+											<span
+												class="font-bold text-slate-800 dark:text-slate-200 group-hover:text-slate-900 dark:text-white transition-colors"
+												>{rule.name}</span
+											>
+											<span class="text-[10px] font-mono text-slate-500 mt-0.5 tracking-tighter"
+												>{rule.cidr}</span
+											>
 										</div>
 									</td>
 									<td class="px-6 py-4 font-mono text-xs">
 										<div class="flex items-center gap-2">
-											<span class="text-slate-500 dark:text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800">PORT:{rule.port}</span>
+											<span
+												class="text-slate-500 dark:text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800"
+												>PORT:{rule.port}</span
+											>
 											{#if rule.path_pattern}
-												<span class="text-slate-500 truncate max-w-[150px]">{rule.path_pattern}</span>
+												<span class="text-slate-500 truncate max-w-[150px]"
+													>{rule.path_pattern}</span
+												>
 											{/if}
 										</div>
 									</td>
@@ -556,7 +642,9 @@
 										</span>
 									</td>
 									<td class="px-6 py-4">
-										<div class="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+										<div
+											class="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+										>
 											<button
 												onclick={() => openModal(rule)}
 												class="p-2 hover:bg-slate-700 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-all"
@@ -580,19 +668,32 @@
 		{:else if activeTab === 'bans'}
 			<div class="h-full overflow-auto grid grid-cols-1 xl:grid-cols-2 gap-4 custom-scrollbar">
 				{#each bans as ban}
-					<div class="bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 group hover:border-red-500/30 transition-all">
+					<div
+						class="bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 group hover:border-red-500/30 transition-all"
+					>
 						<div class="flex justify-between items-start">
 							<div class="flex items-center gap-4">
-								<div class="bg-white dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-red-500 group-hover:border-red-500/50 transition-all">
+								<div
+									class="bg-white dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-red-500 group-hover:border-red-500/50 transition-all"
+								>
 									<Lock class="w-6 h-6" />
 								</div>
 								<div>
-									<h4 class="text-lg font-mono font-bold text-slate-900 dark:text-white leading-none">{ban.ip}</h4>
+									<h4
+										class="text-lg font-mono font-bold text-slate-900 dark:text-white leading-none"
+									>
+										{ban.ip}
+									</h4>
 									<div class="flex items-center gap-2 mt-2">
 										<div class="w-20 h-1 bg-slate-800 rounded-full overflow-hidden">
-											<div class="h-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" style="width: {ban.reputation_score}%"></div>
+											<div
+												class="h-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"
+												style="width: {ban.reputation_score}%"
+											></div>
 										</div>
-										<span class="text-[10px] font-mono text-slate-500 uppercase tracking-tighter">Threat: {ban.reputation_score}%</span>
+										<span class="text-[10px] font-mono text-slate-500 uppercase tracking-tighter"
+											>Threat: {ban.reputation_score}%</span
+										>
 									</div>
 								</div>
 							</div>
@@ -603,15 +704,25 @@
 								De-Quarantine
 							</button>
 						</div>
-						<div class="mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-800/50 grid grid-cols-2 gap-4">
+						<div
+							class="mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-800/50 grid grid-cols-2 gap-4"
+						>
 							<div class="flex flex-col gap-1">
-								<span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Incident Cause</span>
-								<p class="text-xs text-slate-700 dark:text-slate-300 line-clamp-1 italic">"{ban.ban_reason}"</p>
+								<span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest"
+									>Incident Cause</span
+								>
+								<p class="text-xs text-slate-700 dark:text-slate-300 line-clamp-1 italic">
+									"{ban.ban_reason}"
+								</p>
 							</div>
 							<div class="flex flex-col gap-1 text-right">
-								<span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Expiration</span>
+								<span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest"
+									>Expiration</span
+								>
 								<span class="text-xs text-slate-500 dark:text-slate-400 font-mono"
-									>{ban.ban_expires_at ? new Date(ban.ban_expires_at).toLocaleDateString() : 'PERPETUAL'}</span
+									>{ban.ban_expires_at
+										? new Date(ban.ban_expires_at).toLocaleDateString()
+										: 'PERPETUAL'}</span
 								>
 							</div>
 						</div>
@@ -621,74 +732,133 @@
 		{:else if activeTab === 'anticheat'}
 			<div class="h-full overflow-auto space-y-2 custom-scrollbar">
 				{#each events as event}
-					<div class="bg-white/50 dark:bg-slate-950/50 border-l-2 {event.severity > 80 ? 'border-red-500 bg-red-500/5' : 'border-slate-200 dark:border-slate-800'} p-4 rounded-r-xl flex items-center gap-6 group transition-all hover:bg-slate-900/50">
+					<div
+						class="bg-white/50 dark:bg-slate-950/50 border-l-2 {event.severity > 80
+							? 'border-red-500 bg-red-500/5'
+							: 'border-slate-200 dark:border-slate-800'} p-4 rounded-r-xl flex items-center gap-6 group transition-all hover:bg-slate-900/50"
+					>
 						<div class="text-center w-20 shrink-0">
-							<div class="text-[10px] font-mono text-slate-500 leading-none">{new Date(event.timestamp).toLocaleDateString()}</div>
+							<div class="text-[10px] font-mono text-slate-500 leading-none">
+								{new Date(event.timestamp).toLocaleDateString()}
+							</div>
 							<div class="text-xs font-mono text-slate-700 dark:text-slate-300 font-bold mt-1">
-								{new Date(event.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second: '2-digit'})}
+								{new Date(event.timestamp).toLocaleTimeString([], {
+									hour: '2-digit',
+									minute: '2-digit',
+									second: '2-digit'
+								})}
 							</div>
 						</div>
-						
+
 						<div class="flex-1">
 							<div class="flex items-center gap-3">
-								<span class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tighter">{event.event_type}</span>
-								<div class="px-1.5 py-0.5 bg-slate-900 border border-slate-200 dark:border-slate-800 text-[9px] font-mono text-slate-500 dark:text-slate-400 rounded">
+								<span
+									class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tighter"
+									>{event.event_type}</span
+								>
+								<div
+									class="px-1.5 py-0.5 bg-slate-900 border border-slate-200 dark:border-slate-800 text-[9px] font-mono text-slate-500 dark:text-slate-400 rounded"
+								>
 									IP:{event.client_ip}
 								</div>
 							</div>
-							<p class="text-xs text-slate-500 mt-1 font-mono">{event.player_id || 'UNKNOWN_ENTITY'}</p>
+							<p class="text-xs text-slate-500 mt-1 font-mono">
+								{event.player_id || 'UNKNOWN_ENTITY'}
+							</p>
 						</div>
 
 						<div class="flex flex-col items-end gap-2 pr-2">
 							<div class="flex gap-0.5">
 								{#each Array(5) as _, i}
-									<div class="w-3 h-1 rounded-full {i < Math.ceil(event.severity/20) ? (event.severity > 80 ? 'bg-red-500' : 'bg-amber-500') : 'bg-slate-800'}"></div>
+									<div
+										class="w-3 h-1 rounded-full {i < Math.ceil(event.severity / 20)
+											? event.severity > 80
+												? 'bg-red-500'
+												: 'bg-amber-500'
+											: 'bg-slate-800'}"
+									></div>
 								{/each}
 							</div>
-							<span class="text-[10px] font-bold uppercase tracking-widest {event.severity > 80 ? 'text-red-500' : 'text-slate-500'}">Level {event.severity}</span>
+							<span
+								class="text-[10px] font-bold uppercase tracking-widest {event.severity > 80
+									? 'text-red-500'
+									: 'text-slate-500'}">Level {event.severity}</span
+							>
 						</div>
 					</div>
 				{/each}
 			</div>
 		{:else if activeTab === 'config'}
 			<div class="h-full flex items-center justify-center p-6 overflow-auto">
-				<div class="w-full max-w-2xl bg-white/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+				<div
+					class="w-full max-w-2xl bg-white/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-2xl relative overflow-hidden"
+				>
 					<div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
 						<Settings class="w-32 h-32" />
 					</div>
-					
-					<h3 class="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter mb-8 flex items-center gap-3">
+
+					<h3
+						class="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter mb-8 flex items-center gap-3"
+					>
 						<Zap class="w-6 h-6 text-red-500" /> System Protocols
 					</h3>
 
 					<div class="space-y-10">
 						<div class="flex items-center justify-between group">
 							<div class="max-w-[70%]">
-								<h4 class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide group-hover:text-red-400 transition-colors">Autonomous Neutralization</h4>
-								<p class="text-xs text-slate-500 mt-1">Engage automatic quarantine protocols for entities exceeding risk thresholds.</p>
+								<h4
+									class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide group-hover:text-red-400 transition-colors"
+								>
+									Autonomous Neutralization
+								</h4>
+								<p class="text-xs text-slate-500 mt-1">
+									Engage automatic quarantine protocols for entities exceeding risk thresholds.
+								</p>
 							</div>
-							<button 
-								onclick={() => { config['redeye.auto_ban_enabled'] = !config['redeye.auto_ban_enabled']; updateConfig(); }}
-								class="w-14 h-7 rounded-full transition-all relative {config['redeye.auto_ban_enabled'] ? 'bg-red-600 shadow-[0_0_15px_rgba(220,38,38,0.4)]' : 'bg-slate-800'}"
+							<button
+								onclick={() => {
+									config['redeye.auto_ban_enabled'] = !config['redeye.auto_ban_enabled'];
+									updateConfig();
+								}}
+								class="w-14 h-7 rounded-full transition-all relative {config[
+									'redeye.auto_ban_enabled'
+								]
+									? 'bg-red-600 shadow-[0_0_15px_rgba(220,38,38,0.4)]'
+									: 'bg-slate-800'}"
 								aria-label="Toggle autonomous neutralization"
 							>
-								<div class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-all {config['redeye.auto_ban_enabled'] ? 'translate-x-7' : ''}"></div>
+								<div
+									class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-all {config[
+										'redeye.auto_ban_enabled'
+									]
+										? 'translate-x-7'
+										: ''}"
+								></div>
 							</button>
 						</div>
 
 						<div class="space-y-4">
 							<div class="flex justify-between items-end">
-								<h4 class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide">Threat Sensitivity</h4>
-								<span class="text-xl font-black font-mono text-red-500">{config['redeye.auto_ban_threshold']}</span>
+								<h4
+									class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide"
+								>
+									Threat Sensitivity
+								</h4>
+								<span class="text-xl font-black font-mono text-red-500"
+									>{config['redeye.auto_ban_threshold']}</span
+								>
 							</div>
 							<div class="relative py-2">
-								<input 
-									type="range" min="10" max="200" step="10" 
-									bind:value={config['redeye.auto_ban_threshold']} 
+								<input
+									type="range"
+									min="10"
+									max="200"
+									step="10"
+									bind:value={config['redeye.auto_ban_threshold']}
 									onchange={updateConfig}
 									class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-red-500"
 									aria-label="Threat sensitivity threshold"
-								>
+								/>
 							</div>
 							<div class="flex justify-between text-[10px] font-mono text-slate-600 uppercase">
 								<span>High Tolerance</span>
@@ -698,40 +868,76 @@
 
 						<div class="flex items-center justify-between group">
 							<div class="max-w-[70%]">
-								<h4 class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide">Global Notification Feed</h4>
-								<p class="text-xs text-slate-500 mt-1">Broadcast critical security events to the neural command center.</p>
+								<h4
+									class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide"
+								>
+									Global Notification Feed
+								</h4>
+								<p class="text-xs text-slate-500 mt-1">
+									Broadcast critical security events to the neural command center.
+								</p>
 							</div>
-							<button 
-								onclick={() => { config['redeye.alert_enabled'] = !config['redeye.alert_enabled']; updateConfig(); }}
-								class="w-14 h-7 rounded-full transition-all relative {config['redeye.alert_enabled'] ? 'bg-emerald-600 shadow-[0_0_15px_rgba(5,150,105,0.4)]' : 'bg-slate-800'}"
+							<button
+								onclick={() => {
+									config['redeye.alert_enabled'] = !config['redeye.alert_enabled'];
+									updateConfig();
+								}}
+								class="w-14 h-7 rounded-full transition-all relative {config['redeye.alert_enabled']
+									? 'bg-emerald-600 shadow-[0_0_15px_rgba(5,150,105,0.4)]'
+									: 'bg-slate-800'}"
 								aria-label="Toggle alert notifications"
 							>
-								<div class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-all {config['redeye.alert_enabled'] ? 'translate-x-7' : ''}"></div>
+								<div
+									class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-all {config[
+										'redeye.alert_enabled'
+									]
+										? 'translate-x-7'
+										: ''}"
+								></div>
 							</button>
 						</div>
 					</div>
 
 					<div class="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800 text-center">
-						<div class="text-[10px] font-mono text-slate-600 uppercase">Status: Syncing with Mainframe...</div>
+						<div class="text-[10px] font-mono text-slate-600 uppercase">
+							Status: Syncing with Mainframe...
+						</div>
 					</div>
 				</div>
 			</div>
 		{:else}
 			<!-- Logs -->
-			<div class="h-full flex flex-col bg-white/30 dark:bg-slate-950/30 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-				<div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-900/50 flex items-center gap-2">
+			<div
+				class="h-full flex flex-col bg-white/30 dark:bg-slate-950/30 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden"
+			>
+				<div
+					class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-900/50 flex items-center gap-2"
+				>
 					<Terminal class="w-4 h-4 text-sky-400" />
-					<h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest">Packet Intercept Feed</h3>
+					<h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest">
+						Packet Intercept Feed
+					</h3>
 				</div>
 				<div class="flex-1 overflow-auto custom-scrollbar font-mono text-[11px]">
 					<div class="p-4 space-y-1">
 						{#each logs as log}
-							<div class="flex items-center gap-4 py-1 border-b border-slate-200/30 dark:border-slate-800/30 hover:bg-slate-800/20 px-2 rounded transition-colors group">
-								<span class="text-slate-600 shrink-0">[{new Date(log.timestamp).toLocaleTimeString()}]</span>
-								<span class="font-bold {getActionColor(log.action).split(' ')[0]} w-24 shrink-0">{log.action}</span>
+							<div
+								class="flex items-center gap-4 py-1 border-b border-slate-200/30 dark:border-slate-800/30 hover:bg-slate-800/20 px-2 rounded transition-colors group"
+							>
+								<span class="text-slate-600 shrink-0"
+									>[{new Date(log.timestamp).toLocaleTimeString()}]</span
+								>
+								<span class="font-bold {getActionColor(log.action).split(' ')[0]} w-24 shrink-0"
+									>{log.action}</span
+								>
 								<span class="text-slate-500 dark:text-slate-400 shrink-0">SOURCE:</span>
-								<span class="text-slate-900 dark:text-white group-hover:text-red-400 transition-colors">{log.source_ip}</span>
-								<span class="text-[9px] text-slate-700 ml-auto uppercase hidden sm:block">Intercepted @ eth0</span>
+								<span
+									class="text-slate-900 dark:text-white group-hover:text-red-400 transition-colors"
+									>{log.source_ip}</span
+								>
+								<span class="text-[9px] text-slate-700 ml-auto uppercase hidden sm:block"
+									>Intercepted @ eth0</span
+								>
 							</div>
 						{/each}
 					</div>
@@ -758,21 +964,34 @@
 			onclick={(e) => e.stopPropagation()}
 			transition:scale={{ duration: 300, start: 0.95 }}
 		>
-			<div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-transparent"></div>
-			
-			<div class="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-white/50 dark:bg-slate-950/50">
+			<div
+				class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-transparent"
+			></div>
+
+			<div
+				class="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-white/50 dark:bg-slate-950/50"
+			>
 				<div>
 					<h3 class="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">
 						{editingRule ? 'Edit' : 'New'} Protocol
 					</h3>
-					<p class="text-[10px] text-slate-500 font-mono mt-1 uppercase">Define neural gateway parameters</p>
+					<p class="text-[10px] text-slate-500 font-mono mt-1 uppercase">
+						Define neural gateway parameters
+					</p>
 				</div>
-				<button onclick={() => (showModal = false)} class="text-slate-500 hover:text-slate-900 dark:text-white transition-colors">✕</button>
+				<button
+					onclick={() => (showModal = false)}
+					class="text-slate-500 hover:text-slate-900 dark:text-white transition-colors">✕</button
+				>
 			</div>
 
 			<div class="p-8 space-y-6">
 				<div class="space-y-1.5">
-					<label for="ruleName" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Identity Tag</label>
+					<label
+						for="ruleName"
+						class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1"
+						>Identity Tag</label
+					>
 					<input
 						id="ruleName"
 						type="text"
@@ -784,7 +1003,11 @@
 
 				<div class="grid grid-cols-2 gap-6">
 					<div class="space-y-1.5">
-						<label for="ruleCidrIp" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Target IP / CIDR</label>
+						<label
+							for="ruleCidrIp"
+							class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1"
+							>Target IP / CIDR</label
+						>
 						<input
 							id="ruleCidrIp"
 							type="text"
@@ -794,7 +1017,11 @@
 						/>
 					</div>
 					<div class="space-y-1.5">
-						<label for="rulePort" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Gateway Port</label>
+						<label
+							for="rulePort"
+							class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1"
+							>Gateway Port</label
+						>
 						<input
 							id="rulePort"
 							type="text"
@@ -806,7 +1033,11 @@
 				</div>
 
 				<div class="space-y-1.5">
-					<label for="rulePathPattern" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Path Filter (Optional)</label>
+					<label
+						for="rulePathPattern"
+						class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1"
+						>Path Filter (Optional)</label
+					>
 					<input
 						id="rulePathPattern"
 						type="text"
@@ -817,12 +1048,21 @@
 				</div>
 
 				<div class="space-y-3">
-					<label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Action Protocol</label>
+					<label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1"
+						>Action Protocol</label
+					>
 					<div class="grid grid-cols-3 gap-2">
 						{#each ['ALLOW', 'DENY', 'RATE_LIMIT'] as action}
-							<button 
-								onclick={() => form.action = action as any}
-								class="py-3 rounded-xl border-2 text-[10px] font-black uppercase tracking-tighter transition-all {form.action === action ? (action === 'ALLOW' ? 'bg-emerald-600/20 border-emerald-500 text-emerald-400' : action === 'DENY' ? 'bg-red-600/20 border-red-500 text-red-400' : 'bg-amber-600/20 border-amber-500 text-amber-400') : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 hover:border-slate-300 dark:border-slate-700'}"
+							<button
+								onclick={() => (form.action = action as any)}
+								class="py-3 rounded-xl border-2 text-[10px] font-black uppercase tracking-tighter transition-all {form.action ===
+								action
+									? action === 'ALLOW'
+										? 'bg-emerald-600/20 border-emerald-500 text-emerald-400'
+										: action === 'DENY'
+											? 'bg-red-600/20 border-red-500 text-red-400'
+											: 'bg-amber-600/20 border-amber-500 text-amber-400'
+									: 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 hover:border-slate-300 dark:border-slate-700'}"
 							>
 								{action.replace('_', ' ')}
 							</button>
@@ -831,9 +1071,16 @@
 				</div>
 
 				{#if form.action === 'RATE_LIMIT'}
-					<div class="grid grid-cols-2 gap-6 bg-amber-500/5 p-4 rounded-2xl border border-amber-500/10" transition:slide>
+					<div
+						class="grid grid-cols-2 gap-6 bg-amber-500/5 p-4 rounded-2xl border border-amber-500/10"
+						transition:slide
+					>
 						<div class="space-y-1.5">
-							<label for="ruleLimit" class="text-[9px] font-bold text-amber-500/70 uppercase tracking-widest">Rate (req/sec)</label>
+							<label
+								for="ruleLimit"
+								class="text-[9px] font-bold text-amber-500/70 uppercase tracking-widest"
+								>Rate (req/sec)</label
+							>
 							<input
 								id="ruleLimit"
 								type="number"
@@ -842,7 +1089,11 @@
 							/>
 						</div>
 						<div class="space-y-1.5">
-							<label for="ruleBurst" class="text-[9px] font-bold text-amber-500/70 uppercase tracking-widest">Burst Capacity</label>
+							<label
+								for="ruleBurst"
+								class="text-[9px] font-bold text-amber-500/70 uppercase tracking-widest"
+								>Burst Capacity</label
+							>
 							<input
 								id="ruleBurst"
 								type="number"
@@ -854,7 +1105,9 @@
 				{/if}
 			</div>
 
-			<div class="p-6 border-t border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 flex justify-end gap-3">
+			<div
+				class="p-6 border-t border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 flex justify-end gap-3"
+			>
 				<button
 					onclick={() => (showModal = false)}
 					class="px-6 py-3 rounded-xl text-[10px] font-bold text-slate-500 hover:text-slate-900 dark:text-white uppercase tracking-widest transition-all"

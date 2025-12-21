@@ -243,7 +243,10 @@
 				const err = await res.json().catch(() => ({}));
 				throw new Error(err.error || 'Failed to delete spawner');
 			}
-			notifications.add({ type: 'success', message: `Spawner #${spawnerToDeleteId} deleted successfully.` });
+			notifications.add({
+				type: 'success',
+				message: `Spawner #${spawnerToDeleteId} deleted successfully.`
+			});
 		} catch (e: any) {
 			console.error(e);
 			notifications.add({ type: 'error', message: `Failed to delete spawner: ${e.message}` });
@@ -389,7 +392,9 @@
 			<div
 				class={`w-2 h-2 rounded-full ${$isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'} shadow-lg`}
 			></div>
-			<span class="text-xs font-mono text-slate-500 dark:text-slate-400 backdrop-blur-sm">{$connectionStatus}</span>
+			<span class="text-xs font-mono text-slate-500 dark:text-slate-400 backdrop-blur-sm"
+				>{$connectionStatus}</span
+			>
 		</div>
 	</div>
 

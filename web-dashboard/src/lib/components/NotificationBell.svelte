@@ -60,7 +60,9 @@
 								{/if}
 							</div>
 							<div class="flex-1 min-w-0">
-								<p class="text-xs font-medium text-slate-800 dark:text-slate-200 truncate">{note.message}</p>
+								<p class="text-xs font-medium text-slate-800 dark:text-slate-200 truncate">
+									{note.message}
+								</p>
 								{#if note.details}
 									<p class="text-[10px] text-slate-500 truncate">{note.details}</p>
 								{/if}

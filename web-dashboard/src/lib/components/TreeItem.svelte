@@ -58,7 +58,10 @@
 	</div>
 
 	{#if isOpen}
-		<div class="ml-4 pl-2 border-l border-slate-300/50 dark:border-slate-700/50" transition:slide={{ duration: 200 }}>
+		<div
+			class="ml-4 pl-2 border-l border-slate-300/50 dark:border-slate-700/50"
+			transition:slide={{ duration: 200 }}
+		>
 			<slot />
 		</div>
 	{/if}

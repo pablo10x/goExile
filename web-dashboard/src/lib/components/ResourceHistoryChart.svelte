@@ -192,15 +192,21 @@
 				class="absolute z-10 pointer-events-none transform -translate-x-1/2 -translate-y-full mb-2 bg-slate-800/90 backdrop-blur border border-slate-600 rounded px-3 py-2 shadow-xl text-center min-w-[100px]"
 				style="left: {tooltipX}px; top: 0;"
 			>
-				<div class="text-xs text-slate-500 dark:text-slate-400 font-mono mb-1">{formatTime(d.timestamp)}</div>
+				<div class="text-xs text-slate-500 dark:text-slate-400 font-mono mb-1">
+					{formatTime(d.timestamp)}
+				</div>
 				<div class="flex flex-col gap-1">
-					<div class="text-xs font-bold text-slate-900 dark:text-white flex items-center justify-between gap-3">
+					<div
+						class="text-xs font-bold text-slate-900 dark:text-white flex items-center justify-between gap-3"
+					>
 						<span class="text-orange-400">CPU</span>
-						<span>{(d.cpu)?.toFixed(1)}%</span>
+						<span>{d.cpu?.toFixed(1)}%</span>
 					</div>
-					<div class="text-xs font-bold text-slate-900 dark:text-white flex items-center justify-between gap-3">
+					<div
+						class="text-xs font-bold text-slate-900 dark:text-white flex items-center justify-between gap-3"
+					>
 						<span class="text-blue-400">MEM</span>
-						<span>{(d.memory_percent)?.toFixed(1)}%</span>
+						<span>{d.memory_percent?.toFixed(1)}%</span>
 					</div>
 				</div>
 			</div>

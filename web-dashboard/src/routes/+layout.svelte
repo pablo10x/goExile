@@ -441,7 +441,9 @@
 	</div>
 {:else}
 	{#if $isAuthenticated && page.url.pathname !== '/login'}
-		<div class="flex h-screen text-slate-600 dark:text-slate-300 overflow-hidden relative bg-transparent transition-colors duration-300">
+		<div
+			class="flex h-screen text-slate-600 dark:text-slate-300 overflow-hidden relative bg-transparent transition-colors duration-300"
+		>
 			<!-- Global Restart Banner -->
 			{#if $restartRequired}
 				<div
@@ -610,7 +612,8 @@
 									<rect x="3" y="14" width="7" height="7"></rect>
 								</svg>
 								{#if !isSidebarCollapsed}
-									<span class="animate-in fade-in slide-in-from-left-2 duration-300">Dashboard</span>
+									<span class="animate-in fade-in slide-in-from-left-2 duration-300">Dashboard</span
+									>
 								{/if}
 							</a>
 						</QuickActionsTooltip>
@@ -620,7 +623,9 @@
 							title="Performance"
 							class="w-full"
 							enabled={$showQuickActions}
-							actions={[{ label: 'Force GC', icon: Trash2, onClick: handleForceGC, variant: 'warning' }]}
+							actions={[
+								{ label: 'Force GC', icon: Trash2, onClick: handleForceGC, variant: 'warning' }
+							]}
 						>
 							<a
 								href="/performance"
@@ -642,7 +647,8 @@
 									<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
 								</svg>
 								{#if !isSidebarCollapsed}
-									<span class="animate-in fade-in slide-in-from-left-2 duration-300">Performance</span
+									<span class="animate-in fade-in slide-in-from-left-2 duration-300"
+										>Performance</span
 									>
 								{/if}
 							</a>
@@ -655,7 +661,12 @@
 							enabled={$showQuickActions}
 							actions={[
 								{ label: 'Export Config', icon: Download, onClick: handleExportConfig },
-								{ label: 'Reload Server', icon: RefreshCw, onClick: restartServer, variant: 'danger' }
+								{
+									label: 'Reload Server',
+									icon: RefreshCw,
+									onClick: restartServer,
+									variant: 'danger'
+								}
 							]}
 						>
 							<a
@@ -716,108 +727,113 @@
 									<polyline points="7 10 12 15 17 10"></polyline>
 									<line x1="12" y1="15" x2="12" y2="3"></line>
 								</svg>
-																{#if !isSidebarCollapsed}
-																	<span class="animate-in fade-in slide-in-from-left-2 duration-300"
-																		>Server Files</span
-																	>
-																{/if}
-															</a>
-														</QuickActionsTooltip>
-								
-														<QuickActionsTooltip
-															placement="right"
-															title="Databases"
-															class="w-full"
-															enabled={$showQuickActions}
-															actions={[{ label: 'Backup All', icon: HardDrive, onClick: handleBackupDB }]}
-														>
-															<a
-																href="/database"
-																class="nav-link w-full {isSidebarCollapsed ? 'justify-center px-2' : ''}"
-																class:nav-active={isRouteActive('/database')}
-																style="animation-delay: 0.5s;"
-																title={isSidebarCollapsed ? 'Databases' : ''}
-															>
-																{#if isRouteActive('/database')}
-																	<div class="nav-indicator"></div>
-																{/if}
-																<Database class="nav-icon" />
-																{#if !isSidebarCollapsed}
-																	<span class="animate-in fade-in slide-in-from-left-2 duration-300">Databases</span>
-																{/if}
-															</a>
-														</QuickActionsTooltip>
+								{#if !isSidebarCollapsed}
+									<span class="animate-in fade-in slide-in-from-left-2 duration-300"
+										>Server Files</span
+									>
+								{/if}
+							</a>
+						</QuickActionsTooltip>
 
-														<QuickActionsTooltip
-															placement="right"
-															title="Players"
-															class="w-full"
-															enabled={$showQuickActions}
-															actions={[]}
-														>
-															<a
-																href="/users"
-																class="nav-link w-full {isSidebarCollapsed ? 'justify-center px-2' : ''}"
-																class:nav-active={isRouteActive('/users')}
-																style="animation-delay: 0.55s;"
-																title={isSidebarCollapsed ? 'Players' : ''}
-															>
-																{#if isRouteActive('/users')}
-																	<div class="nav-indicator"></div>
-																{/if}
-																<Users class="nav-icon" />
-																{#if !isSidebarCollapsed}
-																	<span class="animate-in fade-in slide-in-from-left-2 duration-300">Players</span>
-																{/if}
-															</a>
-														</QuickActionsTooltip>
-								
-														<QuickActionsTooltip
-															placement="right"
-															title="RedEye"
-															class="w-full"
-															enabled={$showQuickActions}
-															actions={[]}
-														>													<a
-														href="/redeye"
-														class="nav-link w-full {isSidebarCollapsed ? 'justify-center px-2' : ''}"
-														class:nav-active={isRouteActive('/redeye')}
-														style="animation-delay: 0.6s;"
-														title={isSidebarCollapsed ? 'RedEye' : ''}
-													>
-														{#if isRouteActive('/redeye')}
-															<div class="nav-indicator"></div>
-														{/if}
-														<Eye class="nav-icon" />
-														{#if !isSidebarCollapsed}
-															<span class="animate-in fade-in slide-in-from-left-2 duration-300">RedEye</span>
-														{/if}
-													</a>
-												</QuickActionsTooltip>
-						
-												<QuickActionsTooltip
-													placement="right"
-													title="Notes"
-													class="w-full"
-													enabled={$showQuickActions}
-													actions={[{ label: 'New Note', icon: Plus, onClick: () => (showGlobalNoteModal = true) }]}
-												>
-													<a
-														href="/notes"
-														class="nav-link w-full {isSidebarCollapsed ? 'justify-center px-2' : ''}"
-														class:nav-active={isRouteActive('/notes')}
-														style="animation-delay: 0.7s;"
-														title={isSidebarCollapsed ? 'Notes' : ''}
-													>
-														{#if isRouteActive('/notes')}
-															<div class="nav-indicator"></div>
-														{/if}
-														<StickyNote class="nav-icon" />
-														{#if !isSidebarCollapsed}
-															<span class="animate-in fade-in slide-in-from-left-2 duration-300">Notes</span>
-														{/if}
-													</a>
-												</QuickActionsTooltip>					</nav>
+						<QuickActionsTooltip
+							placement="right"
+							title="Databases"
+							class="w-full"
+							enabled={$showQuickActions}
+							actions={[{ label: 'Backup All', icon: HardDrive, onClick: handleBackupDB }]}
+						>
+							<a
+								href="/database"
+								class="nav-link w-full {isSidebarCollapsed ? 'justify-center px-2' : ''}"
+								class:nav-active={isRouteActive('/database')}
+								style="animation-delay: 0.5s;"
+								title={isSidebarCollapsed ? 'Databases' : ''}
+							>
+								{#if isRouteActive('/database')}
+									<div class="nav-indicator"></div>
+								{/if}
+								<Database class="nav-icon" />
+								{#if !isSidebarCollapsed}
+									<span class="animate-in fade-in slide-in-from-left-2 duration-300">Databases</span
+									>
+								{/if}
+							</a>
+						</QuickActionsTooltip>
+
+						<QuickActionsTooltip
+							placement="right"
+							title="Players"
+							class="w-full"
+							enabled={$showQuickActions}
+							actions={[]}
+						>
+							<a
+								href="/users"
+								class="nav-link w-full {isSidebarCollapsed ? 'justify-center px-2' : ''}"
+								class:nav-active={isRouteActive('/users')}
+								style="animation-delay: 0.55s;"
+								title={isSidebarCollapsed ? 'Players' : ''}
+							>
+								{#if isRouteActive('/users')}
+									<div class="nav-indicator"></div>
+								{/if}
+								<Users class="nav-icon" />
+								{#if !isSidebarCollapsed}
+									<span class="animate-in fade-in slide-in-from-left-2 duration-300">Players</span>
+								{/if}
+							</a>
+						</QuickActionsTooltip>
+
+						<QuickActionsTooltip
+							placement="right"
+							title="RedEye"
+							class="w-full"
+							enabled={$showQuickActions}
+							actions={[]}
+						>
+							<a
+								href="/redeye"
+								class="nav-link w-full {isSidebarCollapsed ? 'justify-center px-2' : ''}"
+								class:nav-active={isRouteActive('/redeye')}
+								style="animation-delay: 0.6s;"
+								title={isSidebarCollapsed ? 'RedEye' : ''}
+							>
+								{#if isRouteActive('/redeye')}
+									<div class="nav-indicator"></div>
+								{/if}
+								<Eye class="nav-icon" />
+								{#if !isSidebarCollapsed}
+									<span class="animate-in fade-in slide-in-from-left-2 duration-300">RedEye</span>
+								{/if}
+							</a>
+						</QuickActionsTooltip>
+
+						<QuickActionsTooltip
+							placement="right"
+							title="Notes"
+							class="w-full"
+							enabled={$showQuickActions}
+							actions={[
+								{ label: 'New Note', icon: Plus, onClick: () => (showGlobalNoteModal = true) }
+							]}
+						>
+							<a
+								href="/notes"
+								class="nav-link w-full {isSidebarCollapsed ? 'justify-center px-2' : ''}"
+								class:nav-active={isRouteActive('/notes')}
+								style="animation-delay: 0.7s;"
+								title={isSidebarCollapsed ? 'Notes' : ''}
+							>
+								{#if isRouteActive('/notes')}
+									<div class="nav-indicator"></div>
+								{/if}
+								<StickyNote class="nav-icon" />
+								{#if !isSidebarCollapsed}
+									<span class="animate-in fade-in slide-in-from-left-2 duration-300">Notes</span>
+								{/if}
+							</a>
+						</QuickActionsTooltip>
+					</nav>
 
 					<div
 						class="p-4 border-t border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-black/20 backdrop-blur-md flex flex-col gap-2 transform transition-all duration-700 {sidebarLoaded
@@ -1273,8 +1289,8 @@
 			<canvas
 				bind:this={particleCanvas}
 				class="fixed inset-0 -z-50 pointer-events-none transition-colors duration-500"
-				style="background: {$theme === 'dark' 
-					? 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)' 
+				style="background: {$theme === 'dark'
+					? 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)'
 					: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%)'};"
 			></canvas>
 
@@ -1301,11 +1317,11 @@
 		{@render children()}
 	{/if}
 
-	<NoteModal 
-		bind:isOpen={showGlobalNoteModal} 
-		note={null} 
-		onSave={handleGlobalSaveNote} 
-		onClose={() => (showGlobalNoteModal = false)} 
+	<NoteModal
+		bind:isOpen={showGlobalNoteModal}
+		note={null}
+		onSave={handleGlobalSaveNote}
+		onClose={() => (showGlobalNoteModal = false)}
 	/>
 
 	<ToastContainer />

@@ -111,6 +111,9 @@ npm run dev   # Starts Vite dev server
 *   **`server/dashboard.go` & `server/auth.go`**: Core logic for Dashboard API and Authentication.
 
 ## 📝 Recent Context
+*   **Bug Fixes:**
+    *   Fixed a syntax error and missing `fmt` import in `server/auth/auth.go`.
+    *   Removed an unreachable and incorrect `os.Chdir()` call in `spawner/main.go`.
 *   **Theme Engine:** Implemented a full-featured Light/Dark mode system with glassmorphism effects.
     *   Default mode is Dark.
     *   Background animation (particle canvas) is preserved across both modes.

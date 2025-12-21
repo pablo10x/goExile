@@ -161,7 +161,7 @@ func SpawnInstance(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	w.Write(resp.Data)
+	_, _ = w.Write(resp.Data)
 }
 
 // GetSpawnerLogs fetches and returns the log file content from a spawner.

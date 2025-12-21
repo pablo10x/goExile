@@ -1,5 +1,14 @@
 <script lang="ts">
-	import { Save, X, RotateCw, Palette, Bell, TriangleAlert, ShieldAlert, Check } from 'lucide-svelte';
+	import {
+		Save,
+		X,
+		RotateCw,
+		Palette,
+		Bell,
+		TriangleAlert,
+		ShieldAlert,
+		Check
+	} from 'lucide-svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import type { Note } from '$lib/stores';
@@ -84,22 +93,43 @@
 
 		// Base colors
 		switch (color) {
-			case 'yellow': colorClass = 'bg-yellow-100 text-yellow-900 border-yellow-200'; break;
-			case 'blue': colorClass = 'bg-blue-100 text-blue-900 border-blue-200'; break;
-			case 'green': colorClass = 'bg-green-100 text-green-900 border-green-200'; break;
-			case 'purple': colorClass = 'bg-purple-100 text-purple-900 border-purple-200'; break;
-			case 'orange': colorClass = 'bg-orange-100 text-orange-900 border-orange-200'; break;
-			case 'pink': colorClass = 'bg-pink-100 text-pink-900 border-pink-200'; break;
-			case 'cyan': colorClass = 'bg-cyan-100 text-cyan-900 border-cyan-200'; break;
-			default: colorClass = 'bg-slate-100 text-slate-900 border-slate-200'; break; // Default to a neutral color
+			case 'yellow':
+				colorClass = 'bg-yellow-100 text-yellow-900 border-yellow-200';
+				break;
+			case 'blue':
+				colorClass = 'bg-blue-100 text-blue-900 border-blue-200';
+				break;
+			case 'green':
+				colorClass = 'bg-green-100 text-green-900 border-green-200';
+				break;
+			case 'purple':
+				colorClass = 'bg-purple-100 text-purple-900 border-purple-200';
+				break;
+			case 'orange':
+				colorClass = 'bg-orange-100 text-orange-900 border-orange-200';
+				break;
+			case 'pink':
+				colorClass = 'bg-pink-100 text-pink-900 border-pink-200';
+				break;
+			case 'cyan':
+				colorClass = 'bg-cyan-100 text-cyan-900 border-cyan-200';
+				break;
+			default:
+				colorClass = 'bg-slate-100 text-slate-900 border-slate-200';
+				break; // Default to a neutral color
 		}
 
 		// Status overlays
 		switch (status) {
-			case 'warn': statusClass = 'border-amber-400 ring-2 ring-amber-300/50'; break;
-			case 'critical': statusClass = 'border-red-500 ring-2 ring-red-400/50'; break;
+			case 'warn':
+				statusClass = 'border-amber-400 ring-2 ring-amber-300/50';
+				break;
+			case 'critical':
+				statusClass = 'border-red-500 ring-2 ring-red-400/50';
+				break;
 			case 'normal': // no additional class for normal
-			default: break;
+			default:
+				break;
 		}
 
 		return `${colorClass} ${statusClass}`;
@@ -112,7 +142,13 @@
 		onclick={handleBackdropClick}
 		onkeydown={(e) => {
 			if (e.key === 'Escape' && !loading) onClose();
-			if (e.key === 'Enter' && e.ctrlKey && !loading && (currentNote.title.trim() || currentNote.content.trim())) handleSave();
+			if (
+				e.key === 'Enter' &&
+				e.ctrlKey &&
+				!loading &&
+				(currentNote.title.trim() || currentNote.content.trim())
+			)
+				handleSave();
 		}}
 		role="dialog"
 		aria-modal="true"
@@ -125,7 +161,12 @@
 			transition:scale={{ start: 0.8, duration: 200, easing: cubicOut }}
 		>
 			<!-- Card Body -->
-			<div class="relative w-full h-full min-h-[300px] flex flex-col p-6 rounded-sm border {getNoteCardClasses(currentNote.color, currentNote.status)}">
+			<div
+				class="relative w-full h-full min-h-[300px] flex flex-col p-6 rounded-sm border {getNoteCardClasses(
+					currentNote.color,
+					currentNote.status
+				)}"
+			>
 				<input
 					type="text"
 					bind:value={currentNote.title}
@@ -153,11 +194,15 @@
 			<!-- Controls Bar -->
 			<div class="mt-4 flex flex-wrap gap-2 justify-center w-full">
 				<!-- Color Palette -->
-				<div class="p-2 bg-white/70 backdrop-blur-sm rounded-lg flex gap-1 shadow-md border border-slate-300">
+				<div
+					class="p-2 bg-white/70 backdrop-blur-sm rounded-lg flex gap-1 shadow-md border border-slate-300"
+				>
 					{#each noteColors as color}
 						<button
 							onclick={() => (currentNote.color = color)}
-							class="w-7 h-7 rounded-full border-2 border-transparent {currentNote.color === color ? 'ring-2 ring-offset-1 ring-slate-800' : ''}"
+							class="w-7 h-7 rounded-full border-2 border-transparent {currentNote.color === color
+								? 'ring-2 ring-offset-1 ring-slate-800'
+								: ''}"
 							class:bg-yellow-400={color === 'yellow'}
 							class:bg-blue-400={color === 'blue'}
 							class:bg-green-400={color === 'green'}
@@ -175,11 +220,15 @@
 				</div>
 
 				<!-- Status Selector -->
-				<div class="p-2 bg-white/70 backdrop-blur-sm rounded-lg flex gap-1 shadow-md border border-slate-300">
+				<div
+					class="p-2 bg-white/70 backdrop-blur-sm rounded-lg flex gap-1 shadow-md border border-slate-300"
+				>
 					{#each noteStatuses as status}
 						<button
 							onclick={() => (currentNote.status = status)}
-							class="w-7 h-7 rounded-full border-2 border-transparent {currentNote.status === status ? 'ring-2 ring-offset-1 ring-slate-800' : ''} flex items-center justify-center"
+							class="w-7 h-7 rounded-full border-2 border-transparent {currentNote.status === status
+								? 'ring-2 ring-offset-1 ring-slate-800'
+								: ''} flex items-center justify-center"
 							class:bg-slate-400={status === 'normal'}
 							class:bg-amber-400={status === 'warn'}
 							class:bg-red-500={status === 'critical'}

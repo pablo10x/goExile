@@ -20,10 +20,12 @@ const (
 	colorBgBlue  = "\033[44m"
 )
 
+// PrintStatus writes a basic server ready message to the response.
 func PrintStatus(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Exile Master Server Ready\n")
+	_, _ = fmt.Fprintf(w, "Exile Master Server Ready\n")
 }
 
+// PrintBanner displays the stylized ASCII art banner for the server.
 func PrintBanner() {
 	banner := colorCyan + colorBold + `
     ╔══════╗╚═╗  ╚═╝╚═╝╚══════╗╚══════╗
@@ -39,6 +41,7 @@ func PrintBanner() {
 	fmt.Println(banner)
 }
 
+// PrintSection displays a stylized section header with a success or failure icon.
 func PrintSection(title string, status string, isSuccess bool) {
 	statusColor := colorGreen
 	statusIcon := "✓"
@@ -49,10 +52,12 @@ func PrintSection(title string, status string, isSuccess bool) {
 	fmt.Printf("  %s%s%s %s%s%s\n", statusColor, statusIcon, colorReset, colorWhite, title, colorReset)
 }
 
+// PrintSubItem displays a nested item under a section header.
 func PrintSubItem(text string) {
 	fmt.Printf("    %s└─%s %s%s%s\n", colorDim, colorReset, colorDim, text, colorReset)
 }
 
+// PrintStartupComplete displays the final server ready status with API endpoints.
 func PrintStartupComplete(port string) {
 	fmt.Println()
 	fmt.Printf("  %s%s▸ Server Ready%s\n", colorBold, colorGreen, colorReset)

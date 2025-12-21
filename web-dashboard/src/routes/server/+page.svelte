@@ -379,7 +379,9 @@
 		<div class="grid lg:grid-cols-3 gap-6">
 			<!-- Upload Area -->
 			<div class="lg:col-span-2">
-				<div class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-8">
+				<div
+					class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-8"
+				>
 					<div class="mb-6">
 						<h3 class="text-lg font-semibold text-slate-50 mb-2">Upload Game Server Package</h3>
 						<p class="text-slate-500 dark:text-slate-400 text-sm">
@@ -495,8 +497,12 @@
 
 					<!-- File Analysis Results -->
 					{#if fileAnalysis && !uploading}
-						<div class="mt-6 p-4 bg-slate-900/50 rounded-lg border border-slate-300 dark:border-slate-700">
-							<h4 class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">File Analysis</h4>
+						<div
+							class="mt-6 p-4 bg-slate-900/50 rounded-lg border border-slate-300 dark:border-slate-700"
+						>
+							<h4 class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+								File Analysis
+							</h4>
 							<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
 								<div class="text-center">
 									<p class="text-xs text-slate-500 mb-1">Type</p>
@@ -506,15 +512,21 @@
 								</div>
 								<div class="text-center">
 									<p class="text-xs text-slate-500 mb-1">Size</p>
-									<p class="text-sm font-medium text-slate-700 dark:text-slate-300">{fileAnalysis.size}</p>
+									<p class="text-sm font-medium text-slate-700 dark:text-slate-300">
+										{fileAnalysis.size}
+									</p>
 								</div>
 								<div class="text-center">
 									<p class="text-xs text-slate-500 mb-1">Files</p>
-									<p class="text-sm font-medium text-slate-700 dark:text-slate-300">{fileAnalysis.fileCount}</p>
+									<p class="text-sm font-medium text-slate-700 dark:text-slate-300">
+										{fileAnalysis.fileCount}
+									</p>
 								</div>
 								<div class="text-center">
 									<p class="text-xs text-slate-500 mb-1">Est. Time</p>
-									<p class="text-sm font-medium text-slate-700 dark:text-slate-300">{fileAnalysis.estimatedTime}</p>
+									<p class="text-sm font-medium text-slate-700 dark:text-slate-300">
+										{fileAnalysis.estimatedTime}
+									</p>
 								</div>
 							</div>
 							{#if fileAnalysis.compatibility}
@@ -534,12 +546,17 @@
 			<!-- Version Details Panel -->
 			<div class="lg:col-span-1 space-y-6">
 				<!-- Version Information -->
-				<div class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-6">
+				<div
+					class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-6"
+				>
 					<h3 class="text-lg font-semibold text-slate-50 mb-4">Version Information</h3>
 
 					<div class="space-y-4">
 						<div>
-							<label for="version" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+							<label
+								for="version"
+								class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+							>
 								Version Number <span class="text-red-400">*</span>
 							</label>
 							<input
@@ -554,7 +571,10 @@
 						</div>
 
 						<div>
-							<label for="comment" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+							<label
+								for="comment"
+								class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+							>
 								Release Notes
 							</label>
 							<textarea
@@ -610,7 +630,9 @@
 	{:else}
 		<div class="space-y-6">
 			<!-- Filters and Search -->
-			<div class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-6">
+			<div
+				class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-6"
+			>
 				<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 					<div class="flex-1 max-w-md">
 						<div class="relative">
@@ -687,7 +709,9 @@
 
 			<!-- Version Grid -->
 			{#if getFilteredVersions().length === 0}
-				<div class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-12 text-center">
+				<div
+					class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-12 text-center"
+				>
 					<svg
 						class="w-16 h-16 mx-auto text-slate-600 mb-4"
 						fill="none"
@@ -701,7 +725,9 @@
 							d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
 						/>
 					</svg>
-					<h3 class="text-lg font-medium text-slate-700 dark:text-slate-300 mb-2">No versions found</h3>
+					<h3 class="text-lg font-medium text-slate-700 dark:text-slate-300 mb-2">
+						No versions found
+					</h3>
 					<p class="text-slate-500">
 						{searchQuery
 							? 'Try adjusting your search or filters.'
@@ -805,7 +831,9 @@
 									<!-- Comment -->
 									{#if version.comment}
 										<div class="pt-3 border-t border-slate-300 dark:border-slate-700">
-											<p class="text-sm text-slate-500 dark:text-slate-400 line-clamp-3">{version.comment}</p>
+											<p class="text-sm text-slate-500 dark:text-slate-400 line-clamp-3">
+												{version.comment}
+											</p>
 										</div>
 									{/if}
 								</div>
@@ -835,7 +863,9 @@
 						</div>
 						<div>
 							<h2 class="text-xl font-bold text-slate-100">Version History</h2>
-							<p class="text-sm text-slate-500 dark:text-slate-400">Manage deployed server versions and deployments</p>
+							<p class="text-sm text-slate-500 dark:text-slate-400">
+								Manage deployed server versions and deployments
+							</p>
 						</div>
 					</div>
 					<div
@@ -856,7 +886,9 @@
 						>
 							<Package class="w-10 h-10 opacity-50 text-slate-500" />
 						</div>
-						<h3 class="text-xl font-semibold text-slate-500 dark:text-slate-400 mb-2">No Versions Yet</h3>
+						<h3 class="text-xl font-semibold text-slate-500 dark:text-slate-400 mb-2">
+							No Versions Yet
+						</h3>
 						<p class="text-slate-600 max-w-md">
 							Upload your first game server package to get started with version management.
 						</p>
@@ -919,8 +951,12 @@
 											<span>Uploaded {new Date(version.uploaded_at).toLocaleDateString()}</span>
 										</div>
 										{#if version.comment}
-											<div class="p-3 bg-slate-800/50 rounded-lg border border-slate-300/30 dark:border-slate-700/30">
-												<p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{version.comment}</p>
+											<div
+												class="p-3 bg-slate-800/50 rounded-lg border border-slate-300/30 dark:border-slate-700/30"
+											>
+												<p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+													{version.comment}
+												</p>
 											</div>
 										{/if}
 									</div>

@@ -142,7 +142,7 @@
 	];
 
 	// Flattened items for mobile nav
-	const allMenuItems = menuCategories.flatMap(c => c.items);
+	const allMenuItems = menuCategories.flatMap((c) => c.items);
 
 	// --- Tab Management ---
 
@@ -254,9 +254,13 @@
 	});
 </script>
 
-<div class="flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">
+<div
+	class="flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200"
+>
 	<!-- Mobile Top Nav (Horizontal Scroll) -->
-	<div class="md:hidden border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-900/50 overflow-x-auto no-scrollbar">
+	<div
+		class="md:hidden border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-900/50 overflow-x-auto no-scrollbar"
+	>
 		<div class="flex items-center gap-2 p-2 min-w-max">
 			{#each allMenuItems as item}
 				{@const isActive = activeTabId === item.id}
@@ -280,7 +284,9 @@
 			: 'w-16'}"
 	>
 		<!-- Sidebar Header -->
-		<div class="p-4 border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-900/50 flex items-center justify-between">
+		<div
+			class="p-4 border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-900/50 flex items-center justify-between"
+		>
 			{#if isSidebarOpen}
 				<div class="flex items-center gap-3" transition:fade={{ duration: 150 }}>
 					<div class="p-2 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-lg">
@@ -325,7 +331,9 @@
 								class="w-full flex items-center gap-3 p-2.5 rounded-xl transition-all duration-200 border border-transparent
 								{isActive
 									? colors.active + ' shadow-lg'
-									: 'text-slate-500 dark:text-slate-400 ' + colors.hover + ' hover:border-slate-300/50 dark:border-slate-700/50'}"
+									: 'text-slate-500 dark:text-slate-400 ' +
+										colors.hover +
+										' hover:border-slate-300/50 dark:border-slate-700/50'}"
 								title={item.description}
 							>
 								<div
@@ -517,7 +525,9 @@
 											>
 												<Terminal class="w-6 h-6 text-amber-400" />
 											</div>
-											<span class="text-sm font-medium text-slate-700 dark:text-slate-300">Run Query</span>
+											<span class="text-sm font-medium text-slate-700 dark:text-slate-300"
+												>Run Query</span
+											>
 										</button>
 
 										<button
@@ -529,7 +539,9 @@
 											>
 												<Code2 class="w-6 h-6 text-violet-400" />
 											</div>
-											<span class="text-sm font-medium text-slate-700 dark:text-slate-300">Functions</span>
+											<span class="text-sm font-medium text-slate-700 dark:text-slate-300"
+												>Functions</span
+											>
 										</button>
 
 										<button
@@ -541,7 +553,9 @@
 											>
 												<HardDrive class="w-6 h-6 text-orange-400" />
 											</div>
-											<span class="text-sm font-medium text-slate-700 dark:text-slate-300">Backup DB</span>
+											<span class="text-sm font-medium text-slate-700 dark:text-slate-300"
+												>Backup DB</span
+											>
 										</button>
 
 										<button
@@ -553,7 +567,9 @@
 											>
 												<Shield class="w-6 h-6 text-emerald-400" />
 											</div>
-											<span class="text-sm font-medium text-slate-700 dark:text-slate-300">Manage Roles</span>
+											<span class="text-sm font-medium text-slate-700 dark:text-slate-300"
+												>Manage Roles</span
+											>
 										</button>
 									</div>
 								</div>
@@ -585,14 +601,17 @@
 																<td class="px-6 py-4">
 																	<div class="flex items-center gap-3">
 																		<Table class="w-4 h-4 text-slate-500" />
-																		<span class="font-medium text-slate-800 dark:text-slate-200">{table.name}</span>
+																		<span class="font-medium text-slate-800 dark:text-slate-200"
+																			>{table.name}</span
+																		>
 																	</div>
 																</td>
-																                                                          <td class="px-6 py-4 text-right">
-																                                                          <span class="font-mono text-slate-700 dark:text-slate-300"
-																                                                          >{table.count?.toLocaleString() ?? '0'}</span
-																                                                          >
-																                                                          </td>															</tr>
+																<td class="px-6 py-4 text-right">
+																	<span class="font-mono text-slate-700 dark:text-slate-300"
+																		>{table.count?.toLocaleString() ?? '0'}</span
+																	>
+																</td>
+															</tr>
 														{/each}
 													</tbody>
 												</table>

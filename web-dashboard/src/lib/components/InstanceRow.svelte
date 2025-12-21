@@ -67,7 +67,9 @@
 	}
 </script>
 
-<div class="border border-slate-300/50 dark:border-slate-700/50 rounded-lg bg-slate-800/30 overflow-hidden mb-2">
+<div
+	class="border border-slate-300/50 dark:border-slate-700/50 rounded-lg bg-slate-800/30 overflow-hidden mb-2"
+>
 	<!-- Header / Collapsed View -->
 	<div
 		class="flex flex-col sm:flex-row sm:items-center gap-3 px-3 sm:px-4 py-3 cursor-pointer hover:bg-slate-700/30 transition-colors"
@@ -95,7 +97,9 @@
 		</div>
 
 		<!-- Details Grid/Flex -->
-		<div class="flex-1 flex flex-wrap sm:grid sm:grid-cols-9 gap-2 sm:gap-4 items-center text-xs sm:text-sm pl-6 sm:pl-0">
+		<div
+			class="flex-1 flex flex-wrap sm:grid sm:grid-cols-9 gap-2 sm:gap-4 items-center text-xs sm:text-sm pl-6 sm:pl-0"
+		>
 			<!-- Version -->
 			<div class="col-span-3 text-slate-500 dark:text-slate-400 truncate flex items-center gap-2">
 				<span class="sm:hidden text-slate-500">Ver:</span>
@@ -230,7 +234,9 @@
 			class="bg-slate-900/50 border-t border-slate-300/50 dark:border-slate-700/50 p-3 sm:p-4"
 		>
 			<!-- Toolbar -->
-			<div class="flex flex-wrap gap-2 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-slate-300/50 dark:border-slate-700/50">
+			<div
+				class="flex flex-wrap gap-2 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-slate-300/50 dark:border-slate-700/50"
+			>
 				<button
 					onclick={() => dispatch('tail', { spawnerId, instanceId: instance.id })}
 					class="btn-toolbar bg-slate-700 hover:bg-slate-600 text-slate-800 dark:text-slate-200"
@@ -278,12 +284,18 @@
 			</div>
 
 			<!-- Stats Chart -->
-			<div class="mb-4 sm:mb-6 bg-white/30 dark:bg-slate-950/30 rounded-lg border border-slate-300/50 dark:border-slate-700/50 p-3 sm:p-4">
+			<div
+				class="mb-4 sm:mb-6 bg-white/30 dark:bg-slate-950/30 rounded-lg border border-slate-300/50 dark:border-slate-700/50 p-3 sm:p-4"
+			>
 				<div class="flex justify-between items-end mb-2">
-					<h4 class="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+					<h4
+						class="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+					>
 						Player Activity (24h)
 					</h4>
-					<div class="text-xs sm:text-sm font-mono text-blue-400">{instance.player_count || 0} active</div>
+					<div class="text-xs sm:text-sm font-mono text-blue-400">
+						{instance.player_count || 0} active
+					</div>
 				</div>
 				<PlayersChart data={chartData} height={100} color="#3b82f6" />
 			</div>
@@ -337,6 +349,6 @@
 
 <style lang="postcss">
 	.btn-toolbar {
-		@apply gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded text-[10px] sm:text-xs font-semibold flex items-center transition-all;
+		@apply gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded sm:text-xs font-semibold flex items-center text-[10px] transition-all;
 	}
 </style>

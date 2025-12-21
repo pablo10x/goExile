@@ -86,7 +86,9 @@
 
 	<div class="relative z-10 p-6">
 		<div class="flex items-center justify-between mb-4">
-			<span class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">{title}</span>
+			<span class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider"
+				>{title}</span
+			>
 			{#if Icon}
 				{@const CardIcon = Icon}
 				<div

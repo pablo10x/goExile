@@ -94,7 +94,11 @@
 
 	function getFieldColor(type: string) {
 		if (!type)
-			return { bg: 'bg-slate-500/20', text: 'text-slate-500 dark:text-slate-400', border: 'border-slate-500/30' };
+			return {
+				bg: 'bg-slate-500/20',
+				text: 'text-slate-500 dark:text-slate-400',
+				border: 'border-slate-500/30'
+			};
 		const t = type.toLowerCase();
 		if (
 			t.includes('int') ||
@@ -117,7 +121,11 @@
 		if (t.includes('text') || t.includes('char') || t === 'uuid') {
 			return { bg: 'bg-cyan-500/20', text: 'text-cyan-400', border: 'border-cyan-500/30' };
 		}
-		return { bg: 'bg-slate-500/20', text: 'text-slate-500 dark:text-slate-400', border: 'border-slate-500/30' };
+		return {
+			bg: 'bg-slate-500/20',
+			text: 'text-slate-500 dark:text-slate-400',
+			border: 'border-slate-500/30'
+		};
 	}
 
 	function handleFieldChange(colName: string) {
@@ -266,7 +274,10 @@
 							</div>
 
 							<div>
-								<h2 id="modal-title" class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+								<h2
+									id="modal-title"
+									class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2"
+								>
 									{#if isEditing}
 										Edit Row
 									{:else}
@@ -482,18 +493,22 @@
 					{/if}
 				</div>
 
-				<div class="relative border-t border-slate-300/50 dark:border-slate-700/50 bg-slate-900/80 backdrop-blur-sm p-4">
+				<div
+					class="relative border-t border-slate-300/50 dark:border-slate-700/50 bg-slate-900/80 backdrop-blur-sm p-4"
+				>
 					<div
 						class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-slate-600/50 to-transparent"
 					></div>
 
 					<div class="flex items-center justify-between gap-4">
 						<div class="hidden sm:flex items-center gap-2 text-xs text-slate-500">
-							<kbd class="px-2 py-1 bg-slate-800 rounded border border-slate-300 dark:border-slate-700 font-mono"
+							<kbd
+								class="px-2 py-1 bg-slate-800 rounded border border-slate-300 dark:border-slate-700 font-mono"
 								>Ctrl</kbd
 							>
 							<span>+</span>
-							<kbd class="px-2 py-1 bg-slate-800 rounded border border-slate-300 dark:border-slate-700 font-mono"
+							<kbd
+								class="px-2 py-1 bg-slate-800 rounded border border-slate-300 dark:border-slate-700 font-mono"
 								>Enter</kbd
 							>
 							<span>to save</span>

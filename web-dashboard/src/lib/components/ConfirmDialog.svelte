@@ -159,9 +159,13 @@
 						<h3 class="text-xl font-bold text-slate-100 mb-2 tracking-tight slide-in-text">
 							{title}
 						</h3>
-						<div class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed space-y-2 slide-in-text-delayed">
+						<div
+							class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed space-y-2 slide-in-text-delayed"
+						>
 							{#if loading && statusMessage}
-								<p class="animate-pulse text-slate-700 dark:text-slate-300 font-medium">{statusMessage}</p>
+								<p class="animate-pulse text-slate-700 dark:text-slate-300 font-medium">
+									{statusMessage}
+								</p>
 							{:else}
 								<p>{message}</p>
 							{/if}

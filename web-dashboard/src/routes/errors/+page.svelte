@@ -89,7 +89,9 @@
 	<div class="flex justify-between items-center mb-6">
 		<div>
 			<h1 class="text-2xl font-bold text-slate-50">Error Logs</h1>
-			<p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Recent application errors and warnings</p>
+			<p class="text-slate-500 dark:text-slate-400 text-sm mt-1">
+				Recent application errors and warnings
+			</p>
 		</div>
 
 		<div class="flex gap-4">
@@ -109,7 +111,9 @@
 		</div>
 	</div>
 
-	<div class="card bg-slate-900/50 border border-slate-300/50 dark:border-slate-700/50 shadow-xl overflow-hidden">
+	<div
+		class="card bg-slate-900/50 border border-slate-300/50 dark:border-slate-700/50 shadow-xl overflow-hidden"
+	>
 		{#if loading}
 			<div class="p-12 text-center text-slate-500 animate-pulse">Loading error logs...</div>
 		{:else if errors.length === 0}
@@ -141,7 +145,9 @@
 					<tbody class="divide-y divide-slate-800">
 						{#each errors as error (error.timestamp + error.message)}
 							<tr transition:fade class="hover:bg-slate-800/30 transition-colors group">
-								<td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap">
+								<td
+									class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap"
+								>
 									{formatDate(error.timestamp)}
 								</td>
 								<td class="px-6 py-4">

@@ -93,15 +93,21 @@
 	});
 </script>
 
-<div class="bg-slate-800/50 backdrop-blur-md border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-6">
+<div
+	class="bg-slate-800/50 backdrop-blur-md border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-6"
+>
 	<!-- Header -->
 	<div class="flex items-center justify-between mb-6">
 		<div class="flex items-center gap-3">
-			<div class="p-2 bg-slate-900/50 rounded-lg border border-slate-300/50 dark:border-slate-700/50 text-slate-500 dark:text-slate-400">
+			<div
+				class="p-2 bg-slate-900/50 rounded-lg border border-slate-300/50 dark:border-slate-700/50 text-slate-500 dark:text-slate-400"
+			>
 				<Icon class="w-6 h-6" />
 			</div>
 			<div>
-				<h3 class="text-lg font-semibold text-slate-800 dark:text-slate-200">Top Resource Consumers</h3>
+				<h3 class="text-lg font-semibold text-slate-800 dark:text-slate-200">
+					Top Resource Consumers
+				</h3>
 				<p class="text-sm text-slate-500 dark:text-slate-400">
 					{resourceType === 'cpu' ? 'CPU' : resourceType === 'memory' ? 'Memory' : 'Disk'} Usage
 				</p>
@@ -190,7 +196,7 @@
 										resourceType
 									)}"
 								>
-									{(consumer.cpu_percent)?.toFixed(1)}%
+									{consumer.cpu_percent?.toFixed(1)}%
 								</div>
 								<div class="text-xs text-slate-500 dark:text-slate-400">
 									{resourceType === 'cpu' ? 'CPU' : resourceType === 'memory' ? 'Memory' : 'Disk'}

@@ -70,7 +70,7 @@ func run() error {
 	_, cancel := context.WithCancel(context.Background())
 	// We defer cancel() at the end, but also call it on shutdown signal.
 	// Actually, we need 'cancel' to be available for the shutdown signal handler.
-	
+
 	// Initialize authentication & session management
 	authConfig := auth.GetAuthConfig()
 	sessionStore := auth.NewSessionStore(authConfig.IsProduction)
@@ -123,7 +123,7 @@ func run() error {
 				}
 				utils.PrintSection("Database", "connected", true)
 				utils.PrintSubItem(fmt.Sprintf("Loaded %d spawners", len(loaded)))
-				
+
 				// Get initial DB stats for display
 				if advStats, err := database.GetAdvancedDBStats(database.DBConn); err == nil {
 					utils.PrintSubItem(fmt.Sprintf("Size: %s | Cache Hit: %.1f%%", advStats.DatabaseSize, advStats.CacheHitRatio))
@@ -422,7 +422,7 @@ func run() error {
 		router.Handle("/api/admin/players/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.GetPlayerDetailsHandler))).Methods("GET")
 		router.Handle("/api/admin/players/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.UpdatePlayerDetailsHandler))).Methods("PUT")
 		router.Handle("/api/admin/players/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.DeletePlayerHandler))).Methods("DELETE")
-		
+
 		// Dashboard: Reports (Session Protected)
 		router.Handle("/api/reports", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ListReportsHandler))).Methods("GET")
 
@@ -479,11 +479,11 @@ func run() error {
 	go func() {
 		utils.PrintStartupComplete(port)
 		// Warn if not binding to localhost
-	if serverHost != "127.0.0.1" && serverHost != "localhost" {
-		// Log a note about public binding if needed
-	}
+		if serverHost != "127.0.0.1" && serverHost != "localhost" {
+			// Log a note about public binding if needed
+		}
 
-	// Wait for termination signal
+		// Wait for termination signal
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server error: %v", err)
 		}
@@ -492,7 +492,7 @@ func run() error {
 	// 10. Graceful Shutdown
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-	
+
 	sig := <-stop
 	log.Printf("received signal: %v", sig)
 	cancel()

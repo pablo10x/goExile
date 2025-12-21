@@ -255,7 +255,10 @@
 					</div>
 
 					<div class="mt-8 text-center">
-						<a href="/login" class="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-300 transition-colors">
+						<a
+							href="/login"
+							class="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-300 transition-colors"
+						>
 							Return to login
 						</a>
 					</div>

@@ -144,8 +144,12 @@
 				class="absolute z-10 pointer-events-none transform -translate-x-1/2 -translate-y-full mb-2 bg-slate-800/90 backdrop-blur border border-slate-600 rounded px-3 py-2 shadow-xl text-center min-w-[80px]"
 				style="left: {tooltipX}px; top: {tooltipY}px;"
 			>
-				<div class="text-xs text-slate-500 dark:text-slate-400 font-mono mb-0.5">{formatTime(d.timestamp)}</div>
-				<div class="text-sm font-bold text-slate-900 dark:text-white flex items-center justify-center gap-1">
+				<div class="text-xs text-slate-500 dark:text-slate-400 font-mono mb-0.5">
+					{formatTime(d.timestamp)}
+				</div>
+				<div
+					class="text-sm font-bold text-slate-900 dark:text-white flex items-center justify-center gap-1"
+				>
 					<span class="text-emerald-400">●</span>
 					{d.count} Players
 				</div>

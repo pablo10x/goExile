@@ -269,8 +269,8 @@
 	}
 
 	function distributeConfigs(configs: ConfigItem[]) {
-		masterSections = masterSections.map(s => ({ ...s, items: [] }));
-		spawnerSections = spawnerSections.map(s => ({ ...s, items: [] }));
+		masterSections = masterSections.map((s) => ({ ...s, items: [] }));
+		spawnerSections = spawnerSections.map((s) => ({ ...s, items: [] }));
 
 		if (!configs || configs.length === 0) {
 			configs = getDefaultConfigs();
@@ -544,7 +544,9 @@
 						<Settings class="w-6 h-6 sm:w-8 sm:h-8 text-slate-900 dark:text-white" />
 					</div>
 					<div>
-						<h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">Configuration</h1>
+						<h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
+							Configuration
+						</h1>
 						<p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">
 							Manage server settings & remote configs
 						</p>
@@ -559,7 +561,9 @@
 							transition:slide={{ axis: 'x' }}
 						>
 							<div class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-orange-500 animate-pulse"></div>
-							<span class="text-xs sm:text-sm font-medium text-orange-400">{pendingChangeCount} unsaved</span>
+							<span class="text-xs sm:text-sm font-medium text-orange-400"
+								>{pendingChangeCount} unsaved</span
+							>
 						</div>
 						<button
 							onclick={discardChanges}
@@ -632,7 +636,9 @@
 
 			<!-- Search Bar -->
 			<div class="mt-4 relative group">
-				<Search class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
+				<Search
+					class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500 group-focus-within:text-blue-400 transition-colors"
+				/>
 				<input
 					type="text"
 					bind:value={searchQuery}
@@ -671,15 +677,18 @@
 						>
 							<Info class="w-5 h-5 text-green-400 shrink-0 mt-0.5" />
 							<div>
-								<h4 class="font-medium text-green-400 text-sm sm:text-base">Spawner Default Configuration</h4>
+								<h4 class="font-medium text-green-400 text-sm sm:text-base">
+									Spawner Default Configuration
+								</h4>
 								<p class="text-xs sm:text-sm text-green-300/70 mt-1">
-									These settings are used as defaults for new spawners. Individual spawners can override these locally.
+									These settings are used as defaults for new spawners. Individual spawners can
+									override these locally.
 								</p>
 							</div>
 						</div>
 					{/if}
 
-					{#each (activeTab === 'master' ? filteredMasterSections : filteredSpawnerSections) as section (section.id)}
+					{#each activeTab === 'master' ? filteredMasterSections : filteredSpawnerSections as section (section.id)}
 						{@const isExpanded = expandedSections.has(section.id)}
 						{@const SectionIcon = section.icon}
 						<div
@@ -691,12 +700,20 @@
 								class="w-full px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between hover:bg-slate-700/30 transition-colors"
 							>
 								<div class="flex items-center gap-3 sm:gap-4">
-									<div class="p-2 sm:p-2.5 bg-gradient-to-br {section.gradient} rounded-lg sm:rounded-xl shadow-lg">
+									<div
+										class="p-2 sm:p-2.5 bg-gradient-to-br {section.gradient} rounded-lg sm:rounded-xl shadow-lg"
+									>
 										<SectionIcon class="w-4 h-4 sm:w-5 sm:h-5 text-slate-900 dark:text-white" />
 									</div>
 									<div class="text-left">
-										<h3 class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">{section.title}</h3>
-										<p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 line-clamp-1 sm:line-clamp-none">{section.description}</p>
+										<h3 class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
+											{section.title}
+										</h3>
+										<p
+											class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 line-clamp-1 sm:line-clamp-none"
+										>
+											{section.description}
+										</p>
 									</div>
 								</div>
 								<div class="flex items-center gap-2 sm:gap-3 shrink-0">
@@ -705,7 +722,11 @@
 									>
 										{section.items.length} settings
 									</span>
-									<div class="p-1 rounded-lg bg-slate-700/50 transition-transform duration-200 {isExpanded ? 'rotate-180' : ''}">
+									<div
+										class="p-1 rounded-lg bg-slate-700/50 transition-transform duration-200 {isExpanded
+											? 'rotate-180'
+											: ''}"
+									>
 										<ChevronDown class="w-4 h-4 sm:w-5 sm:h-5 text-slate-500 dark:text-slate-400" />
 									</div>
 								</div>
@@ -713,7 +734,10 @@
 
 							<!-- Section Content -->
 							{#if isExpanded}
-								<div class="px-4 sm:px-6 pb-4 sm:pb-6 space-y-3" transition:slide={{ duration: 200 }}>
+								<div
+									class="px-4 sm:px-6 pb-4 sm:pb-6 space-y-3"
+									transition:slide={{ duration: 200 }}
+								>
 									{#each section.items as item (item.key)}
 										{@const isPending = pendingChanges.has(item.key)}
 										{@const isSecret = item.type === 'secret'}
@@ -723,10 +747,13 @@
 												? 'ring-2 ring-orange-500/50 bg-orange-500/5'
 												: ''} transition-all"
 										>
-											<div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
+											<div
+												class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4"
+											>
 												<div class="flex-1 min-w-0">
 													<div class="flex flex-wrap items-center gap-2 mb-1">
-														<span class="font-mono text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 break-all"
+														<span
+															class="font-mono text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 break-all"
 															>{item.key}</span
 														>
 														{#if item.is_read_only}
@@ -774,7 +801,9 @@
 																<div
 																	class="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 peer-disabled:opacity-50"
 																></div>
-																<span class="ml-3 text-sm font-medium text-slate-700 dark:text-slate-300">
+																<span
+																	class="ml-3 text-sm font-medium text-slate-700 dark:text-slate-300"
+																>
 																	{(pendingChanges.get(item.key) ?? item.value) === 'true'
 																		? 'Enabled'
 																		: 'Disabled'}
@@ -793,7 +822,9 @@
 																		<option value={option}>{option}</option>
 																	{/each}
 																</select>
-																<ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+																<ChevronDown
+																	class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"
+																/>
 															</div>
 														{:else}
 															<div class="flex-1 max-w-md relative">
@@ -835,8 +866,14 @@
 													</div>
 												</div>
 
-												<div class="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center text-[10px] sm:text-xs text-slate-600 shrink-0 gap-2 border-t sm:border-0 border-slate-200 dark:border-slate-800 pt-2 sm:pt-0 w-full sm:w-auto">
-													<div>Type: <span class="text-slate-500 dark:text-slate-400 uppercase">{item.type}</span></div>
+												<div
+													class="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center text-[10px] sm:text-xs text-slate-600 shrink-0 gap-2 border-t sm:border-0 border-slate-200 dark:border-slate-800 pt-2 sm:pt-0 w-full sm:w-auto"
+												>
+													<div>
+														Type: <span class="text-slate-500 dark:text-slate-400 uppercase"
+															>{item.type}</span
+														>
+													</div>
 													<div class="sm:mt-1">
 														Updated: <span class="text-slate-500 dark:text-slate-400"
 															>{new Date(item.updated_at).toLocaleDateString()}</span
@@ -861,7 +898,9 @@
 					{#if (activeTab === 'master' ? filteredMasterSections : filteredSpawnerSections).length === 0}
 						<div class="text-center py-12">
 							<Search class="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 text-slate-600" />
-							<p class="text-slate-500 dark:text-slate-400 text-sm sm:text-base">No matching configurations found</p>
+							<p class="text-slate-500 dark:text-slate-400 text-sm sm:text-base">
+								No matching configurations found
+							</p>
 							<button
 								onclick={() => (searchQuery = '')}
 								class="mt-4 text-blue-400 hover:text-blue-300 text-sm"
@@ -877,7 +916,9 @@
 			{#if activeTab === 'firebase'}
 				<div class="space-y-6" transition:fade={{ duration: 200 }}>
 					<!-- Connection Status Card -->
-					<div class="bg-slate-800/40 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 rounded-2xl p-4 sm:p-6">
+					<div
+						class="bg-slate-800/40 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 rounded-2xl p-4 sm:p-6"
+					>
 						<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 							<div class="flex items-center gap-4">
 								<div
@@ -886,8 +927,12 @@
 									<Flame class="w-5 h-5 sm:w-6 sm:h-6 text-slate-900 dark:text-white" />
 								</div>
 								<div>
-									<h3 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">Firebase Remote Config</h3>
-									<p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Manage remote client configuration</p>
+									<h3 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+										Firebase Remote Config
+									</h3>
+									<p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+										Manage remote client configuration
+									</p>
 								</div>
 							</div>
 
@@ -904,17 +949,23 @@
 										class="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-slate-700/50 border border-slate-600 rounded-xl"
 									>
 										<AlertCircle class="w-4 h-4 sm:w-5 sm:h-5 text-slate-500 dark:text-slate-400" />
-										<span class="text-slate-500 dark:text-slate-400 font-medium text-xs sm:text-sm">Not Configured</span>
+										<span class="text-slate-500 dark:text-slate-400 font-medium text-xs sm:text-sm"
+											>Not Configured</span
+										>
 									</div>
 								{/if}
 							</div>
 						</div>
 
 						{#if firebaseConnected && firebaseProjectId}
-							<div class="mt-4 p-3 bg-slate-900/50 rounded-xl flex flex-col sm:flex-row sm:items-center gap-3">
+							<div
+								class="mt-4 p-3 bg-slate-900/50 rounded-xl flex flex-col sm:flex-row sm:items-center gap-3"
+							>
 								<div class="flex items-center gap-2">
 									<Globe class="w-4 h-4 text-slate-500" />
-									<span class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Project ID:</span>
+									<span class="text-xs sm:text-sm text-slate-500 dark:text-slate-400"
+										>Project ID:</span
+									>
 									<code class="px-2 py-1 bg-slate-800 rounded text-orange-400 text-xs sm:text-sm"
 										>{firebaseProjectId}</code
 									>
@@ -937,13 +988,17 @@
 						<div
 							class="bg-slate-800/40 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 rounded-2xl p-4 sm:p-6"
 						>
-							<h4 class="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+							<h4
+								class="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2"
+							>
 								<CloudCog class="w-5 h-5 text-orange-400" />
 								Setup Instructions
 							</h4>
 							<!-- ... (Instructions steps adjusted for mobile padding) ... -->
 							<div class="space-y-3">
-								<p class="text-slate-500 dark:text-slate-400 text-sm">Please check the documentation to configure Firebase.</p>
+								<p class="text-slate-500 dark:text-slate-400 text-sm">
+									Please check the documentation to configure Firebase.
+								</p>
 							</div>
 						</div>
 					{:else}
@@ -951,8 +1006,12 @@
 						<div
 							class="bg-slate-800/40 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 rounded-2xl overflow-hidden"
 						>
-							<div class="px-4 sm:px-6 py-4 border-b border-slate-300/50 dark:border-slate-700/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-								<h4 class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+							<div
+								class="px-4 sm:px-6 py-4 border-b border-slate-300/50 dark:border-slate-700/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+							>
+								<h4
+									class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2"
+								>
 									<FileJson class="w-5 h-5 text-orange-400" />
 									Remote Config
 								</h4>
@@ -981,10 +1040,13 @@
 											<div
 												class="p-3 sm:p-4 bg-slate-900/50 rounded-xl border border-slate-300/30 dark:border-slate-700/30 hover:border-orange-500/30 transition-all group"
 											>
-												<div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
+												<div
+													class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4"
+												>
 													<div class="flex-1 min-w-0">
 														<div class="flex items-center gap-2 mb-1 flex-wrap">
-															<span class="font-mono text-sm font-semibold text-slate-800 dark:text-slate-200 break-all"
+															<span
+																class="font-mono text-sm font-semibold text-slate-800 dark:text-slate-200 break-all"
 																>{config.key}</span
 															>
 															<span
@@ -1030,7 +1092,9 @@
 								{:else}
 									<div class="text-center py-12">
 										<FileJson class="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 text-slate-600" />
-										<p class="text-slate-500 dark:text-slate-400 mb-2 text-sm">No remote config parameters yet</p>
+										<p class="text-slate-500 dark:text-slate-400 mb-2 text-sm">
+											No remote config parameters yet
+										</p>
 									</div>
 								{/if}
 							</div>
@@ -1059,8 +1123,12 @@
 			transition:scale={{ duration: 200, start: 0.95 }}
 		>
 			<!-- Header -->
-			<div class="px-4 sm:px-6 py-4 border-b border-slate-300 dark:border-slate-700 flex items-center justify-between">
-				<h3 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+			<div
+				class="px-4 sm:px-6 py-4 border-b border-slate-300 dark:border-slate-700 flex items-center justify-between"
+			>
+				<h3
+					class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2"
+				>
 					<Flame class="w-5 h-5 text-orange-400" />
 					{firebaseModalMode === 'create' ? 'Add Parameter' : 'Edit Parameter'}
 				</h3>
@@ -1076,7 +1144,11 @@
 			<div class="p-4 sm:p-6 space-y-4 max-h-[70vh] overflow-y-auto">
 				<!-- Key -->
 				<div>
-					<label for="fbKey" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Parameter Key</label>
+					<label
+						for="fbKey"
+						class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+						>Parameter Key</label
+					>
 					<input
 						id="fbKey"
 						type="text"
@@ -1089,7 +1161,11 @@
 
 				<!-- Value Type -->
 				<div>
-					<label for="fbType" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Value Type</label>
+					<label
+						for="fbType"
+						class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+						>Value Type</label
+					>
 					<select
 						id="fbType"
 						bind:value={firebaseForm.valueType}
@@ -1104,7 +1180,11 @@
 
 				<!-- Value -->
 				<div>
-					<label for="fbValue" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Default Value</label>
+					<label
+						for="fbValue"
+						class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+						>Default Value</label
+					>
 					{#if firebaseForm.valueType === 'BOOLEAN'}
 						<select
 							id="fbValue"
@@ -1135,7 +1215,10 @@
 
 				<!-- Description -->
 				<div>
-					<label for="fbDesc" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Description (optional)</label
+					<label
+						for="fbDesc"
+						class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+						>Description (optional)</label
 					>
 					<textarea
 						id="fbDesc"
@@ -1148,7 +1231,9 @@
 			</div>
 
 			<!-- Footer -->
-			<div class="px-4 sm:px-6 py-4 border-t border-slate-300 dark:border-slate-700 flex items-center justify-end gap-3">
+			<div
+				class="px-4 sm:px-6 py-4 border-t border-slate-300 dark:border-slate-700 flex items-center justify-end gap-3"
+			>
 				<button
 					onclick={closeFirebaseModal}
 					class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-900 dark:text-white rounded-xl font-medium transition-all text-sm"
@@ -1177,7 +1262,7 @@
 	:global(body) {
 		background: rgb(2, 6, 23);
 	}
-	
+
 	/* Hide scrollbar for Chrome, Safari and Opera */
 	.no-scrollbar::-webkit-scrollbar {
 		display: none;
@@ -1185,7 +1270,7 @@
 
 	/* Hide scrollbar for IE, Edge and Firefox */
 	.no-scrollbar {
-		-ms-overflow-style: none;  /* IE and Edge */
-		scrollbar-width: none;  /* Firefox */
+		-ms-overflow-style: none; /* IE and Edge */
+		scrollbar-width: none; /* Firefox */
 	}
 </style>

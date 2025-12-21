@@ -25,7 +25,7 @@
 		isOpen = false,
 		onClose = () => {},
 		embedded = false
-	} = $props<{ 
+	} = $props<{
 		spawnerId: number;
 		isOpen?: boolean;
 		onClose?: () => void;
@@ -239,7 +239,8 @@
 		if (filteredLogs.length > 0 && shouldAutoScroll && logContainer) {
 			// Use a microtask to ensure DOM is updated before scrolling
 			queueMicrotask(() => {
-				if (logContainer) { // Additional null check for safety
+				if (logContainer) {
+					// Additional null check for safety
 					logContainer.scrollTop = logContainer.scrollHeight;
 				}
 			});
@@ -315,7 +316,9 @@
 		class="px-4 py-3 border-b border-slate-300 dark:border-slate-700 flex justify-between items-center bg-slate-800/50"
 	>
 		<div class="flex items-center gap-3 overflow-hidden">
-			<h2 class="text-slate-900 dark:text-white font-semibold text-base sm:text-lg flex items-center gap-2 truncate">
+			<h2
+				class="text-slate-900 dark:text-white font-semibold text-base sm:text-lg flex items-center gap-2 truncate"
+			>
 				<span class="text-slate-500 dark:text-slate-400">#{spawnerId}</span> Logs
 				{#if fileSize > 0}
 					<span
@@ -364,7 +367,9 @@
 		class="px-3 sm:px-4 py-3 bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex flex-col md:flex-row gap-3 md:items-center"
 	>
 		<!-- Tabs (Scrollable on mobile) -->
-		<div class="flex p-1 bg-white dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 overflow-x-auto no-scrollbar">
+		<div
+			class="flex p-1 bg-white dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 overflow-x-auto no-scrollbar"
+		>
 			{#each tabs as tab}
 				{@const Icon = tab.icon}
 				<button
@@ -376,10 +381,11 @@
 				>
 					<Icon class="w-3.5 h-3.5" />
 					{tab.label}
-										<span class="ml-0.5 text-[10px] opacity-60 bg-slate-900/50 px-1.5 rounded-full">
-											{stats[tab.id]}
-										</span>
-									</button>			{/each}
+					<span class="ml-0.5 text-[10px] opacity-60 bg-slate-900/50 px-1.5 rounded-full">
+						{stats[tab.id]}
+					</span>
+				</button>
+			{/each}
 		</div>
 
 		<!-- Search & Options -->
@@ -444,7 +450,9 @@
 						class="flex items-start gap-2 sm:gap-3 hover:bg-slate-900/50 px-1.5 sm:px-2 py-1 rounded select-text group transition-colors"
 					>
 						<!-- Time -->
-						<span class="text-slate-600 shrink-0 w-16 sm:w-24 tabular-nums select-none truncate">{l.time}</span>
+						<span class="text-slate-600 shrink-0 w-16 sm:w-24 tabular-nums select-none truncate"
+							>{l.time}</span
+						>
 
 						<!-- Level -->
 						<span class="shrink-0 w-8 sm:w-12 font-bold select-none {getLevelClass(l.level)}">
@@ -464,9 +472,10 @@
 										{#if !['time', 'level', 'msg', 'message'].includes(k)}
 											<div class="flex gap-2 flex-wrap">
 												<span class="text-slate-600">{k}:</span>
-												<span class="text-slate-500 dark:text-slate-400 font-mono whitespace-pre-wrap break-all"
-														>{JSON.stringify(v)}</span
-													>
+												<span
+													class="text-slate-500 dark:text-slate-400 font-mono whitespace-pre-wrap break-all"
+													>{JSON.stringify(v)}</span
+												>
 											</div>
 										{/if}
 									{/each}
@@ -508,7 +517,7 @@
 	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
 		background: #475569; /* slate-600 */
 	}
-	
+
 	/* Hide scrollbar for tab nav */
 	.no-scrollbar::-webkit-scrollbar {
 		display: none;

@@ -333,11 +333,13 @@
 
 	<!-- Recursive Sub-tasks -->
 	{#if expanded && todo.sub_tasks && todo.sub_tasks.length > 0}
-		<div class="ml-4 mt-1 flex flex-col gap-1 border-l border-slate-300/50 dark:border-slate-700/50 pl-2" transition:slide>
+		<div
+			class="ml-4 mt-1 flex flex-col gap-1 border-l border-slate-300/50 dark:border-slate-700/50 pl-2"
+			transition:slide
+		>
 			{#each todo.sub_tasks as sub (sub.id)}
 				<TaskItem todo={sub} {onToggle} {onDelete} {onToggleProgress} />
 			{/each}
 		</div>
 	{/if}
 </div>
-

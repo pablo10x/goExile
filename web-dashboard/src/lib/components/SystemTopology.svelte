@@ -63,12 +63,12 @@
 	// Derived interception data to ensure everything stays in sync with Master center
 	let interceptionData = $derived.by(() => {
 		// Use the seed to generate new "random" positions but stay reactive to center
-		const s = interceptionSeed; 
+		const s = interceptionSeed;
 		const offset = 120;
 		// Deterministic random-ish offsets based on seed
 		const rx = ((Math.sin(s * 123.45) + 1) / 2 - 0.5) * offset * 2;
-		const ry = ((Math.cos(s * 678.90) + 1) / 2 - 0.5) * offset * 2;
-		
+		const ry = ((Math.cos(s * 678.9) + 1) / 2 - 0.5) * offset * 2;
+
 		const tx = center.x + rx;
 		const ty = center.y + ry;
 
@@ -76,7 +76,7 @@
 		// animateMotion moves the element *relative* to its initial position.
 		// If the element is at (0,0), the path should be absolute coordinates.
 		// Let's make the path start exactly at RedEye and end at Target.
-		
+
 		const midX1 = (redeyePos.x + tx) / 2;
 		const midY1 = (redeyePos.y + ty) / 2;
 		const dx = tx - redeyePos.x;
@@ -84,7 +84,7 @@
 		const dist = Math.sqrt(dx * dx + dy * dy);
 		const px = -dy / dist;
 		const py = dx / dist;
-		
+
 		const path1 = `M${redeyePos.x},${redeyePos.y} Q${midX1 + px * 60},${midY1 + py * 60} ${tx},${ty}`;
 		const path2 = `M${redeyePos.x},${redeyePos.y} Q${midX1 - px * 40},${midY1 - py * 40} ${tx},${ty}`;
 
@@ -494,9 +494,26 @@
 				{#if showInterception}
 					<g filter="url(#strongGlow)" style="pointer-events: none;">
 						<!-- Threat Reticle -->
-						<g class="animate-threat-appear" style="transform-box: fill-box; transform-origin: center;">
-							<rect x={interceptionData.target.x - 15} y={interceptionData.target.y - 15} width="30" height="30" fill="none" stroke="#ef4444" stroke-width="1" rx="4" />
-							<foreignObject x={interceptionData.target.x - 12} y={interceptionData.target.y - 12} width="24" height="24">
+						<g
+							class="animate-threat-appear"
+							style="transform-box: fill-box; transform-origin: center;"
+						>
+							<rect
+								x={interceptionData.target.x - 15}
+								y={interceptionData.target.y - 15}
+								width="30"
+								height="30"
+								fill="none"
+								stroke="#ef4444"
+								stroke-width="1"
+								rx="4"
+							/>
+							<foreignObject
+								x={interceptionData.target.x - 12}
+								y={interceptionData.target.y - 12}
+								width="24"
+								height="24"
+							>
 								<div class="flex items-center justify-center w-full h-full text-red-500">
 									<User class="w-full h-full" />
 								</div>
@@ -506,43 +523,114 @@
 						<!-- Missile 1: Plasma Bolt (Orange) -->
 						<g>
 							<!-- Energy Trail (Drew along the path) -->
-							<path d={interceptionData.path1} fill="none" stroke="#fb923c" stroke-width="3" opacity="0.6" stroke-dasharray="0, 1000">
+							<path
+								d={interceptionData.path1}
+								fill="none"
+								stroke="#fb923c"
+								stroke-width="3"
+								opacity="0.6"
+								stroke-dasharray="0, 1000"
+							>
 								<!-- Reveal the path as the missile travels -->
-								<animate attributeName="stroke-dasharray" from="0, 1000" to="1000, 0" dur="1s" fill="freeze" />
+								<animate
+									attributeName="stroke-dasharray"
+									from="0, 1000"
+									to="1000, 0"
+									dur="1s"
+									fill="freeze"
+								/>
 								<animate attributeName="stroke-dashoffset" from="0" to="0" dur="1s" fill="freeze" />
 								<animate attributeName="opacity" values="0.6;0" dur="1.5s" fill="freeze" />
 							</path>
-							
+
 							<!-- Bolt Head -->
 							<circle r="4" fill="#fb923c">
-								<animateMotion dur="1s" repeatCount="1" path={interceptionData.path1} fill="freeze" rotate="auto" />
+								<animateMotion
+									dur="1s"
+									repeatCount="1"
+									path={interceptionData.path1}
+									fill="freeze"
+									rotate="auto"
+								/>
 							</circle>
 							<circle r="2" fill="#ffffff">
-								<animateMotion dur="1s" repeatCount="1" path={interceptionData.path1} fill="freeze" rotate="auto" />
+								<animateMotion
+									dur="1s"
+									repeatCount="1"
+									path={interceptionData.path1}
+									fill="freeze"
+									rotate="auto"
+								/>
 							</circle>
 						</g>
 
 						<!-- Missile 2: Plasma Bolt (Cyan) -->
 						<g>
 							<!-- Energy Trail -->
-							<path d={interceptionData.path2} fill="none" stroke="#22d3ee" stroke-width="3" opacity="0.6" stroke-dasharray="0, 1000">
-								<animate attributeName="stroke-dasharray" from="0, 1000" to="1000, 0" dur="1s" fill="freeze" begin="0.1s" />
-								<animate attributeName="opacity" values="0.6;0" dur="1.5s" fill="freeze" begin="0.1s" />
+							<path
+								d={interceptionData.path2}
+								fill="none"
+								stroke="#22d3ee"
+								stroke-width="3"
+								opacity="0.6"
+								stroke-dasharray="0, 1000"
+							>
+								<animate
+									attributeName="stroke-dasharray"
+									from="0, 1000"
+									to="1000, 0"
+									dur="1s"
+									fill="freeze"
+									begin="0.1s"
+								/>
+								<animate
+									attributeName="opacity"
+									values="0.6;0"
+									dur="1.5s"
+									fill="freeze"
+									begin="0.1s"
+								/>
 							</path>
-							
+
 							<!-- Bolt Head -->
 							<circle r="4" fill="#22d3ee">
-								<animateMotion dur="1s" repeatCount="1" path={interceptionData.path2} fill="freeze" begin="0.1s" rotate="auto" />
+								<animateMotion
+									dur="1s"
+									repeatCount="1"
+									path={interceptionData.path2}
+									fill="freeze"
+									begin="0.1s"
+									rotate="auto"
+								/>
 							</circle>
 							<circle r="2" fill="#ffffff">
-								<animateMotion dur="1s" repeatCount="1" path={interceptionData.path2} fill="freeze" begin="0.1s" rotate="auto" />
+								<animateMotion
+									dur="1s"
+									repeatCount="1"
+									path={interceptionData.path2}
+									fill="freeze"
+									begin="0.1s"
+									rotate="auto"
+								/>
 							</circle>
 						</g>
 
 						<!-- Impact Blast -->
 						<g transform="translate({interceptionData.target.x}, {interceptionData.target.y})">
-							<circle r="40" fill="none" stroke="#fb923c" stroke-width="3" class="animate-refined-blast">
-								<animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="1" begin="0.9s" />
+							<circle
+								r="40"
+								fill="none"
+								stroke="#fb923c"
+								stroke-width="3"
+								class="animate-refined-blast"
+							>
+								<animate
+									attributeName="opacity"
+									values="0;1;0"
+									dur="2s"
+									repeatCount="1"
+									begin="0.9s"
+								/>
 							</circle>
 						</g>
 					</g>
@@ -878,50 +966,95 @@
 			>
 				<div class="relative w-20 h-20 flex items-center justify-center">
 					<!-- Octagonal frame -->
-					<div 
+					<div
 						class="absolute inset-0 bg-white dark:bg-slate-950 border-2 border-red-600/40 shadow-[0_0_15px_rgba(239,68,68,0.2)] backdrop-blur-xl group-hover:border-red-500 group-hover:shadow-[0_0_30px_rgba(239,68,68,0.4)] transition-all duration-300"
 						style="clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"
 					></div>
-					
+
 					<!-- Inner optical grid -->
 					<div class="absolute inset-2 opacity-5">
-						<div class="w-full h-full" style="background-image: radial-gradient(#ef4444 1.5px, transparent 0); background-size: 8px 8px;"></div>
+						<div
+							class="w-full h-full"
+							style="background-image: radial-gradient(#ef4444 1.5px, transparent 0); background-size: 8px 8px;"
+						></div>
 					</div>
 
 					<!-- The Cyber Eye -->
-					<div class="relative z-10 w-14 h-14 flex items-center justify-center filter drop-shadow-[0_0_10px_rgba(239,68,68,0.6)]">
+					<div
+						class="relative z-10 w-14 h-14 flex items-center justify-center filter drop-shadow-[0_0_10px_rgba(239,68,68,0.6)]"
+					>
 						<svg viewBox="0 0 100 100" class="w-full h-full">
 							<!-- Outer Shell -->
-							<circle cx="50" cy="50" r="45" fill="none" stroke="#ef4444" stroke-width="1" opacity="0.3" stroke-dasharray="10,5" class="animate-spin" style="animation-duration: 15s" />
-							
+							<circle
+								cx="50"
+								cy="50"
+								r="45"
+								fill="none"
+								stroke="#ef4444"
+								stroke-width="1"
+								opacity="0.3"
+								stroke-dasharray="10,5"
+								class="animate-spin"
+								style="animation-duration: 15s"
+							/>
+
 							<!-- Main Lens -->
-							<path d="M 10 50 Q 50 15 90 50 Q 50 85 10 50 Z" fill="#1a0000" stroke="#ef4444" stroke-width="2" />
-							
+							<path
+								d="M 10 50 Q 50 15 90 50 Q 50 85 10 50 Z"
+								fill="#1a0000"
+								stroke="#ef4444"
+								stroke-width="2"
+							/>
+
 							<!-- Iris Array -->
 							<g class="animate-pulse" style="animation-duration: 3s">
-								<circle cx="50" cy="50" r="18" fill="none" stroke="#ef4444" stroke-width="1" opacity="0.6" />
+								<circle
+									cx="50"
+									cy="50"
+									r="18"
+									fill="none"
+									stroke="#ef4444"
+									stroke-width="1"
+									opacity="0.6"
+								/>
 								<circle cx="50" cy="50" r="12" fill="#7f1d1d" opacity="0.8" />
 							</g>
-							
+
 							<!-- Vertical Scan Lens -->
 							<rect x="48" y="30" width="4" height="40" fill="#ff0000" opacity="0.4" rx="2" />
-							
+
 							<!-- Sharp Pupil -->
 							<path d="M 50 40 L 56 50 L 50 60 L 44 50 Z" fill="#ef4444" />
-							
+
 							<!-- Telemetry Arcs -->
-							<path d="M 20 20 A 40 40 0 0 1 40 10" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" />
-							<path d="M 80 80 A 40 40 0 0 1 60 90" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" />
+							<path
+								d="M 20 20 A 40 40 0 0 1 40 10"
+								fill="none"
+								stroke="#ef4444"
+								stroke-width="2"
+								stroke-linecap="round"
+							/>
+							<path
+								d="M 80 80 A 40 40 0 0 1 60 90"
+								fill="none"
+								stroke="#ef4444"
+								stroke-width="2"
+								stroke-linecap="round"
+							/>
 						</svg>
 					</div>
 
 					<!-- Sentinel Status -->
-					<div class="absolute -bottom-3 px-3 py-0.5 bg-slate-900 border border-red-500/30 rounded-full text-[7px] font-bold text-red-400 tracking-widest uppercase">
+					<div
+						class="absolute -bottom-3 px-3 py-0.5 bg-slate-900 border border-red-500/30 rounded-full text-[7px] font-bold text-red-400 tracking-widest uppercase"
+					>
 						{showInterception ? 'INTERCEPTING' : 'VIGILANT'}
 					</div>
 				</div>
 				<div class="mt-6 flex flex-col items-center">
-					<span class="text-[9px] font-black text-red-500 tracking-[0.3em] uppercase opacity-80">REDEYE_SENTINEL</span>
+					<span class="text-[9px] font-black text-red-500 tracking-[0.3em] uppercase opacity-80"
+						>REDEYE_SENTINEL</span
+					>
 				</div>
 			</div>
 
@@ -932,37 +1065,63 @@
 			>
 				<div class="relative w-20 h-20 flex items-center justify-center">
 					<!-- Multi-layered octagonal frame -->
-					<div 
+					<div
 						class="absolute inset-0 bg-white dark:bg-slate-950 border-2 border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.2)] backdrop-blur-xl group-hover:border-emerald-400 group-hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] transition-all duration-300"
 						style="clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"
 					></div>
-					<div 
+					<div
 						class="absolute inset-1 border border-emerald-400/20 animate-redeye-flicker"
 						style="clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"
 					></div>
 
 					<!-- The "Monolith" SVG -->
-					<svg viewBox="0 0 100 100" class="w-14 h-14 relative z-10 filter drop-shadow-[0_0_10px_rgba(16,185,129,0.8)]">
+					<svg
+						viewBox="0 0 100 100"
+						class="w-14 h-14 relative z-10 filter drop-shadow-[0_0_10px_rgba(16,185,129,0.8)]"
+					>
 						<!-- Matrix Grid Pattern -->
 						<defs>
 							<pattern id="dbGrid" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
-								<rect width="10" height="10" fill="none" stroke="#10b981" stroke-width="0.2" opacity="0.3" />
+								<rect
+									width="10"
+									height="10"
+									fill="none"
+									stroke="#10b981"
+									stroke-width="0.2"
+									opacity="0.3"
+								/>
 							</pattern>
 						</defs>
 						<circle cx="50" cy="50" r="35" fill="url(#dbGrid)" opacity="0.4" />
-						
+
 						<!-- Shifting Isometric Data Core -->
 						<g transform="translate(50, 50)">
 							<!-- Inner Core -->
-							<path d="M 0 -20 L 18 -10 L 18 10 L 0 20 L -18 10 L -18 -10 Z" fill="#064e3b" stroke="#10b981" stroke-width="2" class="animate-pulse" />
-							
+							<path
+								d="M 0 -20 L 18 -10 L 18 10 L 0 20 L -18 10 L -18 -10 Z"
+								fill="#064e3b"
+								stroke="#10b981"
+								stroke-width="2"
+								class="animate-pulse"
+							/>
+
 							<!-- Floating Data Shards -->
 							<g class="animate-spin" style="animation-duration: 12s">
 								<rect x="-28" y="-5" width="6" height="6" fill="#34d399" opacity="0.8">
-									<animate attributeName="y" values="-5;-12;-5" dur="2.5s" repeatCount="indefinite" />
+									<animate
+										attributeName="y"
+										values="-5;-12;-5"
+										dur="2.5s"
+										repeatCount="indefinite"
+									/>
 								</rect>
 								<rect x="22" y="-5" width="6" height="6" fill="#34d399" opacity="0.6">
-									<animate attributeName="y" values="-12;-5;-12" dur="3.5s" repeatCount="indefinite" />
+									<animate
+										attributeName="y"
+										values="-12;-5;-12"
+										dur="3.5s"
+										repeatCount="indefinite"
+									/>
 								</rect>
 							</g>
 						</g>
@@ -970,24 +1129,44 @@
 						<!-- Vertical Data Flow -->
 						{#each Array(3) as _, i}
 							<circle r="1" fill="#6ee7b7">
-								<animateMotion dur="{1.5 + i}s" repeatCount="indefinite" path="M {40 + (i*10)} 20 L {40 + (i*10)} 80" begin="{i * 0.4}s" />
-								<animate attributeName="opacity" values="0;1;0" dur="{1.5 + i}s" repeatCount="indefinite" />
+								<animateMotion
+									dur="{1.5 + i}s"
+									repeatCount="indefinite"
+									path="M {40 + i * 10} 20 L {40 + i * 10} 80"
+									begin="{i * 0.4}s"
+								/>
+								<animate
+									attributeName="opacity"
+									values="0;1;0"
+									dur="{1.5 + i}s"
+									repeatCount="indefinite"
+								/>
 							</circle>
 						{/each}
 					</svg>
 
 					<!-- Outer energy resonance -->
-					<div class="absolute inset-0 border border-emerald-500/10 scale-125 animate-ping-slower opacity-20" style="clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"></div>
+					<div
+						class="absolute inset-0 border border-emerald-500/10 scale-125 animate-ping-slower opacity-20"
+						style="clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"
+					></div>
 				</div>
 				<div class="mt-4 flex flex-col items-center">
 					<div class="flex items-center gap-2 mb-1">
-						<div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
-						<span class="text-[9px] font-black text-emerald-500 tracking-[0.3em] uppercase">DATABASE</span>
+						<div
+							class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]"
+						></div>
+						<span class="text-[9px] font-black text-emerald-500 tracking-[0.3em] uppercase"
+							>DATABASE</span
+						>
 					</div>
 					<div class="flex gap-0.5">
 						{#each Array(6) as _, i}
 							<div class="w-2 h-1 bg-emerald-900/40 rounded-sm overflow-hidden">
-								<div class="w-full h-full bg-emerald-500/80 animate-redeye-flicker" style="animation-delay: {i * 0.15}s"></div>
+								<div
+									class="w-full h-full bg-emerald-500/80 animate-redeye-flicker"
+									style="animation-delay: {i * 0.15}s"
+								></div>
 							</div>
 						{/each}
 					</div>
@@ -1049,7 +1228,9 @@
 					`}
 						>
 							{#if isActive}
-								<Cpu class={`w-6 h-6 text-slate-700 dark:text-slate-300 transition-colors duration-800`} />
+								<Cpu
+									class={`w-6 h-6 text-slate-700 dark:text-slate-300 transition-colors duration-800`}
+								/>
 							{:else}
 								<Skull
 									class={`w-6 h-6 text-red-400 animate-pulse-slow transition-colors duration-800`}
@@ -1070,7 +1251,9 @@
 					<div
 						class="absolute top-16 flex flex-col items-center bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm px-4 py-2 rounded-xl border border-slate-300/50 dark:border-slate-700/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-40 pointer-events-none shadow-2xl"
 					>
-						<span class="text-sm font-bold text-slate-900 dark:text-white mb-1">Spawner #{spawner.id}</span>
+						<span class="text-sm font-bold text-slate-900 dark:text-white mb-1"
+							>Spawner #{spawner.id}</span
+						>
 						<div
 							class="w-full h-px bg-gradient-to-r from-transparent via-slate-600 to-transparent mb-1"
 						></div>
@@ -1079,7 +1262,8 @@
 							<span>{spawner.region}</span>
 						</div>
 						<div class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-							Instances: <span class="font-mono text-slate-800 dark:text-slate-200">{spawner.current_instances}</span
+							Instances: <span class="font-mono text-slate-800 dark:text-slate-200"
+								>{spawner.current_instances}</span
 							>/<span class="font-mono">{spawner.max_instances}</span>
 							<span class="ml-2 text-[10px]">({utilization.toFixed(0)}%)</span>
 						</div>
@@ -1715,10 +1899,19 @@
 	}
 
 	@keyframes redeyeFlicker {
-		0%, 100% { opacity: 1; }
-		50% { opacity: 0.3; }
-		55% { opacity: 1; }
-		60% { opacity: 0.4; }
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.3;
+		}
+		55% {
+			opacity: 1;
+		}
+		60% {
+			opacity: 0.4;
+		}
 	}
 
 	.animate-redeye-flicker {
@@ -1726,9 +1919,17 @@
 	}
 
 	@keyframes energySurge {
-		0% { stroke-dashoffset: 100; opacity: 0.2; }
-		50% { opacity: 1; }
-		100% { stroke-dashoffset: 0; opacity: 0.2; }
+		0% {
+			stroke-dashoffset: 100;
+			opacity: 0.2;
+		}
+		50% {
+			opacity: 1;
+		}
+		100% {
+			stroke-dashoffset: 0;
+			opacity: 0.2;
+		}
 	}
 
 	.animate-energy-surge {
@@ -1737,16 +1938,38 @@
 	}
 
 	@keyframes threatAppear {
-		0% { transform: scale(0) rotate(45deg); opacity: 0; }
-		10% { transform: scale(1) rotate(45deg); opacity: 1; }
-		80% { transform: scale(1) rotate(45deg); opacity: 1; }
-		100% { transform: scale(0) rotate(45deg); opacity: 0; }
+		0% {
+			transform: scale(0) rotate(45deg);
+			opacity: 0;
+		}
+		10% {
+			transform: scale(1) rotate(45deg);
+			opacity: 1;
+		}
+		80% {
+			transform: scale(1) rotate(45deg);
+			opacity: 1;
+		}
+		100% {
+			transform: scale(0) rotate(45deg);
+			opacity: 0;
+		}
 	}
 
 	@keyframes refinedBlast {
-		0%, 70% { transform: scale(0); opacity: 0; }
-		75% { transform: scale(1); opacity: 0.8; }
-		100% { transform: scale(3); opacity: 0; }
+		0%,
+		70% {
+			transform: scale(0);
+			opacity: 0;
+		}
+		75% {
+			transform: scale(1);
+			opacity: 0.8;
+		}
+		100% {
+			transform: scale(3);
+			opacity: 0;
+		}
 	}
 
 	.animate-threat-appear {

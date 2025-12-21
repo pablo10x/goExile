@@ -653,7 +653,11 @@
 				<!-- Basic Info -->
 				<div class="grid grid-cols-2 gap-4">
 					<div>
-						<label for="fnSchema" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Schema</label>
+						<label
+							for="fnSchema"
+							class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2"
+							>Schema</label
+						>
 						<select
 							id="fnSchema"
 							bind:value={formData.schema}
@@ -665,7 +669,9 @@
 						</select>
 					</div>
 					<div>
-						<label for="fnName" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2"
+						<label
+							for="fnName"
+							class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2"
 							>Function Name</label
 						>
 						<input
@@ -680,7 +686,11 @@
 
 				<div class="grid grid-cols-2 gap-4">
 					<div>
-						<label for="fnArgs" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Arguments</label>
+						<label
+							for="fnArgs"
+							class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2"
+							>Arguments</label
+						>
 						<input
 							id="fnArgs"
 							type="text"
@@ -690,7 +700,11 @@
 						/>
 					</div>
 					<div>
-						<label for="fnReturns" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Returns</label>
+						<label
+							for="fnReturns"
+							class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2"
+							>Returns</label
+						>
 						<select
 							id="fnReturns"
 							bind:value={formData.returns}
@@ -705,7 +719,11 @@
 
 				<div class="grid grid-cols-3 gap-4">
 					<div>
-						<label for="fnLang" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Language</label>
+						<label
+							for="fnLang"
+							class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2"
+							>Language</label
+						>
 						<select
 							id="fnLang"
 							bind:value={formData.language}
@@ -717,7 +735,11 @@
 						</select>
 					</div>
 					<div>
-						<label for="fnVol" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Volatility</label>
+						<label
+							for="fnVol"
+							class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2"
+							>Volatility</label
+						>
 						<select
 							id="fnVol"
 							bind:value={formData.volatility}
@@ -754,7 +776,11 @@
 
 				<!-- Function Body -->
 				<div>
-					<label for="fnBody" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Function Body</label>
+					<label
+						for="fnBody"
+						class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2"
+						>Function Body</label
+					>
 					<textarea
 						id="fnBody"
 						bind:value={formData.body}
@@ -769,7 +795,9 @@ END;"
 			</div>
 
 			<!-- Modal Footer -->
-			<div class="p-6 border-t border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 flex justify-end gap-3">
+			<div
+				class="p-6 border-t border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 flex justify-end gap-3"
+			>
 				<button
 					onclick={closeModal}
 					class="px-5 py-2.5 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 hover:bg-slate-800 rounded-xl transition-all"
@@ -835,11 +863,18 @@ END;"
 			<div class="flex-1 overflow-y-auto p-6 space-y-6">
 				{#if functionToExecute.argument_types}
 					<div role="group" aria-labelledby="args-label">
-						<div id="args-label" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-3">Arguments</div>
+						<div
+							id="args-label"
+							class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-3"
+						>
+							Arguments
+						</div>
 						<div class="space-y-3">
 							{#each functionToExecute.argument_types.split(',') as arg, i}
 								<div class="flex items-center gap-3">
-									<label for={`execArg-${i}`} class="text-sm text-slate-500 font-mono min-w-[120px]">{arg.trim()}</label>
+									<label for={`execArg-${i}`} class="text-sm text-slate-500 font-mono min-w-[120px]"
+										>{arg.trim()}</label
+									>
 									<input
 										id={`execArg-${i}`}
 										type="text"
@@ -857,14 +892,22 @@ END;"
 
 				{#if executeResult.length > 0}
 					<div role="group" aria-labelledby="result-label">
-						<div id="result-label" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-3">Result</div>
-						<div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+						<div
+							id="result-label"
+							class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-3"
+						>
+							Result
+						</div>
+						<div
+							class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden"
+						>
 							<div class="overflow-x-auto">
 								<table class="w-full text-sm">
 									<thead class="bg-slate-900 text-slate-500 dark:text-slate-400">
 										<tr>
 											{#each Object.keys(executeResult[0]) as key}
-												<th class="px-4 py-2 text-left font-medium border-b border-slate-200 dark:border-slate-800"
+												<th
+													class="px-4 py-2 text-left font-medium border-b border-slate-200 dark:border-slate-800"
 													>{key}</th
 												>
 											{/each}
@@ -889,7 +932,9 @@ END;"
 			</div>
 
 			<!-- Modal Footer -->
-			<div class="p-6 border-t border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 flex justify-end gap-3">
+			<div
+				class="p-6 border-t border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 flex justify-end gap-3"
+			>
 				<button
 					onclick={() => (executeModalOpen = false)}
 					class="px-5 py-2.5 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 hover:bg-slate-800 rounded-xl transition-all"

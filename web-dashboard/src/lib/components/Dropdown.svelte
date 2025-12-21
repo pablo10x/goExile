@@ -2,7 +2,11 @@
 	import { slide } from 'svelte/transition';
 	import type { ComponentType, Snippet } from 'svelte';
 
-	let { label = 'Actions', Icon = null, children } = $props<{
+	let {
+		label = 'Actions',
+		Icon = null,
+		children
+	} = $props<{
 		label?: string;
 		Icon?: ComponentType | null;
 		children?: Snippet;
