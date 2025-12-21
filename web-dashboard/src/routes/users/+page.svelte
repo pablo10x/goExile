@@ -57,7 +57,7 @@
 				r.reason.toLowerCase().includes(query) ||
 				(r.reporter_name?.toLowerCase() || '').includes(query) ||
 				(r.reported_user_name?.toLowerCase() || '').includes(query) ||
-				r.game_server_instance_id.toLowerCase().includes(query)
+				(r.game_server_instance_id?.toLowerCase() || '').includes(query)
 		);
 	});
 
@@ -66,7 +66,7 @@
 		try {
 			const res = await fetch('/api/game/players');
 			if (res.ok) {
-				players = await res.json();
+				players = (await res.json()) || [];
 			}
 		} catch (e) {
 			console.error('Failed to fetch players', e);
@@ -80,7 +80,7 @@
 		try {
 			const res = await fetch('/api/reports');
 			if (res.ok) {
-				reports = await res.json();
+				reports = (await res.json()) || [];
 			}
 		} catch (e) {
 			console.error('Failed to fetch reports', e);
