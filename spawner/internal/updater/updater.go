@@ -55,7 +55,7 @@ func EnsureInstalled(cfg *config.Config, logger *slog.Logger) error {
 		// Unzip happens next. If we write now, unzip might overwrite or be fine.
 		// Actually, let's write it AFTER unzip to ensure it persists.
 		defer func() {
-			if err := os.WriteFile(versionFile, []byte(version), 0644); err != nil {
+			if err := os.WriteFile(versionFile, []byte(version), 0600); err != nil {
 				logger.Warn("Failed to save version file", "error", err)
 			}
 		}()
@@ -177,7 +177,7 @@ func UpdateTemplate(cfg *config.Config, logger *slog.Logger) (string, error) {
 	}
 
 	// 4. Update version file
-	if err := os.WriteFile(versionFile, []byte(remoteVersion), 0644); err != nil {
+	if err := os.WriteFile(versionFile, []byte(remoteVersion), 0600); err != nil {
 		logger.Warn("Failed to save version file", "error", err)
 	}
 

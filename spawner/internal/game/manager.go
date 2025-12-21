@@ -525,7 +525,7 @@ func (m *Manager) startProcess(inst *Instance) error {
 	}
 
 	logFilePath := filepath.Join(inst.Path, "gameserver.log")
-	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
 	if err != nil {
 		spawnerErr := spawnerErrors.FileOperationError("open_log_file", logFilePath, err).
 			WithContext("instance_id", inst.ID).
