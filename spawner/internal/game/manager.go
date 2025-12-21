@@ -758,6 +758,22 @@ func (m *Manager) Shutdown() {
 	// We don't clear map here, so state persists
 }
 
+func (inst *Instance) clone() *Instance {
+	return &Instance{
+		ID:          inst.ID,
+		Port:        inst.Port,
+		ProcessID:   inst.ProcessID,
+		Status:      inst.Status,
+		Region:      inst.Region,
+		Version:     inst.Version,
+		StartTime:   inst.StartTime,
+		Path:        inst.Path,
+		PlayerCount: inst.PlayerCount,
+		MaxPlayers:  inst.MaxPlayers,
+		// History and cmd/proc are intentionally not cloned for public view
+	}
+}
+
 // GetInstance returns a copy of the instance status.
 func (m *Manager) GetInstance(id string) (*Instance, bool) {
 	m.mu.RLock()
@@ -767,10 +783,7 @@ func (m *Manager) GetInstance(id string) (*Instance, bool) {
 	if !ok {
 		return nil, false
 	}
-	// Return copy to avoid race conditions on pointer
-	val := *inst
-	val.cmd = nil // hide internal cmd
-	return &val, true
+	return inst.clone(), true
 }
 
 // ListInstances returns all running instances.
@@ -780,9 +793,7 @@ func (m *Manager) ListInstances() []Instance {
 
 	list := make([]Instance, 0, len(m.instances))
 	for _, inst := range m.instances {
-		val := *inst
-		val.cmd = nil
-		list = append(list, val)
+		list = append(list, *inst.clone())
 	}
 	return list
 }
@@ -880,7 +891,7 @@ func (m *Manager) GetInstanceStats(id string) (*InstanceStats, error) {
 }
 
 // UpdatePlayerStats updates the player count for a running instance.
-func (m *Manager) UpdatePlayerStats(id string, current, max int) error {
+func (m *Manager) UpdatePlayerStats(id string, current, maxPlayers int) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -890,7 +901,7 @@ func (m *Manager) UpdatePlayerStats(id string, current, max int) error {
 	}
 
 	inst.PlayerCount = current
-	inst.MaxPlayers = max
+	inst.MaxPlayers = maxPlayers
 	return nil
 }
 

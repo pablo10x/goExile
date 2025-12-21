@@ -18,30 +18,51 @@ import (
 
 // -- Player Handlers --
 
-// AuthenticatePlayerHandler handles player login via Firebase ID Token
+// AuthenticatePlayerHandler handles player login via Firebase ID Token.
+//
+// This handler performs three-stage player resolution:
+// 1. Lookup by Firebase UID (primary identifier)
+// 2. Lookup by DeviceID if UID not found (migration/linking scenario)
+// 3. Create new player if neither UID nor DeviceID matches
+//
+// Request body supports both JSON and form-encoded data:
+//   - id_token (required): Firebase ID token for authentication
+//   - name (optional): Player display name
+//   - device_id (optional for existing, required for new players): Unique device identifier
+//
+// Response includes:
+//   - player: Full player object with friends and friend requests
+//   - ws_auth_key: WebSocket authentication key for real-time connection
+//   - ws_endpoint: WebSocket endpoint path
 func AuthenticatePlayerHandler(w http.ResponseWriter, r *http.Request) {
+	// Verify database connection is available
 	if database.DBConn == nil {
 		utils.WriteError(w, r, http.StatusServiceUnavailable, "database not connected")
 		return
 	}
 
+	// Verify Firebase authentication is initialized
 	if auth.FirebaseMgr == nil {
 		utils.WriteError(w, r, http.StatusServiceUnavailable, "firebase not initialized")
 		return
 	}
+
+	// Read request body into memory for potential re-parsing
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		utils.WriteError(w, r, http.StatusBadRequest, "failed to read body")
 		return
 	}
 
-	// Restore the body so it can be read again
+	// Restore the body so it can be read again by the decoder
 	r.Body = io.NopCloser(bytes.NewBuffer(body))
 
 	var idToken, name, deviceID string
 	contentType := r.Header.Get("Content-Type")
 
+	// Parse request parameters based on content type
 	if bytes.Contains([]byte(contentType), []byte("application/json")) {
+		// Handle JSON request body
 		var req struct {
 			IDToken  string `json:"id_token"`
 			Name     string `json:"name"`
@@ -55,7 +76,7 @@ func AuthenticatePlayerHandler(w http.ResponseWriter, r *http.Request) {
 		name = req.Name
 		deviceID = req.DeviceID
 	} else {
-		// Fallback to form data
+		// Fallback to form-encoded data
 		if err := r.ParseForm(); err != nil {
 			utils.WriteError(w, r, http.StatusBadRequest, "failed to parse form")
 			return
@@ -65,18 +86,20 @@ func AuthenticatePlayerHandler(w http.ResponseWriter, r *http.Request) {
 		deviceID = r.FormValue("device_id")
 	}
 
+	// Validate that ID token is provided
 	if idToken == "" {
 		utils.WriteError(w, r, http.StatusBadRequest, "id_token is required")
 		return
 	}
 
+	// Verify the Firebase ID token and extract the user ID (UID)
 	uid, err := auth.FirebaseMgr.VerifyIDToken(idToken)
 	if err != nil {
 		utils.WriteError(w, r, http.StatusUnauthorized, "invalid token: "+err.Error())
 		return
 	}
 
-	// 1. Try to find player by UID
+	// Stage 1: Attempt to find player by Firebase UID
 	p, err := database.GetPlayerByUID(database.DBConn, uid)
 	if err != nil {
 		utils.WriteError(w, r, http.StatusInternalServerError, err.Error())
@@ -84,24 +107,28 @@ func AuthenticatePlayerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if p != nil {
-		// Existing player found by UID
-		// Update info if needed
+		// Player found by UID - update their information if changed
 		updated := false
+
+		// Update player name if provided and different
 		if name != "" && p.Name != name {
 			p.Name = name
 			updated = true
 		}
-		// If DeviceID changed or wasn't set (migration scenario)
+
+		// Update device ID if provided and different (handles device changes)
 		if deviceID != "" && p.DeviceID != deviceID {
 			p.DeviceID = deviceID
 			updated = true
 		}
 
+		// Persist changes if any fields were updated
 		if updated {
 			_ = database.UpdatePlayer(database.DBConn, p)
 		}
 	} else {
-		// 2. Try to find player by DeviceID (migration or first link)
+		// Stage 2: Player not found by UID, try to find by DeviceID
+		// This handles migration from device-based auth to Firebase auth
 		if deviceID != "" {
 			p, err = database.GetPlayerByDeviceID(database.DBConn, deviceID)
 			if err != nil {
@@ -111,31 +138,38 @@ func AuthenticatePlayerHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if p != nil {
-			// Found by DeviceID, but UID was empty. Link them.
+			// Player found by DeviceID - link their Firebase UID
 			p.UID = uid
 			if name != "" {
 				p.Name = name
 			}
+
+			// Update player record with Firebase UID linkage
 			_, err := database.DBConn.Exec(`UPDATE player_system.players SET uid=$1, name=$2, updated_at=NOW() WHERE id=$3`, uid, p.Name, p.ID)
 			if err != nil {
 				utils.WriteError(w, r, http.StatusInternalServerError, "failed to link uid: "+err.Error())
 				return
 			}
 		} else {
-			// 3. Create new player
+			// Stage 3: Player not found by UID or DeviceID - create new account
 			newPlayer := &models.Player{
 				UID:      uid,
 				Name:     name,
 				DeviceID: deviceID,
 			}
+
+			// Assign default name if none provided
 			if newPlayer.Name == "" {
 				newPlayer.Name = "Unknown Player"
 			}
+
+			// Device ID is required for new accounts
 			if newPlayer.DeviceID == "" {
 				utils.WriteError(w, r, http.StatusBadRequest, "device_id required for new account")
 				return
 			}
 
+			// Create the new player in the database
 			id, err := database.CreatePlayer(database.DBConn, newPlayer)
 			if err != nil {
 				utils.WriteError(w, r, http.StatusInternalServerError, "failed to create player: "+err.Error())
@@ -146,7 +180,7 @@ func AuthenticatePlayerHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Enrich with friends info
+	// Enrich player data with social information
 	friends, _ := database.GetFriends(database.DBConn, p.ID)
 	incoming, outgoing, _ := database.GetFriendRequests(database.DBConn, p.ID)
 
@@ -154,10 +188,11 @@ func AuthenticatePlayerHandler(w http.ResponseWriter, r *http.Request) {
 	p.IncomingFriendRequests = incoming
 	p.OutgoingFriendRequests = outgoing
 
-	// Generate WS Session Key
+	// Generate WebSocket authentication key for real-time communication
 	wsKey := utils.GenerateRandomString(32)
 	ws_player.GlobalPlayerWS.RegisterSession(p.ID, wsKey)
 
+	// Build response with player data and WebSocket credentials
 	response := map[string]interface{}{
 		"player":      p,
 		"ws_auth_key": wsKey,

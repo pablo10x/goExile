@@ -350,7 +350,10 @@ func (c *Client) handleMessage(msg WSMessage) {
 		var req struct {
 			InstanceID string `json:"instance_id"`
 		}
-		json.Unmarshal(msg.Payload, &req)
+		if err := json.Unmarshal(msg.Payload, &req); err != nil {
+			c.sendResponse(msg.RequestID, "error", nil, "invalid payload")
+			return
+		}
 		err := c.manager.StartInstance(req.InstanceID)
 		if err != nil {
 			c.sendResponse(msg.RequestID, "error", nil, err.Error())
@@ -362,7 +365,10 @@ func (c *Client) handleMessage(msg WSMessage) {
 		var req struct {
 			InstanceID string `json:"instance_id"`
 		}
-		json.Unmarshal(msg.Payload, &req)
+		if err := json.Unmarshal(msg.Payload, &req); err != nil {
+			c.sendResponse(msg.RequestID, "error", nil, "invalid payload")
+			return
+		}
 		err := c.manager.StopInstance(req.InstanceID)
 		if err != nil {
 			c.sendResponse(msg.RequestID, "error", nil, err.Error())
@@ -374,9 +380,12 @@ func (c *Client) handleMessage(msg WSMessage) {
 		var req struct {
 			InstanceID string `json:"instance_id"`
 		}
-		json.Unmarshal(msg.Payload, &req)
+		if err := json.Unmarshal(msg.Payload, &req); err != nil {
+			c.sendResponse(msg.RequestID, "error", nil, "invalid payload")
+			return
+		}
 
-		c.manager.StopInstance(req.InstanceID)
+		_ = c.manager.StopInstance(req.InstanceID) // Ignore stop error, it might already be stopped
 		err := c.manager.StartInstance(req.InstanceID)
 		if err != nil {
 			c.sendResponse(msg.RequestID, "error", nil, err.Error())
@@ -388,7 +397,10 @@ func (c *Client) handleMessage(msg WSMessage) {
 		var req struct {
 			InstanceID string `json:"instance_id"`
 		}
-		json.Unmarshal(msg.Payload, &req)
+		if err := json.Unmarshal(msg.Payload, &req); err != nil {
+			c.sendResponse(msg.RequestID, "error", nil, "invalid payload")
+			return
+		}
 		err := c.manager.RemoveInstance(req.InstanceID)
 		if err != nil {
 			c.sendResponse(msg.RequestID, "error", nil, err.Error())
@@ -424,7 +436,10 @@ func (c *Client) handleMessage(msg WSMessage) {
 		var req struct {
 			InstanceID string `json:"instance_id"`
 		}
-		json.Unmarshal(msg.Payload, &req)
+		if err := json.Unmarshal(msg.Payload, &req); err != nil {
+			c.sendResponse(msg.RequestID, "error", nil, "invalid payload")
+			return
+		}
 		history, err := c.manager.GetInstanceHistory(req.InstanceID)
 		if err != nil {
 			c.sendResponse(msg.RequestID, "error", nil, err.Error())
@@ -437,7 +452,10 @@ func (c *Client) handleMessage(msg WSMessage) {
 		var req struct {
 			InstanceID string `json:"instance_id"`
 		}
-		json.Unmarshal(msg.Payload, &req)
+		if err := json.Unmarshal(msg.Payload, &req); err != nil {
+			c.sendResponse(msg.RequestID, "error", nil, "invalid payload")
+			return
+		}
 		err := c.manager.UpdateInstance(req.InstanceID)
 		if err != nil {
 			c.sendResponse(msg.RequestID, "error", nil, err.Error())

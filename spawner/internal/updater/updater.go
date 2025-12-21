@@ -107,7 +107,9 @@ func EnsureInstalled(cfg *config.Config, logger *slog.Logger) error {
 	}
 
 	// 6. Make executable
-	_ = os.Chmod(fullBinaryPath, 0755)
+	if err := os.Chmod(fullBinaryPath, 0755); err != nil {
+		logger.Warn("Failed to set executable permissions", "path", fullBinaryPath, "error", err)
+	}
 
 	logger.Info("Game server downloaded and installed successfully", "version", version)
 	return nil
@@ -180,7 +182,9 @@ func UpdateTemplate(cfg *config.Config, logger *slog.Logger) (string, error) {
 
 	// 5. Re-apply permissions
 	fullBinaryPath := filepath.Join(cfg.GameInstallDir, cfg.GameBinaryPath)
-	_ = os.Chmod(fullBinaryPath, 0755)
+	if err := os.Chmod(fullBinaryPath, 0755); err != nil {
+		logger.Warn("Failed to set executable permissions on template", "path", fullBinaryPath, "error", err)
+	}
 
 	logger.Info("Template updated successfully", "version", remoteVersion)
 	return remoteVersion, nil
