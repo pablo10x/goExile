@@ -62,20 +62,13 @@
 
 	// Derived interception data to ensure everything stays in sync with Master center
 	let interceptionData = $derived.by(() => {
-		// Use the seed to generate new "random" positions but stay reactive to center
 		const s = interceptionSeed;
-		const offset = 120;
-		// Deterministic random-ish offsets based on seed
+		const offset = 140;
 		const rx = ((Math.sin(s * 123.45) + 1) / 2 - 0.5) * offset * 2;
 		const ry = ((Math.cos(s * 678.9) + 1) / 2 - 0.5) * offset * 2;
 
 		const tx = center.x + rx;
 		const ty = center.y + ry;
-
-		// Calculate curved paths relative to the start point (RedEye) for animateMotion
-		// animateMotion moves the element *relative* to its initial position.
-		// If the element is at (0,0), the path should be absolute coordinates.
-		// Let's make the path start exactly at RedEye and end at Target.
 
 		const midX1 = (redeyePos.x + tx) / 2;
 		const midY1 = (redeyePos.y + ty) / 2;
@@ -85,13 +78,15 @@
 		const px = -dy / dist;
 		const py = dx / dist;
 
-		const path1 = `M${redeyePos.x},${redeyePos.y} Q${midX1 + px * 60},${midY1 + py * 60} ${tx},${ty}`;
-		const path2 = `M${redeyePos.x},${redeyePos.y} Q${midX1 - px * 40},${midY1 - py * 40} ${tx},${ty}`;
+		// Missile paths
+		const path1 = `M${redeyePos.x},${redeyePos.y} Q${midX1 + px * 80},${midY1 + py * 80} ${tx},${ty}`;
+		const path2 = `M${redeyePos.x},${redeyePos.y} Q${midX1 - px * 60},${midY1 - py * 60} ${tx},${ty}`;
 
 		return {
 			target: { x: tx, y: ty },
 			path1,
-			path2
+			path2,
+			angle: Math.atan2(dy, dx) * (180 / Math.PI)
 		};
 	});
 
@@ -99,8 +94,8 @@
 		interceptionInterval = setInterval(() => {
 			interceptionSeed = Math.random();
 			showInterception = true;
-			setTimeout(() => (showInterception = false), 3500);
-		}, 7000);
+			setTimeout(() => (showInterception = false), 4000);
+		}, 8000);
 
 		if (containerElement) {
 			const updateDimensions = () => {
@@ -431,6 +426,32 @@
 						<stop offset="50%" style="stop-color:#64748b;stop-opacity:0.6" />
 						<stop offset="100%" style="stop-color:#64748b;stop-opacity:0.3" />
 					</linearGradient>
+
+					<!-- Missile Gradients -->
+					<linearGradient id="missileGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
+						<stop offset="0%" stop-color="#ef4444" stop-opacity="0" />
+						<stop offset="100%" stop-color="#fb923c" stop-opacity="1" />
+					</linearGradient>
+					<linearGradient id="missileGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+						<stop offset="0%" stop-color="#ef4444" stop-opacity="0" />
+						<stop offset="100%" stop-color="#ec4899" stop-opacity="1" />
+					</linearGradient>
+
+					<linearGradient id="masterBorderGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+						<stop offset="0%" class="master-border-top" />
+						<stop offset="100%" class="master-border-bottom" />
+					</linearGradient>
+
+					<linearGradient id="dataStreamGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+						<stop offset="0%" stop-color="#10b981" stop-opacity="0" />
+						<stop offset="50%" stop-color="#34d399" stop-opacity="1" />
+						<stop offset="100%" stop-color="#10b981" stop-opacity="0" />
+					</linearGradient>
+
+					<filter id="masterGlow">
+						<feGaussianBlur stdDeviation="3" result="blur" />
+						<feComposite in="SourceGraphic" in2="blur" operator="over" />
+					</filter>
 				</defs>
 
 				<!-- RedEye Connection -->
@@ -498,16 +519,32 @@
 							class="animate-threat-appear"
 							style="transform-box: fill-box; transform-origin: center;"
 						>
-							<rect
-								x={interceptionData.target.x - 15}
-								y={interceptionData.target.y - 15}
-								width="30"
-								height="30"
+							<path
+								d="M {interceptionData.target.x - 20} {interceptionData.target.y - 10} L {interceptionData.target.x - 20} {interceptionData.target.y - 20} L {interceptionData.target.x - 10} {interceptionData.target.y - 20}"
 								fill="none"
 								stroke="#ef4444"
-								stroke-width="1"
-								rx="4"
+								stroke-width="2"
 							/>
+							<path
+								d="M {interceptionData.target.x + 10} {interceptionData.target.y - 20} L {interceptionData.target.x + 20} {interceptionData.target.y - 20} L {interceptionData.target.x + 20} {interceptionData.target.y - 10}"
+								fill="none"
+								stroke="#ef4444"
+								stroke-width="2"
+							/>
+							<path
+								d="M {interceptionData.target.x + 20} {interceptionData.target.y + 10} L {interceptionData.target.x + 20} {interceptionData.target.y + 20} L {interceptionData.target.x + 10} {interceptionData.target.y + 20}"
+								fill="none"
+								stroke="#ef4444"
+								stroke-width="2"
+							/>
+							<path
+								d="M {interceptionData.target.x - 10} {interceptionData.target.y + 20} L {interceptionData.target.x - 20} {interceptionData.target.y + 20} L {interceptionData.target.x - 20} {interceptionData.target.y + 10}"
+								fill="none"
+								stroke="#ef4444"
+								stroke-width="2"
+							/>
+
+							<!-- Target Attacker (User Icon) - Destructible -->
 							<foreignObject
 								x={interceptionData.target.x - 12}
 								y={interceptionData.target.y - 12}
@@ -515,123 +552,142 @@
 								height="24"
 							>
 								<div class="flex items-center justify-center w-full h-full text-red-500">
-									<User class="w-full h-full" />
+									<User class="w-full h-full">
+										<animate attributeName="opacity" values="1;1;0" dur="1s" repeatCount="1" begin="0.8s" fill="freeze" />
+										<animateTransform attributeName="transform" type="scale" values="1;1.2;0" dur="1s" repeatCount="1" begin="0.8s" fill="freeze" />
+									</User>
 								</div>
 							</foreignObject>
 						</g>
 
-						<!-- Missile 1: Plasma Bolt (Orange) -->
-						<g>
-							<!-- Energy Trail (Drew along the path) -->
+						<!-- Launch Flare at RedEye -->
+						<g transform="translate({redeyePos.x}, {redeyePos.y})">
+							<circle r="10" fill="#ef4444" opacity="0">
+								<animate
+									attributeName="opacity"
+									values="0;1;0"
+									dur="0.3s"
+									repeatCount="1"
+									fill="freeze"
+								/>
+								<animate attributeName="r" values="5;20" dur="0.3s" repeatCount="1" fill="freeze" />
+							</circle>
+						</g>
+
+						<!-- Rocket 1 -->
+						<g class="rocket-ship">
+							<!-- Smoke Trail -->
 							<path
 								d={interceptionData.path1}
 								fill="none"
-								stroke="#fb923c"
-								stroke-width="3"
-								opacity="0.6"
+								stroke="#64748b"
+								stroke-width="2"
+								opacity="0.4"
 								stroke-dasharray="0, 1000"
 							>
-								<!-- Reveal the path as the missile travels -->
-								<animate
-									attributeName="stroke-dasharray"
-									from="0, 1000"
-									to="1000, 0"
-									dur="1s"
-									fill="freeze"
-								/>
-								<animate attributeName="stroke-dashoffset" from="0" to="0" dur="1s" fill="freeze" />
-								<animate attributeName="opacity" values="0.6;0" dur="1.5s" fill="freeze" />
+								<animate attributeName="stroke-dasharray" from="0, 1000" to="1000, 0" dur="0.8s" fill="freeze" />
+								<animate attributeName="opacity" values="0.4;0" dur="1.2s" fill="freeze" />
 							</path>
 
-							<!-- Bolt Head -->
-							<circle r="4" fill="#fb923c">
-								<animateMotion
-									dur="1s"
-									repeatCount="1"
-									path={interceptionData.path1}
-									fill="freeze"
-									rotate="auto"
-								/>
-							</circle>
-							<circle r="2" fill="#ffffff">
-								<animateMotion
-									dur="1s"
-									repeatCount="1"
-									path={interceptionData.path1}
-									fill="freeze"
-									rotate="auto"
-								/>
-							</circle>
+							<!-- The Rocket -->
+							<g>
+								<animateMotion dur="0.8s" repeatCount="1" path={interceptionData.path1} fill="freeze" rotate="auto" />
+								<!-- Body -->
+								<path d="M 10 0 L -6 -4 L -4 0 L -6 4 Z" fill="#334155" stroke="#ef4444" stroke-width="0.5" />
+								<!-- Nose -->
+								<path d="M 10 0 L 4 -2 L 4 2 Z" fill="#ef4444" />
+								<!-- Engine Flame -->
+								<path d="M -6 0 L -12 -3 L -10 0 L -12 3 Z" fill="#fb923c" class="missile-flame" />
+								<path d="M -6 0 L -9 -1.5 L -8 0 L -9 1.5 Z" fill="#ffffff" class="missile-flame" />
+							</g>
 						</g>
 
-						<!-- Missile 2: Plasma Bolt (Cyan) -->
-						<g>
-							<!-- Energy Trail -->
+						<!-- Rocket 2 -->
+						<g class="rocket-ship">
 							<path
 								d={interceptionData.path2}
 								fill="none"
-								stroke="#22d3ee"
-								stroke-width="3"
-								opacity="0.6"
+								stroke="#64748b"
+								stroke-width="2"
+								opacity="0.4"
 								stroke-dasharray="0, 1000"
 							>
-								<animate
-									attributeName="stroke-dasharray"
-									from="0, 1000"
-									to="1000, 0"
-									dur="1s"
-									fill="freeze"
-									begin="0.1s"
-								/>
-								<animate
-									attributeName="opacity"
-									values="0.6;0"
-									dur="1.5s"
-									fill="freeze"
-									begin="0.1s"
-								/>
+								<animate attributeName="stroke-dasharray" from="0, 1000" to="1000, 0" dur="0.8s" fill="freeze" begin="0.1s" />
+								<animate attributeName="opacity" values="0.4;0" dur="1.2s" fill="freeze" begin="0.1s" />
 							</path>
 
-							<!-- Bolt Head -->
-							<circle r="4" fill="#22d3ee">
-								<animateMotion
-									dur="1s"
-									repeatCount="1"
-									path={interceptionData.path2}
-									fill="freeze"
-									begin="0.1s"
-									rotate="auto"
-								/>
-							</circle>
-							<circle r="2" fill="#ffffff">
-								<animateMotion
-									dur="1s"
-									repeatCount="1"
-									path={interceptionData.path2}
-									fill="freeze"
-									begin="0.1s"
-									rotate="auto"
-								/>
-							</circle>
+							<g>
+								<animateMotion dur="0.8s" repeatCount="1" path={interceptionData.path2} fill="freeze" begin="0.1s" rotate="auto" />
+								<!-- Body -->
+								<path d="M 10 0 L -6 -4 L -4 0 L -6 4 Z" fill="#334155" stroke="#ef4444" stroke-width="0.5" />
+								<!-- Nose -->
+								<path d="M 10 0 L 4 -2 L 4 2 Z" fill="#ef4444" />
+								<!-- Engine Flame -->
+								<path d="M -6 0 L -12 -3 L -10 0 L -12 3 Z" fill="#fb923c" class="missile-flame" />
+								<path d="M -6 0 L -9 -1.5 L -8 0 L -9 1.5 Z" fill="#ffffff" class="missile-flame" />
+							</g>
 						</g>
 
-						<!-- Impact Blast -->
+						<!-- Impact Blast - Refined -->
 						<g transform="translate({interceptionData.target.x}, {interceptionData.target.y})">
+							<!-- Core Flash -->
+							<circle r="30" fill="#ffffff" opacity="0">
+								<animate
+									attributeName="opacity"
+									values="0;1;0"
+									dur="0.4s"
+									begin="0.75s"
+									fill="freeze"
+								/>
+								<animate attributeName="r" values="0;50" dur="0.4s" begin="0.75s" fill="freeze" />
+							</circle>
+
+							<!-- Explosion Cloud -->
+							<circle r="40" fill="#fb923c" opacity="0">
+								<animate attributeName="opacity" values="0;0.8;0" dur="0.8s" begin="0.8s" fill="freeze" />
+								<animate attributeName="r" values="10;60" dur="0.8s" begin="0.8s" fill="freeze" />
+							</circle>
+
+							<!-- Secondary Shockwave -->
 							<circle
-								r="40"
+								r="50"
 								fill="none"
-								stroke="#fb923c"
-								stroke-width="3"
+								stroke="#ef4444"
+								stroke-width="2"
 								class="animate-refined-blast"
 							>
 								<animate
 									attributeName="opacity"
 									values="0;1;0"
-									dur="2s"
+									dur="1.5s"
 									repeatCount="1"
-									begin="0.9s"
+									begin="0.8s"
 								/>
 							</circle>
+
+							<!-- Shatter Fragments (The "Attacker" breaking apart) -->
+							{#each Array(12) as _, i}
+								<rect width="4" height="4" fill="#ef4444">
+									<animate
+										attributeName="x"
+										from="0"
+										to={Math.cos(i * 30 * (Math.PI / 180)) * 80}
+										dur="1s"
+										begin="0.85s"
+										fill="freeze"
+									/>
+									<animate
+										attributeName="y"
+										from="0"
+										to={Math.sin(i * 30 * (Math.PI / 180)) * 80}
+										dur="1s"
+										begin="0.85s"
+										fill="freeze"
+									/>
+									<animateTransform attributeName="transform" type="rotate" from="0" to={Math.random() * 360} dur="1s" begin="0.85s" />
+									<animate attributeName="opacity" values="1;0" dur="1s" begin="0.85s" fill="freeze" />
+								</circle>
+							{/each}
 						</g>
 					</g>
 				{/if}
@@ -962,28 +1018,59 @@
 			<!-- RedEye Node (Cyber Sentinel) -->
 			<div
 				class="absolute z-30 flex flex-col items-center group cursor-pointer transition-all duration-300 hover:scale-110"
-				style="top: {redeyePos.y - 40}px; left: {redeyePos.x - 40}px;"
+				style="top: {redeyePos.y - 45}px; left: {redeyePos.x - 45}px;"
 			>
-				<div class="relative w-20 h-20 flex items-center justify-center">
-					<!-- Octagonal frame -->
-					<div
-						class="absolute inset-0 bg-white dark:bg-slate-950 border-2 border-red-600/40 shadow-[0_0_15px_rgba(239,68,68,0.2)] backdrop-blur-xl group-hover:border-red-500 group-hover:shadow-[0_0_30px_rgba(239,68,68,0.4)] transition-all duration-300"
-						style="clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"
-					></div>
+				<div class="relative w-[90px] h-[90px] flex items-center justify-center">
+					<!-- NEW Cyber Frame -->
+					<svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100">
+						<!-- Main Frame Outer -->
+						<path
+							d="M 25 5 L 75 5 L 95 25 L 95 75 L 75 95 L 25 95 L 5 75 L 5 25 Z"
+							fill="rgba(15, 23, 42, 0.6)"
+							stroke="#ef4444"
+							stroke-width="1.5"
+							stroke-opacity="0.4"
+							class="backdrop-blur-xl"
+						/>
+						<!-- Corner Brackets -->
+						<path d="M 25 5 L 10 5 L 5 20" fill="none" stroke="#ef4444" stroke-width="2.5" class="animate-pulse" />
+						<path d="M 75 5 L 90 5 L 95 20" fill="none" stroke="#ef4444" stroke-width="2.5" class="animate-pulse" />
+						<path d="M 5 80 L 10 95 L 25 95" fill="none" stroke="#ef4444" stroke-width="2.5" class="animate-pulse" />
+						<path d="M 95 80 L 90 95 L 75 95" fill="none" stroke="#ef4444" stroke-width="2.5" class="animate-pulse" />
+						
+						<!-- Internal decorative crosshair -->
+						<circle cx="50" cy="50" r="40" fill="none" stroke="#ef4444" stroke-width="0.5" stroke-dasharray="2 4" opacity="0.3" />
+					</svg>
 
-					<!-- Inner optical grid -->
-					<div class="absolute inset-2 opacity-5">
-						<div
-							class="w-full h-full"
-							style="background-image: radial-gradient(#ef4444 1.5px, transparent 0); background-size: 8px 8px;"
-						></div>
-					</div>
+					<!-- Rotating Outer Ring -->
+					<svg class="absolute inset-0 w-full h-full animate-spin-slow opacity-40">
+						<circle
+							cx="50"
+							cy="50"
+							r="42"
+							fill="none"
+							stroke="#ef4444"
+							stroke-width="1"
+							stroke-dasharray="10 20"
+						/>
+					</svg>
 
 					<!-- The Cyber Eye -->
 					<div
-						class="relative z-10 w-14 h-14 flex items-center justify-center filter drop-shadow-[0_0_10px_rgba(239,68,68,0.6)]"
+						class="relative z-10 w-16 h-16 flex items-center justify-center filter drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]"
 					>
 						<svg viewBox="0 0 100 100" class="w-full h-full">
+							<!-- Scanner Laser -->
+							<line
+								x1="10"
+								y1="50"
+								x2="90"
+								y2="50"
+								stroke="#ff0000"
+								stroke-width="1"
+								class="animate-scan-laser"
+							/>
+
 							<!-- Outer Shell -->
 							<circle
 								cx="50"
@@ -991,69 +1078,55 @@
 								r="45"
 								fill="none"
 								stroke="#ef4444"
-								stroke-width="1"
-								opacity="0.3"
-								stroke-dasharray="10,5"
-								class="animate-spin"
-								style="animation-duration: 15s"
+								stroke-width="1.5"
+								opacity="0.4"
+								stroke-dasharray="15,5"
 							/>
 
 							<!-- Main Lens -->
 							<path
-								d="M 10 50 Q 50 15 90 50 Q 50 85 10 50 Z"
-								fill="#1a0000"
+								d="M 10 50 Q 50 5 90 50 Q 50 95 10 50 Z"
+								fill="#000"
 								stroke="#ef4444"
-								stroke-width="2"
+								stroke-width="2.5"
 							/>
 
 							<!-- Iris Array -->
-							<g class="animate-pulse" style="animation-duration: 3s">
+							<g class={showInterception ? 'animate-pulse' : ''} style="animation-duration: 0.5s">
 								<circle
 									cx="50"
 									cy="50"
-									r="18"
+									r="22"
 									fill="none"
 									stroke="#ef4444"
 									stroke-width="1"
 									opacity="0.6"
 								/>
-								<circle cx="50" cy="50" r="12" fill="#7f1d1d" opacity="0.8" />
+								<circle cx="50" cy="50" r="15" fill="#450a0a" />
+								<circle
+									cx="50"
+									cy="50"
+									r="10"
+									fill={showInterception ? '#ff0000' : '#7f1d1d'}
+									class="transition-colors duration-200"
+								/>
 							</g>
 
-							<!-- Vertical Scan Lens -->
-							<rect x="48" y="30" width="4" height="40" fill="#ff0000" opacity="0.4" rx="2" />
-
-							<!-- Sharp Pupil -->
-							<path d="M 50 40 L 56 50 L 50 60 L 44 50 Z" fill="#ef4444" />
-
-							<!-- Telemetry Arcs -->
-							<path
-								d="M 20 20 A 40 40 0 0 1 40 10"
-								fill="none"
-								stroke="#ef4444"
-								stroke-width="2"
-								stroke-linecap="round"
-							/>
-							<path
-								d="M 80 80 A 40 40 0 0 1 60 90"
-								fill="none"
-								stroke="#ef4444"
-								stroke-width="2"
-								stroke-linecap="round"
-							/>
+							<!-- Pupil Details -->
+							<rect x="49" y="40" width="2" height="20" fill="#ffffff" opacity="0.8" rx="1" />
 						</svg>
 					</div>
 
 					<!-- Sentinel Status -->
 					<div
-						class="absolute -bottom-3 px-3 py-0.5 bg-slate-900 border border-red-500/30 rounded-full text-[7px] font-bold text-red-400 tracking-widest uppercase"
+						class="absolute -bottom-4 px-3 py-0.5 bg-red-950/80 border border-red-500/50 rounded-full text-[8px] font-black text-red-100 tracking-widest uppercase shadow-lg z-40"
 					>
-						{showInterception ? 'INTERCEPTING' : 'VIGILANT'}
+						{showInterception ? 'ENGAGED' : 'SCANNING'}
 					</div>
 				</div>
-				<div class="mt-6 flex flex-col items-center">
-					<span class="text-[9px] font-black text-red-500 tracking-[0.3em] uppercase opacity-80"
-						>REDEYE_SENTINEL</span
+				<div class="mt-8 flex flex-col items-center">
+					<span class="text-[10px] font-black text-red-500 tracking-[0.4em] uppercase opacity-90"
+						>REDEYE_CORE</span
 					>
 				</div>
 			</div>
@@ -1061,111 +1134,106 @@
 			<!-- Database Node (Quantum Persistence Core) -->
 			<div
 				class="absolute z-20 flex flex-col items-center group cursor-pointer transition-all duration-300 hover:scale-110"
-				style="top: {databasePos.y - 40}px; left: {databasePos.x - 40}px;"
+				style="top: {databasePos.y - 45}px; left: {databasePos.x - 45}px;"
 			>
-				<div class="relative w-20 h-20 flex items-center justify-center">
-					<!-- Multi-layered octagonal frame -->
-					<div
-						class="absolute inset-0 bg-white dark:bg-slate-950 border-2 border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.2)] backdrop-blur-xl group-hover:border-emerald-400 group-hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] transition-all duration-300"
-						style="clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"
-					></div>
-					<div
-						class="absolute inset-1 border border-emerald-400/20 animate-redeye-flicker"
-						style="clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"
-					></div>
+				<div class="relative w-[90px] h-[90px] flex items-center justify-center">
+					<!-- NEW Cyber Frame (Emerald) -->
+					<svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100">
+						<!-- Main Frame Outer -->
+						<path
+							d="M 25 5 L 75 5 L 95 25 L 95 75 L 75 95 L 25 95 L 5 75 L 5 25 Z"
+							fill="rgba(6, 78, 59, 0.4)"
+							stroke="#10b981"
+							stroke-width="1.5"
+							stroke-opacity="0.4"
+							class="backdrop-blur-xl"
+						/>
+						<!-- Corner Brackets -->
+						<path d="M 25 5 L 10 5 L 5 20" fill="none" stroke="#10b981" stroke-width="2.5" class="animate-pulse" />
+						<path d="M 75 5 L 90 5 L 95 20" fill="none" stroke="#10b981" stroke-width="2.5" class="animate-pulse" />
+						<path d="M 5 80 L 10 95 L 25 95" fill="none" stroke="#10b981" stroke-width="2.5" class="animate-pulse" />
+						<path d="M 95 80 L 90 95 L 75 95" fill="none" stroke="#10b981" stroke-width="2.5" class="animate-pulse" />
+						
+						<!-- Data stream ring -->
+						<circle cx="50" cy="50" r="42" fill="none" stroke="#10b981" stroke-width="0.5" stroke-dasharray="10 5" opacity="0.2">
+							<animateTransform attributeName="transform" type="rotate" from="360 50 50" to="0 50 50" dur="20s" repeatCount="indefinite" />
+						</circle>
+					</svg>
 
-					<!-- The "Monolith" SVG -->
-					<svg
-						viewBox="0 0 100 100"
-						class="w-14 h-14 relative z-10 filter drop-shadow-[0_0_10px_rgba(16,185,129,0.8)]"
+					<!-- Quantum Storage Cylinder Stack -->
+					<div
+						class="relative z-10 w-16 h-16 flex items-center justify-center filter drop-shadow-[0_0_15px_rgba(16,185,129,0.8)]"
 					>
-						<!-- Matrix Grid Pattern -->
-						<defs>
-							<pattern id="dbGrid" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
-								<rect
-									width="10"
-									height="10"
-									fill="none"
-									stroke="#10b981"
-									stroke-width="0.2"
-									opacity="0.3"
-								/>
-							</pattern>
-						</defs>
-						<circle cx="50" cy="50" r="35" fill="url(#dbGrid)" opacity="0.4" />
+						<svg viewBox="0 0 100 100" class="w-full h-full">
+							<!-- Bottom Plate -->
+							<ellipse cx="50" cy="75" rx="30" ry="10" fill="#064e3b" stroke="#10b981" />
 
-						<!-- Shifting Isometric Data Core -->
-						<g transform="translate(50, 50)">
-							<!-- Inner Core -->
-							<path
-								d="M 0 -20 L 18 -10 L 18 10 L 0 20 L -18 10 L -18 -10 Z"
-								fill="#064e3b"
+							<!-- Middle Plate 1 -->
+							<ellipse
+								cx="50"
+								cy="60"
+								rx="30"
+								ry="10"
+								fill="#065f46"
 								stroke="#10b981"
-								stroke-width="2"
 								class="animate-pulse"
 							/>
 
-							<!-- Floating Data Shards -->
-							<g class="animate-spin" style="animation-duration: 12s">
-								<rect x="-28" y="-5" width="6" height="6" fill="#34d399" opacity="0.8">
-									<animate
-										attributeName="y"
-										values="-5;-12;-5"
-										dur="2.5s"
-										repeatCount="indefinite"
-									/>
-								</rect>
-								<rect x="22" y="-5" width="6" height="6" fill="#34d399" opacity="0.6">
-									<animate
-										attributeName="y"
-										values="-12;-5;-12"
-										dur="3.5s"
-										repeatCount="indefinite"
-									/>
-								</rect>
-							</g>
-						</g>
+							<!-- Middle Plate 2 -->
+							<ellipse
+								cx="50"
+								cy="45"
+								rx="30"
+								ry="10"
+								fill="#065f46"
+								stroke="#10b981"
+								style="animation-delay: 0.5s"
+								class="animate-pulse"
+							/>
 
-						<!-- Vertical Data Flow -->
-						{#each Array(3) as _, i}
-							<circle r="1" fill="#6ee7b7">
-								<animateMotion
-									dur="{1.5 + i}s"
-									repeatCount="indefinite"
-									path="M {40 + i * 10} 20 L {40 + i * 10} 80"
-									begin="{i * 0.4}s"
-								/>
+							<!-- Top Plate -->
+							<ellipse cx="50" cy="30" rx="30" ry="10" fill="#059669" stroke="#34d399" />
+
+							<!-- Connecting Columns -->
+							<rect x="25" y="30" width="2" height="45" fill="#10b981" opacity="0.6" />
+							<rect x="73" y="30" width="2" height="45" fill="#10b981" opacity="0.6" />
+
+							<!-- Central Data Stream -->
+							<rect x="48" y="20" width="4" height="60" fill="url(#dataStreamGradient)" rx="2">
 								<animate
 									attributeName="opacity"
-									values="0;1;0"
-									dur="{1.5 + i}s"
+									values="0.3;1;0.3"
+									dur="2s"
 									repeatCount="indefinite"
 								/>
-							</circle>
-						{/each}
-					</svg>
+							</rect>
 
-					<!-- Outer energy resonance -->
+							<!-- Orbital Read/Write Heads -->
+							<g class="animate-spin" style="animation-duration: 4s">
+								<circle cx="85" cy="50" r="3" fill="#6ee7b7" />
+								<circle cx="15" cy="50" r="3" fill="#6ee7b7" />
+							</g>
+						</svg>
+					</div>
+
+					<!-- Resonance Ring -->
 					<div
-						class="absolute inset-0 border border-emerald-500/10 scale-125 animate-ping-slower opacity-20"
-						style="clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"
+						class="absolute inset-0 border border-emerald-500/20 scale-150 animate-ping-slower opacity-10"
 					></div>
 				</div>
-				<div class="mt-4 flex flex-col items-center">
+				<div class="mt-6 flex flex-col items-center">
 					<div class="flex items-center gap-2 mb-1">
-						<div
-							class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]"
-						></div>
-						<span class="text-[9px] font-black text-emerald-500 tracking-[0.3em] uppercase"
-							>DATABASE</span
+						<span
+							class="text-[10px] font-black text-emerald-500 tracking-[0.4em] uppercase opacity-90"
+							>QUANTUM_STORAGE</span
 						>
 					</div>
-					<div class="flex gap-0.5">
-						{#each Array(6) as _, i}
-							<div class="w-2 h-1 bg-emerald-900/40 rounded-sm overflow-hidden">
+					<div class="flex gap-1">
+						{#each Array(4) as _, i}
+							<div class="w-3 h-1 bg-emerald-900/60 rounded-full overflow-hidden">
 								<div
-									class="w-full h-full bg-emerald-500/80 animate-redeye-flicker"
-									style="animation-delay: {i * 0.15}s"
+									class="w-full h-full bg-emerald-400 animate-pulse"
+									style="animation-delay: {i * 0.2}s"
 								></div>
 							</div>
 						{/each}
@@ -1918,6 +1986,20 @@
 		animation: redeyeFlicker 0.2s infinite;
 	}
 
+	@keyframes missileFlame {
+		0%, 100% { transform: scaleY(1); opacity: 0.8; }
+		50% { transform: scaleY(1.5); opacity: 1; }
+	}
+
+	.missile-flame {
+		animation: missileFlame 0.1s ease-in-out infinite;
+		transform-origin: top;
+	}
+
+	.rocket-ship {
+		filter: drop-shadow(0 0 5px #ef4444);
+	}
+
 	@keyframes energySurge {
 		0% {
 			stroke-dashoffset: 100;
@@ -1980,5 +2062,34 @@
 		animation: refinedBlast 3s ease-out forwards;
 		transform-box: fill-box;
 		transform-origin: center;
+	}
+
+	@keyframes scanLaser {
+		0%,
+		100% {
+			transform: translateY(-30px);
+			opacity: 0;
+		}
+		50% {
+			transform: translateY(30px);
+			opacity: 0.8;
+		}
+	}
+
+	.animate-scan-laser {
+		animation: scanLaser 2s ease-in-out infinite;
+	}
+
+	@keyframes spin-slow {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	.animate-spin-slow {
+		animation: spin-slow 10s linear infinite;
 	}
 </style>

@@ -111,6 +111,12 @@ npm run dev   # Starts Vite dev server
 *   **`server/dashboard.go` & `server/auth.go`**: Core logic for Dashboard API and Authentication.
 
 ## 📝 Recent Context
+*   **Dashboard UI:**
+    *   Enhanced **SystemTopology** component:
+        *   Resized RedEye and Database nodes to be smaller than the Master node for better visual hierarchy.
+        *   Replaced hexagonal frames with custom SVG "Cyber Frames" featuring corner brackets.
+        *   Upgraded interception animation from plasma bolts to realistic rockets with flickering engine flames and smoke trails.
+        *   Added a cinematic "destruction" sequence where the attacker icon shatters and fades upon impact.
 *   **Bug Fixes:**
     *   Fixed a syntax error and missing `fmt` import in `server/auth/auth.go`.
     *   Removed an unreachable and incorrect `os.Chdir()` call in `spawner/main.go`.
