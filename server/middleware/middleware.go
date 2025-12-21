@@ -168,6 +168,26 @@ func UnifiedAuthMiddleware(apiKey string, authConfig auth.AuthConfig, sessionSto
 	}
 }
 
+// Auth_GameMiddleware secures Game Client communication using a specific Game API Key.
+func Auth_GameMiddleware(gameAPIKey string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if gameAPIKey == "" {
+				utils.WriteError(w, r, http.StatusServiceUnavailable, "game api key not configured on server")
+				return
+			}
+
+			clientKey := r.Header.Get("X-Game-API-Key")
+			if clientKey != gameAPIKey {
+				utils.WriteError(w, r, http.StatusUnauthorized, "invalid game api key")
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
 // SecurityHeadersMiddleware adds security-related headers to responses.
 func SecurityHeadersMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

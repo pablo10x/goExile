@@ -174,6 +174,7 @@ func run() error {
 	apiRouter := router.PathPrefix("/api/spawners").Subrouter()
 
 	apiKey := os.Getenv("MASTER_API_KEY")
+	gameAPIKey := os.Getenv("GAME_API_KEY")
 	isProduction := os.Getenv("PRODUCTION_MODE") == "true"
 
 	// Start WS Manager
@@ -186,9 +187,15 @@ func run() error {
 		if apiKey == "" {
 			log.Fatal("FATAL: MASTER_API_KEY must be set in production mode")
 		}
+		if gameAPIKey == "" {
+			log.Fatal("FATAL: GAME_API_KEY must be set in production mode")
+		}
 	} else {
 		if apiKey == "" {
 			apiKey = "dev_master_key" // Default for development
+		}
+		if gameAPIKey == "" {
+			gameAPIKey = "dev_game_key" // Default for development
 		}
 	}
 
@@ -222,6 +229,19 @@ func run() error {
 	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/stats/history", handlers.GetInstanceHistory).Methods("GET")
 	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/history", handlers.GetInstanceHistoryActions).Methods("GET")
 	apiRouter.HandleFunc("/{id}/update-template", handlers.UpdateSpawnerTemplate).Methods("POST")
+
+	// Game client routes - Secured via Game API Key
+	gameRouter := router.PathPrefix("/api/game").Subrouter()
+	gameRouter.Use(middleware.Auth_GameMiddleware(gameAPIKey))
+
+	gameRouter.Handle("/auth", http.HandlerFunc(handlers.AuthenticatePlayerHandler)).Methods("POST")
+	gameRouter.Handle("/ws", http.HandlerFunc(ws_player.GlobalPlayerWS.HandleWS))
+	gameRouter.Handle("/players", http.HandlerFunc(handlers.ListAllPlayersHandler)).Methods("GET")
+	gameRouter.Handle("/players", http.HandlerFunc(handlers.CreateOrGetPlayerHandler)).Methods("POST")
+	gameRouter.Handle("/players/{id}", http.HandlerFunc(handlers.GetPlayerDetailsHandler)).Methods("GET")
+	gameRouter.Handle("/friends/request", http.HandlerFunc(handlers.SendFriendRequestHandler)).Methods("POST")
+	gameRouter.Handle("/friends/accept", http.HandlerFunc(handlers.AcceptFriendRequestHandler)).Methods("POST")
+	gameRouter.Handle("/reports", http.HandlerFunc(handlers.CreateReportHandler)).Methods("POST")
 
 	// Liveness check
 	router.HandleFunc("/health", handlers.Health).Methods("GET")
@@ -382,19 +402,18 @@ func run() error {
 		// AI Bot API
 		router.Handle("/api/ai/chat", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.AIChatHandler))).Methods("POST")
 
-		// Game Player System
-		router.Handle("/api/game/auth", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.AuthenticatePlayerHandler))).Methods("POST")
-		router.Handle("/api/game/ws", http.HandlerFunc(ws_player.GlobalPlayerWS.HandleWS)) // WebSocket Endpoint
-		router.Handle("/api/game/players", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ListAllPlayersHandler))).Methods("GET")
-		router.Handle("/api/game/players", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.CreateOrGetPlayerHandler))).Methods("POST")
-		router.Handle("/api/game/players/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.GetPlayerDetailsHandler))).Methods("GET")
-		
-		router.Handle("/api/game/friends/request", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.SendFriendRequestHandler))).Methods("POST")
-		router.Handle("/api/game/friends/accept", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.AcceptFriendRequestHandler))).Methods("POST")
+		// Game client routes - Secured via Game API Key
+		gameRouter := router.PathPrefix("/api/game").Subrouter()
+		gameRouter.Use(middleware.Auth_GameMiddleware(gameAPIKey))
 
-		// Reports
-		router.Handle("/api/game/reports", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.CreateReportHandler))).Methods("POST")
-		router.Handle("/api/reports", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ListReportsHandler))).Methods("GET")
+		gameRouter.Handle("/auth", http.HandlerFunc(handlers.AuthenticatePlayerHandler)).Methods("POST")
+		gameRouter.Handle("/ws", http.HandlerFunc(ws_player.GlobalPlayerWS.HandleWS))
+		gameRouter.Handle("/players", http.HandlerFunc(handlers.ListAllPlayersHandler)).Methods("GET")
+		gameRouter.Handle("/players", http.HandlerFunc(handlers.CreateOrGetPlayerHandler)).Methods("POST")
+		gameRouter.Handle("/players/{id}", http.HandlerFunc(handlers.GetPlayerDetailsHandler)).Methods("GET")
+		gameRouter.Handle("/friends/request", http.HandlerFunc(handlers.SendFriendRequestHandler)).Methods("POST")
+		gameRouter.Handle("/friends/accept", http.HandlerFunc(handlers.AcceptFriendRequestHandler)).Methods("POST")
+		gameRouter.Handle("/reports", http.HandlerFunc(handlers.CreateReportHandler)).Methods("POST")
 	}
 
 	// Enrollment endpoints (public - enrollment key IS the auth)

@@ -170,19 +170,12 @@ The following security improvements have been implemented:
 *   **RedEye Performance:** Added a new "RedEye Guardian" card and detailed metrics modal to the Performance tab, tracking real-time blocks, rate-limiting, and active bans.
 ### Game Player System
 *   **Schema:** Implemented a new `player_system` database schema to isolate player data.
-*   **Entities:** Added `players`, `friendships`, `friend_requests`, and `reports` tables. Added `uid` column to `players` table for Firebase integration.
-*   **API:**
-    *   `POST /api/game/auth`: Authenticates a player via Firebase ID Token, links UID, and returns full player profile.
-    *   `POST /api/game/players`: Register or Login via `device_id` (Legacy/Dev).
-    *   `GET /api/game/players/{id}`: Get player details with friends lists.
-    *   `POST /api/game/friends/request`: Send a friend request.
-    *   `POST /api/game/friends/accept`: Accept a friend request.
-    *   `POST /api/game/reports`: Create a new user report.
-    *   `GET /api/reports`: List all user reports.
-*   **Frontend**:
-    *   **Users Page**: Implemented a comprehensive user management page with tabs for "Players" and "Reports".
-    *   **Player Details**: Created a detailed player profile page (`/users/[id]`) showing stats, device info, and social graph (friends/requests).
-*   **Integration:** Initialized schema creation in `main.go` startup sequence.
+*   **Entities:** Added `players`, `friendships`, and `friend_requests` tables. Added `uid` column to `players` table for Firebase integration.
+*   **Authentication & Security**:
+    *   `Auth_GameMiddleware`: A dedicated middleware for game clients that enforces authentication via `X-Game-API-Key` header, validated against the `GAME_API_KEY` environment variable.
+    *   `POST /api/game/auth`: Authenticates a player via Firebase ID Token, links UID, returns full player profile, and provides a temporary `ws_auth_key` for WebSocket connection.
+    *   `GET /api/game/ws`: WebSocket endpoint for real-time player communication (requires `key` query param).
+
 
 ### Firebase Remote Config
 *   **Feature:** Implemented full CRUD support for Firebase Remote Config from the dashboard. Users can now create, update, delete, and sync parameters directly via the `/config` page.
