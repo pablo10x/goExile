@@ -2,6 +2,11 @@
 
 This document outlines the API endpoints and WebSocket protocol for the game client to interact with the Master Server.
 
+## Security
+
+All API requests must include the Game API Key in the header:
+`X-Game-API-Key: <YOUR_GAME_API_KEY>`
+
 ## Authentication
 
 ### 1. Authenticate Player (`POST /api/game/auth`)
@@ -131,8 +136,3 @@ All WebSocket messages follow this envelope:
   }
 }
 ```
-
-## Player System (REST)
-
-### Get Player Details (`GET /api/game/players/{id}`)
-Returns public details of a player.
