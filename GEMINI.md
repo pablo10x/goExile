@@ -173,7 +173,7 @@ The following security improvements have been implemented:
 *   **Entities:** Added `players`, `friendships`, and `friend_requests` tables. Added `uid` column to `players` table for Firebase integration.
 *   **Authentication & Security**:
     *   `Auth_GameMiddleware`: A dedicated middleware for game clients that enforces authentication via `X-Game-API-Key`.
-    *   `POST /api/game/auth`: Authenticates a player via Firebase ID Token (Game Client).
+    *   `POST /api/game/auth`: Authenticates a player via Firebase ID Token using the **Firebase Admin SDK** for robust production-ready verification. It links UID, returns full player profile, and provides a temporary `ws_auth_key`.
     *   `GET /api/game/ws`: WebSocket endpoint for real-time player communication (Game Client).
     *   `GET /api/game/players`: List all players (Dashboard - Session Protected).
     *   `GET /api/game/players/{id}`: Get player details (Dashboard - Session Protected).
