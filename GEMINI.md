@@ -308,3 +308,17 @@ The RedEye system, as implemented in `server/redeye_core.go` and `server/handler
 While separating services can offer benefits like independent scalability and improved modularity, these advantages would likely require a substantial re-architecture of RedEye (e.g., transitioning to an event-driven model, introducing a dedicated, synchronized database) to overcome the challenges posed by its current deep integration. The current implementation does not indicate that RedEye's resource consumption or operational independence is a significant bottleneck that would justify such a complex undertaking.
 
 Therefore, for the current architecture, RedEye is most appropriately managed as an internal component of the Master Server.
+## 🎨 Style Guide
+
+### Terminal Theme
+*   **Background:** Deep charcoal (#0a0a0a) or tactical gray (#121212) with radial vignette overlays.
+*   **Typography:** 
+    *   Primary: Bold, uppercase sans-serif (Inter) for headlines and high-level subjects.
+    *   Secondary: Strict monospace (JetBrains Mono) for technical data, logs, and metadata.
+*   **Palette:**
+    *   Primary: Tactical Amber/Orange (#f97316).
+    *   Secondary: Alert Red (#ef4444) for faults and critical actions.
+    *   Neutral: Slate Gray (#a0a0a0) and Deep Steel (#1a1a1a).
+*   **UI Structure:** Horizontally aligned data cards resembling intelligence briefings or intercepted transmissions. Minimal 1px borders and low-opacity separators.
+*   **Atmosphere:** Subtle CRT scanlines (low opacity), soft radial vignette, and cinematic warm-up animations. No noise texture for maximum readability.
+*   **Feel:** Professional command-center, surveillance-driven, dystopian, and authoritative. AAA game cinematic intelligence interface.

@@ -49,13 +49,5 @@
 		"prettier-plugin-tailwindcss": "^0.7.2",
 		"svelte-tiny-virtual-list": "^2.0.0"
 	},
-	"pnpm": {
-		"ignoredBuiltDependencies": [
-			"esbuild",
-			"svelte-preprocess"
-		],
-		"onlyBuiltDependencies": [
-			"esbuild"
-		]
-	}
+	"packageManager": "yarn@4.5.3"
 }

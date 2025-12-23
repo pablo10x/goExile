@@ -8,11 +8,11 @@
 	let center = $state({ x: 300, y: 300 }); // Master node position
 	let spawnerRadius = $state(250); // Radius for spawner placement around the master
 
-	// RedEye and Database node positions (relative to master)
-	let redeyePos = $derived({ x: center.x - 220, y: center.y + 120 });
-	let databasePos = $derived({ x: center.x + 220, y: center.y + 120 });
+	                              // RedEye and Database node positions (relative to master)
 
-	// Track heartbeats for pulse animation
+	                              let redeyePos = $derived({ x: center.x - 220, y: center.y + 160 });
+
+	                              let databasePos = $derived({ x: center.x + 220, y: center.y + 160 });	// Track heartbeats for pulse animation
 	let lastHeartbeats: Record<number, number> = $state({});
 	let pulsingSpawners: Set<number> = $state(new Set());
 	let masterReceiving = $state(false); // Track when master receives spark
@@ -55,48 +55,7 @@
 		delay: Math.random() * 3
 	}));
 
-	// RedEye Interception State
-	let showInterception = $state(false);
-	let interceptionSeed = $state(0); // Used to trigger re-calculation of random values
-	let interceptionInterval: ReturnType<typeof setInterval>;
-
-	// Derived interception data to ensure everything stays in sync with Master center
-	let interceptionData = $derived.by(() => {
-		const s = interceptionSeed;
-		const offset = 140;
-		const rx = ((Math.sin(s * 123.45) + 1) / 2 - 0.5) * offset * 2;
-		const ry = ((Math.cos(s * 678.9) + 1) / 2 - 0.5) * offset * 2;
-
-		const tx = center.x + rx;
-		const ty = center.y + ry;
-
-		const midX1 = (redeyePos.x + tx) / 2;
-		const midY1 = (redeyePos.y + ty) / 2;
-		const dx = tx - redeyePos.x;
-		const dy = ty - redeyePos.y;
-		const dist = Math.sqrt(dx * dx + dy * dy);
-		const px = -dy / dist;
-		const py = dx / dist;
-
-		// Missile paths
-		const path1 = `M${redeyePos.x},${redeyePos.y} Q${midX1 + px * 80},${midY1 + py * 80} ${tx},${ty}`;
-		const path2 = `M${redeyePos.x},${redeyePos.y} Q${midX1 - px * 60},${midY1 - py * 60} ${tx},${ty}`;
-
-		return {
-			target: { x: tx, y: ty },
-			path1,
-			path2,
-			angle: Math.atan2(dy, dx) * (180 / Math.PI)
-		};
-	});
-
 	onMount(() => {
-		interceptionInterval = setInterval(() => {
-			interceptionSeed = Math.random();
-			showInterception = true;
-			setTimeout(() => (showInterception = false), 4000);
-		}, 8000);
-
 		if (containerElement) {
 			const updateDimensions = () => {
 				const rect = containerElement.getBoundingClientRect();
@@ -280,8 +239,11 @@
 		return `M${startX},${startY} Q${controlX},${controlY} ${endX},${endY}`;
 	}
 
-	function getBusPath(startX: number, startY: number, endX: number, endY: number) {
-		// Create a right-angled "circuit board" style path
+	          function getStraightPath(startX: number, startY: number, endX: number, endY: number) {
+	                  return `M${startX},${startY} L${endX},${endY}`;
+	          }
+	
+	          function getBusPath(startX: number, startY: number, endX: number, endY: number) {		// Create a right-angled "circuit board" style path
 		// Horizontal then Vertical
 		const midY = (startY + endY) / 2;
 		return `M${startX},${startY} L${startX},${midY} L${endX},${midY} L${endX},${endY}`;
@@ -437,6 +399,12 @@
 						<stop offset="100%" stop-color="#ec4899" stop-opacity="1" />
 					</linearGradient>
 
+					<!-- Missile Body Gradient -->
+					<linearGradient id="missileBodyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+						<stop offset="0%" stop-color="#ef4444" stop-opacity="0.3" />
+						<stop offset="100%" stop-color="#fb923c" stop-opacity="0.1" />
+					</linearGradient>
+
 					<linearGradient id="masterBorderGradient" x1="0%" y1="0%" x2="0%" y2="100%">
 						<stop offset="0%" class="master-border-top" />
 						<stop offset="100%" class="master-border-bottom" />
@@ -454,246 +422,9 @@
 					</filter>
 				</defs>
 
-				<!-- RedEye Connection -->
-				<path
-					d={getBusPath(redeyePos.x, redeyePos.y, center.x, center.y)}
-					stroke="#ef4444"
-					stroke-width="3"
-					opacity="0.1"
-					fill="none"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				/>
-				<path
-					d={getBusPath(redeyePos.x, redeyePos.y, center.x, center.y)}
-					stroke="#ef4444"
-					stroke-width="2"
-					fill="none"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					class="animate-energy-surge"
-				/>
-				<path
-					d={getBusPath(redeyePos.x, redeyePos.y, center.x, center.y)}
-					stroke="#ff0000"
-					stroke-width="1"
-					opacity="0.5"
-					fill="none"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					class="animate-redeye-flicker"
-				/>
+				                                                                                                      <!-- Master Connection to Spawners -->
 
-				<!-- Database Connection -->
-				<path
-					d={getBusPath(databasePos.x, databasePos.y, center.x, center.y)}
-					stroke="#10b981"
-					stroke-width="3"
-					opacity="0.4"
-					fill="none"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				/>
-				<path
-					d={getBusPath(databasePos.x, databasePos.y, center.x, center.y)}
-					stroke="#10b981"
-					stroke-width="1"
-					opacity="0.8"
-					fill="none"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				>
-					<animate
-						attributeName="stroke-dasharray"
-						values="0, 100; 100, 0"
-						dur="4s"
-						repeatCount="indefinite"
-					/>
-				</path>
-
-				<!-- RedEye Interception (Global SVG) -->
-				{#if showInterception}
-					<g filter="url(#strongGlow)" style="pointer-events: none;">
-						<!-- Threat Reticle -->
-						<g
-							class="animate-threat-appear"
-							style="transform-box: fill-box; transform-origin: center;"
-						>
-							<path
-								d="M {interceptionData.target.x - 20} {interceptionData.target.y - 10} L {interceptionData.target.x - 20} {interceptionData.target.y - 20} L {interceptionData.target.x - 10} {interceptionData.target.y - 20}"
-								fill="none"
-								stroke="#ef4444"
-								stroke-width="2"
-							/>
-							<path
-								d="M {interceptionData.target.x + 10} {interceptionData.target.y - 20} L {interceptionData.target.x + 20} {interceptionData.target.y - 20} L {interceptionData.target.x + 20} {interceptionData.target.y - 10}"
-								fill="none"
-								stroke="#ef4444"
-								stroke-width="2"
-							/>
-							<path
-								d="M {interceptionData.target.x + 20} {interceptionData.target.y + 10} L {interceptionData.target.x + 20} {interceptionData.target.y + 20} L {interceptionData.target.x + 10} {interceptionData.target.y + 20}"
-								fill="none"
-								stroke="#ef4444"
-								stroke-width="2"
-							/>
-							<path
-								d="M {interceptionData.target.x - 10} {interceptionData.target.y + 20} L {interceptionData.target.x - 20} {interceptionData.target.y + 20} L {interceptionData.target.x - 20} {interceptionData.target.y + 10}"
-								fill="none"
-								stroke="#ef4444"
-								stroke-width="2"
-							/>
-
-							<!-- Target Attacker (User Icon) - Destructible -->
-							<foreignObject
-								x={interceptionData.target.x - 12}
-								y={interceptionData.target.y - 12}
-								width="24"
-								height="24"
-							>
-								<div class="flex items-center justify-center w-full h-full text-red-500">
-									<User class="w-full h-full">
-										<animate attributeName="opacity" values="1;1;0" dur="1s" repeatCount="1" begin="0.8s" fill="freeze" />
-										<animateTransform attributeName="transform" type="scale" values="1;1.2;0" dur="1s" repeatCount="1" begin="0.8s" fill="freeze" />
-									</User>
-								</div>
-							</foreignObject>
-						</g>
-
-						<!-- Launch Flare at RedEye -->
-						<g transform="translate({redeyePos.x}, {redeyePos.y})">
-							<circle r="10" fill="#ef4444" opacity="0">
-								<animate
-									attributeName="opacity"
-									values="0;1;0"
-									dur="0.3s"
-									repeatCount="1"
-									fill="freeze"
-								/>
-								<animate attributeName="r" values="5;20" dur="0.3s" repeatCount="1" fill="freeze" />
-							</circle>
-						</g>
-
-						<!-- Rocket 1 -->
-						<g class="rocket-ship">
-							<!-- Smoke Trail -->
-							<path
-								d={interceptionData.path1}
-								fill="none"
-								stroke="#64748b"
-								stroke-width="2"
-								opacity="0.4"
-								stroke-dasharray="0, 1000"
-							>
-								<animate attributeName="stroke-dasharray" from="0, 1000" to="1000, 0" dur="0.8s" fill="freeze" />
-								<animate attributeName="opacity" values="0.4;0" dur="1.2s" fill="freeze" />
-							</path>
-
-							<!-- The Rocket -->
-							<g>
-								<animateMotion dur="0.8s" repeatCount="1" path={interceptionData.path1} fill="freeze" rotate="auto" />
-								<!-- Body -->
-								<path d="M 10 0 L -6 -4 L -4 0 L -6 4 Z" fill="#334155" stroke="#ef4444" stroke-width="0.5" />
-								<!-- Nose -->
-								<path d="M 10 0 L 4 -2 L 4 2 Z" fill="#ef4444" />
-								<!-- Engine Flame -->
-								<path d="M -6 0 L -12 -3 L -10 0 L -12 3 Z" fill="#fb923c" class="missile-flame" />
-								<path d="M -6 0 L -9 -1.5 L -8 0 L -9 1.5 Z" fill="#ffffff" class="missile-flame" />
-							</g>
-						</g>
-
-						<!-- Rocket 2 -->
-						<g class="rocket-ship">
-							<path
-								d={interceptionData.path2}
-								fill="none"
-								stroke="#64748b"
-								stroke-width="2"
-								opacity="0.4"
-								stroke-dasharray="0, 1000"
-							>
-								<animate attributeName="stroke-dasharray" from="0, 1000" to="1000, 0" dur="0.8s" fill="freeze" begin="0.1s" />
-								<animate attributeName="opacity" values="0.4;0" dur="1.2s" fill="freeze" begin="0.1s" />
-							</path>
-
-							<g>
-								<animateMotion dur="0.8s" repeatCount="1" path={interceptionData.path2} fill="freeze" begin="0.1s" rotate="auto" />
-								<!-- Body -->
-								<path d="M 10 0 L -6 -4 L -4 0 L -6 4 Z" fill="#334155" stroke="#ef4444" stroke-width="0.5" />
-								<!-- Nose -->
-								<path d="M 10 0 L 4 -2 L 4 2 Z" fill="#ef4444" />
-								<!-- Engine Flame -->
-								<path d="M -6 0 L -12 -3 L -10 0 L -12 3 Z" fill="#fb923c" class="missile-flame" />
-								<path d="M -6 0 L -9 -1.5 L -8 0 L -9 1.5 Z" fill="#ffffff" class="missile-flame" />
-							</g>
-						</g>
-
-						<!-- Impact Blast - Refined -->
-						<g transform="translate({interceptionData.target.x}, {interceptionData.target.y})">
-							<!-- Core Flash -->
-							<circle r="30" fill="#ffffff" opacity="0">
-								<animate
-									attributeName="opacity"
-									values="0;1;0"
-									dur="0.4s"
-									begin="0.75s"
-									fill="freeze"
-								/>
-								<animate attributeName="r" values="0;50" dur="0.4s" begin="0.75s" fill="freeze" />
-							</circle>
-
-							<!-- Explosion Cloud -->
-							<circle r="40" fill="#fb923c" opacity="0">
-								<animate attributeName="opacity" values="0;0.8;0" dur="0.8s" begin="0.8s" fill="freeze" />
-								<animate attributeName="r" values="10;60" dur="0.8s" begin="0.8s" fill="freeze" />
-							</circle>
-
-							<!-- Secondary Shockwave -->
-							<circle
-								r="50"
-								fill="none"
-								stroke="#ef4444"
-								stroke-width="2"
-								class="animate-refined-blast"
-							>
-								<animate
-									attributeName="opacity"
-									values="0;1;0"
-									dur="1.5s"
-									repeatCount="1"
-									begin="0.8s"
-								/>
-							</circle>
-
-							<!-- Shatter Fragments (The "Attacker" breaking apart) -->
-							{#each Array(12) as _, i}
-								<rect width="4" height="4" fill="#ef4444">
-									<animate
-										attributeName="x"
-										from="0"
-										to={Math.cos(i * 30 * (Math.PI / 180)) * 80}
-										dur="1s"
-										begin="0.85s"
-										fill="freeze"
-									/>
-									<animate
-										attributeName="y"
-										from="0"
-										to={Math.sin(i * 30 * (Math.PI / 180)) * 80}
-										dur="1s"
-										begin="0.85s"
-										fill="freeze"
-									/>
-									<animateTransform attributeName="transform" type="rotate" from="0" to={Math.random() * 360} dur="1s" begin="0.85s" />
-									<animate attributeName="opacity" values="1;0" dur="1s" begin="0.85s" fill="freeze" />
-								</rect>
-							{/each}
-						</g>
-					</g>
-				{/if}
-
-				<!-- Connections -->
-				{#each $spawners as spawner, i (spawner.id)}
+				                                                                                                      {#each $spawners as spawner, i (spawner.id)}
 					{@const pos = getPosition(i, $spawners.length)}
 					{@const isActive = spawner.status === 'online' || spawner.status === 'Online'}
 					{@const connectionPathD = getConnectionPath(pos.x, pos.y, center.x, center.y)}
@@ -1015,231 +746,422 @@
 				</div>
 			</div>
 
-			<!-- RedEye Node (Cyber Sentinel) -->
-			<div
-				class="absolute z-30 flex flex-col items-center group cursor-pointer transition-all duration-300 hover:scale-110"
-				style="top: {redeyePos.y - 45}px; left: {redeyePos.x - 45}px;"
-			>
-				<div class="relative w-[90px] h-[90px] flex items-center justify-center">
-					<!-- NEW Cyber Frame -->
-					<svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100">
-						<!-- Main Frame Outer -->
-						<path
-							d="M 25 5 L 75 5 L 95 25 L 95 75 L 75 95 L 25 95 L 5 75 L 5 25 Z"
-							fill="rgba(15, 23, 42, 0.6)"
-							stroke="#ef4444"
-							stroke-width="1.5"
-							stroke-opacity="0.4"
-							class="backdrop-blur-xl"
-						/>
-						<!-- Corner Brackets -->
-						<path d="M 25 5 L 10 5 L 5 20" fill="none" stroke="#ef4444" stroke-width="2.5" class="animate-pulse" />
-						<path d="M 75 5 L 90 5 L 95 20" fill="none" stroke="#ef4444" stroke-width="2.5" class="animate-pulse" />
-						<path d="M 5 80 L 10 95 L 25 95" fill="none" stroke="#ef4444" stroke-width="2.5" class="animate-pulse" />
-						<path d="M 95 80 L 90 95 L 75 95" fill="none" stroke="#ef4444" stroke-width="2.5" class="animate-pulse" />
+			                                                                              <!-- RedEye Node (Cyber Sentinel) - REDUCED SIZE -->
 
-						<!-- Internal decorative crosshair -->
-						<circle cx="50" cy="50" r="40" fill="none" stroke="#ef4444" stroke-width="0.5" stroke-dasharray="2 4" opacity="0.3" />
-					</svg>
+			                                                                              <div
 
-					<!-- Rotating Outer Ring -->
-					<svg class="absolute inset-0 w-full h-full animate-spin-slow opacity-40">
-						<circle
-							cx="50"
-							cy="50"
-							r="42"
-							fill="none"
-							stroke="#ef4444"
-							stroke-width="1"
-							stroke-dasharray="10 20"
-						/>
-					</svg>
+			                                                                                      class="absolute z-30 flex flex-col items-center group cursor-pointer transition-all duration-300 hover:scale-110"
 
-					<!-- The Cyber Eye -->
-					<div
-						class="relative z-10 w-16 h-16 flex items-center justify-center filter drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]"
-					>
-						<svg viewBox="0 0 100 100" class="w-full h-full">
-							<!-- Scanner Laser -->
-							<line
-								x1="10"
-								y1="50"
-								x2="90"
-								y2="50"
-								stroke="#ff0000"
-								stroke-width="1"
-								class="animate-scan-laser"
-							/>
+			                                                                                      style="top: {redeyePos.y - 30}px; left: {redeyePos.x - 30}px;"
 
-							<!-- Outer Shell -->
-							<circle
-								cx="50"
-								cy="50"
-								r="45"
-								fill="none"
-								stroke="#ef4444"
-								stroke-width="1.5"
-								opacity="0.4"
-								stroke-dasharray="15,5"
-							/>
+			                                                                              >
 
-							<!-- Main Lens -->
-							<path
-								d="M 10 50 Q 50 5 90 50 Q 50 95 10 50 Z"
-								fill="#000"
-								stroke="#ef4444"
-								stroke-width="2.5"
-							/>
+			                                                                                      <div class="relative w-[60px] h-[60px] flex items-center justify-center">
 
-							<!-- Iris Array -->
-							<g class={showInterception ? 'animate-pulse' : ''} style="animation-duration: 0.5s">
-								<circle
-									cx="50"
-									cy="50"
-									r="22"
-									fill="none"
-									stroke="#ef4444"
-									stroke-width="1"
-									opacity="0.6"
-								/>
-								<circle cx="50" cy="50" r="15" fill="#450a0a" />
-								<circle
-									cx="50"
-									cy="50"
-									r="10"
-									fill={showInterception ? '#ff0000' : '#7f1d1d'}
-									class="transition-colors duration-200"
-								/>
-							</g>
+			                                                                                              <!-- NEW Cyber Frame -->
 
-							<!-- Pupil Details -->
-							<rect x="49" y="40" width="2" height="20" fill="#ffffff" opacity="0.8" rx="1" />
-						</svg>
-					</div>
+			                                                                                              <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100">
 
-					<!-- Sentinel Status -->
-					<div
-						class="absolute -bottom-4 px-3 py-0.5 bg-red-950/80 border border-red-500/50 rounded-full text-[8px] font-black text-red-100 tracking-widest uppercase shadow-lg z-40"
-					>
-						{showInterception ? 'ENGAGED' : 'SCANNING'}
-					</div>
-				</div>
-				<div class="mt-8 flex flex-col items-center">
-					<span class="text-[10px] font-black text-red-500 tracking-[0.4em] uppercase opacity-90"
-						>REDEYE_CORE</span
-					>
-				</div>
-			</div>
+			                                                                                                      <!-- Main Frame Outer -->
 
-			<!-- Database Node (Quantum Persistence Core) -->
-			<div
-				class="absolute z-20 flex flex-col items-center group cursor-pointer transition-all duration-300 hover:scale-110"
-				style="top: {databasePos.y - 45}px; left: {databasePos.x - 45}px;"
-			>
-				<div class="relative w-[90px] h-[90px] flex items-center justify-center">
-					<!-- NEW Cyber Frame (Emerald) -->
-					<svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100">
-						<!-- Main Frame Outer -->
-						<path
-							d="M 25 5 L 75 5 L 95 25 L 95 75 L 75 95 L 25 95 L 5 75 L 5 25 Z"
-							fill="rgba(6, 78, 59, 0.4)"
-							stroke="#10b981"
-							stroke-width="1.5"
-							stroke-opacity="0.4"
-							class="backdrop-blur-xl"
-						/>
-						<!-- Corner Brackets -->
-						<path d="M 25 5 L 10 5 L 5 20" fill="none" stroke="#10b981" stroke-width="2.5" class="animate-pulse" />
-						<path d="M 75 5 L 90 5 L 95 20" fill="none" stroke="#10b981" stroke-width="2.5" class="animate-pulse" />
-						<path d="M 5 80 L 10 95 L 25 95" fill="none" stroke="#10b981" stroke-width="2.5" class="animate-pulse" />
-						<path d="M 95 80 L 90 95 L 75 95" fill="none" stroke="#10b981" stroke-width="2.5" class="animate-pulse" />
+			                                                                                                      <path
 
-						<!-- Data stream ring -->
-						<circle cx="50" cy="50" r="42" fill="none" stroke="#10b981" stroke-width="0.5" stroke-dasharray="10 5" opacity="0.2">
-							<animateTransform attributeName="transform" type="rotate" from="360 50 50" to="0 50 50" dur="20s" repeatCount="indefinite" />
-						</circle>
-					</svg>
+			                                                                                                              d="M 25 5 L 75 5 L 95 25 L 95 75 L 75 95 L 25 95 L 5 75 L 5 25 Z"
 
-					<!-- Quantum Storage Cylinder Stack -->
-					<div
-						class="relative z-10 w-16 h-16 flex items-center justify-center filter drop-shadow-[0_0_15px_rgba(16,185,129,0.8)]"
-					>
-						<svg viewBox="0 0 100 100" class="w-full h-full">
-							<!-- Bottom Plate -->
-							<ellipse cx="50" cy="75" rx="30" ry="10" fill="#064e3b" stroke="#10b981" />
+			                                                                                                              fill="rgba(15, 23, 42, 0.6)"
 
-							<!-- Middle Plate 1 -->
-							<ellipse
-								cx="50"
-								cy="60"
-								rx="30"
-								ry="10"
-								fill="#065f46"
-								stroke="#10b981"
-								class="animate-pulse"
-							/>
+			                                                                                                              stroke="#ef4444"
 
-							<!-- Middle Plate 2 -->
-							<ellipse
-								cx="50"
-								cy="45"
-								rx="30"
-								ry="10"
-								fill="#065f46"
-								stroke="#10b981"
-								style="animation-delay: 0.5s"
-								class="animate-pulse"
-							/>
+			                                                                                                              stroke-width="1.5"
 
-							<!-- Top Plate -->
-							<ellipse cx="50" cy="30" rx="30" ry="10" fill="#059669" stroke="#34d399" />
+			                                                                                                              stroke-opacity="0.4"
 
-							<!-- Connecting Columns -->
-							<rect x="25" y="30" width="2" height="45" fill="#10b981" opacity="0.6" />
-							<rect x="73" y="30" width="2" height="45" fill="#10b981" opacity="0.6" />
+			                                                                                                              class="backdrop-blur-xl"
 
-							<!-- Central Data Stream -->
-							<rect x="48" y="20" width="4" height="60" fill="url(#dataStreamGradient)" rx="2">
-								<animate
-									attributeName="opacity"
-									values="0.3;1;0.3"
-									dur="2s"
-									repeatCount="indefinite"
-								/>
-							</rect>
+			                                                                                                      />
 
-							<!-- Orbital Read/Write Heads -->
-							<g class="animate-spin" style="animation-duration: 4s">
-								<circle cx="85" cy="50" r="3" fill="#6ee7b7" />
-								<circle cx="15" cy="50" r="3" fill="#6ee7b7" />
-							</g>
-						</svg>
-					</div>
+			                                                                                                      <!-- Corner Brackets -->
 
-					<!-- Resonance Ring -->
-					<div
-						class="absolute inset-0 border border-emerald-500/20 scale-150 animate-ping-slower opacity-10"
-					></div>
-				</div>
-				<div class="mt-6 flex flex-col items-center">
-					<div class="flex items-center gap-2 mb-1">
-						<span
-							class="text-[10px] font-black text-emerald-500 tracking-[0.4em] uppercase opacity-90"
-							>QUANTUM_STORAGE</span
-						>
-					</div>
-					<div class="flex gap-1">
-						{#each Array(4) as _, i}
-							<div class="w-3 h-1 bg-emerald-900/60 rounded-full overflow-hidden">
-								<div
-									class="w-full h-full bg-emerald-400 animate-pulse"
-									style="animation-delay: {i * 0.2}s"
-								></div>
-							</div>
-						{/each}
-					</div>
-				</div>
-			</div>
+			                                                                                                      <path
+
+			                                                                                                              d="M 25 5 L 10 5 L 5 20"
+
+			                                                                                                              fill="none"
+
+			                                                                                                              stroke="#ef4444"
+
+			                                                                                                              stroke-width="2.5"
+
+			                                                                                                              class="animate-pulse"
+
+			                                                                                                      />
+
+			                                                                                                      <path
+
+			                                                                                                              d="M 75 5 L 90 5 L 95 20"
+
+			                                                                                                              fill="none"
+
+			                                                                                                              stroke="#ef4444"
+
+			                                                                                                              stroke-width="2.5"
+
+			                                                                                                              class="animate-pulse"
+
+			                                                                                                      />
+
+			                                                                                                      <path
+
+			                                                                                                              d="M 5 80 L 10 95 L 25 95"
+
+			                                                                                                              fill="none"
+
+			                                                                                                              stroke="#ef4444"
+
+			                                                                                                              stroke-width="2.5"
+
+			                                                                                                              class="animate-pulse"
+
+			                                                                                                      />
+
+			                                                                                                      <path
+
+			                                                                                                              d="M 95 80 L 90 95 L 75 95"
+
+			                                                                                                              fill="none"
+
+			                                                                                                              stroke="#ef4444"
+
+			                                                                                                              stroke-width="2.5"
+
+			                                                                                                              class="animate-pulse"
+
+			                                                                                                      />
+
+			                                                    
+
+			                                                                                                      <!-- Internal decorative crosshair -->
+
+			                                                                                                      <circle
+
+			                                                                                                              cx="50"
+
+			                                                                                                              cy="50"
+
+			                                                                                                              r="40"
+
+			                                                                                                              fill="none"
+
+			                                                                                                              stroke="#ef4444"
+
+			                                                                                                              stroke-width="0.5"
+
+			                                                                                                              stroke-dasharray="2 4"
+
+			                                                                                                              opacity="0.3"
+
+			                                                                                                      />
+
+			                                                                                              </svg>
+
+			                                                    
+
+			                                                                                              <!-- Rotating Outer Ring -->
+
+			                                                                                              <svg class="absolute inset-0 w-full h-full animate-spin-slow opacity-40">
+
+			                                                                                                      <circle
+
+			                                                                                                              cx="50"
+
+			                                                                                                              cy="50"
+
+			                                                                                                              r="42"
+
+			                                                                                                              fill="none"
+
+			                                                                                                              stroke="#ef4444"
+
+			                                                                                                              stroke-width="1"
+
+			                                                                                                              stroke-dasharray="10 20"
+
+			                                                                                                      />
+
+			                                                                                              </svg>
+
+			                                                    
+
+			                                                                                              <!-- The Cyber Eye -->
+
+			                                                                                              <div
+
+			                                                                                                      class="relative z-10 w-10 h-10 flex items-center justify-center filter drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]"
+
+			                                                                                              >
+
+			                                                                                                      <svg viewBox="0 0 100 100" class="w-full h-full">
+
+			                                                                                                              <!-- Scanner Laser -->
+
+			                                                                                                              <line
+
+			                                                                                                                      x1="10"
+
+			                                                                                                                      y1="50"
+
+			                                                                                                                      x2="90"
+
+			                                                                                                                      y2="50"
+
+			                                                                                                                      stroke="#ff0000"
+
+			                                                                                                                      stroke-width="1"
+
+			                                                                                                                      class="animate-scan-laser"
+
+			                                                                                                              />
+
+			                                                    
+
+			                                                                                                              <!-- Outer Shell -->
+
+			                                                                                                              <circle
+
+			                                                                                                                      cx="50"
+
+			                                                                                                                      cy="50"
+
+			                                                                                                                      r="45"
+
+			                                                                                                                      fill="none"
+
+			                                                                                                                      stroke="#ef4444"
+
+			                                                                                                                      stroke-width="1.5"
+
+			                                                                                                                      opacity="0.4"
+
+			                                                                                                                      stroke-dasharray="15,5"
+
+			                                                                                                              />
+
+			                                                    
+
+			                                                                                                              <!-- Main Lens -->
+
+			                                                                                                              <path
+
+			                                                                                                                      d="M 10 50 Q 50 5 90 50 Q 50 95 10 50 Z"
+
+			                                                                                                                      fill="#000"
+
+			                                                                                                                      stroke="#ef4444"
+
+			                                                                                                                      stroke-width="2.5"
+
+			                                                                                                              />
+
+			                                                    
+
+			                                                                                                              <!-- Iris Array -->
+
+			                                                                                                              <g>
+
+			                                                                                                                      <circle
+
+			                                                                                                                              cx="50"
+
+			                                                                                                                              cy="50"
+
+			                                                                                                                              r="22"
+
+			                                                                                                                              fill="none"
+
+			                                                                                                                              stroke="#ef4444"
+
+			                                                                                                                              stroke-width="1"
+
+			                                                                                                                              opacity="0.6"
+
+			                                                                                                                      />
+
+			                                                                                                                      <circle cx="50" cy="50" r="15" fill="#450a0a" />
+
+			                                                                                                                      <circle
+
+			                                                                                                                              cx="50"
+
+			                                                                                                                              cy="50"
+
+			                                                                                                                              r="10"
+
+			                                                                                                                              fill="#7f1d1d"
+
+			                                                                                                                              class="transition-colors duration-200"
+
+			                                                                                                                      />
+
+			                                                                                                              </g>
+
+			                                                    
+
+			                                                                                                              <!-- Pupil Details -->
+
+			                                                                                                              <rect x="49" y="40" width="2" height="20" fill="#ffffff" opacity="0.8" rx="1" />
+
+			                                                                                                      </svg>
+
+			                                                                                              </div>
+
+			                                                    
+
+			                                                                                                                                        <!-- Sentinel Status -->
+
+			                                                    
+
+			                                                                                                                                </div>
+
+			                                                    
+
+			                                                                                                                        </div>
+
+			                          <!-- Database Node (Quantum Persistence Core) - REDUCED SIZE -->
+			                                                                              <div
+			                                                                                      class="absolute z-30 flex flex-col items-center group cursor-pointer transition-all duration-300 hover:scale-110"
+			                                                                                      style="top: {databasePos.y - 30}px; left: {databasePos.x - 30}px;"
+			                                                                              >
+			                                                                                      <div class="relative w-[60px] h-[60px] flex items-center justify-center">
+			                                                                                              <!-- NEW Cyber Frame (Emerald) -->
+			                                                                                              <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100">
+			                                                                                                      <!-- Main Frame Outer -->
+			                                                                                                      <path
+			                                                                                                              d="M 25 5 L 75 5 L 95 25 L 95 75 L 75 95 L 25 95 L 5 75 L 5 25 Z"
+			                                                                                                              fill="rgba(6, 78, 59, 0.4)"
+			                                                                                                              stroke="#10b981"
+			                                                                                                              stroke-width="1.5"
+			                                                                                                              stroke-opacity="0.4"
+			                                                                                                              class="backdrop-blur-xl"
+			                                                                                                      />
+			                                                                                                      <!-- Corner Brackets -->
+			                                                                                                      <path
+			                                                                                                              d="M 25 5 L 10 5 L 5 20"
+			                                                                                                              fill="none"
+			                                                                                                              stroke="#10b981"
+			                                                                                                              stroke-width="2.5"
+			                                                                                                              class="animate-pulse"
+			                                                                                                      />
+			                                                                                                      <path
+			                                                                                                              d="M 75 5 L 90 5 L 95 20"
+			                                                                                                              fill="none"
+			                                                                                                              stroke="#10b981"
+			                                                                                                              stroke-width="2.5"
+			                                                                                                              class="animate-pulse"
+			                                                                                                      />
+			                                                                                                      <path
+			                                                                                                              d="M 5 80 L 10 95 L 25 95"
+			                                                                                                              fill="none"
+			                                                                                                              stroke="#10b981"
+			                                                                                                              stroke-width="2.5"
+			                                                                                                              class="animate-pulse"
+			                                                                                                      />
+			                                                                                                      <path
+			                                                                                                              d="M 95 80 L 90 95 L 75 95"
+			                                                                                                              fill="none"
+			                                                                                                              stroke="#10b981"
+			                                                                                                              stroke-width="2.5"
+			                                                                                                              class="animate-pulse"
+			                                                                                                      />
+			                                                    
+			                                                                                                      <!-- Data stream ring -->
+			                                                                                                      <circle
+			                                                                                                              cx="50"
+			                                                                                                              cy="50"
+			                                                                                                              r="42"
+			                                                                                                              fill="none"
+			                                                                                                              stroke="#10b981"
+			                                                                                                              stroke-width="0.5"
+			                                                                                                              stroke-dasharray="10 5"
+			                                                                                                              opacity="0.2"
+			                                                                                                      >
+			                                                                                                              <animateTransform
+			                                                                                                                      attributeName="transform"
+			                                                                                                                      type="rotate"
+			                                                                                                                      from="360 50 50"
+			                                                                                                                      to="0 50 50"
+			                                                                                                                      dur="20s"
+			                                                                                                                      repeatCount="indefinite"
+			                                                                                                              />
+			                                                                                                      </circle>
+			                                                                                              </svg>
+			                                                    
+			                                                                                              <!-- Quantum Storage Cylinder Stack -->
+			                                                                                              <div
+			                                                                                                      class="relative z-10 w-10 h-10 flex items-center justify-center filter drop-shadow-[0_0_15px_rgba(16,185,129,0.8)]"
+			                                                                                              >
+			                                                                                                      <svg viewBox="0 0 100 100" class="w-full h-full">
+			                                                                                                              <!-- Bottom Plate -->
+			                                                                                                              <ellipse cx="50" cy="75" rx="30" ry="10" fill="#064e3b" stroke="#10b981" />
+			                                                    
+			                                                                                                              <!-- Middle Plate 1 -->
+			                                                                                                              <ellipse
+			                                                                                                                      cx="50"
+			                                                                                                                      cy="60"
+			                                                                                                                      rx="30"
+			                                                                                                                      ry="10"
+			                                                                                                                      fill="#065f46"
+			                                                                                                                      stroke="#10b981"
+			                                                                                                                      class="animate-pulse"
+			                                                                                                              />
+			                                                    
+			                                                                                                              <!-- Middle Plate 2 -->
+			                                                                                                              <ellipse
+			                                                                                                                      cx="50"
+			                                                                                                                      cy="45"
+			                                                                                                                      rx="30"
+			                                                                                                                      ry="10"
+			                                                                                                                      fill="#065f46"
+			                                                                                                                      stroke="#10b981"
+			                                                                                                                      style="animation-delay: 0.5s"
+			                                                                                                                      class="animate-pulse"
+			                                                                                                              />
+			                                                    
+			                                                                                                              <!-- Top Plate -->
+			                                                                                                              <ellipse cx="50" cy="30" rx="30" ry="10" fill="#059669" stroke="#34d399" />
+			                                                    
+			                                                                                                              <!-- Connecting Columns -->
+			                                                                                                              <rect x="25" y="30" width="2" height="45" fill="#10b981" opacity="0.6" />
+			                                                                                                              <rect x="73" y="30" width="2" height="45" fill="#10b981" opacity="0.6" />
+			                                                    
+			                                                                                                              <!-- Central Data Stream -->
+			                                                                                                              <rect x="48" y="20" width="4" height="60" fill="url(#dataStreamGradient)" rx="2">
+			                                                                                                                      <animate
+			                                                                                                                              attributeName="opacity"
+			                                                                                                                              values="0.3;1;0.3"
+			                                                                                                                              dur="2s"
+			                                                                                                                              repeatCount="indefinite"
+			                                                                                                                      />
+			                                                                                                              </rect>
+			                                                    
+			                                                                                                              <!-- Orbital Read/Write Heads -->
+			                                                                                                              <g class="animate-spin" style="animation-duration: 4s">
+			                                                                                                                      <circle cx="85" cy="50" r="3" fill="#6ee7b7" />
+			                                                                                                                      <circle cx="15" cy="50" r="3" fill="#6ee7b7" />
+			                                                                                                              </g>
+			                                                                                                      </svg>
+			                                                                                              </div>
+			                                                    
+			                                                                                                                                        <!-- Resonance Ring -->
+			                                                    
+			                                                                                                                                        <div
+			                                                    
+			                                                                                                                                                class="absolute inset-0 border border-emerald-500/20 scale-150 animate-ping-slower opacity-10"
+			                                                    
+			                                                                                                                                        ></div>
+			                                                    
+			                                                                                                                                </div>
+			                                                    
+			                                                                                                                        </div>
 
 			<!-- Spawner Nodes -->
 			{#each $spawners as spawner, i (spawner.id)}
@@ -1987,17 +1909,57 @@
 	}
 
 	@keyframes missileFlame {
-		0%, 100% { transform: scaleY(1); opacity: 0.8; }
-		50% { transform: scaleY(1.5); opacity: 1; }
+		0%,
+		100% {
+			transform: scaleY(1) scaleX(1);
+			opacity: 0.9;
+		}
+		50% {
+			transform: scaleY(1.4) scaleX(1.1);
+			opacity: 1;
+		}
 	}
 
 	.missile-flame {
-		animation: missileFlame 0.1s ease-in-out infinite;
-		transform-origin: top;
+		animation: missileFlame 0.08s ease-in-out infinite;
+		transform-origin: center left;
+	}
+
+	@keyframes missileFlameFast {
+		0%,
+		100% {
+			transform: scaleY(1) scaleX(1);
+			opacity: 0.8;
+		}
+		50% {
+			transform: scaleY(1.6) scaleX(1.2);
+			opacity: 1;
+		}
+	}
+
+	.missile-flame-fast {
+		animation: missileFlameFast 0.05s ease-in-out infinite;
+		transform-origin: center left;
+	}
+
+	@keyframes missileSparkle {
+		0%,
+		100% {
+			opacity: 1;
+			transform: scale(1);
+		}
+		50% {
+			opacity: 0.4;
+			transform: scale(0.6);
+		}
+	}
+
+	.missile-sparkle {
+		animation: missileSparkle 0.15s ease-in-out infinite;
 	}
 
 	.rocket-ship {
-		filter: drop-shadow(0 0 5px #ef4444);
+		filter: drop-shadow(0 0 6px #ef4444) drop-shadow(0 0 3px #fb923c);
 	}
 
 	@keyframes energySurge {

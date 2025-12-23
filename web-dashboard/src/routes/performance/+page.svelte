@@ -10,29 +10,27 @@
 		Database,
 		Network,
 		RefreshCw,
-		TrendingUp,
-		TrendingDown,
 		AlertTriangle,
 		CheckCircle,
 		XCircle,
 		Gauge,
 		Timer,
 		Layers,
-		GitBranch,
 		Trash2,
-		PlayCircle,
 		Clock,
 		BarChart3,
-		PieChart,
 		ArrowUp,
 		ArrowDown,
-		Minus,
 		Eye,
 		ShieldAlert,
 		Lock,
 		ShieldCheck,
-		Search,
-		Info
+		Info,
+		Terminal,
+		Radio,
+		Dna,
+		AlertOctagon,
+		Signal
 	} from 'lucide-svelte';
 	import { fade, fly, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -162,6 +160,7 @@
 	let gcLoading = $state(false);
 	let freeMemLoading = $state(false);
 	let showRedEyeModal = $state(false);
+	let isWarmingUp = $state(true);
 
 	// Previous values for trend calculation
 	let prevMetrics = $state<CombinedMetrics | null>(null);
@@ -198,25 +197,25 @@
 		return n.toString();
 	}
 
-	function getHealthStatus(metrics: CombinedMetrics): { status: string; color: string; icon: any } {
+	function getHealthStatus(metrics: CombinedMetrics): { status: string; color: string; icon: any; glow: string } {
 		const heapRatio = metrics.master.heap_usage_ratio;
 		const gcCpu = metrics.master.gc_cpu_fraction;
 		const errorRate = metrics.network.error_rate;
 		const dbConnected = metrics.database.connected;
 
 		if (!dbConnected || heapRatio > 0.9 || errorRate > 20) {
-			return { status: 'Critical', color: 'red', icon: XCircle };
+			return { status: 'FAULT', color: '#ef4444', icon: AlertOctagon, glow: 'rgba(239, 68, 68, 0.4)' };
 		}
 		if (heapRatio > 0.75 || gcCpu > 0.05 || errorRate > 10) {
-			return { status: 'Warning', color: 'amber', icon: AlertTriangle };
+			return { status: 'DEGRADED', color: '#f97316', icon: AlertTriangle, glow: 'rgba(249, 115, 22, 0.4)' };
 		}
-		return { status: 'Healthy', color: 'emerald', icon: CheckCircle };
+		return { status: 'OPTIMAL', color: '#fbbf24', icon: CheckCircle, glow: 'rgba(251, 191, 36, 0.4)' };
 	}
 
 	function getTrend(current: number, previous: number | undefined): 'up' | 'down' | 'stable' {
 		if (previous === undefined) return 'stable';
 		const diff = current - previous;
-		const threshold = Math.abs(previous) * 0.05; // 5% change threshold
+		const threshold = Math.abs(previous) * 0.02; // 2% change threshold
 		if (diff > threshold) return 'up';
 		if (diff < -threshold) return 'down';
 		return 'stable';
@@ -226,7 +225,7 @@
 	async function fetchMetrics() {
 		try {
 			const res = await fetch('/api/metrics');
-			if (!res.ok) throw new Error('Failed to fetch metrics');
+			if (!res.ok) throw new Error('COMMS_FAILURE');
 			const data = await res.json();
 			prevMetrics = metrics;
 			metrics = data;
@@ -243,7 +242,7 @@
 		gcLoading = true;
 		try {
 			const res = await fetch('/api/metrics/gc', { method: 'POST' });
-			if (!res.ok) throw new Error('Failed to trigger GC');
+			if (!res.ok) throw new Error('CMD_FAIL');
 			await fetchMetrics();
 		} catch (e: any) {
 			error = e.message;
@@ -256,7 +255,7 @@
 		freeMemLoading = true;
 		try {
 			const res = await fetch('/api/metrics/memory/free', { method: 'POST' });
-			if (!res.ok) throw new Error('Failed to free memory');
+			if (!res.ok) throw new Error('CMD_FAIL');
 			await fetchMetrics();
 		} catch (e: any) {
 			error = e.message;
@@ -280,6 +279,9 @@
 	onMount(() => {
 		fetchMetrics();
 		startAutoRefresh();
+		setTimeout(() => {
+			isWarmingUp = false;
+		}, 1000);
 	});
 
 	onDestroy(() => {
@@ -300,1121 +302,540 @@
 	);
 </script>
 
-<div class="space-y-6 p-4 sm:p-6 pb-24 md:pb-6">
-	<!-- Header -->
-	<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-		<div>
-			<h1
-				class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3"
-			>
-				<Zap class="w-6 h-6 sm:w-8 sm:h-8 text-yellow-400" />
-				Performance
-			</h1>
-			<p
-				class="text-slate-500 dark:text-slate-400 mt-1 sm:mt-2 flex items-center gap-2 text-xs sm:text-sm"
-			>
-				<Activity class="w-3 h-3 sm:w-4 sm:h-4 text-emerald-400" />
-				Real-time monitoring
-			</p>
+<div class="min-h-screen bg-[#050505] text-[#e2e8f0] font-['Inter',sans-serif] p-4 sm:p-8 space-y-8 selection:bg-[#f97316] selection:text-black relative overflow-hidden">
+	<!-- Industrial UI Overlays -->
+	<div class="fixed inset-0 pointer-events-none z-[100] opacity-[0.02] bg-amber-scanlines"></div>
+	<div class="fixed inset-0 pointer-events-none z-[101] opacity-[0.15] bg-vignette"></div>
+
+	<!-- Warm-up Animation -->
+	{#if isWarmingUp}
+		<div class="fixed inset-0 z-[200] bg-[#050505] flex flex-col items-center justify-center animate-warmup font-['JetBrains_Mono']">
+			<div class="text-2xl font-extrabold italic tracking-[0.8em] animate-pulse text-[#f97316]">LOAD_CORE_OS</div>
 		</div>
+	{/if}
 
-		<div class="flex flex-wrap items-center gap-2 sm:gap-3">
-			<!-- Health Status -->
-			{#if health}
-				{@const HealthIcon = health.icon}
-				<div
-					class="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border flex items-center gap-2 text-xs sm:text-sm {health.color ===
-					'emerald'
-						? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-						: health.color === 'amber'
-							? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-							: 'bg-red-500/10 border-red-500/30 text-red-400'}"
-					transition:scale={{ start: 0.9, duration: 200 }}
-				>
-					<HealthIcon class="w-4 h-4 sm:w-5 sm:h-5" />
-					<span class="font-semibold">{health.status}</span>
+	<!-- Header Unit -->
+	<div class="border-b-[1px] border-white/10 bg-[#0a0a0a] p-8 relative overflow-hidden shadow-2xl">
+		<div class="absolute top-0 right-0 w-96 h-96 bg-[#f97316]/5 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2"></div>
+		
+		<div class="flex flex-col md:flex-row md:items-end justify-between gap-10 relative z-10">
+			<div class="space-y-8">
+				<div class="flex items-center gap-8">
+					<div class="w-24 h-24 border border-white/10 flex items-center justify-center bg-black shadow-[8px_8px_0px_#000] relative group hover:border-[#f97316] transition-all duration-500 overflow-hidden">
+						<Terminal class="w-12 h-12 text-[#f97316]" />
+						<div class="absolute inset-0 bg-[#f97316]/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+						<div class="absolute bottom-0 left-0 w-full h-[2px] bg-[#f97316] translate-y-full group-hover:translate-y-0 transition-transform"></div>
+					</div>
+					<div class="space-y-2">
+						<div class="flex items-center gap-4">
+							<span class="text-[11px] font-black text-[#f97316] tracking-[0.5em] uppercase font-['JetBrains_Mono']">STATION_CMD_01</span>
+							<div class="h-[1px] w-16 bg-white/10"></div>
+							<span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest italic font-['JetBrains_Mono']">Encrypted_Uplink</span>
+						</div>
+						<h1 class="text-6xl sm:text-8xl font-black tracking-tight italic leading-none text-white uppercase font-['Inter']">
+							Tele<span class="text-[#f97316] underline decoration-4 underline-offset-8">metry</span>
+						</h1>
+					</div>
 				</div>
-			{/if}
-			<!-- Auto Refresh Toggle -->
-			<button
-				onclick={toggleAutoRefresh}
-				class="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border transition-all duration-200 flex items-center gap-2 text-xs sm:text-sm {autoRefresh
-					? 'bg-blue-500/10 border-blue-500/30 text-blue-400'
-					: 'bg-slate-800/50 border-slate-300/50 dark:border-slate-700/50 text-slate-500 dark:text-slate-400'}"
-			>
-				<RefreshCw
-					class="w-3 h-3 sm:w-4 sm:h-4 {autoRefresh ? 'animate-spin' : ''}"
-					style="animation-duration: 3s"
-				/>
-				<span class="font-medium">{autoRefresh ? 'Auto' : 'Paused'}</span>
-			</button>
+				<div class="flex flex-wrap gap-10 text-[11px] font-black text-slate-500 tracking-[0.3em] uppercase italic border-t border-white/5 pt-6 font-['JetBrains_Mono']">
+					<div class="flex items-center gap-3"><div class="w-2 h-2 bg-[#f97316] shadow-[0_0_10px_#f97316]"></div> STATION_88-FF</div>
+					<div class="flex items-center gap-3"><div class="w-2 h-2 bg-white/10"></div> LOC_SECTOR_07</div>
+					<div class="flex items-center gap-3 text-[#fbbf24]"><Dna class="w-4 h-4 animate-spin-slow" /> CORE_SYNC_ACTIVE</div>
+				</div>
+			</div>
 
-			<!-- Manual Refresh -->
-			<button
-				onclick={fetchMetrics}
-				disabled={loading}
-				class="p-1.5 sm:p-2 rounded-xl bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:border-slate-600 transition-all disabled:opacity-50"
-			>
-				<RefreshCw class="w-4 h-4 sm:w-5 sm:h-5 {loading ? 'animate-spin' : ''}" />
-			</button>
+			<div class="flex flex-wrap items-center gap-8">
+				<!-- Status Badge -->
+				{#if health}
+					{@const HealthIcon = health.icon}
+					<div class="px-10 py-5 bg-black border border-white/10 flex items-center gap-8 shadow-2xl relative overflow-hidden group hover:border-[#f97316] transition-all duration-500">
+						<div class="relative">
+							<HealthIcon class="w-10 h-10" style="color: {health.color}" />
+							<div class="absolute inset-0 blur-2xl opacity-30 animate-pulse" style="background-color: {health.color}"></div>
+						</div>
+						<div class="flex flex-col relative z-10">
+							<span class="text-[10px] font-black text-slate-500 mb-1 tracking-[0.4em] font-['JetBrains_Mono']">INTEGRITY</span>
+							<span class="text-3xl font-black tracking-tight italic uppercase font-['Inter']" style="color: {health.color}">{health.status}</span>
+						</div>
+					</div>
+				{/if}
+
+				<!-- Controls -->
+				<div class="flex bg-[#0a0a0a] border border-white/10 shadow-2xl p-1.5">
+					<button
+						onclick={toggleAutoRefresh}
+						class="px-8 py-4 hover:bg-[#f97316] hover:text-black transition-all flex items-center gap-4 border border-transparent font-['JetBrains_Mono'] font-extrabold {autoRefresh ? 'text-[#f97316]' : 'text-slate-600'}"
+					>
+						<Radio class="w-6 h-6 {autoRefresh ? 'animate-pulse' : ''}" />
+						<span class="text-sm tracking-widest">{autoRefresh ? 'STREAM_ON' : 'STREAM_OFF'}</span>
+					</button>
+					<button
+						onclick={fetchMetrics}
+						disabled={loading}
+						class="px-8 py-4 hover:bg-[#f97316] hover:text-black transition-all text-slate-400 border-l border-white/5 disabled:opacity-20"
+					>
+						<RefreshCw class="w-6 h-6 {loading ? 'animate-spin' : ''}" />
+					</button>
+				</div>
+			</div>
 		</div>
 	</div>
 
-	<!-- Last Update -->
-	{#if lastUpdate}
-		<div class="text-[10px] sm:text-xs text-slate-500 flex items-center gap-2">
-			<Clock class="w-3 h-3" />
-			Last updated: {lastUpdate.toLocaleTimeString()}
+	<!-- Primary Metrics Grid -->
+	<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+		<div class="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+			{#if metrics}
+				{#each [
+					{ label: 'UPTIME_ENGINE', val: formatDuration(metrics.master.uptime_ms), icon: Timer, color: 'text-white' },
+					{ label: 'PROCESS_FLOW', val: metrics.master.num_goroutine, icon: Activity, color: 'text-white', trend: goroutineTrend },
+					{ label: 'MEMORY_LOAD', val: formatBytes(metrics.master.heap_alloc), icon: MemoryStick, color: 'text-white', detail: `Usage: ${(metrics.master.heap_usage_ratio * 100).toFixed(1)}%` },
+					{ label: 'DATA_VELOCITY', val: formatNumber(metrics.network.total_requests), icon: Signal, color: 'text-white', detail: `Rate: ${metrics.network.requests_per_second?.toFixed(1)}Hz` }
+				] as block}
+					{@const BlockIcon = block.icon}
+					<div class="bg-[#0a0a0a] border border-white/5 p-8 group hover:border-[#f97316]/50 transition-all duration-500 relative overflow-hidden shadow-xl">
+						<div class="absolute -right-6 -bottom-6 opacity-[0.02] group-hover:opacity-[0.08] transition-opacity duration-1000">
+							<BlockIcon size={120} />
+						</div>
+						<div class="text-[10px] font-black text-slate-500 tracking-[0.4em] mb-4 italic uppercase font-['JetBrains_Mono']">{block.label}</div>
+						<div class="flex items-end justify-between relative z-10">
+							<div class="text-4xl font-extrabold italic tracking-tighter {block.color} font-['JetBrains_Mono']">{block.val}</div>
+							{#if block.trend && block.trend !== 'stable'}
+								<div class="text-xl font-black {block.trend === 'up' ? 'text-[#ef4444]' : 'text-[#10b981]'} ml-2 mb-1">
+									{block.trend === 'up' ? '▲' : '▼'}
+								</div>
+							{/if}
+						</div>
+						{#if block.detail}
+							<div class="text-[10px] font-extrabold text-[#f97316] mt-4 uppercase tracking-[0.2em] font-['JetBrains_Mono'] opacity-80">{block.detail}</div>
+						{/if}
+					</div>
+				{/each}
+			{/if}
 		</div>
-	{/if}
 
-	<!-- Error Banner -->
-	{#if error}
-		<div
-			class="p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center gap-3 text-red-400"
-			transition:fly={{ y: -10, duration: 300 }}
-		>
-			<AlertTriangle class="w-5 h-5" />
-			<span class="text-sm">{error}</span>
+		<!-- Station Log (Modern High-Res Mono) -->
+		<div class="bg-black border border-white/5 p-8 font-['JetBrains_Mono'] text-[11px] shadow-2xl relative overflow-hidden flex flex-col group hover:border-white/10 transition-colors">
+			<div class="flex items-center justify-between mb-6 text-[#f97316] border-b border-white/5 pb-4">
+				<div class="flex items-center gap-3">
+					<Terminal class="w-4 h-4" />
+					<span class="font-black tracking-[0.4em]">STATION_LOG</span>
+				</div>
+				<div class="w-2.5 h-2.5 rounded-full bg-[#f97316] animate-pulse shadow-[0_0_8px_#f97316]"></div>
+			</div>
+			<div class="space-y-4 italic text-slate-400 uppercase font-bold flex-1 custom-scrollbar overflow-y-auto">
+				<div class="flex items-start gap-4 hover:text-white transition-colors cursor-default group/log">
+					<span class="text-slate-600 font-normal">[{lastUpdate?.toLocaleTimeString().split(' ')[0]}]</span>
+					<span class="text-white group-hover/log:translate-x-1 transition-transform">&gt;&gt; SYNC_STABLE</span>
+				</div>
+				{#if metrics}
+					<div class="flex items-start gap-4 hover:text-white transition-colors cursor-default group/log">
+						<span class="text-slate-600 font-normal">[{lastUpdate?.toLocaleTimeString().split(' ')[0]}]</span>
+						<span class="group-hover/log:translate-x-1 transition-transform">&gt;&gt; NODE_HEALTH: <span class="text-[#f97316] underline underline-offset-4 decoration-1 font-extrabold">{health?.status}</span></span>
+					</div>
+					<div class="flex items-start gap-4 hover:text-white transition-colors cursor-default group/log">
+						<span class="text-slate-600 font-normal">[{lastUpdate?.toLocaleTimeString().split(' ')[0]}]</span>
+						<span class="group-hover/log:translate-x-1 transition-transform">&gt;&gt; FLEET_LINK: <span class="text-white font-extrabold">{metrics.spawners.online_spawners}</span> UNIT(S)</span>
+					</div>
+				{/if}
+				{#if error}
+					<div class="text-[#ef4444] flex items-start gap-4 border-l-2 border-[#ef4444] pl-4 animate-flicker">
+						<span class="font-extrabold">&gt;&gt; CRIT_FAULT: {error}</span>
+					</div>
+				{/if}
+			</div>
 		</div>
-	{/if}
+	</div>
 
 	{#if metrics}
-		<!-- Quick Stats Row -->
-		<div
-			class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4"
-			transition:fade={{ duration: 300 }}
-		>
-			<!-- Uptime -->
-			<div
-				class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-3 sm:p-4"
-			>
-				<div
-					class="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-medium mb-1 sm:mb-2"
-				>
-					<Timer class="w-3 h-3 sm:w-4 sm:h-4" />
-					UPTIME
-				</div>
-				<div class="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white truncate">
-					{formatDuration(metrics.master.uptime_ms)}
-				</div>
-			</div>
-
-			<!-- Goroutines -->
-			<div
-				class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-3 sm:p-4"
-			>
-				<div
-					class="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-medium mb-1 sm:mb-2"
-				>
-					<GitBranch class="w-3 h-3 sm:w-4 sm:h-4" />
-					GOROUTINES
-				</div>
-				<div
-					class="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2"
-				>
-					{metrics.master.num_goroutine}
-					{#if goroutineTrend === 'up'}
-						<ArrowUp class="w-3 h-3 sm:w-4 sm:h-4 text-amber-400" />
-					{:else if goroutineTrend === 'down'}
-						<ArrowDown class="w-3 h-3 sm:w-4 sm:h-4 text-emerald-400" />
-					{:else}
-						<Minus class="w-3 h-3 sm:w-4 sm:h-4 text-slate-500" />
-					{/if}
-				</div>
-				<div class="text-[10px] sm:text-xs text-slate-500 mt-1">
-					Peak: {metrics.master.peak_goroutines}
-				</div>
-			</div>
-
-			<!-- Heap Usage -->
-			<div
-				class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-3 sm:p-4"
-			>
-				<div
-					class="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-medium mb-1 sm:mb-2"
-				>
-					<MemoryStick class="w-3 h-3 sm:w-4 sm:h-4" />
-					HEAP ALLOC
-				</div>
-				<div
-					class="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2 truncate"
-				>
-					{formatBytes(metrics.master.heap_alloc)}
-					{#if heapTrend === 'up'}
-						<ArrowUp class="w-3 h-3 sm:w-4 sm:h-4 text-amber-400" />
-					{:else if heapTrend === 'down'}
-						<ArrowDown class="w-3 h-3 sm:w-4 sm:h-4 text-emerald-400" />
-					{:else}
-						<Minus class="w-3 h-3 sm:w-4 sm:h-4 text-slate-500" />
-					{/if}
-				</div>
-				<div class="text-[10px] sm:text-xs text-slate-500 mt-1">
-					{(metrics.master.heap_usage_ratio * 100)?.toFixed(1) || 0}% of sys
-				</div>
-			</div>
-
-			<!-- GC Cycles -->
-			<div
-				class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-3 sm:p-4"
-			>
-				<div
-					class="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-medium mb-1 sm:mb-2"
-				>
-					<Trash2 class="w-3 h-3 sm:w-4 sm:h-4" />
-					GC CYCLES
-				</div>
-				<div class="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white">
-					{metrics.master.num_gc}
-				</div>
-				<div class="text-[10px] sm:text-xs text-slate-500 mt-1">
-					CPU: {(metrics.master.gc_cpu_fraction * 100)?.toFixed(2) || 0}%
-				</div>
-			</div>
-
-			<!-- Active Spawners -->
-			<div
-				class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-3 sm:p-4"
-			>
-				<div
-					class="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-medium mb-1 sm:mb-2"
-				>
-					<Server class="w-3 h-3 sm:w-4 sm:h-4" />
-					SPAWNERS
-				</div>
-				<div class="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white">
-					<span class="text-emerald-400">{metrics.spawners.online_spawners}</span>
-					<span class="text-slate-500">/{metrics.spawners.total_spawners}</span>
-				</div>
-				<div class="text-[10px] sm:text-xs text-slate-50">
-					{metrics.spawners.running_instances} instances
-				</div>
-			</div>
-
-			<!-- Requests -->
-			<div
-				class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-3 sm:p-4"
-			>
-				<div
-					class="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-medium mb-1 sm:mb-2"
-				>
-					<Network class="w-3 h-3 sm:w-4 sm:h-4" />
-					REQUESTS
-				</div>
-				<div class="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white truncate">
-					{formatNumber(metrics.network.total_requests)}
-				</div>
-				<div class="text-[10px] sm:text-xs text-slate-500 mt-1">
-					{metrics.network.requests_per_second?.toFixed(1) || 0}/s
-				</div>
-			</div>
-		</div>
-
-		<!-- Main Grid -->
-		<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-			<!-- Master Server Memory Card -->
-			<div
-				class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl overflow-hidden"
-				transition:fly={{ y: 20, duration: 400, delay: 100 }}
-			>
-				<div
-					class="p-4 border-b border-slate-300/50 dark:border-slate-700/50 flex items-center justify-between"
-				>
-					<div class="flex items-center gap-3">
-						<div class="p-2 bg-blue-500/20 rounded-lg">
-							<MemoryStick class="w-5 h-5 text-blue-400" />
+		<!-- Industrial Diagnostic Floor -->
+		<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 font-['JetBrains_Mono']">
+			
+			<!-- Memory Engine -->
+			<div class="lg:col-span-7 bg-[#0a0a0a] border border-white/5 shadow-2xl relative overflow-hidden group hover:border-[#f97316]/20 transition-all duration-700">
+				<div class="p-8 border-b border-white/5 flex items-center justify-between bg-black/60 backdrop-blur-xl">
+					<div class="flex items-center gap-6">
+						<div class="w-14 h-14 border border-white/10 flex items-center justify-center group-hover:border-[#f97316] transition-colors duration-500 shadow-xl relative overflow-hidden">
+							<MemoryStick class="w-8 h-8 text-[#f97316]" />
+							<div class="absolute inset-0 bg-[#f97316]/5 animate-pulse"></div>
 						</div>
 						<div>
-							<h3 class="font-semibold text-slate-900 dark:text-white text-sm sm:text-base">
-								Memory Management
-							</h3>
-							<p class="text-[10px] sm:text-xs text-slate-500">Go Runtime Memory Statistics</p>
+							<h3 class="font-black text-2xl tracking-tighter italic uppercase text-white leading-none font-['Inter']">Memory_Core</h3>
+							<span class="text-[10px] font-black tracking-[0.5em] text-slate-500 uppercase mt-2 block opacity-80">Phys_Addr_Mapping: Nominal</span>
 						</div>
 					</div>
-					<div class="flex gap-2">
+					<div class="flex bg-black border border-white/10 p-1.5 gap-1 shadow-inner">
 						<button
 							onclick={forceGC}
 							disabled={gcLoading}
-							class="px-2 py-1 sm:px-3 sm:py-1.5 text-[10px] sm:text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-lg hover:bg-amber-500/20 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+							class="px-6 py-3 text-[11px] font-black hover:bg-[#f97316] hover:text-black transition-all duration-300 disabled:opacity-20 uppercase tracking-[0.2em]"
 						>
 							{#if gcLoading}
-								<RefreshCw class="w-3 h-3 animate-spin" />
+								<RefreshCw class="w-4 h-4 animate-spin" />
 							{:else}
-								<Trash2 class="w-3 h-3" />
+								FLUSH
 							{/if}
-							<span class="hidden sm:inline">Force GC</span>
-							<span class="sm:hidden">GC</span>
 						</button>
 						<button
 							onclick={freeMemory}
 							disabled={freeMemLoading}
-							class="px-2 py-1 sm:px-3 sm:py-1.5 text-[10px] sm:text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/30 rounded-lg hover:bg-purple-500/20 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+							class="px-6 py-3 text-[11px] font-black hover:bg-[#f97316] hover:text-black transition-all duration-300 disabled:opacity-20 uppercase tracking-[0.2em] border-l border-white/5"
 						>
 							{#if freeMemLoading}
-								<RefreshCw class="w-3 h-3 animate-spin" />
+								<RefreshCw class="w-4 h-4 animate-spin" />
 							{:else}
-								<ArrowDown class="w-3 h-3" />
+								VACUUM
 							{/if}
-							<span class="hidden sm:inline">Free OS Mem</span>
-							<span class="sm:hidden">Free</span>
 						</button>
 					</div>
 				</div>
 
-				<div class="p-4 space-y-4">
-					<!-- Heap Visual -->
-					<div class="relative h-8 bg-slate-900/50 rounded-lg overflow-hidden">
-						<div
-							class="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-600 to-blue-400 transition-all duration-500"
-							style="width: {metrics.master.heap_usage_ratio * 100}%"
-						></div>
-						<div
-							class="absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs font-medium text-slate-900 dark:text-white"
-						>
-							{formatBytes(metrics.master.heap_inuse)} / {formatBytes(metrics.master.heap_sys)}
+				<div class="p-12 space-y-16">
+					<!-- Visual Mapping -->
+					<div class="space-y-6">
+						<div class="flex justify-between text-[11px] font-black tracking-[0.4em] uppercase italic text-slate-500">
+							<span class="flex items-center gap-3"><div class="w-2 h-2 bg-[#f97316] shadow-[0_0_8px_#f97316]"></div> V_MEMORY_LOAD</span>
+							<span class="text-white">CAP: {formatBytes(metrics.master.sys)}</span>
+						</div>
+						<div class="h-20 bg-black border border-white/10 p-2 relative overflow-hidden shadow-inner">
+							<div
+								class="h-full bg-gradient-to-r from-[#f97316]/20 via-[#f97316]/60 to-[#f97316] border-r-[3px] border-[#f97316] transition-all duration-1000 ease-out relative group-hover:brightness-110"
+								style="width: {metrics.master.heap_usage_ratio * 100}%"
+							>
+								<div class="absolute inset-0 bg-amber-scanlines opacity-20"></div>
+								<div class="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent"></div>
+							</div>
+							<div class="absolute inset-0 flex items-center justify-between px-10 font-black text-lg italic tracking-tighter text-white mix-blend-difference uppercase">
+								<span>Engaged: {formatBytes(metrics.master.heap_inuse)}</span>
+								<span>{(metrics.master.heap_usage_ratio * 100).toFixed(1)}%</span>
+							</div>
 						</div>
 					</div>
 
-					<!-- Memory Grid -->
-					<div class="grid grid-cols-2 gap-3">
-						<div class="bg-slate-900/30 rounded-lg p-3">
-							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Heap Allocated</div>
-							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
-								{formatBytes(metrics.master.heap_alloc)}
+					<!-- Matrix Diagnostics -->
+					<div class="grid grid-cols-2 md:grid-cols-3 gap-10">
+						{#each [
+							{ label: 'HEAP_LIVE', val: formatBytes(metrics.master.heap_alloc) },
+							{ label: 'STACK_SYS', val: formatBytes(metrics.master.stack_sys) },
+							{ label: 'OBJ_TOTAL', val: formatNumber(metrics.master.live_objects) },
+							{ label: 'WRITE_Hz', val: `${formatBytes(metrics.master.heap_alloc_rate)}/s` },
+							{ label: 'IDLE_BUF', val: formatBytes(metrics.master.heap_idle) },
+							{ label: 'GC_TARGET', val: formatBytes(metrics.master.next_gc_target) }
+						] as item}
+							<div class="border-l-[1px] border-white/5 bg-white/[0.01] p-6 hover:border-[#f97316] transition-all duration-500 group/stat">
+								<div class="text-[10px] font-black text-slate-500 tracking-[0.3em] mb-3 uppercase group-hover/stat:text-[#f97316] transition-colors italic font-['JetBrains_Mono']">{item.label}</div>
+								<div class="text-3xl font-extrabold italic tracking-tighter text-white font-['JetBrains_Mono']">{item.val}</div>
 							</div>
-						</div>
-						<div class="bg-slate-900/30 rounded-lg p-3">
-							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Heap Idle</div>
-							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
-								{formatBytes(metrics.master.heap_idle)}
-							</div>
-						</div>
-						<div class="bg-slate-900/30 rounded-lg p-3">
-							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Stack In Use</div>
-							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
-								{formatBytes(metrics.master.stack_inuse)}
-							</div>
-						</div>
-						<div class="bg-slate-900/30 rounded-lg p-3">
-							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Total System</div>
-							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
-								{formatBytes(metrics.master.sys)}
-							</div>
-						</div>
-						<div class="bg-slate-900/30 rounded-lg p-3">
-							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Live Objects</div>
-							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
-								{formatNumber(metrics.master.live_objects)}
-							</div>
-						</div>
-						<div class="bg-slate-900/30 rounded-lg p-3">
-							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Alloc Rate</div>
-							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
-								{formatBytes(metrics.master.heap_alloc_rate)}/s
-							</div>
-						</div>
+						{/each}
 					</div>
 				</div>
 			</div>
 
-			<!-- Garbage Collection Card -->
-			<div
-				class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl overflow-hidden"
-				transition:fly={{ y: 20, duration: 400, delay: 150 }}
-			>
-				<div
-					class="p-4 border-b border-slate-300/50 dark:border-slate-700/50 flex items-center gap-3"
-				>
-					<div class="p-2 bg-amber-500/20 rounded-lg">
-						<Trash2 class="w-5 h-5 text-amber-400" />
+			<!-- Scrubber Unit -->
+			<div class="lg:col-span-5 bg-[#0a0a0a] border border-white/5 shadow-2xl relative overflow-hidden group hover:border-[#f97316]/20 transition-all duration-700">
+				<div class="p-8 border-b border-white/5 flex items-center gap-6 bg-black/60 backdrop-blur-xl">
+					<div class="w-14 h-14 border border-white/10 flex items-center justify-center">
+						<Trash2 class="w-8 h-8 text-[#f97316]" />
 					</div>
 					<div>
-						<h3 class="font-semibold text-slate-900 dark:text-white text-sm sm:text-base">
-							Garbage Collection
-						</h3>
-						<p class="text-[10px] sm:text-xs text-slate-500">GC Performance & Statistics</p>
+						<h3 class="font-black text-2xl tracking-tighter italic uppercase text-white leading-none font-['Inter']">Scrubber_Log</h3>
+						<span class="text-[10px] font-black tracking-[0.5em] text-slate-500 uppercase mt-2 block opacity-80">Logic: Auto_Reclaim</span>
 					</div>
 				</div>
 
-				<div class="p-4 space-y-4">
-					<!-- GC CPU Impact -->
-					<div>
-						<div class="flex items-center justify-between text-xs sm:text-sm mb-2">
-							<span class="text-slate-500 dark:text-slate-400">GC CPU Usage</span>
-							<span
-								class="font-medium {metrics.master.gc_cpu_fraction > 0.05
-									? 'text-red-400'
-									: metrics.master.gc_cpu_fraction > 0.02
-										? 'text-amber-400'
-										: 'text-emerald-400'}"
-							>
-								{(metrics.master.gc_cpu_fraction * 100).toFixed(3)}%
-							</span>
+				<div class="p-12 space-y-12">
+					<!-- Load Gauges -->
+					<div class="space-y-6">
+						<div class="flex justify-between text-[11px] font-black tracking-[0.4em] uppercase italic text-slate-500">
+							<span class="flex items-center gap-3">CPU_INTERRUPT_VECTOR</span>
+							<span class="text-[#f97316]">{(metrics.master.gc_cpu_fraction * 100).toFixed(4)}%</span>
 						</div>
-						<div class="h-2 bg-slate-900/50 rounded-full overflow-hidden">
-							<div
-								class="h-full transition-all duration-500 {metrics.master.gc_cpu_fraction > 0.05
-									? 'bg-red-500'
-									: metrics.master.gc_cpu_fraction > 0.02
-										? 'bg-amber-500'
-										: 'bg-emerald-500'}"
-								style="width: {Math.min(metrics.master.gc_cpu_fraction * 1000, 100)}%"
-							></div>
+						<div class="flex h-12 gap-1.5 bg-black p-2 border border-white/5 shadow-inner">
+							{#each Array(15) as _, i}
+								{@const isFilled = i < Math.min(metrics.master.gc_cpu_fraction * 750, 15)}
+								{@const isPulsing = i === Math.floor(metrics.master.gc_cpu_fraction * 750)}
+								<div 
+									class="flex-1 transition-all duration-500 {isFilled ? 'bg-[#f97316] shadow-[0_0_10px_#f97316]' : 'bg-white/[0.02]'} {isPulsing ? 'animate-pulse' : ''}"
+								></div>
+							{/each}
 						</div>
 					</div>
 
-					<!-- GC Stats Grid -->
-					<div class="grid grid-cols-2 gap-3">
-						<div class="bg-slate-900/30 rounded-lg p-3">
-							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Total GC Cycles</div>
-							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
-								{metrics.master.num_gc}
+					<!-- Trace Table -->
+					<div class="bg-black border border-white/5 p-10 space-y-6 shadow-2xl relative group overflow-hidden">
+						<div class="absolute top-0 right-0 w-16 h-16 bg-white/[0.02] border-b border-l border-white/5 rotate-0 transition-transform duration-700 group-hover:scale-110"></div>
+						{#each [
+							{ label: 'Total_Cycles', val: metrics.master.num_gc },
+							{ label: 'Avg_Lat', val: formatNanoseconds(metrics.master.avg_gc_pause_ns) },
+							{ label: 'Peak_Spike', val: formatNanoseconds(metrics.master.max_gc_pause_ns), color: 'text-[#ef4444]' },
+							{ label: 'Forced_Cnt', val: metrics.master.num_forced_gc }
+						] as trace}
+							<div class="flex justify-between border-b border-white/5 pb-4 text-[12px] font-extrabold italic tracking-tighter">
+								<span class="text-slate-500 uppercase tracking-[0.3em] font-['JetBrains_Mono']">{trace.label}</span>
+								<span class="{trace.color || 'text-white'} uppercase font-['JetBrains_Mono'] text-lg">{trace.val}</span>
 							</div>
-						</div>
-						<div class="bg-slate-900/30 rounded-lg p-3">
-							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Forced GC</div>
-							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
-								{metrics.master.num_forced_gc}
-							</div>
-						</div>
-						<div class="bg-slate-900/30 rounded-lg p-3">
-							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Last Pause</div>
-							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
-								{formatNanoseconds(metrics.master.last_gc_pause_ns)}
-							</div>
-						</div>
-						<div class="bg-slate-900/30 rounded-lg p-3">
-							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Avg Pause</div>
-							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
-								{formatNanoseconds(metrics.master.avg_gc_pause_ns)}
-							</div>
-						</div>
-						<div class="bg-slate-900/30 rounded-lg p-3">
-							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Max Pause</div>
-							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
-								{formatNanoseconds(metrics.master.max_gc_pause_ns)}
-							</div>
-						</div>
-						<div class="bg-slate-900/30 rounded-lg p-3">
-							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Next GC Target</div>
-							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
-								{formatBytes(metrics.master.next_gc_target)}
-							</div>
-						</div>
+						{/each}
 					</div>
 				</div>
 			</div>
 
-			<!-- Database Performance Card -->
-			<div
-				class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl overflow-hidden"
-				transition:fly={{ y: 20, duration: 400, delay: 200 }}
-			>
-				<div
-					class="p-4 border-b border-slate-300/50 dark:border-slate-700/50 flex items-center justify-between"
-				>
-					<div class="flex items-center gap-3">
-						<div class="p-2 bg-emerald-500/20 rounded-lg">
-							<Database class="w-5 h-5 text-emerald-400" />
-						</div>
-						<div>
-							<h3 class="font-semibold text-slate-900 dark:text-white text-sm sm:text-base">
-								Database Performance
-							</h3>
-							<p class="text-[10px] sm:text-xs text-slate-500">PostgreSQL Connection Pool</p>
-						</div>
-					</div>
-					<div class="flex items-center gap-2">
-						<div
-							class="w-2 h-2 rounded-full {metrics.database.connected
-								? 'bg-emerald-500'
-								: 'bg-red-500'}"
-						></div>
-						<span
-							class="text-[10px] sm:text-xs {metrics.database.connected
-								? 'text-emerald-400'
-								: 'text-red-400'}"
-						>
-							{metrics.database.connected ? 'Connected' : 'Disconnected'}
-						</span>
-					</div>
-				</div>
-
-				<div class="p-4 space-y-4">
-					<!-- Connection Pool Visual -->
-					<div>
-						<div class="flex items-center justify-between text-xs sm:text-sm mb-2">
-							<span class="text-slate-500 dark:text-slate-400">Connection Pool</span>
-							<span class="text-slate-900 dark:text-white font-medium"
-								>{metrics.database.in_use} / {metrics.database.open_connections}</span
-							>
-						</div>
-						<div class="h-3 bg-slate-900/50 rounded-full overflow-hidden flex">
-							<div
-								class="bg-blue-500 transition-all duration-500"
-								style="width: {metrics.database.open_connections > 0
-									? (metrics.database.in_use / metrics.database.open_connections) * 100
-									: 0}%"
-							></div>
-							<div
-								class="bg-slate-600 transition-all duration-500"
-								style="width: {metrics.database.open_connections > 0
-									? (metrics.database.idle / metrics.database.open_connections) * 100
-									: 0}%"
-							></div>
-						</div>
-						<div class="flex gap-4 mt-2 text-[10px] sm:text-xs">
-							<span class="text-blue-400">● In Use: {metrics.database.in_use}</span>
-							<span class="text-slate-500 dark:text-slate-400">● Idle: {metrics.database.idle}</span
-							>
-						</div>
-					</div>
-
-					<!-- Cache Hit Ratio -->
-					<div>
-						<div class="flex items-center justify-between text-xs sm:text-sm mb-2">
-							<span class="text-slate-500 dark:text-slate-400">Cache Hit Ratio</span>
-							<span
-								class="font-medium {metrics.database.cache_hit_ratio > 95
-									? 'text-emerald-400'
-									: metrics.database.cache_hit_ratio > 80
-										? 'text-amber-400'
-										: 'text-red-400'}"
-							>
-								{metrics.database.cache_hit_ratio?.toFixed(2)}%
-							</span>
-						</div>
-						<div class="h-2 bg-slate-900/50 rounded-full overflow-hidden">
-							<div
-								class="h-full transition-all duration-500 {metrics.database.cache_hit_ratio > 95
-									? 'bg-emerald-500'
-									: metrics.database.cache_hit_ratio > 80
-										? 'bg-amber-500'
-										: 'bg-red-500'}"
-								style="width: {metrics.database.cache_hit_ratio}%"
-							></div>
-						</div>
-					</div>
-
-					<!-- DB Stats Grid -->
-					<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-						<div class="bg-slate-900/30 rounded-lg p-3">
-							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Size</div>
-							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
-								{metrics.database.size || 'N/A'}
+			<!-- Spawner Array Deck -->
+			{#if metrics.spawners.spawner_details && metrics.spawners.spawner_details.length > 0}
+				<div class="lg:col-span-12 bg-[#0a0a0a] border border-white/5 shadow-2xl relative overflow-hidden group/fleet">
+					<div class="p-10 border-b border-white/5 bg-black/60 backdrop-blur-xl flex flex-col md:flex-row md:items-center justify-between gap-10">
+						<div class="flex items-center gap-10">
+							<div class="w-24 h-24 border border-[#f97316] flex items-center justify-center bg-[#f97316]/5 shadow-[0_0_40px_rgba(249,115,22,0.15)] relative overflow-hidden">
+								<Server class="w-12 h-12 text-[#f97316]" />
+								<div class="absolute inset-0 bg-amber-scanlines opacity-10 animate-flicker"></div>
 							</div>
-						</div>
-						<div class="bg-slate-900/30 rounded-lg p-3">
-							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Commits</div>
-							<div class="text-sm sm:text-lg font-semibold text-emerald-400">
-								{formatNumber(metrics.database.commits)}
-							</div>
-						</div>
-						<div class="bg-slate-900/30 rounded-lg p-3">
-							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Rollbacks</div>
-							<div class="text-sm sm:text-lg font-semibold text-red-400">
-								{formatNumber(metrics.database.rollbacks)}
-							</div>
-						</div>
-						<div class="bg-slate-900/30 rounded-lg p-3">
-							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Rows Fetched</div>
-							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
-								{formatNumber(metrics.database.tup_fetched)}
-							</div>
-						</div>
-						<div class="bg-slate-900/30 rounded-lg p-3">
-							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Rows Inserted</div>
-							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
-								{formatNumber(metrics.database.tup_inserted)}
-							</div>
-						</div>
-						<div class="bg-slate-900/30 rounded-lg p-3">
-							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Wait Count</div>
-							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
-								{formatNumber(metrics.database.wait_count)}
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<!-- Network & API Card -->
-			<div
-				class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl overflow-hidden"
-				transition:fly={{ y: 20, duration: 400, delay: 250 }}
-			>
-				<div
-					class="p-4 border-b border-slate-300/50 dark:border-slate-700/50 flex items-center gap-3"
-				>
-					<div class="p-2 bg-purple-500/20 rounded-lg">
-						<Network class="w-5 h-5 text-purple-400" />
-					</div>
-					<div>
-						<h3 class="font-semibold text-slate-900 dark:text-white text-sm sm:text-base">
-							Network & API
-						</h3>
-						<p class="text-[10px] sm:text-xs text-slate-500">Request Statistics & Bandwidth</p>
-					</div>
-				</div>
-
-				<div class="p-4 space-y-4">
-					<!-- Error Rate -->
-					<div>
-						<div class="flex items-center justify-between text-xs sm:text-sm mb-2">
-							<span class="text-slate-500 dark:text-slate-400">Error Rate</span>
-							<span
-								class="font-medium {metrics.network.error_rate < 1
-									? 'text-emerald-400'
-									: metrics.network.error_rate < 5
-										? 'text-amber-400'
-										: 'text-red-400'}"
-							>
-								{metrics.network.error_rate?.toFixed(2)}%
-							</span>
-						</div>
-						<div class="h-2 bg-slate-900/50 rounded-full overflow-hidden">
-							<div
-								class="h-full transition-all duration-500 {metrics.network.error_rate < 1
-									? 'bg-emerald-500'
-									: metrics.network.error_rate < 5
-										? 'bg-amber-500'
-										: 'bg-red-500'}"
-								style="width: {Math.min(metrics.network.error_rate * 10, 100)}%"
-							></div>
-						</div>
-					</div>
-
-					<!-- Network Stats Grid -->
-					<div class="grid grid-cols-2 gap-3">
-						<div class="bg-slate-900/30 rounded-lg p-3">
-							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Total Requests</div>
-							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
-								{formatNumber(metrics.network.total_requests)}
-							</div>
-						</div>
-						<div class="bg-slate-900/30 rounded-lg p-3">
-							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Total Errors</div>
-							<div class="text-sm sm:text-lg font-semibold text-red-400">
-								{formatNumber(metrics.network.total_errors)}
-							</div>
-						</div>
-						<div class="bg-slate-900/30 rounded-lg p-3">
-							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Requests/sec</div>
-							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
-								{metrics.network.requests_per_second?.toFixed(2)}
-							</div>
-						</div>
-						<div class="bg-slate-900/30 rounded-lg p-3">
-							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Active WS Connections</div>
-							<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
-								{metrics.network.active_connections}
-							</div>
-						</div>
-						<div class="bg-slate-900/30 rounded-lg p-3">
-							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Bytes Sent</div>
-							<div class="text-sm sm:text-lg font-semibold text-emerald-400">
-								{formatBytes(metrics.network.bytes_sent)}
-							</div>
-						</div>
-						<div class="bg-slate-900/30 rounded-lg p-3">
-							<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Bytes Received</div>
-							<div class="text-sm sm:text-lg font-semibold text-blue-400">
-								{formatBytes(metrics.network.bytes_received)}
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<!-- RedEye Guardian Performance Card -->
-			<div
-				class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl overflow-hidden"
-				transition:fly={{ y: 20, duration: 400, delay: 275 }}
-			>
-				<div
-					class="p-4 border-b border-slate-300/50 dark:border-slate-700/50 flex items-center justify-between"
-				>
-					<div class="flex items-center gap-3">
-						<div class="p-2 bg-red-500/20 rounded-lg">
-							<Eye class="w-5 h-5 text-red-400" />
-						</div>
-						<div>
-							<h3 class="font-semibold text-slate-900 dark:text-white text-sm sm:text-base">
-								RedEye Guardian
-							</h3>
-							<p class="text-[10px] sm:text-xs text-slate-500">Security & Traffic Shield</p>
-						</div>
-					</div>
-					<button
-						onclick={() => (showRedEyeModal = true)}
-						class="px-3 py-1.5 text-[10px] sm:text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-colors flex items-center gap-1.5"
-					>
-						<BarChart3 class="w-3 h-3" />
-						Details
-					</button>
-				</div>
-
-				<div class="p-4 space-y-4">
-					<!-- Active Bans -->
-					<div>
-						<div class="flex items-center justify-between text-xs sm:text-sm mb-2">
-							<span class="text-slate-500 dark:text-slate-400">Security Shield</span>
-							<span class="text-emerald-400 font-medium flex items-center gap-1.5">
-								<ShieldCheck class="w-3.5 h-3.5" />
-								Active
-							</span>
-						</div>
-						<div class="grid grid-cols-2 gap-3">
-							<div class="bg-slate-900/30 rounded-lg p-3">
-								<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Total Blocks</div>
-								<div class="text-sm sm:text-lg font-semibold text-red-400">
-									{formatNumber(metrics.network.redeye_total_blocks)}
-								</div>
-							</div>
-							<div class="bg-slate-900/30 rounded-lg p-3">
-								<div class="text-[10px] sm:text-xs text-slate-500 mb-1">Active Bans</div>
-								<div class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
-									{metrics.network.redeye_active_bans}
+							<div>
+								<h3 class="font-black text-5xl tracking-tight italic uppercase text-white leading-none font-['Inter']">Fleet_Deployment</h3>
+								<div class="flex items-center gap-8 mt-6 font-['JetBrains_Mono']">
+									<div class="flex items-center gap-3">
+										<div class="w-3 h-3 rounded-full bg-[#10b981] shadow-[0_0_15px_#10b981] animate-pulse"></div>
+										<span class="text-[11px] font-black uppercase tracking-[0.4em] text-[#10b981]">{metrics.spawners.online_spawners} ACTIVE_UNITS</span>
+									</div>
+									<div class="w-[1px] h-6 bg-white/10"></div>
+									<span class="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500">{metrics.spawners.running_instances} TOTAL_PROC_NODES</span>
 								</div>
 							</div>
 						</div>
+
+						<!-- Aggregate Telemetry Matrix -->
+						<div class="flex bg-black border border-white/10 p-1.5 shadow-2xl">
+							{#each [
+								{ label: 'AVG_CPU', val: `${metrics.spawners.avg_cpu_usage?.toFixed(1)}%` },
+								{ label: 'AVG_MEM', val: `${metrics.spawners.mem_usage_percent?.toFixed(1)}%` },
+								{ label: 'AVG_DSK', val: `${metrics.spawners.disk_usage_percent?.toFixed(1)}%` }
+							] as stat}
+								<div class="px-12 py-6 text-center hover:bg-white/5 transition-all duration-500 cursor-default border-r border-white/5 last:border-none">
+									<div class="text-[10px] font-black text-[#f97316] tracking-[0.4em] uppercase mb-2 italic font-['JetBrains_Mono']">{stat.label}</div>
+									<div class="text-3xl font-extrabold italic tracking-tighter text-white uppercase font-['JetBrains_Mono']">{stat.val}</div>
+								</div>
+							{/each}
+						</div>
 					</div>
 
-					<!-- Rate Limiting Impact -->
-					<div class="bg-amber-500/5 border border-amber-500/10 rounded-lg p-3">
-						<div class="flex items-center justify-between mb-1">
-							<span class="text-[10px] text-amber-500/70 uppercase tracking-wider font-bold"
-								>Traffic Throttling</span
-							>
-							<Lock class="w-3 h-3 text-amber-500/50" />
-						</div>
-						<div class="text-xl font-bold text-amber-400">
-							{formatNumber(metrics.network.redeye_total_rate_limit)}
-						</div>
-						<div class="text-[10px] text-slate-500 mt-1">Total requests rate-limited</div>
+					<!-- Spawner Units -->
+					<div class="divide-y border-t border-white/5">
+						{#each metrics.spawners.spawner_details as spawner (spawner.id)}
+							<div class="p-12 bg-[#0a0a0a] hover:bg-black transition-all duration-700 group/unit relative overflow-hidden border-white/5">
+								<div class="flex flex-col lg:flex-row lg:items-center gap-16 relative z-10">
+									<!-- ID & Detail -->
+									<div class="flex items-center gap-10 min-w-[380px]">
+										<div class="w-20 h-20 border border-white/10 flex items-center justify-center transition-all duration-500 shadow-2xl relative overflow-hidden group-hover/unit:border-[#f97316]">
+											<Radio class="w-10 h-10 {spawner.status === 'Online' ? 'text-[#10b981]' : 'text-[#ef4444] animate-pulse'}" />
+											<div class="absolute bottom-0 left-0 w-full h-1 {spawner.status === 'Online' ? 'bg-[#10b981]' : 'bg-[#ef4444]'}"></div>
+										</div>
+										<div>
+											<div class="flex items-center gap-5 mb-3">
+												<span class="text-4xl font-black italic tracking-tight uppercase text-white group-hover/unit:text-[#f97316] transition-colors font-['Inter']">{spawner.region}</span>
+												<span class="text-[11px] bg-[#1a1a1a] text-slate-400 px-4 py-2 font-black italic tracking-[0.3em] border border-white/5 font-['JetBrains_Mono']">UNIT_{spawner.id}</span>
+											</div>
+											<div class="text-[11px] text-slate-500 font-extrabold italic tracking-[0.2em] flex items-center gap-6 uppercase font-['JetBrains_Mono']">
+												<span>Uplink: <span class="text-white">{spawner.host}:{spawner.port}</span></span>
+												<span class="w-1.5 h-1.5 bg-white/10 rounded-full"></span>
+												<span>v{spawner.game_version}</span>
+											</div>
+										</div>
+									</div>
+
+									<!-- Telemetry Matrix -->
+									<div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-12 font-['JetBrains_Mono']">
+										<div class="flex flex-col justify-center border-l-[1px] border-white/5 pl-10">
+											<span class="text-[10px] font-black text-slate-500 tracking-[0.3em] uppercase mb-3 italic">Process_Load</span>
+											<div class="text-4xl font-extrabold italic tracking-tighter text-white uppercase leading-none">
+												{spawner.current_instances} <span class="text-sm text-slate-700 mx-2 font-normal">/</span> {spawner.max_instances}
+											</div>
+										</div>
+
+										{#each [
+											{ label: 'CPU_V', val: spawner.cpu_usage },
+											{ label: 'MEM_V', val: spawner.mem_percent },
+											{ label: 'DSK_V', val: spawner.disk_percent }
+										] as res}
+											<div class="flex flex-col justify-center group/gauge">
+												<div class="flex justify-between text-[10px] font-black tracking-[0.3em] uppercase mb-4 text-slate-500 italic">
+													<span class="group-hover/gauge:text-white transition-colors">{res.label}</span>
+													<span class="text-[#f97316] font-extrabold">{res.val?.toFixed(1)}%</span>
+												</div>
+												<div class="h-2.5 bg-black border border-white/10 p-[2px] shadow-2xl relative overflow-hidden group-hover/unit:border-white/20 transition-colors">
+													<div class="h-full bg-gradient-to-r from-[#f97316]/40 to-[#f97316] transition-all duration-1000 shadow-[0_0_15px_rgba(249,115,22,0.3)] relative" style="width: {res.val}%">
+														<div class="absolute inset-0 bg-amber-scanlines opacity-20"></div>
+													</div>
+												</div>
+											</div>
+										{/each}
+									</div>
+									
+									<div class="px-10 py-5 bg-black border border-white/10 text-[11px] font-black italic text-[#f97316] uppercase tracking-[0.4em] group-hover/unit:border-[#f97316] group-hover:text-black group-hover:bg-[#f97316] transition-all duration-500 cursor-default shadow-2xl font-['JetBrains_Mono']">
+										STABLE
+									</div>
+								</div>
+							</div>
+						{/each}
 					</div>
 				</div>
-			</div>
+			{/if}
 		</div>
 
-		<!-- Spawners Detail Section -->
-		{#if metrics.spawners.spawner_details && metrics.spawners.spawner_details.length > 0}
-			<div
-				class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl overflow-hidden"
-				transition:fly={{ y: 20, duration: 400, delay: 300 }}
-			>
-				<div
-					class="p-4 border-b border-slate-300/50 dark:border-slate-700/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-				>
-					<div class="flex items-center gap-3">
-						<div class="p-2 bg-cyan-500/20 rounded-lg">
-							<Server class="w-5 h-5 text-cyan-400" />
-						</div>
-						<div>
-							<h3 class="font-semibold text-slate-900 dark:text-white text-sm sm:text-base">
-								Spawner Fleet
-							</h3>
-							<p class="text-[10px] sm:text-xs text-slate-500">
-								{metrics.spawners.online_spawners} online of {metrics.spawners.total_spawners} total •
-								{metrics.spawners.running_instances} instances running
-							</p>
-						</div>
-					</div>
-
-					<!-- Aggregate Stats -->
-					<div class="flex gap-4 text-xs sm:text-sm w-full sm:w-auto justify-around sm:justify-end">
-						<div class="text-center">
-							<div class="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs">Avg CPU</div>
-							<div class="font-semibold text-slate-900 dark:text-white">
-								{metrics.spawners.avg_cpu_usage?.toFixed(1)}%
-							</div>
-						</div>
-						<div class="text-center">
-							<div class="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs">Memory</div>
-							<div class="font-semibold text-slate-900 dark:text-white">
-								{metrics.spawners.mem_usage_percent?.toFixed(1)}%
-							</div>
-						</div>
-						<div class="text-center">
-							<div class="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs">Disk</div>
-							<div class="font-semibold text-slate-900 dark:text-white">
-								{metrics.spawners.disk_usage_percent?.toFixed(1)}%
-							</div>
-						</div>
-					</div>
+		<!-- Footer -->
+		<div class="border-t border-white/5 bg-[#050505] p-12 shadow-2xl relative overflow-hidden group font-['JetBrains_Mono']">
+			<div class="absolute inset-0 bg-gradient-to-b from-white/[0.01] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+			<div class="flex flex-wrap items-center justify-center gap-16 text-[11px] font-black tracking-[0.5em] uppercase text-slate-600 relative z-10 italic">
+				<div class="flex items-center gap-4 hover:text-[#f97316] transition-all duration-300 cursor-default group/fitem">
+					<Cpu class="w-5 h-5 text-[#f97316] group-hover/fitem:scale-110 transition-transform" />
+					<span>Cores: <span class="text-white">{metrics.master.num_cpu}</span></span>
 				</div>
-
-				<div class="divide-y divide-slate-700/50">
-					{#each metrics.spawners.spawner_details as spawner (spawner.id)}
-						<div class="p-4 hover:bg-slate-700/20 transition-colors">
-							<div
-								class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-							>
-								<!-- Spawner Info -->
-								<div class="flex items-center gap-4 w-full sm:w-auto">
-									<div
-										class="w-2 h-2 rounded-full {spawner.status === 'Online'
-											? 'bg-emerald-500'
-											: 'bg-red-500'}"
-									></div>
-									<div class="flex-1 sm:flex-initial">
-										<div
-											class="font-medium text-slate-900 dark:text-white flex items-center gap-2 text-sm sm:text-base"
-										>
-											{spawner.region}
-											<span class="text-[10px] sm:text-xs text-slate-500">#{spawner.id}</span>
-										</div>
-										<div class="text-[10px] sm:text-xs text-slate-500">
-											{spawner.host}:{spawner.port}
-											{#if spawner.game_version}
-												<span
-													class="ml-2 px-1.5 py-0.5 bg-slate-700 rounded text-slate-500 dark:text-slate-400"
-													>v{spawner.game_version}</span
-												>
-											{/if}
-										</div>
-									</div>
-									<!-- Instances (Mobile: Moved next to name) -->
-									<div class="text-center px-2 sm:hidden">
-										<div class="text-[10px] text-slate-500">Inst.</div>
-										<div class="font-semibold text-slate-900 dark:text-white text-sm">
-											{spawner.current_instances}
-										</div>
-									</div>
-								</div>
-
-								<!-- Stats Grid -->
-								<div class="grid grid-cols-3 sm:flex items-center gap-4 w-full sm:w-auto">
-									<!-- Instances (Desktop) -->
-									<div class="text-center px-4 hidden sm:block">
-										<div class="text-xs text-slate-500">Instances</div>
-										<div class="font-semibold text-slate-900 dark:text-white">
-											{spawner.current_instances} / {spawner.max_instances}
-										</div>
-									</div>
-
-									<!-- CPU -->
-									<div class="w-full sm:w-32">
-										<div class="flex items-center justify-between text-[10px] sm:text-xs mb-1">
-											<span class="text-slate-500">CPU</span>
-											<span
-												class={spawner.cpu_usage > 80
-													? 'text-red-400'
-													: spawner.cpu_usage > 60
-														? 'text-amber-400'
-														: 'text-emerald-400'}>{spawner.cpu_usage?.toFixed(1)}%</span
-											>
-										</div>
-										<div class="h-1.5 bg-slate-900/50 rounded-full overflow-hidden">
-											<div
-												class="h-full transition-all duration-500 {spawner.cpu_usage > 80
-													? 'bg-red-500'
-													: spawner.cpu_usage > 60
-														? 'bg-amber-500'
-														: 'bg-emerald-500'}"
-												style="width: {spawner.cpu_usage}%"
-											></div>
-										</div>
-									</div>
-
-									<!-- Memory -->
-									<div class="w-full sm:w-32">
-										<div class="flex items-center justify-between text-[10px] sm:text-xs mb-1">
-											<span class="text-slate-500">MEM</span>
-											<span
-												class={spawner.mem_percent > 85
-													? 'text-red-400'
-													: spawner.mem_percent > 70
-														? 'text-amber-400'
-														: 'text-emerald-400'}>{spawner.mem_percent?.toFixed(1)}%</span
-											>
-										</div>
-										<div class="h-1.5 bg-slate-900/50 rounded-full overflow-hidden">
-											<div
-												class="h-full transition-all duration-500 {spawner.mem_percent > 85
-													? 'bg-red-500'
-													: spawner.mem_percent > 70
-														? 'bg-amber-500'
-														: 'bg-emerald-500'}"
-												style="width: {spawner.mem_percent}%"
-											></div>
-										</div>
-									</div>
-
-									<!-- Disk -->
-									<div class="w-full sm:w-32">
-										<div class="flex items-center justify-between text-[10px] sm:text-xs mb-1">
-											<span class="text-slate-500">DISK</span>
-											<span
-												class={spawner.disk_percent > 90
-													? 'text-red-400'
-													: spawner.disk_percent > 75
-														? 'text-amber-400'
-														: 'text-emerald-400'}>{spawner.disk_percent?.toFixed(1)}%</span
-											>
-										</div>
-										<div class="h-1.5 bg-slate-900/50 rounded-full overflow-hidden">
-											<div
-												class="h-full transition-all duration-500 {spawner.disk_percent > 90
-													? 'bg-red-500'
-													: spawner.disk_percent > 75
-														? 'bg-amber-500'
-														: 'bg-emerald-500'}"
-												style="width: {spawner.disk_percent}%"
-											></div>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					{/each}
+				<div class="flex items-center gap-4 hover:text-[#f97316] transition-all duration-300 cursor-default group/fitem">
+					<Layers class="w-5 h-5 text-[#f97316] group-hover/fitem:scale-110 transition-transform" />
+					<span>Runtime: <span class="text-white">{metrics.master.go_version}</span></span>
 				</div>
-			</div>
-		{/if}
-
-		<!-- System Info Footer -->
-		<div
-			class="bg-slate-800/30 border border-slate-300/30 dark:border-slate-700/30 rounded-xl p-4"
-			transition:fade={{ duration: 300, delay: 350 }}
-		>
-			<div
-				class="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-[10px] sm:text-xs text-slate-500"
-			>
-				<div class="flex items-center gap-2">
-					<Cpu class="w-3 h-3 sm:w-4 sm:h-4" />
-					<span>{metrics.master.num_cpu} CPUs</span>
+				<div class="flex items-center gap-4 hover:text-[#f97316] transition-all duration-300 cursor-default group/fitem">
+					<Server class="w-5 h-5 text-[#f97316] group-hover/fitem:scale-110 transition-transform" />
+					<span>Arch: <span class="text-white">{metrics.master.goos}/{metrics.master.goarch}</span></span>
 				</div>
-				<div class="flex items-center gap-2">
-					<Layers class="w-3 h-3 sm:w-4 sm:h-4" />
-					<span>{metrics.master.go_version}</span>
-				</div>
-				<div class="flex items-center gap-2">
-					<Server class="w-3 h-3 sm:w-4 sm:h-4" />
-					<span>{metrics.master.goos}/{metrics.master.goarch}</span>
-				</div>
-				<div class="flex items-center gap-2">
-					<BarChart3 class="w-3 h-3 sm:w-4 sm:h-4" />
-					<span>{formatNumber(metrics.master.mallocs)} allocs</span>
-				</div>
-				<div class="flex items-center gap-2">
-					<Trash2 class="w-3 h-3 sm:w-4 sm:h-4" />
-					<span>{formatNumber(metrics.master.frees)} frees</span>
+				<div class="flex items-center gap-4 hover:text-[#f97316] transition-all duration-300 cursor-default group/fitem">
+					<BarChart3 class="w-5 h-5 text-[#f97316] group-hover/fitem:scale-110 transition-transform" />
+					<span>Allocs: <span class="text-white">{formatNumber(metrics.master.mallocs)}</span></span>
 				</div>
 			</div>
 		</div>
 	{:else if loading}
-		<!-- Loading State -->
-		<div class="flex items-center justify-center py-20">
-			<div class="flex flex-col items-center gap-4">
-				<RefreshCw class="w-10 h-10 text-blue-400 animate-spin" />
-				<p class="text-slate-500 dark:text-slate-400">Loading metrics...</p>
+		<div class="flex items-center justify-center py-60 font-['JetBrains_Mono']">
+			<div class="flex flex-col items-center gap-12 animate-pulse">
+				<div class="w-32 h-32 border-[1px] border-white/5 border-t-[#f97316] rounded-full animate-spin-slow shadow-[0_0_50px_rgba(249,115,22,0.1)]"></div>
+				<div class="text-2xl font-black italic tracking-[0.6em] text-[#f97316] uppercase drop-shadow-[0_0_10px_rgba(249,115,22,0.3)]">Initializing_Link</div>
 			</div>
 		</div>
 	{/if}
 </div>
 
 {#if showRedEyeModal && metrics}
+	<!-- RedEye Modal - High-Definition Modern Industrial -->
 	<div
-		class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+		class="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-[#050505]/99 backdrop-blur-xl font-['Inter',sans-serif]"
 		transition:fade={{ duration: 200 }}
 	>
 		<div
-			class="bg-slate-900 border border-red-500/30 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col relative"
-			transition:scale={{ duration: 300, start: 0.95, easing: cubicOut }}
+			class="bg-black border border-white/10 shadow-[0_0_150px_rgba(239,68,68,0.15)] w-full max-w-7xl max-h-[95vh] overflow-hidden flex flex-col relative"
+			transition:scale={{ duration: 400, start: 0.98, easing: cubicOut }}
 		>
-			<!-- Neural Grid Background -->
-			<div class="absolute inset-0 opacity-10 pointer-events-none">
-				<div
-					class="absolute inset-0"
-					style="background-image: radial-gradient(circle at 2px 2px, #ef4444 1px, transparent 0); background-size: 24px 24px;"
-				></div>
-			</div>
-
 			<!-- Header -->
-			<div
-				class="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-white/50 dark:bg-slate-950/50 relative z-10"
-			>
-				<div class="flex items-center gap-4">
-					<div class="p-3 bg-red-500/20 rounded-2xl relative overflow-hidden group">
-						<Eye class="w-6 h-6 text-red-500 relative z-10" />
-						<div
-							class="absolute inset-0 bg-red-500/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500"
-						></div>
+			<div class="p-12 border-b-2 border-[#ef4444] flex justify-between items-center bg-black relative z-10 shadow-2xl">
+				<div class="flex items-center gap-10">
+					<div class="w-20 h-20 border-[1px] border-[#ef4444] flex items-center justify-center bg-[#ef4444]/5 shadow-[0_0_30px_rgba(239,68,68,0.2)] group hover:bg-[#ef4444]/10 transition-all duration-500">
+						<Eye class="w-12 h-12 text-[#ef4444] animate-flicker" />
 					</div>
-					<div>
-						<h2
-							class="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter"
-						>
-							RedEye Neural Core
+					<div class="space-y-3">
+						<div class="flex items-center gap-5">
+							<span class="text-[11px] font-black text-[#ef4444] tracking-[0.6em] uppercase font-['JetBrains_Mono'] italic leading-none">SENTINEL_PROTOCOL_V4</span>
+							<div class="h-[1px] w-20 bg-red-950"></div>
+						</div>
+						<h2 class="text-7xl font-black italic uppercase tracking-tighter leading-none text-white font-['Inter']">
+							RedEye_<span class="text-[#ef4444] underline decoration-4 underline-offset-12">Shield</span>
 						</h2>
-						<p class="text-[10px] text-red-500/70 font-mono uppercase tracking-[0.2em]">
-							Active Defense Subsystem Metrics
-						</p>
 					</div>
 				</div>
 				<button
 					onclick={() => (showRedEyeModal = false)}
-					class="p-2 hover:bg-white/5 rounded-xl text-slate-500 hover:text-slate-900 dark:text-white transition-all"
+					class="p-6 border border-white/10 hover:border-[#ef4444] hover:bg-[#ef4444] hover:text-black transition-all duration-500 group relative"
 				>
-					<XCircle class="w-6 h-6" />
+					<XCircle class="w-14 h-14 group-hover:rotate-180 transition-transform duration-700" />
+					<div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100"></div>
 				</button>
 			</div>
 
 			<!-- Body -->
-			<div class="p-8 overflow-y-auto relative z-10 flex-1 custom-scrollbar">
-				<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-					<!-- Threat Level -->
-					<div
-						class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 relative group overflow-hidden"
-					>
-						<div class="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
-						<div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
-							Threat Level
+			<div class="p-16 overflow-y-auto relative z-10 flex-1 custom-scrollbar space-y-20 bg-[#050505]">
+				<!-- Top Analytics -->
+				<div class="grid grid-cols-1 lg:grid-cols-3 gap-12 font-['JetBrains_Mono']">
+					<div class="lg:col-span-2 border border-white/5 bg-[#0a0a0a] p-16 relative overflow-hidden shadow-2xl group hover:border-[#ef4444]/20 transition-all duration-700">
+						<div class="absolute inset-0 bg-gradient-to-br from-red-600/[0.03] to-transparent"></div>
+						<div class="flex items-center justify-between mb-16 relative z-10">
+							<h4 class="text-md font-black text-slate-500 uppercase tracking-[0.8em] italic leading-none">Threat_Spectrum</h4>
+							<AlertOctagon class="w-12 h-12 text-[#ef4444] animate-pulse" />
 						</div>
-						<div class="flex items-end gap-2">
-							<div class="text-4xl font-black text-slate-900 dark:text-white font-mono">
-								{metrics.network.redeye_total_blocks > 1000 ? 'ELEVATED' : 'STABLE'}
+						<div class="flex items-end gap-16 relative z-10">
+							<div class="text-9xl font-black italic tracking-tighter leading-none uppercase text-white drop-shadow-[0_0_40px_rgba(255,255,255,0.1)]">
+								{metrics.network.redeye_total_blocks > 1000 ? 'Elevated' : 'Nominal'}
+							</div>
+							<div class="flex-1 space-y-6 pb-4">
+								<div class="h-6 bg-black border border-white/10 relative overflow-hidden shadow-inner">
+									<div 
+										class="h-full bg-gradient-to-r from-red-900 via-red-600 to-[#ef4444] transition-all duration-1000 shadow-[0_0_30px_rgba(239,68,68,0.4)] relative"
+										style="width: {metrics.network.redeye_total_blocks > 1000 ? '94%' : '22%'}"
+									>
+										<div class="absolute inset-0 bg-amber-scanlines opacity-20"></div>
+									</div>
+								</div>
+								<div class="flex justify-between text-[13px] font-black text-slate-600 tracking-[0.5em] uppercase italic">
+									<span>Signal_Variance</span>
+									<span class="text-red-950 font-extrabold">KEY: 0xCF9</span>
+								</div>
 							</div>
 						</div>
-						<div class="mt-4 flex gap-1">
-							{#each Array(5) as _, i}
-								<div
-									class="h-1 flex-1 rounded-full {i <
-									(metrics.network.redeye_total_blocks > 1000 ? 4 : 2)
-										? 'bg-red-500'
-										: 'bg-slate-800'}"
-								></div>
-							{/each}
-						</div>
 					</div>
 
-					<!-- Block Efficiency -->
-					<div
-						class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 relative overflow-hidden"
-					>
-						<div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
-						<div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
-							Shield Integrity
+					<div class="border border-white/5 bg-[#0a0a0a] p-12 flex flex-col justify-center items-center text-center shadow-2xl relative group hover:border-[#10b981]/20 transition-all duration-700">
+						<div class="relative mb-10 animate-pulse">
+							<ShieldCheck class="w-32 h-32 text-[#10b981] group-hover:scale-110 transition-transform duration-700" />
+							<div class="absolute inset-0 blur-[60px] bg-[#10b981]/20"></div>
 						</div>
-						<div class="text-4xl font-black text-slate-900 dark:text-white font-mono">99.9%</div>
-						<div class="mt-4 text-[10px] text-emerald-500 font-mono">AUTOMATED DEFENSE ACTIVE</div>
-					</div>
-
-					<!-- Active Bans -->
-					<div
-						class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 relative overflow-hidden"
-					>
-						<div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-						<div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
-							Neural Bans
-						</div>
-						<div class="text-4xl font-black text-slate-900 dark:text-white font-mono">
-							{metrics.network.redeye_active_bans}
-						</div>
-						<div class="mt-4 text-[10px] text-blue-500 font-mono">ACTIVE REPUTATION QUARANTINE</div>
+						<div class="text-[12px] font-black text-slate-500 uppercase tracking-[0.6em] mb-4 italic font-['JetBrains_Mono']">Integrity_Index</div>
+						<div class="text-7xl font-black text-white italic tracking-tighter leading-none uppercase font-['JetBrains_Mono']">99.9%</div>
 					</div>
 				</div>
 
-				<!-- Detailed Metrics Section -->
-				<div class="space-y-6">
-					<h3
-						class="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.3em] flex items-center gap-3"
-					>
-						<BarChart3 class="w-4 h-4 text-red-500" />
-						Interception Analytics
-					</h3>
-
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-						<!-- Total Interceptions -->
-						<div
-							class="bg-white/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-6"
-						>
-							<div class="flex justify-between items-start mb-6">
-								<div>
-									<h4
-										class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider"
-									>
-										Total Interceptions
-									</h4>
-									<p class="text-[10px] text-slate-500 font-mono">Cumulative DENY operations</p>
-								</div>
-								<ShieldAlert class="w-5 h-5 text-red-500" />
-							</div>
-							<div class="text-3xl font-black text-slate-900 dark:text-white mb-2">
-								{formatNumber(metrics.network.redeye_total_blocks)}
-							</div>
-							<div class="h-1.5 bg-slate-900 rounded-full overflow-hidden">
-								<div class="h-full bg-red-500 w-[65%] animate-pulse"></div>
+				<!-- Metric Blocks -->
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-12 font-['JetBrains_Mono']">
+									{#each [
+										{ label: 'AGGREGATE_INTERCEPT', val: formatNumber(metrics.network.redeye_total_blocks), color: 'text-white', icon: Lock, barColor: 'bg-red-600', percent: '65%', glow: 'shadow-[0_0_20px_rgba(239,68,68,0.3)]' },
+										{ label: 'THROTTLE_THOROUGHPUT', val: formatNumber(metrics.network.redeye_total_rate_limit), color: 'text-white', icon: Gauge, barColor: 'bg-[#f97316]', percent: '45%', glow: 'shadow-[0_0_20px_rgba(249,115,22,0.3)]' }
+									] as stat}
+										{@const StatIcon = stat.icon}
+										<div class="border border-white/5 bg-[#0a0a0a] p-12 relative overflow-hidden shadow-2xl group hover:border-white/10 transition-all duration-500">
+											<div class="flex justify-between items-start mb-16 relative z-10">
+												<div>
+													<h5 class="text-[12px] font-black text-slate-500 uppercase tracking-[0.5em] mb-4 italic leading-none">{stat.label}</h5>
+													<div class="text-7xl font-extrabold italic tracking-tighter {stat.color} group-hover:text-[#f97316] transition-colors uppercase leading-none">{stat.val}</div>
+												</div>
+												<StatIcon class="w-20 h-20 text-white/[0.02] group-hover:text-white/[0.06] transition-all duration-700 group-hover:scale-110" />
+											</div>							<div class="h-3 bg-black border border-white/10 relative overflow-hidden group-hover:border-white/20 transition-colors">
+								<div class="h-full {stat.barColor} transition-all duration-1000 opacity-40 group-hover:opacity-100 {stat.glow}" style="width: {stat.percent}"></div>
 							</div>
 						</div>
+					{/each}
+				</div>
 
-						<!-- Rate Limiting -->
-						<div
-							class="bg-white/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-6"
-						>
-							<div class="flex justify-between items-start mb-6">
-								<div>
-									<h4
-										class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider"
-									>
-										Throttling Events
-									</h4>
-									<p class="text-[10px] text-slate-500 font-mono">Traffic shaping triggers</p>
-								</div>
-								<Gauge class="w-5 h-5 text-amber-500" />
-							</div>
-							<div class="text-3xl font-black text-slate-900 dark:text-white mb-2">
-								{formatNumber(metrics.network.redeye_total_rate_limit)}
-							</div>
-							<div class="h-1.5 bg-slate-900 rounded-full overflow-hidden">
-								<div class="h-full bg-amber-500 w-[42%]"></div>
-							</div>
+				<!-- Command Logs -->
+				<div class="bg-black border border-white/5 p-12 font-['JetBrains_Mono'] text-sm leading-relaxed italic text-slate-400 shadow-2xl relative overflow-hidden group hover:border-white/10 transition-all duration-700">
+					<div class="absolute inset-0 bg-gradient-to-r from-red-600/[0.02] to-transparent"></div>
+					<div class="flex items-center gap-8 mb-10 text-[#ef4444] font-black tracking-[0.6em] uppercase border-b border-white/5 pb-8 relative z-10">
+						<div class="w-12 h-12 border border-[#ef4444] flex items-center justify-center bg-[#ef4444]/5">
+							<Info class="w-6 h-6" />
 						</div>
+						<span class="text-xl">Tactical_Report_012 // Neural_Matrix</span>
 					</div>
-
-					<!-- System Status -->
-					<div class="bg-red-500/5 border border-red-500/10 rounded-2xl p-6">
-						<div class="flex items-start gap-4">
-							<div class="p-3 bg-red-500/10 rounded-xl">
-								<Info class="w-6 h-6 text-red-400" />
-							</div>
-							<div class="flex-1">
-								<h4
-									class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-2"
-								>
-									Automated Anomaly Detection
-								</h4>
-								<p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-									The RedEye neural core is currently monitoring for high-frequency traffic
-									anomalies. Autonomous ban protocols are active with a threshold of <span
-										class="text-red-400 font-mono">100 events/min</span
-									>. Current system entropy is within nominal parameters.
-								</p>
-							</div>
-						</div>
+					<div class="relative z-10 text-lg leading-loose tracking-tight font-medium">
+						STATUS: <span class="text-white font-black uppercase tracking-widest bg-white/5 px-3 py-1">Active_Containment</span>. Heuristic engine matching verified threat signatures. Automated quarantine engaged across <span class="text-white font-bold underline decoration-[#ef4444] decoration-2 underline-offset-8">All Sectors</span>. Reputation variance stable (<span class="text-[#f97316] font-extrabold">0.024%</span>). Node synchronization complete. Defense hot-load operational.
 					</div>
 				</div>
 			</div>
 
 			<!-- Footer -->
-			<div
-				class="p-6 border-t border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 flex justify-between items-center"
-			>
-				<div
-					class="flex items-center gap-4 text-[10px] font-mono text-slate-500 uppercase tracking-widest"
-				>
-					<span class="flex items-center gap-1.5">
-						<div class="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></div>
-						Core Online
+			<div class="p-16 border-t border-white/5 bg-black flex flex-col md:flex-row justify-between items-center gap-12 font-['JetBrains_Mono']">
+				<div class="flex items-center gap-16 text-[14px] font-black text-slate-600 tracking-[0.6em] uppercase italic">
+					<span class="flex items-center gap-5">
+						<div class="w-4 h-4 rounded-full bg-[#ef4444] animate-pulse shadow-[0_0_15px_#ef4444]"></div>
+						UPLINK_HOT
 					</span>
-					<span>CRC: 0x8F22A1</span>
-					<span>Lat: 0.24ms</span>
+					<span class="hidden lg:block border-l border-white/5 pl-16">CIPHER: AES_256_RSA_OLD</span>
 				</div>
 				<button
 					onclick={() => (showRedEyeModal = false)}
-					class="px-8 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-xl shadow-red-900/20"
+					class="w-full md:w-auto px-24 py-8 bg-[#f97316] hover:bg-white text-black font-black uppercase tracking-[0.6em] italic transition-all shadow-2xl hover:shadow-[0_0_50px_rgba(255,255,255,0.25)] active:scale-95 text-lg font-['Inter']"
 				>
-					Acknowledge
+					ACKNOWLEDGE
 				</button>
 			</div>
 		</div>
@@ -1422,17 +843,79 @@
 {/if}
 
 <style>
+	/* CRT & Industrial Styles */
+	.bg-amber-scanlines {
+		background: linear-gradient(
+			rgba(18, 16, 16, 0) 50%,
+			rgba(0, 0, 0, 0.2) 50%
+		),
+		linear-gradient(
+			90deg,
+			rgba(255, 0, 0, 0.03),
+			rgba(0, 255, 0, 0.01),
+			rgba(0, 0, 255, 0.03)
+		);
+		background-size: 100% 4px, 4px 100%;
+	}
+
+	.bg-vignette {
+		background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.9) 100%);
+	}
+
+	@keyframes warmup {
+		0% { opacity: 1; filter: contrast(3) brightness(0); }
+		15% { opacity: 1; filter: contrast(2) brightness(1.5); }
+		30% { opacity: 1; filter: contrast(1.5) brightness(0.5); }
+		100% { opacity: 0; filter: contrast(1) brightness(1); visibility: hidden; }
+	}
+	.animate-warmup {
+		animation: warmup 1.2s forwards ease-out;
+	}
+
+	@keyframes loadingBar {
+		0% { transform: translateX(-100%); }
+		100% { transform: translateX(100%); }
+	}
+	.animate-loading-bar {
+		animation: loadingBar 1.5s linear infinite;
+	}
+
+	.animate-spin-slow {
+		animation: rotate 12s linear infinite;
+	}
+	@keyframes rotate {
+		from { transform: rotate(0deg); }
+		to { transform: rotate(360deg); }
+	}
+
+	@keyframes flicker {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0.8; }
+		55% { opacity: 0.95; }
+		60% { opacity: 0.7; }
+	}
+	.animate-flicker {
+		animation: flicker 0.25s infinite;
+	}
+
+	/* Refined Industrial Scrollbar */
 	.custom-scrollbar::-webkit-scrollbar {
-		width: 6px;
+		width: 8px;
 	}
 	.custom-scrollbar::-webkit-scrollbar-track {
-		background: transparent;
+		background: #050505;
 	}
 	.custom-scrollbar::-webkit-scrollbar-thumb {
-		background: rgba(239, 68, 68, 0.1);
-		border-radius: 10px;
+		background: #1a1a1a;
+		border: 1px solid #050505;
 	}
 	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-		background: rgba(239, 68, 68, 0.2);
+		background: #f97316;
+	}
+
+	/* Typography Overrides */
+	:global(body) {
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
 	}
 </style>
