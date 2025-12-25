@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
-	import { X, Save, User, Smartphone, Trophy, Hash, Terminal, ChevronRight } from 'lucide-svelte';
+	import { X, Save, User, Smartphone, Trophy, Hash, Terminal, ChevronRight, RefreshCw } from 'lucide-svelte';
 	import { notifications } from '$lib/stores';
 
 	let { isOpen, player, onClose, onSave } = $props();

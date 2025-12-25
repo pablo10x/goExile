@@ -177,7 +177,7 @@
 			case 'WARN':
 				return 'text-orange-400';
 			default:
-				return 'text-blue-400';
+				return 'text-rust-light';
 		}
 	}
 
@@ -237,7 +237,7 @@
 				onclick={() => changeCategory(cat)}
 				class="px-4 py-2 rounded-lg text-sm font-medium transition-all border border-transparent {category ===
 				cat
-					? 'bg-blue-600 text-slate-900 dark:text-white shadow-lg shadow-blue-900/20'
+					? 'bg-rust text-white shadow-lg shadow-rust/20'
 					: 'bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-700 hover:border-slate-600'}"
 			>
 				{cat} <span class="ml-1 opacity-60 text-xs">({counts[cat] || 0})</span>
@@ -258,9 +258,8 @@
 								onclick={toggleSelectAll}
 								class="w-5 h-5 rounded border border-slate-600 flex items-center justify-center transition-all {selectedIds.size ===
 									logs.length && logs.length > 0
-									? 'bg-blue-600 border-blue-500'
-									: 'hover:border-slate-400'}"
-							>
+																										? 'bg-rust border-rust-light'
+																										: 'hover:border-slate-400'}"							>
 								{#if selectedIds.size === logs.length && logs.length > 0}
 									<Check class="w-3.5 h-3.5 text-slate-900 dark:text-white" />
 								{/if}
@@ -286,18 +285,16 @@
 								class="hover:bg-slate-800/50 transition-colors cursor-pointer group {selectedIds.has(
 									log.id
 								)
-									? 'bg-blue-900/10'
-									: ''}"
-								onclick={() => (selectedLog = log)}
+																										? 'bg-rust/10'
+																										: ''}"								onclick={() => (selectedLog = log)}
 							>
 								<td class="px-4 py-3 text-center" onclick={(e) => toggleSelection(e, log.id)}>
 									<div
 										class="w-5 h-5 mx-auto rounded border border-slate-600 flex items-center justify-center transition-all relative overflow-hidden {selectedIds.has(
 											log.id
 										)
-											? 'bg-blue-600 border-blue-500'
-											: 'group-hover:border-slate-400 bg-slate-800/50'}"
-									>
+																																		? 'bg-rust border-rust-light'
+																																		: 'group-hover:border-slate-400 bg-slate-800/50'}"									>
 										{#if selectedIds.has(log.id)}
 											<div transition:scale={{ duration: 200, start: 0.5 }}>
 												<Check class="w-3.5 h-3.5 text-slate-900 dark:text-white" />

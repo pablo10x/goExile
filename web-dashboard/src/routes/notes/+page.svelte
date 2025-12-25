@@ -335,14 +335,13 @@
 						type="text"
 						bind:value={searchQuery}
 						placeholder="Search notes..."
-						class="w-full bg-slate-900/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/50 outline-none backdrop-blur-sm"
-					/>
-				</div>
-				<button
-					onclick={openCreateNoteModal}
-					class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-slate-900 dark:text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-900/20 transition-all hover:-translate-y-0.5"
-				>
-					<Plus class="w-4 h-4" />
+						                        class="w-full bg-slate-900/50 border border-[var(--border-color)] rounded-xl pl-9 pr-4 py-2 text-sm text-slate-200 focus:ring-2 focus:ring-rust/50 outline-none backdrop-blur-sm"
+						                    />
+						                </div>
+						                <button
+						                    onclick={openCreateNoteModal}
+						                    class="flex items-center gap-2 px-4 py-2 bg-rust hover:bg-rust-light text-white text-sm font-bold rounded-xl shadow-lg shadow-rust/20 transition-all hover:-translate-y-0.5"
+						                >					<Plus class="w-4 h-4" />
 					<span class="hidden sm:inline">New Note</span>
 				</button>
 			</div>

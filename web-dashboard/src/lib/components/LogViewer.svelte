@@ -2,6 +2,7 @@
 	import { onMount, tick, createEventDispatcher } from 'svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
+	import { siteSettings } from '$lib/stores';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import { formatBytes } from '$lib/utils';
 	import {
@@ -17,7 +18,9 @@
 		AlertTriangle,
 		Info,
 		Bug,
-		XCircle
+		XCircle,
+		Activity,
+		Trash2
 	} from 'lucide-svelte';
 
 	const {
@@ -97,7 +100,7 @@
 
 	const tabs: TabDef[] = [
 		{ id: 'all', label: 'All', icon: BarChart3, color: 'text-slate-500 dark:text-slate-400' },
-		{ id: 'info', label: 'Info', icon: Info, color: 'text-blue-400' },
+		{ id: 'info', label: 'Info', icon: Info, color: 'text-rust-light' },
 		{ id: 'warn', label: 'Warn', icon: AlertTriangle, color: 'text-yellow-400' },
 		{ id: 'error', label: 'Error', icon: XCircle, color: 'text-red-400' }
 	];
@@ -187,7 +190,7 @@
 			case 'DBG':
 				return 'text-slate-500';
 			case 'INF':
-				return 'text-blue-400';
+				return 'text-rust-light';
 			case 'WRN':
 				return 'text-yellow-400';
 			case 'ERR':
@@ -279,7 +282,7 @@
 {#if isOpen}
 	{#if !embedded}
 		<div
-			class="fixed inset-0 z-50 flex items-center justify-center sm:p-4 bg-black/60 backdrop-blur-sm"
+			class="fixed inset-0 z-[150] flex items-center justify-center sm:p-4 bg-black/80 backdrop-blur-md"
 			transition:fade={{ duration: 200 }}
 		>
 			<!-- Backdrop click to close -->
@@ -292,19 +295,23 @@
 				aria-label="Close"
 			></div>
 
-			<!-- Modal Container - Full screen on mobile, limited on desktop -->
+			<!-- Modal Container -->
 			<div
-				class="relative w-full h-full sm:h-[85vh] sm:max-w-6xl bg-slate-900 sm:rounded-xl border-0 sm:border border-slate-300 dark:border-slate-700 shadow-2xl flex flex-col overflow-hidden"
-				transition:scale={{ start: 0.95, duration: 200, easing: cubicOut }}
+				class="relative w-full h-full sm:h-[90vh] sm:max-w-7xl bg-stone-950 border-2 border-stone-800 shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden"
+				transition:scale={{ start: 0.98, duration: 300, easing: cubicOut }}
 			>
+				<!-- CRT Overlay -->
+				<div class="absolute inset-0 pointer-events-none z-50 opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%]"></div>
+				
 				<div class="contents">
-					<!-- Shared Content -->
 					{@render content()}
 				</div>
 			</div>
 		</div>
 	{:else}
-		<div class="h-full flex flex-col bg-slate-900 overflow-hidden">
+		<div class="h-full flex flex-col bg-stone-950 overflow-hidden border-2 border-stone-800 relative">
+			<!-- CRT Overlay -->
+			<div class="absolute inset-0 pointer-events-none z-50 opacity-[0.02] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%]"></div>
 			{@render content()}
 		</div>
 	{/if}
@@ -313,48 +320,72 @@
 {#snippet content()}
 	<!-- Header -->
 	<div
-		class="px-4 py-3 border-b border-slate-300 dark:border-slate-700 flex justify-between items-center bg-slate-800/50"
+		class="px-6 py-4 border-b-2 border-stone-800 flex justify-between items-center bg-stone-900/50"
 	>
-		<div class="flex items-center gap-3 overflow-hidden">
-			<h2
-				class="text-slate-900 dark:text-white font-semibold text-base sm:text-lg flex items-center gap-2 truncate"
-			>
-				<span class="text-slate-500 dark:text-slate-400">#{spawnerId}</span> Logs
-				{#if fileSize > 0}
-					<span
-						class="text-[10px] text-slate-500 font-mono border border-slate-300 dark:border-slate-700 rounded px-1.5 py-0.5 bg-slate-900/50 hidden sm:inline-block"
-						>{formatBytes(fileSize)}</span
-					>
-				{/if}
-			</h2>
+		<div class="flex items-center gap-4 overflow-hidden">
+			<div class="p-2 bg-rust/10 border border-rust/30">
+				<Activity class="w-4 h-4 text-rust-light" />
+			</div>
+			<div class="flex flex-col">
+				<h2 class="text-white font-black military-label text-lg tracking-tighter uppercase leading-none">
+					LOG_ARCHIVE : <span class="text-rust-light">NODE_{spawnerId}</span>
+				</h2>
+				<div class="flex items-center gap-3 mt-1">
+					<span class="text-[8px] font-mono text-stone-600 tracking-[0.2em] uppercase">Status: Streaming</span>
+					{#if fileSize > 0}
+						<span class="text-[8px] font-mono text-rust-light/60 bg-rust/5 px-1.5 py-0.5 border border-rust/20 uppercase"
+							>{formatBytes(fileSize)} Buffer</span>
+					{/if}
+				</div>
+			</div>
 			{#if loading && parsedLogs.length > 0}
-				<RefreshCw class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 animate-spin shrink-0" />
+				<RefreshCw class="w-3 h-3 text-rust-light animate-spin" />
 			{/if}
 		</div>
 
-		<div class="flex items-center gap-1 sm:gap-2">
+		<div class="flex items-center gap-3">
+			<div class="hidden sm:flex items-center gap-4 mr-4 text-[10px] font-mono text-stone-500">
+				<label class="flex items-center gap-2 cursor-pointer group">
+					<input
+						type="checkbox"
+						bind:checked={shouldAutoScroll}
+						class="sr-only peer"
+					/>
+					<div class="w-3 h-3 border border-stone-700 peer-checked:bg-rust peer-checked:border-rust transition-all"></div>
+					<span class="group-hover:text-stone-300 transition-colors uppercase tracking-widest">Auto_Scroll</span>
+				</label>
+				<label class="flex items-center gap-2 cursor-pointer group">
+					<input
+						type="checkbox"
+						bind:checked={isAutoRefreshing}
+						class="sr-only peer"
+					/>
+					<div class="w-3 h-3 border border-stone-700 peer-checked:bg-rust peer-checked:border-rust transition-all"></div>
+					<span class="group-hover:text-stone-300 transition-colors uppercase tracking-widest">Live_Sync</span>
+				</label>
+			</div>
+
 			<button
-				class="p-2 hover:bg-slate-700 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors"
-				title="Refresh Now"
+				class="p-2 bg-stone-900 border border-stone-800 text-stone-500 hover:text-white hover:border-rust transition-all"
+				title="Manual_Refresh"
 				onclick={fetchLogs}
 			>
 				<RefreshCw class="w-4 h-4 {loading ? 'animate-spin' : ''}" />
 			</button>
 
 			<button
-				class="p-2 hover:bg-slate-700 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors"
-				title="Clear Logs"
+				class="p-2 bg-stone-900 border border-stone-800 text-stone-500 hover:text-red-500 hover:border-red-900/50 transition-all"
+				title="Clear_Registry"
 				onclick={() => (isConfirmOpen = true)}
 			>
-				<XCircle class="w-4 h-4" />
+				<Trash2 class="w-4 h-4" />
 			</button>
 
 			{#if !embedded}
-				<div class="h-6 w-px bg-slate-700 mx-1 sm:mx-2"></div>
-
+				<div class="h-8 w-px bg-stone-800 mx-1"></div>
 				<button
 					onclick={onClose}
-					class="p-2 hover:bg-red-500/20 hover:text-red-400 rounded-lg text-slate-500 dark:text-slate-400 transition-colors"
+					class="p-2 bg-red-950/10 border border-red-900/30 text-red-600 hover:bg-red-600 hover:text-black transition-all"
 				>
 					<X class="w-5 h-5" />
 				</button>
@@ -364,116 +395,94 @@
 
 	<!-- Toolbar: Tabs & Search -->
 	<div
-		class="px-3 sm:px-4 py-3 bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex flex-col md:flex-row gap-3 md:items-center"
+		class="px-6 py-4 bg-stone-950 border-b border-stone-800 flex flex-col md:flex-row gap-6 md:items-center"
 	>
-		<!-- Tabs (Scrollable on mobile) -->
-		<div
-			class="flex p-1 bg-white dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 overflow-x-auto no-scrollbar"
-		>
+		<!-- Tabs -->
+		<div class="flex gap-1 bg-black p-1 border border-stone-800">
 			{#each tabs as tab}
 				{@const Icon = tab.icon}
 				<button
-					class="px-2.5 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 whitespace-nowrap
+					class="px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2
 					                        {selectedTab === tab.id
-						? 'bg-slate-800 text-slate-900 dark:text-white shadow-sm'
-						: 'text-slate-500 hover:text-slate-700 dark:text-slate-300'}"
+						? 'bg-rust text-white shadow-[0_0_15px_rgba(120,53,15,0.3)]'
+						: 'text-stone-600 hover:text-stone-300 hover:bg-stone-900'}"
 					onclick={() => (selectedTab = tab.id)}
 				>
 					<Icon class="w-3.5 h-3.5" />
-					{tab.label}
-					<span class="ml-0.5 text-[10px] opacity-60 bg-slate-900/50 px-1.5 rounded-full">
-						{stats[tab.id]}
-					</span>
+					<span class="hidden sm:inline">{tab.label}</span>
+					<span class="ml-1 opacity-40 font-mono">[{stats[tab.id]}]</span>
 				</button>
 			{/each}
 		</div>
 
-		<!-- Search & Options -->
-		<div class="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
-			<div class="relative w-full sm:w-56">
-				<Search class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
-				<input
-					type="text"
-					placeholder="Search logs..."
-					bind:value={searchTerm}
-					class="w-full pl-9 pr-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs sm:text-sm text-slate-800 dark:text-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-				/>
-			</div>
-
-			<div class="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400 select-none">
-				<label class="flex items-center gap-2 cursor-pointer">
-					<input
-						type="checkbox"
-						bind:checked={shouldAutoScroll}
-						class="rounded bg-slate-800 border-slate-300 dark:border-slate-700 text-blue-500 focus:ring-0 w-3.5 h-3.5"
-					/>
-					<span>Auto-scroll</span>
-				</label>
-				<label class="flex items-center gap-2 cursor-pointer">
-					<input
-						type="checkbox"
-						bind:checked={isAutoRefreshing}
-						class="rounded bg-slate-800 border-slate-300 dark:border-slate-700 text-blue-500 focus:ring-0 w-3.5 h-3.5"
-					/>
-					<span>Auto-refresh</span>
-				</label>
-			</div>
+		<!-- Search -->
+		<div class="flex-1 relative group">
+			<Search class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-700 group-focus-within:text-rust transition-colors" />
+			<input
+				type="text"
+				placeholder="FILTER_BUFFER_BY_IDENTIFIER..."
+				bind:value={searchTerm}
+				class="w-full pl-12 pr-4 py-2.5 bg-black border border-stone-800 focus:border-rust text-white text-[11px] font-mono uppercase tracking-widest outline-none transition-all placeholder:text-stone-800"
+			/>
 		</div>
 	</div>
 
 	<!-- Logs Area -->
-	<div class="flex-1 relative bg-white dark:bg-slate-950 min-h-0">
+	<div class="flex-1 relative bg-stone-950 min-h-0">
 		{#if loading && parsedLogs.length === 0}
-			<div class="absolute inset-0 flex flex-col items-center justify-center text-slate-500 gap-3">
-				<RefreshCw class="w-8 h-8 animate-spin opacity-50" />
-				<span class="text-sm">Loading logs...</span>
+			<div class="absolute inset-0 flex flex-col items-center justify-center text-stone-700 gap-4">
+				<RefreshCw class="w-10 h-10 animate-spin opacity-20" />
+				<span class="text-[10px] font-mono uppercase tracking-[0.5em] animate-pulse">Initializing_Buffer_Link...</span>
 			</div>
 		{:else if error}
-			<div class="absolute inset-0 flex flex-col items-center justify-center text-red-400 gap-2">
-				<AlertTriangle class="w-8 h-8 opacity-50" />
-				<span class="text-sm">{error}</span>
-				<button class="text-xs underline hover:text-red-300" onclick={fetchLogs}>Try Again</button>
+			<div class="absolute inset-0 flex flex-col items-center justify-center text-red-500 gap-4 p-8 text-center">
+				<AlertTriangle class="w-12 h-12 opacity-40" />
+				<div class="space-y-1">
+					<span class="text-xs font-black uppercase tracking-widest block">FATAL_CONNECTION_FAULT</span>
+					<p class="text-[10px] font-mono opacity-60 uppercase">{error}</p>
+				</div>
+				<button class="px-6 py-2 bg-red-950/20 border border-red-900 text-red-500 text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all" onclick={fetchLogs}>Retry_Protocol</button>
 			</div>
 		{:else if filteredLogs.length === 0}
-			<div class="absolute inset-0 flex flex-col items-center justify-center text-slate-600 gap-2">
-				<Search class="w-8 h-8 opacity-20" />
-				<span class="text-sm">No logs found</span>
+			<div class="absolute inset-0 flex flex-col items-center justify-center text-stone-800 gap-4">
+				<Search class="w-12 h-12 opacity-10" />
+				<span class="text-[10px] font-mono uppercase tracking-[0.3em]">NULL_RECORDS_LOCATED</span>
 			</div>
 		{:else}
 			<div
 				bind:this={logContainer}
 				onscroll={handleScroll}
-				class="absolute inset-0 overflow-y-auto overflow-x-auto p-2 font-mono text-[10px] sm:text-xs space-y-0.5 custom-scrollbar"
+				class="absolute inset-0 overflow-y-auto overflow-x-auto p-4 font-mono text-[11px] space-y-1 custom-scrollbar bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.01)_1px,transparent_0)] bg-[size:40px_40px]"
 			>
 				{#each filteredLogs as l (l.id)}
 					<div
-						class="flex items-start gap-2 sm:gap-3 hover:bg-slate-900/50 px-1.5 sm:px-2 py-1 rounded select-text group transition-colors"
+						class="flex items-start gap-4 hover:bg-white/[0.03] px-3 py-1.5 border-l-2 border-transparent hover:border-rust/40 transition-all select-text group"
 					>
 						<!-- Time -->
-						<span class="text-slate-600 shrink-0 w-16 sm:w-24 tabular-nums select-none truncate"
+						<span class="text-stone-600 shrink-0 w-24 tabular-nums select-none opacity-60 font-medium"
 							>{l.time}</span
 						>
 
 						<!-- Level -->
-						<span class="shrink-0 w-8 sm:w-12 font-bold select-none {getLevelClass(l.level)}">
-							{l.level}
+						<span class="shrink-0 w-12 font-black select-none text-[10px] {getLevelClass(l.level)} uppercase tracking-tighter">
+							[{l.level}]
 						</span>
 
 						<!-- Message -->
-						<div class="flex-1 min-w-0 break-all sm:break-words text-slate-700 dark:text-slate-300">
+						<div class="flex-1 min-w-0 break-all sm:break-words text-stone-300 leading-relaxed font-medium">
 							<span>{l.message}</span>
 
 							<!-- Structured Context -->
 							{#if l.raw && Object.keys(l.raw).length > 3}
 								<div
-									class="mt-1 ml-1 sm:ml-2 text-slate-500 text-[9px] sm:text-[10px] space-y-1 border-l-2 border-slate-200 dark:border-slate-800 pl-2 opacity-80 group-hover:opacity-100 transition-opacity"
+									class="mt-2 ml-2 space-y-1 border-l-2 border-stone-800 bg-stone-900/30 p-3 opacity-70 group-hover:opacity-100 transition-opacity"
 								>
 									{#each Object.entries(l.raw) as [k, v]}
 										{#if !['time', 'level', 'msg', 'message'].includes(k)}
-											<div class="flex gap-2 flex-wrap">
-												<span class="text-slate-600">{k}:</span>
+											<div class="flex gap-3 flex-wrap">
+												<span class="text-rust-light/60 font-bold uppercase text-[9px] tracking-widest">{k}:</span>
 												<span
-													class="text-slate-500 dark:text-slate-400 font-mono whitespace-pre-wrap break-all"
+													class="text-stone-400 font-mono text-[10px] whitespace-pre-wrap break-all"
 													>{JSON.stringify(v)}</span
 												>
 											</div>
@@ -486,7 +495,7 @@
 				{/each}
 
 				{#if shouldAutoScroll}
-					<div class="h-4"></div>
+					<div class="h-8"></div>
 				{/if}
 			</div>
 		{/if}
@@ -501,21 +510,20 @@
 />
 
 <style>
-	/* Custom Scrollbar for the log container */
+	/* Custom Scrollbar for industrial terminal */
 	.custom-scrollbar::-webkit-scrollbar {
-		width: 10px;
-		height: 10px;
+		width: 6px;
+		height: 6px;
 	}
 	.custom-scrollbar::-webkit-scrollbar-track {
-		background: #0f172a; /* slate-950 */
+		background: #050505;
 	}
 	.custom-scrollbar::-webkit-scrollbar-thumb {
-		background: #334155; /* slate-700 */
-		border-radius: 5px;
-		border: 2px solid #0f172a;
+		background: #222;
+		border: 1px solid #111;
 	}
 	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-		background: #475569; /* slate-600 */
+		background: var(--color-rust);
 	}
 
 	/* Hide scrollbar for tab nav */
@@ -523,7 +531,15 @@
 		display: none;
 	}
 	.no-scrollbar {
-		-ms-overflow-style: none; /* IE and Edge */
-		scrollbar-width: none; /* Firefox */
+		-ms-overflow-style: none;
+		scrollbar-width: none;
+	}
+
+	@keyframes flicker {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0.4; }
+	}
+	.animate-flicker {
+		animation: flicker 0.2s infinite;
 	}
 </style>

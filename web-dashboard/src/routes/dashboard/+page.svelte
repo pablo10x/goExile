@@ -377,24 +377,29 @@
 	}
 </script>
 
-<div class="flex justify-between items-center mb-6 relative">
+<div class="flex justify-between items-center mb-10 relative">
 	<div
 		class="transform transition-all duration-700 {isLoaded
 			? 'translate-x-0 opacity-100'
 			: '-translate-x-4 opacity-0'}"
 	>
+		<div class="flex items-center gap-3 mb-1">
+			<div class="h-px w-8 bg-rust"></div>
+			<span class="tactical-code text-rust">Sector_01 // Registry</span>
+		</div>
 		<h1
-			class="text-2xl sm:text-3xl font-bold text-slate-50 bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent animate-pulse"
+			class="text-4xl sm:text-5xl font-blackops text-white military-label tracking-tighter"
 		>
-			Dashboard
+			<span class="text-rust">EXILE</span>_SYSTEM_CORE
 		</h1>
-		<div class="flex items-center gap-2 mt-1">
+		<div class="flex items-center gap-3 mt-2">
 			<div
-				class={`w-2 h-2 rounded-full ${$isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'} shadow-lg`}
-			></div>
-			<span class="text-xs font-mono text-slate-500 dark:text-slate-400 backdrop-blur-sm"
-				>{$connectionStatus}</span
+				class={`px-2 py-0.5 tactical-code flex items-center gap-2 ${$isConnected ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}
 			>
+				<span class={`w-1.5 h-1.5 rounded-full ${$isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`}></span>
+				{$connectionStatus}
+			</div>
+			<span class="text-[10px] font-industrial text-stone-600 uppercase tracking-[0.2em]">Sync_Protocol: Active</span>
 		</div>
 	</div>
 
@@ -402,71 +407,51 @@
 		<!-- Add Spawner Button -->
 		<button
 			onclick={() => (showAddSpawnerModal = true)}
-			class="group relative flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-slate-900 dark:text-white font-semibold text-sm rounded-xl shadow-lg shadow-emerald-900/30 hover:shadow-emerald-500/30 transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95 overflow-hidden {isLoaded
+			class="group relative flex items-center gap-3 px-6 py-3 bg-white text-black font-black font-heading text-xs rounded-none border-2 border-white hover:bg-rust hover:text-white hover:border-rust transition-all duration-300 shadow-[4px_4px_0px_rgba(255,255,255,0.2)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none {isLoaded
 				? 'translate-x-0 opacity-100'
 				: 'translate-x-4 opacity-0'}"
 		>
-			<!-- Shimmer effect -->
-			<div
-				class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"
-			></div>
-
-			<!-- Icon with rotation on hover -->
-			<div class="relative">
-				<Plus class="w-5 h-5 transition-transform duration-300 group-hover:rotate-90" />
-			</div>
-
-			<span class="relative hidden sm:inline">Add Spawner</span>
-
-			<!-- Glow effect -->
-			<div
-				class="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-				style="box-shadow: inset 0 0 20px rgba(16, 185, 129, 0.3);"
-			></div>
+			<Plus class="w-4 h-4" />
+			<span class="uppercase tracking-widest">Init_Instance</span>
 		</button>
 
-		<NotificationBell />
-		<div
-			class="text-slate-500 text-sm hidden sm:block transform transition-all duration-700 delay-100 {isLoaded
-				? 'translate-x-0 opacity-100'
-				: 'translate-x-4 opacity-0'}"
-		>
-			{new Date().toLocaleDateString()}
+		<div class="relative group">
+			<NotificationBell />
 		</div>
 	</div>
 </div>
 
 <!-- Stats Grid -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
 	<div
-		class="transform transition-all duration-700 hover:scale-105 {animateStats
+		class="transform transition-all duration-700 {animateStats
 			? 'translate-y-0 opacity-100'
 			: 'translate-y-8 opacity-0'}"
 		style="animation-delay: 0.1s;"
 	>
-		<StatsCard title="Uptime" value={formatUptime($stats.uptime)} Icon={Clock} color="blue" />
+		<StatsCard title="OPERATIONAL_UPTIME" value={formatUptime($stats.uptime)} Icon={Clock} color="blue" />
 	</div>
 	<div
-		class="transform transition-all duration-700 hover:scale-105 {animateStats
+		class="transform transition-all duration-700 {animateStats
 			? 'translate-y-0 opacity-100'
 			: 'translate-y-8 opacity-0'}"
 		style="animation-delay: 0.2s;"
 	>
 		<StatsCard
-			title="Active Spawners"
+			title="RECOGNIZED_SPAWNERS"
 			value={$stats.active_spawners}
 			Icon={Server}
 			color="emerald"
 		/>
 	</div>
 	<div
-		class="transform transition-all duration-700 hover:scale-105 {animateStats
+		class="transform transition-all duration-700 {animateStats
 			? 'translate-y-0 opacity-100'
 			: 'translate-y-8 opacity-0'}"
 		style="animation-delay: 0.3s;"
 	>
 		<StatsCard
-			title="Total Requests"
+			title="TOTAL_BUFFER_REQUESTS"
 			value={$stats.total_requests}
 			Icon={Activity}
 			color="purple"
@@ -474,52 +459,50 @@
 	</div>
 	<a
 		href="/logs"
-		class="block transition-all duration-700 hover:scale-[1.05] hover:rotate-1 {animateStats
+		class="block transition-all duration-700 {animateStats
 			? 'translate-y-0 opacity-100'
 			: 'translate-y-8 opacity-0'}"
 		style="animation-delay: 0.4s;"
 	>
-		<StatsCard title="Total Errors" value={$stats.total_errors} Icon={AlertCircle} color="red" />
+		<StatsCard title="CRITICAL_FAULT_COUNT" value={$stats.total_errors} Icon={AlertCircle} color="red" />
 	</a>
 </div>
 
 <!-- Secondary Stats & Resources -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-	<div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
-		<div
-			class="transform transition-all duration-700 hover:scale-105 hover:-translate-y-1 {animateStats
-				? 'translate-y-0 opacity-100'
-				: 'translate-y-8 opacity-0'}"
-			style="animation-delay: 0.5s;"
-		>
-			<StatsCard
-				title="Network Traffic"
-				value=""
-				subValue={`<span class="text-orange-400">↑ ${formatBytes($stats.bytes_sent)}</span> <span class="text-slate-600 mx-2">|</span> <span class="text-cyan-400">↓ ${formatBytes($stats.bytes_received)}</span>`}
-				Icon={Network}
-				color="orange"
-			/>
-		</div>
-		<div
-			class="transform transition-all duration-700 hover:scale-105 hover:-translate-y-1 {animateStats
-				? 'translate-y-0 opacity-100'
-				: 'translate-y-8 opacity-0'}"
-			style="animation-delay: 0.6s;"
-			onmouseenter={handleDBMouseEnter}
-			onmouseleave={handleDBMouseLeave}
-			onmousemove={handleDBMouseMove}
-			role="tooltip"
-		>
-			<StatsCard
-				title="Database Status"
-				value={$stats.db_connected ? 'Connected' : 'Disconnected'}
-				subValue={$stats.db_connected
-					? `<span class="text-emerald-400">${$stats.db_open_connections} Open</span> <span class="text-slate-600 mx-2">|</span> <span class="text-blue-400">${$stats.db_in_use} In Use</span>`
-					: ''}
-				Icon={Database}
-				color={$stats.db_connected ? 'emerald' : 'red'}
-			/>
-		</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+	<div
+		class="transform transition-all duration-700 hover:scale-[1.01] {animateStats
+			? 'translate-y-0 opacity-100'
+			: 'translate-y-8 opacity-0'}"
+		style="animation-delay: 0.5s;"
+	>
+		<StatsCard
+			title="NETWORK_TRAFFIC"
+			value=""
+			subValue={`<span class="text-orange-400">UP: ${formatBytes($stats.bytes_sent)}</span> <span class="text-stone-700 mx-2">|</span> <span class="text-rust-light">DOWN: ${formatBytes($stats.bytes_received)}</span>`}
+			Icon={Network}
+			color="orange"
+		/>
+	</div>
+	<div
+		class="transform transition-all duration-700 hover:scale-[1.01] {animateStats
+			? 'translate-y-0 opacity-100'
+			: 'translate-y-8 opacity-0'}"
+		style="animation-delay: 0.6s;"
+		onmouseenter={handleDBMouseEnter}
+		onmouseleave={handleDBMouseLeave}
+		onmousemove={handleDBMouseMove}
+		role="tooltip"
+	>
+		<StatsCard
+			title="DATABASE_ENGINE"
+			value={$stats.db_connected ? 'CONNECTED' : 'OFFLINE'}
+			subValue={$stats.db_connected
+				? `<span class="text-emerald-400">CONNECTIONS: ${$stats.db_open_connections}</span> <span class="text-stone-700 mx-2">|</span> <span class="text-rust-light">IN_USE: ${$stats.db_in_use}</span>`
+				: 'RECONNECTING...'}
+			Icon={Database}
+			color={$stats.db_connected ? 'emerald' : 'red'}
+		/>
 	</div>
 </div>
 
@@ -535,26 +518,38 @@
 
 <!-- Spawners Section -->
 <div
-	class="card bg-slate-800/60 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 rounded-xl overflow-hidden transform transition-all duration-700 hover:scale-[1.01] hover:border-blue-500/20 hover:shadow-2xl hover:shadow-blue-500/5 {animateStats
+	class="bg-stone-900/20 border-2 border-stone-800 rounded-none overflow-hidden transform transition-all duration-700 hover:border-rust/30 shadow-xl {animateStats
 		? 'translate-y-0 opacity-100'
 		: 'translate-y-12 opacity-0'}"
 	style="animation-delay: 0.7s;"
 >
 	<div
-		class="border-b border-slate-300/50 dark:border-slate-700/50 px-6 py-4 flex justify-between items-center bg-gradient-to-r from-slate-800/80 to-slate-800/60 backdrop-blur-sm"
+		class="border-b-2 border-stone-800 px-6 py-4 flex justify-between items-center bg-stone-900/40"
 	>
-		<div class="flex items-center gap-3">
-			<div
-				class="w-3 h-3 bg-blue-500 rounded-full animate-pulse shadow-lg shadow-blue-500/50"
-			></div>
-			<h2 class="text-xl font-bold text-slate-50">📦 Registered Spawners</h2>
+		<div class="flex items-center gap-4">
+			<div class="p-2 bg-rust/10 border border-rust/30 rounded-none">
+				<Server class="w-4 h-4 text-rust-light" />
+			</div>
+			<div>
+				<h2 class="text-xl font-bold text-stone-100 tracking-tight uppercase">Synchronized_Nodes</h2>
+				<div class="flex items-center gap-2">
+					<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+					<span class="text-[9px] font-mono text-stone-500 uppercase tracking-widest">Active_Registry_Stream</span>
+				</div>
+			</div>
 		</div>
-		<span
-			class="text-xs text-slate-500 uppercase tracking-widest font-semibold bg-slate-900/80 px-3 py-1 rounded-full border border-slate-300 dark:border-slate-700"
-			>Real-time</span
-		>
+		<div class="flex items-center gap-4">
+			<div class="hidden sm:flex flex-col items-end">
+				<span class="tactical-code text-rust-light">System_Archive</span>
+				<span class="text-[10px] font-industrial text-white uppercase tracking-widest">Buffer_Optimized</span>
+			</div>
+			<div class="h-10 w-px bg-stone-800"></div>
+			<span
+				class="text-[10px] font-black font-industrial bg-rust/20 text-rust-light px-4 py-1.5 border border-rust/30 uppercase tracking-widest"
+				>Real-time</span>
+		</div>
 	</div>
-	<div class="p-0 bg-slate-900/40">
+	<div class="p-0 bg-black/20 backdrop-blur-sm">
 		<SpawnerTable
 			bind:this={spawnerTableComponent}
 			spawners={$spawners}

@@ -177,8 +177,7 @@
 				</span>
 				{#if !todo.done && todo.in_progress}
 					<span
-						class="px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 text-[9px] font-bold uppercase tracking-wider animate-pulse"
-					>
+																		class="px-1.5 py-0.5 rounded-full bg-rust/20 text-rust-light text-[9px] font-bold uppercase tracking-wider animate-pulse"					>
 						In Progress
 					</span>
 				{/if}
@@ -263,12 +262,12 @@
 					type="text"
 					bind:value={newSubTaskContent}
 					placeholder="New sub-task..."
-					class="flex-1 bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-emerald-500 transition-all"
+					class="flex-1 bg-slate-900 border border-[var(--border-color)] rounded-lg px-2 py-1 text-xs text-slate-200 outline-none focus:border-rust transition-all"
 				/>
 				<button
 					type="submit"
 					disabled={!newSubTaskContent.trim()}
-					class="p-1 bg-slate-700 hover:bg-emerald-600 text-slate-900 dark:text-white rounded transition-colors disabled:opacity-50"
+					class="p-1 bg-slate-700 hover:bg-rust text-white rounded transition-colors disabled:opacity-50"
 				>
 					<Plus class="w-3 h-3" />
 				</button>
@@ -278,12 +277,12 @@
 
 	<!-- Comments Section -->
 	{#if showComments}
-		<div class="ml-8 mt-2 space-y-2 pr-2 border-l-2 border-indigo-500/30 pl-3" transition:slide>
+		<div class="ml-8 mt-2 space-y-2 pr-2 border-l-2 border-rust/30 pl-3" transition:slide>
 			<div class="space-y-2">
 				{#each todo.comments || [] as comment (comment.id)}
 					<div class="flex flex-col gap-1 p-2 bg-slate-900/50 rounded-lg group/comment">
 						<div class="flex justify-between items-center">
-							<div class="flex items-center gap-1.5 text-[10px] font-bold text-indigo-400">
+							<div class="flex items-center gap-1.5 text-[10px] font-bold text-rust-light">
 								<User class="w-2.5 h-2.5" />
 								<span>{comment.author || 'User'}</span>
 								<span class="text-slate-600 font-normal ml-1"
@@ -318,12 +317,12 @@
 					type="text"
 					bind:value={newCommentContent}
 					placeholder="Write a comment..."
-					class="flex-1 bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-indigo-500 transition-all"
+					class="flex-1 bg-slate-900 border border-[var(--border-color)] rounded-lg px-2 py-1.5 text-xs text-slate-200 outline-none focus:border-rust transition-all"
 				/>
 				<button
 					type="submit"
 					disabled={!newCommentContent.trim()}
-					class="p-1.5 bg-indigo-600 hover:bg-indigo-500 text-slate-900 dark:text-white rounded-lg transition-colors disabled:opacity-50"
+					class="p-1.5 bg-rust hover:bg-rust-light text-white rounded-lg transition-colors disabled:opacity-50"
 				>
 					<Send class="w-3 h-3" />
 				</button>

@@ -73,8 +73,7 @@
 			</button>
 			<div>
 				<h1 class="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-					<User class="w-8 h-8 text-blue-400" />
-					Player Details
+															<User class="w-8 h-8 text-rust-light" />					Player Details
 				</h1>
 				<p class="text-slate-500 dark:text-slate-400 mt-1">
 					Detailed view of player profile and social graph
@@ -93,8 +92,7 @@
 
 	{#if loading}
 		<div class="flex flex-col items-center justify-center py-20">
-			<RefreshCw class="w-12 h-12 text-blue-500 animate-spin mb-4" />
-			<p class="text-slate-500 dark:text-slate-400">Loading player profile...</p>
+									<RefreshCw class="w-12 h-12 text-rust animate-spin mb-4" />			<p class="text-slate-500 dark:text-slate-400">Loading player profile...</p>
 		</div>
 	{:else if error}
 		<div
@@ -122,8 +120,7 @@
 
 					<div class="relative z-10 flex flex-col sm:flex-row gap-6 items-start">
 						<div
-							class="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-3xl font-bold text-slate-900 dark:text-white shadow-xl shadow-blue-900/30"
-						>
+																					class="w-20 h-20 rounded-2xl bg-gradient-to-br from-rust to-rust-light flex items-center justify-center text-3xl font-bold text-white shadow-xl shadow-rust/30"						>
 							{player.name.charAt(0).toUpperCase()}
 						</div>
 

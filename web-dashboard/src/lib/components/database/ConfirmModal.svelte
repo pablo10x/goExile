@@ -44,8 +44,7 @@
 			iconBg: 'bg-blue-500/10',
 			iconColor: 'text-blue-400',
 			buttonBg: 'bg-blue-600 hover:bg-blue-500',
-			buttonShadow: 'shadow-blue-900/20'
-		}
+					  buttonShadow: 'shadow-rust-light/20'		}
 	};
 
 	$effect(() => {

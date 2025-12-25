@@ -1,4 +1,3 @@
-
 🔒 Comprehensive Security Enhancement Plan
 
 
@@ -101,3 +100,43 @@ WebSocket Security:
   - Low Cost, High Impact: Security headers, rate limiting
   - Medium Cost, High Impact: Authentication hardening, input validation
   - High Cost, High Impact: Advanced threat detection, MFA
+
+---
+
+# 🎨 Dashboard Theme & Aesthetic Implementation (Phase 2) - TODO for Tomorrow
+
+### 1. 🛠️ Critical Syntax & Logic Fixes
+- [ ] **config/+page.svelte Cleanup**:
+    - [ ] Fix async function declarations (ensure all are `async function name()` and not `await functionName()`).
+    - [ ] Perform a full audit of HTML/Svelte tags to fix "Unexpected block closing tag" errors.
+    - [ ] Resolve property access indexing issues in the "Aesthetics" tab.
+- [ ] **SystemTopology.svelte Import**:
+    - [ ] Investigate why `dashboard/+page.svelte` fails to import `SystemTopology`. Ensure it has a `export default` if using standard Svelte 5 component syntax, or verify named exports.
+- [ ] **SectionBackground.svelte Indexing**:
+    - [ ] Fix TypeScript indexing error for `backgroundConfig.settings[type]` by ensuring `type` is cast to a valid key.
+
+### 2. ⚡ Performance & Optimization
+- [ ] **Three.js Lifecycle Management**:
+    - [ ] Ensure "Minimal" core engine mode completely stops the `requestAnimationFrame` loop in `SectionBackground`, `GlobalSmoke`, and `NavbarParticles`.
+    - [ ] Add a "Low Power Mode" toggle to `siteSettings` that forces "Minimal" background and disables all heavy animations (pulsing, flickering, floating).
+    - [ ] Optimize particle counts based on the `particle_density` setting.
+
+### 3. 💾 Persistence & State
+- [ ] **Local Storage Sync**:
+    - [ ] Implement a helper to sync `siteSettings` and `backgroundConfig` stores with `localStorage`.
+    - [ ] Ensure settings persist across page refreshes.
+
+### 4. 🎨 UI/UX Theme Audit
+- [ ] **Hardcoded Style Removal**:
+    - [ ] Scan all routes (`/notes`, `/database`, `/logs`, `/performance`, `/redeye`, `/users`) for remaining `blue-*`, `indigo-*`, or `cyan-*` classes.
+    - [ ] Replace them with `rust-*`, `stone-*`, or CSS variables (`var(--color-rust)`).
+- [ ] **Industrial Styling Consistency**:
+    - [ ] Ensure the `industrial_styling` toggle (rounded vs sharp corners) is respected by ALL cards and modals.
+    - [ ] Update `InstanceRow.svelte` and `LogViewer.svelte` to support the new toggles.
+- [ ] **Component Polish**:
+    - [ ] Refactor `NotificationBell.svelte` to match the Rust/Industrial theme.
+    - [ ] Update scrollbar styles in all views to use the tactical gray/rust-hover palette.
+
+### 5. ✅ Final Verification
+- [ ] Run `yarn check` and ensure **0 errors** across the entire web-dashboard.
+- [ ] Test the "Aesthetics" tab toggles in real-time to ensure immediate UI feedback without reload.

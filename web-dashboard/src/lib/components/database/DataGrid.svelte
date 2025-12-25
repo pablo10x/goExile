@@ -371,11 +371,10 @@
 					</button>
 				{/if}
 
-				<button
-					onclick={onAddRow}
-					class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-slate-900 dark:text-white rounded-lg text-sm font-bold shadow-lg shadow-blue-900/25 transition-all hover:shadow-blue-900/40 hover:scale-[1.02] active:scale-[0.98]"
-				>
-					<Plus class="w-4 h-4" />
+				                <button
+									onclick={onAddRow}
+									class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-rust to-rust-light hover:from-rust-light hover:to-rust text-white rounded-lg text-sm font-bold shadow-lg shadow-rust-light/25 transition-all hover:shadow-rust-light/40 hover:scale-[1.02] active:scale-[0.98]"
+								>					<Plus class="w-4 h-4" />
 					<span>Add Row</span>
 				</button>
 			</div>

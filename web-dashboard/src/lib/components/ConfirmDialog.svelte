@@ -3,6 +3,7 @@
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut, backOut } from 'svelte/easing';
 	import DOMPurify from 'dompurify';
+	import { siteSettings } from '$lib/stores';
 	import { Terminal, ShieldAlert, AlertTriangle, RefreshCw, X, ChevronRight } from 'lucide-svelte';
 
 	export let isOpen: boolean = false;
@@ -64,11 +65,13 @@
 		transition:fade={{ duration: 200 }}
 	>
 		<!-- CRT Overlay Effect (Dialog Scope) -->
-		<div class="fixed inset-0 pointer-events-none z-[450] opacity-[0.03] bg-amber-scanlines"></div>
+		{#if $siteSettings.aesthetic.crt_effect}
+			<div class="fixed inset-0 pointer-events-none z-[450] opacity-[0.03] bg-amber-scanlines"></div>
+		{/if}
 
 		<!-- Backdrop -->
 		<div
-			class="absolute inset-0 bg-black/90 backdrop-blur-sm"
+			class="absolute inset-0 bg-black/90 {$siteSettings.aesthetic.glassmorphism ? 'backdrop-blur-sm' : ''}"
 			onclick={!loading ? close : undefined}
 			onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && !loading && close()}
 			role="button"
@@ -78,19 +81,23 @@
 
 		<!-- Modal Container - Industrial Terminal Style -->
 		<div
-			class="relative w-full max-w-lg bg-black border-2 {isCritical ? 'border-red-900 shadow-[0_0_40px_rgba(153,27,27,0.2)]' : 'border-[#f97316]/30 shadow-[0_0_40px_rgba(249,115,22,0.1)]'} overflow-hidden z-[460]"
+			class="relative w-full max-w-lg bg-black border-2 {$siteSettings.aesthetic.industrial_styling ? 'rounded-sm' : 'rounded-2xl'} {isCritical ? 'border-red-900' : 'border-rust/30'} {$siteSettings.aesthetic.glow_effects ? (isCritical ? 'shadow-[0_0_40px_rgba(153,27,27,0.2)]' : 'shadow-[0_0_40px_rgba(120,53,15,0.1)]') : ''} overflow-hidden z-[460]"
 			transition:modalScale
 		>
 			<!-- Status Bar -->
-			<div class="h-1 w-full {isCritical ? 'bg-red-600' : 'bg-[#f97316]'} opacity-50 animate-pulse"></div>
+			{#if $siteSettings.aesthetic.animations_enabled}
+				<div class="h-1 w-full {isCritical ? 'bg-red-600' : 'bg-rust'} opacity-50 animate-pulse"></div>
+			{:else}
+				<div class="h-1 w-full {isCritical ? 'bg-red-600' : 'bg-rust'} opacity-50"></div>
+			{/if}
 
 			<!-- Header -->
 			<div class="px-8 py-5 border-b border-white/5 flex justify-between items-center bg-black">
 				<div class="flex items-center gap-4">
 					{#if isCritical}
-						<ShieldAlert class="w-5 h-5 text-red-600 animate-flicker" />
+						<ShieldAlert class="w-5 h-5 text-red-600 {$siteSettings.aesthetic.animations_enabled ? 'animate-flicker' : ''}" />
 					{:else}
-						<Terminal class="w-5 h-5 text-[#f97316]" />
+						<Terminal class="w-5 h-5 text-rust" />
 					{/if}
 					<h3 class="text-lg font-black italic tracking-tighter text-white uppercase">
 						{title}
@@ -114,7 +121,7 @@
 						</div>
 						<div class="text-slate-400 text-sm leading-relaxed italic font-bold uppercase tracking-tight">
 							{#if loading && statusMessage}
-								<p class="animate-pulse text-[#f97316]">
+								<p class="{$siteSettings.aesthetic.animations_enabled ? 'animate-pulse' : ''} text-rust">
 									>> {statusMessage}
 								</p>
 							{:else}

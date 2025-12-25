@@ -74,7 +74,7 @@
 			'relative overflow-hidden rounded-full transition-all duration-500 ease-out';
 		const colorMap = {
 			orange: 'from-orange-500 to-red-500',
-			blue: 'from-blue-500 to-purple-500',
+			blue: 'from-rust to-rust-light',
 			green: 'from-green-500 to-teal-500',
 			red: 'from-red-500 to-pink-500',
 			purple: 'from-purple-500 to-indigo-500',

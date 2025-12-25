@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { fade, slide, scale } from 'svelte/transition';
-	import { notifications } from '$lib/stores';
+	import {
+		notifications,
+		backgroundConfig,
+		siteSettings,
+		theme
+	} from '$lib/stores';
 	import {
 		Settings,
 		Server,
@@ -35,10 +40,18 @@
 		FileJson,
 		Search,
 		X,
-		Edit3
+		Edit3,
+		Palette,
+		Monitor,
+		Code2,
+		LayoutDashboard,
+		CloudRain,
+		Waves,
+		Wind,
+		Activity
 	} from 'lucide-svelte';
 
-	// Types (Same as before)
+	// Types
 	interface ConfigItem {
 		key: string;
 		value: string;
@@ -81,7 +94,7 @@
 	// State
 	let loading = $state(true);
 	let saving = $state(false);
-	let activeTab = $state<'master' | 'spawner' | 'firebase'>('master');
+	let activeTab = $state<'master' | 'spawner' | 'firebase' | 'aesthetic'>('master');
 	let searchQuery = $state('');
 	let showSecrets = $state<Set<string>>(new Set());
 	let pendingChanges = $state<Map<string, string>>(new Map());
@@ -107,7 +120,7 @@
 			description: 'Core server identification and behavior',
 			icon: Settings,
 			color: 'blue',
-			gradient: 'from-blue-600 to-indigo-600',
+			gradient: 'from-rust to-rust-light',
 			expanded: true,
 			items: []
 		},
@@ -117,7 +130,7 @@
 			description: 'Ports, hosts, and connection settings',
 			icon: Network,
 			color: 'cyan',
-			gradient: 'from-cyan-600 to-teal-600',
+			gradient: 'from-orange-600 to-amber-600',
 			expanded: true,
 			items: []
 		},
@@ -137,7 +150,7 @@
 			description: 'Database connections and pooling',
 			icon: Database,
 			color: 'purple',
-			gradient: 'from-purple-600 to-violet-600',
+			gradient: 'from-amber-700 to-orange-800',
 			expanded: false,
 			items: []
 		},
@@ -147,7 +160,7 @@
 			description: 'Resource limits and performance tuning',
 			icon: Zap,
 			color: 'amber',
-			gradient: 'from-amber-600 to-orange-600',
+			gradient: 'from-rust to-rust-light',
 			expanded: false,
 			items: []
 		}
@@ -161,7 +174,7 @@
 			description: 'Default values for new spawners',
 			icon: Cpu,
 			color: 'green',
-			gradient: 'from-green-600 to-emerald-600',
+			gradient: 'from-stone-700 to-stone-800',
 			expanded: true,
 			items: []
 		},
@@ -171,7 +184,7 @@
 			description: 'Instance limits and resource allocation',
 			icon: HardDrive,
 			color: 'orange',
-			gradient: 'from-orange-600 to-red-600',
+			gradient: 'from-rust to-orange-700',
 			expanded: true,
 			items: []
 		},
@@ -181,7 +194,7 @@
 			description: 'Game server port ranges',
 			icon: Network,
 			color: 'teal',
-			gradient: 'from-teal-600 to-cyan-600',
+			gradient: 'from-rust-light to-rust',
 			expanded: false,
 			items: []
 		},
@@ -191,7 +204,7 @@
 			description: 'Automatic update behavior',
 			icon: RefreshCw,
 			color: 'indigo',
-			gradient: 'from-indigo-600 to-blue-600',
+			gradient: 'from-stone-600 to-rust',
 			expanded: false,
 			items: []
 		}
@@ -247,16 +260,14 @@
 		);
 	});
 
-	// Load configuration data (Same as before)
+	// Load configuration data
 	async function loadConfig() {
 		loading = true;
 		try {
 			const response = await fetch('/api/config');
-			if (!response.ok) throw new Error('Failed to load configuration');
-
-			const configs: ConfigItem[] = await response.json();
+			if (!response.ok) throw new Error('Failed to fetch config');
+			const configs = await response.json();
 			distributeConfigs(configs);
-			await loadFirebaseStatus();
 		} catch (e: any) {
 			notifications.add({
 				type: 'error',
@@ -271,10 +282,6 @@
 	function distributeConfigs(configs: ConfigItem[]) {
 		masterSections = masterSections.map((s) => ({ ...s, items: [] }));
 		spawnerSections = spawnerSections.map((s) => ({ ...s, items: [] }));
-
-		if (!configs || configs.length === 0) {
-			configs = getDefaultConfigs();
-		}
 
 		for (const config of configs) {
 			if (config.category === 'system') {
@@ -328,29 +335,23 @@
 		spawnerSections = [...spawnerSections];
 	}
 
-	function getDefaultConfigs(): ConfigItem[] {
-		// (Same mock data implementation for fallback)
-		const now = new Date().toISOString();
-		return []; // Truncated for brevity, logic remains
-	}
-
-	async function loadFirebaseStatus() {
-		try {
-			const response = await fetch('/api/config/firebase/status');
+	function loadFirebaseStatus() {
+		return fetch('/api/config/firebase/status').then(response => {
 			if (response.ok) {
-				const status = await response.json();
-				firebaseConnected = status.connected;
-				firebaseProjectId = status.project_id || '';
-				if (status.configs) {
-					firebaseConfigs = status.configs;
-				}
+				return response.json();
 			}
-		} catch (e) {
+		}).then((status) => {
+			firebaseConnected = status.connected;
+			firebaseProjectId = status.project_id || '';
+			if (status.configs) {
+				firebaseConfigs = status.configs;
+			}
+		}).catch(() => {
 			firebaseConnected = false;
-		}
+		});
 	}
 
-	// Firebase functions (Same as before)
+	// Firebase functions
 	function openFirebaseModal(mode: 'create' | 'edit', config?: FirebaseConfig) {
 		firebaseModalMode = mode;
 		if (mode === 'edit' && config) {
@@ -358,19 +359,19 @@
 			firebaseForm = {
 				key: config.key,
 				value: config.value,
-				valueType: config.valueType.toUpperCase(),
+				valueType: config.valueType.toUpperCase() as any,
 				description: config.description || ''
 			};
 		} else {
 			firebaseEditingKey = '';
-			firebaseForm = { key: '', value: '', valueType: 'STRING', description: '' };
+			firebaseForm = { key: '', value: '', valueType: 'STRING' as any, description: '' };
 		}
 		showFirebaseModal = true;
 	}
 
 	function closeFirebaseModal() {
 		showFirebaseModal = false;
-		firebaseForm = { key: '', value: '', valueType: 'STRING', description: '' };
+		firebaseForm = { key: '', value: '', valueType: 'STRING' as any, description: '' };
 	}
 
 	async function saveFirebaseParameter() {
@@ -485,12 +486,38 @@
 	async function saveChanges() {
 		if (pendingChanges.size === 0) return;
 		saving = true;
-		// (Save logic same as before)
-		setTimeout(() => {
-			saving = false;
-			pendingChanges = new Map();
+		
+		try {
+			const promises = [];
+			for (const [key, value] of pendingChanges.entries()) {
+				promises.push(
+					fetch(`/api/config/${key}`, {
+						method: 'PUT',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ value })
+					})
+				);
+			}
+
+			const results = await Promise.all(promises);
+			const failed = results.filter(r => !r.ok);
+
+			if (failed.length > 0) {
+				throw new Error(`Failed to save ${failed.length} items`);
+			}
+
 			notifications.add({ type: 'success', message: 'Configuration saved successfully' });
-		}, 1000);
+			pendingChanges = new Map();
+			await loadConfig(); // Reload to refresh timestamps etc
+		} catch (e: any) {
+			notifications.add({
+				type: 'error',
+				message: 'Save failed',
+				details: e.message
+			});
+		} finally {
+			saving = false;
+		}
 	}
 
 	function discardChanges() {
@@ -516,348 +543,237 @@
 		}
 	}
 
-	onMount(() => {
-		loadConfig();
+	onMount(async () => {
+		await loadConfig();
+		await loadFirebaseStatus();
 	});
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-	<!-- Animated Background -->
-	<div class="fixed inset-0 overflow-hidden pointer-events-none">
-		<div
-			class="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-pulse"
-		></div>
-		<div
-			class="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse"
-			style="animation-delay: 1s;"
-		></div>
-	</div>
+<div class="relative z-10 p-4 sm:p-6 max-w-7xl mx-auto pb-24 md:pb-6">
+	<!-- Header -->
+	<div class="mb-10">
+		<div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+			<div class="flex items-center gap-5">
+				<div
+					class="p-3 bg-rust border-2 border-rust-light shadow-[0_0_20px_rgba(120,53,15,0.4)]"
+				>
+					<Settings class="w-8 h-8 text-white" />
+				</div>
+				<div>
+					<div class="flex items-center gap-2 mb-1">
+						<div class="h-px w-6 bg-rust"></div>
+						<span class="tactical-code text-rust">System_Environment_Bus</span>
+					</div>
+					<h1 class="text-3xl sm:text-4xl font-black military-label text-white uppercase tracking-tighter">
+						CONFIGURATION_CORE
+					</h1>
+				</div>
+			</div>
 
-	<div class="relative z-10 p-4 sm:p-6 max-w-7xl mx-auto pb-24 md:pb-6">
-		<!-- Header -->
-		<div class="mb-6 sm:mb-8">
-			<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-				<div class="flex items-center gap-4">
+			<!-- Actions Bar -->
+			<div class="flex items-center gap-3">
+				{#if hasUnsavedChanges}
 					<div
-						class="p-2 sm:p-3 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl sm:rounded-2xl shadow-lg shadow-blue-900/30"
+						class="flex items-center gap-3 px-4 py-2 bg-rust/10 border-2 border-rust/30"
+						transition:slide={{ axis: 'x' }}
 					>
-						<Settings class="w-6 h-6 sm:w-8 sm:h-8 text-slate-900 dark:text-white" />
+						<div class="w-2 h-2 bg-rust animate-pulse"></div>
+						<span class="font-jetbrains text-[10px] font-black text-rust-light uppercase tracking-widest" >{pendingChangeCount}_UNCOMMITTED_CHANGES</span>
 					</div>
-					<div>
-						<h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
-							Configuration
-						</h1>
-						<p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">
-							Manage server settings & remote configs
-						</p>
-					</div>
-				</div>
-
-				<!-- Actions Bar -->
-				<div class="flex items-center gap-2 sm:gap-3 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-					{#if hasUnsavedChanges}
-						<div
-							class="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-orange-500/10 border border-orange-500/30 rounded-xl whitespace-nowrap"
-							transition:slide={{ axis: 'x' }}
-						>
-							<div class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-orange-500 animate-pulse"></div>
-							<span class="text-xs sm:text-sm font-medium text-orange-400"
-								>{pendingChangeCount} unsaved</span
-							>
-						</div>
-						<button
-							onclick={discardChanges}
-							class="px-3 py-1.5 sm:px-4 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl transition-all flex items-center gap-2 text-xs sm:text-sm font-medium"
-						>
-							<RotateCcw class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-							<span class="hidden sm:inline">Discard</span>
-						</button>
-						<button
-							onclick={saveChanges}
-							disabled={saving}
-							class="px-4 py-1.5 sm:px-5 sm:py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-slate-900 dark:text-white rounded-xl font-semibold shadow-lg shadow-orange-900/30 transition-all flex items-center gap-2 text-xs sm:text-sm disabled:opacity-50"
-						>
-							{#if saving}
-								<RefreshCw class="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
-								<span class="hidden sm:inline">Saving...</span>
-							{:else}
-								<Save class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-								<span>Save</span>
-							{/if}
-						</button>
-					{:else}
-						<button
-							onclick={loadConfig}
-							disabled={loading}
-							class="px-3 py-1.5 sm:px-4 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl transition-all flex items-center gap-2 disabled:opacity-50 text-xs sm:text-sm font-medium ml-auto md:ml-0"
-						>
-							<RefreshCw class="w-3.5 h-3.5 sm:w-4 sm:h-4 {loading ? 'animate-spin' : ''}" />
-							Refresh
-						</button>
-					{/if}
-				</div>
-			</div>
-
-			<!-- Tab Navigation (Scrollable on mobile) -->
-			<div
-				class="flex items-center gap-2 p-1.5 bg-slate-800/50 rounded-2xl border border-slate-300/50 dark:border-slate-700/50 backdrop-blur-sm overflow-x-auto no-scrollbar"
-			>
-				<button
-					onclick={() => (activeTab = 'master')}
-					class="flex-1 flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium text-xs sm:text-sm whitespace-nowrap transition-all {activeTab ===
-					'master'
-						? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-slate-900 dark:text-white shadow-lg'
-						: 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-700/50'}"
-				>
-					<Server class="w-4 h-4 sm:w-5 sm:h-5" />
-					Master Server
-				</button>
-				<button
-					onclick={() => (activeTab = 'spawner')}
-					class="flex-1 flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium text-xs sm:text-sm whitespace-nowrap transition-all {activeTab ===
-					'spawner'
-						? 'bg-gradient-to-r from-green-600 to-emerald-600 text-slate-900 dark:text-white shadow-lg'
-						: 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-700/50'}"
-				>
-					<Cpu class="w-4 h-4 sm:w-5 sm:h-5" />
-					Spawner Defaults
-				</button>
-				<button
-					onclick={() => (activeTab = 'firebase')}
-					class="flex-1 flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium text-xs sm:text-sm whitespace-nowrap transition-all {activeTab ===
-					'firebase'
-						? 'bg-gradient-to-r from-orange-600 to-amber-600 text-slate-900 dark:text-white shadow-lg'
-						: 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-700/50'}"
-				>
-					<Flame class="w-4 h-4 sm:w-5 sm:h-5" />
-					Firebase
-				</button>
-			</div>
-
-			<!-- Search Bar -->
-			<div class="mt-4 relative group">
-				<Search
-					class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500 group-focus-within:text-blue-400 transition-colors"
-				/>
-				<input
-					type="text"
-					bind:value={searchQuery}
-					placeholder="Search configurations..."
-					class="w-full pl-10 sm:pl-12 pr-10 py-2.5 sm:py-3 bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl text-sm sm:text-base text-slate-800 dark:text-slate-200 placeholder:text-slate-500 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-				/>
-				{#if searchQuery}
 					<button
-						onclick={() => (searchQuery = '')}
-						class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-900 dark:text-white"
+						onclick={discardChanges}
+						class="px-6 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 font-black text-[10px] uppercase tracking-widest transition-all border border-stone-700"
 					>
-						<X class="w-4 h-4" />
+						Rollback
+					</button>
+					<button
+						onclick={saveChanges}
+						disabled={saving}
+						class="px-8 py-2 bg-rust hover:bg-rust-light text-white font-black text-[10px] uppercase tracking-widest shadow-[4px_4px_0px_rgba(120,53,15,0.3)] transition-all disabled:opacity-50"
+					>
+						{#if saving}
+							COMMITTING...
+						{:else}
+							COMMIT_CHANGES
+						{/if}
+					</button>
+				{:else}
+					<button
+						onclick={loadConfig}
+						disabled={loading}
+						class="px-6 py-2 bg-stone-900 hover:bg-white hover:text-black text-stone-400 font-black text-[10px] uppercase tracking-widest transition-all border border-stone-800 ml-auto md:ml-0"
+					>
+						<RefreshCw class="w-3 h-3 inline mr-2 {loading ? 'animate-spin' : ''}" />
+						Recalibrate
 					</button>
 				{/if}
 			</div>
 		</div>
 
-		<!-- Loading State -->
-		{#if loading}
-			<div class="flex items-center justify-center py-20" transition:fade>
-				<div class="flex flex-col items-center gap-4">
-					<div
-						class="w-10 h-10 sm:w-12 sm:h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"
-					></div>
-					<span class="text-slate-500 dark:text-slate-400 text-sm">Loading configuration...</span>
-				</div>
-			</div>
-		{:else}
-			<!-- Master & Spawner Config View -->
-			{#if activeTab === 'master' || activeTab === 'spawner'}
-				<div class="space-y-4" transition:fade={{ duration: 200 }}>
-					<!-- Info Banner for Spawner Tab -->
-					{#if activeTab === 'spawner'}
-						<div
-							class="p-4 bg-green-500/10 border border-green-500/30 rounded-xl flex items-start gap-3"
-						>
-							<Info class="w-5 h-5 text-green-400 shrink-0 mt-0.5" />
-							<div>
-								<h4 class="font-medium text-green-400 text-sm sm:text-base">
-									Spawner Default Configuration
-								</h4>
-								<p class="text-xs sm:text-sm text-green-300/70 mt-1">
-									These settings are used as defaults for new spawners. Individual spawners can
-									override these locally.
-								</p>
-							</div>
-						</div>
-					{/if}
+		<!-- Tab Navigation -->
+		<div
+			class="flex items-center p-1 bg-black/60 border-2 border-stone-800 backdrop-blur-md overflow-x-auto no-scrollbar"
+		>
+			<button
+				onclick={() => (activeTab = 'master')}
+				class="flex-1 flex flex-col items-center gap-1 px-6 py-3 transition-all {activeTab === 'master'
+					? 'bg-rust text-white'
+					: 'text-stone-600 hover:text-white hover:bg-stone-900'}"
+			>
+				<span class="font-black text-[11px] uppercase tracking-widest">MASTER_NODE</span>
+				<span class="font-mono text-[7px] opacity-50">CORE_RESOURCES</span>
+			</button>
+			<button
+				onclick={() => (activeTab = 'spawner')}
+				class="flex-1 flex flex-col items-center gap-1 px-6 py-3 transition-all {activeTab === 'spawner'
+					? 'bg-rust text-white'
+					: 'text-stone-600 hover:text-white hover:bg-stone-900'}"
+			>
+				<span class="font-black text-[11px] uppercase tracking-widest">SPAWNER_BUS</span>
+				<span class="font-mono text-[7px] opacity-50">REGISTRY_DEFAULTS</span>
+			</button>
+			<button
+				onclick={() => (activeTab = 'firebase')}
+				class="flex-1 flex flex-col items-center gap-1 px-6 py-3 transition-all {activeTab === 'firebase'
+					? 'bg-orange-600 text-white'
+					: 'text-stone-600 hover:text-white hover:bg-stone-900'}"
+			>
+				<span class="font-black text-[11px] uppercase tracking-widest">REMOTE_SIGNAL</span>
+				<span class="font-mono text-[7px] opacity-50">FIREBASE_SYNC</span>
+			</button>
+			<button
+				onclick={() => (activeTab = 'aesthetic')}
+				class="flex-1 flex flex-col items-center gap-1 px-6 py-3 transition-all {activeTab === 'aesthetic'
+					? 'bg-stone-100 text-black'
+					: 'text-stone-600 hover:text-white hover:bg-stone-900'}"
+			>
+				<span class="font-black text-[11px] uppercase tracking-widest">AESTHETICS</span>
+				<span class="font-mono text-[7px] opacity-50">INTERFACE_GEOMETRY</span>
+			</button>
+		</div>
 
+		<!-- Search Bar -->
+		<div class="mt-4 relative group">
+			<Search
+				class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500 group-focus-within:text-rust-light transition-colors"
+			/>
+			<input
+				type="text"
+				bind:value={searchQuery}
+				placeholder="Filter identifiers..."
+				class="w-full pl-10 sm:pl-12 pr-10 py-2.5 sm:py-3 bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl text-sm sm:text-base text-slate-200 placeholder:text-slate-600 focus:border-rust-light focus:ring-2 focus:ring-rust-light/20 outline-none transition-all font-mono"
+			/>
+			{#if searchQuery}
+				<button
+					onclick={() => (searchQuery = '')}
+					class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+				>
+					<X class="w-4 h-4" />
+				</button>
+			{/if}
+		</div>
+	</div>
+
+	<!-- Loading State -->
+	{#if loading}
+		<div class="flex items-center justify-center py-20" transition:fade>
+			<div class="flex flex-col items-center gap-4">
+				<div
+					class="w-10 h-10 sm:w-12 sm:h-12 border-4 border-rust-light border-t-transparent rounded-full animate-spin"
+				></div>
+				<span class="text-slate-500 font-mono text-sm uppercase">Synchronizing...</span>
+			</div>
+		</div>
+	{:else}
+		<div class="space-y-6">
+			{#if activeTab === 'master' || activeTab === 'spawner'}
+				<div class="space-y-8" transition:fade={{ duration: 200 }}>
 					{#each activeTab === 'master' ? filteredMasterSections : filteredSpawnerSections as section (section.id)}
 						{@const isExpanded = expandedSections.has(section.id)}
 						{@const SectionIcon = section.icon}
 						<div
-							class="bg-slate-800/40 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 rounded-2xl overflow-hidden transition-all duration-300"
+							class="brutalist-card {$siteSettings.aesthetic.industrial_styling ? 'rounded-none border-2' : 'rounded-2xl'} overflow-hidden shadow-2xl transition-all duration-300"
 						>
-							<!-- Section Header -->
 							<button
 								onclick={() => toggleSection(section.id)}
-								class="w-full px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between hover:bg-slate-700/30 transition-colors"
+								class="w-full px-6 py-5 flex items-center justify-between hover:bg-white/5 transition-colors border-b border-stone-800"
 							>
-								<div class="flex items-center gap-3 sm:gap-4">
+								<div class="flex items-center gap-5">
 									<div
-										class="p-2 sm:p-2.5 bg-gradient-to-br {section.gradient} rounded-lg sm:rounded-xl shadow-lg"
+										class="p-2.5 bg-rust/20 border border-rust/40 rounded-none shadow-[0_0_15px_rgba(120,53,15,0.2)]"
 									>
-										<SectionIcon class="w-4 h-4 sm:w-5 sm:h-5 text-slate-900 dark:text-white" />
+										<SectionIcon class="w-5 h-5 text-rust-light" />
 									</div>
 									<div class="text-left">
-										<h3 class="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">
+										<h3 class="text-lg font-black military-label text-white uppercase tracking-widest">
 											{section.title}
 										</h3>
-										<p
-											class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 line-clamp-1 sm:line-clamp-none"
-										>
+										<p class="text-[9px] font-mono text-stone-500 uppercase tracking-widest mt-0.5">
 											{section.description}
 										</p>
 									</div>
 								</div>
-								<div class="flex items-center gap-2 sm:gap-3 shrink-0">
-									<span
-										class="hidden sm:inline-block px-2.5 py-1 bg-slate-700/50 rounded-lg text-xs font-medium text-slate-500 dark:text-slate-400"
-									>
-										{section.items.length} settings
-									</span>
-									<div
-										class="p-1 rounded-lg bg-slate-700/50 transition-transform duration-200 {isExpanded
-											? 'rotate-180'
-											: ''}"
-									>
-										<ChevronDown class="w-4 h-4 sm:w-5 sm:h-5 text-slate-500 dark:text-slate-400" />
-									</div>
+								<div class="flex items-center gap-4">
+									<span class="tactical-code text-stone-600 hidden sm:inline">{section.items.length}_IDENTIFIERS_LOADED</span>
+									<ChevronDown class="w-5 h-5 text-stone-600 transition-transform duration-300 {isExpanded ? 'rotate-180 text-rust' : ''}" />
 								</div>
 							</button>
 
-							<!-- Section Content -->
 							{#if isExpanded}
-								<div
-									class="px-4 sm:px-6 pb-4 sm:pb-6 space-y-3"
-									transition:slide={{ duration: 200 }}
-								>
+								<div class="px-6 py-6 space-y-4 bg-black/20" transition:slide={{ duration: 300 }}>
 									{#each section.items as item (item.key)}
 										{@const isPending = pendingChanges.has(item.key)}
 										{@const isSecret = item.type === 'secret'}
 										{@const showValue = showSecrets.has(item.key)}
-										<div
-											class="p-3 sm:p-4 bg-slate-900/50 rounded-xl border border-slate-300/30 dark:border-slate-700/30 {isPending
-												? 'ring-2 ring-orange-500/50 bg-orange-500/5'
-												: ''} transition-all"
-										>
-											<div
-												class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4"
-											>
+										<div class="p-5 bg-stone-900/40 border-l-4 {isPending ? 'border-rust bg-rust/5' : 'border-stone-800'} transition-all group">
+											<div class="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
 												<div class="flex-1 min-w-0">
-													<div class="flex flex-wrap items-center gap-2 mb-1">
-														<span
-															class="font-mono text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 break-all"
-															>{item.key}</span
-														>
-														{#if item.is_read_only}
-															<span
-																class="px-1.5 py-0.5 bg-slate-700 text-slate-500 dark:text-slate-400 text-[10px] font-bold rounded flex items-center gap-1"
-															>
-																<Lock class="w-2.5 h-2.5" />
-																READ-ONLY
-															</span>
-														{/if}
-														{#if item.requires_restart}
-															<span
-																class="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-[10px] font-bold rounded flex items-center gap-1"
-															>
-																<RotateCcw class="w-2.5 h-2.5" />
-																RESTART
-															</span>
-														{/if}
-														{#if isPending}
-															<span
-																class="px-1.5 py-0.5 bg-orange-500/20 text-orange-400 text-[10px] font-bold rounded animate-pulse"
-															>
-																MODIFIED
-															</span>
-														{/if}
+													<div class="flex items-center gap-3 mb-2 flex-wrap">
+														<span class="font-jetbrains text-xs font-black text-rust-light uppercase tracking-wider">{item.key}</span>
+														<div class="flex gap-1">
+															{#if item.is_read_only}
+																<span class="text-[7px] font-black bg-stone-800 text-stone-500 px-2 py-0.5 border border-stone-700 uppercase">Protected</span>
+															{/if}
+															{#if item.requires_restart}
+																<span class="text-[7px] font-black bg-amber-950/30 text-amber-500 px-2 py-0.5 border border-amber-900/30 uppercase">Restart_Req</span>
+															{/if}
+														</div>
 													</div>
-													<p class="text-xs sm:text-sm text-slate-500 mb-3">{item.description}</p>
-
-													<!-- Input Field -->
-													<div class="flex items-center gap-2">
+													<p class="text-[10px] font-mono text-stone-500 uppercase tracking-tight leading-relaxed max-w-2xl">{item.description}</p>
+													
+													<div class="mt-4">
 														{#if item.type === 'bool'}
-															<label class="relative inline-flex items-center cursor-pointer">
-																<input
-																	type="checkbox"
-																	checked={(pendingChanges.get(item.key) ?? item.value) === 'true'}
-																	onchange={(e) =>
-																		handleValueChange(
-																			item.key,
-																			e.currentTarget.checked ? 'true' : 'false',
-																			item.value
-																		)}
-																	disabled={item.is_read_only}
-																	class="sr-only peer"
-																/>
-																<div
-																	class="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 peer-disabled:opacity-50"
-																></div>
-																<span
-																	class="ml-3 text-sm font-medium text-slate-700 dark:text-slate-300"
-																>
-																	{(pendingChanges.get(item.key) ?? item.value) === 'true'
-																		? 'Enabled'
-																		: 'Disabled'}
-																</span>
-															</label>
-														{:else if item.validation?.options}
-															<div class="relative w-full max-w-xs">
-																<select
-																	value={pendingChanges.get(item.key) ?? item.value}
-																	onchange={(e) =>
-																		handleValueChange(item.key, e.currentTarget.value, item.value)}
-																	disabled={item.is_read_only}
-																	class="w-full px-3 py-2.5 bg-slate-800 border border-slate-600 rounded-lg text-slate-800 dark:text-slate-200 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none disabled:opacity-50 appearance-none"
-																>
-																	{#each item.validation.options as option}
-																		<option value={option}>{option}</option>
-																	{/each}
-																</select>
-																<ChevronDown
-																	class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"
-																/>
-															</div>
+															<button 
+																onclick={() => handleValueChange(item.key, (pendingChanges.get(item.key) ?? item.value) === 'true' ? 'false' : 'true', item.value)}
+																disabled={item.is_read_only}
+																class="flex items-center gap-3 px-4 py-2 rounded-none border-2 transition-all {(pendingChanges.get(item.key) ?? item.value) === 'true' ? 'bg-rust/20 border-rust text-white' : 'bg-stone-950 border-stone-800 text-stone-600'}"
+															>
+																<div class="w-2 h-2 {(pendingChanges.get(item.key) ?? item.value) === 'true' ? 'bg-rust shadow-[0_0_8px_var(--color-rust)]' : 'bg-stone-800'}"></div>
+																<span class="font-black text-[10px] uppercase tracking-[0.2em]">{(pendingChanges.get(item.key) ?? item.value) === 'true' ? 'Active_Status' : 'Standby_Protocol'}</span>
+															</button>
 														{:else}
-															<div class="flex-1 max-w-md relative">
-																<input
-																	type={isSecret && !showValue
-																		? 'password'
-																		: getInputType(item.type)}
-																	value={pendingChanges.get(item.key) ?? item.value}
-																	oninput={(e) =>
-																		handleValueChange(item.key, e.currentTarget.value, item.value)}
-																	disabled={item.is_read_only}
-																	min={item.validation?.min}
-																	max={item.validation?.max}
-																	class="w-full px-3 py-2.5 bg-slate-800 border border-slate-600 rounded-lg text-slate-800 dark:text-slate-200 font-mono text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none disabled:opacity-50 {isSecret
-																		? 'pr-20'
-																		: 'pr-10'}"
-																/>
-																{#if isSecret}
-																	<button
-																		onclick={() => toggleSecret(item.key)}
-																		class="absolute right-10 top-1/2 -translate-y-1/2 p-1.5 text-slate-500 hover:text-slate-700 dark:text-slate-300"
-																	>
-																		{#if showValue}
-																			<EyeOff class="w-4 h-4" />
-																		{:else}
-																			<Eye class="w-4 h-4" />
-																		{/if}
-																	</button>
-																{/if}
-																<button
-																	onclick={() =>
-																		copyToClipboard(pendingChanges.get(item.key) ?? item.value)}
-																	class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-500 hover:text-slate-700 dark:text-slate-300"
+															<div class="flex items-center gap-2 max-w-xl">
+																<div class="relative flex-1">
+																	<input
+																		type={isSecret && !showValue ? 'password' : 'text'}
+																		value={pendingChanges.get(item.key) ?? item.value}
+																		oninput={e => handleValueChange(item.key, e.currentTarget.value, item.value)}
+																		disabled={item.is_read_only}
+																		class="w-full bg-black border-2 border-stone-800 focus:border-rust text-white font-mono text-xs px-4 py-2.5 transition-all disabled:opacity-30"
+																	/>
+																	{#if isSecret}
+																		<button 
+																			onclick={() => toggleSecret(item.key)} 
+																			class="absolute right-3 top-1/2 -translate-y-1/2 text-stone-600 hover:text-rust transition-colors"
+																		>
+																			{#if showValue}<EyeOff class="w-4 h-4"/>{:else}<Eye class="w-4 h-4"/>{/if}
+																		</button>
+																	{/if}
+																</div>
+																<button 
+																	onclick={() => copyToClipboard(pendingChanges.get(item.key) ?? item.value)} 
+																	class="p-2.5 bg-stone-800 text-stone-500 hover:text-white hover:bg-rust transition-all border border-stone-700"
+																	title="Copy_to_Buffer"
 																>
 																	<Copy class="w-4 h-4" />
 																</button>
@@ -865,251 +781,390 @@
 														{/if}
 													</div>
 												</div>
-
-												<div
-													class="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center text-[10px] sm:text-xs text-slate-600 shrink-0 gap-2 border-t sm:border-0 border-slate-200 dark:border-slate-800 pt-2 sm:pt-0 w-full sm:w-auto"
-												>
-													<div>
-														Type: <span class="text-slate-500 dark:text-slate-400 uppercase"
-															>{item.type}</span
-														>
-													</div>
-													<div class="sm:mt-1">
-														Updated: <span class="text-slate-500 dark:text-slate-400"
-															>{new Date(item.updated_at).toLocaleDateString()}</span
-														>
-													</div>
-												</div>
 											</div>
 										</div>
 									{/each}
-
-									{#if section.items.length === 0}
-										<div class="text-center py-8 text-slate-500">
-											<Info class="w-8 h-8 mx-auto mb-2 opacity-50" />
-											<p class="text-sm">No settings in this section</p>
-										</div>
-									{/if}
 								</div>
 							{/if}
 						</div>
 					{/each}
-
-					{#if (activeTab === 'master' ? filteredMasterSections : filteredSpawnerSections).length === 0}
-						<div class="text-center py-12">
-							<Search class="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 text-slate-600" />
-							<p class="text-slate-500 dark:text-slate-400 text-sm sm:text-base">
-								No matching configurations found
-							</p>
-							<button
-								onclick={() => (searchQuery = '')}
-								class="mt-4 text-blue-400 hover:text-blue-300 text-sm"
-							>
-								Clear search
-							</button>
-						</div>
-					{/if}
 				</div>
 			{/if}
 
-			<!-- Firebase Config View (Simplified structure for brevity, applied responsive logic) -->
 			{#if activeTab === 'firebase'}
 				<div class="space-y-6" transition:fade={{ duration: 200 }}>
 					<!-- Connection Status Card -->
-					<div
-						class="bg-slate-800/40 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 rounded-2xl p-4 sm:p-6"
-					>
-						<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+					<div class="bg-[var(--card-bg)] backdrop-blur-sm border border-[var(--border-color)] rounded-2xl p-6 shadow-2xl">
+						<div class="flex items-center justify-between">
 							<div class="flex items-center gap-4">
-								<div
-									class="p-2 sm:p-3 bg-gradient-to-br from-orange-600 to-amber-600 rounded-xl shadow-lg"
-								>
-									<Flame class="w-5 h-5 sm:w-6 sm:h-6 text-slate-900 dark:text-white" />
+								<div class="p-3 bg-gradient-to-br from-orange-600 to-amber-600 rounded-xl shadow-lg">
+									<Flame class="w-6 h-6 text-white" />
 								</div>
 								<div>
-									<h3 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
-										Firebase Remote Config
-									</h3>
-									<p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-										Manage remote client configuration
-									</p>
+									<h3 class="text-xl font-bold text-slate-100 font-heading tracking-widest uppercase">Firebase Remote Config</h3>
+									<p class="text-xs text-slate-500 font-mono italic">Synchronize remote client parameters</p>
 								</div>
 							</div>
-
-							<div class="flex items-center gap-3 self-start sm:self-center">
-								{#if firebaseConnected}
-									<div
-										class="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-green-500/10 border border-green-500/30 rounded-xl"
-									>
-										<CheckCircle2 class="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />
-										<span class="text-green-400 font-medium text-xs sm:text-sm">Connected</span>
-									</div>
-								{:else}
-									<div
-										class="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-slate-700/50 border border-slate-600 rounded-xl"
-									>
-										<AlertCircle class="w-4 h-4 sm:w-5 sm:h-5 text-slate-500 dark:text-slate-400" />
-										<span class="text-slate-500 dark:text-slate-400 font-medium text-xs sm:text-sm"
-											>Not Configured</span
-										>
-									</div>
-								{/if}
-							</div>
+							{#if firebaseConnected}
+								<div class="px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center gap-2">
+									<div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_#10b981]"></div>
+									<span class="text-emerald-400 font-black text-xs uppercase tracking-widest">Encrypted_Link</span>
+								</div>
+							{:else}
+								<div class="px-4 py-2 bg-stone-800 border border-white/5 rounded-xl flex items-center gap-2">
+									<div class="w-2 h-2 bg-stone-600 rounded-full"></div>
+									<span class="text-stone-500 font-black text-xs uppercase tracking-widest">Link_Offline</span>
+								</div>
+							{/if}
 						</div>
 
-						{#if firebaseConnected && firebaseProjectId}
-							<div
-								class="mt-4 p-3 bg-slate-900/50 rounded-xl flex flex-col sm:flex-row sm:items-center gap-3"
-							>
-								<div class="flex items-center gap-2">
-									<Globe class="w-4 h-4 text-slate-500" />
-									<span class="text-xs sm:text-sm text-slate-500 dark:text-slate-400"
-										>Project ID:</span
-									>
-									<code class="px-2 py-1 bg-slate-800 rounded text-orange-400 text-xs sm:text-sm"
-										>{firebaseProjectId}</code
-									>
+						{#if firebaseConnected}
+							<div class="bg-[var(--card-bg)] backdrop-blur-sm border border-[var(--border-color)] rounded-2xl overflow-hidden shadow-2xl">
+								<div class="px-6 py-4 border-b border-[var(--border-color)] flex items-center justify-between bg-black/20">
+									<div class="flex items-center gap-3">
+										<FileJson class="w-5 h-5 text-orange-500" />
+										<h3 class="text-lg font-bold text-slate-100 font-heading tracking-widest uppercase">Parameter Buffer</h3>
+									</div>
+									<div class="flex gap-2">
+										<button onclick={syncFirebaseConfig} class="px-4 py-2 bg-stone-800 hover:bg-stone-700 text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all">Sync_Core</button>
+										<button onclick={() => openFirebaseModal('create')} class="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all">Add_Node</button>
+									</div>
 								</div>
-								<a
-									href="https://console.firebase.google.com/project/{firebaseProjectId}/config"
-									target="_blank"
-									rel="noopener"
-									class="sm:ml-auto flex items-center gap-1 text-xs sm:text-sm text-blue-400 hover:text-blue-300"
-								>
-									Open Firebase Console
-									<ExternalLink class="w-3 h-3 sm:w-4 sm:h-4" />
-								</a>
-							</div>
-						{/if}
-					</div>
-
-					{#if !firebaseConnected}
-						<!-- Setup Instructions (Responsive) -->
-						<div
-							class="bg-slate-800/40 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 rounded-2xl p-4 sm:p-6"
-						>
-							<h4
-								class="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2"
-							>
-								<CloudCog class="w-5 h-5 text-orange-400" />
-								Setup Instructions
-							</h4>
-							<!-- ... (Instructions steps adjusted for mobile padding) ... -->
-							<div class="space-y-3">
-								<p class="text-slate-500 dark:text-slate-400 text-sm">
-									Please check the documentation to configure Firebase.
-								</p>
-							</div>
-						</div>
-					{:else}
-						<!-- Remote Config Parameters -->
-						<div
-							class="bg-slate-800/40 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 rounded-2xl overflow-hidden"
-						>
-							<div
-								class="px-4 sm:px-6 py-4 border-b border-slate-300/50 dark:border-slate-700/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-							>
-								<h4
-									class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2"
-								>
-									<FileJson class="w-5 h-5 text-orange-400" />
-									Remote Config
-								</h4>
-								<div class="flex items-center gap-2">
-									<button
-										onclick={syncFirebaseConfig}
-										class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-900 dark:text-white rounded-xl font-medium transition-all flex items-center gap-2 text-xs sm:text-sm"
-									>
-										<RefreshCw class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-										Sync
-									</button>
-									<button
-										onclick={() => openFirebaseModal('create')}
-										class="px-3 py-2 bg-orange-600 hover:bg-orange-500 text-slate-900 dark:text-white rounded-xl font-medium transition-all flex items-center gap-2 text-xs sm:text-sm"
-									>
-										<Plus class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-										Add
-									</button>
-								</div>
-							</div>
-
-							<div class="p-4 sm:p-6">
-								{#if filteredFirebaseConfigs.length > 0}
-									<div class="space-y-3">
+								<div class="p-6">
+									<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 										{#each filteredFirebaseConfigs as config (config.key)}
-											<div
-												class="p-3 sm:p-4 bg-slate-900/50 rounded-xl border border-slate-300/30 dark:border-slate-700/30 hover:border-orange-500/30 transition-all group"
-											>
-												<div
-													class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4"
-												>
-													<div class="flex-1 min-w-0">
-														<div class="flex items-center gap-2 mb-1 flex-wrap">
-															<span
-																class="font-mono text-sm font-semibold text-slate-800 dark:text-slate-200 break-all"
-																>{config.key}</span
-															>
-															<span
-																class="px-1.5 py-0.5 bg-orange-500/20 text-orange-400 text-[10px] font-bold rounded uppercase"
-															>
-																{config.valueType}
-															</span>
-														</div>
-														<p class="text-xs sm:text-sm text-slate-500 mb-2 sm:mb-3">
-															{config.description || 'No description'}
-														</p>
-														<div class="flex items-center gap-2 overflow-x-auto">
-															<code
-																class="px-2 sm:px-3 py-1 sm:py-1.5 bg-slate-800 rounded-lg text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-mono whitespace-nowrap"
-															>
-																{config.valueType === 'json'
-																	? JSON.stringify(JSON.parse(config.value), null, 0).slice(0, 40) +
-																		'...'
-																	: config.value}
-															</code>
-														</div>
+											<div class="p-4 bg-black/40 rounded-xl border border-white/5 group hover:border-orange-500/30 transition-all">
+												<div class="flex items-start justify-between gap-4">
+													<div class="min-w-0">
+														<div class="flex items-center gap-2 mb-1">
+															<span class="text-xs font-bold text-orange-500 font-mono uppercase">{config.key}</span>
+														<span class="text-[8px] bg-stone-800 text-stone-500 px-1 py-0.5 rounded">{config.valueType}</span>
 													</div>
-													<div
-														class="flex items-center gap-2 self-end sm:self-start opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity"
-													>
-														<button
-															onclick={() => openFirebaseModal('edit', config)}
-															class="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-700 rounded-lg"
-														>
-															<Edit3 class="w-4 h-4" />
-														</button>
-														<button
-															onclick={() => deleteFirebaseParameter(config.key)}
-															class="p-2 text-slate-500 dark:text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg"
-														>
-															<Trash2 class="w-4 h-4" />
-														</button>
+													<p class="text-[10px] text-slate-500 italic mb-2 truncate uppercase tracking-tight">{config.description || 'NO_META_DATA'}</p>
+													<code class="text-[10px] text-stone-400 bg-stone-900/50 px-2 py-1 rounded block truncate font-mono">
+														{config.value}
+												</code>
 													</div>
+												<div class="flex gap-1">
+													<button onclick={() => openFirebaseModal('edit', config)} class="p-1.5 text-stone-600 hover:text-white transition-colors"><Edit3 class="w-3.5 h-3.5"/></button>
+													<button onclick={() => deleteFirebaseParameter(config.key)} class="p-1.5 text-stone-600 hover:text-red-500 transition-colors"><Trash2 class="w-3.5 h-3.5"/></button>
 												</div>
 											</div>
+										</div>
+									{/each}
+									</div>
+																</div>
+															</div>
+														{/if}
+													</div>
+												</div>
+											{/if}
+			{#if activeTab === 'aesthetic'}
+				<div class="space-y-6" transition:fade={{ duration: 200 }}>
+					<!-- System Aesthetic Section -->
+					<div class="bg-[var(--card-bg)] backdrop-blur-sm border border-[var(--border-color)] rounded-2xl overflow-hidden shadow-2xl">
+						<div class="px-6 py-4 border-b border-[var(--border-color)] flex items-center gap-3 bg-black/20">
+							<div class="p-2 bg-gradient-to-br from-rust to-rust-light rounded-lg shadow-lg">
+								<Monitor class="w-5 h-5 text-white" />
+							</div>
+							<h3 class="text-xl font-bold text-slate-100 font-heading tracking-widest uppercase">System Interface Aesthetic</h3>
+						</div>
+					<div class="p-6">
+						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+							{#each [
+									{ key: 'crt_effect', label: 'CRT Simulation', desc: 'Cathode-ray visualization', icon: Monitor },
+									{ key: 'industrial_styling', label: 'Industrial Geometry', desc: 'Sharp edges & heavy borders', icon: Shield },
+									{ key: 'glassmorphism', label: 'Refractive Glass', desc: 'Backdrop occlusion effects', icon: Cloud },
+									{ key: 'glow_effects', label: 'Luminous Core', desc: 'Signal & shadow radiance', icon: Zap },
+									{ key: 'animations_enabled', label: 'Aggressive Overlays', desc: 'Fluid state synchronization', icon: RefreshCw },
+									{ key: 'panic_mode', label: 'Red Alert Protocol', desc: 'Critical state visualization', icon: AlertCircle }
+							] as toggle}
+								<div class="flex items-center justify-between p-4 bg-black/40 rounded-xl border border-white/5 hover:border-rust-light/30 transition-all">
+									<div class="flex items-center gap-3">
+										<toggle.icon class="w-4 h-4 text-rust-light" />
+										<div>
+											<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">{toggle.label}</h4>
+											<p class="text-[9px] text-slate-500 font-mono uppercase">{toggle.desc}</p>
+										</div>
+									</div>
+									<label class="relative inline-flex items-center cursor-pointer">
+										<input type="checkbox" checked={($siteSettings.aesthetic as any)[toggle.key]} onchange={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, [toggle.key]: e.currentTarget.checked } }))} class="sr-only peer">
+										<div class="w-10 h-5 bg-stone-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rust"></div>
+									</label>
+								</div>
+							{/each}
+							</div>
+
+							<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 pt-8 border-t border-white/5">
+								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5">
+									<div class="flex justify-between items-center mb-1">
+										<div class="flex items-center gap-2">
+											<Wind class="w-3 h-3 text-rust-light" />
+											<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Scanline Intensity</h4>
+										</div>
+										<span class="text-[10px] font-mono text-rust-light">{(($siteSettings.aesthetic.scanlines_opacity || 0) * 100).toFixed(0)}%</span>
+									</div>
+									<input type="range" min="0" max="0.2" step="0.01" value={$siteSettings.aesthetic.scanlines_opacity} oninput={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, scanlines_opacity: parseFloat(e.currentTarget.value) } }))} class="w-full h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-rust" />
+								</div>
+
+								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5">
+									<div class="flex justify-between items-center mb-1">
+										<div class="flex items-center gap-2">
+											<Activity class="w-3 h-3 text-rust-light" />
+											<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Static Noise</h4>
+										</div>
+										<span class="text-[10px] font-mono text-rust-light">{(($siteSettings.aesthetic.noise_opacity || 0) * 100).toFixed(0)}%</span>
+									</div>
+									<input type="range" min="0" max="0.1" step="0.005" value={$siteSettings.aesthetic.noise_opacity} oninput={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, noise_opacity: parseFloat(e.currentTarget.value) } }))} class="w-full h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-rust" />
+								</div>
+
+								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5">
+									<div class="flex justify-between items-center mb-1">
+										<div class="flex items-center gap-2">
+											<Palette class="w-3 h-3 text-rust-light" />
+											<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Card Opacity</h4>
+										</div>
+										<span class="text-[10px] font-mono text-rust-light">{(($siteSettings.aesthetic.card_alpha || 0) * 100).toFixed(0)}%</span>
+									</div>
+									<input type="range" min="0" max="1" step="0.05" value={$siteSettings.aesthetic.card_alpha} oninput={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, card_alpha: parseFloat(e.currentTarget.value) } }))} class="w-full h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-rust" />
+								</div>
+
+								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5">
+									<div class="flex justify-between items-center mb-1">
+										<div class="flex items-center gap-2">
+											<Cloud class="w-3 h-3 text-rust-light" />
+											<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Backdrop Blur</h4>
+										</div>
+										<span class="text-[10px] font-mono text-rust-light">{$siteSettings.aesthetic.backdrop_blur || 0}px</span>
+									</div>
+									<input type="range" min="0" max="40" step="1" value={$siteSettings.aesthetic.backdrop_blur} oninput={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, backdrop_blur: parseInt(e.currentTarget.value) } }))} class="w-full h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-rust" />
+								</div>
+
+								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5">
+									<div class="flex justify-between items-center mb-1">
+										<div class="flex items-center gap-2">
+											<Shield class="w-3 h-3 text-rust-light" />
+											<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Border Weight</h4>
+										</div>
+										<span class="text-[10px] font-mono text-rust-light">{$siteSettings.aesthetic.card_border_width || 0}px</span>
+									</div>
+									<input type="range" min="0" max="10" step="1" value={$siteSettings.aesthetic.card_border_width} oninput={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, card_border_width: parseInt(e.currentTarget.value) } }))} class="w-full h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-rust" />
+								</div>
+
+								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5">
+									<div class="flex justify-between items-center mb-1">
+										<div class="flex items-center gap-2">
+											<Zap class="w-3 h-3 text-rust-light" />
+											<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Shadow Magnitude</h4>
+										</div>
+										<span class="text-[10px] font-mono text-rust-light">{$siteSettings.aesthetic.card_shadow_size || 0}px</span>
+									</div>
+									<input type="range" min="0" max="50" step="1" value={$siteSettings.aesthetic.card_shadow_size} oninput={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, card_shadow_size: parseInt(e.currentTarget.value) } }))} class="w-full h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-rust" />
+								</div>
+
+								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5">
+									<div class="flex justify-between items-center mb-1">
+										<div class="flex items-center gap-2">
+											<LayoutDashboard class="w-3 h-3 text-rust-light" />
+											<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Sidebar Opacity</h4>
+										</div>
+										<span class="text-[10px] font-mono text-rust-light">{(($siteSettings.aesthetic.sidebar_alpha || 0) * 100).toFixed(0)}%</span>
+									</div>
+									<input type="range" min="0" max="1" step="0.05" value={$siteSettings.aesthetic.sidebar_alpha} oninput={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, sidebar_alpha: parseFloat(e.currentTarget.value) } }))} class="w-full h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-rust" />
+								</div>
+
+								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5">
+									<div class="flex justify-between items-center mb-1">
+										<div class="flex items-center gap-2">
+											<Monitor class="w-3 h-3 text-rust-light" />
+											<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Global BG Opacity</h4>
+										</div>
+										<span class="text-[10px] font-mono text-rust-light">{(($siteSettings.aesthetic.bg_opacity || 0) * 100).toFixed(0)}%</span>
+									</div>
+									<input type="range" min="0" max="1" step="0.05" value={$siteSettings.aesthetic.bg_opacity} oninput={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, bg_opacity: parseFloat(e.currentTarget.value) } }))} class="w-full h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-rust" />
+								</div>
+
+								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5 md:col-span-2">
+									<div class="flex justify-between items-center mb-1">
+										<div class="flex items-center gap-2">
+											<Code2 class="w-3 h-3 text-rust-light" />
+											<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">System Typeface</h4>
+										</div>
+										<span class="text-[10px] font-mono text-rust-light">{$siteSettings.aesthetic.font_primary || 'Inter'}</span>
+									</div>
+									<div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+										{#each ['Inter', 'Space Grotesk', 'Michroma', 'Orbitron', 'Red Hat Mono', 'Syncopate', 'Kanit', 'JetBrains Mono'] as font}
+											<button 
+												onclick={() => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, font_primary: font } }))}
+												class="px-3 py-2 bg-stone-900 border transition-all text-xs {$siteSettings.aesthetic.font_primary === font ? 'border-rust text-rust-light bg-rust/5' : 'border-stone-800 text-stone-500 hover:border-stone-700'}"
+												style="font-family: '{font}', sans-serif;"
+											>
+												{font}
+											</button>
 										{/each}
 									</div>
-								{:else}
-									<div class="text-center py-12">
-										<FileJson class="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 text-slate-600" />
-										<p class="text-slate-500 dark:text-slate-400 mb-2 text-sm">
-											No remote config parameters yet
-										</p>
+								</div>
+
+								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5 md:col-span-2">
+									<div class="flex justify-between items-center mb-1">
+										<div class="flex items-center gap-2">
+											<Monitor class="w-3 h-3 text-rust-light" />
+											<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Global Base Color</h4>
+										</div>
+										<span class="text-[10px] font-mono text-rust-light">{$siteSettings.aesthetic.bg_color}</span>
 									</div>
-								{/if}
+									<div class="flex gap-4 items-center">
+										<div class="relative group">
+											<input 
+												type="color" 
+												value={$siteSettings.aesthetic.bg_color || '#050505'} 
+												oninput={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, bg_color: e.currentTarget.value } }))} 
+												class="w-14 h-14 bg-transparent border-none cursor-pointer appearance-none" 
+											/>
+											<div class="absolute inset-0 border-2 border-stone-800 pointer-events-none group-hover:border-rust transition-colors"></div>
+										</div>
+										<div class="grid grid-cols-5 gap-2 flex-1">
+											{#each ['#050505', '#0a0a0a', '#121212', '#1c1917', '#0c0a09'] as color}
+												<button 
+													onclick={() => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, bg_color: color } }))}
+													class="h-10 border transition-transform hover:scale-105 {$siteSettings.aesthetic.bg_color === color ? 'border-rust shadow-[0_0_10px_rgba(120,53,15,0.3)]' : 'border-white/10'}"
+													style="background-color: {color}"
+													aria-label="Set background color to {color}"
+												></button>
+											{/each}
+										</div>
+									</div>
+								</div>
+
+								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5 md:col-span-2">
+									<div class="flex justify-between items-center mb-1">
+										<div class="flex items-center gap-2">
+											<Palette class="w-3 h-3 text-rust-light" />
+											<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Primary System Accent</h4>
+										</div>
+										<span class="text-[10px] font-mono text-rust-light">{$siteSettings.aesthetic.accent_color}</span>
+									</div>
+									<div class="flex gap-4 items-center">
+										<div class="relative group">
+											<input 
+												type="color" 
+												value={$siteSettings.aesthetic.accent_color} 
+												oninput={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, accent_color: e.currentTarget.value } }))} 
+												class="w-14 h-14 bg-transparent border-none cursor-pointer appearance-none" 
+											/>
+											<div class="absolute inset-0 border-2 border-stone-800 pointer-events-none group-hover:border-rust transition-colors"></div>
+										</div>
+										<div class="grid grid-cols-5 gap-2 flex-1">
+											{#each ['#78350f', '#92400e', '#ef4444', '#10b981', '#0ea5e9'] as color}
+												<button 
+													onclick={() => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, accent_color: color } }))}
+													class="h-10 border transition-transform hover:scale-105 {$siteSettings.aesthetic.accent_color === color ? 'border-rust shadow-[0_0_10px_rgba(120,53,15,0.3)]' : 'border-white/10'}"
+													style="background-color: {color}"
+													aria-label="Set accent color to {color}"
+												></button>
+											{/each}
+										</div>
+									</div>
+								</div>
 							</div>
 						</div>
-					{/if}
+					</div>
+
+					<!-- Atmospheric Modulation Section -->
+					<div class="bg-[var(--card-bg)] backdrop-blur-sm border border-[var(--border-color)] rounded-2xl overflow-hidden shadow-2xl">
+						<div class="px-6 py-4 border-b border-[var(--border-color)] flex items-center gap-3 bg-black/20">
+							<div class="p-2 bg-gradient-to-br from-rust to-rust-light rounded-lg shadow-lg">
+								<CloudRain class="w-5 h-5 text-white" />
+							</div>
+							<h3 class="text-xl font-bold text-slate-100 font-heading tracking-widest uppercase">Atmospheric Modulation</h3>
+						</div>
+					<div class="p-6">
+						<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+							{#each [
+									{ key: 'show_smoke', label: 'Thermal Exhaust', icon: Wind },
+									{ key: 'show_rain', label: 'Acid Rain', icon: CloudRain },
+									{ key: 'show_clouds', label: 'Vapor Cover', icon: Cloud },
+									{ key: 'show_vignette', label: 'Vignette', icon: Monitor },
+									{ key: 'show_navbar_particles', label: 'Ash Fall', icon: Waves }
+							] as effect}
+								<button 
+									onclick={() => backgroundConfig.update((b: any) => ({ ...b, [effect.key]: !b[effect.key] }))}
+									class="flex items-center justify-between p-4 rounded-xl border transition-all {($backgroundConfig as any)[effect.key] ? 'bg-rust/10 border-rust/40 text-rust-light' : 'bg-black/40 border-white/5 text-slate-500 hover:border-white/10'}"
+								>
+									<div class="flex items-center gap-3">
+										<effect.icon class="w-4 h-4" />
+										<span class="font-bold uppercase text-[10px] tracking-widest">{effect.label}</span>
+									</div>
+									<div class="w-1.5 h-1.5 rounded-full {($backgroundConfig as any)[effect.key] ? 'bg-rust shadow-[0_0_8px_var(--color-rust)]' : 'bg-stone-800'}"></div>
+								</button>
+							{/each}
+							</div>
+
+							<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 pt-8 border-t border-white/5">
+								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5">
+									<div class="flex justify-between items-center">
+										<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Precipitation Density</h4>
+										<span class="text-[10px] font-mono text-rust-light">{($backgroundConfig.rain_opacity * 100).toFixed(0)}%</span>
+									</div>
+									<input type="range" min="0" max="1" step="0.05" value={$backgroundConfig.rain_opacity} oninput={e => backgroundConfig.update(b => ({ ...b, rain_opacity: parseFloat(e.currentTarget.value) }))} class="w-full h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-rust" />
+								</div>
+								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5">
+									<div class="flex justify-between items-center">
+										<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Vapor Opacity</h4>
+										<span class="text-[10px] font-mono text-rust-light">{($backgroundConfig.clouds_opacity * 100).toFixed(0)}%</span>
+									</div>
+									<input type="range" min="0" max="1" step="0.05" value={$backgroundConfig.clouds_opacity} oninput={e => backgroundConfig.update(b => ({ ...b, clouds_opacity: parseFloat(e.currentTarget.value) }))} class="w-full h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-rust" />
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Visual Core Engine Section -->
+					<div class="bg-[var(--card-bg)] backdrop-blur-sm border border-[var(--border-color)] rounded-2xl overflow-hidden shadow-2xl">
+						<div class="px-6 py-4 border-b border-[var(--border-color)] flex items-center gap-3 bg-black/20">
+							<div class="p-2 bg-gradient-to-br from-amber-600 to-orange-600 rounded-lg shadow-lg">
+								<Zap class="w-5 h-5 text-white" />
+							</div>
+							<h3 class="text-xl font-bold text-slate-100 font-heading tracking-widest uppercase">Visual Core Engine</h3>
+						</div>
+					<div class="p-6">
+						<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+							{#each [
+									{ id: 'architecture', label: 'Brutalist', desc: 'Floating masses', icon: Server },
+									{ id: 'tactical_grid', label: 'Radar', desc: 'Scanning nodes', icon: Network },
+									{ id: 'neural_network', label: 'Neural', desc: 'Plexus mapping', icon: Activity },
+									{ id: 'data_flow', label: 'Data Flow', desc: 'Signal stream', icon: FileJson },
+									{ id: 'digital_horizon', label: 'Horizon', desc: 'Infinite grid', icon: Globe },
+									{ id: 'none', label: 'Minimal', desc: 'Zero noise', icon: Zap }
+							] as engine}
+								<button 
+									onclick={() => backgroundConfig.update(b => ({ ...b, global_type: engine.id as any }))}
+									class="flex flex-col items-center gap-2 p-4 rounded-xl border transition-all {$backgroundConfig.global_type === engine.id ? 'bg-rust/20 border-rust shadow-[0_0_20px_rgba(120,53,15,0.3)] text-white' : 'bg-black/40 border-white/5 text-slate-500 hover:bg-slate-800/50'}"
+								>
+									<div class="flex items-center justify-between w-full">
+										<engine.icon class="w-4 h-4 {$backgroundConfig.global_type === engine.id ? 'text-rust-light' : 'text-slate-600'}" />
+										{#if $backgroundConfig.global_type === engine.id}
+											<div class="w-1.5 h-1.5 bg-rust rounded-full shadow-[0_0_8px_var(--color-rust)] animate-pulse"></div>
+										{/if}
+									</div>
+									<span class="font-bold uppercase text-[10px] tracking-widest"> {engine.label} </span>
+									<span class="text-[8px] font-mono opacity-40 uppercase leading-tight">{engine.desc}</span>
+								</button>
+							{/each}
+						</div>
+					</div>
 				</div>
-			{/if}
+			</div>
 		{/if}
-	</div>
+		</div>
+	{/if}
 </div>
 
-<!-- Firebase Parameter Modal (Responsive) -->
+
+<!-- Firebase Parameter Modal -->
 {#if showFirebaseModal}
 	<div
-		class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+		class="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
 		onclick={(e) => e.target === e.currentTarget && closeFirebaseModal()}
 		onkeydown={(e) => {
 			if (e.key === 'Enter' || e.key === ' ') closeFirebaseModal();
@@ -1119,138 +1174,109 @@
 		transition:fade={{ duration: 150 }}
 	>
 		<div
-			class="w-full max-w-lg bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl shadow-2xl overflow-hidden"
+			class="w-full max-w-lg bg-black border border-white/10 rounded-xl shadow-2xl overflow-hidden"
 			transition:scale={{ duration: 200, start: 0.95 }}
 		>
 			<!-- Header -->
 			<div
-				class="px-4 sm:px-6 py-4 border-b border-slate-300 dark:border-slate-700 flex items-center justify-between"
+				class="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-black"
 			>
 				<h3
-					class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2"
+					class="text-xl font-bold text-slate-100 font-heading tracking-widest uppercase flex items-center gap-3"
 				>
-					<Flame class="w-5 h-5 text-orange-400" />
-					{firebaseModalMode === 'create' ? 'Add Parameter' : 'Edit Parameter'}
+					<Flame class="w-5 h-5 text-orange-500" />
+					{firebaseModalMode === 'create' ? 'Append_Parameter' : 'Modify_Node'}
 				</h3>
 				<button
 					onclick={closeFirebaseModal}
-					class="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-700 rounded-lg"
+					class="p-2 text-stone-600 hover:text-white transition-colors"
 				>
 					<X class="w-5 h-5" />
 				</button>
 			</div>
 
 			<!-- Body -->
-			<div class="p-4 sm:p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-				<!-- Key -->
+			<div class="p-8 space-y-6 max-h-[70vh] overflow-y-auto bg-[#050505] font-mono">
 				<div>
-					<label
-						for="fbKey"
-						class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
-						>Parameter Key</label
-					>
+					<label for="fbKey" class="block text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-2">Parameter Identifier</label>
 					<input
 						id="fbKey"
 						type="text"
 						bind:value={firebaseForm.key}
 						disabled={firebaseModalMode === 'edit'}
-						placeholder="e.g. feature_enabled"
-						class="w-full px-4 py-2.5 sm:py-3 bg-slate-800 border border-slate-600 rounded-xl text-slate-800 dark:text-slate-200 placeholder:text-slate-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none disabled:opacity-50 text-sm"
+						placeholder="NODE_ID_001"
+						class="w-full bg-black border border-white/5 px-4 py-3 text-slate-200 focus:border-orange-500 outline-none transition-all placeholder:text-stone-800"
 					/>
 				</div>
 
-				<!-- Value Type -->
 				<div>
-					<label
-						for="fbType"
-						class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
-						>Value Type</label
-					>
+					<label for="fbType" class="block text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-2">Data Schema</label>
 					<select
 						id="fbType"
 						bind:value={firebaseForm.valueType}
-						class="w-full px-4 py-2.5 sm:py-3 bg-slate-800 border border-slate-600 rounded-xl text-slate-800 dark:text-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none text-sm"
+						class="w-full bg-black border border-white/5 px-4 py-3 text-slate-200 focus:border-orange-500 outline-none transition-all appearance-none"
 					>
-						<option value="STRING">String</option>
-						<option value="NUMBER">Number</option>
-						<option value="BOOLEAN">Boolean</option>
+						<option value="STRING">STRING</option>
+						<option value="NUMBER">NUMBER</option>
+						<option value="BOOLEAN">BOOLEAN</option>
 						<option value="JSON">JSON</option>
 					</select>
 				</div>
 
-				<!-- Value -->
 				<div>
-					<label
-						for="fbValue"
-						class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
-						>Default Value</label
-					>
+					<label for="fbValue" class="block text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-2">Payload Data</label>
 					{#if firebaseForm.valueType === 'BOOLEAN'}
 						<select
 							id="fbValue"
 							bind:value={firebaseForm.value}
-							class="w-full px-4 py-2.5 sm:py-3 bg-slate-800 border border-slate-600 rounded-xl text-slate-800 dark:text-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none text-sm"
+							class="w-full bg-black border border-white/5 px-4 py-3 text-slate-200 focus:border-orange-500 outline-none transition-all"
 						>
-							<option value="true">true</option>
-							<option value="false">false</option>
+							<option value="true">TRUE</option>
+							<option value="false">FALSE</option>
 						</select>
 					{:else if firebaseForm.valueType === 'JSON'}
-						<textarea
-							id="fbValue"
-							bind:value={firebaseForm.value}
-							rows={4}
-							placeholder="Enter JSON value..."
-							class="w-full px-4 py-2.5 sm:py-3 bg-slate-800 border border-slate-600 rounded-xl text-slate-800 dark:text-slate-200 placeholder:text-slate-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none font-mono text-sm"
-						></textarea>
-					{:else}
+																		<textarea
+																			id="fbValue"
+																			bind:value={firebaseForm.value}
+																			rows={4}
+																			placeholder={`{ "status": "active" }`}
+																			class="w-full bg-black border border-white/5 px-4 py-3 text-slate-200 focus:border-orange-500 outline-none transition-all resize-none"
+																		></textarea>					{:else}
 						<input
 							id="fbValue"
 							type={firebaseForm.valueType === 'NUMBER' ? 'number' : 'text'}
 							bind:value={firebaseForm.value}
-							placeholder="Enter value..."
-							class="w-full px-4 py-2.5 sm:py-3 bg-slate-800 border border-slate-600 rounded-xl text-slate-800 dark:text-slate-200 placeholder:text-slate-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none text-sm"
+							placeholder="NULL_PTR"
+							class="w-full bg-black border border-white/5 px-4 py-3 text-slate-200 focus:border-orange-500 outline-none transition-all"
 						/>
 					{/if}
 				</div>
 
-				<!-- Description -->
 				<div>
-					<label
-						for="fbDesc"
-						class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
-						>Description (optional)</label
-					>
-					<textarea
-						id="fbDesc"
-						bind:value={firebaseForm.description}
-						rows={2}
-						placeholder="Describe what this parameter does..."
-						class="w-full px-4 py-2.5 sm:py-3 bg-slate-800 border border-slate-600 rounded-xl text-slate-800 dark:text-slate-200 placeholder:text-slate-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none text-sm"
-					></textarea>
-				</div>
+					<label for="fbDesc" class="block text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-2">Signal Description</label>
+										<textarea
+											id="fbDesc"
+											bind:value={firebaseForm.description}
+											rows={2}
+											placeholder="Protocol purpose..."
+											class="w-full bg-black border border-white/5 px-4 py-3 text-slate-200 focus:border-orange-500 outline-none transition-all resize-none"
+										></textarea>				</div>
 			</div>
 
 			<!-- Footer -->
-			<div
-				class="px-4 sm:px-6 py-4 border-t border-slate-300 dark:border-slate-700 flex items-center justify-end gap-3"
-			>
-				<button
-					onclick={closeFirebaseModal}
-					class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-900 dark:text-white rounded-xl font-medium transition-all text-sm"
-				>
-					Cancel
+			<div class="px-8 py-6 bg-black border-t border-white/5 flex items-center justify-end gap-4">
+				<button onclick={closeFirebaseModal} class="px-6 py-2 text-[11px] font-black text-stone-600 hover:text-white uppercase tracking-widest italic transition-all">
+					Abort
 				</button>
 				<button
 					onclick={saveFirebaseParameter}
 					disabled={firebaseSaving || !firebaseForm.key.trim()}
-					class="px-4 py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-slate-900 dark:text-white rounded-xl font-semibold shadow-lg shadow-orange-900/30 transition-all flex items-center gap-2 disabled:opacity-50 text-sm"
+					class="px-8 py-3 bg-orange-600 hover:bg-white text-black text-[11px] font-black uppercase tracking-[0.3em] transition-all disabled:opacity-20 shadow-[6px_6px_0px_#000]"
 				>
 					{#if firebaseSaving}
-						<RefreshCw class="w-4 h-4 animate-spin" />
-						Saving...
+						SYNCING...
 					{:else}
-						<Save class="w-4 h-4" />
-						{firebaseModalMode === 'create' ? 'Create' : 'Update'}
+						COMMIT_PROTOCOL
 					{/if}
 				</button>
 			</div>
@@ -1259,10 +1285,6 @@
 {/if}
 
 <style>
-	:global(body) {
-		background: rgb(2, 6, 23);
-	}
-
 	/* Hide scrollbar for Chrome, Safari and Opera */
 	.no-scrollbar::-webkit-scrollbar {
 		display: none;
@@ -1272,5 +1294,13 @@
 	.no-scrollbar {
 		-ms-overflow-style: none; /* IE and Edge */
 		scrollbar-width: none; /* Firefox */
+	}
+
+	input[type="range"] {
+		@apply transition-all duration-300;
+	}
+	
+	input[type="range"]:hover {
+		@apply brightness-110;
 	}
 </style>

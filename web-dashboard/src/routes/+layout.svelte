@@ -14,7 +14,10 @@
 		notes,
 		showQuickActions,
 		notifications,
-		theme
+		theme,
+		backgroundConfig,
+		siteSettings,
+		loadAllSettings
 	} from '$lib/stores';
 	import type { Note } from '$lib/stores';
 	import {
@@ -46,10 +49,19 @@
 	import QuickActionsTooltip from '$lib/components/QuickActionsTooltip.svelte';
 	import NoteModal from '$lib/components/notes/NoteModal.svelte';
 
+	import NavbarParticles from '$lib/components/theme/NavbarParticles.svelte';
+	import GlobalSmoke from '$lib/components/theme/GlobalSmoke.svelte';
+	import SectionBackground from '$lib/components/theme/SectionBackground.svelte';
+	import ServerStatus from '$lib/components/theme/ServerStatus.svelte';
+	import Notifications from '$lib/components/theme/Notifications.svelte';
+
 	let { children } = $props();
 	let isChecking = $state(true);
 	let restarting = $state(false);
 	let eventSource: EventSource | null = null;
+
+	let localBackgroundConfig = $derived($backgroundConfig);
+	let localSiteSettings = $derived($siteSettings);
 
 	// Theme handling
 	$effect(() => {
@@ -60,6 +72,34 @@
 				document.documentElement.classList.remove('dark');
 			}
 			localStorage.setItem('theme', $theme);
+
+			// Sync aesthetic variables
+			const root = document.documentElement;
+			if ($siteSettings.aesthetic) {
+				root.style.setProperty('--card-alpha', ($siteSettings.aesthetic.card_alpha ?? 0.4).toString());
+				root.style.setProperty('--backdrop-blur', ($siteSettings.aesthetic.backdrop_blur ?? 16) + 'px');
+				root.style.setProperty('--sidebar-alpha', ($siteSettings.aesthetic.sidebar_alpha ?? 0.7).toString());
+				root.style.setProperty('--bg-opacity', ($siteSettings.aesthetic.bg_opacity ?? 1.0).toString());
+				root.style.setProperty('--bg-color', $siteSettings.aesthetic.bg_color || '#050505');
+				root.style.setProperty('--font-primary', ($siteSettings.aesthetic.font_primary || 'Inter') + ', sans-serif');
+				root.style.setProperty('--card-border-width', ($siteSettings.aesthetic.card_border_width ?? 1) + 'px');
+				root.style.setProperty('--card-shadow-size', ($siteSettings.aesthetic.card_shadow_size ?? 4) + 'px');
+				
+				let accent = $siteSettings.aesthetic.accent_color ?? '#78350f';
+				
+				// RED ALERT / PANIC MODE
+				if ($siteSettings.aesthetic.panic_mode) {
+					accent = '#dc2626'; // Pure red
+					root.style.setProperty('--border-color', '#991b1b');
+					root.style.setProperty('--card-bg-hex', '#450a0a');
+				} else {
+					root.style.setProperty('--border-color', $siteSettings.aesthetic.industrial_border_color || '#44403c');
+					root.style.setProperty('--card-bg-hex', $siteSettings.aesthetic.card_bg_color || '#1c1917');
+				}
+
+				root.style.setProperty('--accent-color', accent);
+				root.style.setProperty('--accent-color-light', accent + 'dd');
+			}
 		}
 	});
 
@@ -73,141 +113,6 @@
 	let mouseY = $state(0);
 	let hoveredItem = $state(-1);
 	let isSidebarCollapsed = $state(true);
-
-	// Particle system
-	let particleCanvas: HTMLCanvasElement | null = null;
-	let particleCtx: CanvasRenderingContext2D | null = null;
-	let particles: Particle[] = [];
-	let animationFrameId: number | null = null;
-
-	class Particle {
-		x: number;
-		y: number;
-		vx: number;
-		vy: number;
-		radius: number;
-		opacity: number;
-		color: string;
-		pulseSpeed: number;
-		pulsePhase: number;
-
-		constructor(width: number, height: number) {
-			this.x = Math.random() * width;
-			this.y = Math.random() * height;
-			this.vx = (Math.random() - 0.5) * 0.3;
-			this.vy = (Math.random() - 0.5) * 0.3;
-			this.radius = Math.random() * 2.5 + 0.5;
-			this.opacity = Math.random() * 0.5 + 0.2;
-			this.pulseSpeed = Math.random() * 0.02 + 0.01;
-			this.pulsePhase = Math.random() * Math.PI * 2;
-
-			const colors = [
-				'rgba(59, 130, 246',
-				'rgba(96, 165, 250',
-				'rgba(34, 211, 238',
-				'rgba(147, 197, 253'
-			];
-			this.color = colors[Math.floor(Math.random() * colors.length)];
-		}
-
-		update(width: number, height: number) {
-			this.x += this.vx;
-			this.y += this.vy;
-
-			if (this.x < 0 || this.x > width) this.vx *= -1;
-			if (this.y < 0 || this.y > height) this.vy *= -1;
-
-			this.pulsePhase += this.pulseSpeed;
-		}
-
-		draw(ctx: CanvasRenderingContext2D) {
-			const pulse = Math.sin(this.pulsePhase) * 0.3 + 0.7;
-			const currentRadius = this.radius * pulse;
-			const currentOpacity = this.opacity * pulse;
-
-			ctx.beginPath();
-			ctx.arc(this.x, this.y, currentRadius, 0, Math.PI * 2);
-			ctx.fillStyle = `${this.color}, ${currentOpacity})`;
-			ctx.fill();
-
-			// Glow effect
-			const gradient = ctx.createRadialGradient(
-				this.x,
-				this.y,
-				0,
-				this.x,
-				this.y,
-				currentRadius * 3
-			);
-			gradient.addColorStop(0, `${this.color}, ${currentOpacity * 0.3})`);
-			gradient.addColorStop(1, `${this.color}, 0)`);
-			ctx.fillStyle = gradient;
-			ctx.beginPath();
-			ctx.arc(this.x, this.y, currentRadius * 3, 0, Math.PI * 2);
-			ctx.fill();
-		}
-	}
-
-	function initParticles() {
-		if (!particleCanvas) return;
-		const width = particleCanvas.width;
-		const height = particleCanvas.height;
-		particles = [];
-
-		// Create fewer particles for better performance
-		const particleCount = Math.min(80, Math.floor((width * height) / 15000));
-		for (let i = 0; i < particleCount; i++) {
-			particles.push(new Particle(width, height));
-		}
-	}
-
-	function connectParticles() {
-		if (!particleCtx) return;
-		const maxDistance = 120;
-
-		for (let i = 0; i < particles.length; i++) {
-			for (let j = i + 1; j < particles.length; j++) {
-				const dx = particles[i].x - particles[j].x;
-				const dy = particles[i].y - particles[j].y;
-				const distance = Math.sqrt(dx * dx + dy * dy);
-
-				if (distance < maxDistance) {
-					const opacity = (1 - distance / maxDistance) * 0.15;
-					particleCtx.beginPath();
-					particleCtx.strokeStyle = `rgba(96, 165, 250, ${opacity})`;
-					particleCtx.lineWidth = 0.5;
-					particleCtx.moveTo(particles[i].x, particles[i].y);
-					particleCtx.lineTo(particles[j].x, particles[j].y);
-					particleCtx.stroke();
-				}
-			}
-		}
-	}
-
-	function animateParticles() {
-		if (!particleCanvas || !particleCtx) return;
-
-		const width = particleCanvas.width;
-		const height = particleCanvas.height;
-
-		particleCtx.clearRect(0, 0, width, height);
-
-		particles.forEach((particle) => {
-			particle.update(width, height);
-			particle.draw(particleCtx!);
-		});
-
-		connectParticles();
-
-		animationFrameId = requestAnimationFrame(animateParticles);
-	}
-
-	function handleResize() {
-		if (typeof window === 'undefined' || !particleCanvas) return;
-		particleCanvas.width = window.innerWidth;
-		particleCanvas.height = window.innerHeight;
-		initParticles();
-	}
 
 	function connectSSE() {
 		if (typeof window === 'undefined') return;
@@ -244,6 +149,12 @@
 	}
 
 	async function checkAuth() {
+		// Don't check auth if we are already on the login page
+		if (page.url.pathname === '/login' || page.url.pathname === '/login/2fa') {
+			isChecking = false;
+			return;
+		}
+
 		try {
 			const res = await fetch('/api/stats', { cache: 'no-store', credentials: 'include' });
 			if (res.ok) {
@@ -304,20 +215,18 @@
 	onMount(async () => {
 		const savedTheme = localStorage.getItem('theme');
 		if (savedTheme === 'light' || savedTheme === 'dark') {
-			theme.set(savedTheme);
+			theme.init(savedTheme);
 		}
 
-		await checkAuth();
-		if ($isAuthenticated) {
-			initialFetch();
-		}
-
-		// Initialize particle system (browser only)
-		if (typeof window !== 'undefined' && particleCanvas) {
-			particleCtx = particleCanvas.getContext('2d', { alpha: true });
-			handleResize();
-			animateParticles();
-			window.addEventListener('resize', handleResize);
+		if (page.url.pathname === '/login' || page.url.pathname === '/login/2fa') {
+			isChecking = false;
+		} else {
+			await checkAuth();
+			
+			if ($isAuthenticated) {
+				await loadAllSettings();
+				initialFetch();
+			}
 		}
 
 		setTimeout(() => {
@@ -327,10 +236,6 @@
 
 	onDestroy(() => {
 		if (eventSource) eventSource.close();
-		if (animationFrameId) cancelAnimationFrame(animationFrameId);
-		if (typeof window !== 'undefined') {
-			window.removeEventListener('resize', handleResize);
-		}
 	});
 
 	async function logout() {
@@ -428,22 +333,74 @@
 
 {#if isChecking}
 	<div
-		class="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"
+		class="flex items-center justify-center min-h-screen bg-stone-950"
 	>
 		<div class="relative">
 			<div
-				class="animate-spin rounded-full h-16 w-16 border-4 border-slate-700 border-t-indigo-500 shadow-2xl"
+				class="animate-spin rounded-full h-16 w-16 border-4 border-stone-800 border-t-rust shadow-2xl"
 			></div>
 			<div
-				class="absolute inset-0 rounded-full bg-gradient-to-r from-indigo-500/20 to-purple-500/20 blur-xl animate-pulse"
+				class="absolute inset-0 rounded-full bg-rust/20 blur-xl animate-pulse"
 			></div>
 		</div>
 	</div>
 {:else}
 	{#if $isAuthenticated && page.url.pathname !== '/login'}
-		<div
-			class="flex h-screen text-slate-600 dark:text-slate-300 overflow-hidden relative bg-transparent transition-colors duration-300"
-		>
+		<div class="relative min-h-screen {localSiteSettings?.aesthetic?.crt_effect ? 'crt-container' : ''} {localSiteSettings?.aesthetic?.panic_mode ? 'panic-mode' : ''}">
+			<!-- System Ticker Header (New) -->
+			<div class="fixed top-0 left-0 right-0 h-6 bg-black/80 backdrop-blur-md border-b border-stone-800 z-[110] flex items-center px-4 overflow-hidden">
+				<div class="flex items-center gap-6 animate-text-reveal whitespace-nowrap">
+					<span class="tactical-code text-rust-light">[SYSTEM_READY]</span>
+					<span class="tactical-code text-stone-600">CONNECTION: {$connectionStatus}</span>
+					<span class="tactical-code text-stone-600">ACTIVE_NODES: {$stats.active_spawners}</span>
+					<span class="tactical-code text-stone-600">TIMESTAMP: {new Date().toISOString()}</span>
+					<span class="tactical-code text-rust-light">[BUFFER_OPTIMIZED]</span>
+				</div>
+			</div>
+
+			<!-- Overlays -->
+			<div class="fixed inset-0 z-[100] pointer-events-none overflow-hidden">
+				<div class="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" style="opacity: {localSiteSettings?.aesthetic?.scanlines_opacity || 0.05}"></div>
+				<div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/asfalt-dark.png')] opacity-20 mix-blend-overlay" style="opacity: {localSiteSettings?.aesthetic?.noise_opacity || 0.03}"></div>
+			</div>
+
+			{#if localBackgroundConfig?.show_clouds}
+				<div class="clouds-overlay" style="opacity: {localBackgroundConfig.clouds_opacity}"></div>
+				<div class="clouds-overlay opacity-40" style="animation-direction: reverse; animation-duration: 180s; opacity: {localBackgroundConfig.clouds_opacity * 0.5}"></div>
+			{/if}
+
+			{#if localBackgroundConfig?.show_rain}
+				<div class="rain-container">
+					<div class="rain-layer rain-layer-back"></div>
+					<div class="rain-layer rain-layer-mid"></div>
+					<div class="rain-layer rain-layer-front" style="opacity: {localBackgroundConfig.rain_opacity * 0.5}"></div>
+				</div>
+			{/if}
+
+			{#if localBackgroundConfig?.show_smoke}
+				<GlobalSmoke />
+			{/if}
+
+			{#if localBackgroundConfig?.show_vignette}
+				<div class="vignette"></div>
+			{/if}
+
+			{#if localBackgroundConfig?.global_type && localBackgroundConfig.global_type !== 'none'}
+				<div class="fixed inset-0 z-0 pointer-events-none overflow-hidden opacity-50">
+					<SectionBackground type={localBackgroundConfig.global_type} />
+				</div>
+			{/if}
+
+			{#if localSiteSettings?.site_notice?.enabled}
+				<div class="relative z-[60] py-2 px-4 text-center text-[10px] font-heading tracking-[0.3em] uppercase transition-colors duration-500 {localSiteSettings.site_notice.type === 'critical' ? 'bg-red-600 text-white animate-pulse' : localSiteSettings.site_notice.type === 'warning' ? 'bg-rust text-white' : 'bg-stone-800 text-stone-300'}">
+					<span class="mr-2">[{localSiteSettings.site_notice.type.toUpperCase()}_BROADCAST]</span>
+					{localSiteSettings.site_notice.message}
+				</div>
+			{/if}
+
+			<div
+				class="flex h-screen text-stone-400 overflow-hidden relative bg-transparent transition-colors duration-300"
+			>
 			<!-- Global Restart Banner -->
 			{#if $restartRequired}
 				<div
@@ -527,525 +484,224 @@
 
 			<!-- Desktop Sidebar -->
 			<aside
-				class="hidden md:flex relative transition-all duration-300 ease-in-out bg-white/70 dark:bg-slate-950/70 backdrop-blur-md border-r border-slate-200 dark:border-slate-800 flex-col shrink-0 overflow-hidden shadow-2xl z-20 {isSidebarCollapsed
+				class="hidden md:flex relative transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] bg-[var(--sidebar-bg)] backdrop-blur-xl border-r-2 border-stone-800 flex-col shrink-0 overflow-hidden z-20 {isSidebarCollapsed
 					? 'w-20'
-					: 'w-64'}"
+					: 'w-72'} {$siteSettings.aesthetic.panic_mode ? 'border-red-600 shadow-[0_0_30px_rgba(220,38,38,0.2)]' : 'shadow-2xl'}"
 			>
-				<div
-					class="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-[1px] border-r border-white/5"
-				></div>
+				{#if localBackgroundConfig?.show_navbar_particles}
+					<NavbarParticles />
+				{/if}
+				
+				<!-- Tactical Overlays -->
+				<div class="absolute inset-0 pointer-events-none opacity-20">
+					<div class="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_2px_2px,rgba(255,255,255,0.05)_1px,transparent_0)] bg-[size:24px_24px]"></div>
+					{#if $siteSettings.aesthetic.crt_effect}
+						<div class="absolute top-0 left-0 w-full h-full animate-scanline_sweep bg-gradient-to-b from-transparent via-white/5 to-transparent"></div>
+					{/if}
+				</div>
 
 				<div class="relative z-10 flex flex-col h-full">
 					<div
-						class="p-6 border-b border-slate-200 dark:border-white/5 bg-white/5 backdrop-blur-md transform transition-all duration-700 {sidebarLoaded
+						class="p-6 border-b-2 border-stone-800 bg-black/40 transform transition-all duration-700 {sidebarLoaded
 							? 'translate-y-0 opacity-100'
 							: '-translate-y-4 opacity-0'} flex items-center justify-between"
 					>
 						{#if !isSidebarCollapsed}
-							<div class="flex items-center gap-3 animate-in fade-in zoom-in duration-300">
-								<div
-									class="w-3 h-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full animate-pulse shadow-lg shadow-blue-500/50"
-								></div>
-								<h1
-									class="text-2xl font-bold text-slate-900 dark:text-slate-50 -tracking-wide bg-gradient-to-r from-blue-600 via-cyan-600 to-blue-600 dark:from-blue-400 dark:via-cyan-400 dark:to-blue-400 bg-clip-text text-transparent filter drop-shadow-lg animate-gradient bg-size-200"
-								>
-									GoExile
-								</h1>
+							<div class="flex flex-col animate-in fade-in zoom-in duration-500">
+								<div class="flex items-center gap-2">
+									<div class="w-2 h-2 bg-rust shadow-[0_0_8px_var(--color-rust)]"></div>
+									<h1 class="text-xl font-black military-label text-white tracking-tighter uppercase">
+										EXILE_<span class="text-rust-light">OS</span>
+									</h1>
+								</div>
+								<span class="text-[8px] font-mono text-stone-600 mt-1 tracking-[0.3em]">VERSION_0.9.4_STABLE</span>
 							</div>
 						{/if}
 						<button
 							onclick={toggleSidebar}
-							class="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-all duration-300 active:scale-90 border border-transparent hover:border-slate-200 dark:hover:border-white/10 group {isSidebarCollapsed
+							class="p-2 rounded-none text-stone-500 hover:text-white bg-stone-900/50 border border-stone-800 hover:border-rust transition-all duration-300 {isSidebarCollapsed
 								? 'mx-auto'
 								: ''}"
-							title={isSidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
 						>
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								class="w-5 h-5 transition-transform duration-300 group-hover:scale-110"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							>
-								{#if isSidebarCollapsed}
-									<polyline points="13 17 18 12 13 7"></polyline>
-									<polyline points="6 17 11 12 6 7"></polyline>
-								{:else}
-									<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-									<line x1="9" y1="3" x2="9" y2="21"></line>
-								{/if}
-							</svg>
+							<Menu class="w-4 h-4" />
 						</button>
 					</div>
 
-					<nav class="flex-1 p-4 space-y-2 overflow-y-auto overflow-x-hidden">
-						<QuickActionsTooltip
-							placement="right"
-							title="Dashboard"
-							class="w-full"
-							enabled={$showQuickActions}
-							actions={[{ label: 'Refresh Data', icon: RefreshCw, onClick: initialFetch }]}
-						>
-							<a
-								href="/dashboard"
-								class="nav-link w-full {isSidebarCollapsed ? 'justify-center px-2' : ''}"
-								class:nav-active={isRouteActive('/dashboard') || isRouteActive('/')}
-								style="animation-delay: 0.1s;"
-								title={isSidebarCollapsed ? 'Dashboard' : ''}
-							>
-								{#if isRouteActive('/dashboard') || isRouteActive('/')}
-									<div class="nav-indicator"></div>
-								{/if}
-								<svg
-									class="nav-icon"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2"
-								>
-									<rect x="3" y="3" width="7" height="7"></rect>
-									<rect x="14" y="3" width="7" height="7"></rect>
-									<rect x="14" y="14" width="7" height="7"></rect>
-									<rect x="3" y="14" width="7" height="7"></rect>
-								</svg>
-								{#if !isSidebarCollapsed}
-									<span class="animate-in fade-in slide-in-from-left-2 duration-300">Dashboard</span
-									>
-								{/if}
-							</a>
-						</QuickActionsTooltip>
-
-						<QuickActionsTooltip
-							placement="right"
-							title="Performance"
-							class="w-full"
-							enabled={$showQuickActions}
-							actions={[
-								{ label: 'Force GC', icon: Trash2, onClick: handleForceGC, variant: 'warning' }
-							]}
-						>
-							<a
-								href="/performance"
-								class="nav-link w-full {isSidebarCollapsed ? 'justify-center px-2' : ''}"
-								class:nav-active={isRouteActive('/performance')}
-								style="animation-delay: 0.2s;"
-								title={isSidebarCollapsed ? 'Performance' : ''}
-							>
-								{#if isRouteActive('/performance')}
-									<div class="nav-indicator"></div>
-								{/if}
-								<svg
-									class="nav-icon"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2"
-								>
-									<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-								</svg>
-								{#if !isSidebarCollapsed}
-									<span class="animate-in fade-in slide-in-from-left-2 duration-300"
-										>Performance</span
-									>
-								{/if}
-							</a>
-						</QuickActionsTooltip>
-
-						<QuickActionsTooltip
-							placement="right"
-							title="Configuration"
-							class="w-full"
-							enabled={$showQuickActions}
-							actions={[
-								{ label: 'Export Config', icon: Download, onClick: handleExportConfig },
-								{
-									label: 'Reload Server',
-									icon: RefreshCw,
-									onClick: restartServer,
-									variant: 'danger'
-								}
-							]}
-						>
-							<a
-								href="/config"
-								class="nav-link w-full {isSidebarCollapsed ? 'justify-center px-2' : ''}"
-								class:nav-active={isRouteActive('/config') || isRouteActive('/config/')}
-								style="animation-delay: 0.3s;"
-								title={isSidebarCollapsed ? 'Configuration' : ''}
-							>
-								{#if isRouteActive('/config') || isRouteActive('/config/')}
-									<div class="nav-indicator"></div>
-								{/if}
-								<svg
-									class="nav-icon"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2"
-								>
-									<circle cx="12" cy="12" r="3"></circle>
-									<path
-										d="M12 1v6m0 6v6m4.22-13.22l4.24 4.24M1.54 1.54l4.24 4.24M20.46 20.46l-4.24-4.24M1.54 20.46l4.24-4.24"
-									></path>
-								</svg>
-								{#if !isSidebarCollapsed}
-									<span class="animate-in fade-in slide-in-from-left-2 duration-300"
-										>Configuration</span
-									>
-								{/if}
-							</a>
-						</QuickActionsTooltip>
-
-						<QuickActionsTooltip
-							placement="right"
-							title="Server Files"
-							class="w-full"
-							enabled={$showQuickActions}
-							actions={[{ label: 'Download Core', icon: Download, onClick: handleDownloadFiles }]}
-						>
-							<a
-								href="/server"
-								class="nav-link w-full {isSidebarCollapsed ? 'justify-center px-2' : ''}"
-								class:nav-active={isRouteActive('/server')}
-								style="animation-delay: 0.4s;"
-								title={isSidebarCollapsed ? 'Server Files' : ''}
-							>
-								{#if isRouteActive('/server')}
-									<div class="nav-indicator"></div>
-								{/if}
-								<svg
-									class="nav-icon"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2"
-								>
-									<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-									<polyline points="7 10 12 15 17 10"></polyline>
-									<line x1="12" y1="15" x2="12" y2="3"></line>
-								</svg>
-								{#if !isSidebarCollapsed}
-									<span class="animate-in fade-in slide-in-from-left-2 duration-300"
-										>Server Files</span
-									>
-								{/if}
-							</a>
-						</QuickActionsTooltip>
-
-						<QuickActionsTooltip
-							placement="right"
-							title="Databases"
-							class="w-full"
-							enabled={$showQuickActions}
-							actions={[{ label: 'Backup All', icon: HardDrive, onClick: handleBackupDB }]}
-						>
-							<a
-								href="/database"
-								class="nav-link w-full {isSidebarCollapsed ? 'justify-center px-2' : ''}"
-								class:nav-active={isRouteActive('/database')}
-								style="animation-delay: 0.5s;"
-								title={isSidebarCollapsed ? 'Databases' : ''}
-							>
-								{#if isRouteActive('/database')}
-									<div class="nav-indicator"></div>
-								{/if}
-								<Database class="nav-icon" />
-								{#if !isSidebarCollapsed}
-									<span class="animate-in fade-in slide-in-from-left-2 duration-300">Databases</span
-									>
-								{/if}
-							</a>
-						</QuickActionsTooltip>
-
-						<QuickActionsTooltip
-							placement="right"
-							title="Players"
-							class="w-full"
-							enabled={$showQuickActions}
-							actions={[]}
-						>
-							<a
-								href="/users"
-								class="nav-link w-full {isSidebarCollapsed ? 'justify-center px-2' : ''}"
-								class:nav-active={isRouteActive('/users')}
-								style="animation-delay: 0.55s;"
-								title={isSidebarCollapsed ? 'Players' : ''}
-							>
-								{#if isRouteActive('/users')}
-									<div class="nav-indicator"></div>
-								{/if}
-								<Users class="nav-icon" />
-								{#if !isSidebarCollapsed}
-									<span class="animate-in fade-in slide-in-from-left-2 duration-300">Players</span>
-								{/if}
-							</a>
-						</QuickActionsTooltip>
-
-						<QuickActionsTooltip
-							placement="right"
-							title="RedEye"
-							class="w-full"
-							enabled={$showQuickActions}
-							actions={[]}
-						>
-							<a
-								href="/redeye"
-								class="nav-link w-full {isSidebarCollapsed ? 'justify-center px-2' : ''}"
-								class:nav-active={isRouteActive('/redeye')}
-								style="animation-delay: 0.6s;"
-								title={isSidebarCollapsed ? 'RedEye' : ''}
-							>
-								{#if isRouteActive('/redeye')}
-									<div class="nav-indicator"></div>
-								{/if}
-								<Eye class="nav-icon" />
-								{#if !isSidebarCollapsed}
-									<span class="animate-in fade-in slide-in-from-left-2 duration-300">RedEye</span>
-								{/if}
-							</a>
-						</QuickActionsTooltip>
-
-						<QuickActionsTooltip
-							placement="right"
-							title="Notes"
-							class="w-full"
-							enabled={$showQuickActions}
-							actions={[
-								{ label: 'New Note', icon: Plus, onClick: () => (showGlobalNoteModal = true) }
-							]}
-						>
-							<a
-								href="/notes"
-								class="nav-link w-full {isSidebarCollapsed ? 'justify-center px-2' : ''}"
-								class:nav-active={isRouteActive('/notes')}
-								style="animation-delay: 0.7s;"
-								title={isSidebarCollapsed ? 'Notes' : ''}
-							>
-								{#if isRouteActive('/notes')}
-									<div class="nav-indicator"></div>
-								{/if}
-								<StickyNote class="nav-icon" />
-								{#if !isSidebarCollapsed}
-									<span class="animate-in fade-in slide-in-from-left-2 duration-300">Notes</span>
-								{/if}
-							</a>
-						</QuickActionsTooltip>
-					</nav>
-
-					<div
-						class="p-4 border-t border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-black/20 backdrop-blur-md flex flex-col gap-2 transform transition-all duration-700 {sidebarLoaded
-							? 'translate-y-0 opacity-100'
-							: 'translate-y-8 opacity-0'}"
-						style="animation-delay: 0.6s;"
-					>
+					<nav class="flex-1 p-3 space-y-4 overflow-y-auto overflow-x-hidden no-scrollbar">
+						<!-- Terminal Output Simulation -->
 						{#if !isSidebarCollapsed}
-							<button
-								onmouseenter={() => (hoveredItem = 8)}
-								onmouseleave={() => (hoveredItem = -1)}
-								onclick={toggleTheme}
-								class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-300 group relative overflow-hidden animate-in fade-in zoom-in
-								{hoveredItem === 8
-									? 'bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border-purple-400/40 shadow-lg shadow-purple-500/20 scale-[1.02]'
-									: 'hover:bg-slate-100 dark:hover:bg-slate-800/50'}
-								border border-transparent hover:border-purple-400/20"
-							>
-								<div
-									class="absolute inset-0 bg-gradient-to-r from-purple-600/0 via-purple-400/10 to-purple-600/0 translate-x-[-100%] {hoveredItem ===
-									8
-										? 'translate-x-[100%]'
-										: ''} transition-transform duration-700"
-								></div>
-
-								<div class="relative z-10">
-									{#if $theme === 'dark'}
-										<Moon
-											class="w-5 h-5 transition-all duration-300 text-purple-400 {hoveredItem === 8
-												? 'scale-110 fill-purple-400/20'
-												: ''}"
-										/>
-									{:else}
-										<Sun
-											class="w-5 h-5 transition-all duration-300 text-amber-500 {hoveredItem === 8
-												? 'scale-110 fill-amber-500/20'
-												: ''}"
-										/>
-									{/if}
-								</div>
-
-								<span
-									class="relative z-10 text-sm font-medium transition-all duration-300 {hoveredItem ===
-									8
-										? 'translate-x-1'
-										: ''}"
-								>
-									{$theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
-								</span>
-							</button>
-
-							<button
-								onmouseenter={() => (hoveredItem = 6)}
-								onmouseleave={() => (hoveredItem = -1)}
-								class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-300 group relative overflow-hidden animate-in fade-in zoom-in
-								{hoveredItem === 6
-									? 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-blue-400/40 shadow-lg shadow-blue-500/20 scale-[1.02]'
-									: 'hover:bg-slate-100 dark:hover:bg-slate-800/50'}
-								border border-transparent hover:border-blue-400/20"
-							>
-								<div
-									class="absolute inset-0 bg-gradient-to-r from-blue-600/0 via-blue-400/10 to-blue-600/0 translate-x-[-100%] {hoveredItem ===
-									6
-										? 'translate-x-[100%]'
-										: ''} transition-transform duration-700"
-								></div>
-
-								<div class="relative z-10">
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										class="w-5 h-5 transition-all duration-300 {hoveredItem === 6
-											? 'rotate-12 scale-110'
-											: ''}"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										stroke-width="2"
-										stroke-linecap="round"
-										stroke-linejoin="round"
-									>
-										<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-										<path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-									</svg>
-									<span
-										class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-ping"
-									></span>
-									<span class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-								</div>
-
-								<span
-									class="relative z-10 text-sm font-medium transition-all duration-300 {hoveredItem ===
-									6
-										? 'translate-x-1'
-										: ''}">Notifications</span
-								>
-							</button>
-
-							<button
-								onclick={toggleQuickActions}
-								onmouseenter={() => (hoveredItem = 7)}
-								onmouseleave={() => (hoveredItem = -1)}
-								class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-300 group relative overflow-hidden animate-in fade-in zoom-in
-								{hoveredItem === 7
-									? 'bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border-yellow-400/40 shadow-lg shadow-yellow-500/20 scale-[1.02]'
-									: 'hover:bg-slate-100 dark:hover:bg-slate-800/50'}
-								border border-transparent hover:border-yellow-400/20"
-								title={$showQuickActions ? 'Disable Quick Actions' : 'Enable Quick Actions'}
-							>
-								<div
-									class="absolute inset-0 bg-gradient-to-r from-yellow-600/0 via-yellow-400/10 to-yellow-600/0 translate-x-[-100%] {hoveredItem ===
-									7
-										? 'translate-x-[100%]'
-										: ''} transition-transform duration-700"
-								></div>
-
-								<div class="relative z-10">
-									{#if $showQuickActions}
-										<Zap
-											class="w-5 h-5 transition-all duration-300 text-yellow-400 {hoveredItem === 7
-												? 'scale-110 fill-yellow-400/20'
-												: ''}"
-										/>
-									{:else}
-										<ZapOff
-											class="w-5 h-5 transition-all duration-300 {hoveredItem === 7
-												? 'scale-110'
-												: ''}"
-										/>
-									{/if}
-								</div>
-
-								<span
-									class="relative z-10 text-sm font-medium transition-all duration-300 {hoveredItem ===
-									7
-										? 'translate-x-1'
-										: ''}">Quick Actions</span
-								>
-							</button>
+							<div class="px-2 py-1 mb-4 border-l-2 border-rust/30 opacity-40">
+								<div class="tactical-code text-stone-500 animate-pulse">>> ACCESSING_CORES...</div>
+								<div class="tactical-code text-stone-600">>> BUFFER_READY</div>
+							</div>
 						{/if}
 
-						<button
-							onclick={logout}
-							onmouseenter={() => (hoveredItem = 5)}
-							onmouseleave={() => (hoveredItem = -1)}
-							class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border transition-all duration-300 group relative overflow-hidden
-							{hoveredItem === 5
-								? 'bg-gradient-to-r from-red-500/20 to-rose-600/20 border-red-400/50 shadow-lg shadow-red-500/30 scale-[1.02]'
-								: 'border-transparent hover:bg-red-500/10 hover:border-red-500/20'}"
-							title={isSidebarCollapsed ? 'Logout' : ''}
-						>
-							<!-- Animated shimmer effect -->
-							<div
-								class="absolute inset-0 bg-gradient-to-r from-red-600/0 via-red-400/20 to-red-600/0 translate-x-[-100%] {hoveredItem ===
-								5
-									? 'translate-x-[100%]'
-									: ''} transition-transform duration-700"
-							></div>
-
-							<!-- Pulsing danger background -->
-							<div
-								class="absolute inset-0 {hoveredItem === 5
-									? 'animate-pulse'
-									: ''} bg-red-500/5 rounded-xl"
-							></div>
-
-							<!-- Warning particles effect -->
-							{#if hoveredItem === 5}
-								<div
-									class="absolute top-0 left-1/4 w-1 h-1 bg-red-400 rounded-full animate-ping"
-									style="animation-delay: 0s;"
-								></div>
-								<div
-									class="absolute bottom-1 right-1/3 w-1 h-1 bg-red-400 rounded-full animate-ping"
-									style="animation-delay: 0.2s;"
-								></div>
-								<div
-									class="absolute top-1 right-1/4 w-1 h-1 bg-rose-400 rounded-full animate-ping"
-									style="animation-delay: 0.4s;"
-								></div>
-							{/if}
-
-							<div class="relative z-10 flex items-center justify-center gap-2">
-								<div
-									class="w-4 h-4 flex items-center justify-center transition-all duration-300 {hoveredItem ===
-									5
-										? 'rotate-12 scale-110'
-										: ''}"
-								>
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										class="w-4 h-4 transition-all duration-300 group-hover:-translate-x-0.5"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										stroke-width="2"
-										stroke-linecap="round"
-										stroke-linejoin="round"
-									>
-										<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-										<polyline points="16 17 21 12 16 7"></polyline>
-										<line x1="21" y1="12" x2="9" y2="12"></line>
-									</svg>
+						<div class="space-y-1">
+							<a
+								href="/dashboard"
+								class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}"
+								class:active={isRouteActive('/dashboard') || isRouteActive('/')}
+							>
+								<div class="nav-icon-container">
+									<LayoutDashboard class="w-4 h-4" />
 								</div>
 								{#if !isSidebarCollapsed}
-									<span
-										class="text-sm font-semibold transition-all duration-300 {hoveredItem === 5
-											? 'translate-x-1'
-											: ''}">Logout</span
-									>
+									<div class="flex flex-col">
+										<span class="nav-text">CORE_INTERFACE</span>
+										<span class="nav-subtext">Unified_Dash</span>
+									</div>
 								{/if}
+							</a>
+
+							<a
+								href="/performance"
+								class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}"
+								class:active={isRouteActive('/performance')}
+							>
+								<div class="nav-icon-container">
+									<Activity class="w-4 h-4" />
+								</div>
+								{#if !isSidebarCollapsed}
+									<div class="flex flex-col">
+										<span class="nav-text">TELEMETRY_BUS</span>
+										<span class="nav-subtext">Metric_Stream</span>
+									</div>
+								{/if}
+							</a>
+
+							<a
+								href="/config"
+								class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}"
+								class:active={isRouteActive('/config')}
+							>
+								<div class="nav-icon-container">
+									<Settings class="w-4 h-4" />
+								</div>
+								{#if !isSidebarCollapsed}
+									<div class="flex flex-col">
+										<span class="nav-text">SYS_PARAMETERS</span>
+										<span class="nav-subtext">Config_Buffer</span>
+									</div>
+								{/if}
+							</a>
+
+							<a
+								href="/server"
+								class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}"
+								class:active={isRouteActive('/server')}
+							>
+								<div class="nav-icon-container">
+									<HardDrive class="w-4 h-4" />
+								</div>
+								{#if !isSidebarCollapsed}
+									<div class="flex flex-col">
+										<span class="nav-text">ASSET_INDEX</span>
+										<span class="nav-subtext">Binary_Storage</span>
+									</div>
+								{/if}
+							</a>
+
+							<a
+								href="/database"
+								class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}"
+								class:active={isRouteActive('/database')}
+							>
+								<div class="nav-icon-container">
+									<Database class="w-4 h-4" />
+								</div>
+								{#if !isSidebarCollapsed}
+									<div class="flex flex-col">
+										<span class="nav-text">DATA_ARCHIVE</span>
+										<span class="nav-subtext">Persistence_Cores</span>
+									</div>
+								{/if}
+							</a>
+
+							<a
+								href="/users"
+								class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}"
+								class:active={isRouteActive('/users')}
+							>
+								<div class="nav-icon-container">
+									<Users class="w-4 h-4" />
+								</div>
+								{#if !isSidebarCollapsed}
+									<div class="flex flex-col">
+										<span class="nav-text">IDENTITY_VAULT</span>
+										<span class="nav-subtext">Client_Protocols</span>
+									</div>
+								{/if}
+							</a>
+
+							<a
+								href="/redeye"
+								class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}"
+								class:active={isRouteActive('/redeye')}
+							>
+								<div class="nav-icon-container">
+									<ShieldCheck class="w-4 h-4" />
+								</div>
+								{#if !isSidebarCollapsed}
+									<div class="flex flex-col">
+										<span class="nav-text">NETWORK_SHIELD</span>
+										<span class="nav-subtext">Security_Sentinel</span>
+									</div>
+								{/if}
+							</a>
+
+							<a
+								href="/notes"
+								class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}"
+								class:active={isRouteActive('/notes')}
+							>
+								<div class="nav-icon-container">
+									<StickyNote class="w-4 h-4" />
+								</div>
+								{#if !isSidebarCollapsed}
+									<div class="flex flex-col">
+										<span class="nav-text">SIGNAL_LOGS</span>
+										<span class="nav-subtext">Notation_Drive</span>
+									</div>
+								{/if}
+							</a>
+						</div>
+					</nav>
+
+					<!-- Sidebar Footer: Terminal Diagnostics -->
+					<div
+						class="mt-auto p-4 border-t-2 border-stone-800 bg-black/60 flex flex-col gap-4 transform transition-all duration-700 {sidebarLoaded
+							? 'translate-y-0 opacity-100'
+							: 'translate-y-8 opacity-0'}"
+					>
+						{#if !isSidebarCollapsed}
+							<div class="grid grid-cols-2 gap-2 mb-2">
+								<div class="flex flex-col">
+									<span class="text-[7px] text-stone-600 font-mono uppercase">Sync_Rate</span>
+									<span class="text-[9px] font-bold text-rust-light font-mono">124.5 Hz</span>
+								</div>
+								<div class="text-right flex flex-col">
+									<span class="text-[7px] text-stone-600 font-mono uppercase">Buffer_Cap</span>
+									<span class="text-[9px] font-bold text-emerald-500 font-mono">NOMINAL</span>
+								</div>
 							</div>
-						</button>
+						{/if}
+
+						<div class="flex items-center gap-2 {isSidebarCollapsed ? 'flex-col' : ''}">
+							<button
+								onclick={toggleTheme}
+								class="p-2 border border-stone-800 bg-stone-950/50 text-stone-500 hover:text-white hover:border-rust transition-all flex-1 flex justify-center"
+								title="Cycle_Luminance"
+							>
+								{#if $theme === 'dark'}<Moon class="w-4 h-4"/>{:else}<Sun class="w-4 h-4"/>{/if}
+							</button>
+							<button
+								onclick={logout}
+								class="p-2 border border-red-900/30 bg-red-950/10 text-red-600 hover:bg-red-600 hover:text-black transition-all flex-1 flex justify-center group"
+								title="Deauthenticate"
+							>
+								<code class="text-[10px] font-black group-hover:animate-pulse">BYE_</code>
+							</button>
+						</div>
 					</div>
 				</div>
 			</aside>
@@ -1053,70 +709,29 @@
 			<div class="flex-1 flex flex-col h-full overflow-hidden relative">
 				<!-- Mobile Top Header -->
 				<header
-					class="md:hidden h-14 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-white/5 flex items-center justify-between px-4 z-30 shrink-0"
+					class="md:hidden h-14 bg-black/80 backdrop-blur-md border-b-2 border-stone-800 flex items-center justify-between px-4 z-30 shrink-0"
 				>
-					<div class="flex items-center gap-2">
-						<div
-							class="w-2.5 h-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full animate-pulse shadow-lg shadow-blue-500/50"
-						></div>
-						<h1
-							class="text-lg font-bold text-slate-900 dark:text-slate-50 bg-gradient-to-r from-blue-600 via-cyan-600 to-blue-600 dark:from-blue-400 dark:via-cyan-400 dark:to-blue-400 bg-clip-text text-transparent"
-						>
-							GoExile
-						</h1>
+					<div class="flex flex-col">
+						<div class="flex items-center gap-2">
+							<div class="w-1.5 h-1.5 bg-rust shadow-[0_0_5px_var(--color-rust)]"></div>
+							<h1 class="text-sm font-black military-label text-white tracking-tighter uppercase">
+								EXILE_<span class="text-rust-light">OS</span>
+							</h1>
+						</div>
+						<span class="text-[6px] font-mono text-stone-600 tracking-[0.3em]">MOBILE_INTERFACE_V1</span>
 					</div>
 					<div class="flex items-center gap-2">
 						<button
 							onclick={toggleTheme}
-							class="relative p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-300 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 active:scale-90 group"
-							aria-label="Toggle Theme"
+							class="p-2 border border-stone-800 bg-stone-900/50 text-stone-500 hover:text-white transition-all"
 						>
-							{#if $theme === 'dark'}
-								<Moon class="w-5 h-5 transition-transform duration-300 group-hover:-rotate-12" />
-							{:else}
-								<Sun class="w-5 h-5 transition-transform duration-300 group-hover:rotate-90" />
-							{/if}
-						</button>
-						<button
-							class="relative p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-300 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 active:scale-90 group"
-							aria-label="Notifications"
-						>
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								class="w-5 h-5 transition-transform duration-300 group-hover:rotate-12"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							>
-								<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-								<path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-							</svg>
-							<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-ping"
-							></span>
-							<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
+							{#if $theme === 'dark'}<Moon class="w-4 h-4"/>{:else}<Sun class="w-4 h-4"/>{/if}
 						</button>
 						<button
 							onclick={logout}
-							class="p-2 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-all duration-300 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 active:scale-90 group"
-							aria-label="Logout"
+							class="p-2 border border-red-900/30 bg-red-950/10 text-red-600 hover:bg-red-600 hover:text-black transition-all group"
 						>
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								class="w-5 h-5 transition-transform duration-300 group-hover:-translate-x-0.5"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							>
-								<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-								<polyline points="16 17 21 12 16 7"></polyline>
-								<line x1="21" y1="12" x2="9" y2="12"></line>
-							</svg>
+							<code class="text-[8px] font-black uppercase">Exit_</code>
 						</button>
 					</div>
 				</header>
@@ -1130,189 +745,64 @@
 
 				<!-- Mobile Bottom Nav -->
 				<nav
-					class="md:hidden h-16 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-t border-slate-200 dark:border-white/10 fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2 safe-area-pb"
+					class="md:hidden h-16 bg-black/90 backdrop-blur-xl border-t-2 border-stone-800 fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2 safe-area-pb"
 				>
 					<a
 						href="/dashboard"
 						class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive(
 							'/dashboard'
 						) || isRouteActive('/')
-							? 'text-blue-600 dark:text-blue-400'
-							: 'text-slate-500 hover:text-slate-900 dark:text-slate-500 dark:hover:text-slate-300'} transition-colors"
+							? 'text-rust-light'
+							: 'text-stone-600'} transition-colors"
 					>
-						<svg
-							class="w-5 h-5"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						>
-							<rect x="3" y="3" width="7" height="7"></rect>
-							<rect x="14" y="3" width="7" height="7"></rect>
-							<rect x="14" y="14" width="7" height="7"></rect>
-							<rect x="3" y="14" width="7" height="7"></rect>
-						</svg>
-						<span class="text-[10px] font-medium">Dash</span>
+						<LayoutDashboard class="w-5 h-5" />
+						<span class="font-mono text-[8px] font-black uppercase">CORE</span>
 					</a>
 					<a
 						href="/performance"
 						class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive(
 							'/performance'
 						)
-							? 'text-blue-600 dark:text-blue-400'
-							: 'text-slate-500 hover:text-slate-900 dark:text-slate-500 dark:hover:text-slate-300'} transition-colors"
+							? 'text-rust-light'
+							: 'text-stone-600'} transition-colors"
 					>
-						<svg
-							class="w-5 h-5"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						>
-							<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-						</svg>
-						<span class="text-[10px] font-medium">Perf</span>
+						<Activity class="w-5 h-5" />
+						<span class="font-mono text-[8px] font-black uppercase">PERF</span>
 					</a>
 					<a
 						href="/config"
 						class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive(
 							'/config'
 						) || isRouteActive('/config/')
-							? 'text-blue-600 dark:text-blue-400'
-							: 'text-slate-500 hover:text-slate-900 dark:text-slate-500 dark:hover:text-slate-300'} transition-colors"
+							? 'text-rust-light'
+							: 'text-stone-600'} transition-colors"
 					>
-						<svg
-							class="w-5 h-5"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						>
-							<circle cx="12" cy="12" r="3"></circle>
-							<path
-								d="M12 1v6m0 6v6m4.22-13.22l4.24 4.24M1.54 1.54l4.24 4.24M20.46 20.46l-4.24-4.24M1.54 20.46l4.24-4.24"
-							></path>
-						</svg>
-						<span class="text-[10px] font-medium">Config</span>
-					</a>
-					<a
-						href="/server"
-						class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive(
-							'/server'
-						)
-							? 'text-blue-600 dark:text-blue-400'
-							: 'text-slate-500 hover:text-slate-900 dark:text-slate-500 dark:hover:text-slate-300'} transition-colors"
-					>
-						<svg
-							class="w-5 h-5"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						>
-							<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-							<polyline points="7 10 12 15 17 10"></polyline>
-							<line x1="12" y1="15" x2="12" y2="3"></line>
-						</svg>
-						<span class="text-[10px] font-medium">Files</span>
-					</a>
-					<a
-						href="/database"
-						class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive(
-							'/database'
-						)
-							? 'text-blue-600 dark:text-blue-400'
-							: 'text-slate-500 hover:text-slate-900 dark:text-slate-500 dark:hover:text-slate-300'} transition-colors"
-					>
-						<svg
-							class="w-5 h-5"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						>
-							<ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-							<path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
-							<path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
-						</svg>
-						<span class="text-[10px] font-medium">DB</span>
-					</a>
-					<a
-						href="/users"
-						class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive(
-							'/users'
-						)
-							? 'text-blue-600 dark:text-blue-400'
-							: 'text-slate-500 hover:text-slate-900 dark:text-slate-500 dark:hover:text-slate-300'} transition-colors"
-					>
-						<Users class="w-5 h-5" />
-						<span class="text-[10px] font-medium">Players</span>
+						<Settings class="w-5 h-5" />
+						<span class="font-mono text-[8px] font-black uppercase">CNFG</span>
 					</a>
 					<a
 						href="/redeye"
 						class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive(
 							'/redeye'
 						)
-							? 'text-blue-600 dark:text-blue-400'
-							: 'text-slate-500 hover:text-slate-900 dark:text-slate-500 dark:hover:text-slate-300'} transition-colors"
+							? 'text-rust-light'
+							: 'text-stone-600'} transition-colors"
 					>
-						<Eye class="w-5 h-5" />
-						<span class="text-[10px] font-medium">RedEye</span>
-					</a>
-					<a
-						href="/notes"
-						class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive(
-							'/notes'
-						)
-							? 'text-blue-600 dark:text-blue-400'
-							: 'text-slate-500 hover:text-slate-900 dark:text-slate-500 dark:hover:text-slate-300'} transition-colors"
-					>
-						<StickyNote class="w-5 h-5" />
-						<span class="text-[10px] font-medium">Notes</span>
+						<ShieldCheck class="w-5 h-5" />
+						<span class="font-mono text-[8px] font-black uppercase">SHLD</span>
 					</a>
 				</nav>
 			</div>
 		</div>
+	</div>
 
-		<!-- Spectacular Animated Particle Background -->
-		{#if $isAuthenticated && !isRouteActive('/login')}
-			<canvas
-				bind:this={particleCanvas}
-				class="fixed inset-0 -z-50 pointer-events-none transition-colors duration-500"
-				style="background: {$theme === 'dark'
-					? 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)'
-					: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%)'};"
-			></canvas>
+		<ServerStatus 
+			status={$isConnected ? 'ONLINE' : 'OFFLINE'} 
+			players={$stats.active_spawners * 10} 
+			servers={$stats.active_spawners} 
+		/>
 
-			<!-- Additional atmospheric layers -->
-			<div class="fixed inset-0 -z-40 pointer-events-none">
-				<!-- Radial gradient overlay -->
-				<div
-					class="absolute inset-0 bg-gradient-radial from-transparent via-slate-900/30 to-slate-950/60 opacity-50 dark:opacity-100 transition-opacity duration-500"
-				></div>
-
-				<!-- Animated gradient orbs -->
-				<div
-					class="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px] animate-float-slow"
-				></div>
-				<div
-					class="absolute bottom-0 right-0 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[140px] animate-float-slower"
-				></div>
-				<div
-					class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-indigo-500/10 rounded-full blur-[100px] animate-pulse-slow"
-				></div>
-			</div>
-		{/if}
+		<Notifications />
 	{:else}
 		{@render children()}
 	{/if}
@@ -1323,8 +813,6 @@
 		onSave={handleGlobalSaveNote}
 		onClose={() => (showGlobalNoteModal = false)}
 	/>
-
-	<ToastContainer />
 {/if}
 
 <style>
@@ -1442,20 +930,20 @@
 	}
 
 	.nav-link.nav-active {
-		border-color: rgba(37, 99, 235, 0.4);
+		border-color: rgba(146, 64, 14, 0.4);
 		transform: scale(1.02);
 	}
 
 	:global(.dark) .nav-link.nav-active {
-		background: linear-gradient(to right, rgba(37, 99, 235, 0.3), rgba(37, 99, 235, 0.2));
-		color: rgb(147, 197, 253);
-		box-shadow: 0 25px 50px -12px rgba(37, 99, 235, 0.25);
+		background: linear-gradient(to right, rgba(120, 53, 15, 0.3), rgba(120, 53, 15, 0.2));
+		color: #f97316;
+		box-shadow: 0 25px 50px -12px rgba(120, 53, 15, 0.25);
 	}
 
 	:global(:not(.dark)) .nav-link.nav-active {
-		background: linear-gradient(to right, rgba(37, 99, 235, 0.15), rgba(37, 99, 235, 0.05));
-		color: rgb(37, 99, 235);
-		box-shadow: 0 25px 50px -12px rgba(37, 99, 235, 0.1);
+		background: linear-gradient(to right, rgba(120, 53, 15, 0.15), rgba(120, 53, 15, 0.05));
+		color: #78350f;
+		box-shadow: 0 25px 50px -12px rgba(120, 53, 15, 0.1);
 	}
 
 	.nav-icon {
@@ -1500,9 +988,9 @@
 		bottom: 0;
 		left: 0;
 		width: 0.375rem;
-		background: linear-gradient(to bottom, rgb(96, 165, 250), rgb(34, 211, 238));
+		background: linear-gradient(to bottom, #f97316, #92400e);
 		border-radius: 0 0.25rem 0.25rem 0;
-		box-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+		box-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
 		animation: pulse 2s infinite;
 	}
 </style>

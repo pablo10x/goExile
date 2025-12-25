@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { slide } from 'svelte/transition';
-	import { serverVersions } from '$lib/stores';
+	import { serverVersions, siteSettings } from '$lib/stores';
 	import { compareVersions } from '$lib/semver';
 	import PlayersChart from './PlayersChart.svelte';
 	import QuickActionsTooltip from './QuickActionsTooltip.svelte';
@@ -13,7 +13,8 @@
 		RotateCw,
 		ArrowDownToLine,
 		Trash2,
-		TerminalSquare
+		TerminalSquare,
+		Activity
 	} from 'lucide-svelte';
 
 	let { spawnerId, instance }: { spawnerId: number; instance: any } = $props();
@@ -68,287 +69,248 @@
 </script>
 
 <div
-	class="border border-slate-300/50 dark:border-slate-700/50 rounded-lg bg-slate-800/30 overflow-hidden mb-2"
+	class={`border border-stone-800 ${$siteSettings.aesthetic.industrial_styling ? 'rounded-none' : 'rounded-lg'} bg-stone-950/20 overflow-hidden mb-2 hover:border-rust/40 transition-all shadow-sm`}
 >
 	<!-- Header / Collapsed View -->
 	<div
-		class="flex flex-col sm:flex-row sm:items-center gap-3 px-3 sm:px-4 py-3 cursor-pointer hover:bg-slate-700/30 transition-colors"
+		class="flex flex-col sm:flex-row sm:items-center gap-4 px-5 py-3 cursor-pointer hover:bg-white/[0.02] transition-colors"
 		onclick={toggle}
 		role="button"
 		tabindex="0"
 		onkeydown={(e) => e.key === 'Enter' && toggle()}
 	>
-		<!-- Top Row (Mobile): Chevron + Name -->
-		<div class="flex items-center gap-2 w-full sm:w-auto">
-			<div
-				class="text-slate-500 transform transition-transform duration-200 {expanded
-					? 'rotate-90'
-					: ''}"
-			>
-				<ChevronRight class="w-4 h-4 sm:w-5 sm:h-5" />
-			</div>
-
-			<div
-				class="font-mono text-sm sm:text-base text-slate-700 dark:text-slate-300 truncate flex-1 sm:flex-initial"
-				title={`Exile Gameserver : #${instance.port}`}
-			>
-				<span class="hidden md:inline text-slate-500">Exile Gameserver : </span>#{instance.port}
-			</div>
-		</div>
-
-		<!-- Details Grid/Flex -->
+		<!-- Chevron -->
 		<div
-			class="flex-1 flex flex-wrap sm:grid sm:grid-cols-9 gap-2 sm:gap-4 items-center text-xs sm:text-sm pl-6 sm:pl-0"
+			class="text-stone-600 transform transition-transform duration-300 {expanded
+				? 'rotate-90 text-rust-light'
+				: ''}"
 		>
-			<!-- Version -->
-			<div class="col-span-3 text-slate-500 dark:text-slate-400 truncate flex items-center gap-2">
-				<span class="sm:hidden text-slate-500">Ver:</span>
-				{instance.version || 'Unknown'}
-				{#if isOutdated}
-					<span
-						class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 animate-pulse"
-					>
-						UPDATE
-					</span>
-				{/if}
-			</div>
+			<ChevronRight class="w-4 h-4" />
+		</div>
 
-			<!-- Port -->
-			<div class="col-span-2 font-mono text-slate-500 dark:text-slate-400">
-				<span class="sm:hidden text-slate-500">Port:</span>
-				{instance.port}
+		<!-- Name & Identity -->
+		<div class="flex flex-col min-w-[140px]">
+			<div class="flex items-center gap-2">
+				<span class="text-[10px] font-mono text-stone-600 uppercase tracking-tighter">Node_</span>
+				<span class="font-bold text-sm text-white tracking-tight uppercase">{instance.id.split('-').pop() || instance.port}</span>
 			</div>
-
-			<!-- Status -->
-			<div class="col-span-3">
-				{#if instance.status === 'Running'}
-					<span
-						class="inline-flex items-center px-2 py-0.5 rounded text-[10px] sm:text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-					>
-						Running
-					</span>
-				{:else if instance.status === 'Provisioning'}
-					<span
-						class="inline-flex items-center px-2 py-0.5 rounded text-[10px] sm:text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20 animate-pulse"
-					>
-						Provisioning
-					</span>
-				{:else if instance.status === 'Error'}
-					<span
-						class="inline-flex items-center px-2 py-0.5 rounded text-[10px] sm:text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20"
-					>
-						Error
-					</span>
-				{:else}
-					<span
-						class="inline-flex items-center px-2 py-0.5 rounded text-[10px] sm:text-xs font-medium bg-slate-700 text-slate-500 dark:text-slate-400"
-					>
-						{instance.status}
-					</span>
-				{/if}
-			</div>
-
-			<!-- PID -->
-			<div class="col-span-1 font-mono text-slate-500 text-[10px] sm:text-xs hidden sm:block">
-				{instance.pid || '-'}
+			<div class="flex items-center gap-2 mt-0.5">
+				<span class="text-[8px] font-mono text-stone-700 uppercase">Port:</span>
+				<span class="text-[9px] font-mono text-rust-light/80">{instance.port}</span>
 			</div>
 		</div>
 
-		<!-- Quick Actions (Right aligned on desktop, bottom row on mobile) -->
-		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- Status Badge -->
+		<div class="sm:w-32">
+			{#if instance.status === 'Running'}
+				<div class="flex items-center gap-2 text-emerald-500 bg-emerald-500/5 px-2 py-1 border border-emerald-500/20 w-fit">
+					<div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+					<span class="text-[9px] font-black uppercase tracking-widest">Running</span>
+				</div>
+			{:else if instance.status === 'Provisioning'}
+				<div class="flex items-center gap-2 text-rust-light bg-rust/5 px-2 py-1 border border-rust/20 w-fit">
+					<div class="w-1.5 h-1.5 rounded-none bg-rust animate-spin"></div>
+					<span class="text-[9px] font-black uppercase tracking-widest">Syncing</span>
+				</div>
+			{:else if instance.status === 'Error'}
+				<div class="flex items-center gap-2 text-red-500 bg-red-500/5 px-2 py-1 border border-red-500/20 w-fit">
+					<div class="w-1.5 h-1.5 rounded-full bg-red-500 animate-flicker"></div>
+					<span class="text-[9px] font-black uppercase tracking-widest">Fault</span>
+				</div>
+			{:else}
+				<div class="flex items-center gap-2 text-stone-500 bg-stone-800/10 px-2 py-1 border border-stone-800/30 w-fit">
+					<div class="w-1.5 h-1.5 rounded-full bg-stone-700"></div>
+					<span class="text-[9px] font-black uppercase tracking-widest">{instance.status || 'Offline'}</span>
+				</div>
+			{/if}
+		</div>
+
+		<!-- Version Info -->
+		<div class="flex flex-col hidden md:flex">
+			<span class="text-[8px] font-mono text-stone-700 uppercase">System_Ver</span>
+			<div class="flex items-center gap-2">
+				<span class="text-[10px] font-mono text-stone-400">{instance.version || '0.0.0'}</span>
+				{#if isOutdated}
+					<span class="text-[7px] font-black bg-rust/20 text-rust px-1 border border-rust/30 uppercase animate-pulse">Update_Avail</span>
+				{/if}
+			</div>
+		</div>
+
+		<!-- Player Load -->
+		<div class="flex flex-col hidden lg:flex ml-4">
+			<span class="text-[8px] font-mono text-stone-700 uppercase">Active_Load</span>
+			<div class="flex items-center gap-2">
+				<div class="w-16 h-1.5 bg-stone-900 border border-stone-800 rounded-none overflow-hidden">
+					<div class="h-full bg-rust-light opacity-60" style="width: {(instance.player_count / 100) * 100}%"></div>
+				</div>
+				<span class="text-[10px] font-mono text-stone-400">{instance.player_count || 0} Clients</span>
+			</div>
+		</div>
+
+		<!-- Quick Actions -->
 		<div
-			class="flex items-center gap-1 ml-auto pl-0 sm:pl-4 border-l-0 sm:border-l border-slate-300/50 dark:border-slate-700/50 w-full sm:w-auto justify-end mt-2 sm:mt-0"
-			role="group"
+			class="flex items-center gap-1 ml-auto"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
+			role="toolbar"
+			aria-label="Instance Quick Actions"
 		>
-			<QuickActionsTooltip
-				placement="bottom"
-				title="Quick Actions"
-				actions={[
-					{
-						label: 'Start',
-						icon: Play,
-						onClick: () => dispatch('start', { spawnerId, instanceId: instance.id }),
-						disabled: instance.status === 'Running',
-						variant: 'success'
-					},
-					{
-						label: 'Stop',
-						icon: Square,
-						onClick: () => dispatch('stop', { spawnerId, instanceId: instance.id }),
-						disabled: instance.status !== 'Running',
-						variant: 'warning'
-					},
-					{
-						label: 'Restart',
-						icon: RotateCw,
-						onClick: () => dispatch('restart', { spawnerId, instanceId: instance.id }),
-						disabled: instance.status !== 'Running'
-					}
-				]}
+			<button
+				onclick={() => dispatch('tail', { spawnerId, instanceId: instance.id })}
+				class="p-2 text-stone-600 hover:text-white hover:bg-stone-900 transition-all border border-transparent"
+				title="Access Terminal"
 			>
+				<TerminalSquare class="w-4 h-4" />
+			</button>
+
+			<div class="w-px h-4 bg-stone-800 mx-1"></div>
+
+			{#if instance.status !== 'Running'}
 				<button
-					onclick={() => dispatch('tail', { spawnerId, instanceId: instance.id })}
-					class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-700 rounded transition-colors"
-					title="Manage"
+					onclick={() => dispatch('start', { spawnerId, instanceId: instance.id })}
+					class="p-2 text-emerald-600 hover:text-emerald-400 hover:bg-emerald-500/5 transition-all"
+					title="Execute Node"
 				>
-					<Settings class="w-4 h-4" />
+					<Play class="w-4 h-4" />
 				</button>
-			</QuickActionsTooltip>
-
-			<button
-				onclick={() => dispatch('start', { spawnerId, instanceId: instance.id })}
-				disabled={instance.status === 'Running'}
-				class="p-1.5 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-400/10 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-				title="Start"
-			>
-				<Play class="w-4 h-4" />
-			</button>
-
-			<button
-				onclick={() => dispatch('stop', { spawnerId, instanceId: instance.id })}
-				disabled={instance.status !== 'Running'}
-				class="p-1.5 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-				title="Stop"
-			>
-				<Square class="w-4 h-4" />
-			</button>
-
-			<button
-				onclick={() => dispatch('restart', { spawnerId, instanceId: instance.id })}
-				disabled={instance.status !== 'Running'}
-				class="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-				title="Restart"
-			>
-				<RotateCw class="w-4 h-4" />
-			</button>
+			{:else}
+				<button
+					onclick={() => dispatch('stop', { spawnerId, instanceId: instance.id })}
+					class="p-2 text-stone-600 hover:text-yellow-500 hover:bg-yellow-500/5 transition-all"
+					title="Terminate Node"
+				>
+					<Square class="w-4 h-4" />
+				</button>
+				<button
+					onclick={() => dispatch('restart', { spawnerId, instanceId: instance.id })}
+					class="p-2 text-stone-600 hover:text-rust-light hover:bg-rust/5 transition-all"
+					title="Reboot Node"
+				>
+					<RotateCw class="w-4 h-4" />
+				</button>
+			{/if}
 		</div>
 	</div>
 
 	<!-- Expanded Details -->
 	{#if expanded}
 		<div
-			transition:slide={{ duration: 200 }}
-			class="bg-slate-900/50 border-t border-slate-300/50 dark:border-slate-700/50 p-3 sm:p-4"
+			transition:slide={{ duration: 300 }}
+			class="bg-black/20 border-t border-stone-800/50 p-6 space-y-6"
 		>
-			<!-- Toolbar -->
-			<div
-				class="flex flex-wrap gap-2 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-slate-300/50 dark:border-slate-700/50"
-			>
-				<button
-					onclick={() => dispatch('tail', { spawnerId, instanceId: instance.id })}
-					class="btn-toolbar bg-slate-700 hover:bg-slate-600 text-slate-800 dark:text-slate-200"
-				>
-					<Settings class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-					Manage
-				</button>
-
-				<button
-					onclick={() => dispatch('start', { spawnerId, instanceId: instance.id })}
-					disabled={instance.status === 'Running'}
-					class="btn-toolbar bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-600/30 disabled:opacity-50"
-				>
-					Start
-				</button>
-
-				<button
-					onclick={() => dispatch('stop', { spawnerId, instanceId: instance.id })}
-					disabled={instance.status !== 'Running'}
-					class="btn-toolbar bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-400 border border-yellow-600/30 disabled:opacity-50"
-				>
-					Stop
-				</button>
-
-				<button
-					onclick={() => dispatch('update', { spawnerId, instanceId: instance.id })}
-					disabled={versionDiff === 0}
-					class={`btn-toolbar disabled:opacity-50 disabled:cursor-not-allowed ${versionDiff > 0 ? 'bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-600/30' : 'bg-orange-600/20 hover:bg-orange-600/30 text-orange-400 border border-orange-600/30'}`}
-					title={versionDiff > 0
-						? `Update to ${activeVersion?.version}`
-						: versionDiff < 0
-							? `Downgrade to ${activeVersion?.version}`
-							: 'Server is up to date'}
-				>
-					{versionDiff > 0 ? 'Update' : 'Downgrade'}
-				</button>
-
-				<button
-					onclick={() => dispatch('delete', { spawnerId, instanceId: instance.id })}
-					disabled={instance.status === 'Running'}
-					class="btn-toolbar bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-600/30 disabled:opacity-50 ml-auto"
-				>
-					Delete
-				</button>
-			</div>
-
-			<!-- Stats Chart -->
-			<div
-				class="mb-4 sm:mb-6 bg-white/30 dark:bg-slate-950/30 rounded-lg border border-slate-300/50 dark:border-slate-700/50 p-3 sm:p-4"
-			>
-				<div class="flex justify-between items-end mb-2">
-					<h4
-						class="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-					>
-						Player Activity (24h)
-					</h4>
-					<div class="text-xs sm:text-sm font-mono text-blue-400">
-						{instance.player_count || 0} active
-					</div>
-				</div>
-				<PlayersChart data={chartData} height={100} color="#3b82f6" />
-			</div>
-
-			<!-- Settings Form -->
-			<div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-				<div>
-					<label
-						for={'name-' + instance.id}
-						class="block text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2"
-					>
-						Game Server Name (ID)
-					</label>
-					<div class="flex gap-2">
-						<input
-							id={'name-' + instance.id}
-							type="text"
-							bind:value={renameValue}
-							class="flex-1 px-3 py-1.5 bg-slate-900/50 border border-slate-600 rounded text-xs sm:text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors placeholder-slate-600"
-							placeholder={instance.id}
-						/>
+			<div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+				<!-- Left: Technical Readouts -->
+				<div class="xl:col-span-7 space-y-6">
+					<!-- Primary Toolbar -->
+					<div class="flex flex-wrap gap-2 pb-6 border-b border-stone-800/50">
 						<button
-							onclick={handleRename}
-							disabled={renameValue === instance.id || !renameValue.trim()}
-							class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-slate-900 dark:text-white rounded text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+							onclick={() => dispatch('tail', { spawnerId, instanceId: instance.id })}
+							class="btn-industrial bg-stone-900 text-stone-400 hover:text-white border border-stone-800 hover:border-stone-600"
 						>
-							Rename
+							<TerminalSquare class="w-3 h-3" />
+							<span>Terminal_Bridge</span>
+						</button>
+						<button
+							onclick={() => dispatch('update', { spawnerId, instanceId: instance.id })}
+							disabled={!isOutdated}
+							class="btn-industrial {isOutdated ? 'bg-rust/10 text-rust-light border-rust/30 hover:bg-rust hover:text-white' : 'bg-stone-900/50 text-stone-600 border-stone-800 opacity-50 cursor-not-allowed'}"
+						>
+							<ArrowDownToLine class="w-3 h-3" />
+							<span>{isOutdated ? 'Sync_Patch' : 'Registry_Up_to_Date'}</span>
+						</button>
+						<button
+							onclick={() => dispatch('delete', { spawnerId, instanceId: instance.id })}
+							disabled={instance.status === 'Running'}
+							class="btn-industrial bg-red-950/10 text-red-600/70 hover:text-red-500 border border-red-900/20 hover:border-red-600/40 ml-auto"
+						>
+							<Trash2 class="w-3 h-3" />
+							<span>Decommission_Record</span>
 						</button>
 					</div>
+
+					<!-- Load Chart -->
+					<div class="space-y-3">
+						<div class="flex justify-between items-end">
+							<div class="flex flex-col">
+								<span class="text-[8px] font-mono text-stone-600 uppercase tracking-widest">Stream_Buffer</span>
+								<h4 class="text-[10px] font-bold text-stone-300 uppercase tracking-wider">Client_Interaction_Telemetry</h4>
+							</div>
+							<div class="text-[10px] font-mono text-rust-light bg-rust/5 px-2 py-0.5 border border-rust/20">
+								SIGNAL: {instance.player_count || 0}_ACTIVE
+							</div>
+						</div>
+						<div class="bg-stone-950/40 border border-stone-800/50 p-4">
+							<PlayersChart data={chartData} height={140} color="var(--color-rust)" />
+						</div>
+					</div>
 				</div>
 
-				<div>
-					<label
-						for={'port-' + instance.id}
-						class="block text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2"
-					>
-						Assigned Port
-					</label>
-					<input
-						id={'port-' + instance.id}
-						type="text"
-						value={instance.port || 'Auto'}
-						disabled
-						class="w-full px-3 py-1.5 bg-slate-900/30 border border-slate-300/50 dark:border-slate-700/50 rounded text-xs sm:text-sm text-slate-500 dark:text-slate-400 cursor-not-allowed"
-					/>
+				<!-- Right: Node Configuration -->
+				<div class="xl:col-span-5 space-y-4">
+					<div class="bg-stone-900/30 border border-stone-800/50 p-5 space-y-4">
+						<div class="space-y-2">
+							<label for={'name-' + instance.id} class="text-[9px] font-mono text-stone-600 uppercase tracking-widest block">Instance_Identifier</label>
+							<div class="flex gap-2">
+								<input
+									id={'name-' + instance.id}
+									type="text"
+									bind:value={renameValue}
+									class="flex-1 bg-black border border-stone-800 px-4 py-2 text-xs font-mono text-white focus:border-rust/50 outline-none transition-all"
+									placeholder={instance.id}
+								/>
+								<button
+									onclick={handleRename}
+									disabled={renameValue === instance.id || !renameValue.trim()}
+									class="bg-stone-800 hover:bg-rust text-stone-400 hover:text-white px-4 py-2 text-[9px] font-black uppercase transition-all disabled:opacity-30 border border-stone-700 hover:border-rust"
+								>
+									Commit
+								</button>
+							</div>
+						</div>
+
+						<div class="grid grid-cols-2 gap-4 pt-2">
+							<div class="bg-black/40 border border-stone-800/50 p-3 flex flex-col">
+								<span class="text-[8px] font-mono text-stone-700 uppercase mb-1">Runtime_PID</span>
+								<span class="text-xs font-mono text-stone-300 uppercase">{instance.pid || 'NULL'}</span>
+							</div>
+							<div class="bg-black/40 border border-stone-800/50 p-3 flex flex-col">
+								<span class="text-[8px] font-mono text-stone-700 uppercase mb-1">Network_Port</span>
+								<span class="text-xs font-mono text-rust-light uppercase">{instance.port || 'AUTO'}</span>
+							</div>
+						</div>
+					</div>
+
+					<div class="bg-amber-950/5 border border-amber-900/20 p-4 flex gap-4 items-start">
+						<div class="p-2 bg-amber-900/20 text-amber-500">
+							<Activity class="w-4 h-4" />
+						</div>
+						<div class="space-y-1">
+							<span class="text-[9px] font-black text-amber-600 uppercase tracking-widest block">Maintenance_Protocol</span>
+							<p class="text-[10px] font-mono text-stone-500 leading-tight">System ensures node stability through real-time heartbeat monitoring. Manual restarts recommended only for fatal buffer overflows.</p>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
 	{/if}
 </div>
 
-<style lang="postcss">
+<style>
+	@reference "../../app.css";
+	
+	.btn-industrial {
+		@apply flex items-center gap-2 px-4 py-2 transition-all font-mono text-[9px] font-black uppercase;
+	}
+
 	.btn-toolbar {
-		@apply gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded sm:text-xs font-semibold flex items-center text-[10px] transition-all;
+		@apply gap-2 px-4 py-2 rounded-none text-[10px] font-black uppercase flex items-center transition-all active:translate-x-[1px] active:translate-y-[1px];
+	}
+
+	@keyframes flicker {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0.4; }
+	}
+	.animate-flicker {
+		animation: flicker 0.2s infinite;
 	}
 </style>

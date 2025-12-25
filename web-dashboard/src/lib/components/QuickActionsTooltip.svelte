@@ -122,7 +122,7 @@
 				<div
 					class="px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-300/50 dark:border-slate-700/50 mb-1 flex items-center gap-2"
 				>
-					<span class="w-1 h-1 bg-blue-500 rounded-full"></span>
+					<span class="w-1 h-1 bg-rust-light rounded-full"></span>
 					{title}
 				</div>
 			{/if}

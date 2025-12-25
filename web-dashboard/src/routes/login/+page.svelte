@@ -2,65 +2,52 @@
 	import { goto } from '$app/navigation';
 	import { isAuthenticated } from '$lib/stores';
 	import { onMount } from 'svelte';
-	import { fade, fly, slide } from 'svelte/transition';
-	import { quintOut } from 'svelte/easing';
+	import { fade, fly, scale } from 'svelte/transition';
+	import { Shield, Lock, User, ChevronRight, Activity, Terminal } from 'lucide-svelte';
 
-	let email = 'admin@example.com';
-	let password = 'admin123';
-	let error = '';
-	let loading = false;
-	let mounted = false;
-	let mouseX = 0;
-	let mouseY = 0;
-	let formShake = false;
-	let isSubmitting = false;
-	let particles = Array.from({ length: 50 }, (_, i) => ({
-		id: i,
-		x: Math.random() * 100,
-		y: Math.random() * 100,
-		size: Math.random() * 4 + 1,
-		speedX: (Math.random() - 0.5) * 0.5,
-		speedY: (Math.random() - 0.5) * 0.5
-	}));
+	let email = $state('admin@example.com');
+	let password = $state('admin123');
+	let error = $state('');
+	let loading = $state(false);
+	let mounted = $state(false);
+	let formShake = $state(false);
+	let isSubmitting = $state(false);
+
+	// Terminal simulation data
+	let terminalLines = $state<string[]>([]);
+	const bootSequence = [
+		'[BOOT] Initializing Exile_OS Kernel...',
+		'[SYS] Mounting encrypted partitions...',
+		'[NET] Opening secure bridge to Master_Registry...',
+		'[SEC] Firewall rules injected via RedEye...',
+		'[OK] Environment stable. Awaiting credentials.'
+	];
 
 	onMount(() => {
 		mounted = true;
+		
+		// Run boot sequence simulation
+		let lineIndex = 0;
+		const interval = setInterval(() => {
+			if (lineIndex < bootSequence.length) {
+				terminalLines = [...terminalLines, bootSequence[lineIndex]];
+				lineIndex++;
+			} else {
+				clearInterval(interval);
+			}
+		}, 400);
 
-		// Mouse tracking for parallax effects
-		const handleMouseMove = (e: MouseEvent) => {
-			mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
-			mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
-		};
-
-		window.addEventListener('mousemove', handleMouseMove);
-
-		// Particle animation
-		const animateParticles = () => {
-			particles = particles.map((particle) => ({
-				...particle,
-				x: (particle.x + particle.speedX + 100) % 100,
-				y: (particle.y + particle.speedY + 100) % 100
-			}));
-		};
-
-		const interval = setInterval(animateParticles, 50);
-
-		return () => {
-			window.removeEventListener('mousemove', handleMouseMove);
-			clearInterval(interval);
-		};
+		return () => clearInterval(interval);
 	});
 
 	async function handleLogin(event: Event) {
 		event.preventDefault();
-
 		if (isSubmitting) return;
 
 		isSubmitting = true;
 		loading = true;
 		error = '';
 
-		const start = Date.now();
 		const formData = new URLSearchParams();
 		formData.append('email', email);
 		formData.append('password', password);
@@ -69,13 +56,11 @@
 			const response = await fetch('/api/auth/login', {
 				method: 'POST',
 				body: formData,
-				headers: {
-					'Content-Type': 'application/x-www-form-urlencoded'
-				}
+				headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
 			});
 
-			const elapsed = Date.now() - start;
-			if (elapsed < 800) await new Promise((r) => setTimeout(r, 800 - elapsed));
+			// Artificial delay for industrial feel
+			await new Promise(r => setTimeout(r, 1200));
 
 			if (response.ok) {
 				const data = await response.json();
@@ -86,13 +71,14 @@
 					goto('/');
 				}
 			} else {
-				// Failed login
 				formShake = true;
+				error = 'CREDENTIAL_MISMATCH: ACCESS_DENIED';
 				setTimeout(() => (formShake = false), 600);
 				password = '';
 			}
 		} catch (e) {
 			formShake = true;
+			error = 'REGISTRY_UNREACHABLE: CONNECTION_FAULT';
 			setTimeout(() => (formShake = false), 600);
 		} finally {
 			loading = false;
@@ -102,382 +88,180 @@
 </script>
 
 {#if mounted}
-	<!-- Spectacular Background -->
-	<div class="fixed inset-0 -z-50 overflow-hidden">
-		<!-- Animated Gradient Background -->
-		<div
-			class="absolute inset-0 bg-gradient-to-br from-purple-900 via-black to-blue-900 animate-gradient-shift"
-		></div>
+	<!-- Industrial Background -->
+	<div class="fixed inset-0 -z-50 bg-stone-950 overflow-hidden">
+		<!-- CRT Scanline Effect -->
+		<div class="absolute inset-0 pointer-events-none z-50 opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%]"></div>
+		
+		<!-- Static Noise -->
+		<div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/asfalt-dark.png')] opacity-[0.02] mix-blend-overlay"></div>
 
-		<!-- Moving Nebula Clouds -->
-		<div class="absolute inset-0">
-			<div
-				class="absolute top-0 left-0 w-[60%] h-[40%] bg-blue-600/20 rounded-full blur-[150px] animate-blob"
-				style="animation-delay: 0s;"
-			></div>
-			<div
-				class="absolute top-1/4 right-0 w-[50%] h-[35%] bg-purple-600/20 rounded-full blur-[150px] animate-blob"
-				style="animation-delay: 3s;"
-			></div>
-			<div
-				class="absolute bottom-0 left-1/3 w-[45%] h-[30%] bg-cyan-600/15 rounded-full blur-[120px] animate-blob"
-				style="animation-delay: 5s;"
-			></div>
+		<!-- Neural Blobs (Subtle) -->
+		<div class="absolute inset-0 overflow-hidden opacity-20 pointer-events-none">
+			<div class="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-rust/10 rounded-full blur-[120px] animate-blob"></div>
+			<div class="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-stone-800/20 rounded-full blur-[120px] animate-blob" style="animation-delay: 3s"></div>
 		</div>
 
-		<!-- Particle Field -->
-		<div class="absolute inset-0">
-			{#each particles as particle (particle.id)}
-				<div
-					class="absolute bg-white rounded-full animate-pulse"
-					style="left: {particle.x}%; top: {particle.y}%; width: {particle.size}px; height: {particle.size}px; opacity: 0.6; animation-delay: {particle.id *
-						0.1}s;"
-				></div>
-			{/each}
-		</div>
-
-		<!-- Grid Pattern Overlay -->
-		<div
-			class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgPGcgZmlsbD0iIzY0NzQ4YiIgZmlsbC1vcGFjaXR5PSIwLjAzIj4KICAgICAgPHBhdGggZD0iTTM2IDM0di00aC0ydjRoLTR2Mmg0djRoMnYtNGg0di0yaC00em0wLTMwVjBoLTJ2NGgtNHYyaDR2NGgyVjZoNFY0aC00ek02IDM0di00SDR2NEgwdjJoNHY0aDJ2LTRoNHYtMkg2ek02IDRWMEg0djRIMHYyaDR2NGgyVjZoNFY0SDZ6Ii8+CiAgICA8L2c+CiAgPC9nPgo8L3N2Zz4=')] opacity-20"
-		></div>
-
-		<!-- Vignette Effect -->
-		<div
-			class="absolute inset-0 bg-radial-gradient from-transparent via-black/20 to-black/60"
-		></div>
+		<!-- Animated Grid -->
+		<div class="absolute inset-0 opacity-[0.03]" style="background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px); background-size: 50px 50px;"></div>
 	</div>
 
-	<!-- Main Content -->
-	<div class="min-h-screen w-full flex items-center justify-center p-4 relative z-10">
-		<!-- Glass Card Container -->
+	<div class="min-h-screen w-full flex items-center justify-center p-4 relative z-10 font-jetbrains">
+		<!-- Brutalist Container -->
 		<div
-			class="w-full max-w-6xl mx-auto backdrop-blur-xl bg-white/5 rounded-3xl border border-white/10 shadow-2xl overflow-hidden transform transition-all duration-1000 {mounted
-				? 'translate-y-0 opacity-100 scale-100'
-				: 'translate-y-10 opacity-0 scale-95'}"
-			style="transform: perspective(1000px) rotateX({mouseY * 2}deg) rotateY({mouseX * 2}deg);"
+			class="w-full max-w-5xl bg-stone-900 border-2 border-stone-800 shadow-[12px_12px_0px_rgba(0,0,0,0.4)] flex flex-col md:flex-row overflow-hidden {formShake ? 'animate-shake' : ''}"
 		>
-			<div class="grid lg:grid-cols-2 gap-0">
-				<!-- Left Side: Brand Showcase -->
-				<div
-					class="relative p-12 lg:p-16 flex flex-col items-center justify-center bg-gradient-to-br from-blue-600/20 to-purple-600/20 border-r border-white/10"
-				>
-					<!-- Geometric Background Elements -->
-					<div class="absolute inset-0 overflow-hidden">
-						<div
-							class="absolute top-10 left-10 w-32 h-32 border-2 border-blue-400/20 rounded-lg transform rotate-45 animate-float"
-						></div>
-						<div
-							class="absolute bottom-10 right-10 w-24 h-24 border-2 border-purple-400/20 rounded-full animate-pulse"
-						></div>
-						<div
-							class="absolute top-1/3 right-1/4 w-20 h-20 border-2 border-cyan-400/20 transform rotate-12 animate-spin"
-							style="animation-duration: 20s;"
-						></div>
+			<!-- Left Panel: System Status -->
+			<div class="w-full md:w-1/2 bg-black p-8 md:p-12 border-b-2 md:border-b-0 md:border-r-2 border-stone-800 flex flex-col justify-between relative overflow-hidden group">
+				<!-- Glitch Decoration -->
+				<div class="absolute top-0 left-0 w-full h-1 bg-rust opacity-30 group-hover:opacity-100 transition-opacity"></div>
+				
+				<div class="relative z-10">
+					<div class="flex items-center gap-3 mb-8">
+						<div class="p-2 bg-rust border border-rust-light shadow-[0_0_15px_rgba(120,53,15,0.4)]">
+							<Terminal class="w-6 h-6 text-white" />
+						</div>
+						<div>
+							<h1 class="text-3xl font-black military-label text-white uppercase tracking-tighter">EXILE_OS</h1>
+							<span class="text-[8px] font-mono text-stone-600 tracking-[0.4em]">REGISTRY_INTERFACE_V1.0</span>
+						</div>
 					</div>
 
-					<div
-						class="relative z-10 text-center space-y-8"
-						in:fly={{ y: -30, duration: 1200, delay: 200 }}
-					>
-						<!-- Floating Logo -->
-						<div class="relative inline-flex">
-							<div
-								class="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl blur-xl animate-pulse"
-							></div>
-							<div
-								class="relative p-6 bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 shadow-2xl transform transition-all duration-300 hover:scale-110 hover:rotate-3"
-							>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									class="w-20 h-20 text-slate-900 dark:text-white"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="1.5"
-								>
-									<path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
-								</svg>
+					<!-- Boot Sequence Display -->
+					<div class="space-y-2 mt-12 bg-stone-950/50 p-4 border border-stone-800 font-mono text-[10px]">
+						{#each terminalLines as line}
+							<div class="flex gap-2" transition:fade>
+								<span class="text-rust">>></span>
+								<span class="text-stone-400 uppercase tracking-widest">{line}</span>
 							</div>
-						</div>
-
-						<div class="space-y-4">
-							<h1 class="text-6xl font-black text-slate-900 dark:text-white tracking-tight">
-								<span
-									class="bg-gradient-to-r from-blue-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent animate-gradient"
-									>GoExile</span
-								>
-							</h1>
-							<p
-								class="text-xl text-slate-900/80 dark:text-white/80 font-light max-w-sm mx-auto leading-relaxed"
-							>
-								Advanced Game Server Management Registry
-							</p>
-							<div
-								class="flex items-center justify-center gap-6 text-sm text-slate-900/60 dark:text-white/60"
-							>
-								<div class="flex items-center gap-2">
-									<div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-									<span>Real-time</span>
-								</div>
-								<div class="flex items-center gap-2">
-									<div class="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-									<span>Secured</span>
-								</div>
-								<div class="flex items-center gap-2">
-									<div class="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
-									<span>Distributed</span>
-								</div>
+						{/each}
+						{#if terminalLines.length < bootSequence.length}
+							<div class="flex gap-2">
+								<span class="text-rust">>></span>
+								<span class="w-2 h-4 bg-rust-light animate-pulse"></span>
 							</div>
-						</div>
+						{/if}
 					</div>
 				</div>
 
-				<!-- Right Side: Login Form -->
-				<div class="relative p-12 lg:p-16 flex flex-col justify-center">
-					<!-- Background Decoration -->
-					<div
-						class="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent"
-					></div>
+				<div class="mt-12 space-y-4">
+					<div class="flex items-center gap-4 tactical-code text-stone-600">
+						<Activity class="w-4 h-4 text-emerald-500" />
+						<span>CLUSTER_HEALTH: OPTIMAL</span>
+					</div>
+					<div class="flex items-center gap-4 tactical-code text-stone-600">
+						<Shield class="w-4 h-4 text-rust" />
+						<span>SEC_PROTOCOL: REDEYE_ACTIVE</span>
+					</div>
+				</div>
+			</div>
 
-					<div class="relative z-10 space-y-8" in:fly={{ x: 30, duration: 1000, delay: 400 }}>
-						<div class="space-y-2">
-							<h2 class="text-4xl font-bold text-slate-900 dark:text-white">Welcome Back</h2>
-							<p class="text-slate-900/60 dark:text-white/60 text-lg">
-								Authenticate to access your dashboard
-							</p>
-						</div>
+			<!-- Right Panel: Authentication -->
+			<div class="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-stone-900/50 relative">
+				<div class="mb-10">
+					<h2 class="text-2xl font-black text-white uppercase tracking-widest mb-2 italic">IDENT_REQUIRED</h2>
+					<p class="tactical-code text-stone-500 italic">Enter credentials to initialize secure session_</p>
+				</div>
 
-						<form onsubmit={handleLogin} class="space-y-6" class:animate-shake={formShake}>
-							<!-- Email Field -->
-							<div class="space-y-2 group">
-								<label
-									for="email"
-									class="text-sm font-medium text-slate-900/80 dark:text-white/80 uppercase tracking-wider"
-									>Email Address</label
-								>
-								<div class="relative">
-									<div
-										class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-900/50 dark:text-white/50 group-focus-within:text-blue-400 transition-colors duration-300"
-									>
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											class="w-5 h-5"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											stroke-width="2"
-										>
-											<path
-												d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
-											></path>
-											<polyline points="22,6 12,13 2,6"></polyline>
-										</svg>
-									</div>
-									<input
-										type="email"
-										id="email"
-										bind:value={email}
-										required
-										class="w-full pl-12 pr-4 py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-slate-900 dark:text-white placeholder-white/40 focus:outline-none focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300 hover:bg-white/10"
-										placeholder="name@example.com"
-									/>
-								</div>
+				<form onsubmit={handleLogin} class="space-y-8">
+					<!-- Email -->
+					<div class="space-y-2 group">
+						<label for="email" class="tactical-code text-stone-400 group-focus-within:text-rust-light transition-colors font-bold">Registry_Identifier</label>
+						<div class="relative">
+							<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-stone-600 group-focus-within:text-rust-light transition-colors">
+								<User class="w-4 h-4" />
 							</div>
-
-							<!-- Password Field -->
-							<div class="space-y-2 group">
-								<label
-									for="password"
-									class="text-sm font-medium text-slate-900/80 dark:text-white/80 uppercase tracking-wider"
-									>Password</label
-								>
-								<div class="relative">
-									<div
-										class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-900/50 dark:text-white/50 group-focus-within:text-blue-400 transition-colors duration-300"
-									>
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											class="w-5 h-5"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											stroke-width="2"
-										>
-											<rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-											<path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-										</svg>
-									</div>
-									<input
-										type="password"
-										id="password"
-										bind:value={password}
-										required
-										class="w-full pl-12 pr-4 py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-slate-900 dark:text-white placeholder-white/40 focus:outline-none focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300 hover:bg-white/10"
-										placeholder="••••••••"
-									/>
-								</div>
-							</div>
-
-							<!-- Submit Button -->
-							<button
-								type="submit"
-								disabled={loading}
-								class="w-full py-4 px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-slate-900 dark:text-white font-bold rounded-xl shadow-xl shadow-blue-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 group relative overflow-hidden"
-							>
-								<!-- Button Background Effect -->
-								<div
-									class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"
-								></div>
-
-								<div class="relative z-10 flex items-center gap-3">
-									{#if loading}
-										<div
-											class="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"
-										></div>
-										<span>Authenticating...</span>
-									{:else}
-										<span>Secure Login</span>
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											class="w-5 h-5 transition-transform duration-300 group-hover:translate-x-2"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											stroke-width="2"
-										>
-											<line x1="5" y1="12" x2="19" y2="12"></line>
-											<polyline points="12 5 19 12 12 19"></polyline>
-										</svg>
-									{/if}
-								</div>
-							</button>
-						</form>
-
-						<!-- Security Notice -->
-						<div class="pt-6 border-t border-white/10">
-							<div class="flex items-center gap-3 text-sm text-slate-900/50 dark:text-white/50">
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									class="w-4 h-4 flex-shrink-0"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2"
-								>
-									<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-								</svg>
-								<span>Secure connection with end-to-end encryption</span>
-							</div>
+							<input
+								type="email"
+								id="email"
+								bind:value={email}
+								required
+								class="w-full pl-12 pr-4 py-4 bg-black border-2 border-stone-800 text-white text-xs focus:border-rust outline-none transition-all placeholder:text-stone-800"
+								placeholder="OPERATOR@EXILE.SYS"
+							/>
 						</div>
 					</div>
+
+					<!-- Password -->
+					<div class="space-y-2 group">
+						<label for="password" class="tactical-code text-stone-400 group-focus-within:text-rust-light transition-colors font-bold">Access_Encryption_Key</label>
+						<div class="relative">
+							<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-stone-600 group-focus-within:text-rust-light transition-colors">
+								<Lock class="w-4 h-4" />
+							</div>
+							<input
+								type="password"
+								id="password"
+								bind:value={password}
+								required
+								class="w-full pl-12 pr-4 py-4 bg-black border-2 border-stone-800 text-white text-xs focus:border-rust outline-none transition-all placeholder:text-stone-800"
+								placeholder="****************"
+							/>
+						</div>
+					</div>
+
+					{#if error}
+						<div class="p-3 bg-red-950/20 border-l-4 border-red-600 text-red-500 text-[10px] font-black uppercase italic animate-flicker">
+							>> {error}
+						</div>
+					{/if}
+
+					<!-- Action -->
+					<button
+						type="submit"
+						disabled={loading}
+						class="w-full py-5 bg-rust hover:bg-rust-light text-white font-black text-xs uppercase tracking-[0.3em] shadow-[6px_6px_0px_rgba(0,0,0,0.3)] transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-4 group"
+					>
+						{#if loading}
+							<Activity class="w-5 h-5 animate-spin" />
+							<span>SYNCHRONIZING...</span>
+						{:else}
+							<span>INITIALIZE_CORE</span>
+							<ChevronRight class="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+						{/if}
+					</button>
+				</form>
+
+				<!-- System ID Footer -->
+				<div class="mt-12 pt-6 border-t border-stone-800 flex justify-between items-center opacity-30">
+					<span class="text-[7px] font-mono text-stone-500 uppercase tracking-widest">Node_Ref: 0x4F2A_EX</span>
+					<span class="text-[7px] font-mono text-stone-500 uppercase tracking-widest">Enc_Type: AES_256_RSA</span>
 				</div>
 			</div>
 		</div>
 	</div>
-
-	<!-- Floating Elements -->
-	{#if mounted}
-		<div class="fixed inset-0 pointer-events-none z-20">
-			<div
-				class="absolute top-20 left-20 w-16 h-16 border-2 border-blue-400/30 rounded-lg animate-float"
-				style="animation-delay: 0s;"
-			></div>
-			<div
-				class="absolute top-40 right-32 w-12 h-12 border-2 border-purple-400/30 rounded-full animate-pulse"
-				style="animation-delay: 1s;"
-			></div>
-			<div
-				class="absolute bottom-32 left-1/3 w-20 h-20 border-2 border-cyan-400/30 transform rotate-45 animate-spin"
-				style="animation-delay: 2s; animation-duration: 15s;"
-			></div>
-		</div>
-	{/if}
-
-	<style>
-		@keyframes gradient-shift {
-			0%,
-			100% {
-				background-position: 0% 50%;
-			}
-			50% {
-				background-position: 100% 50%;
-			}
-		}
-
-		@keyframes blob {
-			0% {
-				transform: translate(0px, 0px) scale(1);
-			}
-			33% {
-				transform: translate(30px, -50px) scale(1.1);
-			}
-			66% {
-				transform: translate(-20px, 20px) scale(0.9);
-			}
-			100% {
-				transform: translate(0px, 0px) scale(1);
-			}
-		}
-
-		@keyframes float {
-			0%,
-			100% {
-				transform: translateY(0px) rotate(0deg);
-			}
-			50% {
-				transform: translateY(-20px) rotate(5deg);
-			}
-		}
-
-		@keyframes shake {
-			0%,
-			100% {
-				transform: translateX(0);
-			}
-			10%,
-			30%,
-			50%,
-			70%,
-			90% {
-				transform: translateX(-10px);
-			}
-			20%,
-			40%,
-			60%,
-			80% {
-				transform: translateX(10px);
-			}
-		}
-
-		.animate-gradient-shift {
-			background-size: 200% 200%;
-			animation: gradient-shift 8s ease infinite;
-		}
-
-		.animate-blob {
-			animation: blob 7s infinite;
-		}
-
-		.animate-float {
-			animation: float 3s ease-in-out infinite;
-		}
-
-		.animate-shake {
-			animation: shake 0.5s ease-in-out;
-		}
-
-		.bg-radial-gradient {
-			background: radial-gradient(
-				circle at center,
-				transparent 0%,
-				rgba(0, 0, 0, 0.2) 50%,
-				rgba(0, 0, 0, 0.6) 100%
-			);
-		}
-
-		.animate-gradient {
-			background-size: 200% 200%;
-			animation: gradient-shift 3s ease infinite;
-		}
-	</style>
 {/if}
+
+<style>
+	@keyframes blob {
+		0% { transform: translate(0px, 0px) scale(1); }
+		33% { transform: translate(30px, -50px) scale(1.1); }
+		66% { transform: translate(-20px, 20px) scale(0.9); }
+		100% { transform: translate(0px, 0px) scale(1); }
+	}
+
+	.animate-blob {
+		animation: blob 10s infinite alternate ease-in-out;
+	}
+
+	@keyframes shake {
+		0%, 100% { transform: translateX(0); }
+		10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+		20%, 40%, 60%, 80% { transform: translateX(5px); }
+	}
+
+	.animate-shake {
+		animation: shake 0.5s ease-in-out;
+	}
+
+	@keyframes flicker {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0.7; }
+		55% { opacity: 0.9; }
+		60% { opacity: 0.6; }
+	}
+
+	.animate-flicker {
+		animation: flicker 0.2s infinite;
+	}
+</style>

@@ -126,7 +126,151 @@ export const notifications = createNotificationStore();
 export const isConnected = writable(false);
 export const connectionStatus = writable('Connecting...');
 
-export const theme = writable<'light' | 'dark'>('dark');
+// Helper for database-backed stores
+function createDatabaseStore<T>(key: string, initialValue: T) {
+	let storedValue;
+	if (typeof window !== 'undefined') {
+		const json = localStorage.getItem(key);
+		if (json) {
+			try {
+				storedValue = JSON.parse(json);
+			} catch (e) {
+				console.error(`Error parsing persistent store ${key}:`, e);
+			}
+		}
+	}
+
+	const { subscribe, set, update } = writable<T>(storedValue || initialValue);
+
+	async function saveToDB(value: T) {
+		try {
+			const response = await fetch(`/api/config/${key}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ value: JSON.stringify(value) })
+			});
+			if (response.status === 401) return; // Ignore unauthorized, expected during login
+		} catch (e) {
+			// Only log real network errors, not expected 401s
+		}
+	}
+
+	return {
+		subscribe,
+		set: (value: T) => {
+			if (typeof window !== 'undefined') {
+				localStorage.setItem(key, JSON.stringify(value));
+			}
+			set(value);
+			saveToDB(value);
+		},
+		update: (fn: (value: T) => T) => {
+			update((oldValue) => {
+				const newValue = fn(oldValue);
+				if (typeof window !== 'undefined') {
+					localStorage.setItem(key, JSON.stringify(newValue));
+				}
+				saveToDB(newValue);
+				return newValue;
+			});
+		},
+		// Initialize from DB
+		init: (value: T) => {
+			if (typeof window !== 'undefined') {
+				localStorage.setItem(key, JSON.stringify(value));
+			}
+			set(value);
+		}
+	};
+}
+
+export const theme = createDatabaseStore<'light' | 'dark'>('site.theme', 'dark');
+
+export const backgroundConfig = createDatabaseStore('site.background_config', {
+	show_smoke: true,
+	show_rain: true,
+	show_clouds: true,
+	show_vignette: true,
+	show_navbar_particles: true,
+	rain_opacity: 0.2,
+	clouds_opacity: 0.3,
+	global_type: 'architecture' as 'architecture' | 'tactical_grid' | 'neural_network' | 'data_flow' | 'digital_horizon' | 'none',
+	settings: {
+		architecture: { intensity: 0.5, speed: 1, density: 1, color: '#f97316' },
+		tactical_grid: { intensity: 0.5, speed: 1, density: 1, color: '#f97316' },
+		neural_network: { intensity: 0.5, speed: 1, density: 1, color: '#f97316' },
+		data_flow: { intensity: 0.5, speed: 1, density: 1, color: '#f97316' },
+		digital_horizon: { intensity: 0.5, speed: 1, density: 1, color: '#f97316' }
+	}
+});
+
+export const siteSettings = createDatabaseStore('site.settings', {
+	site_name: 'EXILE',
+	version_tag: 'v0.9.4-PROTOTYPE',
+	aesthetic: {
+		crt_effect: true,
+		scanlines_opacity: 0.05,
+		noise_opacity: 0.03,
+		industrial_styling: true,
+		glassmorphism: true,
+		glow_effects: true,
+		animations_enabled: true,
+		topology_blobs: true,
+		card_alpha: 0.4,
+		backdrop_blur: 16,
+		accent_color: '#78350f',
+		sidebar_alpha: 0.7,
+		bg_opacity: 1.0,
+		bg_color: '#050505',
+		font_primary: 'Inter',
+		card_border_width: 1,
+		card_shadow_size: 4,
+		scanline_speed: 4,
+		noise_intensity: 0.03,
+		terminal_line_height: 1.5,
+		panic_mode: false,
+		industrial_border_color: '#44403c',
+		card_bg_color: '#1c1917'
+	},
+	performance: {
+		high_quality_smoke: false,
+		particle_density: 0.5,
+		low_power_mode: false
+	},
+	site_notice: {
+		enabled: false,
+		message: 'SYSTEM MAINTENANCE SCHEDULED FOR 0200 HOURS',
+		type: 'info'
+	}
+});
+
+/**
+ * Load all settings from the database and initialize stores
+ */
+export async function loadAllSettings() {
+	try {
+		const response = await fetch('/api/config');
+		if (response.status === 401) return; // Silent return if not logged in
+		if (!response.ok) return;
+		const configs: ServerConfig[] = await response.json();
+
+		configs.forEach((cfg) => {
+			try {
+				if (cfg.key === 'site.theme') {
+					theme.init(JSON.parse(cfg.value));
+				} else if (cfg.key === 'site.settings') {
+					siteSettings.init(JSON.parse(cfg.value));
+				} else if (cfg.key === 'site.background_config') {
+					backgroundConfig.init(JSON.parse(cfg.value));
+				}
+			} catch (e) {
+				console.error(`Error parsing config ${cfg.key}:`, e);
+			}
+		});
+	} catch (e) {
+		console.error('Failed to load settings from database:', e);
+	}
+}
 
 function createNotificationStore() {
 	const { subscribe, update } = writable<Notification[]>([]);

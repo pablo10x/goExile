@@ -522,7 +522,7 @@
 								<Cpu class="w-3 h-3" /> System Load
 							</h4>
 							<div class="space-y-4">
-								{#each [['Core Analyzer', Number(Math.min(100, 5 + stats.logs_24h / 100)), 'text-emerald-400'], ['Ban Sequencer', Number(Math.min(100, 2 + stats.active_bans * 2)), 'text-red-400'], ['Log Indexer', Number(Math.min(100, 1 + stats.reputation_count / 10)), 'text-blue-400']] as [label, perc, color]}
+								{#each [['Core Analyzer', Number(Math.min(100, 5 + stats.logs_24h / 100)), 'text-emerald-400'], ['Ban Sequencer', Number(Math.min(100, 2 + stats.active_bans * 2)), 'text-red-400'], ['Log Indexer', Number(Math.min(100, 1 + stats.reputation_count / 10)), 'text-rust-light']] as [label, perc, color]}
 									<div class="space-y-1.5">
 										<div class="flex justify-between text-[10px] font-mono uppercase">
 											<span class="text-slate-500 dark:text-slate-400">{label}</span>

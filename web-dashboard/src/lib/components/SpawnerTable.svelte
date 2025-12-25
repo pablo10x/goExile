@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Spawner } from '$lib/stores';
-	import { serverVersions } from '$lib/stores';
+	import { serverVersions, siteSettings } from '$lib/stores';
 	import { createEventDispatcher } from 'svelte';
 	import { formatBytes } from '$lib/utils';
 	import InstanceRow from './InstanceRow.svelte';
@@ -16,7 +16,9 @@
 		Zap,
 		Box,
 		Terminal,
-		Settings
+		Settings,
+		ChevronRight,
+		ChevronDown
 	} from 'lucide-svelte';
 	import { slide } from 'svelte/transition';
 
@@ -28,13 +30,6 @@
 	let loadingInstances: Record<number, boolean> = {};
 
 	$: activeVersion = ($serverVersions || []).find((v) => v.is_active);
-
-	function getOutdatedCount(spawnerId: number) {
-		if (!activeInstances[spawnerId] || !activeVersion) return 0;
-		return activeInstances[spawnerId].filter(
-			(i) => i.version && compareVersions(activeVersion.version, i.version) > 0
-		).length;
-	}
 
 	const dispatch = createEventDispatcher();
 
@@ -91,7 +86,7 @@
 			const res = await fetch(`/api/spawners/${id}/instances`);
 			if (!res.ok) {
 				activeInstances[id] = [];
-				return; // Exit early if not ok to avoid parsing error for no content
+				return;
 			}
 			const data = await res.json();
 			activeInstances[id] = data.instances || data || [];
@@ -107,15 +102,15 @@
 	function getStatusClass(status: string) {
 		switch (status) {
 			case 'Online':
-				return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+				return 'bg-emerald-500 text-black border-emerald-400';
 			case 'Degraded':
-				return 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20';
+				return 'bg-yellow-500 text-black border-yellow-400';
 			case 'Unresponsive':
-				return 'bg-orange-500/10 text-orange-400 border border-orange-500/20';
+				return 'bg-orange-600 text-white border-orange-500';
 			case 'Offline':
-				return 'bg-slate-700/30 text-slate-500 dark:text-slate-400 border border-slate-300/50 dark:border-slate-700/50';
+				return 'bg-stone-800 text-stone-500 border-stone-700';
 			default:
-				return 'bg-slate-700/30 text-slate-500 dark:text-slate-400';
+				return 'bg-stone-800 text-stone-500 border-stone-700';
 		}
 	}
 
@@ -134,17 +129,17 @@
 
 <div class="w-full">
 	<!-- Mobile View (Cards) -->
-	<div class="md:hidden space-y-4">
+	<div class="md:hidden space-y-6 px-2 py-4">
 		{#each spawners as spawner}
 			<div
-				class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl overflow-hidden {spawner.id ===
-				highlightNewSpawnerId
-					? 'ring-2 ring-blue-500'
+				class="bg-black/60 border-2 border-stone-800 rounded-none overflow-hidden {spawner.id ===
+				highlightNewSpawnerId && $siteSettings.aesthetic.animations_enabled
+					? 'border-rust shadow-[0_0_20px_rgba(120,53,15,0.3)]'
 					: ''}"
 			>
 				<!-- Card Header -->
 				<div
-					class="p-4 border-b border-slate-300/50 dark:border-slate-700/50 flex items-center justify-between"
+					class="p-4 border-b-2 border-stone-800 flex items-center justify-between bg-stone-900/40"
 					onclick={() => toggleRow(spawner.id)}
 					onkeydown={(e) => {
 						if (e.key === 'Enter' || e.key === ' ') toggleRow(spawner.id);
@@ -152,84 +147,69 @@
 					role="button"
 					tabindex="0"
 				>
-					<div class="flex items-center gap-3">
-						<div class="p-2 bg-slate-800 rounded-lg border border-slate-300 dark:border-slate-700">
-							<Server class="w-5 h-5 text-slate-500 dark:text-slate-400" />
+					<div class="flex items-center gap-4">
+						<div class="p-2 bg-stone-800 border border-stone-700">
+							<Server class="w-5 h-5 text-rust" />
 						</div>
 						<div>
 							<div class="flex items-center gap-2">
-								<span class="font-bold text-slate-100">{spawner.name || spawner.region}</span>
-								<span class="text-xs text-slate-500">#{spawner.id}</span>
+								<span class="font-black text-white uppercase tracking-tighter text-sm">{spawner.name || spawner.region}</span>
+								<span class="font-mono text-[10px] text-rust-light">#{spawner.id.toString().padStart(3, '0')}</span>
 							</div>
-							<div class="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+							<div class="tactical-code text-stone-500 mt-0.5">
 								{spawner.host}:{spawner.port}
 							</div>
 						</div>
 					</div>
 					<div class="flex flex-col items-end gap-1">
 						<span
-							class={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${getStatusClass(spawner.status)}`}
+							class={`text-[9px] px-2 py-0.5 font-black uppercase border-l-2 ${getStatusClass(spawner.status)}`}
 						>
 							{spawner.status}
 						</span>
-						{#if spawner.game_version}
-							<span class="text-[10px] text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded"
-								>v{spawner.game_version}</span
-							>
-						{/if}
 					</div>
 				</div>
 
 				<!-- Card Body -->
-				<div class="p-4 space-y-4">
+				<div class="p-4 space-y-5">
 					<!-- Instances Progress -->
 					<div>
-						<div class="flex justify-between text-xs mb-1.5">
-							<span class="text-slate-500 dark:text-slate-400">Instances</span>
-							<span class="text-slate-800 dark:text-slate-200 font-medium"
+						<div class="flex justify-between items-center mb-2">
+							<span class="tactical-code text-stone-500">Node_Load</span>
+							<span class="font-jetbrains text-[10px] font-bold text-rust-light"
 								>{spawner.current_instances} / {spawner.max_instances}</span
 							>
 						</div>
-						<div class="w-full h-2 bg-slate-700/50 rounded-full overflow-hidden">
+						<div class="w-full h-1.5 bg-stone-900 border border-stone-800 p-[1px]">
 							<div
-								class="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500"
+								class="h-full bg-rust shadow-[0_0_10px_rgba(120,53,15,0.4)] transition-all duration-500"
 								style={`width: ${getInstancePercent(spawner)}%`}
 							></div>
 						</div>
 					</div>
 
 					<!-- Actions Grid -->
-					<div class="grid grid-cols-3 gap-2">
+					<div class="grid grid-cols-2 gap-2">
 						{#if spawner.status === 'Offline'}
 							<button
 								onclick={() => deleteSpawner(spawner.id)}
-								class="col-span-3 flex items-center justify-center gap-2 py-2 px-3 bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 rounded-lg text-xs font-medium transition-colors"
+								class="col-span-2 py-2.5 bg-red-950/20 text-red-500 border border-red-900/50 text-[10px] font-black uppercase hover:bg-red-600 hover:text-black transition-all"
 							>
-								<Trash2 class="w-3.5 h-3.5" />
-								Delete Spawner
+								Decommission_Offline_Node
 							</button>
 						{:else}
-							<a
-								href="/spawners/{spawner.id}"
-								class="flex items-center justify-center gap-1.5 py-2 px-3 bg-slate-700/50 hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-medium transition-colors border border-slate-600/50"
-							>
-								<Settings class="w-3.5 h-3.5" />
-								Manage
-							</a>
 							<button
 								onclick={() => dispatch('viewLogs', spawner.id)}
-								class="flex items-center justify-center gap-1.5 py-2 px-3 bg-slate-700/50 hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-medium transition-colors border border-slate-600/50"
+								class="py-2.5 bg-stone-800 text-stone-300 border border-stone-700 text-[10px] font-black uppercase hover:bg-white hover:text-black transition-all"
 							>
-								<Terminal class="w-3.5 h-3.5" />
-								Logs
+								Terminal
 							</button>
 							<button
 								onclick={() => dispatch('spawn', spawner.id)}
 								disabled={spawner.status !== 'Online'}
-								class="flex items-center justify-center gap-1.5 py-2 px-3 bg-blue-600 hover:bg-blue-500 text-slate-900 dark:text-white rounded-lg text-xs font-medium transition-colors disabled:opacity-50 disabled:bg-slate-700"
+								class="py-2.5 bg-rust text-white border border-rust-light text-[10px] font-black uppercase hover:bg-rust-light transition-all disabled:opacity-30 disabled:grayscale"
 							>
-								<Zap class="w-3.5 h-3.5" />
-								Spawn
+								Execute
 							</button>
 						{/if}
 					</div>
@@ -237,144 +217,80 @@
 
 				<!-- Expand Button -->
 				<button
-					class="w-full py-2 flex items-center justify-center gap-1 text-xs text-slate-500 hover:text-slate-700 dark:text-slate-300 hover:bg-slate-800/50 border-t border-slate-300/50 dark:border-slate-700/50 transition-colors"
+					class="w-full py-3 flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest text-rust-light hover:text-white hover:bg-rust/10 border-t-2 border-stone-800 transition-all"
 					onclick={() => toggleRow(spawner.id)}
 				>
-					<span>{expandedRows.has(spawner.id) ? 'Hide Details' : 'Show Details'}</span>
+					<span>{expandedRows.has(spawner.id) ? 'Defragment_View' : 'Access_Detailed_Node_Report'}</span>
 					<div
 						class="transform transition-transform {expandedRows.has(spawner.id)
 							? 'rotate-180'
 							: ''}"
 					>
-						<svg
-							width="10"
-							height="6"
-							viewBox="0 0 10 6"
-							fill="none"
-							xmlns="http://www.w3.org/2000/svg"
-						>
-							<path
-								d="M1 1L5 5L9 1"
-								stroke="currentColor"
-								stroke-width="1.5"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							/>
-						</svg>
+						<ChevronDown class="w-3.5 h-3.5" />
 					</div>
 				</button>
 
 				<!-- Expanded Details (Mobile) -->
 				{#if expandedRows.has(spawner.id)}
 					<div
-						class="border-t border-slate-300/50 dark:border-slate-700/50 bg-slate-900/30 p-4"
+						class="border-t-2 border-stone-800 bg-stone-950/50 p-4 space-y-6"
 						transition:slide
 					>
-						<!-- Resource Stats -->
-						<div class="grid grid-cols-3 gap-3 mb-6">
-							<div
-								class="bg-slate-800/50 p-2.5 rounded-lg border border-slate-300/50 dark:border-slate-700/50"
-							>
-								<div class="text-[10px] text-slate-500 uppercase font-semibold mb-1">CPU</div>
-								<div class="text-sm font-bold text-slate-800 dark:text-slate-200">
+						<div class="grid grid-cols-1 gap-3">
+							<div class="brutalist-card p-3 border-l-4 border-l-rust">
+								<div class="flex justify-between items-center mb-1">
+									<span class="tactical-code text-stone-500 text-[9px]">Processor_Load</span>
+									<Cpu class="w-3 h-3 text-rust" />
+								</div>
+								<div class="text-xl font-black military-label">
 									{spawner.cpu_usage?.toFixed(1) || 0}%
 								</div>
-								<div class="w-full h-1 bg-slate-700 rounded-full mt-1.5 overflow-hidden">
-									<div class="h-full bg-blue-500" style="width: {spawner.cpu_usage || 0}%"></div>
+								<div class="w-full h-1 bg-stone-900 mt-2 border border-stone-800">
+									<div class="h-full bg-rust" style="width: {spawner.cpu_usage || 0}%"></div>
 								</div>
 							</div>
-							<div
-								class="bg-slate-800/50 p-2.5 rounded-lg border border-slate-300/50 dark:border-slate-700/50"
-							>
-								<div class="text-[10px] text-slate-500 uppercase font-semibold mb-1">MEM</div>
-								<div class="text-sm font-bold text-slate-800 dark:text-slate-200">
-									{(((spawner.mem_used || 0) / (spawner.mem_total || 1)) * 100).toFixed(0)}%
+							
+							<div class="grid grid-cols-2 gap-3">
+								<div class="brutalist-card p-3 border-l-4 border-l-rust">
+									<div class="flex justify-between items-center mb-1">
+										<span class="tactical-code text-stone-500 text-[9px]">RAM</span>
+										<Zap class="w-3 h-3 text-rust" />
+									</div>
+									<div class="text-sm font-black military-label">
+										{(((spawner.mem_used || 0) / (spawner.mem_total || 1)) * 100).toFixed(0)}%
+									</div>
 								</div>
-								<div class="w-full h-1 bg-slate-700 rounded-full mt-1.5 overflow-hidden">
-									<div
-										class="h-full bg-purple-500"
-										style="width: {(spawner.mem_used / spawner.mem_total) * 100 || 0}%"
-									></div>
-								</div>
-							</div>
-							<div
-								class="bg-slate-800/50 p-2.5 rounded-lg border border-slate-300/50 dark:border-slate-700/50"
-							>
-								<div class="text-[10px] text-slate-500 uppercase font-semibold mb-1">DISK</div>
-								<div class="text-sm font-bold text-slate-800 dark:text-slate-200">
-									{(((spawner.disk_used || 0) / (spawner.disk_total || 1)) * 100).toFixed(0)}%
-								</div>
-								<div class="w-full h-1 bg-slate-700 rounded-full mt-1.5 overflow-hidden">
-									<div
-										class="h-full bg-orange-500"
-										style="width: {(spawner.disk_used / spawner.disk_total) * 100 || 0}%"
-									></div>
+								<div class="brutalist-card p-3 border-l-4 border-l-rust">
+									<div class="flex justify-between items-center mb-1">
+										<span class="tactical-code text-stone-500 text-[9px]">DISK</span>
+										<HardDrive class="w-3 h-3 text-rust" />
+									</div>
+									<div class="text-sm font-black military-label">
+										{(((spawner.disk_used || 0) / (spawner.disk_total || 1)) * 100).toFixed(0)}%
+									</div>
 								</div>
 							</div>
 						</div>
 
-						<!-- Instances List -->
-						<div>
-							<div class="flex items-center justify-between mb-3">
-								<h4
-									class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
-								>
-									Instances
-								</h4>
-								<!-- Mobile Bulk Actions -->
-								<div class="flex justify-end pr-2">
-									<Dropdown label="Actions">
-										{#snippet children()}
-											<button
-												onclick={() => {
-													dispatchBulkAction('start', spawner.id);
-												}}
-												class="w-full text-left px-4 py-2 text-sm text-emerald-400 hover:bg-emerald-500/10"
-												>Start All</button
-											>
-											<button
-												onclick={() => {
-													dispatchBulkAction('stop', spawner.id);
-												}}
-												class="w-full text-left px-4 py-2 text-sm text-rose-400 hover:bg-rose-500/10"
-												>Stop All</button
-											>
-											<button
-												onclick={() => {
-													dispatchBulkAction('restart', spawner.id);
-												}}
-												class="w-full text-left px-4 py-2 text-sm text-blue-400 hover:bg-blue-500/10"
-												>Restart All</button
-											>
-											<div class="border-t border-slate-200 dark:border-slate-800 my-1"></div>
-											<button
-												onclick={() => {
-													dispatchBulkAction('update', spawner.id);
-												}}
-												class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-800"
-												>Update All</button
-											>
-										{/snippet}
-									</Dropdown>
-								</div>
+						<div class="space-y-4">
+							<div class="flex items-center justify-between border-b border-stone-800 pb-2">
+								<h4 class="text-[10px] font-black military-label uppercase tracking-widest">Sub_Nodes</h4>
+								<Dropdown label="CMD">
+									{#snippet children()}
+										<button onclick={() => dispatchBulkAction('start', spawner.id)} class="w-full text-left px-4 py-2 text-[10px] font-black uppercase text-emerald-400 hover:bg-emerald-500/10">Execute_All</button>
+										<button onclick={() => dispatchBulkAction('stop', spawner.id)} class="w-full text-left px-4 py-2 text-[10px] font-black uppercase text-rose-400 hover:bg-rose-500/10">Kill_All</button>
+										<div class="border-t border-stone-800 my-1"></div>
+										<button onclick={() => dispatchBulkAction('update', spawner.id)} class="w-full text-left px-4 py-2 text-[10px] font-black uppercase text-rust-light hover:bg-white hover:text-black">Patch_Stream</button>
+									{/snippet}
+								</Dropdown>
 							</div>
 
 							{#if loadingInstances[spawner.id] && (!activeInstances[spawner.id] || activeInstances[spawner.id].length === 0)}
-								<div class="p-4 text-center text-slate-500 text-xs bg-slate-800/30 rounded-lg">
-									Loading...
-								</div>
+								<div class="p-8 text-center tactical-code text-stone-600 bg-stone-900/40 border-2 border-dashed border-stone-800">Buffer_Sync...</div>
 							{:else if !activeInstances[spawner.id] || activeInstances[spawner.id].length === 0}
-								<div
-									class="p-4 text-center text-slate-500 text-xs bg-slate-800/30 rounded-lg border border-slate-300/50 dark:border-slate-700/50"
-								>
-									No active instances.
-								</div>
+								<div class="p-8 text-center tactical-code text-stone-600 bg-stone-900/40 border-2 border-dashed border-stone-800">NULL_REPORT</div>
 							{:else}
-								<div
-									class={loadingInstances[spawner.id]
-										? 'opacity-50 pointer-events-none transition-opacity'
-										: 'transition-opacity'}
-								>
+								<div class={loadingInstances[spawner.id] ? 'opacity-50 pointer-events-none' : ''}>
 									{#each activeInstances[spawner.id] as instance (instance.id)}
 										<InstanceRow
 											spawnerId={spawner.id}
@@ -397,60 +313,34 @@
 		{/each}
 
 		{#if spawners.length === 0}
-			<div
-				class="p-8 text-center bg-slate-800/20 rounded-xl border border-slate-300/50 dark:border-slate-700/50 border-dashed"
-			>
-				<Box class="w-10 h-10 text-slate-600 mx-auto mb-3" />
-				<p class="text-slate-500 dark:text-slate-400 text-sm">No spawners registered.</p>
+			<div class="p-12 text-center bg-stone-950 border-2 border-dashed border-stone-800">
+				<Box class="w-10 h-10 text-stone-800 mx-auto mb-4" />
+				<p class="tactical-code text-stone-600">No_Nodes_Registered_In_Registry</p>
 			</div>
 		{/if}
 	</div>
 
 	<!-- Desktop View (Table) -->
 	<div class="hidden md:block overflow-x-auto">
-		<table class="w-full text-sm">
-			<thead class="border-b border-slate-300 dark:border-slate-700">
-				<tr>
+		<table class="w-full text-sm border-separate border-spacing-y-2 px-4">
+			<thead>
+				<tr class="tactical-code text-stone-500">
 					<th class="w-8"></th>
-					<th
-						class="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-						>ID</th
-					>
-					<th
-						class="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-						>Name</th
-					>
-					<th
-						class="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-						>Region</th
-					>
-					<th
-						class="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-						>Address</th
-					>
-					<th
-						class="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-						>Status</th
-					>
-					<th
-						class="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-						>Instances</th
-					>
-					<th
-						class="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-						>Game Version</th
-					>
-					<th
-						class="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right"
-						>Actions</th
-					>
+					<th class="text-left px-4 py-4 font-black uppercase">Ref_ID</th>
+					<th class="text-left px-4 py-4 font-black uppercase">Tactical_Name</th>
+					<th class="text-left px-4 py-4 font-black uppercase">Region_Code</th>
+					<th class="text-left px-4 py-4 font-black uppercase">Network_ADDR</th>
+					<th class="text-left px-4 py-4 font-black uppercase">Operational_Status</th>
+					<th class="text-left px-4 py-4 font-black uppercase">Buffer_Load</th>
+					<th class="text-left px-4 py-4 font-black uppercase">Ver</th>
+					<th class="text-right px-4 py-4 font-black uppercase">CMD</th>
 				</tr>
 			</thead>
-			<tbody class="text-slate-700 dark:text-slate-300">
+			<tbody class="text-slate-300">
 				{#each spawners as spawner}
 					<tr
-						class="border-t border-slate-300 dark:border-slate-700 hover:bg-slate-800/50 transition cursor-pointer {spawner.id ===
-						highlightNewSpawnerId
+						class="industrial-frame bg-stone-900/40 hover:bg-rust/5 transition-all cursor-pointer group {spawner.id ===
+						highlightNewSpawnerId && $siteSettings.aesthetic.animations_enabled
 							? 'animate-highlight-new-spawner'
 							: ''}"
 						onclick={() => toggleRow(spawner.id)}
@@ -460,219 +350,112 @@
 						role="button"
 						tabindex="0"
 					>
-						<td class="px-4 py-3 text-center text-slate-500">
-							<span
-								class="inline-block transition-transform duration-200 {expandedRows.has(spawner.id)
-									? 'rotate-90'
-									: ''}">▶</span
-							>
+						<td class="px-4 py-5 text-center text-stone-600">
+							<div class="transition-transform duration-300 {expandedRows.has(spawner.id) ? 'rotate-90 text-rust' : ''}">
+								<ChevronRight class="w-4 h-4" />
+							</div>
 						</td>
-						<td class="px-4 py-3 text-slate-500 dark:text-slate-400">#{spawner.id}</td>
-						<td class="px-4 py-3 font-semibold text-slate-100">{spawner.name || spawner.region}</td>
-						<td class="px-4 py-3 font-semibold text-slate-100">{spawner.region}</td>
-						<td class="px-4 py-3 font-mono text-slate-500 dark:text-slate-400"
-							>{spawner.host}:{spawner.port}</td
-						>
-						<td class="px-4 py-3">
-							<span
-								class={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold ${getStatusClass(spawner.status)}`}
-							>
-								<span class="w-2 h-2 rounded-full bg-current"></span>
+						<td class="px-4 py-5 font-jetbrains font-bold text-rust-light">[{spawner.id.toString().padStart(3, '0')}]</td>
+						<td class="px-4 py-5 font-heading font-black tracking-tight text-white uppercase">{spawner.name || spawner.region}</td>
+						<td class="px-4 py-5">
+							<span class="px-2 py-0.5 bg-stone-800 text-[10px] font-black uppercase border border-stone-700">{spawner.region}</span>
+						</td>
+						<td class="px-4 py-5 font-mono text-[11px] text-stone-500">{spawner.host}:{spawner.port}</td>
+						<td class="px-4 py-5">
+							<span class={`inline-flex items-center gap-2 px-3 py-1 rounded-none text-[10px] font-black uppercase border-l-4 ${getStatusClass(spawner.status)}`}>
 								{spawner.status}
 							</span>
 						</td>
-						<td class="px-4 py-3">
-							<div class="text-sm mb-2">{spawner.current_instances} / {spawner.max_instances}</div>
-							<div class="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
-								<div
-									class="h-full bg-gradient-to-r from-blue-500 to-purple-500"
-									style={`width: ${getInstancePercent(spawner)}%`}
-								></div>
+						<td class="px-4 py-5 w-48">
+							<div class="flex items-center justify-between gap-3">
+								<div class="flex-1 h-1.5 bg-stone-800 rounded-none overflow-hidden border border-stone-700 p-[1px]">
+									<div class="h-full bg-rust shadow-[0_0_10px_rgba(120,53,15,0.5)] transition-all duration-1000" style={`width: ${getInstancePercent(spawner)}%`}></div>
+								</div>
+								<span class="font-jetbrains text-[10px] font-bold text-rust-light">{spawner.current_instances}/{spawner.max_instances}</span>
 							</div>
 						</td>
-						<td class="px-4 py-3 font-mono text-slate-500 dark:text-slate-400 text-xs">
-							{spawner.game_version || 'N/A'}
-						</td>
-						<td class="px-4 py-3 text-right space-x-2" onclick={(e) => e.stopPropagation()}>
-							{#if spawner.status === 'Offline'}
-								<button
-									onclick={() => deleteSpawner(spawner.id)}
-									class="inline-flex items-center gap-2 px-3 py-1 bg-red-900/30 hover:bg-red-900/50 text-red-400 border border-red-900/50 rounded text-xs font-semibold transition-colors"
-								>
-									<Trash2 class="w-3.5 h-3.5" />
-									Delete
-								</button>
+						<td class="px-4 py-5 font-jetbrains text-stone-600 text-[10px]">{spawner.game_version || '??'}</td>
+												<td class="px-4 py-5 text-right space-x-2" onclick={(e) => e.stopPropagation()}>
+													{#if spawner.status === 'Offline'}
+														<button
+															onclick={() => deleteSpawner(spawner.id)}
+															class="px-4 py-1.5 bg-red-950/20 text-red-500 border border-red-900/50 rounded-none text-[10px] font-black uppercase hover:bg-red-600 hover:text-black transition-all"
+														>
+															Decommission_Node
+														</button>
 							{:else}
-								<a
-									href="/spawners/{spawner.id}"
-									class="inline-flex items-center gap-2 px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-800 dark:text-slate-200 rounded text-xs font-semibold transition-colors"
-								>
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										class="w-3.5 h-3.5"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										stroke-width="2"
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
-										></path><polyline points="15 3 21 3 21 9"></polyline><line
-											x1="10"
-											y1="14"
-											x2="21"
-											y2="3"
-										></line></svg
-									>
-									Manage
-								</a>
-								<button
-									onclick={() => dispatch('viewLogs', spawner.id)}
-									class="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-800 dark:text-slate-200 rounded text-xs font-semibold transition-colors"
-									>Logs</button
-								>
-								<button
-									onclick={() => dispatch('spawn', spawner.id)}
-									disabled={spawner.status !== 'Online'}
-									class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-slate-900 dark:text-white rounded text-xs font-semibold transition-colors shadow-lg shadow-blue-900/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-700"
-									>Spawn</button
-								>
+								<button onclick={() => dispatch('viewLogs', spawner.id)} class="px-4 py-1.5 bg-stone-800 text-stone-300 border border-stone-700 rounded-none text-[10px] font-black uppercase hover:bg-white hover:text-black transition-all">Terminal</button>
+								<button onclick={() => dispatch('spawn', spawner.id)} disabled={spawner.status !== 'Online'} class="px-4 py-1.5 bg-rust text-white border border-rust-light rounded-none text-[10px] font-black uppercase hover:bg-rust-light transition-all shadow-[4px_4px_0px_rgba(120,53,15,0.3)] disabled:opacity-30 disabled:grayscale">Execute</button>
 							{/if}
 						</td>
 					</tr>
 					{#if expandedRows.has(spawner.id)}
-						<tr class="bg-slate-900/50 border-b border-slate-300 dark:border-slate-700">
-							<td colspan="9" class="px-4 py-4">
-								<!-- Colspan updated from 7 to 9 -->
-								<div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs mb-6">
-									<!-- CPU -->
-									<div
-										class="bg-slate-800 rounded p-3 border border-slate-300 dark:border-slate-700"
-									>
-										<div class="text-slate-500 dark:text-slate-400 uppercase font-semibold mb-1">
-											CPU Usage
+						<tr class="bg-black/40 border-b-2 border-stone-800">
+							<td colspan="9" class="px-8 py-8">
+								<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+									<div class="brutalist-card p-4 border-l-4 border-l-rust">
+										<div class="flex justify-between items-center mb-2">
+											<span class="tactical-code text-stone-500">Core_Utilization</span>
+											<Cpu class="w-3.5 h-3.5 text-rust" />
 										</div>
-										<div class="text-lg font-bold text-slate-100">
-											{spawner.cpu_usage ? spawner.cpu_usage?.toFixed(1) : 0}%
-										</div>
-										<div class="w-full h-1 bg-slate-700 rounded-full mt-2 overflow-hidden">
-											<div
-												class="h-full bg-blue-500"
-												style="width: {spawner.cpu_usage || 0}%"
-											></div>
+										<div class="text-3xl font-black military-label mb-2">{spawner.cpu_usage ? spawner.cpu_usage?.toFixed(1) : 0}%</div>
+										<div class="w-full h-1 bg-stone-900 rounded-none overflow-hidden border border-stone-800">
+											<div class="h-full bg-rust" style="width: {spawner.cpu_usage || 0}%"></div>
 										</div>
 									</div>
-									<!-- Memory -->
-									<div
-										class="bg-slate-800 rounded p-3 border border-slate-300 dark:border-slate-700"
-									>
-										<div class="text-slate-500 dark:text-slate-400 uppercase font-semibold mb-1">
-											Memory Usage
+									<div class="brutalist-card p-4 border-l-4 border-l-rust">
+										<div class="flex justify-between items-center mb-2">
+											<span class="tactical-code text-stone-500">Volatile_Memory</span>
+											<Zap class="w-3.5 h-3.5 text-rust" />
 										</div>
-										<div class="text-lg font-bold text-slate-100">
-											{formatBytes(spawner.mem_used || 0)} / {formatBytes(spawner.mem_total || 0)}
-										</div>
-										<div class="text-slate-500 mt-1">
-											Free: {formatBytes((spawner.mem_total || 0) - (spawner.mem_used || 0))}
-										</div>
-										<div class="w-full h-1 bg-slate-700 rounded-full mt-2 overflow-hidden">
-											<div
-												class="h-full bg-purple-500"
-												style="width: {spawner.mem_total
-													? (spawner.mem_used / spawner.mem_total) * 100
-													: 0}%"
-											></div>
+										<div class="text-xl font-black military-label mb-1">{formatBytes(spawner.mem_used || 0)} <span class="text-xs text-stone-600">/ {formatBytes(spawner.mem_total || 0)}</span></div>
+										<div class="text-[10px] font-mono text-stone-500 mb-2">AVAILABLE: {formatBytes((spawner.mem_total || 0) - (spawner.mem_used || 0))}</div>
+										<div class="w-full h-1 bg-stone-900 rounded-none overflow-hidden border border-stone-800">
+											<div class="h-full bg-rust" style="width: {spawner.mem_total ? (spawner.mem_used / spawner.mem_total) * 100 : 0}%"></div>
 										</div>
 									</div>
-									<!-- Disk -->
-									<div
-										class="bg-slate-800 rounded p-3 border border-slate-300 dark:border-slate-700"
-									>
-										<div class="text-slate-500 dark:text-slate-400 uppercase font-semibold mb-1">
-											Disk Usage
+									<div class="brutalist-card p-4 border-l-4 border-l-rust">
+										<div class="flex justify-between items-center mb-2">
+											<span class="tactical-code text-stone-500">Storage_Array</span>
+											<HardDrive class="w-3.5 h-3.5 text-rust" />
 										</div>
-										<div class="text-lg font-bold text-slate-100">
-											{formatBytes(spawner.disk_used || 0)} / {formatBytes(spawner.disk_total || 0)}
-										</div>
-										<div class="w-full h-1 bg-slate-700 rounded-full mt-2 overflow-hidden">
-											<div
-												class="h-full bg-orange-500"
-												style="width: {spawner.disk_total
-													? (spawner.disk_used / spawner.disk_total) * 100
-													: 0}%"
-											></div>
+										<div class="text-xl font-black military-label mb-1">{formatBytes(spawner.disk_used || 0)} <span class="text-xs text-stone-600">/ {formatBytes(spawner.disk_total || 0)}</span></div>
+										<div class="text-[10px] font-mono text-stone-500 mb-2">I/O_STREAM: ACTIVE</div>
+										<div class="w-full h-1 bg-stone-900 rounded-none overflow-hidden border border-stone-800">
+											<div class="h-full bg-rust" style="width: {spawner.disk_total ? (spawner.disk_used / spawner.disk_total) * 100 : 0}%"></div>
 										</div>
 									</div>
 								</div>
 
-								<!-- Active Instances -->
-								<div class="space-y-2">
-									<div class="flex justify-between items-center mb-2 px-1">
-										<h4
-											class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
-										>
-											Active Instances
-										</h4>
-										<div class="flex items-center gap-2">
-											<Dropdown label="Bulk Actions">
+								<div class="space-y-4">
+									<div class="flex justify-between items-center mb-4 px-1 border-b border-stone-800 pb-2">
+										<div class="flex items-center gap-3">
+											<Box class="w-4 h-4 text-rust" />
+											<h4 class="text-sm font-black military-label uppercase tracking-widest">Sub_Node_Instances</h4>
+										</div>
+										<div class="flex items-center gap-4">
+											<Dropdown label="System_CMD">
 												{#snippet children()}
-													<button
-														onclick={() => {
-															dispatchBulkAction('start', spawner.id);
-														}}
-														class="w-full text-left px-4 py-2 text-sm text-emerald-400 hover:bg-emerald-500/10"
-														>Start All</button
-													>
-													<button
-														onclick={() => {
-															dispatchBulkAction('stop', spawner.id);
-														}}
-														class="w-full text-left px-4 py-2 text-sm text-yellow-400 hover:bg-yellow-500/10"
-														>Stop All</button
-													>
-													<button
-														onclick={() => {
-															dispatchBulkAction('restart', spawner.id);
-														}}
-														class="w-full text-left px-4 py-2 text-sm text-blue-400 hover:bg-blue-500/10"
-														>Restart All</button
-													>
-													<button
-														onclick={() => {
-															dispatchBulkAction('update', spawner.id);
-														}}
-														class="w-full text-left px-4 py-2 text-sm text-purple-400 hover:bg-purple-500/10 border-t border-slate-200 dark:border-slate-800"
-														>Update All</button
-													>
+													<button onclick={() => dispatchBulkAction('start', spawner.id)} class="w-full text-left px-4 py-2 text-[10px] font-black uppercase text-emerald-400 hover:bg-emerald-500/10">Execute_All</button>
+													<button onclick={() => dispatchBulkAction('stop', spawner.id)} class="w-full text-left px-4 py-2 text-[10px] font-black uppercase text-yellow-400 hover:bg-yellow-500/10">Terminate_All</button>
+													<button onclick={() => dispatchBulkAction('restart', spawner.id)} class="w-full text-left px-4 py-2 text-[10px] font-black uppercase text-rust-light hover:bg-rust/10">Reboot_All</button>
+													<button onclick={() => dispatchBulkAction('update', spawner.id)} class="w-full text-left px-4 py-2 text-[10px] font-black uppercase text-purple-400 hover:bg-purple-500/10 border-t border-stone-800">Patch_All</button>
 												{/snippet}
 											</Dropdown>
-											<div class="w-px h-4 bg-slate-700 mx-1"></div>
+											<div class="w-px h-6 bg-stone-800"></div>
 											{#if loadingInstances[spawner.id]}
-												<div
-													class="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"
-												></div>
+												<div class="w-4 h-4 border-2 border-rust border-t-transparent rounded-none animate-spin"></div>
 											{/if}
-											<button
-												onclick={() => fetchInstances(spawner.id)}
-												class="text-xs text-blue-400 hover:text-blue-300">Refresh</button
-											>
+											<button onclick={() => fetchInstances(spawner.id)} class="tactical-code text-rust-light hover:text-white transition-colors">Recalibrate_Stream</button>
 										</div>
 									</div>
 
 									{#if loadingInstances[spawner.id] && (!activeInstances[spawner.id] || activeInstances[spawner.id].length === 0)}
-										<div class="p-4 text-center text-slate-500 text-xs">Loading instances...</div>
+										<div class="p-12 text-center tactical-code text-stone-600 bg-stone-900/20 border-2 border-dashed border-stone-800">Synchronizing_Instance_Buffer...</div>
 									{:else if !activeInstances[spawner.id] || activeInstances[spawner.id].length === 0}
-										<div
-											class="p-4 text-center text-slate-500 text-xs bg-slate-800/30 rounded border border-slate-300/50 dark:border-slate-700/50"
-										>
-											No active instances.
-										</div>
+										<div class="p-12 text-center tactical-code text-stone-600 bg-stone-900/20 border-2 border-dashed border-stone-800">NULL_INSTANCE_REPORTED</div>
 									{:else}
-										<div
-											class={loadingInstances[spawner.id]
-												? 'opacity-50 pointer-events-none transition-opacity'
-												: 'transition-opacity'}
-										>
+										<div class={loadingInstances[spawner.id] ? 'opacity-50 pointer-events-none transition-opacity' : 'transition-opacity'}>
 											{#each activeInstances[spawner.id] as instance (instance.id)}
 												<InstanceRow
 													spawnerId={spawner.id}
@@ -695,13 +478,10 @@
 				{/each}
 				{#if spawners.length === 0}
 					<tr>
-						<td
-							colspan="9"
-							class="px-4 py-12 text-center text-slate-500 bg-slate-800/20 rounded-b-lg"
-						>
-							<div class="flex flex-col items-center gap-2">
-								<span class="text-2xl">📭</span>
-								<span>No spawners registered yet.</span>
+						<td colspan="9" class="px-4 py-20 text-center bg-stone-950 border-2 border-dashed border-stone-800">
+							<div class="flex flex-col items-center gap-4">
+								<Box class="w-12 h-12 text-stone-800" />
+								<p class="tactical-code text-stone-600 text-lg">Empty_Registry_Reported</p>
 							</div>
 						</td>
 					</tr>
@@ -714,11 +494,11 @@
 <style lang="ts">
 	@keyframes highlight-new-spawner {
 		0% {
-			background-color: theme('colors.blue.900');
+			background-color: var(--color-rust);
 		}
 		50% {
-			background-color: theme('colors.blue.900');
-		} /* Hold color */
+			background-color: var(--color-rust);
+		}
 		100% {
 			background-color: transparent;
 		}

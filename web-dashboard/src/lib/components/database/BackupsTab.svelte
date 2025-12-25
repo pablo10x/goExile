@@ -91,12 +91,11 @@
 				<p class="text-sm text-slate-500">Create and restore internal database snapshots</p>
 			</div>
 		</div>
-		<button
-			onclick={createBackup}
-			disabled={loading}
-			class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-slate-900 dark:text-white rounded-lg font-bold flex items-center gap-2 shadow-lg shadow-blue-900/20 disabled:opacity-50"
-		>
-			<Plus class="w-4 h-4" /> Create Backup
+					<button
+						onclick={createBackup}
+						disabled={loading}
+						class="px-4 py-2 bg-rust-light hover:bg-rust text-white rounded-lg font-bold flex items-center gap-2 shadow-lg shadow-rust-light/20 disabled:opacity-50"
+					>			<Plus class="w-4 h-4" /> Create Backup
 		</button>
 	</div>
 

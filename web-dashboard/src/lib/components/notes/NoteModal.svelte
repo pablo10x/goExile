@@ -97,7 +97,7 @@
 				colorClass = 'bg-yellow-100 text-yellow-900 border-yellow-200';
 				break;
 			case 'blue':
-				colorClass = 'bg-blue-100 text-blue-900 border-blue-200';
+				colorClass = 'bg-orange-100 text-orange-900 border-orange-200';
 				break;
 			case 'green':
 				colorClass = 'bg-green-100 text-green-900 border-green-200';

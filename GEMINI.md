@@ -154,7 +154,14 @@ npm run dev   # Starts Vite dev server
 *   **Logging:** Implemented log rotation (max 5MB, keep 20 lines) in Spawner, filtered noisy log types, and added file size display in Dashboard LogViewer.
 *   **Database:** Integrated PostgreSQL support (via `pgx` driver) alongside SQLite. Added "Databases" tab to Dashboard for table listing. Use `DB_DRIVER=pgx` for Postgres. Added 5s timeout to DB init to prevent startup hangs. Enhanced Database Management: Full UI for Overview, Table Browser/Editor (CRUD), Internal Backups (Create/Restore/Download), and Config viewing.
 *   **Dashboard Stability:** Fixed Svelte 5 reactivity issues in Layout and Dashboard Page (Runes migration) resolving navigation bugs and blank screen issues. Fixed accessibility warnings and template syntax errors.
-*   **Performance:** Refactored Spawner metrics collection to be asynchronous, preventing I/O blocks from delaying heartbeats.
+*   **Theme & Aesthetic Migration:** Completed the migration to the tactical Rust/Stone "Exile" terminal aesthetic.
+    *   Replaced all remaining hardcoded blue, indigo, and cyan accents with Rust theme colors across all major routes (`/dashboard`, `/config`, `/logs`, `/database`, `/notes`, `/users`).
+    *   Implemented full `industrial_styling` support: all cards and modals now respect the sharp-corner/heavy-border toggle.
+    *   Updated `NotificationBell` and `TaskItem` components to match the new industrial aesthetic.
+    *   Fixed multiple Svelte 5 syntax errors and tag nesting issues in `config/+page.svelte`.
+    *   Optimized Three.js lifecycle management: `SectionBackground`, `NavbarParticles`, and `GlobalSmoke` now properly stop their animation loops when disabled or in Low Power Mode.
+    *   Implemented persistence for aesthetic settings: `theme`, `backgroundConfig`, and `siteSettings` now automatically sync with `localStorage`.
+*   **Performance:** Refactored Spawner metrics collection to be asynchronous, preventing I/O blocks from delaying heartbeats. Added a "Low Power Mode" toggle to disable resource-intensive background animations.
 
 ## 🔒 Security Note
 *   **Transport Encryption:** The Master Server runs on plain HTTP (`:8081`). For production security, you **MUST** run it behind a Reverse Proxy (Nginx, Caddy, Cloudflare) that handles SSL/TLS termination. This ensures the WebSocket connection and API Key are encrypted.

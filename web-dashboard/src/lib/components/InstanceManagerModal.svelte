@@ -1,65 +1,80 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
 	import { fade, scale, fly, slide } from 'svelte/transition';
 	import { cubicOut, elasticOut } from 'svelte/easing';
 	import { formatBytes, formatUptime } from '$lib/utils';
 	import { serverVersions } from '$lib/stores';
 	import Terminal from './Terminal.svelte';
-	import ResourceHistoryChart from './ResourceHistoryChart.svelte';
 	import ResourceMetricsPanel from './ResourceMetricsPanel.svelte';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 	import LogViewer from './LogViewer.svelte';
 
-	export let isOpen: boolean = false;
-	export let spawnerId: number | null = null;
-	export let instanceId: string | null = null;
-	export let onClose: () => void;
-	export let memTotal: number = 0;
+	interface Props {
+		isOpen: boolean;
+		spawnerId: number | null;
+		instanceId: string | null;
+		onClose: () => void;
+		memTotal?: number;
+	}
 
-	let logs: string[] = [];
+	let {
+		isOpen = $bindable(false),
+		spawnerId = null,
+		instanceId = null,
+		onClose,
+		memTotal = 0
+	}: Props = $props();
 
-	let stats = {
+	// Component State
+	let logs = $state<string[]>([]);
+	let stats = $state({
 		cpu_percent: 0,
 		memory_usage: 0,
 		disk_usage: 0,
 		status: 'Unknown',
 		uptime: 0
-	};
-	let activeTab: 'console' | 'metrics' | 'backups' | 'history' | 'node_logs' = 'console';
+	});
+	
+	type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
+	let activeTab = $state<TabType>('console');
 
-	interface TabItem {
-		id: 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
-		label: string;
-		icon: string;
-	}
+	const tabs: { id: TabType; label: string }[] = [
+		{ id: 'console', label: 'Terminal' },
+		{ id: 'metrics', label: 'Metrics' },
+		{ id: 'backups', label: 'Archives' },
+		{ id: 'history', label: 'Protocol Logs' },
+		{ id: 'node_logs', label: 'Host Logs' }
+	];
 
-	// New State for Backups and History
-	let backups: any[] = [];
-	let historyLogs: any[] = [];
-	let isLoadingData = false;
+	// Data States
+	let backups = $state<any[]>([]);
+	let historyLogs = $state<any[]>([]);
+	let isLoadingData = $state(false);
 
 	// Confirm Dialog State
-	let isConfirmOpen = false;
-	let confirmTitle = '';
-	let confirmMessage = '';
-	let confirmBtnText = 'Confirm';
-	let isCriticalAction = false;
-	let pendingBackupAction: () => Promise<void> = async () => {};
+	let isConfirmOpen = $state(false);
+	let confirmTitle = $state('');
+	let confirmMessage = $state('');
+	let confirmBtnText = $state('Confirm');
+	let isCriticalAction = $state(false);
+	let pendingBackupAction = $state<() => Promise<void>>(async () => {});
 
+	// Polling Intervals
 	let statsInterval: ReturnType<typeof setInterval> | null = null;
 	let logsInterval: ReturnType<typeof setInterval> | null = null;
 
-	// Provisioning State
-	let isProvisioning = false;
-	let provisioningStep = 0;
+	// Provisioning Logic
+	let isProvisioning = $state(false);
+	let provisioningStep = $state(0);
 	const provisioningSteps = [
-		'Allocating resources...',
-		'Downloading game files...',
-		'Configuring environment...',
+		'Allocating resources...', 
+		'Downloading game files...', 
+		'Configuring environment...', 
 		'Starting process...'
 	];
 
-	$: activeVersion = $serverVersions.find((v) => v.is_active);
+	// Derived State
+	let activeVersion = $derived($serverVersions.find((v) => v.is_active));
+	let memoryPercent = $derived(memTotal ? Math.min(100, (stats.memory_usage / (memTotal * 1024 * 1024)) * 100) : 0);
 
 	function getBackupVersion(filename: string): string | null {
 		const match = filename.match(/_v(.*?)\.zip$/);
@@ -69,42 +84,45 @@
 	function isOutdated(filename: string): boolean {
 		if (!activeVersion) return false;
 		const version = getBackupVersion(filename);
-		if (!version) return false;
-		return version !== activeVersion.version;
+		return version ? version !== activeVersion.version : false;
 	}
 
-	$: if (isOpen && spawnerId !== null && instanceId) {
-		startPolling();
-		provisioningStep = 0;
-	} else {
-		stopPolling();
-		activeTab = 'console';
-	}
+	// Effects
+	$effect(() => {
+		if (isOpen && spawnerId !== null && instanceId) {
+			startPolling();
+		} else {
+			stopPolling();
+			if (!isOpen) activeTab = 'console';
+		}
+	});
 
-	$: if (stats.status === 'Provisioning') {
-		isProvisioning = true;
-	} else {
-		isProvisioning = false;
-	}
+	$effect(() => {
+		isProvisioning = stats.status === 'Provisioning';
+	});
 
-	let provTimer: any;
-	$: if (isProvisioning) {
-		clearInterval(provTimer);
-		provTimer = setInterval(() => {
-			if (provisioningStep < provisioningSteps.length - 1) provisioningStep++;
-		}, 2000);
-	} else {
-		clearInterval(provTimer);
-	}
+	let provTimer: ReturnType<typeof setInterval> | undefined;
+	$effect(() => {
+		if (isProvisioning) {
+			provTimer = setInterval(() => {
+				if (provisioningStep < provisioningSteps.length - 1) provisioningStep++;
+			}, 2000);
+		} else {
+			clearInterval(provTimer);
+			provisioningStep = 0;
+		}
+		return () => clearInterval(provTimer);
+	});
 
-	$: if (isOpen && activeTab === 'backups' && spawnerId && instanceId) {
-		fetchBackups();
-	}
+	$effect(() => {
+		if (isOpen && activeTab === 'backups' && spawnerId && instanceId) fetchBackups();
+	});
 
-	$: if (isOpen && activeTab === 'history' && spawnerId && instanceId) {
-		fetchHistoryLogs();
-	}
+	$effect(() => {
+		if (isOpen && activeTab === 'history' && spawnerId && instanceId) fetchHistoryLogs();
+	});
 
+	// API Functions
 	async function fetchBackups() {
 		if (!spawnerId || !instanceId) return;
 		isLoadingData = true;
@@ -112,15 +130,9 @@
 			const res = await fetch(`/api/spawners/${spawnerId}/instances/${instanceId}/backups`);
 			if (res.ok) {
 				const data = await res.json();
-				backups = (data.backups || []).sort(
-					(a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()
-				);
+				backups = (data.backups || []).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
 			}
-		} catch (e) {
-			console.error(e);
-		} finally {
-			isLoadingData = false;
-		}
+		} catch (e) { console.error(e); } finally { isLoadingData = false; }
 	}
 
 	async function fetchHistoryLogs() {
@@ -128,68 +140,8 @@
 		isLoadingData = true;
 		try {
 			const res = await fetch(`/api/spawners/${spawnerId}/instances/${instanceId}/history`);
-			if (res.ok) {
-				historyLogs = await res.json();
-			} else {
-				console.error('Failed to fetch history:', res.status, res.statusText);
-				historyLogs = [];
-			}
-		} catch (e) {
-			console.error('Error fetching history:', e);
-			historyLogs = [];
-		} finally {
-			isLoadingData = false;
-		}
-	}
-
-	function handleBackupAction(action: 'create' | 'restore' | 'delete', filename?: string) {
-		if (!spawnerId || !instanceId) return;
-
-		if (action === 'create') {
-			confirmTitle = 'Create Backup';
-			confirmMessage = 'Are you sure you want to create a new backup? The server must be stopped.';
-			confirmBtnText = 'Start Backup';
-			isCriticalAction = false;
-		} else if (action === 'restore') {
-			confirmTitle = 'Restore Backup';
-			confirmMessage = `Are you sure you want to restore "${filename}"?\n\n⚠️ WARNING: This will overwrite all current game files!`;
-			confirmBtnText = 'Restore Files';
-			isCriticalAction = true;
-		} else if (action === 'delete') {
-			confirmTitle = 'Delete Backup';
-			confirmMessage = `Are you sure you want to PERMANENTLY delete "${filename}"?`;
-			confirmBtnText = 'Delete Backup';
-			isCriticalAction = true;
-		}
-
-		pendingBackupAction = async () => {
-			let url = '';
-			let body = null;
-			if (action === 'create') url = `/api/spawners/${spawnerId}/instances/${instanceId}/backup`;
-			else if (action === 'restore') {
-				url = `/api/spawners/${spawnerId}/instances/${instanceId}/restore`;
-				body = JSON.stringify({ filename });
-			} else if (action === 'delete') {
-				url = `/api/spawners/${spawnerId}/instances/${instanceId}/backup/delete`;
-				body = JSON.stringify({ filename });
-			}
-
-			const res = await fetch(url, {
-				method: 'POST',
-				headers: body ? { 'Content-Type': 'application/json' } : undefined,
-				body
-			});
-
-			if (!res.ok) {
-				const err = await res.json();
-				throw new Error(err.error || 'Action failed');
-			}
-
-			if (action !== 'restore') await fetchBackups();
-			else alert('Backup restored successfully.');
-		};
-
-		isConfirmOpen = true;
+			if (res.ok) historyLogs = await res.json();
+		} catch (e) { console.error(e); } finally { isLoadingData = false; }
 	}
 
 	async function fetchInstanceLogs() {
@@ -198,13 +150,17 @@
 			const res = await fetch(`/api/spawners/${spawnerId}/instances/${instanceId}/logs`);
 			if (res.ok) {
 				const data = await res.json();
-				if (data.logs) {
-					logs = data.logs.split('\n');
-				}
+				if (data.logs) logs = data.logs.split('\n');
 			}
-		} catch (e) {
-			console.error('Failed to fetch logs:', e);
-		}
+		} catch (e) { console.error('Log fetch error:', e); }
+	}
+
+	async function fetchStats() {
+		if (!spawnerId || !instanceId) return;
+		try {
+			const res = await fetch(`/api/spawners/${spawnerId}/instances/${instanceId}/stats`);
+			if (res.ok) stats = { ...stats, ...(await res.json()) };
+		} catch (e) { console.error('Stats fetch error:', e); }
 	}
 
 	function startPolling() {
@@ -212,50 +168,57 @@
 		logs = [];
 		fetchStats();
 		fetchInstanceLogs();
-
 		statsInterval = setInterval(fetchStats, 2000);
-		logsInterval = setInterval(() => {
-			if (activeTab === 'console') {
-				fetchInstanceLogs();
-			}
-		}, 2000);
+		logsInterval = setInterval(() => { if (activeTab === 'console') fetchInstanceLogs(); }, 2000);
 	}
 
 	function stopPolling() {
-		if (statsInterval) {
-			clearInterval(statsInterval);
-			statsInterval = null;
-		}
-		if (logsInterval) {
-			clearInterval(logsInterval);
-			logsInterval = null;
-		}
-		logs = [];
+		if (statsInterval) clearInterval(statsInterval);
+		if (logsInterval) clearInterval(logsInterval);
+		statsInterval = null;
+		logsInterval = null;
 	}
 
-	async function fetchStats() {
-		if (spawnerId === null || !instanceId) return;
-		try {
-			const res = await fetch(`/api/spawners/${spawnerId}/instances/${instanceId}/stats`);
+	type BackupAction = 'create' | 'restore' | 'delete';
+	function handleBackupAction(action: BackupAction, filename: string | undefined = undefined) {
+		if (!spawnerId || !instanceId) return;
+		confirmTitle = action === 'create' ? 'Create Backup' : action === 'restore' ? 'Restore Backup' : 'Delete Backup';
+		confirmMessage = action === 'create' 
+			? 'Create a new backup? Node must be stopped.' 
+			: action === 'restore' 
+				? `Restore ${filename}? WARNING: Overwrites all current data!` 
+				: `Permanently delete ${filename}?`;
+		confirmBtnText = action === 'create' ? 'Start' : action === 'restore' ? 'Restore' : 'Delete';
+		isCriticalAction = action !== 'create';
+
+		pendingBackupAction = async () => {
+			let url = `/api/spawners/${spawnerId}/instances/${instanceId}/backup`;
+			if (action === 'restore') url = `/api/spawners/${spawnerId}/instances/${instanceId}/restore`;
+			else if (action === 'delete') url = `/api/spawners/${spawnerId}/instances/${instanceId}/backup/delete`;
+
+			const res = await fetch(url, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: filename ? JSON.stringify({ filename }) : null
+			});
 			if (res.ok) {
-				const data = await res.json();
-				stats = { ...stats, ...data };
+				if (action !== 'restore') await fetchBackups();
+				else alert('Restore completed.');
+			} else {
+				const err = await res.json();
+				alert(`Action failed: ${err.error || 'Unknown error'}`);
 			}
-		} catch (e) {
-			console.error(e);
-		}
+		};
+		isConfirmOpen = true;
 	}
 
 	function triggerAction(action: string) {
-		confirmTitle = `${action.charAt(0).toUpperCase() + action.slice(1)} Instance`;
-		confirmMessage = `Are you sure you want to ${action.toUpperCase()} this instance?`;
-		confirmBtnText = action === 'delete' ? 'Delete' : 'Confirm';
+		confirmTitle = `${action.toUpperCase()} NODE`;
+		confirmMessage = `Initiate ${action} sequence for instance ${instanceId}?`;
+		confirmBtnText = action === 'delete' ? 'Terminate' : 'Confirm';
 		isCriticalAction = action === 'delete' || action === 'stop';
-
 		pendingBackupAction = async () => {
-			await fetch(`/api/spawners/${spawnerId}/instances/${instanceId}/${action}`, {
-				method: 'POST'
-			});
+			await fetch(`/api/spawners/${spawnerId}/instances/${instanceId}/${action}`, { method: 'POST' });
 		};
 		isConfirmOpen = true;
 	}
@@ -264,803 +227,238 @@
 		stopPolling();
 		onClose();
 	}
-
-	// Calculate memory percentage for display
-	$: memoryPercent = memTotal
-		? Math.min(100, (stats.memory_usage / (memTotal * 1024 * 1024)) * 100)
-		: 10;
-	$: diskPercent = 15; // Placeholder
 </script>
 
 {#if isOpen}
-	<div
+	<div 
 		class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
-		transition:fade={{ duration: 250, easing: cubicOut }}
+		transition:fade={{ duration: 200 }}
 	>
-		<!-- Enhanced Backdrop with animated gradient -->
-		<div
-			class="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 backdrop-blur-xl"
-			onclick={close}
-			onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && close()}
-			role="button"
-			tabindex="0"
-			aria-label="Close console"
-			style="background-image: radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);"
+		<!-- Backdrop -->
+		<div 
+			class="absolute inset-0 bg-slate-950/90 backdrop-blur-md"
+			onclick={close} 
+			role="button" 
+			tabindex="0" 
+			onkeydown={(e) => e.key === 'Escape' && close()}
+			aria-label="Close modal"
 		></div>
 
-		<!-- Enhanced Modal Window with glassmorphism -->
-		<div
-			class="relative w-full max-w-7xl h-[90vh] flex bg-slate-900/40 backdrop-blur-2xl border border-slate-300/50 dark:border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden"
-			transition:scale={{ start: 0.9, duration: 300, easing: elasticOut }}
-			style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;"
+		<!-- Modal Window -->
+		<div 
+			class="relative w-full max-w-7xl h-[90vh] flex bg-[#0a0a0a] border border-slate-800 rounded-lg shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden"
+			transition:scale={{ start: 0.98, duration: 200, easing: cubicOut }}
 		>
-			<!-- Enhanced Sidebar -->
-			<div
-				class="w-80 bg-gradient-to-b from-slate-950/90 to-slate-900/90 backdrop-blur-xl border-r border-slate-300/50 dark:border-slate-700/50 flex flex-col shrink-0 relative overflow-hidden"
-			>
-				<!-- Ambient glow effect -->
-				<div
-					class="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 pointer-events-none"
-				></div>
-
-				<!-- Header -->
-				<div
-					class="relative p-6 border-b border-slate-300/50 dark:border-slate-700/50 bg-slate-900/50"
-				>
-					<div class="flex items-start justify-between mb-3">
-						<h3
-							class="text-xl font-bold text-slate-100 break-all leading-tight bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent"
-						>
-							{instanceId}
-						</h3>
-						<div class="flex items-center gap-2 ml-3">
-							<span
-								class={`relative flex h-3 w-3 ${stats.status === 'Running' ? 'animate-pulse' : ''}`}
-							>
-								{#if stats.status === 'Running'}
-									<span
-										class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"
-									></span>
-									<span
-										class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 shadow-lg shadow-emerald-500/50"
-									></span>
-								{:else if stats.status === 'Provisioning'}
-									<span
-										class="relative inline-flex rounded-full h-3 w-3 bg-blue-500 shadow-lg shadow-blue-500/50 animate-bounce"
-									></span>
-								{:else}
-									<span
-										class="relative inline-flex rounded-full h-3 w-3 bg-red-500 shadow-lg shadow-red-500/50"
-									></span>
-								{/if}
-							</span>
+			<!-- Tactical Sidebar -->
+			<div class="w-72 bg-[#0d0d0d] border-r border-slate-800 flex flex-col shrink-0">
+				<div class="p-5 border-b border-slate-800 bg-[#111]">
+					<h3 class="text-sm font-black text-slate-200 truncate font-mono tracking-tighter uppercase">{instanceId}</h3>
+					<div class="mt-3 flex items-center gap-2">
+						<div class="flex items-center gap-1.5 px-2 py-1 rounded bg-black border border-slate-800 text-[9px] font-black uppercase tracking-widest {stats.status === 'Running' ? 'text-emerald-500' : 'text-red-500'}">
+							<span class="w-1.5 h-1.5 rounded-full {stats.status === 'Running' ? 'bg-emerald-500 animate-pulse shadow-[0_0_5px_rgba(16,185,129,0.5)]' : 'bg-red-500'}"></span>
+							{stats.status}
 						</div>
-					</div>
-					<div
-						class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/50 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50"
-					>
-						<span class="text-xs font-semibold font-mono text-slate-700 dark:text-slate-300"
-							>{stats.status || 'Unknown'}</span
-						>
 					</div>
 				</div>
 
-				<div class="relative p-6 space-y-6 flex-1 overflow-y-auto custom-scrollbar">
-					<!-- Uptime Card -->
-					<div class="relative group">
-						<div
-							class="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl blur-xl group-hover:blur-2xl transition-all"
-						></div>
-						<div
-							class="relative bg-slate-900/50 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-4 hover:border-slate-600/50 transition-all"
-						>
-							<div
-								class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"
-							>
-								<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-									/>
-								</svg>
-								Uptime
+				<div class="flex-1 overflow-y-auto p-5 space-y-8">
+					<!-- Uptime Section -->
+					<div>
+						<div class="text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2">System Uptime</div>
+						<div class="text-xl font-black font-mono text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]">
+							{formatUptime((stats.uptime || 0) * 1000)}
+						</div>
+					</div>
+
+					<!-- Resources -->
+					<div class="space-y-6">
+						<div class="group">
+							<div class="flex justify-between text-[9px] font-black uppercase mb-2 tracking-widest">
+								<span class="text-slate-500">Core Load</span>
+								<span class="text-orange-500">{stats.cpu_percent?.toFixed(1)}%</span>
 							</div>
-							<div
-								class="text-4xl font-bold font-mono bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent tracking-tight"
-							>
-								{formatUptime((stats.uptime || 0) * 1000)}
+							<div class="h-1 bg-slate-900 overflow-hidden border border-slate-800/50">
+								<div class="h-full bg-orange-600 transition-all duration-500 shadow-[0_0_10px_rgba(234,88,12,0.4)]" style="width: {stats.cpu_percent}%"></div>
+							</div>
+						</div>
+						<div class="group">
+							<div class="flex justify-between text-[9px] font-black uppercase mb-2 tracking-widest">
+								<span class="text-slate-500">Memory Allocation</span>
+								<span class="text-purple-500">{formatBytes(stats.memory_usage)}</span>
+							</div>
+							<div class="h-1 bg-slate-900 overflow-hidden border border-slate-800/50">
+								<div class="h-full bg-purple-600 transition-all duration-500 shadow-[0_0_10px_rgba(147,51,234,0.4)]" style="width: {memoryPercent}%"></div>
 							</div>
 						</div>
 					</div>
 
-					<!-- Enhanced Resource Metrics -->
-					<div class="space-y-4">
-						<!-- CPU -->
-						<div class="relative group">
-							<div
-								class="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-red-500/10 rounded-xl blur-lg group-hover:blur-xl transition-all"
-							></div>
-							<div
-								class="relative bg-slate-900/50 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-4 hover:border-orange-500/30 transition-all"
-							>
-								<div class="flex items-center justify-between mb-3">
-									<div class="flex items-center gap-2">
-										<div class="p-2 rounded-lg bg-orange-500/10 text-orange-400">
-											<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="2"
-													d="M13 10V3L4 14h7v7l9-11h-7z"
-												/>
-											</svg>
-										</div>
-										<span
-											class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
-											>CPU Usage</span
-										>
-									</div>
-									<span class="text-lg font-bold font-mono text-orange-400"
-										>{stats.cpu_percent?.toFixed(1)}%</span
-									>
-								</div>
-								<div
-									class="relative w-full h-2 bg-slate-800/80 rounded-full overflow-hidden backdrop-blur-sm"
-								>
-									<div
-										class="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 transition-all duration-700 ease-out rounded-full shadow-lg shadow-orange-500/50"
-										style="width: {stats.cpu_percent}%; box-shadow: 0 0 20px rgba(249, 115, 22, 0.4);"
-									></div>
-								</div>
-							</div>
-						</div>
-
-						<!-- Memory -->
-						<div class="relative group">
-							<div
-								class="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl blur-lg group-hover:blur-xl transition-all"
-							></div>
-							<div
-								class="relative bg-slate-900/50 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-4 hover:border-purple-500/30 transition-all"
-							>
-								<div class="flex items-center justify-between mb-3">
-									<div class="flex items-center gap-2">
-										<div class="p-2 rounded-lg bg-purple-500/10 text-purple-400">
-											<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="2"
-													d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
-												/>
-											</svg>
-										</div>
-										<span
-											class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
-											>Memory</span
-										>
-									</div>
-									<span class="text-lg font-bold font-mono text-purple-400"
-										>{formatBytes(stats.memory_usage)}</span
-									>
-								</div>
-								<div
-									class="relative w-full h-2 bg-slate-800/80 rounded-full overflow-hidden backdrop-blur-sm"
-								>
-									<div
-										class="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-700 ease-out rounded-full shadow-lg shadow-purple-500/50"
-										style="width: {memoryPercent}%; box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);"
-									></div>
-								</div>
-							</div>
-						</div>
-
-						<!-- Disk -->
-						<div class="relative group">
-							<div
-								class="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-xl blur-lg group-hover:blur-xl transition-all"
-							></div>
-							<div
-								class="relative bg-slate-900/50 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-4 hover:border-emerald-500/30 transition-all"
-							>
-								<div class="flex items-center justify-between mb-3">
-									<div class="flex items-center gap-2">
-										<div class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
-											<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="2"
-													d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"
-												/>
-											</svg>
-										</div>
-										<span
-											class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
-											>Disk Space</span
-										>
-									</div>
-									<span class="text-lg font-bold font-mono text-emerald-400"
-										>{formatBytes(stats.disk_usage)}</span
-									>
-								</div>
-								<div
-									class="relative w-full h-2 bg-slate-800/80 rounded-full overflow-hidden backdrop-blur-sm"
-								>
-									<div
-										class="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-700 ease-out rounded-full shadow-lg shadow-emerald-500/50"
-										style="width: {diskPercent}%; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);"
-									></div>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<!-- Enhanced Provisioning Steps -->
+					<!-- Provisioning Monitor -->
 					{#if isProvisioning}
-						<div
-							class="relative pt-6 border-t border-slate-300/50 dark:border-slate-700/50"
-							in:fly={{ y: 20, duration: 500, easing: cubicOut }}
-						>
-							<div
-								class="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-cyan-500/5 rounded-xl blur-xl"
-							></div>
-							<div class="relative">
-								<div
-									class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-4 flex items-center gap-2"
-								>
-									<div class="relative">
-										<div
-											class="w-4 h-4 rounded-full border-2 border-blue-400 border-t-transparent animate-spin"
-										></div>
-										<div class="absolute inset-0 w-4 h-4 rounded-full bg-blue-400/20 blur-sm"></div>
+						<div class="pt-6 border-t border-slate-800/50" transition:slide>
+							<div class="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+								<div class="w-2 h-2 rounded-full bg-blue-500 animate-ping"></div>
+								Provisioning Sequence
+							</div>
+							<div class="space-y-3">
+								{#each provisioningSteps as step, i}
+									<div class="text-[10px] font-bold flex items-center gap-3 transition-colors {i <= provisioningStep ? 'text-slate-300' : 'text-slate-700'}">
+										<div class="w-1.5 h-1.5 rounded-full {i < provisioningStep ? 'bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]' : i === provisioningStep ? 'bg-blue-500 animate-pulse' : 'bg-slate-800'}"></div>
+										<span class={i < provisioningStep ? 'line-through opacity-50' : ''}>{step}</span>
 									</div>
-									Provisioning Instance
-								</div>
-								<div class="space-y-3">
-									{#each provisioningSteps as step, i}
-										<div
-											class="flex items-center gap-3 text-xs transition-all duration-300"
-											in:fly={{ x: -20, duration: 300, delay: i * 100 }}
-										>
-											{#if i < provisioningStep}
-												<div class="relative flex-shrink-0">
-													<div
-														class="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-slate-900 dark:text-white shadow-lg shadow-emerald-500/50"
-													>
-														<svg
-															class="w-3 h-3"
-															fill="none"
-															stroke="currentColor"
-															viewBox="0 0 24 24"
-														>
-															<path
-																stroke-linecap="round"
-																stroke-linejoin="round"
-																stroke-width="3"
-																d="M5 13l4 4L19 7"
-															/>
-														</svg>
-													</div>
-												</div>
-												<span class="text-slate-500 line-through decoration-slate-700 font-medium"
-													>{step}</span
-												>
-											{:else if i === provisioningStep}
-												<div class="relative flex-shrink-0">
-													<div
-														class="w-6 h-6 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"
-													></div>
-													<div
-														class="absolute inset-0 w-6 h-6 rounded-full bg-blue-500/20 blur-sm animate-pulse"
-													></div>
-												</div>
-												<span class="text-blue-200 font-semibold animate-pulse">{step}</span>
-											{:else}
-												<div
-													class="w-6 h-6 rounded-full border-2 border-slate-200 dark:border-slate-800 flex-shrink-0"
-												></div>
-												<span class="text-slate-600 font-medium">{step}</span>
-											{/if}
-										</div>
-									{/each}
-								</div>
+								{/each}
 							</div>
 						</div>
 					{/if}
 				</div>
 
-				<!-- Enhanced Action Buttons -->
-				<div
-					class="relative p-4 border-t border-slate-300/50 dark:border-slate-700/50 bg-slate-900/70 backdrop-blur-sm"
-				>
+				<!-- Quick Controls -->
+				<div class="p-4 border-t border-slate-800 bg-black/40">
 					<div class="grid grid-cols-2 gap-2">
-						<button
-							onclick={() => triggerAction('start')}
-							disabled={stats.status === 'Running' || stats.status === 'Provisioning'}
-							class="col-span-2 relative group px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-slate-900 dark:text-white rounded-xl text-sm font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:from-slate-800 disabled:to-slate-800 shadow-lg hover:shadow-emerald-500/50 disabled:shadow-none overflow-hidden"
+						<button 
+							onclick={() => triggerAction('start')} 
+							disabled={stats.status === 'Running' || isProvisioning} 
+							class="col-span-2 py-2.5 bg-emerald-600/10 border border-emerald-500/30 hover:bg-emerald-600/20 disabled:opacity-20 text-emerald-500 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95"
 						>
-							<span class="relative z-10 flex items-center justify-center gap-2">
-								<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-									<path d="M8 5v14l11-7z" />
-								</svg>
-								Start Instance
-							</span>
-							<div
-								class="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-400 opacity-0 group-hover:opacity-20 transition-opacity"
-							></div>
+							Execute Init
 						</button>
-						<button
-							onclick={() => triggerAction('restart')}
-							disabled={stats.status !== 'Running'}
-							class="relative group px-4 py-2.5 bg-slate-800/80 hover:bg-gradient-to-r hover:from-blue-600/20 hover:to-cyan-600/20 text-slate-700 dark:text-slate-300 hover:text-blue-400 rounded-xl text-sm font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-slate-300/50 dark:border-slate-700/50 hover:border-blue-500/50 overflow-hidden"
+						<button 
+							onclick={() => triggerAction('restart')} 
+							disabled={stats.status !== 'Running'} 
+							class="py-2 bg-slate-800/50 border border-slate-700 hover:bg-slate-800 disabled:opacity-20 text-slate-400 font-black text-[9px] uppercase tracking-wider transition-all"
 						>
-							<span class="relative z-10 flex items-center justify-center gap-2">
-								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-									/>
-								</svg>
-								Restart
-							</span>
+							Reboot
 						</button>
-						<button
-							onclick={() => triggerAction('stop')}
-							disabled={stats.status !== 'Running'}
-							class="relative group px-4 py-2.5 bg-slate-800/80 hover:bg-gradient-to-r hover:from-red-600/20 hover:to-rose-600/20 text-slate-700 dark:text-slate-300 hover:text-red-400 rounded-xl text-sm font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-slate-300/50 dark:border-slate-700/50 hover:border-red-500/50 overflow-hidden"
+						<button 
+							onclick={() => triggerAction('stop')} 
+							disabled={stats.status !== 'Running'} 
+							class="py-2 bg-slate-800/50 border border-slate-700 hover:bg-red-900/20 hover:text-red-400 disabled:opacity-20 text-slate-400 font-black text-[9px] uppercase tracking-wider transition-all"
 						>
-							<span class="relative z-10 flex items-center justify-center gap-2">
-								<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-									<path d="M6 6h12v12H6z" />
-								</svg>
-								Stop
-							</span>
+							Abort
 						</button>
 					</div>
 				</div>
 			</div>
 
-			<!-- Enhanced Main Area -->
-			<div class="flex-1 flex flex-col min-w-0 relative overflow-hidden">
-				<!-- Ambient background effects -->
-				<div
-					class="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 pointer-events-none"
-				></div>
-
-				<!-- Enhanced Tabs -->
-				<div
-					class="relative flex border-b border-slate-300/50 dark:border-slate-700/50 bg-slate-900/40 backdrop-blur-xl shrink-0 z-10"
-				>
-					{#each [{ id: 'console', label: 'Console', icon: 'M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' }, { id: 'metrics', label: 'Metrics', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' }, { id: 'backups', label: 'Backups', icon: 'M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4' }, { id: 'history', label: 'History', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' }, { id: 'node_logs', label: 'Node Logs', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' }] as TabItem[] as tab: TabItem}
-						<button
-							class="relative px-6 py-4 text-xs font-bold uppercase tracking-wider transition-all group {activeTab ===
-							tab.id
-								? 'text-blue-400'
-								: 'text-slate-500 hover:text-slate-700 dark:text-slate-300'}"
-							onclick={() => (activeTab = tab.id)}
-						>
-							<span class="relative z-10 flex items-center gap-2">
-								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d={tab.icon}
-									/>
-								</svg>
-								{tab.label}
-							</span>
-							{#if activeTab === tab.id}
-								<div
-									class="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 to-cyan-500 shadow-lg shadow-blue-500/50"
-									transition:slide={{ duration: 200 }}
-								></div>
-								<div
-									class="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-t-lg"
-								></div>
-							{/if}
-						</button>
-					{/each}
-				</div>
-
-				<div class="relative flex-1 overflow-hidden">
-					{#if activeTab === 'console'}
-						<div class="absolute inset-0 p-0">
-							<!-- Enhanced Live Indicator -->
-							<div class="absolute top-4 right-4 z-10">
-								<div class="relative">
-									<div
-										class="absolute inset-0 bg-emerald-500/20 blur-xl rounded-full animate-pulse"
-									></div>
-									<div
-										class="relative px-4 py-2 rounded-full bg-slate-900/80 backdrop-blur-xl border border-emerald-500/30 text-[11px] font-bold font-mono text-emerald-400 flex items-center gap-2 shadow-lg"
-									>
-										<span class="relative flex h-2 w-2">
-											<span
-												class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"
-											></span>
-											<span
-												class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500 shadow-lg shadow-emerald-500/50"
-											></span>
-										</span>
-										LIVE
-									</div>
+			<!-- Main Terminal/Data Area -->
+			<div class="flex-1 flex flex-col min-w-0 bg-[#050505]">
+				<!-- Navigation Tabs -->
+								<div class="flex border-b border-slate-800 bg-[#0d0d0d] overflow-x-auto no-scrollbar">
+									{#each tabs as tab}
+										<button 
+											onclick={() => activeTab = tab.id}
+											class="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all border-b-2 {activeTab === tab.id ? 'text-blue-500 border-blue-500 bg-blue-500/5' : 'text-slate-600 border-transparent hover:text-slate-400'}"
+										>
+											{tab.label}
+										</button>
+									{/each}
 								</div>
-							</div>
+
+				<!-- Content Viewport -->
+				<div class="flex-1 relative overflow-hidden">
+					{#if activeTab === 'console'}
+						<div class="absolute inset-0 p-4" in:fade={{ duration: 150 }}>
 							<Terminal {logs} title={`root@${instanceId}:~`} />
 						</div>
 					{:else if activeTab === 'metrics'}
-						<div
-							class="p-8 h-full overflow-y-auto custom-scrollbar bg-gradient-to-br from-slate-950/50 to-slate-900/50"
-						>
+						<div class="p-8 h-full overflow-y-auto" in:fade={{ duration: 150 }}>
 							{#if spawnerId !== null && instanceId}
-								{#key instanceId}
-									<ResourceMetricsPanel {spawnerId} {instanceId} {memTotal} height={300} />
-								{/key}
-							{:else}
-								<div class="flex items-center justify-center h-full">
-									<div class="text-center">
-										<div
-											class="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800/50 flex items-center justify-center"
-										>
-											<svg
-												class="w-8 h-8 text-slate-600"
-												fill="none"
-												stroke="currentColor"
-												viewBox="0 0 24 24"
-											>
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="2"
-													d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-												/>
-											</svg>
-										</div>
-										<p class="text-slate-500 font-medium">No instance selected</p>
-									</div>
-								</div>
+								<ResourceMetricsPanel {spawnerId} {instanceId} {memTotal} height={450} />
 							{/if}
 						</div>
 					{:else if activeTab === 'node_logs'}
-						<div class="h-full relative">
+						<div class="h-full" in:fade={{ duration: 150 }}>
 							{#if spawnerId !== null}
-								<LogViewer {spawnerId} isOpen={true} embedded={true} />
+								<LogViewer {spawnerId} isOpen={isOpen} embedded={true} />
 							{/if}
 						</div>
 					{:else if activeTab === 'backups'}
-						<div
-							class="p-8 h-full overflow-y-auto custom-scrollbar bg-gradient-to-br from-slate-950/50 to-slate-900/50"
-						>
-							<div class="flex justify-between items-center mb-8">
+						<div class="p-8 h-full overflow-y-auto" in:fade={{ duration: 150 }}>
+							<div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-4">
 								<div>
-									<h3
-										class="text-2xl font-bold bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent"
-									>
-										Instance Backups
-									</h3>
-									<p class="text-sm text-slate-500 mt-1">
-										Manage and restore your instance backups
-									</p>
+									<h4 class="text-xs font-black text-slate-200 uppercase tracking-[0.3em]">Storage Archives</h4>
+									<p class="text-[9px] text-slate-600 font-mono mt-1 uppercase">Node snapshot management</p>
 								</div>
-								<button
-									onclick={() => handleBackupAction('create')}
-									class="relative group px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-slate-900 dark:text-white rounded-xl text-sm font-bold transition-all shadow-lg hover:shadow-blue-500/50 overflow-hidden"
+								<button 
+									onclick={() => handleBackupAction('create')} 
+									class="px-4 py-2 bg-blue-600 text-black font-black text-[9px] uppercase tracking-widest hover:bg-blue-500 transition-colors active:translate-y-px"
 								>
-									<span class="relative z-10 flex items-center gap-2">
-										<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2"
-												d="M12 4v16m8-8H4"
-											/>
-										</svg>
-										Create Backup
-									</span>
-									<div
-										class="absolute inset-0 bg-gradient-to-r from-blue-400 to-cyan-400 opacity-0 group-hover:opacity-20 transition-opacity"
-									></div>
+									Generate Snapshot
 								</button>
 							</div>
-
+							
 							{#if isLoadingData}
-								<div class="flex items-center justify-center py-20">
-									<div class="relative">
-										<div
-											class="w-12 h-12 rounded-full border-4 border-slate-200 dark:border-slate-800 border-t-blue-500 animate-spin"
-										></div>
-										<div
-											class="absolute inset-0 w-12 h-12 rounded-full bg-blue-500/20 blur-lg animate-pulse"
-										></div>
-									</div>
+								<div class="flex justify-center py-20">
+									<div class="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
 								</div>
 							{:else if backups.length === 0}
-								<div class="relative group">
-									<div
-										class="absolute inset-0 bg-gradient-to-r from-slate-800/20 to-slate-700/20 rounded-2xl blur-xl"
-									></div>
-									<div
-										class="relative text-center py-20 border-2 border-dashed border-slate-300/50 dark:border-slate-700/50 rounded-2xl bg-slate-900/30 backdrop-blur-sm hover:border-slate-600/50 transition-all"
-									>
-										<div
-											class="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800/50 flex items-center justify-center"
-										>
-											<svg
-												class="w-8 h-8 text-slate-600"
-												fill="none"
-												stroke="currentColor"
-												viewBox="0 0 24 24"
-											>
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="2"
-													d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-												/>
-											</svg>
-										</div>
-										<p class="text-slate-500 font-medium text-lg">No backups found</p>
-										<p class="text-slate-600 text-sm mt-2">
-											Create your first backup to get started
-										</p>
-									</div>
+								<div class="text-center py-20 text-[10px] font-black text-slate-700 uppercase tracking-[0.3em] border border-dashed border-slate-800 rounded">
+									No archives detected
 								</div>
 							{:else}
-								<div class="space-y-3">
-									{#each backups as backup, i (backup.filename)}
-										{@const outdated = isOutdated(backup.filename)}
-										{@const version = getBackupVersion(backup.filename)}
-										<div
-											class="relative group"
-											in:fly={{ y: 20, duration: 400, delay: 50 * i, easing: cubicOut }}
-										>
-											<div
-												class="absolute inset-0 bg-gradient-to-r {outdated
-													? 'from-orange-500/10 to-red-500/10'
-													: 'from-emerald-500/10 to-teal-500/10'} rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity"
-											></div>
-											<div
-												class="relative flex items-center justify-between p-5 rounded-xl border transition-all {outdated
-													? 'bg-orange-500/5 border-orange-500/20 hover:border-orange-500/40'
-													: 'bg-slate-900/50 border-slate-300/50 dark:border-slate-700/50 hover:border-slate-600/50'} backdrop-blur-sm"
-											>
-												<div class="flex items-center gap-4 flex-1 min-w-0">
-													<div class="relative flex-shrink-0">
-														<div
-															class="absolute inset-0 {outdated
-																? 'bg-orange-500/20'
-																: 'bg-emerald-500/20'} blur-lg rounded-xl"
-														></div>
-														<div
-															class="relative p-3 rounded-xl {outdated
-																? 'bg-orange-500/10 text-orange-400'
-																: 'bg-emerald-500/10 text-emerald-400'} border {outdated
-																? 'border-orange-500/30'
-																: 'border-emerald-500/30'}"
-														>
-															<svg
-																class="w-6 h-6"
-																fill="none"
-																stroke="currentColor"
-																viewBox="0 0 24 24"
-															>
-																<path
-																	stroke-linecap="round"
-																	stroke-linejoin="round"
-																	stroke-width="2"
-																	d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-																/>
-															</svg>
-														</div>
-													</div>
-													<div class="flex-1 min-w-0">
-														<div
-															class="text-sm font-bold text-slate-800 dark:text-slate-200 font-mono truncate mb-1"
-														>
-															{backup.filename}
-														</div>
-														<div
-															class="flex items-center gap-3 flex-wrap text-xs text-slate-500 dark:text-slate-400"
-														>
-															<span class="flex items-center gap-1">
-																<svg
-																	class="w-3 h-3"
-																	fill="none"
-																	stroke="currentColor"
-																	viewBox="0 0 24 24"
-																>
-																	<path
-																		stroke-linecap="round"
-																		stroke-linejoin="round"
-																		stroke-width="2"
-																		d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-																	/>
-																</svg>
-																{new Date(backup.date).toLocaleString()}
-															</span>
-															<span class="flex items-center gap-1">
-																<svg
-																	class="w-3 h-3"
-																	fill="none"
-																	stroke="currentColor"
-																	viewBox="0 0 24 24"
-																>
-																	<path
-																		stroke-linecap="round"
-																		stroke-linejoin="round"
-																		stroke-width="2"
-																		d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-																	/>
-																</svg>
-																{formatBytes(backup.size)}
-															</span>
-															{#if version}
-																<span
-																	class="px-2 py-1 rounded-full font-mono font-bold text-[10px] {outdated
-																		? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
-																		: 'bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-600'}"
-																>
-																	v{version}
-																</span>
-															{/if}
-														</div>
-													</div>
+								<div class="space-y-2">
+									{#each backups as backup}
+										<div class="flex items-center justify-between p-4 bg-[#0d0d0d] border border-slate-800 hover:border-slate-700 transition-all group">
+											<div class="flex-1 min-w-0">
+												<div class="text-xs font-black text-slate-300 font-mono truncate tracking-tight">{backup.filename}</div>
+												<div class="text-[9px] text-slate-600 mt-1.5 font-black uppercase tracking-widest flex items-center gap-3">
+													<span>{new Date(backup.date).toLocaleString()}</span>
+													<span class="w-1 h-1 rounded-full bg-slate-800"></span>
+													<span>{formatBytes(backup.size)}</span>
+													{#if getBackupVersion(backup.filename)}
+														<span class="px-1.5 py-0.5 rounded bg-blue-950/30 text-blue-500 border border-blue-900/50">v{getBackupVersion(backup.filename)}</span>
+													{/if}
 												</div>
-												<div class="flex gap-2 ml-4 flex-shrink-0">
-													<button
-														onclick={() => handleBackupAction('restore', backup.filename)}
-														class="relative group/btn px-4 py-2 bg-slate-800/80 hover:bg-gradient-to-r hover:from-blue-600 hover:to-cyan-600 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:text-white rounded-lg text-xs font-semibold transition-all border border-slate-300/50 dark:border-slate-700/50 hover:border-blue-500/50 overflow-hidden"
-													>
-														<span class="relative z-10 flex items-center gap-1">
-															<svg
-																class="w-3 h-3"
-																fill="none"
-																stroke="currentColor"
-																viewBox="0 0 24 24"
-															>
-																<path
-																	stroke-linecap="round"
-																	stroke-linejoin="round"
-																	stroke-width="2"
-																	d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-																/>
-															</svg>
-															Restore
-														</span>
-													</button>
-													<button
-														onclick={() => handleBackupAction('delete', backup.filename)}
-														class="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors border border-transparent hover:border-red-500/30"
-														title="Delete"
-													>
-														<svg
-															class="w-4 h-4"
-															fill="none"
-															stroke="currentColor"
-															viewBox="0 0 24 24"
-														>
-															<path
-																stroke-linecap="round"
-																stroke-linejoin="round"
-																stroke-width="2"
-																d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-															/>
-														</svg>
-													</button>
-												</div>
+											</div>
+											<div class="flex gap-3 ml-4">
+												<button 
+													onclick={() => handleBackupAction('restore', backup.filename)} 
+													class="px-4 py-2 bg-slate-900 border border-slate-800 text-slate-400 hover:text-blue-400 hover:border-blue-900/50 font-black text-[9px] uppercase tracking-widest transition-all"
+												>
+												Restore
+												</button>
+												<button 
+													onclick={() => handleBackupAction('delete', backup.filename)} 
+													class="p-2 text-slate-700 hover:text-red-500 transition-colors"
+													aria-label="Delete"
+												>
+													<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+												</button>
 											</div>
 										</div>
 									{/each}
 								</div>
-							{/if}
+						{/if}
 						</div>
 					{:else if activeTab === 'history'}
-						<div
-							class="h-full overflow-y-auto custom-scrollbar bg-gradient-to-br from-slate-950/50 to-slate-900/50"
-						>
-							<table class="w-full text-left border-collapse">
-								<thead
-									class="sticky top-0 z-10 bg-slate-900/90 backdrop-blur-xl border-b border-slate-300/50 dark:border-slate-700/50"
-								>
+						<div class="h-full overflow-y-auto" in:fade={{ duration: 150 }}>
+							<table class="w-full text-left border-collapse font-mono">
+								<thead class="sticky top-0 bg-[#0d0d0d] border-b border-slate-800 z-10">
 									<tr>
-										<th
-											class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
-											>Action</th
-										>
-										<th
-											class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
-											>Status</th
-										>
-										<th
-											class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
-											>Time</th
-										>
-										<th
-											class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
-											>Details</th
-										>
+										<th class="px-6 py-4 text-[9px] font-black text-slate-600 uppercase tracking-widest">Protocol Action</th>
+										<th class="px-6 py-4 text-[9px] font-black text-slate-600 uppercase tracking-widest text-center">Status</th>
+										<th class="px-6 py-4 text-[9px] font-black text-slate-600 uppercase tracking-widest text-right">Timestamp</th>
 									</tr>
 								</thead>
-								<tbody class="divide-y divide-slate-800/30">
-									{#each historyLogs || [] as log, i}
-										<tr
-											class="group hover:bg-slate-800/30 transition-all"
-											in:fly={{ x: -20, duration: 300, delay: i * 50 }}
-										>
-											<td class="px-6 py-4">
-												<span
-													class="inline-flex items-center font-mono text-sm text-slate-700 dark:text-slate-300 bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-300/50 dark:border-slate-700/50 group-hover:border-slate-600/50 transition-colors"
-												>
-													{log.action}
-												</span>
-											</td>
-											<td class="px-6 py-4">
-												<span
-													class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold border {log.status ===
-													'success'
-														? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-														: 'bg-red-500/10 text-red-400 border-red-500/20'}"
-												>
-													{#if log.status === 'success'}
-														<svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-															<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-														</svg>
-													{:else}
-														<svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-															<path
-																d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
-															/>
-														</svg>
-													{/if}
+								<tbody class="divide-y divide-slate-900">
+									{#each historyLogs as log}
+										<tr class="hover:bg-white/[0.02] transition-colors">
+											<td class="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-tight">{log.action}</td>
+											<td class="px-6 py-4 text-center">
+												<span class="px-2 py-0.5 rounded text-[9px] font-black uppercase {log.status === 'success' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}">
 													{log.status}
 												</span>
 											</td>
-											<td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400 font-mono">
+											<td class="px-6 py-4 text-[10px] text-slate-600 text-right font-black">
 												{new Date(log.timestamp).toLocaleString()}
 											</td>
-											<td
-												class="px-6 py-4 text-sm text-slate-500 truncate max-w-xs"
-												title={log.details}
-											>
-												{log.details || '-'}
+										</tr>
+									{:else}
+										<tr>
+											<td colspan="3" class="px-6 py-20 text-center text-[10px] font-black text-slate-700 uppercase tracking-[0.3em]">
+												No protocol entries recorded
 											</td>
 										</tr>
 									{/each}
-									{#if (historyLogs || []).length === 0 && !isLoadingData}
-										<tr>
-											<td colspan="4" class="px-6 py-20 text-center">
-												<div class="flex flex-col items-center">
-													<div
-														class="w-16 h-16 mb-4 rounded-full bg-slate-800/50 flex items-center justify-center"
-													>
-														<svg
-															class="w-8 h-8 text-slate-600"
-															fill="none"
-															stroke="currentColor"
-															viewBox="0 0 24 24"
-														>
-															<path
-																stroke-linecap="round"
-																stroke-linejoin="round"
-																stroke-width="2"
-																d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-															/>
-														</svg>
-													</div>
-													<p class="text-slate-500 font-medium text-lg">No history found</p>
-													<p class="text-slate-600 text-sm mt-2">
-														Instance actions will appear here
-													</p>
-												</div>
-											</td>
-										</tr>
-									{/if}
 								</tbody>
 							</table>
 						</div>
@@ -1068,25 +466,13 @@
 				</div>
 			</div>
 
-			<!-- Enhanced Close Button -->
-			<button
-				onclick={close}
-				class="absolute top-4 right-4 p-2.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-800/80 backdrop-blur-xl rounded-xl transition-all z-30 border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-600 group"
-				aria-label="Close"
+			<!-- Exit Interface -->
+			<button 
+				onclick={close} 
+				class="absolute top-4 right-4 p-2 text-slate-600 hover:text-white hover:bg-white/10 rounded transition-all z-50 group"
+				aria-label="Exit Console"
 			>
-				<svg
-					class="w-5 h-5 group-hover:rotate-90 transition-transform duration-300"
-					fill="none"
-					stroke="currentColor"
-					viewBox="0 0 24 24"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M6 18L18 6M6 6l12 12"
-					/>
-				</svg>
+				<svg class="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
 			</button>
 		</div>
 	</div>
@@ -1102,32 +488,11 @@
 {/if}
 
 <style>
-	.custom-scrollbar::-webkit-scrollbar {
-		width: 8px;
-		height: 8px;
+	.no-scrollbar::-webkit-scrollbar {
+		display: none;
 	}
-
-	.custom-scrollbar::-webkit-scrollbar-track {
-		background: rgba(15, 23, 42, 0.3);
-		border-radius: 4px;
-	}
-
-	.custom-scrollbar::-webkit-scrollbar-thumb {
-		background: rgba(71, 85, 105, 0.5);
-		border-radius: 4px;
-		transition: background 0.2s;
-	}
-
-	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-		background: rgba(71, 85, 105, 0.7);
-	}
-
-	@keyframes shimmer {
-		0% {
-			background-position: -200% center;
-		}
-		100% {
-			background-position: 200% center;
-		}
+	.no-scrollbar {
+		-ms-overflow-style: none;
+		scrollbar-width: none;
 	}
 </style>

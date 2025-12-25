@@ -105,8 +105,8 @@
 					<stop offset="100%" stop-color="#f97316" stop-opacity="0" />
 				</linearGradient>
 				<linearGradient id="memGradient" x1="0" x2="0" y1="0" y2="1">
-					<stop offset="0%" stop-color="#3b82f6" stop-opacity="0.2" />
-					<stop offset="100%" stop-color="#3b82f6" stop-opacity="0" />
+					<stop offset="0%" stop-color="#92400e" stop-opacity="0.2" />
+					<stop offset="100%" stop-color="#92400e" stop-opacity="0" />
 				</linearGradient>
 			</defs>
 
@@ -139,7 +139,7 @@
 			<path
 				d={`M${memPath}`}
 				fill="none"
-				stroke="#3b82f6"
+				stroke="#92400e"
 				stroke-width="2"
 				vector-effect="non-scaling-stroke"
 			/>
@@ -177,7 +177,7 @@
 					cx={tooltipX}
 					cy={yMem}
 					r="4"
-					fill="#3b82f6"
+					fill="#92400e"
 					stroke="white"
 					stroke-width="2"
 					class="pointer-events-none"
@@ -205,7 +205,7 @@
 					<div
 						class="text-xs font-bold text-slate-900 dark:text-white flex items-center justify-between gap-3"
 					>
-						<span class="text-blue-400">MEM</span>
+						<span class="text-rust-light">MEM</span>
 						<span>{d.memory_percent?.toFixed(1)}%</span>
 					</div>
 				</div>

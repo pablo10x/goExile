@@ -93,7 +93,7 @@
 	class={`notification-card relative w-full max-w-sm rounded-xl overflow-hidden shadow-2xl p-4 flex items-start gap-3 transition-all duration-300 border backdrop-blur-md
 	${notification.type === 'success' ? 'bg-emerald-900/40 border-emerald-400/50 shadow-emerald-500/20' : ''}
 	${notification.type === 'error' ? 'bg-red-900/40 border-red-400/50 shadow-red-500/20' : ''}
-	${notification.type === 'info' ? 'bg-blue-900/40 border-blue-400/50 shadow-blue-500/20' : ''}
+	${notification.type === 'info' ? 'bg-rust/40 border-rust-light/50 shadow-rust-light/20' : ''}
 	${notification.type === 'warning' ? 'bg-orange-900/40 border-orange-400/50 shadow-orange-500/20' : ''}
 	${isHovered ? 'scale-105 shadow-2xl' : 'scale-100'}`}
 	onmouseover={pauseTimer}

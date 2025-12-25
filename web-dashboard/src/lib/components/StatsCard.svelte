@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { ComponentType } from 'svelte';
 	import DOMPurify from 'dompurify';
+	import { siteSettings } from '$lib/stores';
 
 	type ColorKey = 'blue' | 'emerald' | 'orange' | 'red' | 'purple';
 
@@ -9,7 +10,7 @@
 		value,
 		Icon = null,
 		subValue = '',
-		subValueClass = 'text-slate-500 dark:text-slate-400',
+		subValueClass = 'tactical-code text-stone-500',
 		color = 'blue'
 	} = $props<{
 		title: string;
@@ -29,42 +30,47 @@
 
 	const colorMap: Record<
 		ColorKey,
-		{ border: string; text: string; bg: string; iconBg: string; glow: string }
+		{ border: string; text: string; bg: string; iconBg: string; glow: string; accent: string }
 	> = {
 		blue: {
-			border: 'border-blue-500/30',
-			text: 'text-blue-300',
-			bg: 'bg-gradient-to-br from-blue-500/20 to-blue-600/10',
-			iconBg: 'bg-gradient-to-br from-blue-500 to-blue-600',
-			glow: 'shadow-blue-500/20'
+			border: 'border-rust/30',
+			text: 'text-rust-light',
+			bg: 'bg-rust/10',
+			iconBg: 'bg-rust',
+			glow: 'shadow-[0_0_20px_rgba(120,53,15,0.2)]',
+			accent: 'bg-rust'
 		},
 		emerald: {
-			border: 'border-emerald-500/30',
-			text: 'text-emerald-300',
-			bg: 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/10',
-			iconBg: 'bg-gradient-to-br from-emerald-500 to-emerald-600',
-			glow: 'shadow-emerald-500/20'
+			border: 'border-emerald-900/30',
+			text: 'text-emerald-400',
+			bg: 'bg-emerald-950/10',
+			iconBg: 'bg-emerald-600',
+			glow: 'shadow-[0_0_20px_rgba(16,185,129,0.2)]',
+			accent: 'bg-emerald-500'
 		},
 		orange: {
-			border: 'border-orange-500/30',
-			text: 'text-orange-300',
-			bg: 'bg-gradient-to-br from-orange-500/20 to-orange-600/10',
-			iconBg: 'bg-gradient-to-br from-orange-500 to-orange-600',
-			glow: 'shadow-orange-500/20'
+			border: 'border-orange-900/30',
+			text: 'text-orange-400',
+			bg: 'bg-orange-950/10',
+			iconBg: 'bg-orange-600',
+			glow: 'shadow-[0_0_20px_rgba(249,115,22,0.2)]',
+			accent: 'bg-orange-500'
 		},
 		red: {
-			border: 'border-red-500/30',
-			text: 'text-red-300',
-			bg: 'bg-gradient-to-br from-red-500/20 to-red-600/10',
-			iconBg: 'bg-gradient-to-br from-red-500 to-red-600',
-			glow: 'shadow-red-500/20'
+			border: 'border-red-900/30',
+			text: 'text-red-400',
+			bg: 'bg-red-950/10',
+			iconBg: 'bg-red-600',
+			glow: 'shadow-[0_0_20px_rgba(239,68,68,0.2)]',
+			accent: 'bg-red-500'
 		},
 		purple: {
-			border: 'border-purple-500/30',
-			text: 'text-purple-300',
-			bg: 'bg-gradient-to-br from-purple-500/20 to-purple-600/10',
-			iconBg: 'bg-gradient-to-br from-purple-500 to-purple-600',
-			glow: 'shadow-purple-500/20'
+			border: 'border-purple-900/30',
+			text: 'text-purple-400',
+			bg: 'bg-purple-950/10',
+			iconBg: 'bg-purple-600',
+			glow: 'shadow-[0_0_20px_rgba(168,85,247,0.2)]',
+			accent: 'bg-purple-500'
 		}
 	};
 
@@ -72,42 +78,89 @@
 </script>
 
 <div
-	class={`group relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800/60 to-slate-900/60 border ${colors.border} backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl ${colors.glow} cursor-pointer`}
+
+	class={`group relative overflow-hidden transition-all duration-300 bg-stone-900/30 border-2 ${colors.border} ${$siteSettings.aesthetic.industrial_styling ? 'rounded-none' : 'rounded-xl'} hover:border-rust/60 hover:translate-y-[-2px] shadow-[2px_2px_0px_rgba(0,0,0,0.3)] hover:shadow-[4px_4px_0px_rgba(120,53,15,0.1)] cursor-pointer font-primary`}
+
 >
-	<!-- Background gradient overlay -->
-	<div
-		class={`absolute inset-0 ${colors.bg} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
-	></div>
 
-	<!-- Subtle animated border -->
-	<div
-		class="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"
-	></div>
+	<!-- Status Bar Accent -->
 
-	<div class="relative z-10 p-6">
+	<div class={`absolute top-0 left-0 w-full h-0.5 ${colors.accent} opacity-20 group-hover:opacity-100 transition-opacity duration-500`}></div>
+
+
+
+	<!-- Tactical Background Pattern -->
+
+	<div class="absolute inset-0 opacity-[0.02] pointer-events-none" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 32px 32px;"></div>
+
+
+
+	<div class="relative z-10 p-5">
+
 		<div class="flex items-center justify-between mb-4">
-			<span class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider"
-				>{title}</span
-			>
-			{#if Icon}
-				{@const CardIcon = Icon}
-				<div
-					class={`p-2.5 rounded-xl ${colors.iconBg} shadow-lg ${colors.glow} transition-transform duration-300 group-hover:scale-110`}
+
+			<div class="flex flex-col">
+
+				<span class="text-[8px] font-mono uppercase tracking-[0.2em] text-stone-500 mb-0.5">Telemetry_Signal</span>
+
+				<span class="text-[10px] font-bold uppercase tracking-wider text-stone-300 font-primary"
+
+					>{title}</span
+
 				>
-					<CardIcon class="w-5 h-5 text-slate-900 dark:text-white" />
+
+			</div>
+
+			{#if Icon}
+
+				{@const CardIcon = Icon}
+
+				<div
+
+					class={`p-1.5 rounded-none border border-white/5 ${colors.iconBg} bg-opacity-20 backdrop-blur-md transition-all duration-500 group-hover:bg-opacity-100`}
+
+				>
+
+					<CardIcon class="w-3.5 h-3.5 text-white" />
+
 				</div>
+
 			{/if}
+
 		</div>
+
+
 
 		<div class="space-y-2">
-			<div class="text-3xl font-bold text-slate-100 tabular-nums tracking-tight">
+
+			<div class={`text-3xl font-bold text-white tabular-nums tracking-tight font-primary`}>
+
 				{value}
+
 			</div>
+
 			{#if subValue}
-				<div class={`text-sm leading-relaxed ${subValueClass}`}>
+
+				<div class={`text-[9px] font-mono leading-relaxed uppercase tracking-widest ${subValueClass} opacity-80`}>
+
 					{@html sanitizedSubValue}
+
 				</div>
+
 			{/if}
+
 		</div>
+
 	</div>
+
+
+
+	<!-- Terminal ID Corner -->
+
+	<div class="absolute bottom-0 right-0 p-1 opacity-5 group-hover:opacity-20 transition-opacity">
+
+		<span class="font-mono text-[6px] text-white">CH_{title.substring(0,3).toUpperCase()}</span>
+
+	</div>
+
 </div>

@@ -182,16 +182,16 @@
 	function getColorClasses(color: string, isActive: boolean = false) {
 		const colors: Record<string, { bg: string; text: string; hover: string; active: string }> = {
 			blue: {
-				bg: 'bg-blue-500/10',
-				text: 'text-blue-400',
-				hover: 'hover:bg-blue-500/20 hover:text-blue-300',
-				active: 'bg-blue-500/20 text-blue-300 border-blue-500/50'
+				bg: 'bg-rust/10',
+				text: 'text-rust-light',
+				hover: 'hover:bg-rust/20 hover:text-rust',
+				active: 'bg-rust/20 text-rust border-rust/50'
 			},
 			indigo: {
-				bg: 'bg-indigo-500/10',
-				text: 'text-indigo-400',
-				hover: 'hover:bg-indigo-500/20 hover:text-indigo-300',
-				active: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/50'
+				bg: 'bg-amber-500/10',
+				text: 'text-amber-400',
+				hover: 'hover:bg-amber-500/20 hover:text-amber-300',
+				active: 'bg-amber-500/20 text-amber-300 border-amber-500/50'
 			},
 			amber: {
 				bg: 'bg-amber-500/10',
@@ -289,8 +289,8 @@
 		>
 			{#if isSidebarOpen}
 				<div class="flex items-center gap-3" transition:fade={{ duration: 150 }}>
-					<div class="p-2 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-lg">
-						<Database class="w-5 h-5 text-blue-400" />
+					<div class="p-2 bg-gradient-to-br from-rust/20 to-rust-light/20 rounded-lg">
+						<Database class="w-5 h-5 text-rust-light" />
 					</div>
 					<div>
 						<h2 class="font-bold text-slate-100">Database</h2>
@@ -391,13 +391,13 @@
 						>
 							<!-- Header -->
 							<div
-								class="p-4 sm:p-8 border-b border-slate-200/50 dark:border-slate-800/50 bg-gradient-to-r from-blue-500/5 via-transparent to-cyan-500/5"
+								class="p-4 sm:p-8 border-b border-[var(--border-color)] bg-gradient-to-r from-rust/5 via-transparent to-rust-light/5"
 							>
 								<div class="flex items-center gap-4 mb-2">
 									<div
-										class="p-3 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-xl border border-blue-500/30 shadow-lg shadow-blue-500/10"
+										class="p-3 bg-gradient-to-br from-rust/20 to-rust-light/20 rounded-xl border border-rust/30 shadow-lg shadow-rust/10"
 									>
-										<Database class="w-6 h-6 sm:w-8 sm:h-8 text-blue-400" />
+										<Database class="w-6 h-6 sm:w-8 sm:h-8 text-rust-light" />
 									</div>
 									<div>
 										<h1 class="text-2xl sm:text-3xl font-bold text-slate-100">Database Overview</h1>
@@ -413,18 +413,18 @@
 								<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
 									<!-- Database Size Card -->
 									<div
-										class="relative overflow-hidden bg-gradient-to-br from-slate-800/80 to-slate-800/40 border border-slate-300/50 dark:border-slate-700/50 rounded-2xl p-6 hover:border-blue-500/30 transition-all group"
+										class="relative overflow-hidden bg-gradient-to-br from-slate-800/80 to-slate-800/40 border border-slate-300/50 dark:border-slate-700/50 rounded-2xl p-6 hover:border-rust-light/30 transition-all group"
 									>
 										<div
-											class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+											class="absolute inset-0 bg-gradient-to-br from-rust/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
 										></div>
 										<div class="relative">
 											<div class="flex items-center justify-between mb-4">
-												<div class="p-2.5 bg-blue-500/10 rounded-xl">
-													<HardDrive class="w-6 h-6 text-blue-400" />
+												<div class="p-2.5 bg-rust/10 rounded-xl">
+													<HardDrive class="w-6 h-6 text-rust-light" />
 												</div>
 												<span
-													class="text-xs font-medium text-blue-400 bg-blue-500/10 px-2 py-1 rounded-full"
+													class="text-xs font-medium text-rust-light bg-rust/10 px-2 py-1 rounded-full"
 													>Storage</span
 												>
 											</div>
