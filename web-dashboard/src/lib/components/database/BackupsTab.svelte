@@ -78,83 +78,83 @@
 	});
 </script>
 
-<div class="h-full flex flex-col bg-slate-900">
+<div class="h-full flex flex-col bg-[#050505]">
 	<div
-		class="p-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex justify-between items-center"
+		class="p-6 border-b border-stone-800 bg-[#0a0a0a] flex justify-between items-center"
 	>
-		<div class="flex items-center gap-3">
-			<div class="p-2 bg-orange-500/10 rounded-lg">
-				<HardDrive class="w-6 h-6 text-orange-400" />
+		<div class="flex items-center gap-4">
+			<div class="p-2.5 bg-rust/10 border border-rust/20 rounded-none industrial-frame">
+				<HardDrive class="w-6 h-6 text-rust-light" />
 			</div>
 			<div>
-				<h2 class="text-xl font-bold text-slate-100">Backups & Snapshots</h2>
-				<p class="text-sm text-slate-500">Create and restore internal database snapshots</p>
+				<h2 class="text-xl font-heading font-black text-slate-100 uppercase tracking-tighter">ARCHIVE_STORAGE_CORE</h2>
+				<p class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest mt-1">Create and restore internal database snapshots</p>
 			</div>
 		</div>
 					<button
 						onclick={createBackup}
 						disabled={loading}
-						class="px-4 py-2 bg-rust-light hover:bg-rust text-white rounded-lg font-bold flex items-center gap-2 shadow-lg shadow-rust-light/20 disabled:opacity-50"
-					>			<Plus class="w-4 h-4" /> Create Backup
+						class="px-6 py-3 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rust/20 disabled:opacity-20 transition-all active:translate-y-px"
+					>			<Plus class="w-4 h-4" /> Generate_Snapshot
 		</button>
 	</div>
 
-	<div class="flex-1 overflow-auto p-6">
+	<div class="flex-1 overflow-auto p-8 custom-scrollbar">
 		{#if loading && backups.length === 0}
-			<div class="flex justify-center p-12">
+			<div class="flex justify-center p-20">
 				<div
-					class="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"
+					class="w-10 h-10 border-2 border-rust border-t-transparent rounded-none animate-spin"
 				></div>
 			</div>
 		{:else if backups.length === 0}
 			<div
-				class="flex flex-col items-center justify-center h-64 text-slate-500 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl"
+				class="flex flex-col items-center justify-center h-64 text-stone-600 border border-dashed border-stone-800 industrial-frame bg-stone-900/20"
 			>
-				<HardDrive class="w-12 h-12 opacity-20 mb-4" />
-				<p>No backups found. Create one to get started.</p>
+				<HardDrive class="w-16 h-16 opacity-10 mb-6" />
+				<p class="font-heading font-black text-xs tracking-[0.2em] uppercase">No archives detected</p>
+				<p class="font-jetbrains text-[9px] mt-2 uppercase tracking-widest opacity-60">Generate first snapshot to secure sector data</p>
 			</div>
 		{:else}
-			<div class="grid grid-cols-1 gap-3">
+			<div class="grid grid-cols-1 gap-4 max-w-5xl mx-auto">
 				{#each backups as backup}
 					<div
-						class="flex items-center justify-between p-4 bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl hover:bg-slate-800 hover:border-slate-600 transition-all group"
+						class="flex items-center justify-between p-6 bg-stone-900/40 border border-stone-800 hover:border-rust/40 transition-all group industrial-frame"
 					>
-						<div class="flex items-center gap-4">
+						<div class="flex items-center gap-6">
 							<div
-								class="p-3 bg-slate-900 rounded-lg text-slate-500 dark:text-slate-400 group-hover:text-blue-400 transition-colors"
+								class="p-3 bg-stone-950 border border-stone-800 text-stone-600 group-hover:text-rust transition-colors"
 							>
-								<FileText class="w-6 h-6" />
+								<FileText class="w-7 h-7" />
 							</div>
 							<div>
-								<div class="font-mono font-bold text-slate-800 dark:text-slate-200 text-lg">
+								<div class="font-jetbrains font-black text-stone-200 text-base uppercase tracking-tighter">
 									{backup.name}
 								</div>
-								<div class="text-xs text-slate-500 flex gap-3 mt-1">
-									<span class="bg-slate-900 px-2 py-0.5 rounded text-slate-500 dark:text-slate-400"
-										>{formatBytes(backup.size)}</span
-									>
+								<div class="font-jetbrains text-[10px] text-stone-500 flex gap-4 mt-2 uppercase tracking-widest">
+									<span class="text-rust/60 font-black">{formatBytes(backup.size)}</span>
+									<span class="w-1 h-1 bg-stone-800 self-center"></span>
 									<span>{new Date(backup.created_at).toLocaleString()}</span>
 								</div>
 							</div>
 						</div>
-						<div class="flex gap-2">
+						<div class="flex gap-3">
 							<button
 								onclick={() => downloadFile(backup.name)}
-								class="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-700 rounded-lg"
+								class="p-2.5 text-stone-600 hover:text-white hover:bg-stone-800 transition-all"
 								title="Download"
 							>
 								<Download class="w-5 h-5" />
 							</button>
 							<button
 								onclick={() => restoreBackup(backup.name)}
-								class="p-2 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 rounded-lg"
+								class="p-2.5 text-stone-600 hover:text-amber-500 hover:bg-amber-500/5 transition-all"
 								title="Restore"
 							>
 								<RotateCcw class="w-5 h-5" />
 							</button>
 							<button
 								onclick={() => deleteBackup(backup.name)}
-								class="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg"
+								class="p-2.5 text-stone-600 hover:text-red-500 hover:bg-red-500/5 transition-all"
 								title="Delete"
 							>
 								<Trash2 class="w-5 h-5" />

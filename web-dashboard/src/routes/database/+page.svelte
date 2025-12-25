@@ -181,17 +181,11 @@
 
 	function getColorClasses(color: string, isActive: boolean = false) {
 		const colors: Record<string, { bg: string; text: string; hover: string; active: string }> = {
-			blue: {
+			rust: {
 				bg: 'bg-rust/10',
 				text: 'text-rust-light',
 				hover: 'hover:bg-rust/20 hover:text-rust',
 				active: 'bg-rust/20 text-rust border-rust/50'
-			},
-			indigo: {
-				bg: 'bg-amber-500/10',
-				text: 'text-amber-400',
-				hover: 'hover:bg-amber-500/20 hover:text-amber-300',
-				active: 'bg-amber-500/20 text-amber-300 border-amber-500/50'
 			},
 			amber: {
 				bg: 'bg-amber-500/10',
@@ -199,32 +193,20 @@
 				hover: 'hover:bg-amber-500/20 hover:text-amber-300',
 				active: 'bg-amber-500/20 text-amber-300 border-amber-500/50'
 			},
-			violet: {
-				bg: 'bg-violet-500/10',
-				text: 'text-violet-400',
-				hover: 'hover:bg-violet-500/20 hover:text-violet-300',
-				active: 'bg-violet-500/20 text-violet-300 border-violet-500/50'
+			red: {
+				bg: 'bg-red-500/10',
+				text: 'text-red-400',
+				hover: 'hover:bg-red-500/20 hover:text-red-300',
+				active: 'bg-red-500/20 text-red-300 border-red-500/50'
 			},
-			emerald: {
-				bg: 'bg-emerald-500/10',
-				text: 'text-emerald-400',
-				hover: 'hover:bg-emerald-500/20 hover:text-emerald-300',
-				active: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50'
-			},
-			orange: {
-				bg: 'bg-orange-500/10',
-				text: 'text-orange-400',
-				hover: 'hover:bg-orange-500/20 hover:text-orange-300',
-				active: 'bg-orange-500/20 text-orange-300 border-orange-500/50'
-			},
-			purple: {
-				bg: 'bg-purple-500/10',
-				text: 'text-purple-400',
-				hover: 'hover:bg-purple-500/20 hover:text-purple-300',
-				active: 'bg-purple-500/20 text-purple-300 border-purple-500/50'
+			slate: {
+				bg: 'bg-slate-500/10',
+				text: 'text-slate-400',
+				hover: 'hover:bg-slate-500/20 hover:text-slate-300',
+				active: 'bg-slate-500/20 text-slate-300 border-slate-500/50'
 			}
 		};
-		return colors[color] || colors.blue;
+		return colors[color] || colors.rust;
 	}
 
 	// --- Initialization ---
@@ -255,23 +237,23 @@
 </script>
 
 <div
-	class="flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200"
+	class="flex flex-col lg:flex-row h-[calc(100vh-120px)] md:h-[calc(100vh-140px)] overflow-hidden bg-[#050505] text-slate-200 border border-stone-800 shadow-2xl"
 >
 	<!-- Mobile Top Nav (Horizontal Scroll) -->
 	<div
-		class="md:hidden border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-900/50 overflow-x-auto no-scrollbar"
+		class="lg:hidden border-b border-stone-800 bg-[#0a0a0a]/80 overflow-x-auto no-scrollbar backdrop-blur-md shrink-0"
 	>
-		<div class="flex items-center gap-2 p-2 min-w-max">
+		<div class="flex items-center gap-2 p-3 min-w-max">
 			{#each allMenuItems as item}
 				{@const isActive = activeTabId === item.id}
-				{@const colors = getColorClasses(item.color, isActive)}
+				{@const colors = getColorClasses(isActive ? 'rust' : 'slate')}
 				<button
 					onclick={() => openTab(item.id, item.label, item.type)}
-					class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all
-					{isActive ? colors.active : 'text-slate-500 dark:text-slate-400 ' + colors.hover}"
+					class="flex items-center gap-2.5 px-4 py-2 rounded-none border border-transparent transition-all
+					{isActive ? colors.active + ' border-rust/50 shadow-lg shadow-rust/10' : 'text-stone-500 ' + colors.hover}"
 				>
 					<item.icon class="w-4 h-4" />
-					{item.label}
+					<span class="text-[10px] font-heading font-black uppercase tracking-widest">{item.label}</span>
 				</button>
 			{/each}
 		</div>
@@ -279,28 +261,28 @@
 
 	<!-- Desktop Sidebar -->
 	<div
-		class="hidden md:flex flex-col border-r border-slate-200/80 dark:border-slate-800/80 transition-all duration-300 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 {isSidebarOpen
-			? 'w-64'
-			: 'w-16'}"
+		class="hidden lg:flex flex-col border-r border-stone-800 transition-all duration-500 bg-[#0a0a0a] {isSidebarOpen
+			? 'w-72'
+			: 'w-20'}"
 	>
 		<!-- Sidebar Header -->
 		<div
-			class="p-4 border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-900/50 flex items-center justify-between"
+			class="p-6 border-b border-stone-800 bg-stone-900/30 flex items-center justify-between"
 		>
 			{#if isSidebarOpen}
-				<div class="flex items-center gap-3" transition:fade={{ duration: 150 }}>
-					<div class="p-2 bg-gradient-to-br from-rust/20 to-rust-light/20 rounded-lg">
-						<Database class="w-5 h-5 text-rust-light" />
+				<div class="flex items-center gap-4" transition:fade={{ duration: 150 }}>
+					<div class="p-2.5 bg-rust/10 border border-rust/20 rounded-none industrial-frame shadow-lg">
+						<Database class="w-6 h-6 text-rust-light" />
 					</div>
 					<div>
-						<h2 class="font-bold text-slate-100">Database</h2>
-						<p class="text-xs text-slate-500">PostgreSQL Manager</p>
+						<h2 class="font-heading font-black text-sm tracking-tighter text-slate-100">DATA_CORE</h2>
+						<p class="font-jetbrains text-[9px] text-rust/60 uppercase tracking-widest font-black mt-0.5">DB_MANAGER_V1</p>
 					</div>
 				</div>
 			{/if}
 			<button
 				onclick={() => (isSidebarOpen = !isSidebarOpen)}
-				class="p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-300 hover:bg-slate-800/50 transition-all"
+				class="p-2.5 rounded-none text-stone-600 hover:text-rust hover:bg-rust/5 border border-transparent hover:border-rust/20 transition-all {isSidebarOpen ? '' : 'mx-auto'}"
 			>
 				{#if isSidebarOpen}
 					<ChevronLeft class="w-5 h-5" />
@@ -311,41 +293,37 @@
 		</div>
 
 		<!-- Sidebar Menu -->
-		<div class="flex-1 overflow-y-auto py-4 px-2 space-y-6">
+		<div class="flex-1 overflow-y-auto py-8 px-4 space-y-10 custom-scrollbar">
 			{#each menuCategories as category}
-				<div>
+				<div class="space-y-3">
 					{#if isSidebarOpen}
 						<h3
-							class="px-3 mb-2 text-xs font-bold text-slate-500 uppercase tracking-wider"
+							class="px-3 text-[9px] font-black text-stone-600 uppercase tracking-[0.3em] flex items-center gap-2"
 							transition:fade={{ duration: 100 }}
 						>
+							<div class="w-1 h-1 bg-stone-800"></div>
 							{category.name}
 						</h3>
 					{/if}
-					<div class="space-y-1">
+					<div class="space-y-1.5">
 						{#each category.items as item}
 							{@const isActive = activeTabId === item.id}
-							{@const colors = getColorClasses(item.color, isActive)}
 							<button
 								onclick={() => openTab(item.id, item.label, item.type)}
-								class="w-full flex items-center gap-3 p-2.5 rounded-xl transition-all duration-200 border border-transparent
+								class="w-full flex items-center gap-4 p-3.5 transition-all duration-300 group
 								{isActive
-									? colors.active + ' shadow-lg'
-									: 'text-slate-500 dark:text-slate-400 ' +
-										colors.hover +
-										' hover:border-slate-300/50 dark:border-slate-700/50'}"
+									? 'bg-rust text-white shadow-xl shadow-rust/20 border-l-2 border-rust-light'
+									: 'text-stone-500 hover:bg-stone-900/50 hover:text-stone-200 border-l-2 border-transparent'}"
 								title={item.description}
 							>
 								<div
-									class="p-1.5 rounded-lg transition-colors {isActive
-										? colors.bg
-										: 'bg-slate-800/50'}"
+									class="transition-all duration-500 {isActive ? 'scale-110 shadow-rust/50' : 'group-hover:rotate-12 group-hover:scale-110 group-hover:text-rust'}"
 								>
-									<item.icon class="w-4 h-4 {isActive ? colors.text : ''}" />
+									<item.icon class="w-4.5 h-4.5" />
 								</div>
 								{#if isSidebarOpen}
 									<div class="flex-1 text-left" transition:fade={{ duration: 100 }}>
-										<span class="text-sm font-medium">{item.label}</span>
+										<span class="font-heading text-[11px] font-black tracking-[0.1em] uppercase">{item.label}</span>
 									</div>
 								{/if}
 							</button>
@@ -358,25 +336,25 @@
 		<!-- Sidebar Footer -->
 		{#if isSidebarOpen}
 			<div
-				class="p-4 border-t border-slate-200/80 dark:border-slate-800/80 bg-white/50 dark:bg-slate-950/50"
+				class="p-6 border-t border-stone-800 bg-stone-900/20"
 				transition:fade={{ duration: 150 }}
 			>
-				<div class="flex items-center gap-3 text-xs text-slate-500">
-					<div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-					<span>Connected</span>
+				<div class="flex items-center gap-4 text-[9px] font-black uppercase tracking-[0.2em] text-stone-600">
+					<div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-emerald-500/50 shadow-lg"></div>
+					<span class="font-jetbrains">CLUSTER_SYNC: ACTIVE</span>
 				</div>
 			</div>
 		{/if}
 	</div>
 
 	<!-- Main Content Area -->
-	<div class="flex-1 flex flex-col min-w-0 bg-slate-900">
+	<div class="flex-1 flex flex-col min-w-0 bg-[#050505]">
 		<QueryTabs {tabs} {activeTabId} onSelect={(id) => (activeTabId = id)} onClose={closeTab} />
 
-		<div class="flex-1 overflow-auto relative">
+		<div class="flex-1 overflow-hidden relative">
 			{#each tabs as tab (tab.id)}
 				<div
-					class="absolute inset-0 bg-slate-900 {activeTabId === tab.id
+					class="absolute inset-0 bg-[#050505] {activeTabId === tab.id
 						? 'z-10 block'
 						: 'z-0 hidden'}"
 				>
@@ -387,227 +365,190 @@
 					{:else if tab.id === 'overview'}
 						<!-- Enhanced Overview Content -->
 						<div
-							class="h-full overflow-auto bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950"
+							class="h-full overflow-auto bg-[#050505] relative custom-scrollbar"
 						>
+							<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
+							
 							<!-- Header -->
 							<div
-								class="p-4 sm:p-8 border-b border-[var(--border-color)] bg-gradient-to-r from-rust/5 via-transparent to-rust-light/5"
+								class="p-8 sm:p-12 border-b border-stone-800 bg-[#0a0a0a]"
 							>
-								<div class="flex items-center gap-4 mb-2">
+								<div class="flex items-center gap-8 mb-2">
 									<div
-										class="p-3 bg-gradient-to-br from-rust/20 to-rust-light/20 rounded-xl border border-rust/30 shadow-lg shadow-rust/10"
+										class="p-5 bg-rust/10 border border-rust/30 shadow-2xl shadow-rust/10 industrial-frame"
 									>
-										<Database class="w-6 h-6 sm:w-8 sm:h-8 text-rust-light" />
+										<Database class="w-10 h-10 text-rust-light" />
 									</div>
 									<div>
-										<h1 class="text-2xl sm:text-3xl font-bold text-slate-100">Database Overview</h1>
-										<p class="text-sm text-slate-500 mt-1 hidden sm:block">
-											Monitor your PostgreSQL database performance and health
-										</p>
+										<h1 class="text-4xl sm:text-5xl font-heading font-black tracking-tighter text-white uppercase">
+											CLUSTER_STORAGE_OVERVIEW
+										</h1>
+										<div class="font-jetbrains text-[11px] text-stone-500 mt-2 uppercase tracking-[0.3em] font-black hidden sm:flex items-center gap-3">
+											<div class="w-1.5 h-1.5 bg-rust animate-pulse shadow-rust/50 shadow-lg"></div>
+											System_Persistence // Global_Data_Cores // Real-time
+										</div>
 									</div>
 								</div>
 							</div>
 
 							<!-- Stats Grid -->
-							<div class="p-4 sm:p-8">
-								<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+							<div class="p-8 sm:p-12">
+								<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-8 mb-12">
 									<!-- Database Size Card -->
-									<div
-										class="relative overflow-hidden bg-gradient-to-br from-slate-800/80 to-slate-800/40 border border-slate-300/50 dark:border-slate-700/50 rounded-2xl p-6 hover:border-rust-light/30 transition-all group"
-									>
-										<div
-											class="absolute inset-0 bg-gradient-to-br from-rust/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
-										></div>
+									<div class="modern-industrial-card glass-panel p-8 !rounded-none">
 										<div class="relative">
-											<div class="flex items-center justify-between mb-4">
-												<div class="p-2.5 bg-rust/10 rounded-xl">
-													<HardDrive class="w-6 h-6 text-rust-light" />
+											<div class="flex items-center justify-between mb-8">
+												<div class="p-3 bg-rust/10 border border-rust/20 industrial-frame">
+													<HardDrive class="w-7 h-7 text-rust-light" />
 												</div>
-												<span
-													class="text-xs font-medium text-rust-light bg-rust/10 px-2 py-1 rounded-full"
-													>Storage</span
-												>
+												<span class="font-jetbrains text-[10px] font-black text-rust-light bg-rust/10 px-3 py-1.5 uppercase tracking-[0.2em] border border-rust/30">Storage</span>
 											</div>
-											<div class="text-3xl font-bold text-slate-100 mb-1">
+											<div class="text-4xl font-heading font-black text-white mb-2 tracking-tighter">
 												{formatBytes(dbStats.size_bytes)}
 											</div>
-											<div class="text-sm text-slate-500">Database Size</div>
+											<div class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest font-bold">Allocated_Buffer_Space</div>
 										</div>
 									</div>
 
 									<!-- Connections Card -->
-									<div
-										class="relative overflow-hidden bg-gradient-to-br from-slate-800/80 to-slate-800/40 border border-slate-300/50 dark:border-slate-700/50 rounded-2xl p-6 hover:border-emerald-500/30 transition-all group"
-									>
-										<div
-											class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
-										></div>
+									<div class="modern-industrial-card glass-panel p-8 !rounded-none">
 										<div class="relative">
-											<div class="flex items-center justify-between mb-4">
-												<div class="p-2.5 bg-emerald-500/10 rounded-xl">
-													<Activity class="w-6 h-6 text-emerald-400" />
+											<div class="flex items-center justify-between mb-8">
+												<div class="p-3 bg-emerald-500/10 border border-emerald-500/20 industrial-frame">
+													<Activity class="w-7 h-7 text-emerald-400" />
 												</div>
-												<span
-													class="text-xs font-medium text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-full"
-													>Active</span
-												>
+												<span class="font-jetbrains text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-3 py-1.5 uppercase tracking-[0.2em] border border-emerald-500/30">Active</span>
 											</div>
-											<div class="text-3xl font-bold text-slate-100 mb-1">
+											<div class="text-4xl font-heading font-black text-white mb-2 tracking-tighter">
 												{dbStats.connections}
 											</div>
-											<div class="text-sm text-slate-500">Connections</div>
+											<div class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest font-bold">Total_Net_Sockets</div>
 										</div>
 									</div>
 
 									<!-- Uptime Card -->
-									<div
-										class="relative overflow-hidden bg-gradient-to-br from-slate-800/80 to-slate-800/40 border border-slate-300/50 dark:border-slate-700/50 rounded-2xl p-6 hover:border-purple-500/30 transition-all group"
-									>
-										<div
-											class="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
-										></div>
+									<div class="modern-industrial-card glass-panel p-8 !rounded-none">
 										<div class="relative">
-											<div class="flex items-center justify-between mb-4">
-												<div class="p-2.5 bg-purple-500/10 rounded-xl">
-													<Clock class="w-6 h-6 text-purple-400" />
+											<div class="flex items-center justify-between mb-8">
+												<div class="p-3 bg-purple-500/10 border border-purple-500/20 industrial-frame">
+													<Clock class="w-7 h-7 text-purple-400" />
 												</div>
-												<span
-													class="text-xs font-medium text-purple-400 bg-purple-500/10 px-2 py-1 rounded-full"
-													>Uptime</span
-												>
+												<span class="font-jetbrains text-[10px] font-black text-purple-400 bg-purple-500/10 px-3 py-1.5 uppercase tracking-[0.2em] border border-purple-500/30">Uptime</span>
 											</div>
-											<div class="text-3xl font-bold text-slate-100 mb-1">
+											<div class="text-4xl font-heading font-black text-white mb-2 tracking-tighter">
 												{Math.floor(dbStats.uptime_seconds / 3600)}h
 											</div>
-											<div class="text-sm text-slate-500">
-												{Math.floor((dbStats.uptime_seconds % 3600) / 60)}m running
+											<div class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest font-bold">
+												{Math.floor((dbStats.uptime_seconds % 3600) / 60)}m Persistent_State
 											</div>
 										</div>
 									</div>
 
 									<!-- Version Card -->
-									<div
-										class="relative overflow-hidden bg-gradient-to-br from-slate-800/80 to-slate-800/40 border border-slate-300/50 dark:border-slate-700/50 rounded-2xl p-6 hover:border-orange-500/30 transition-all group"
-									>
-										<div
-											class="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
-										></div>
+									<div class="modern-industrial-card glass-panel p-8 !rounded-none">
 										<div class="relative">
-											<div class="flex items-center justify-between mb-4">
-												<div class="p-2.5 bg-orange-500/10 rounded-xl">
-													<Server class="w-6 h-6 text-orange-400" />
+											<div class="flex items-center justify-between mb-8">
+												<div class="p-3 bg-amber-500/10 border border-amber-500/20 industrial-frame">
+													<Server class="w-7 h-7 text-amber-400" />
 												</div>
-												<span
-													class="text-xs font-medium text-orange-400 bg-orange-500/10 px-2 py-1 rounded-full"
-													>Version</span
-												>
+												<span class="font-jetbrains text-[10px] font-black text-amber-400 bg-amber-500/10 px-3 py-1.5 uppercase tracking-[0.2em] border border-amber-500/30">Kernel</span>
 											</div>
-											<div class="text-3xl font-bold text-slate-100 mb-1 truncate">
-												{dbStats.version.split(' ')[0] || 'PostgreSQL'}
+											<div class="text-4xl font-heading font-black text-white mb-2 tracking-tighter truncate">
+												{dbStats.version.split(' ')[0] || 'PGSQL'}
 											</div>
-											<div class="text-sm text-slate-500 truncate">
-												{dbStats.version.split(',')[0] || 'Database Server'}
+											<div class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest font-bold truncate">
+												{dbStats.version.split(',')[0] || 'Build_Active'}
 											</div>
 										</div>
 									</div>
 								</div>
 
 								<!-- Quick Actions -->
-								<div class="mb-8">
-									<h2 class="text-lg font-bold text-slate-100 mb-4">Quick Actions</h2>
-									<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+								<div class="mb-16">
+									<h2 class="font-heading font-black text-sm tracking-[0.3em] text-stone-500 mb-8 flex items-center gap-4">
+										<Zap class="w-5 h-5 text-rust animate-pulse" />
+										CORE_DIRECTIVES
+									</h2>
+									<div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
 										<button
 											onclick={() => openTab('sql', 'SQL Editor', 'sql')}
-											class="flex flex-col items-center gap-3 p-6 bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl hover:border-amber-500/30 hover:bg-slate-800 transition-all group"
+											class="flex flex-col items-center gap-6 p-10 bg-stone-900/40 border border-stone-800 hover:border-rust hover:bg-rust/5 transition-all duration-500 group industrial-frame"
 										>
-											<div
-												class="p-3 bg-amber-500/10 rounded-xl group-hover:bg-amber-500/20 transition-colors"
-											>
-												<Terminal class="w-6 h-6 text-amber-400" />
+											<div class="p-5 bg-stone-950 border border-stone-800 group-hover:border-rust/40 group-hover:text-rust transition-all group-hover:scale-110 shadow-lg">
+												<Terminal class="w-8 h-8 text-stone-600 group-hover:text-rust" />
 											</div>
-											<span class="text-sm font-medium text-slate-700 dark:text-slate-300"
-												>Run Query</span
-											>
+											<span class="font-heading text-[12px] font-black tracking-[0.2em] text-stone-500 group-hover:text-white uppercase transition-colors">Neural_Query</span>
 										</button>
 
 										<button
 											onclick={() => openTab('functions', 'Functions', 'functions')}
-											class="flex flex-col items-center gap-3 p-6 bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl hover:border-violet-500/30 hover:bg-slate-800 transition-all group"
+											class="flex flex-col items-center gap-6 p-10 bg-stone-900/40 border border-stone-800 hover:border-rust hover:bg-rust/5 transition-all duration-500 group industrial-frame"
 										>
-											<div
-												class="p-3 bg-violet-500/10 rounded-xl group-hover:bg-violet-500/20 transition-colors"
-											>
-												<Code2 class="w-6 h-6 text-violet-400" />
+											<div class="p-5 bg-stone-950 border border-stone-800 group-hover:border-rust/40 group-hover:text-rust transition-all group-hover:scale-110 shadow-lg">
+												<Code2 class="w-8 h-8 text-stone-600 group-hover:text-rust" />
 											</div>
-											<span class="text-sm font-medium text-slate-700 dark:text-slate-300"
-												>Functions</span
-											>
+											<span class="font-heading text-[12px] font-black tracking-[0.2em] text-stone-500 group-hover:text-white uppercase transition-colors">Logic_Units</span>
 										</button>
 
 										<button
 											onclick={() => openTab('backups', 'Backups', 'backups')}
-											class="flex flex-col items-center gap-3 p-6 bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl hover:border-orange-500/30 hover:bg-slate-800 transition-all group"
+											class="flex flex-col items-center gap-6 p-10 bg-stone-900/40 border border-stone-800 hover:border-rust hover:bg-rust/5 transition-all duration-500 group industrial-frame"
 										>
-											<div
-												class="p-3 bg-orange-500/10 rounded-xl group-hover:bg-orange-500/20 transition-colors"
-											>
-												<HardDrive class="w-6 h-6 text-orange-400" />
+											<div class="p-5 bg-stone-950 border border-stone-800 group-hover:border-rust/40 group-hover:text-rust transition-all group-hover:scale-110 shadow-lg">
+												<HardDrive class="w-8 h-8 text-stone-600 group-hover:text-rust" />
 											</div>
-											<span class="text-sm font-medium text-slate-700 dark:text-slate-300"
-												>Backup DB</span
-											>
+											<span class="font-heading text-[12px] font-black tracking-[0.2em] text-stone-500 group-hover:text-white uppercase transition-colors">Snapshot_IO</span>
 										</button>
 
 										<button
 											onclick={() => openTab('roles', 'Roles', 'roles')}
-											class="flex flex-col items-center gap-3 p-6 bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl hover:border-emerald-500/30 hover:bg-slate-800 transition-all group"
+											class="flex flex-col items-center gap-6 p-10 bg-stone-900/40 border border-stone-800 hover:border-rust hover:bg-rust/5 transition-all duration-500 group industrial-frame"
 										>
-											<div
-												class="p-3 bg-emerald-500/10 rounded-xl group-hover:bg-emerald-500/20 transition-colors"
-											>
-												<Shield class="w-6 h-6 text-emerald-400" />
+											<div class="p-5 bg-stone-950 border border-stone-800 group-hover:border-rust/40 group-hover:text-rust transition-all group-hover:scale-110 shadow-lg">
+												<Shield class="w-8 h-8 text-stone-600 group-hover:text-rust" />
 											</div>
-											<span class="text-sm font-medium text-slate-700 dark:text-slate-300"
-												>Manage Roles</span
-											>
+											<span class="font-heading text-[12px] font-black tracking-[0.2em] text-stone-500 group-hover:text-white uppercase transition-colors">Auth_Sector</span>
 										</button>
 									</div>
 								</div>
 
 								<!-- Table Stats -->
 								{#if tableCounts.length > 0}
-									<div>
-										<h2 class="text-lg font-bold text-slate-100 mb-4">Table Statistics</h2>
+									<div class="w-full">
+										<h2 class="font-heading font-black text-sm tracking-[0.3em] text-stone-500 mb-8 flex items-center gap-4">
+											<BarChart3 class="w-5 h-5 text-rust animate-pulse" />
+											SECTOR_DATA_METRICS
+										</h2>
 										<div
-											class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl overflow-hidden"
+											class="bg-stone-900/30 border border-stone-800 overflow-hidden industrial-frame"
 										>
-											<div class="overflow-x-auto">
+											<div class="overflow-x-auto custom-scrollbar">
 												<table class="w-full">
-													<thead class="bg-slate-900/50">
+													<thead class="bg-stone-950 border-b border-stone-800">
 														<tr>
 															<th
-																class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-																>Table</th
+																class="px-8 py-5 text-left text-[11px] font-black text-stone-500 uppercase tracking-[0.3em]"
+																>Subject_ID</th
 															>
 															<th
-																class="px-6 py-3 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-																>Row Count</th
+																class="px-8 py-5 text-right text-[11px] font-black text-stone-500 uppercase tracking-[0.3em]"
+																>Entity_Count</th
 															>
 														</tr>
 													</thead>
-													<tbody class="divide-y divide-slate-700/50">
-														{#each tableCounts.slice(0, 10) as table}
-															<tr class="hover:bg-slate-800/50 transition-colors">
-																<td class="px-6 py-4">
-																	<div class="flex items-center gap-3">
-																		<Table class="w-4 h-4 text-slate-500" />
-																		<span class="font-medium text-slate-800 dark:text-slate-200"
+													<tbody class="divide-y divide-stone-800/50">
+														{#each tableCounts as table}
+															<tr class="hover:bg-rust/5 transition-all duration-300 group">
+																<td class="px-8 py-5">
+																	<div class="flex items-center gap-5">
+																		<Table class="w-4.5 h-4.5 text-stone-700 group-hover:text-rust transition-colors" />
+																		<span class="font-jetbrains text-xs font-black text-stone-400 uppercase tracking-widest group-hover:text-stone-200"
 																			>{table.name}</span
 																		>
 																	</div>
 																</td>
-																<td class="px-6 py-4 text-right">
-																	<span class="font-mono text-slate-700 dark:text-slate-300"
+																<td class="px-8 py-5 text-right">
+																	<span class="font-jetbrains text-xs text-rust font-black tracking-widest shadow-rust/20"
 																		>{table.count?.toLocaleString() ?? '0'}</span
 																	>
 																</td>
@@ -632,9 +573,11 @@
 					{:else if tab.type === 'functions'}
 						<FunctionsTab />
 					{:else}
-						<div class="p-8 text-slate-500 flex flex-col items-center justify-center h-full">
-							<FileText class="w-16 h-16 opacity-20 mb-4" />
-							<p>Feature {tab.label} is currently being upgraded.</p>
+						<div class="p-12 text-stone-700 flex flex-col items-center justify-center h-full gap-6">
+							<div class="p-8 bg-stone-900/20 border border-stone-800 industrial-frame">
+								<FileText class="w-20 h-20 opacity-10" />
+							</div>
+							<p class="font-heading font-black text-sm tracking-[0.4em] uppercase animate-pulse">Neural_Buffer_Upgrading</p>
 						</div>
 					{/if}
 				</div>
@@ -645,21 +588,20 @@
 
 <style>
 	/* Custom scrollbar for sidebar */
-	.overflow-y-auto::-webkit-scrollbar {
+	.custom-scrollbar::-webkit-scrollbar {
 		width: 4px;
 	}
 
-	.overflow-y-auto::-webkit-scrollbar-track {
+	.custom-scrollbar::-webkit-scrollbar-track {
 		background: transparent;
 	}
 
-	.overflow-y-auto::-webkit-scrollbar-thumb {
-		background: rgb(51 65 85 / 0.5);
-		border-radius: 2px;
+	.custom-scrollbar::-webkit-scrollbar-thumb {
+		background: #2a2a2a;
 	}
 
-	.overflow-y-auto::-webkit-scrollbar-thumb:hover {
-		background: rgb(71 85 105 / 0.5);
+	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+		background: var(--color-rust);
 	}
 
 	/* Hide scrollbar for mobile horizontal nav */

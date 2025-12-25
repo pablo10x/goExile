@@ -13,7 +13,10 @@
 		Globe,
 		UserCheck,
 		UserPlus,
-		Clock
+		Clock,
+		AlertOctagon,
+		Lock,
+		ChevronRight
 	} from 'lucide-svelte';
 	import { fade, slide } from 'svelte/transition';
 
@@ -61,22 +64,26 @@
 	});
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6">
+<div class="w-full space-y-10 pb-32 md:pb-12">
 	<!-- Header -->
-	<div class="mb-8 flex items-center justify-between">
-		<div class="flex items-center gap-4">
+	<div class="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+		<div class="flex items-center gap-6">
 			<button
 				onclick={() => goto('/users')}
-				class="p-2 bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-700 transition-all group"
+				class="p-4 bg-stone-900 border border-stone-800 text-stone-500 hover:text-white hover:border-rust transition-all industrial-frame shadow-xl group"
 			>
-				<ArrowLeft class="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
+				<ArrowLeft class="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
 			</button>
 			<div>
-				<h1 class="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-															<User class="w-8 h-8 text-rust-light" />					Player Details
+				<div class="flex items-center gap-3 mb-1">
+					<div class="h-0.5 w-8 bg-rust"></div>
+					<span class="font-jetbrains text-[10px] font-black text-rust uppercase tracking-[0.3em]">Identity_Vault // Deep_Scan</span>
+				</div>
+				<h1 class="text-4xl sm:text-5xl font-heading font-black text-white uppercase tracking-tighter flex items-center gap-4">
+					Subject_<span class="text-rust">{player?.name || 'NULL'}</span>
 				</h1>
-				<p class="text-slate-500 dark:text-slate-400 mt-1">
-					Detailed view of player profile and social graph
+				<p class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest font-black mt-2">
+					Detailed analysis of subject profile and synchronization graph
 				</p>
 			</div>
 		</div>
@@ -84,93 +91,94 @@
 		<button
 			onclick={fetchPlayerDetails}
 			disabled={loading}
-			class="p-2 bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-700 transition-all disabled:opacity-50"
+			class="p-4 bg-stone-900 border border-stone-800 hover:border-rust text-stone-500 hover:text-rust transition-all industrial-frame shadow-xl active:translate-y-px disabled:opacity-20"
 		>
-			<RefreshCw class="w-5 h-5 {loading ? 'animate-spin' : ''}" />
+			<RefreshCw class="w-6 h-6 {loading ? 'animate-spin' : ''}" />
 		</button>
 	</div>
 
 	{#if loading}
-		<div class="flex flex-col items-center justify-center py-20">
-									<RefreshCw class="w-12 h-12 text-rust animate-spin mb-4" />			<p class="text-slate-500 dark:text-slate-400">Loading player profile...</p>
+		<div class="flex flex-col items-center justify-center py-40 gap-6">
+			<div class="w-16 h-16 border-2 border-rust border-t-transparent rounded-none animate-spin shadow-lg shadow-rust/20"></div>
+			<p class="font-heading font-black text-[12px] text-rust animate-pulse uppercase tracking-[0.5em]">Synchronizing_Identity_Buffer...</p>
 		</div>
 	{:else if error}
 		<div
-			class="p-6 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center gap-4 text-red-400"
+			class="p-12 text-center bg-red-950/10 border border-red-900/30 industrial-frame shadow-2xl"
 		>
-			<div class="p-3 bg-red-500/20 rounded-xl">
-				<Users class="w-6 h-6" />
-			</div>
-			<div>
-				<h3 class="font-bold text-lg">Error Loading Player</h3>
-				<p>{error}</p>
-			</div>
+			<AlertOctagon class="w-16 h-16 text-red-600 mx-auto mb-6 animate-pulse" />
+			<h3 class="text-2xl font-heading font-black text-red-500 mb-3 uppercase tracking-widest">Identity_Extraction_Fault</h3>
+			<p class="font-jetbrains text-stone-500 font-bold uppercase tracking-tight">{error}</p>
+			<button class="mt-10 px-10 py-3 bg-red-600 hover:bg-red-500 text-white font-heading font-black text-[11px] uppercase tracking-widest transition-all shadow-lg" onclick={fetchPlayerDetails}>Retry_Protocol</button>
 		</div>
 	{:else if player}
-		<div class="grid grid-cols-1 lg:grid-cols-3 gap-6" transition:fade>
+		<div class="grid grid-cols-1 lg:grid-cols-12 gap-10" transition:fade>
 			<!-- Main Profile Card -->
-			<div class="lg:col-span-2 space-y-6">
+			<div class="lg:col-span-8 space-y-10">
 				<!-- Identity Card -->
 				<div
-					class="bg-slate-800/40 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 rounded-2xl p-6 relative overflow-hidden"
+					class="modern-industrial-card glass-panel p-10 relative overflow-hidden shadow-2xl !rounded-none"
 				>
-					<div class="absolute top-0 right-0 p-6 opacity-10">
-						<User class="w-32 h-32" />
+					<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
+					
+					<div class="absolute top-0 right-0 p-10 opacity-[0.03] pointer-events-none">
+						<User class="w-64 h-64" />
 					</div>
 
-					<div class="relative z-10 flex flex-col sm:flex-row gap-6 items-start">
+					<div class="relative z-10 flex flex-col sm:flex-row gap-10 items-center sm:items-start text-center sm:text-left">
 						<div
-																					class="w-20 h-20 rounded-2xl bg-gradient-to-br from-rust to-rust-light flex items-center justify-center text-3xl font-bold text-white shadow-xl shadow-rust/30"						>
+							class="w-28 h-28 bg-stone-950 border-2 border-rust flex items-center justify-center text-5xl font-heading font-black italic text-white shadow-2xl shadow-rust/20 industrial-frame"
+						>
 							{player.name.charAt(0).toUpperCase()}
 						</div>
 
-						<div class="flex-1 space-y-4">
+						<div class="flex-1 space-y-6">
 							<div>
-								<div class="flex items-center gap-3">
-									<h2 class="text-2xl font-bold text-slate-900 dark:text-white">{player.name}</h2>
+								<div class="flex flex-col sm:flex-row sm:items-center gap-4 mb-3">
+									<h2 class="text-4xl font-heading font-black text-white uppercase tracking-tighter">{player.name}</h2>
 									{#if player.online}
 										<div
-											class="px-2 py-0.5 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-bold rounded-full flex items-center gap-1.5"
+											class="w-fit px-4 py-1.5 bg-emerald-500/5 border border-emerald-500/20 text-emerald-400 text-[10px] font-black font-jetbrains rounded-none flex items-center gap-2.5 uppercase tracking-widest shadow-inner"
 										>
-											<div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-											ONLINE
+											<div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_#10b981]"></div>
+											SIGNAL_LOCKED
 										</div>
 									{:else}
 										<div
-											class="px-2 py-0.5 bg-slate-700/50 border border-slate-600 text-slate-500 dark:text-slate-400 text-xs font-bold rounded-full"
+											class="w-fit px-4 py-1.5 bg-stone-900 border border-stone-800 text-stone-600 text-[10px] font-black font-jetbrains rounded-none uppercase tracking-widest"
 										>
-											OFFLINE
+											SIGNAL_LOST
 										</div>
 									{/if}
 								</div>
-								<div class="text-slate-500 dark:text-slate-400 font-mono text-sm mt-1">
-									ID: #{player.id}
+								<div class="text-stone-500 font-jetbrains font-black text-[11px] uppercase tracking-[0.4em] italic">
+									REGISTRY_SIGNATURE: 0x{player.id.toString(16).toUpperCase()}
 								</div>
 							</div>
 
-							<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+							<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
 								<div
-									class="p-3 bg-slate-900/50 rounded-xl border border-slate-300/30 dark:border-slate-700/30"
+									class="p-5 bg-stone-950/60 border border-stone-800 industrial-frame shadow-inner"
 								>
 									<div
-										class="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1 flex items-center gap-2"
+										class="text-[9px] text-stone-600 uppercase font-black tracking-[0.2em] mb-3 flex items-center gap-3"
 									>
-										<Smartphone class="w-3 h-3" /> Device ID
+										<Smartphone class="w-3.5 h-3.5 text-rust" /> Terminal_ID
 									</div>
-									<code class="text-sm text-slate-700 dark:text-slate-300 font-mono break-all"
+									<code class="text-xs text-stone-300 font-jetbrains font-bold break-all opacity-80"
 										>{player.device_id}</code
 									>
 								</div>
 								<div
-									class="p-3 bg-slate-900/50 rounded-xl border border-slate-300/30 dark:border-slate-700/30"
+									class="p-5 bg-stone-950/60 border border-stone-800 industrial-frame shadow-inner"
 								>
 									<div
-										class="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1 flex items-center gap-2"
+										class="text-[9px] text-stone-600 uppercase font-black tracking-[0.2em] mb-3 flex items-center gap-3"
 									>
-										<Users class="w-3 h-3" /> Firebase UID
+										<Lock class="w-3.5 h-3.5 text-rust" /> Registry_UID
 									</div>
-									<code class="text-sm text-slate-700 dark:text-slate-300 font-mono break-all"
-										>{player.uid || 'Not Linked'}</code
+									<code class="text-xs text-stone-300 font-jetbrains font-bold break-all opacity-80"
+										>{player.uid || 'NULL_PTR'}</code
 									>
 								</div>
 							</div>
@@ -179,179 +187,187 @@
 				</div>
 
 				<!-- Stats Grid -->
-				<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+				<div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
 					<div
-						class="bg-slate-800/40 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-4 flex flex-col items-center justify-center text-center hover:bg-slate-800/60 transition-colors"
+						class="modern-industrial-card glass-panel p-8 flex flex-col items-center justify-center text-center group hover:border-rust/30 transition-all !rounded-none"
 					>
-						<div class="mb-2 p-2 bg-amber-500/10 rounded-lg text-amber-400">
-							<Trophy class="w-5 h-5" />
+						<div class="mb-4 p-3 bg-amber-500/5 border border-amber-500/20 industrial-frame text-amber-500 group-hover:bg-amber-500 group-hover:text-black transition-all">
+							<Trophy class="w-6 h-6" />
 						</div>
-						<div class="text-2xl font-bold text-slate-900 dark:text-white">
+						<div class="text-3xl font-heading font-black text-white tabular-nums tracking-tighter mb-1">
 							{player.xp.toLocaleString()}
 						</div>
 						<div
-							class="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider"
+							class="text-[9px] font-jetbrains font-black text-stone-600 uppercase tracking-[0.3em]"
 						>
-							Experience
+							XP_ACCUMULATION
 						</div>
 					</div>
 
 					<div
-						class="bg-slate-800/40 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-4 flex flex-col items-center justify-center text-center hover:bg-slate-800/60 transition-colors"
+						class="modern-industrial-card glass-panel p-8 flex flex-col items-center justify-center text-center group hover:border-rust/30 transition-all !rounded-none"
 					>
-						<div class="mb-2 p-2 bg-purple-500/10 rounded-lg text-purple-400">
-							<Globe class="w-5 h-5" />
+						<div class="mb-4 p-3 bg-rust/5 border border-rust/20 industrial-frame text-rust group-hover:bg-rust group-hover:text-white transition-all">
+							<Globe class="w-6 h-6" />
 						</div>
 						<div
-							class="text-sm font-bold text-slate-900 dark:text-white truncate w-full"
+							class="text-sm font-heading font-black text-white uppercase tracking-widest truncate w-full mb-1"
 							title={player.last_joined_server}
 						>
-							{player.last_joined_server || 'N/A'}
+							{player.last_joined_server || 'VOID_MAP'}
 						</div>
 						<div
-							class="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider"
+							class="text-[9px] font-jetbrains font-black text-stone-600 uppercase tracking-[0.3em]"
 						>
-							Last Server
+							LAST_KNOWN_VECTOR
 						</div>
 					</div>
 
 					<div
-						class="bg-slate-800/40 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-4 flex flex-col items-center justify-center text-center hover:bg-slate-800/60 transition-colors"
+						class="modern-industrial-card glass-panel p-8 flex flex-col items-center justify-center text-center group hover:border-rust/30 transition-all !rounded-none"
 					>
-						<div class="mb-2 p-2 bg-blue-500/10 rounded-lg text-blue-400">
-							<Calendar class="w-5 h-5" />
+						<div class="mb-4 p-3 bg-stone-800 border border-stone-700 industrial-frame text-stone-400 group-hover:bg-white group-hover:text-black transition-all">
+							<Calendar class="w-6 h-6" />
 						</div>
-						<div class="text-sm font-bold text-slate-900 dark:text-white">
+						<div class="text-xl font-heading font-black text-white uppercase tracking-tighter mb-1">
 							{new Date(player.created_at).toLocaleDateString()}
 						</div>
 						<div
-							class="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider"
+							class="text-[9px] font-jetbrains font-black text-stone-600 uppercase tracking-[0.3em]"
 						>
-							Joined
+							UPLINK_INITIATED
 						</div>
 					</div>
 				</div>
 
-				<!-- Timestamps -->
+				<!-- Synchronization Audit -->
 				<div
-					class="bg-slate-800/40 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-4 flex items-center justify-between text-sm"
+					class="p-6 bg-stone-950/40 border border-stone-800 industrial-frame flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-inner"
 				>
-					<div class="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-						<Clock class="w-4 h-4" />
-						<span>Last Updated:</span>
+					<div class="flex items-center gap-4 text-stone-600">
+						<Clock class="w-5 h-5 text-rust" />
+						<span class="font-jetbrains text-[10px] font-black uppercase tracking-widest">Last_Identity_Synchronization:</span>
 					</div>
-					<div class="font-mono text-slate-700 dark:text-slate-300">
-						{new Date(player.updated_at).toLocaleString()}
+					<div class="font-jetbrains font-black text-xs text-stone-400 uppercase tracking-tighter flex items-center gap-4">
+						<span class="text-white">{new Date(player.updated_at).toLocaleDateString()}</span>
+						<span class="w-px h-3 bg-stone-800"></span>
+						<span class="text-rust-light">{new Date(player.updated_at).toLocaleTimeString([], { hour12: false })}</span>
 					</div>
 				</div>
 			</div>
 
 			<!-- Sidebar / Social Graph -->
-			<div class="space-y-6">
+			<div class="lg:col-span-4 space-y-10">
 				<!-- Friends List -->
 				<div
-					class="bg-slate-800/40 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 rounded-2xl overflow-hidden flex flex-col h-full max-h-[500px]"
+					class="modern-industrial-card glass-panel flex flex-col max-h-[600px] !rounded-none shadow-2xl"
 				>
 					<div
-						class="p-4 border-b border-slate-300/50 dark:border-slate-700/50 bg-slate-900/30 flex items-center justify-between"
+						class="p-6 border-b border-stone-800 bg-[#0a0a0a] flex items-center justify-between"
 					>
-						<h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-							<UserCheck class="w-5 h-5 text-emerald-400" />
-							Friends
+						<h3 class="font-heading font-black text-xs text-white flex items-center gap-4 uppercase tracking-widest">
+							<UserCheck class="w-5 h-5 text-emerald-500" />
+							Synchronization_Grid
 						</h3>
 						<span
-							class="px-2 py-0.5 bg-slate-700 rounded-full text-xs font-bold text-slate-700 dark:text-slate-300"
+							class="px-3 py-1 bg-stone-900 border border-stone-800 text-[10px] font-black font-jetbrains text-rust tabular-nums shadow-inner"
 						>
 							{player.friends?.length || 0}
 						</span>
 					</div>
 
-					<div class="flex-1 overflow-y-auto p-2 space-y-1">
+					<div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar bg-black/20">
 						{#if player.friends && player.friends.length > 0}
 							{#each player.friends as friend}
 								<a
 									href={`/users/${friend.id}`}
-									class="flex items-center gap-3 p-2 hover:bg-slate-700/30 rounded-xl transition-colors group"
+									class="flex items-center gap-5 p-4 bg-stone-900/40 border border-stone-800 hover:border-rust/40 transition-all group industrial-frame"
 								>
 									<div
-										class="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center font-bold text-slate-900 dark:text-white text-xs"
+										class="w-10 h-10 bg-stone-950 border border-stone-800 flex items-center justify-center font-heading font-black italic text-stone-500 group-hover:text-rust transition-colors"
 									>
 										{friend.name.charAt(0).toUpperCase()}
 									</div>
 									<div class="flex-1 min-w-0">
 										<div
-											class="text-sm font-medium text-slate-800 dark:text-slate-200 truncate group-hover:text-blue-400 transition-colors"
+											class="text-xs font-black text-stone-200 uppercase tracking-widest truncate group-hover:text-white transition-colors"
 										>
 											{friend.name}
 										</div>
-										<div class="text-xs text-slate-500 font-mono">#{friend.id}</div>
+										<div class="text-[9px] text-stone-600 font-jetbrains font-bold uppercase tracking-widest mt-1 italic">SIG: 0x{friend.id.toString(16).toUpperCase()}</div>
 									</div>
+									<ChevronRight class="w-4 h-4 text-stone-800 group-hover:text-rust group-hover:translate-x-1 transition-all" />
 								</a>
 							{/each}
 						{:else}
-							<div class="p-8 text-center text-slate-500 text-sm">No friends found</div>
+							<div class="py-20 text-center opacity-30">
+								<Users class="w-12 h-12 text-stone-800 mx-auto mb-4" />
+								<p class="text-stone-600 font-jetbrains font-black text-[10px] uppercase tracking-widest">No_Connections_Mapped</p>
+							</div>
 						{/if}
 					</div>
 				</div>
 
-				<!-- Friend Requests -->
+				<!-- Pending Requests -->
 				{#if (player.incoming_friend_requests && player.incoming_friend_requests.length > 0) || (player.outgoing_friend_requests && player.outgoing_friend_requests.length > 0)}
 					<div
-						class="bg-slate-800/40 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 rounded-2xl overflow-hidden"
+						class="modern-industrial-card glass-panel !rounded-none shadow-2xl"
 					>
-						<div class="p-4 border-b border-slate-300/50 dark:border-slate-700/50 bg-slate-900/30">
-							<h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-								<UserPlus class="w-5 h-5 text-amber-400" />
-								Pending Requests
+						<div class="p-6 border-b border-stone-800 bg-[#0a0a0a]">
+							<h3 class="font-heading font-black text-xs text-white flex items-center gap-4 uppercase tracking-widest">
+								<UserPlus class="w-5 h-5 text-amber-500 animate-pulse" />
+								Pending_Protocols
 							</h3>
 						</div>
-						<div class="p-2 space-y-2">
+						<div class="p-4 space-y-6 bg-black/20">
 							{#if player.incoming_friend_requests && player.incoming_friend_requests.length > 0}
-								<div class="px-2 py-1 text-xs font-bold text-slate-500 uppercase tracking-wider">
-									Incoming
-								</div>
-								{#each player.incoming_friend_requests as req}
-									<div
-										class="flex items-center gap-3 p-2 bg-slate-900/30 rounded-xl border border-slate-300/30 dark:border-slate-700/30"
-									>
-										<div
-											class="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center font-bold text-slate-900 dark:text-white text-xs"
-										>
-											{req.name.charAt(0).toUpperCase()}
-										</div>
-										<div>
-											<div class="text-sm font-medium text-slate-800 dark:text-slate-200">
-												{req.name}
-											</div>
-											<div class="text-xs text-slate-500">From #{req.id}</div>
-										</div>
+								<div class="space-y-3">
+									<div class="px-2 text-[9px] font-black text-stone-600 uppercase tracking-[0.3em] italic border-l border-stone-800">
+										Incoming_Signals
 									</div>
-								{/each}
+									{#each player.incoming_friend_requests as req}
+										<div
+											class="flex items-center gap-4 p-3 bg-stone-900/60 border border-stone-800 industrial-frame"
+										>
+											<div
+												class="w-8 h-8 bg-stone-950 border border-stone-800 flex items-center justify-center font-heading font-black italic text-stone-600 text-xs"
+											>
+												{req.name.charAt(0).toUpperCase()}
+											</div>
+											<div class="min-w-0">
+												<div class="text-[10px] font-black text-stone-300 uppercase tracking-widest truncate">
+													{req.name}
+												</div>
+												<div class="text-[8px] text-stone-700 font-jetbrains font-bold uppercase tracking-tight">SRC: 0x{req.id.toString(16).toUpperCase()}</div>
+											</div>
+										</div>
+									{/each}
+								</div>
 							{/if}
 
 							{#if player.outgoing_friend_requests && player.outgoing_friend_requests.length > 0}
-								<div
-									class="px-2 py-1 text-xs font-bold text-slate-500 uppercase tracking-wider mt-2"
-								>
-									Outgoing
-								</div>
-								{#each player.outgoing_friend_requests as req}
-									<div
-										class="flex items-center gap-3 p-2 bg-slate-900/30 rounded-xl border border-slate-300/30 dark:border-slate-700/30 opacity-70"
-									>
-										<div
-											class="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center font-bold text-slate-900 dark:text-white text-xs"
-										>
-											{req.name.charAt(0).toUpperCase()}
-										</div>
-										<div>
-											<div class="text-sm font-medium text-slate-800 dark:text-slate-200">
-												{req.name}
-											</div>
-											<div class="text-xs text-slate-500">To #{req.id}</div>
-										</div>
+								<div class="space-y-3">
+									<div class="px-2 text-[9px] font-black text-stone-600 uppercase tracking-[0.3em] italic border-l border-stone-800">
+										Outgoing_Transmissions
 									</div>
-								{/each}
+									{#each player.outgoing_friend_requests as req}
+										<div
+											class="flex items-center gap-4 p-3 bg-stone-900/20 border border-stone-800 opacity-60 industrial-frame"
+										>
+											<div
+												class="w-8 h-8 bg-stone-950 border border-stone-800 flex items-center justify-center font-heading font-black italic text-stone-700 text-xs"
+											>
+												{req.name.charAt(0).toUpperCase()}
+											</div>
+											<div class="min-w-0">
+												<div class="text-[10px] font-black text-stone-500 uppercase tracking-widest truncate">
+													{req.name}
+												</div>
+												<div class="text-[8px] text-stone-800 font-jetbrains font-bold uppercase tracking-tight">DST: 0x{req.id.toString(16).toUpperCase()}</div>
+											</div>
+										</div>
+									{/each}
+								</div>
 							{/if}
 						</div>
 					</div>

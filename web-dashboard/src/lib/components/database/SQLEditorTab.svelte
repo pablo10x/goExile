@@ -534,41 +534,41 @@
 	}
 </script>
 
-<div class="h-full flex flex-col bg-white dark:bg-slate-950">
+<div class="h-full flex flex-col bg-[#050505]">
 	<!-- Toolbar -->
 	<div
-		class="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-900/50"
+		class="p-4 border-b border-stone-800 flex justify-between items-center bg-[#0a0a0a]"
 	>
-		<div class="flex items-center gap-3">
-			<div class="p-2 bg-amber-500/10 rounded-lg">
-				<Terminal class="w-5 h-5 text-amber-400" />
+		<div class="flex items-center gap-4">
+			<div class="p-2.5 bg-rust/10 border border-rust/20 rounded-none industrial-frame">
+				<Terminal class="w-5 h-5 text-rust-light" />
 			</div>
 			<div>
-				<h2 class="text-lg font-bold text-slate-100">SQL Console</h2>
-				<p class="text-xs text-slate-500">Execute raw SQL queries against the database</p>
+				<h2 class="text-lg font-heading font-black text-slate-100 uppercase tracking-tighter">SQL_CONSOLE_CORE</h2>
+				<p class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest mt-1">Execute raw neural queries against the database</p>
 			</div>
 		</div>
-		<div class="flex gap-2 items-center">
+		<div class="flex gap-4 items-center">
 			{#if loadingMetadata}
-				<span class="text-xs text-slate-500 flex items-center gap-1">
-					<RefreshCw class="w-3 h-3 animate-spin" />
-					Loading schema...
+				<span class="font-jetbrains text-[10px] text-stone-600 flex items-center gap-2 uppercase tracking-widest">
+					<RefreshCw class="w-3.5 h-3.5 animate-spin" />
+					Syncing_Schema...
 				</span>
 			{:else if tables.length > 0}
-				<span class="text-xs text-slate-500 flex items-center gap-1">
-					<Database class="w-3 h-3" />
-					{tables.length} tables loaded
+				<span class="font-jetbrains text-[10px] text-stone-500 flex items-center gap-2 uppercase tracking-widest">
+					<Database class="w-3.5 h-3.5 text-rust/60" />
+					{tables.length} Sectors_Mapped
 				</span>
 			{/if}
 			<button
 				onclick={runQuery}
 				disabled={loading || !query.trim()}
-				class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-slate-900 dark:text-white rounded-lg font-bold flex items-center gap-2 shadow-lg shadow-amber-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+				class="px-6 py-2.5 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rust/20 disabled:opacity-20 transition-all active:translate-y-px"
 			>
 				{#if loading}
 					<RefreshCw class="w-4 h-4 animate-spin" /> Executing...
 				{:else}
-					<Play class="w-4 h-4 fill-current" /> Run
+					<Play class="w-4 h-4 fill-current" /> Run_Op
 				{/if}
 			</button>
 		</div>
@@ -578,13 +578,13 @@
 	<div class="flex-1 flex flex-col overflow-hidden">
 		<!-- Editor Area -->
 		<div
-			class="h-1/3 min-h-[150px] p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-900/30 relative"
+			class="h-1/3 min-h-[200px] p-6 border-b border-stone-800 bg-[#050505] relative"
 		>
 			<div class="relative w-full h-full">
 				<textarea
 					bind:this={textareaEl}
 					bind:value={query}
-					class="w-full h-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl p-4 font-mono text-sm text-blue-300 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none resize-none shadow-inner"
+					class="w-full h-full bg-stone-950 border border-stone-800 p-6 font-jetbrains text-xs text-stone-200 focus:border-rust outline-none resize-none shadow-inner uppercase tracking-widest"
 					placeholder="SELECT * FROM table_name LIMIT 10;"
 					onkeydown={handleKeydown}
 					oninput={handleInput}
@@ -596,114 +596,109 @@
 				<!-- Autocomplete Dropdown -->
 				{#if showAutocomplete && suggestions.length > 0}
 					<div
-						class="absolute z-50 bg-slate-800 border border-slate-600 rounded-lg shadow-xl overflow-hidden min-w-[200px] max-w-[300px]"
+						class="absolute z-50 bg-[#0a0a0a] border border-stone-800 shadow-2xl overflow-hidden min-w-[240px] max-w-[350px] industrial-frame"
 						style="top: {autocompletePosition.top}px; left: {autocompletePosition.left}px;"
 						transition:slide={{ duration: 100 }}
 					>
-						<div class="max-h-[200px] overflow-y-auto">
+						<div class="max-h-[250px] overflow-y-auto custom-scrollbar">
 							{#each suggestions as suggestion, i}
 								<button
-									class="w-full px-3 py-2 text-left text-sm font-mono flex items-center gap-2 transition-colors {i ===
+									class="w-full px-4 py-2.5 text-left font-jetbrains text-[10px] font-black uppercase tracking-widest flex items-center gap-3 transition-all {i ===
 									selectedIndex
-										? 'bg-amber-600 text-slate-900 dark:text-white'
-										: 'text-slate-700 dark:text-slate-300 hover:bg-slate-700'}"
+										? 'bg-rust text-white shadow-[0_0_15px_rgba(120,53,15,0.4)]'
+										: 'text-stone-500 hover:bg-stone-900 hover:text-stone-300'}"
 									onmousedown={() => applySuggestion(suggestion)}
 									onmouseenter={() => (selectedIndex = i)}
 								>
 									{#if SQL_KEYWORDS.includes(suggestion.toUpperCase())}
-										<span class="w-2 h-2 rounded-full bg-purple-400 flex-shrink-0"></span>
+										<span class="w-1.5 h-1.5 bg-rust-light flex-shrink-0"></span>
 									{:else if suggestion.includes('.')}
-										<span class="w-2 h-2 rounded-full bg-green-400 flex-shrink-0"></span>
+										<span class="w-1.5 h-1.5 bg-emerald-500 flex-shrink-0"></span>
 									{:else if tables.some((t) => t.table === suggestion || `${t.schema}.${t.table}` === suggestion)}
-										<span class="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0"></span>
+										<span class="w-1.5 h-1.5 bg-amber-500 flex-shrink-0"></span>
 									{:else}
-										<span class="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"></span>
+										<span class="w-1.5 h-1.5 bg-stone-700 flex-shrink-0"></span>
 									{/if}
 									<span class="truncate">{suggestion}</span>
 								</button>
 							{/each}
 						</div>
 						<div
-							class="px-3 py-1.5 bg-slate-900 border-t border-slate-300 dark:border-slate-700 text-xs text-slate-500 flex gap-3"
+							class="px-4 py-2 bg-[#050505] border-t border-stone-800 font-jetbrains text-[8px] font-black text-stone-600 flex gap-4 uppercase tracking-[0.2em]"
 						>
 							<span
-								><kbd class="px-1 py-0.5 bg-slate-700 rounded text-slate-500 dark:text-slate-400"
+								><kbd class="px-1 bg-stone-900 border border-stone-800 rounded-none text-stone-500"
 									>↑↓</kbd
-								> Navigate</span
-							>
+								> NAV</span>
 							<span
-								><kbd class="px-1 py-0.5 bg-slate-700 rounded text-slate-500 dark:text-slate-400"
-									>Tab</kbd
-								> Select</span
-							>
+								><kbd class="px-1 bg-stone-900 border border-stone-800 rounded-none text-stone-500"
+									>TAB</kbd
+								> SELECT</span>
 							<span
-								><kbd class="px-1 py-0.5 bg-slate-700 rounded text-slate-500 dark:text-slate-400"
-									>Esc</kbd
-								> Close</span
-							>
+								><kbd class="px-1 bg-stone-900 border border-stone-800 rounded-none text-stone-500"
+									>ESC</kbd
+								> EXIT</span>
 						</div>
 					</div>
 				{/if}
 			</div>
-			<div class="text-xs text-slate-500 mt-2 flex justify-between">
-				<div class="flex gap-4">
-					<span>Cmd/Ctrl + Enter to execute</span>
-					<span class="text-slate-600">•</span>
-					<span>Type to autocomplete</span>
+			<div class="font-jetbrains text-[9px] font-black text-stone-600 mt-3 flex justify-between uppercase tracking-widest">
+				<div class="flex gap-6">
+					<span class="flex items-center gap-2"><div class="w-1 h-1 bg-stone-800"></div> Cmd/Ctrl + Enter to execute</span>
+					<span class="flex items-center gap-2"><div class="w-1 h-1 bg-stone-800"></div> Type to autocomplete</span>
 				</div>
 				{#if executionTime > 0}
-					<span class="text-emerald-400">Time: {executionTime.toFixed(2)}ms</span>
+					<span class="text-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.2)]">Time: {executionTime.toFixed(2)}ms</span>
 				{/if}
 			</div>
 		</div>
 
 		<!-- Results Area -->
-		<div class="flex-1 flex flex-col overflow-hidden bg-slate-900/50 relative">
+		<div class="flex-1 flex flex-col overflow-hidden bg-[#050505] relative">
 			{#if results.length > 0}
 				<div
-					class="p-2 border-b border-slate-200 dark:border-slate-800 bg-slate-900 flex justify-between items-center px-4"
+					class="p-3 border-b border-stone-800 bg-[#0a0a0a] flex justify-between items-center px-6"
 				>
 					<span
-						class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-						>{results.length} Rows</span
-					>
-					<div class="flex gap-2">
+						class="font-jetbrains text-[10px] font-black text-stone-500 uppercase tracking-widest"
+						>{results.length} Entities_Detected</span>
+					<div class="flex gap-3">
 						<button
 							onclick={copyToClipboard}
-							class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-800 rounded"
+							class="p-2 text-stone-600 hover:text-rust transition-all"
 							title="Copy JSON"
 						>
 							<Copy class="w-4 h-4" />
 						</button>
 						<button
 							onclick={downloadCSV}
-							class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-800 rounded"
+							class="p-2 text-stone-600 hover:text-rust transition-all"
 							title="Download CSV"
 						>
 							<Download class="w-4 h-4" />
 						</button>
 					</div>
 				</div>
-				<div class="flex-1 overflow-auto">
-					<table class="w-full text-left text-sm border-collapse">
+				<div class="flex-1 overflow-auto custom-scrollbar">
+					<table class="w-full text-left font-jetbrains text-[11px] border-collapse">
 						<thead
-							class="bg-white dark:bg-slate-950 text-slate-500 dark:text-slate-400 sticky top-0 shadow-md z-10"
+							class="bg-[#0a0a0a] text-stone-500 sticky top-0 z-10 border-b border-stone-800"
 						>
 							<tr>
 								{#each Object.keys(results[0]) as key}
 									<th
-										class="px-4 py-3 font-medium border-b border-slate-200 dark:border-slate-800 whitespace-nowrap"
+										class="px-5 py-4 font-black uppercase tracking-widest border-r border-stone-800/30 whitespace-nowrap"
 										>{key}</th
 									>
 								{/each}
 							</tr>
 						</thead>
-						<tbody class="divide-y divide-slate-800/50">
+						<tbody class="divide-y divide-stone-900">
 							{#each results as row}
-								<tr class="hover:bg-slate-800/50 transition-colors">
+								<tr class="hover:bg-rust/5 transition-colors group">
 									{#each Object.values(row) as val}
 										<td
-											class="px-4 py-2 text-slate-700 dark:text-slate-300 font-mono whitespace-nowrap max-w-xs truncate"
+											class="px-5 py-3 text-stone-400 group-hover:text-stone-200 border-r border-stone-800/20 whitespace-nowrap max-w-xs truncate"
 											title={String(val)}
 										>
 											{val === null ? 'NULL' : String(val)}
@@ -715,28 +710,34 @@
 					</table>
 				</div>
 			{:else if error}
-				<div class="flex-1 flex items-center justify-center p-8">
-					<div class="bg-red-500/10 border border-red-500/20 rounded-xl p-6 max-w-2xl text-center">
-						<div class="text-red-400 font-mono text-sm whitespace-pre-wrap">{error}</div>
+				<div class="flex-1 flex items-center justify-center p-10">
+					<div class="bg-red-500/5 border border-red-500/20 p-8 max-w-3xl industrial-frame">
+						<div class="font-jetbrains text-xs text-red-500 uppercase tracking-widest font-black mb-4 flex items-center gap-3">
+							<div class="w-2 h-2 bg-red-500 animate-pulse"></div>
+							EXECUTION_FAULT_DETECTED
+						</div>
+						<div class="text-red-400/80 font-jetbrains text-[11px] whitespace-pre-wrap leading-relaxed">{error}</div>
 					</div>
 				</div>
 			{:else if !loading}
-				<div class="flex-1 flex flex-col items-center justify-center text-slate-500">
-					<Terminal class="w-16 h-16 opacity-20 mb-4" />
-					<p>Enter a query and run it to see results.</p>
-					<p class="text-xs mt-2 text-slate-600">Start typing for autocomplete suggestions</p>
+				<div class="flex-1 flex flex-col items-center justify-center text-stone-700">
+					<div class="p-8 bg-stone-900/40 border border-stone-800 industrial-frame mb-6 shadow-inner">
+						<Terminal class="w-16 h-16 opacity-10" />
+					</div>
+					<p class="font-heading font-black text-xs tracking-[0.2em] uppercase">Ready_For_Neural_Input</p>
+					<p class="font-jetbrains text-[9px] mt-2 uppercase tracking-widest opacity-60">Enter query and execute to view data sectors</p>
 				</div>
 			{/if}
 
 			{#if loading}
 				<div
-					class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-20"
+					class="absolute inset-0 bg-[#050505]/80 backdrop-blur-sm flex items-center justify-center z-20"
 				>
-					<div class="flex flex-col items-center gap-3">
+					<div class="flex flex-col items-center gap-4">
 						<div
-							class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"
+							class="w-10 h-10 border-2 border-rust border-t-transparent rounded-none animate-spin"
 						></div>
-						<span class="text-amber-400 font-medium animate-pulse">Running Query...</span>
+						<span class="font-heading font-black text-[11px] text-rust uppercase tracking-[0.2em] animate-pulse">Running_Query_Sequence...</span>
 					</div>
 				</div>
 			{/if}

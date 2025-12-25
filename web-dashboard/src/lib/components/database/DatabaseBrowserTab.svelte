@@ -238,25 +238,25 @@
 	});
 </script>
 
-<div class="h-full flex flex-col bg-slate-900">
+<div class="h-full flex flex-col bg-[#050505]">
 	<!-- Header -->
-	<div class="shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+	<div class="shrink-0 border-b border-stone-800 bg-[#0a0a0a]">
 		<!-- Title Bar -->
-		<div class="px-4 py-3 flex items-center justify-between">
-			<div class="flex items-center gap-3">
-				<div class="p-2 bg-indigo-500/10 rounded-lg">
-					<FolderTree class="w-5 h-5 text-indigo-400" />
+		<div class="px-6 py-4 flex items-center justify-between">
+			<div class="flex items-center gap-4">
+				<div class="p-2.5 bg-rust/10 border border-rust/20 rounded-none industrial-frame">
+					<FolderTree class="w-5 h-5 text-rust-light" />
 				</div>
 				<div>
-					<h2 class="text-base font-bold text-slate-100">Database Browser</h2>
-					<p class="text-xs text-slate-500">Explore and manage your database structure</p>
+					<h2 class="text-base font-heading font-black text-slate-100 uppercase tracking-tighter">SCHEMA_BROWSER</h2>
+					<p class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest mt-1">Explore and manage database topology</p>
 				</div>
 			</div>
 
 			<button
 				onclick={refresh}
 				disabled={isRefreshing}
-				class="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-50"
+				class="p-2.5 text-stone-500 hover:text-rust hover:bg-rust/10 transition-all disabled:opacity-20"
 				title="Refresh"
 			>
 				<RefreshCw class="w-5 h-5 {isRefreshing ? 'animate-spin' : ''}" />
@@ -264,16 +264,14 @@
 		</div>
 
 		<!-- Stats Bar -->
-		<div class="px-4 pb-3 flex items-center gap-4">
-			<div class="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 rounded-lg">
-				<Layers class="w-4 h-4 text-purple-400" />
-				<span class="text-sm font-medium text-slate-700 dark:text-slate-300">{totalSchemas}</span>
-				<span class="text-xs text-slate-500">schemas</span>
+		<div class="px-6 pb-4 flex items-center gap-4">
+			<div class="flex items-center gap-3 px-3 py-1.5 bg-stone-900 border border-stone-800">
+				<Layers class="w-3.5 h-3.5 text-rust" />
+				<span class="font-jetbrains text-[11px] font-black text-stone-200 uppercase tracking-widest">{totalSchemas} SCHEMAS</span>
 			</div>
-			<div class="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 rounded-lg">
-				<Table class="w-4 h-4 text-blue-400" />
-				<span class="text-sm font-medium text-slate-700 dark:text-slate-300">{totalTables}</span>
-				<span class="text-xs text-slate-500">tables</span>
+			<div class="flex items-center gap-3 px-3 py-1.5 bg-stone-900 border border-stone-800">
+				<Table class="w-3.5 h-3.5 text-rust-light" />
+				<span class="font-jetbrains text-[11px] font-black text-stone-200 uppercase tracking-widest">{totalTables} TABLES</span>
 			</div>
 		</div>
 	</div>

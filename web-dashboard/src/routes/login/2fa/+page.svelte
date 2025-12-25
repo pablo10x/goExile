@@ -121,77 +121,79 @@
 </script>
 
 {#if mounted}
-	<!-- Background: Grey Modern Texture -->
-	<div class="fixed inset-0 -z-50 bg-white dark:bg-slate-950 overflow-hidden">
+	<!-- Industrial Background -->
+	<div class="fixed inset-0 -z-50 bg-stone-950 overflow-hidden">
+		<!-- CRT Scanline Effect -->
+		<div class="absolute inset-0 pointer-events-none z-50 opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%]"></div>
+		
+		<!-- Static Noise -->
+		<div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/asfalt-dark.png')] opacity-[0.02] mix-blend-overlay"></div>
+
 		<div
-			class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZmlsdGVyIGlkPSJnoiPjxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjY1IiBudW1PY3RhdmVzPSIzIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+PC9maWx0ZXI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI2cpIiBvcGFjaXR5PSIwLjAzIi8+PC9zdmc+')] opacity-40"
+			class="absolute inset-0 bg-gradient-to-tr from-stone-950 via-[#0a0a0a] to-[#121212] opacity-80"
 		></div>
-		<div
-			class="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-900 to-slate-800 opacity-80"
-		></div>
-		<!-- Subtle Glow -->
-		<div
-			class="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-white/5 blur-[120px] rounded-full"
-		></div>
+		
+		<!-- Animated Grid -->
+		<div class="absolute inset-0 opacity-[0.03]" style="background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px); background-size: 50px 50px;"></div>
 	</div>
 
-	<div class="min-h-screen flex items-center justify-center p-6" in:fade={{ duration: 300 }}>
+	<div class="min-h-screen flex items-center justify-center p-6 font-jetbrains" in:fade={{ duration: 300 }}>
 		<div class="w-full max-w-[420px] relative">
 			<!-- Card -->
 			<div
-				class="bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-2xl shadow-2xl overflow-hidden relative group"
+				class="bg-stone-900 border-2 border-stone-800 shadow-[12px_12px_0px_rgba(0,0,0,0.4)] overflow-hidden relative group industrial-frame"
 			>
-				<!-- Top Highlight Line -->
+				<!-- Status Highlight -->
 				<div
-					class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-slate-500/20 to-transparent"
+					class="absolute top-0 left-0 w-full h-1 bg-rust opacity-40 group-hover:opacity-100 transition-opacity"
 				></div>
 
-				<div class="p-8 pt-10 text-center">
+				<div class="p-10 pt-12 text-center bg-black/40">
 					<!-- Icon -->
 					<div
-						class="w-16 h-16 mx-auto bg-slate-800/50 rounded-2xl flex items-center justify-center mb-6 shadow-inner border border-slate-300/50 dark:border-slate-700/50 group-hover:border-slate-600/50 transition-colors"
+						class="w-20 h-20 mx-auto bg-stone-950 border border-stone-800 flex items-center justify-center mb-8 shadow-2xl industrial-frame transition-all group-hover:border-rust/50"
 					>
 						{#if showEmailSection}
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
-								class="w-7 h-7 text-slate-800 dark:text-slate-200"
+								class="w-8 h-8 text-rust"
 								viewBox="0 0 24 24"
 								fill="none"
 								stroke="currentColor"
 								stroke-width="1.5"
-								><rect width="20" height="16" x="2" y="4" rx="2" /><path
+								><rect width="20" height="16" x="2" y="4" rx="0" /><path
 									d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"
 								/></svg
 							>
 						{:else}
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
-								class="w-7 h-7 text-slate-800 dark:text-slate-200"
+								class="w-8 h-8 text-rust"
 								viewBox="0 0 24 24"
 								fill="none"
 								stroke="currentColor"
 								stroke-width="1.5"
-								><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path
+								><rect width="18" height="11" x="3" y="11" rx="0" ry="0" /><path
 									d="M7 11V7a5 5 0 0 1 10 0v4"
 								/></svg
 							>
 						{/if}
 					</div>
 
-					<h1 class="text-2xl font-medium text-slate-100 mb-2 tracking-tight">Authentication</h1>
-					<p class="text-sm text-slate-500 dark:text-slate-400 font-light">
+					<h1 class="text-2xl font-black text-white mb-2 uppercase tracking-tighter italic">Auth_Verify</h1>
+					<p class="text-[10px] text-stone-500 font-bold uppercase tracking-widest italic">
 						{#if showEmailSection}
-							Code sent to your email
+							Secondary_Vector: Email_Auth
 						{:else}
-							Enter code from authenticator
+							Primary_Vector: TOTP_Buffer
 						{/if}
 					</p>
 				</div>
 
-				<div class="px-8 pb-10">
+				<div class="px-10 pb-12 pt-8">
 					<div class="relative" class:animate-shake={shake}>
 						{#if !showEmailSection}
-							<div class="space-y-6">
+							<div class="space-y-8">
 								<div class="relative group/input">
 									<!-- svelte-ignore a11y_autofocus -->
 									<input
@@ -200,34 +202,34 @@
 										maxlength="6"
 										inputmode="numeric"
 										autocomplete="one-time-code"
-										class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl px-4 py-4 text-center text-3xl font-mono tracking-[0.5em] text-slate-900 dark:text-white placeholder:text-slate-700 focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500/50 transition-all disabled:opacity-50"
-										placeholder="······"
+										class="w-full bg-black border-2 border-stone-800 px-4 py-5 text-center text-4xl font-mono tracking-[0.4em] text-white focus:border-rust outline-none transition-all placeholder:text-stone-900 shadow-inner"
+										placeholder="000000"
 										disabled={loading}
 										autofocus
 									/>
 									{#if loading}
 										<div class="absolute right-4 top-1/2 -translate-y-1/2">
 											<div
-												class="w-4 h-4 border-2 border-slate-500 border-t-transparent rounded-full animate-spin"
+												class="w-5 h-5 border-2 border-rust border-t-transparent rounded-none animate-spin"
 											></div>
 										</div>
 									{/if}
 								</div>
 							</div>
 						{:else}
-							<div in:slide={{ axis: 'y', duration: 400 }} class="space-y-6">
+							<div in:slide={{ axis: 'y', duration: 400 }} class="space-y-8">
 								<div
-									class="flex items-center justify-center gap-2 text-xs text-emerald-400 bg-emerald-950/30 py-2 rounded-lg border border-emerald-900/50 mb-4"
+									class="flex items-center justify-center gap-3 text-[10px] font-black text-emerald-400 bg-emerald-950/10 py-3 border border-emerald-900/30 uppercase tracking-widest shadow-inner"
 								>
 									<svg
 										xmlns="http://www.w3.org/2000/svg"
-										class="w-3.5 h-3.5"
+										class="w-4 h-4"
 										viewBox="0 0 24 24"
 										fill="none"
 										stroke="currentColor"
-										stroke-width="2"><polyline points="20 6 9 17 4 12" /></svg
+										stroke-width="3"><polyline points="20 6 9 17 4 12" /></svg
 									>
-									<span>Authenticator verified</span>
+									<span>Primary_Link_Stable</span>
 								</div>
 
 								<div class="relative group/input">
@@ -237,15 +239,15 @@
 										bind:value={emailCode}
 										maxlength="6"
 										inputmode="numeric"
-										class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl px-4 py-4 text-center text-3xl font-mono tracking-[0.5em] text-slate-900 dark:text-white placeholder:text-slate-700 focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500/50 transition-all disabled:opacity-50"
-										placeholder="······"
+										class="w-full bg-black border-2 border-stone-800 px-4 py-5 text-center text-4xl font-mono tracking-[0.4em] text-white focus:border-rust outline-none transition-all placeholder:text-stone-900 shadow-inner"
+										placeholder="000000"
 										disabled={loading}
 										autofocus
 									/>
 									{#if loading}
 										<div class="absolute right-4 top-1/2 -translate-y-1/2">
 											<div
-												class="w-4 h-4 border-2 border-slate-500 border-t-transparent rounded-full animate-spin"
+												class="w-5 h-5 border-2 border-rust border-t-transparent rounded-none animate-spin"
 											></div>
 										</div>
 									{/if}
@@ -254,21 +256,21 @@
 						{/if}
 					</div>
 
-					<div class="mt-8 text-center">
+					<div class="mt-10 text-center border-t border-stone-800 pt-8">
 						<a
 							href="/login"
-							class="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-300 transition-colors"
+							class="text-[10px] font-black text-stone-600 hover:text-white uppercase tracking-[0.3em] transition-all italic"
 						>
-							Return to login
+							[Abord_Sequence]
 						</a>
 					</div>
 				</div>
 			</div>
 
 			<div
-				class="text-center mt-6 text-[10px] text-slate-600 uppercase tracking-widest font-medium"
+				class="text-center mt-8 text-[8px] text-stone-700 uppercase tracking-[0.5em] font-black opacity-40 italic"
 			>
-				Secured by GoExile
+				Neural_Encryption: Active_GCM_256
 			</div>
 		</div>
 	</div>

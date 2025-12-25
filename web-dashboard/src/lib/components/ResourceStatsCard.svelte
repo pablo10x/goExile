@@ -58,39 +58,39 @@
 </script>
 
 <div
-	class="bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-4 relative overflow-hidden group hover:border-slate-300 dark:border-slate-700 transition-colors"
+	class="modern-industrial-card glass-panel p-5 relative overflow-hidden group hover:border-rust/40 transition-all duration-500 shadow-xl"
 >
-	<div class="flex justify-between items-start mb-3">
+	<div class="flex justify-between items-start mb-4 relative z-10">
 		<div>
-			<div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-0.5">
+			<div class="text-[9px] font-jetbrains font-black text-stone-500 uppercase tracking-[0.2em] mb-1">
 				{title}
 			</div>
 			<div
-				class="text-2xl font-mono font-medium text-slate-800 dark:text-slate-200 tabular-nums tracking-tight"
+				class="text-3xl font-heading font-black text-white tabular-nums tracking-tighter"
 			>
-				{displayCurrent.toFixed(1)}<span class="text-sm text-slate-500 ml-0.5">{unit}</span>
+				{displayCurrent.toFixed(1)}<span class="text-xs text-stone-500 ml-1 font-jetbrains">{unit}</span>
 			</div>
 		</div>
 		<div
-			class="p-2 rounded-lg bg-slate-800/50 text-lg opacity-80 group-hover:scale-110 transition-transform"
+			class="p-2.5 rounded-none border border-stone-800 bg-stone-900/50 text-xl group-hover:scale-110 group-hover:text-rust transition-all industrial-frame shadow-inner"
 		>
 			{icon}
 		</div>
 	</div>
 
 	<!-- Progress Bar -->
-	<div class="relative h-1.5 w-full bg-slate-800 rounded-full overflow-hidden mb-2">
+	<div class="relative h-1 w-full bg-stone-950 border border-stone-800 rounded-none overflow-hidden mb-3 p-0 relative z-10">
 		<div
-			class="absolute top-0 left-0 h-full {c.bg} transition-all duration-500 ease-out"
-			style="width: {pct}%"
+			class="absolute top-0 left-0 h-full {c.bg.replace('bg-', 'bg-')} transition-all duration-700 ease-out shadow-lg"
+			style="width: {pct}%; box-shadow: 0 0 10px rgba(249, 115, 22, 0.2);"
 		></div>
 	</div>
 
 	<!-- Footer -->
-	<div class="flex items-center justify-between text-[10px] text-slate-500 font-mono">
-		<span>PEAK: {peak.toFixed(1)}{unit}</span>
-		<span class={trend === 'up' ? c.text : 'text-slate-600'}>
-			{pct.toFixed(0)}%
+	<div class="flex items-center justify-between text-[9px] font-jetbrains font-bold text-stone-600 uppercase tracking-widest relative z-10">
+		<span class="flex items-center gap-2">PEAK_VALUE: <span class="text-stone-400">{peak.toFixed(1)}{unit}</span></span>
+		<span class={`px-1.5 py-0.5 border ${trend === 'up' ? 'text-red-500 border-red-500/20 bg-red-500/5' : 'text-emerald-500 border-emerald-500/20 bg-emerald-500/5'}`}>
+			{pct.toFixed(0)}%_LOAD
 		</span>
 	</div>
 </div>

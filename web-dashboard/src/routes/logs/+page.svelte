@@ -187,141 +187,157 @@
 	});
 </script>
 
-<div class="p-6 h-full flex flex-col overflow-hidden">
+<div class="w-full h-[calc(100vh-140px)] md:h-[calc(100vh-160px)] flex flex-col overflow-hidden relative border border-stone-800 bg-[#050505] shadow-2xl industrial-frame">
 	<!-- Header -->
-	<div class="flex justify-between items-center mb-6 shrink-0">
-		<div>
-			<h1 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-				<Activity class="w-6 h-6 text-red-400" />
-				System Logs
-			</h1>
-			<p class="text-slate-500 dark:text-slate-400 text-sm mt-1">
-				Monitor system-wide errors and events
-			</p>
+	<div class="flex flex-col md:flex-row justify-between items-start md:items-center p-8 border-b border-stone-800 bg-[#0a0a0a] gap-6 shrink-0 relative z-10">
+		<div class="flex items-center gap-6">
+			<div class="p-4 bg-rust/10 border border-rust/30 industrial-frame shadow-lg">
+				<Activity class="w-8 h-8 text-rust-light" />
+			</div>
+			<div>
+				<h1 class="text-3xl font-heading font-black text-white uppercase tracking-tighter">
+					SYSTEM_LOG_INTERCEPT
+				</h1>
+				<p class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest font-black mt-1">
+					Monitor system-wide anomalies and kernel events
+				</p>
+			</div>
 		</div>
-		<div class="flex gap-2 items-center">
+		<div class="flex flex-wrap gap-3 items-center w-full md:w-auto">
 			{#if selectedIds.size > 0}
 				<button
 					onclick={deleteSelected}
 					transition:scale={{ duration: 200, start: 0.9 }}
-					class="p-2 bg-red-600 hover:bg-red-500 text-slate-900 dark:text-white rounded-lg transition-colors flex items-center gap-2 px-4 shadow-lg shadow-red-900/20 mr-2"
+					class="flex-1 md:flex-none px-6 py-3 bg-red-600 hover:bg-red-500 text-white font-heading font-black text-[10px] uppercase tracking-widest shadow-lg shadow-red-900/20 active:translate-y-px transition-all"
 				>
-					<Trash2 class="w-4 h-4" />
-					<span class="text-xs font-bold">Delete ({selectedIds.size})</span>
+					<Trash2 class="w-4 h-4 inline mr-2" />
+					Purge_Selected ({selectedIds.size})
 				</button>
 			{/if}
 
 			<button
 				onclick={clearLogs}
-				class="p-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 hover:text-red-200 rounded-lg transition-colors flex items-center gap-2 px-3"
+				class="flex-1 md:flex-none px-6 py-3 bg-stone-900 border border-stone-800 text-stone-500 hover:text-red-500 hover:border-red-500/30 font-heading font-black text-[10px] uppercase tracking-widest transition-all active:translate-y-px"
 			>
-				<Trash2 class="w-4 h-4" />
-				<span class="text-xs font-semibold">Clear All</span>
+				<Trash2 class="w-4 h-4 inline mr-2" />
+				Global_Wipe
 			</button>
 			<button
 				onclick={() => {
 					fetchLogs();
 					fetchCounts();
 				}}
-				class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-900 dark:text-white rounded-lg transition-colors"
+				class="p-3 bg-stone-900 border border-stone-800 text-stone-500 hover:text-rust transition-all shadow-xl active:translate-y-px"
 			>
-				<RefreshCw class="w-4 h-4 {loading ? 'animate-spin' : ''}" />
+				<RefreshCw class="w-5 h-5 {loading ? 'animate-spin' : ''}" />
 			</button>
 		</div>
 	</div>
 
 	<!-- Filters -->
-	<div class="flex gap-2 mb-4 overflow-x-auto shrink-0 pb-2">
+	<div class="flex gap-2 p-6 bg-stone-950 border-b border-stone-800 overflow-x-auto shrink-0 no-scrollbar relative z-10 shadow-inner">
 		{#each categories as cat}
 			<button
 				onclick={() => changeCategory(cat)}
-				class="px-4 py-2 rounded-lg text-sm font-medium transition-all border border-transparent {category ===
+				class="px-6 py-2.5 font-heading font-black text-[10px] uppercase tracking-widest transition-all border {category ===
 				cat
-					? 'bg-rust text-white shadow-lg shadow-rust/20'
-					: 'bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-700 hover:border-slate-600'}"
+					? 'bg-rust text-white border-rust shadow-lg shadow-rust/20'
+					: 'bg-stone-900 text-stone-600 border-stone-800 hover:text-stone-300 hover:border-stone-700'}"
 			>
-				{cat} <span class="ml-1 opacity-60 text-xs">({counts[cat] || 0})</span>
+				{cat} <span class="ml-2 opacity-40 font-jetbrains">[{counts[cat] || 0}]</span>
 			</button>
 		{/each}
 	</div>
 
-	<!-- Table -->
-	<div
-		class="flex-1 bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden flex flex-col"
-	>
-		<div class="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
-			<table class="w-full text-left text-sm text-slate-500 dark:text-slate-400">
-				<thead class="bg-slate-900 text-slate-800 dark:text-slate-200 sticky top-0 z-10">
-					<tr>
-						<th class="px-4 py-3 font-semibold w-10 text-center">
+	<!-- Table Area -->
+	<div class="flex-1 flex flex-col min-h-0 bg-black/20 relative">
+		<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.01] pointer-events-none"></div>
+		
+		<div class="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar relative z-10">
+			<table class="w-full text-left font-jetbrains text-[11px] border-collapse">
+				<thead class="bg-[#0a0a0a] text-stone-500 sticky top-0 z-10 border-b border-stone-800 shadow-md">
+					<tr class="uppercase font-black tracking-widest">
+						<th class="px-6 py-4 w-16 text-center border-r border-stone-800/30">
 							<button
 								onclick={toggleSelectAll}
-								class="w-5 h-5 rounded border border-slate-600 flex items-center justify-center transition-all {selectedIds.size ===
+								class="w-5 h-5 mx-auto border-2 border-stone-800 flex items-center justify-center transition-all {selectedIds.size ===
 									logs.length && logs.length > 0
-																										? 'bg-rust border-rust-light'
-																										: 'hover:border-slate-400'}"							>
+																										? 'bg-rust border-rust shadow-[0_0_10px_rgba(249,115,22,0.3)]'
+																										: 'hover:border-stone-600'}"							>
 								{#if selectedIds.size === logs.length && logs.length > 0}
-									<Check class="w-3.5 h-3.5 text-slate-900 dark:text-white" />
+									<Check class="w-3.5 h-3.5 text-white" />
 								{/if}
 							</button>
 						</th>
-						<th class="px-4 py-3 font-semibold">Time</th>
-						<th class="px-4 py-3 font-semibold">Level</th>
-						<th class="px-4 py-3 font-semibold">Category</th>
-						<th class="px-4 py-3 font-semibold">Message</th>
-						<th class="px-4 py-3 font-semibold">Path</th>
-						<th class="px-4 py-3 font-semibold w-10"></th>
+						<th class="px-6 py-4 border-r border-stone-800/30">Timestamp</th>
+						<th class="px-6 py-4 border-r border-stone-800/30">Integrity</th>
+						<th class="px-6 py-4 border-r border-stone-800/30">Sector</th>
+						<th class="px-6 py-4 border-r border-stone-800/30">Signal_Message</th>
+						<th class="px-6 py-4 border-r border-stone-800/30">Kernel_Path</th>
+						<th class="px-6 py-4 w-16"></th>
 					</tr>
 				</thead>
-				<tbody class="divide-y divide-slate-800">
+				<tbody class="divide-y divide-stone-900">
 					{#if loading && logs.length === 0}
-						<tr><td colspan="7" class="p-8 text-center">Loading...</td></tr>
+						<tr>
+							<td colspan="7" class="py-32">
+								<div class="flex flex-col items-center justify-center gap-4">
+									<div class="w-10 h-10 border-2 border-rust border-t-transparent rounded-none animate-spin shadow-lg"></div>
+									<span class="font-heading font-black text-[11px] text-stone-600 uppercase tracking-[0.4em] animate-pulse">Syncing_Active_Logs...</span>
+								</div>
+							</td>
+						</tr>
 					{:else if logs.length === 0}
-						<tr><td colspan="7" class="p-8 text-center">No logs found</td></tr>
+						<tr>
+							<td colspan="7" class="py-32">
+								<div class="flex flex-col items-center justify-center text-stone-800 gap-4">
+									<div class="p-6 border border-dashed border-stone-800 industrial-frame">
+										<Activity class="w-12 h-12 opacity-10" />
+									</div>
+									<span class="font-jetbrains text-[10px] font-black uppercase tracking-[0.3em]">Null_Archive_Reported</span>
+								</div>
+							</td>
+						</tr>
 					{:else}
 						{#each logs as log (log.id)}
 							<tr
 								transition:fly={{ x: 20, duration: 300 }}
-								class="hover:bg-slate-800/50 transition-colors cursor-pointer group {selectedIds.has(
-									log.id
-								)
-																										? 'bg-rust/10'
-																										: ''}"								onclick={() => (selectedLog = log)}
+								class="hover:bg-rust/5 transition-all cursor-pointer group {selectedIds.has(log.id) ? 'bg-rust/10' : ''}"								onclick={() => (selectedLog = log)}
 							>
-								<td class="px-4 py-3 text-center" onclick={(e) => toggleSelection(e, log.id)}>
+								<td class="px-6 py-4 text-center border-r border-stone-800/20" onclick={(e) => toggleSelection(e, log.id)}>
 									<div
-										class="w-5 h-5 mx-auto rounded border border-slate-600 flex items-center justify-center transition-all relative overflow-hidden {selectedIds.has(
+										class="w-5 h-5 mx-auto border border-stone-800 flex items-center justify-center transition-all relative overflow-hidden {selectedIds.has(
 											log.id
 										)
-																																		? 'bg-rust border-rust-light'
-																																		: 'group-hover:border-slate-400 bg-slate-800/50'}"									>
+																																		? 'bg-rust border-rust shadow-[0_0_8px_rgba(249,115,22,0.2)]'
+																																		: 'group-hover:border-stone-600 bg-stone-950 shadow-inner'}"									>
 										{#if selectedIds.has(log.id)}
 											<div transition:scale={{ duration: 200, start: 0.5 }}>
-												<Check class="w-3.5 h-3.5 text-slate-900 dark:text-white" />
+												<Check class="w-3.5 h-3.5 text-white" />
 											</div>
 										{/if}
 									</div>
 								</td>
-								<td class="px-4 py-3 whitespace-nowrap font-mono text-xs text-slate-500"
-									>{log.timestamp ? new Date(log.timestamp).toLocaleString() : '-'}</td
+								<td class="px-6 py-4 whitespace-nowrap font-bold tabular-nums text-stone-500 group-hover:text-stone-300 transition-colors border-r border-stone-800/20"
+									>{log.timestamp ? new Date(log.timestamp).toLocaleString([], { hour12: false }) : 'UNKNOWN_T'}</td
 								>
-								<td class="px-4 py-3 font-bold {getLevelColor(log.level)}">{log.level}</td>
-								<td class="px-4 py-3">
+								<td class="px-6 py-4 font-black tracking-tighter border-r border-stone-800/20 {getLevelColor(log.level)}">{log.level}</td>
+								<td class="px-6 py-4 border-r border-stone-800/20">
 									<span
-										class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-800 text-xs border border-slate-300 dark:border-slate-700"
+										class="px-2 py-0.5 font-black text-[9px] bg-stone-900 border border-stone-800 text-stone-500 uppercase tracking-widest"
 									>
 										{log.category}
 									</span>
 								</td>
 								<td
-									class="px-4 py-3 text-slate-700 dark:text-slate-300 max-w-md truncate"
+									class="px-6 py-4 text-stone-400 group-hover:text-white transition-colors max-w-xl truncate uppercase font-bold tracking-tight border-r border-stone-800/20"
 									title={log.message}>{log.message}</td
 								>
-								<td class="px-4 py-3 font-mono text-xs text-slate-500">{log.path || '-'}</td>
-								<td class="px-4 py-3 text-right">
+								<td class="px-6 py-4 font-bold text-stone-600 uppercase tracking-tighter border-r border-stone-800/20">{log.path || 'GLOBAL_CORE'}</td>
+								<td class="px-6 py-4 text-right">
 									<button
 										onclick={(e) => deleteLog(e, log.id)}
-										class="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-900/20 rounded transition-all opacity-0 group-hover:opacity-100"
+										class="p-2 text-stone-700 hover:text-red-500 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
 										title="Delete Log"
 									>
 										<Trash2 class="w-4 h-4" />
@@ -334,27 +350,36 @@
 			</table>
 		</div>
 
-		<!-- Pagination -->
+		<!-- Pagination Footer -->
 		<div
-			class="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-900 flex justify-between items-center shrink-0"
+			class="p-6 border-t border-stone-800 bg-[#0a0a0a] flex flex-col sm:flex-row justify-between items-center gap-6 shrink-0 relative z-10"
 		>
-			<span class="text-xs text-slate-500">
-				Showing {offset + 1}-{Math.min(offset + limit, total)} of {total}
-			</span>
+			<div class="flex items-center gap-6">
+				<span class="font-jetbrains text-[10px] font-black text-stone-600 uppercase tracking-widest">
+					Showing <span class="text-rust">{offset + 1}-{Math.min(offset + limit, total)}</span> // Total <span class="text-white">{total}</span> Signals_Mapped
+				</span>
+				{#if selectedIds.size > 0}
+					<div class="w-px h-4 bg-stone-800"></div>
+					<span class="font-jetbrains text-[10px] font-black text-red-500 uppercase tracking-widest animate-pulse">
+						{selectedIds.size} Targets_Locked
+					</span>
+				{/if}
+			</div>
+			
 			<div class="flex gap-2">
 				<button
 					onclick={prevPage}
 					disabled={offset === 0}
-					class="p-1.5 rounded hover:bg-slate-800 disabled:opacity-50 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors"
+					class="p-3 bg-stone-950 border border-stone-800 hover:border-rust hover:text-rust disabled:opacity-20 text-stone-600 transition-all active:translate-x-px shadow-lg"
 				>
-					<ChevronLeft class="w-4 h-4" />
+					<ChevronLeft class="w-5 h-5" />
 				</button>
 				<button
 					onclick={nextPage}
 					disabled={offset + limit >= total}
-					class="p-1.5 rounded hover:bg-slate-800 disabled:opacity-50 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors"
+					class="p-3 bg-stone-950 border border-stone-800 hover:border-rust hover:text-rust disabled:opacity-20 text-stone-600 transition-all active:translate-x-px shadow-lg"
 				>
-					<ChevronRight class="w-4 h-4" />
+					<ChevronRight class="w-5 h-5" />
 				</button>
 			</div>
 		</div>
@@ -363,8 +388,8 @@
 	<!-- Detail Modal -->
 	{#if selectedLog}
 		<div
-			class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-			transition:fade
+			class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl"
+			transition:fade={{ duration: 150 }}
 			onclick={() => (selectedLog = null)}
 			role="button"
 			tabindex="0"
@@ -373,80 +398,78 @@
 			}}
 		>
 			<div
-				class="bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden"
+				class="bg-[#050505] border border-stone-800 rounded-none shadow-[0_0_100px_rgba(0,0,0,0.8)] w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden industrial-frame"
 				onclick={(e) => e.stopPropagation()}
 			>
 				<div
-					class="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-start"
+					class="p-8 border-b border-stone-800 bg-[#0a0a0a] flex justify-between items-start"
 				>
-					<div>
-						<h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-							<span class={getLevelColor(selectedLog.level)}>{selectedLog.level}</span>
-							Log Details
-						</h3>
-						<p class="text-slate-500 dark:text-slate-400 text-sm mt-1">
-							{selectedLog.timestamp ? new Date(selectedLog.timestamp).toLocaleString() : '-'}
-						</p>
+					<div class="flex items-center gap-6">
+						<div class="p-3 bg-stone-950 border border-stone-800 industrial-frame">
+							<div class={`font-black text-2xl tracking-tighter ${getLevelColor(selectedLog.level)}`}>{selectedLog.level}</div>
+						</div>
+						<div>
+							<h3 class="text-xl font-heading font-black text-white uppercase tracking-tighter flex items-center gap-3">
+								INTERCEPT_DETAIL_READOUT
+							</h3>
+							<p class="font-jetbrains text-[10px] text-stone-500 font-bold mt-1 uppercase tracking-widest">
+								Captured: {selectedLog.timestamp ? new Date(selectedLog.timestamp).toLocaleString([], { hour12: false }) : 'N/A'}
+							</p>
+						</div>
 					</div>
 					<button
 						onclick={() => (selectedLog = null)}
-						class="text-slate-500 hover:text-slate-900 dark:text-white">✕</button
-					>
+						class="p-2 text-stone-600 hover:text-white transition-all hover:rotate-90">
+						<X class="w-6 h-6" />
+					</button>
 				</div>
-				<div class="p-6 overflow-y-auto space-y-4">
-					<div class="grid grid-cols-2 gap-4 text-sm">
-						<div>
-							<span class="block text-slate-500 text-xs uppercase tracking-wider">Category</span>
-							<span class="text-slate-700 dark:text-slate-300">{selectedLog.category}</span>
-						</div>
-						<div>
-							<span class="block text-slate-500 text-xs uppercase tracking-wider">Source</span>
-							<span class="text-slate-700 dark:text-slate-300">{selectedLog.source}</span>
-						</div>
-						<div>
-							<span class="block text-slate-500 text-xs uppercase tracking-wider">Path</span>
-							<span class="font-mono text-slate-700 dark:text-slate-300"
-								>{selectedLog.path || '-'}</span
-							>
-						</div>
-						<div>
-							<span class="block text-slate-500 text-xs uppercase tracking-wider">Method</span>
-							<span class="font-mono text-slate-700 dark:text-slate-300"
-								>{selectedLog.method || '-'}</span
-							>
-						</div>
-						<div>
-							<span class="block text-slate-500 text-xs uppercase tracking-wider">Client IP</span>
-							<span class="font-mono text-slate-700 dark:text-slate-300"
-								>{selectedLog.client_ip || '-'}</span
-							>
-						</div>
-						<div>
-							<span class="block text-slate-500 text-xs uppercase tracking-wider">Log ID</span>
-							<span class="font-mono text-slate-700 dark:text-slate-300">#{selectedLog.id}</span>
-						</div>
+				<div class="p-10 overflow-y-auto space-y-10 custom-scrollbar bg-[#050505] relative">
+					<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
+					
+					<div class="grid grid-cols-2 md:grid-cols-3 gap-8 relative z-10">
+						{#each [
+							{ label: 'Signal_Category', val: selectedLog.category },
+							{ label: 'Origin_Source', val: selectedLog.source },
+							{ label: 'Kernel_Vector', val: selectedLog.path || 'SYSTEM_CORE' },
+							{ label: 'Access_Method', val: selectedLog.method || 'INTERNAL' },
+							{ label: 'Remote_Address', val: selectedLog.client_ip || 'DECENTRALIZED' },
+							{ label: 'LOG_UID', val: `#${selectedLog.id}` }
+						] as meta}
+							<div class="space-y-2 bg-stone-900/40 border border-stone-800 p-4 industrial-frame">
+								<span class="block font-jetbrains text-[9px] font-black text-stone-600 uppercase tracking-widest">{meta.label}</span>
+								<span class="font-jetbrains text-[11px] font-black text-stone-200 uppercase tracking-tight break-all">{meta.val}</span>
+							</div>
+						{/each}
 					</div>
 
-					<div>
-						<span class="block text-slate-500 text-xs uppercase tracking-wider mb-1">Message</span>
+					<div class="space-y-4 relative z-10">
+						<span class="block font-jetbrains text-[9px] font-black text-stone-600 uppercase tracking-[0.3em]">SIGNAL_MESSAGE_RAW</span>
 						<div
-							class="bg-white dark:bg-slate-950 p-3 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-mono text-sm whitespace-pre-wrap"
+							class="bg-stone-950 p-6 border border-stone-800 text-stone-300 font-jetbrains text-xs whitespace-pre-wrap leading-relaxed uppercase tracking-wide shadow-inner"
 						>
 							{selectedLog.message}
 						</div>
 					</div>
 
 					{#if selectedLog.details}
-						<div>
-							<span class="block text-slate-500 text-xs uppercase tracking-wider mb-1">Details</span
-							>
+						<div class="space-y-4 relative z-10">
+							<span class="block font-jetbrains text-[9px] font-black text-stone-600 uppercase tracking-[0.3em]">EXTENDED_TELEMETRY_DATA</span>
 							<div
-								class="bg-white dark:bg-slate-950 p-3 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-mono text-sm whitespace-pre-wrap overflow-x-auto"
+								class="bg-stone-950 p-6 border border-stone-800 text-stone-400 font-jetbrains text-[11px] whitespace-pre-wrap overflow-x-auto shadow-inner leading-relaxed"
 							>
 								{selectedLog.details}
 							</div>
 						</div>
 					{/if}
+				</div>
+				
+				<div class="p-8 bg-[#0a0a0a] border-t border-stone-800 flex justify-end">
+					<button 
+						onclick={() => (selectedLog = null)}
+						class="px-10 py-3 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rust/20 transition-all active:translate-y-px"
+					>
+						Acknowledge_Signal
+					</button>
 				</div>
 			</div>
 		</div>

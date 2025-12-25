@@ -738,7 +738,7 @@
 
 				<!-- Main Content -->
 				<main class="flex-1 overflow-auto relative">
-					<div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6 md:py-8 min-h-full pb-24 md:pb-8">
+					<div class="w-full px-4 sm:px-6 md:px-10 py-8 md:py-12 min-h-full pb-32 md:pb-12">
 						{@render children()}
 					</div>
 				</main>

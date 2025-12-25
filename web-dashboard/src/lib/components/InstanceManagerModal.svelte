@@ -246,64 +246,64 @@
 
 		<!-- Modal Window -->
 		<div 
-			class="relative w-full max-w-7xl h-[90vh] flex bg-[#0a0a0a] border border-slate-800 rounded-lg shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden"
+			class="relative w-full max-w-7xl h-[90vh] flex bg-[#050505] border border-stone-800 rounded-none shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden industrial-frame"
 			transition:scale={{ start: 0.98, duration: 200, easing: cubicOut }}
 		>
 			<!-- Tactical Sidebar -->
-			<div class="w-72 bg-[#0d0d0d] border-r border-slate-800 flex flex-col shrink-0">
-				<div class="p-5 border-b border-slate-800 bg-[#111]">
-					<h3 class="text-sm font-black text-slate-200 truncate font-mono tracking-tighter uppercase">{instanceId}</h3>
-					<div class="mt-3 flex items-center gap-2">
-						<div class="flex items-center gap-1.5 px-2 py-1 rounded bg-black border border-slate-800 text-[9px] font-black uppercase tracking-widest {stats.status === 'Running' ? 'text-emerald-500' : 'text-red-500'}">
-							<span class="w-1.5 h-1.5 rounded-full {stats.status === 'Running' ? 'bg-emerald-500 animate-pulse shadow-[0_0_5px_rgba(16,185,129,0.5)]' : 'bg-red-500'}"></span>
+			<div class="w-72 bg-[#0a0a0a] border-r border-stone-800 flex flex-col shrink-0">
+				<div class="p-6 border-b border-stone-800 bg-stone-900/30">
+					<h3 class="text-xs font-heading font-black text-slate-200 truncate tracking-widest uppercase">{instanceId}</h3>
+					<div class="mt-4 flex items-center gap-2">
+						<div class="flex items-center gap-2 px-3 py-1 bg-black border border-stone-800 text-[10px] font-jetbrains font-black uppercase tracking-widest {stats.status === 'Running' ? 'text-emerald-500' : 'text-red-500'}">
+							<span class="w-2 h-2 rounded-full {stats.status === 'Running' ? 'bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-red-500'}"></span>
 							{stats.status}
 						</div>
 					</div>
 				</div>
 
-				<div class="flex-1 overflow-y-auto p-5 space-y-8">
+				<div class="flex-1 overflow-y-auto p-6 space-y-10 custom-scrollbar">
 					<!-- Uptime Section -->
 					<div>
-						<div class="text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2">System Uptime</div>
-						<div class="text-xl font-black font-mono text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]">
+						<div class="text-[10px] font-heading font-black text-stone-600 uppercase tracking-[0.2em] mb-2">SYSTEM_UPTIME</div>
+						<div class="text-2xl font-heading font-black text-rust drop-shadow-[0_0_15px_rgba(120,53,15,0.4)]">
 							{formatUptime((stats.uptime || 0) * 1000)}
 						</div>
 					</div>
 
 					<!-- Resources -->
-					<div class="space-y-6">
+					<div class="space-y-8">
 						<div class="group">
-							<div class="flex justify-between text-[9px] font-black uppercase mb-2 tracking-widest">
-								<span class="text-slate-500">Core Load</span>
-								<span class="text-orange-500">{stats.cpu_percent?.toFixed(1)}%</span>
+							<div class="flex justify-between text-[10px] font-jetbrains font-black uppercase mb-2 tracking-widest">
+								<span class="text-stone-500">Core_Load</span>
+								<span class="text-rust">{stats.cpu_percent?.toFixed(1)}%</span>
 							</div>
-							<div class="h-1 bg-slate-900 overflow-hidden border border-slate-800/50">
-								<div class="h-full bg-orange-600 transition-all duration-500 shadow-[0_0_10px_rgba(234,88,12,0.4)]" style="width: {stats.cpu_percent}%"></div>
+							<div class="h-1.5 bg-stone-950 overflow-hidden border border-stone-800/50">
+								<div class="h-full bg-rust transition-all duration-500 shadow-[0_0_15px_rgba(120,53,15,0.5)]" style="width: {stats.cpu_percent}%"></div>
 							</div>
 						</div>
 						<div class="group">
-							<div class="flex justify-between text-[9px] font-black uppercase mb-2 tracking-widest">
-								<span class="text-slate-500">Memory Allocation</span>
-								<span class="text-purple-500">{formatBytes(stats.memory_usage)}</span>
+							<div class="flex justify-between text-[10px] font-jetbrains font-black uppercase mb-2 tracking-widest">
+								<span class="text-stone-500">Mem_Allocation</span>
+								<span class="text-rust-light">{formatBytes(stats.memory_usage)}</span>
 							</div>
-							<div class="h-1 bg-slate-900 overflow-hidden border border-slate-800/50">
-								<div class="h-full bg-purple-600 transition-all duration-500 shadow-[0_0_10px_rgba(147,51,234,0.4)]" style="width: {memoryPercent}%"></div>
+							<div class="h-1.5 bg-stone-950 overflow-hidden border border-stone-800/50">
+								<div class="h-full bg-rust-light transition-all duration-500 shadow-[0_0_15px_rgba(146,64,14,0.5)]" style="width: {memoryPercent}%"></div>
 							</div>
 						</div>
 					</div>
 
 					<!-- Provisioning Monitor -->
 					{#if isProvisioning}
-						<div class="pt-6 border-t border-slate-800/50" transition:slide>
-							<div class="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-								<div class="w-2 h-2 rounded-full bg-blue-500 animate-ping"></div>
-								Provisioning Sequence
+						<div class="pt-8 border-t border-stone-800" transition:slide>
+							<div class="text-[10px] font-heading font-black text-rust uppercase tracking-widest mb-6 flex items-center gap-3">
+								<div class="w-2 h-2 rounded-full bg-rust animate-ping"></div>
+								PROVISIONING_SEQ
 							</div>
-							<div class="space-y-3">
+							<div class="space-y-4">
 								{#each provisioningSteps as step, i}
-									<div class="text-[10px] font-bold flex items-center gap-3 transition-colors {i <= provisioningStep ? 'text-slate-300' : 'text-slate-700'}">
-										<div class="w-1.5 h-1.5 rounded-full {i < provisioningStep ? 'bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]' : i === provisioningStep ? 'bg-blue-500 animate-pulse' : 'bg-slate-800'}"></div>
-										<span class={i < provisioningStep ? 'line-through opacity-50' : ''}>{step}</span>
+									<div class="text-[11px] font-jetbrains font-bold flex items-center gap-4 transition-colors {i <= provisioningStep ? 'text-stone-300' : 'text-stone-700'}">
+										<div class="w-1.5 h-1.5 rounded-none {i < provisioningStep ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]' : i === provisioningStep ? 'bg-rust animate-pulse shadow-[0_0_10px_rgba(120,53,15,0.4)]' : 'bg-stone-800'}"></div>
+										<span class={i < provisioningStep ? 'line-through opacity-40' : ''}>{step}</span>
 									</div>
 								{/each}
 							</div>
@@ -312,28 +312,28 @@
 				</div>
 
 				<!-- Quick Controls -->
-				<div class="p-4 border-t border-slate-800 bg-black/40">
+				<div class="p-4 border-t border-stone-800 bg-black/60">
 					<div class="grid grid-cols-2 gap-2">
 						<button 
 							onclick={() => triggerAction('start')} 
 							disabled={stats.status === 'Running' || isProvisioning} 
-							class="col-span-2 py-2.5 bg-emerald-600/10 border border-emerald-500/30 hover:bg-emerald-600/20 disabled:opacity-20 text-emerald-500 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95"
+							class="col-span-2 py-3 bg-rust text-white disabled:opacity-20 font-heading font-black text-[11px] uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-rust/20 hover:bg-rust-light"
 						>
-							Execute Init
+							EXECUTE_INIT
 						</button>
 						<button 
 							onclick={() => triggerAction('restart')} 
 							disabled={stats.status !== 'Running'} 
-							class="py-2 bg-slate-800/50 border border-slate-700 hover:bg-slate-800 disabled:opacity-20 text-slate-400 font-black text-[9px] uppercase tracking-wider transition-all"
+							class="py-2.5 bg-stone-900 border border-stone-800 hover:border-rust/50 hover:text-rust disabled:opacity-20 text-stone-400 font-heading font-black text-[10px] uppercase tracking-widest transition-all"
 						>
-							Reboot
+							REBOOT
 						</button>
 						<button 
 							onclick={() => triggerAction('stop')} 
 							disabled={stats.status !== 'Running'} 
-							class="py-2 bg-slate-800/50 border border-slate-700 hover:bg-red-900/20 hover:text-red-400 disabled:opacity-20 text-slate-400 font-black text-[9px] uppercase tracking-wider transition-all"
+							class="py-2.5 bg-stone-900 border border-stone-800 hover:border-red-500/50 hover:text-red-500 disabled:opacity-20 text-stone-400 font-heading font-black text-[10px] uppercase tracking-widest transition-all"
 						>
-							Abort
+							ABORT
 						</button>
 					</div>
 				</div>
@@ -342,25 +342,27 @@
 			<!-- Main Terminal/Data Area -->
 			<div class="flex-1 flex flex-col min-w-0 bg-[#050505]">
 				<!-- Navigation Tabs -->
-								<div class="flex border-b border-slate-800 bg-[#0d0d0d] overflow-x-auto no-scrollbar">
-									{#each tabs as tab}
-										<button 
-											onclick={() => activeTab = tab.id}
-											class="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all border-b-2 {activeTab === tab.id ? 'text-blue-500 border-blue-500 bg-blue-500/5' : 'text-slate-600 border-transparent hover:text-slate-400'}"
-										>
-											{tab.label}
-										</button>
-									{/each}
-								</div>
+				<div class="flex border-b border-stone-800 bg-[#0a0a0a] overflow-x-auto no-scrollbar">
+					{#each tabs as tab}
+						<button 
+							onclick={() => activeTab = tab.id}
+							class="px-8 py-5 text-[11px] font-heading font-black uppercase tracking-[0.2em] transition-all border-b-2 {activeTab === tab.id ? 'text-rust border-rust bg-rust/5' : 'text-stone-600 border-transparent hover:text-stone-400'}"
+						>
+							{tab.label}
+						</button>
+					{/each}
+				</div>
 
 				<!-- Content Viewport -->
 				<div class="flex-1 relative overflow-hidden">
+					<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
+					
 					{#if activeTab === 'console'}
-						<div class="absolute inset-0 p-4" in:fade={{ duration: 150 }}>
+						<div class="absolute inset-0 p-6" in:fade={{ duration: 150 }}>
 							<Terminal {logs} title={`root@${instanceId}:~`} />
 						</div>
 					{:else if activeTab === 'metrics'}
-						<div class="p-8 h-full overflow-y-auto" in:fade={{ duration: 150 }}>
+						<div class="p-10 h-full overflow-y-auto custom-scrollbar" in:fade={{ duration: 150 }}>
 							{#if spawnerId !== null && instanceId}
 								<ResourceMetricsPanel {spawnerId} {instanceId} {memTotal} height={450} />
 							{/if}
@@ -372,56 +374,56 @@
 							{/if}
 						</div>
 					{:else if activeTab === 'backups'}
-						<div class="p-8 h-full overflow-y-auto" in:fade={{ duration: 150 }}>
-							<div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-4">
+						<div class="p-10 h-full overflow-y-auto custom-scrollbar" in:fade={{ duration: 150 }}>
+							<div class="flex justify-between items-center mb-10 border-b border-stone-800 pb-6">
 								<div>
-									<h4 class="text-xs font-black text-slate-200 uppercase tracking-[0.3em]">Storage Archives</h4>
-									<p class="text-[9px] text-slate-600 font-mono mt-1 uppercase">Node snapshot management</p>
+									<h4 class="text-sm font-heading font-black text-slate-200 uppercase tracking-[0.3em]">Storage_Archives</h4>
+									<p class="font-jetbrains text-[10px] text-stone-600 mt-2 uppercase tracking-widest">Node Snapshot Management Protocol</p>
 								</div>
 								<button 
 									onclick={() => handleBackupAction('create')} 
-									class="px-4 py-2 bg-blue-600 text-black font-black text-[9px] uppercase tracking-widest hover:bg-blue-500 transition-colors active:translate-y-px"
+									class="px-6 py-3 bg-rust text-white font-heading font-black text-[11px] uppercase tracking-widest hover:bg-rust-light transition-all shadow-lg shadow-rust/20"
 								>
-									Generate Snapshot
+									GENERATE_SNAPSHOT
 								</button>
 							</div>
 							
 							{#if isLoadingData}
 								<div class="flex justify-center py-20">
-									<div class="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+									<div class="w-8 h-8 border-2 border-rust border-t-transparent rounded-none animate-spin"></div>
 								</div>
 							{:else if backups.length === 0}
-								<div class="text-center py-20 text-[10px] font-black text-slate-700 uppercase tracking-[0.3em] border border-dashed border-slate-800 rounded">
-									No archives detected
+								<div class="text-center py-20 text-[11px] font-heading font-black text-stone-700 uppercase tracking-[0.3em] border border-dashed border-stone-800 industrial-frame">
+									No archives detected in system storage
 								</div>
 							{:else}
-								<div class="space-y-2">
+								<div class="space-y-3">
 									{#each backups as backup}
-										<div class="flex items-center justify-between p-4 bg-[#0d0d0d] border border-slate-800 hover:border-slate-700 transition-all group">
+										<div class="flex items-center justify-between p-6 bg-stone-900/40 border border-stone-800 hover:border-rust/40 transition-all group industrial-frame">
 											<div class="flex-1 min-w-0">
-												<div class="text-xs font-black text-slate-300 font-mono truncate tracking-tight">{backup.filename}</div>
-												<div class="text-[9px] text-slate-600 mt-1.5 font-black uppercase tracking-widest flex items-center gap-3">
+												<div class="text-xs font-jetbrains font-black text-stone-300 truncate tracking-tighter">{backup.filename}</div>
+												<div class="text-[10px] text-stone-600 mt-2 font-jetbrains font-bold uppercase tracking-widest flex items-center gap-4">
 													<span>{new Date(backup.date).toLocaleString()}</span>
-													<span class="w-1 h-1 rounded-full bg-slate-800"></span>
-													<span>{formatBytes(backup.size)}</span>
+													<span class="w-1.5 h-1.5 bg-stone-800"></span>
+													<span class="text-rust/60">{formatBytes(backup.size)}</span>
 													{#if getBackupVersion(backup.filename)}
-														<span class="px-1.5 py-0.5 rounded bg-blue-950/30 text-blue-500 border border-blue-900/50">v{getBackupVersion(backup.filename)}</span>
+														<span class="px-2 py-0.5 bg-rust/10 text-rust border border-rust/20">v{getBackupVersion(backup.filename)}</span>
 													{/if}
 												</div>
 											</div>
-											<div class="flex gap-3 ml-4">
+											<div class="flex gap-4 ml-6">
 												<button 
 													onclick={() => handleBackupAction('restore', backup.filename)} 
-													class="px-4 py-2 bg-slate-900 border border-slate-800 text-slate-400 hover:text-blue-400 hover:border-blue-900/50 font-black text-[9px] uppercase tracking-widest transition-all"
+													class="px-5 py-2.5 bg-stone-950 border border-stone-800 text-stone-500 hover:text-rust hover:border-rust/50 font-heading font-black text-[10px] uppercase tracking-widest transition-all"
 												>
-												Restore
+													RESTORE
 												</button>
 												<button 
 													onclick={() => handleBackupAction('delete', backup.filename)} 
-													class="p-2 text-slate-700 hover:text-red-500 transition-colors"
+													class="p-2 text-stone-700 hover:text-red-500 transition-colors"
 													aria-label="Delete"
 												>
-													<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+													<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
 												</button>
 											</div>
 										</div>
@@ -430,32 +432,32 @@
 						{/if}
 						</div>
 					{:else if activeTab === 'history'}
-						<div class="h-full overflow-y-auto" in:fade={{ duration: 150 }}>
-							<table class="w-full text-left border-collapse font-mono">
-								<thead class="sticky top-0 bg-[#0d0d0d] border-b border-slate-800 z-10">
+						<div class="h-full overflow-y-auto custom-scrollbar" in:fade={{ duration: 150 }}>
+							<table class="w-full text-left border-collapse font-jetbrains">
+								<thead class="sticky top-0 bg-[#0a0a0a] border-b border-stone-800 z-10">
 									<tr>
-										<th class="px-6 py-4 text-[9px] font-black text-slate-600 uppercase tracking-widest">Protocol Action</th>
-										<th class="px-6 py-4 text-[9px] font-black text-slate-600 uppercase tracking-widest text-center">Status</th>
-										<th class="px-6 py-4 text-[9px] font-black text-slate-600 uppercase tracking-widest text-right">Timestamp</th>
+										<th class="px-8 py-5 text-[10px] font-black text-stone-600 uppercase tracking-widest">Protocol Action</th>
+										<th class="px-8 py-5 text-[10px] font-black text-stone-600 uppercase tracking-widest text-center">Status</th>
+										<th class="px-8 py-5 text-[10px] font-black text-stone-600 uppercase tracking-widest text-right">Timestamp</th>
 									</tr>
 								</thead>
-								<tbody class="divide-y divide-slate-900">
+								<tbody class="divide-y divide-stone-900">
 									{#each historyLogs as log}
-										<tr class="hover:bg-white/[0.02] transition-colors">
-											<td class="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-tight">{log.action}</td>
-											<td class="px-6 py-4 text-center">
-												<span class="px-2 py-0.5 rounded text-[9px] font-black uppercase {log.status === 'success' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}">
+										<tr class="hover:bg-rust/5 transition-colors group">
+											<td class="px-8 py-5 text-[11px] font-bold text-stone-400 uppercase tracking-tighter group-hover:text-rust transition-colors">{log.action}</td>
+											<td class="px-8 py-5 text-center">
+												<span class="px-3 py-1 text-[10px] font-black uppercase {log.status === 'success' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}">
 													{log.status}
 												</span>
 											</td>
-											<td class="px-6 py-4 text-[10px] text-slate-600 text-right font-black">
+											<td class="px-8 py-5 text-[10px] text-stone-600 text-right font-black">
 												{new Date(log.timestamp).toLocaleString()}
 											</td>
 										</tr>
 									{:else}
 										<tr>
-											<td colspan="3" class="px-6 py-20 text-center text-[10px] font-black text-slate-700 uppercase tracking-[0.3em]">
-												No protocol entries recorded
+											<td colspan="3" class="px-8 py-24 text-center text-[11px] font-heading font-black text-stone-700 uppercase tracking-[0.4em]">
+												No protocol entries recorded in system logs
 											</td>
 										</tr>
 									{/each}
@@ -469,10 +471,10 @@
 			<!-- Exit Interface -->
 			<button 
 				onclick={close} 
-				class="absolute top-4 right-4 p-2 text-slate-600 hover:text-white hover:bg-white/10 rounded transition-all z-50 group"
+				class="absolute top-6 right-6 p-2 text-stone-600 hover:text-rust hover:bg-rust/10 transition-all z-50 group"
 				aria-label="Exit Console"
 			>
-				<svg class="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+				<svg class="w-6 h-6 group-hover:rotate-90 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
 			</button>
 		</div>
 	</div>

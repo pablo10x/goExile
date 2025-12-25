@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { fade, slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
-	import { Plus, CheckSquare, Square, Trash2, StickyNote, RefreshCw, Search } from 'lucide-svelte';
+	import { Plus, CheckSquare, Square, Trash2, StickyNote, RefreshCw, Search, X } from 'lucide-svelte';
 	import NoteCard from '$lib/components/notes/NoteCard.svelte';
 	import TaskItem from '$lib/components/notes/TaskItem.svelte';
 	import NoteModal from '$lib/components/notes/NoteModal.svelte';
@@ -188,69 +188,69 @@
 	onMount(loadData);
 </script>
 
-<div class="h-full flex flex-col lg:flex-row gap-6 p-4 sm:p-6 overflow-hidden relative">
-	<!-- Left Column: Tasks (Fixed width on desktop, stacked on mobile) -->
+<div class="w-full h-[calc(100vh-140px)] md:h-[calc(100vh-160px)] flex flex-col lg:flex-row gap-8 overflow-hidden relative border border-stone-800 bg-[#050505] shadow-2xl">
+	<!-- Left Column: Tasks -->
 	<div
-		class="w-full lg:w-96 flex-shrink-0 flex flex-col bg-slate-900/50 border border-slate-300/50 dark:border-slate-700/50 rounded-2xl overflow-hidden backdrop-blur-xl shadow-xl h-[500px] lg:h-auto"
+		class="w-full lg:w-[450px] flex-shrink-0 flex flex-col bg-[#0a0a0a]/60 border-r border-stone-800 overflow-hidden backdrop-blur-xl h-[500px] lg:h-full"
 	>
 		<!-- Tasks Header -->
 		<div
-			class="p-5 border-b border-slate-300/50 dark:border-slate-700/50 bg-slate-800/30 flex justify-between items-center shrink-0"
+			class="p-6 border-b border-stone-800 bg-[#0a0a0a] flex justify-between items-center shrink-0"
 		>
-			<h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-				<CheckSquare class="w-5 h-5 text-emerald-400" />
-				Tasks
+			<h2 class="text-xl font-heading font-black text-white flex items-center gap-3 uppercase tracking-tighter">
+				<CheckSquare class="w-6 h-6 text-emerald-500" />
+				TASK_REGISTRY
 			</h2>
-			<div class="flex items-center gap-2">
+			<div class="flex items-center gap-3">
 				<span
-					class="px-2 py-0.5 rounded-md bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-mono text-slate-500 dark:text-slate-400"
+					class="px-3 py-1 bg-stone-900 border border-stone-800 font-jetbrains text-[10px] font-black text-stone-500 uppercase tracking-widest shadow-inner"
 				>
-					{pendingTodos.length} Pending
+					{pendingTodos.length} PENDING
 				</span>
 			</div>
 		</div>
 
-		<div class="p-4 border-b border-slate-300/50 dark:border-slate-700/50 bg-slate-900/30 shrink-0">
+		<div class="p-6 border-b border-stone-800 bg-stone-900/20 shrink-0">
 			<form
 				onsubmit={(e) => {
 					e.preventDefault();
 					addTodo();
 				}}
-				class="flex flex-col gap-2"
+				class="flex flex-col gap-4"
 			>
-				<div class="flex gap-2">
+				<div class="flex gap-3">
 					<input
 						type="text"
 						bind:value={newTodoContent}
-						placeholder="New task..."
-						class="flex-1 bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-500 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all"
+						placeholder="INIT_NEW_DIRECTIVE..."
+						class="flex-1 bg-black border border-stone-800 px-4 py-3 font-jetbrains text-xs text-white placeholder:text-stone-800 focus:border-rust outline-none transition-all uppercase tracking-widest shadow-inner"
 					/>
 					<button
 						type="submit"
 						disabled={!newTodoContent.trim()}
-						class="p-2 bg-slate-700 hover:bg-emerald-600 text-slate-900 dark:text-white rounded-lg transition-colors disabled:opacity-50"
+						class="p-3 bg-rust hover:bg-rust-light text-white transition-all disabled:opacity-20 shadow-lg shadow-rust/20 active:translate-y-px"
 					>
-						<Plus class="w-4 h-4" />
+						<Plus class="w-5 h-5" />
 					</button>
 				</div>
-				<div class="flex items-center gap-2">
+				<div class="flex items-center gap-4">
 					<label
 						for="todo-deadline"
-						class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Deadline:</label
+						class="font-jetbrains text-[9px] font-black text-stone-600 uppercase tracking-[0.3em]">EXECUTION_DEADLINE:</label
 					>
 					<input
 						type="date"
 						id="todo-deadline"
 						bind:value={newTodoDeadline}
-						class="bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 text-[10px] text-slate-700 dark:text-slate-300 outline-none focus:border-slate-500 transition-colors"
+						class="bg-black border border-stone-800 px-3 py-1.5 font-jetbrains text-[10px] text-rust-light outline-none focus:border-rust transition-all uppercase tracking-widest shadow-inner"
 					/>
 					{#if newTodoDeadline}
 						<button
 							type="button"
 							onclick={() => (newTodoDeadline = '')}
-							class="text-[10px] text-red-400 hover:text-red-300"
+							class="font-jetbrains text-[9px] font-black text-red-500 hover:text-white transition-colors uppercase tracking-widest"
 						>
-							Clear
+							[CLEAR]
 						</button>
 					{/if}
 				</div>
@@ -258,14 +258,16 @@
 		</div>
 
 		<!-- Task List -->
-		<div class="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+		<div class="flex-1 overflow-y-auto p-6 space-y-3 custom-scrollbar bg-black/20 relative">
+			<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.01] pointer-events-none"></div>
 			{#if loading}
-				<div class="flex justify-center py-4">
-					<RefreshCw class="w-5 h-5 animate-spin text-slate-600" />
+				<div class="flex flex-col items-center justify-center py-20 gap-4">
+					<div class="w-8 h-8 border-2 border-rust border-t-transparent rounded-none animate-spin"></div>
+					<span class="font-jetbrains text-[9px] font-black text-stone-600 uppercase tracking-[0.4em]">Syncing_Buffer...</span>
 				</div>
 			{:else}
 				{#if pendingTodos.length > 0}
-					<div class="space-y-2">
+					<div class="space-y-3 relative z-10">
 						{#each pendingTodos as todo (todo.id)}
 							<div animate:flip={{ duration: 300 }}>
 								<TaskItem
@@ -281,12 +283,13 @@
 
 				{#if completedTodos.length > 0}
 					{#if pendingTodos.length > 0}
-						<div class="border-t border-slate-200/50 dark:border-slate-800/50 my-4"></div>
+						<div class="h-px bg-stone-800 my-8 relative z-10">
+							<div class="absolute inset-0 flex items-center justify-center">
+								<div class="bg-[#0a0a0a] px-4 font-jetbrains text-[8px] font-black text-stone-700 tracking-[0.5em] uppercase">DEFRAGMENTED_UNITS</div>
+							</div>
+						</div>
 					{/if}
-					<div class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 px-1">
-						Completed
-					</div>
-					<div class="space-y-2 opacity-60">
+					<div class="space-y-3 opacity-40 relative z-10">
 						{#each completedTodos as todo (todo.id)}
 							<div animate:flip={{ duration: 300 }}>
 								<TaskItem
@@ -301,11 +304,11 @@
 				{/if}
 
 				{#if $todos.length === 0}
-					<div class="text-center py-8">
-						<div class="inline-flex p-3 rounded-full bg-slate-800/50 mb-3">
-							<CheckSquare class="w-6 h-6 text-slate-600" />
+					<div class="flex flex-col items-center justify-center py-20 text-stone-800 gap-4">
+						<div class="p-6 border border-dashed border-stone-800 industrial-frame">
+							<CheckSquare class="w-10 h-10 opacity-10" />
 						</div>
-						<p class="text-sm text-slate-500">No tasks yet.</p>
+						<p class="font-jetbrains text-[10px] font-black uppercase tracking-[0.3em]">Protocol_Buffer_Empty</p>
 					</div>
 				{/if}
 			{/if}
@@ -313,53 +316,58 @@
 	</div>
 
 	<!-- Right Column: Notes -->
-	<div class="flex-1 flex flex-col min-h-0 bg-transparent">
+	<div class="flex-1 flex flex-col min-h-0 bg-transparent p-6 lg:p-10">
 		<!-- Notes Toolbar -->
 		<div
-			class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 shrink-0"
+			class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8 mb-12 shrink-0"
 		>
-			<div>
-				<h1 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-					<StickyNote class="w-6 h-6 text-yellow-400" />
-					Notes
-				</h1>
-				<p class="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
-					Capture ideas and important info
-				</p>
+			<div class="flex items-center gap-6">
+				<div class="p-4 bg-stone-900 border border-stone-800 shadow-xl industrial-frame">
+					<StickyNote class="w-10 h-10 text-rust" />
+				</div>
+				<div>
+					<h1 class="text-4xl font-heading font-black text-white uppercase tracking-tighter">
+						NEURAL_NOTATIONS
+					</h1>
+					<p class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest font-black mt-2">
+						Buffer asynchronous concepts and tactical intelligence
+					</p>
+				</div>
 			</div>
 
-			<div class="flex items-center gap-3 w-full sm:w-auto">
-				<div class="relative flex-1 sm:w-64">
-					<Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+			<div class="flex items-center gap-4 w-full xl:w-auto">
+				<div class="relative flex-1 xl:w-96 group">
+					<Search class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-600 group-focus-within:text-rust transition-colors" />
 					<input
 						type="text"
 						bind:value={searchQuery}
-						placeholder="Search notes..."
-						                        class="w-full bg-slate-900/50 border border-[var(--border-color)] rounded-xl pl-9 pr-4 py-2 text-sm text-slate-200 focus:ring-2 focus:ring-rust/50 outline-none backdrop-blur-sm"
-						                    />
-						                </div>
-						                <button
-						                    onclick={openCreateNoteModal}
-						                    class="flex items-center gap-2 px-4 py-2 bg-rust hover:bg-rust-light text-white text-sm font-bold rounded-xl shadow-lg shadow-rust/20 transition-all hover:-translate-y-0.5"
-						                >					<Plus class="w-4 h-4" />
-					<span class="hidden sm:inline">New Note</span>
+						placeholder="FILTER_SIGNAL_LOGS..."
+						class="w-full bg-stone-950 border border-stone-800 py-3.5 pl-14 pr-4 font-jetbrains text-xs text-stone-300 focus:border-rust outline-none transition-all uppercase tracking-widest shadow-inner"
+					/>
+				</div>
+				<button
+					onclick={openCreateNoteModal}
+					class="flex items-center gap-3 px-10 py-3.5 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rust/20 transition-all active:translate-y-px"
+				>					<Plus class="w-5 h-5" />
+					<span>New_Entry</span>
 				</button>
 			</div>
 		</div>
 
 		<!-- Notes Grid -->
-		<div class="flex-1 overflow-y-auto custom-scrollbar pb-20">
+		<div class="flex-1 overflow-y-auto custom-scrollbar pb-32">
+			<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.01] pointer-events-none"></div>
 			<!-- pb-20 for AI bot clearance -->
 			{#if loading}
-				<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-					{#each [1, 2, 3] as _}
+				<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-8">
+					{#each [1, 2, 3, 4, 5] as _}
 						<div
-							class="h-48 bg-slate-800/30 rounded-xl animate-pulse border border-slate-300/30 dark:border-slate-700/30"
+							class="h-72 bg-stone-900/40 border border-stone-800 animate-pulse industrial-frame"
 						></div>
 					{/each}
 				</div>
 			{:else if filteredNotes.length > 0}
-				<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+				<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-8">
 					{#each filteredNotes as note (note.id)}
 						<div animate:flip={{ duration: 300 }}>
 							<NoteCard {note} onEdit={openEditNoteModal} onDelete={deleteNote} />
@@ -368,13 +376,13 @@
 				</div>
 			{:else}
 				<div
-					class="h-64 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-900/20"
+					class="h-[500px] flex flex-col items-center justify-center border-2 border-dashed border-stone-800 bg-stone-950/20 industrial-frame"
 				>
-					<div class="p-4 bg-slate-800/50 rounded-full mb-3">
-						<StickyNote class="w-8 h-8 text-slate-600" />
+					<div class="p-10 bg-stone-900/40 border border-stone-800 mb-8 group">
+						<StickyNote class="w-16 h-16 text-stone-800 group-hover:text-rust transition-colors duration-500" />
 					</div>
-					<p class="text-slate-500 font-medium">
-						{searchQuery ? 'No matching notes found.' : 'No notes yet. Create one!'}
+					<p class="font-heading font-black text-base text-stone-600 uppercase tracking-[0.4em]">
+						{searchQuery ? 'Zero_Signals_Matching_Query' : 'Registry_Clean_Initialize_Buffer'}
 					</p>
 				</div>
 			{/if}

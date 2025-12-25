@@ -38,51 +38,51 @@
 
 {#if isOpen}
 	<div
-		class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+		class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
 		transition:slide={{ duration: 100 }}
 	>
 		<div
-			class="bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl w-full max-w-md shadow-2xl flex flex-col"
+			class="bg-[#050505] border border-stone-800 rounded-none w-full max-w-md shadow-2xl flex flex-col industrial-frame"
 		>
 			<div
-				class="p-4 border-b border-slate-300 dark:border-slate-700 flex justify-between items-center"
+				class="p-6 border-b border-stone-800 flex justify-between items-center bg-[#0a0a0a]"
 			>
-				<h3 class="text-lg font-bold text-slate-100">
-					Add Column to <span class="text-blue-400 font-mono">{table}</span>
+				<h3 class="text-xl font-heading font-black text-slate-100 uppercase tracking-tighter">
+					Alter_Schema: <span class="text-rust font-jetbrains text-xs ml-3 uppercase tracking-widest">{table}</span>
 				</h3>
 				<button
 					onclick={onClose}
-					class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white"
+					class="text-stone-600 hover:text-white transition-colors"
 				>
 					<X class="w-5 h-5" />
 				</button>
 			</div>
 
-			<div class="p-6 space-y-4">
+			<div class="p-8 space-y-8">
 				<div>
 					<label
 						for="column-name"
-						class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5"
-						>Column Name</label
+						class="block font-jetbrains text-[10px] font-black text-stone-500 uppercase tracking-widest mb-3"
+						>Field_Identity</label
 					>
 					<input
 						id="column-name"
 						type="text"
 						bind:value={columnName}
-						class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500"
-						placeholder="e.g. status"
+						class="w-full bg-stone-950 border border-stone-800 py-3 px-4 text-stone-200 font-jetbrains text-xs focus:border-rust outline-none uppercase tracking-widest transition-all"
+						placeholder="e.g. CORE_STATUS"
 					/>
 				</div>
 				<div>
 					<label
 						for="column-type"
-						class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5"
-						>Data Type</label
+						class="block font-jetbrains text-[10px] font-black text-stone-500 uppercase tracking-widest mb-3"
+						>Data_Type_Protocol</label
 					>
 					<select
 						id="column-type"
 						bind:value={columnType}
-						class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500"
+						class="w-full bg-stone-950 border border-stone-800 py-3 px-4 text-rust font-jetbrains text-xs focus:border-rust outline-none appearance-none cursor-pointer uppercase tracking-widest"
 					>
 						{#each dataTypes as type}
 							<option value={type}>{type}</option>
@@ -92,27 +92,28 @@
 			</div>
 
 			<div
-				class="p-4 border-t border-slate-300 dark:border-slate-700 bg-slate-900/50 flex justify-end gap-3"
+				class="p-6 border-t border-stone-800 bg-[#0a0a0a] flex justify-end gap-4"
 			>
 				<button
 					onclick={onClose}
-					class="px-4 py-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-800 rounded-lg transition-colors"
+					class="px-6 py-3 font-heading font-black text-[10px] text-stone-500 hover:text-white transition-all uppercase tracking-widest"
 				>
-					Cancel
+					Abort_Sequence
 				</button>
 				<button
 					onclick={handleSave}
 					disabled={loading || !columnName.trim()}
-					class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-slate-900 dark:text-white rounded-lg font-bold flex items-center gap-2 shadow-lg disabled:opacity-50"
+					class="px-8 py-3 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rust/20 disabled:opacity-20 transition-all active:translate-y-px"
 				>
 					{#if loading}
 						<div
-							class="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"
+							class="w-4 h-4 border-2 border-white/30 border-t-white animate-spin"
 						></div>
+						SYNCING...
 					{:else}
 						<Save class="w-4 h-4" />
+						Append_Field
 					{/if}
-					Add Column
 				</button>
 			</div>
 		</div>

@@ -252,8 +252,8 @@
 	function getStatusColor(spawner: any, isHovered: boolean) {
 		const isActive = spawner.status === 'online' || spawner.status === 'Online';
 
-		if (!isActive) return { stroke: '#ef4444', glow: 'rgba(239, 68, 68, 0.3)' };
-		if (isHovered) return { stroke: '#f97316', glow: 'rgba(249, 115, 22, 0.5)' };
+		if (!isActive) return { stroke: 'var(--color-red-500)', glow: 'rgba(239, 68, 68, 0.3)' };
+		if (isHovered) return { stroke: 'var(--color-rust-light)', glow: 'rgba(249, 115, 22, 0.5)' };
 		return { stroke: 'var(--color-rust)', glow: 'rgba(120, 53, 15, 0.2)' };
 	}
 
@@ -1217,7 +1217,7 @@
 						<div
 							class={`
 						relative w-12 h-12 rounded-full flex items-center justify-center border-2 shadow-lg ${$siteSettings.aesthetic.glassmorphism ? 'backdrop-blur-md' : ''}
-						${isActive ? 'bg-[var(--card-bg)] border-rust-light shadow-rust-light/30' : 'bg-slate-900/95 border-red-500/70 shadow-red-500/40'}
+						${isActive ? 'bg-gradient-to-br from-stone-900 to-black border-rust-light shadow-rust-light/30' : 'bg-slate-900/95 border-red-500/70 shadow-red-500/40'}
 						${(pulsingSpawners.has(spawner.id) && $siteSettings.aesthetic.animations_enabled) ? 'node-pulse border-emerald-400 shadow-emerald-500/60' : ''}
 						transition-all duration-300
 					`}

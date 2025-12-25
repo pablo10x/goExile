@@ -69,11 +69,11 @@
 </script>
 
 <div
-	class={`border border-stone-800 ${$siteSettings.aesthetic.industrial_styling ? 'rounded-none' : 'rounded-lg'} bg-stone-950/20 overflow-hidden mb-2 hover:border-rust/40 transition-all shadow-sm`}
+	class={`border border-stone-800 ${$siteSettings.aesthetic.industrial_styling ? 'rounded-none' : 'rounded-xl'} bg-stone-950/40 glass-panel overflow-hidden mb-2 hover:border-rust/40 transition-all duration-500 shadow-lg group/row`}
 >
 	<!-- Header / Collapsed View -->
 	<div
-		class="flex flex-col sm:flex-row sm:items-center gap-4 px-5 py-3 cursor-pointer hover:bg-white/[0.02] transition-colors"
+		class="flex flex-col sm:flex-row sm:items-center gap-4 px-6 py-4 cursor-pointer hover:bg-rust/5 transition-all"
 		onclick={toggle}
 		role="button"
 		tabindex="0"
@@ -81,110 +81,111 @@
 	>
 		<!-- Chevron -->
 		<div
-			class="text-stone-600 transform transition-transform duration-300 {expanded
-				? 'rotate-90 text-rust-light'
+			class="text-stone-600 transform transition-transform duration-500 {expanded
+				? 'rotate-90 text-rust shadow-rust/20'
 				: ''}"
 		>
 			<ChevronRight class="w-4 h-4" />
 		</div>
 
 		<!-- Name & Identity -->
-		<div class="flex flex-col min-w-[140px]">
+		<div class="flex flex-col min-w-[160px]">
 			<div class="flex items-center gap-2">
-				<span class="text-[10px] font-mono text-stone-600 uppercase tracking-tighter">Node_</span>
-				<span class="font-bold text-sm text-white tracking-tight uppercase">{instance.id.split('-').pop() || instance.port}</span>
+				<span class="text-[9px] font-jetbrains font-black text-stone-600 uppercase tracking-tighter">ID</span>
+				<span class="font-heading font-black text-sm text-white tracking-widest uppercase">{instance.id.split('-').pop() || instance.port}</span>
 			</div>
-			<div class="flex items-center gap-2 mt-0.5">
-				<span class="text-[8px] font-mono text-stone-700 uppercase">Port:</span>
-				<span class="text-[9px] font-mono text-rust-light/80">{instance.port}</span>
+			<div class="flex items-center gap-2 mt-1">
+				<span class="text-[8px] font-jetbrains font-bold text-stone-700 uppercase">Port:</span>
+				<span class="text-[9px] font-jetbrains font-black text-rust-light tracking-widest">{instance.port}</span>
 			</div>
 		</div>
 
 		<!-- Status Badge -->
-		<div class="sm:w-32">
+		<div class="sm:w-36">
 			{#if instance.status === 'Running'}
-				<div class="flex items-center gap-2 text-emerald-500 bg-emerald-500/5 px-2 py-1 border border-emerald-500/20 w-fit">
-					<div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-					<span class="text-[9px] font-black uppercase tracking-widest">Running</span>
+				<div class="flex items-center gap-2.5 text-emerald-400 bg-emerald-500/5 px-3 py-1 border border-emerald-500/20 rounded-none w-fit shadow-[0_0_15px_rgba(16,185,129,0.05)]">
+					<div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-emerald-500/50 shadow-lg"></div>
+					<span class="text-[9px] font-heading font-black uppercase tracking-[0.2em]">Running</span>
 				</div>
 			{:else if instance.status === 'Provisioning'}
-				<div class="flex items-center gap-2 text-rust-light bg-rust/5 px-2 py-1 border border-rust/20 w-fit">
-					<div class="w-1.5 h-1.5 rounded-none bg-rust animate-spin"></div>
-					<span class="text-[9px] font-black uppercase tracking-widest">Syncing</span>
+				<div class="flex items-center gap-2.5 text-rust-light bg-rust/5 px-3 py-1 border border-rust/20 rounded-none w-fit">
+					<div class="w-1.5 h-1.5 rounded-none bg-rust animate-spin shadow-rust/50 shadow-lg"></div>
+					<span class="text-[9px] font-heading font-black uppercase tracking-[0.2em]">Starting</span>
 				</div>
 			{:else if instance.status === 'Error'}
-				<div class="flex items-center gap-2 text-red-500 bg-red-500/5 px-2 py-1 border border-red-500/20 w-fit">
-					<div class="w-1.5 h-1.5 rounded-full bg-red-500 animate-flicker"></div>
-					<span class="text-[9px] font-black uppercase tracking-widest">Fault</span>
+				<div class="flex items-center gap-2.5 text-red-500 bg-red-500/5 px-3 py-1 border border-red-500/20 rounded-none w-fit">
+					<div class="w-1.5 h-1.5 rounded-full bg-red-500 animate-flicker shadow-red-500/50 shadow-lg"></div>
+					<span class="text-[9px] font-heading font-black uppercase tracking-[0.2em]">Error</span>
 				</div>
 			{:else}
-				<div class="flex items-center gap-2 text-stone-500 bg-stone-800/10 px-2 py-1 border border-stone-800/30 w-fit">
+				<div class="flex items-center gap-2.5 text-stone-500 bg-stone-900/40 px-3 py-1 border border-stone-800 rounded-none w-fit">
 					<div class="w-1.5 h-1.5 rounded-full bg-stone-700"></div>
-					<span class="text-[9px] font-black uppercase tracking-widest">{instance.status || 'Offline'}</span>
+					<span class="text-[9px] font-heading font-black uppercase tracking-[0.2em]">{instance.status || 'Offline'}</span>
 				</div>
 			{/if}
 		</div>
 
 		<!-- Version Info -->
 		<div class="flex flex-col hidden md:flex">
-			<span class="text-[8px] font-mono text-stone-700 uppercase">System_Ver</span>
+			<span class="text-[8px] font-jetbrains font-black text-stone-700 uppercase tracking-widest">Version</span>
 			<div class="flex items-center gap-2">
-				<span class="text-[10px] font-mono text-stone-400">{instance.version || '0.0.0'}</span>
+				<span class="text-[10px] font-jetbrains font-bold text-stone-400">{instance.version || '0.0.0'}</span>
 				{#if isOutdated}
-					<span class="text-[7px] font-black bg-rust/20 text-rust px-1 border border-rust/30 uppercase animate-pulse">Update_Avail</span>
+					<span class="text-[7px] font-black font-heading bg-rust/20 text-rust px-1.5 py-0.5 border border-rust/30 uppercase animate-pulse shadow-rust/10 shadow-lg">UPDATE_RQ</span>
 				{/if}
 			</div>
 		</div>
 
 		<!-- Player Load -->
-		<div class="flex flex-col hidden lg:flex ml-4">
-			<span class="text-[8px] font-mono text-stone-700 uppercase">Active_Load</span>
-			<div class="flex items-center gap-2">
-				<div class="w-16 h-1.5 bg-stone-900 border border-stone-800 rounded-none overflow-hidden">
-					<div class="h-full bg-rust-light opacity-60" style="width: {(instance.player_count / 100) * 100}%"></div>
+		<div class="flex flex-col hidden lg:flex ml-6">
+			<span class="text-[8px] font-jetbrains font-black text-stone-700 uppercase tracking-widest">Clients</span>
+			<div class="flex items-center gap-3">
+				<div class="w-20 h-1 bg-stone-950 border border-stone-800 rounded-none overflow-hidden relative p-0">
+					<div class="h-full bg-rust-light shadow-rust/40 shadow-lg transition-all duration-1000 ease-out" style="width: {Math.min(100, (instance.player_count / 100) * 100)}%"></div>
 				</div>
-				<span class="text-[10px] font-mono text-stone-400">{instance.player_count || 0} Clients</span>
+				<span class="text-[10px] font-jetbrains font-black text-stone-400 tracking-tighter">{instance.player_count || 0}</span>
 			</div>
 		</div>
 
 		<!-- Quick Actions -->
 		<div
-			class="flex items-center gap-1 ml-auto"
+			class="flex items-center gap-2 ml-auto"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
 			role="toolbar"
 			aria-label="Instance Quick Actions"
+			tabindex="0"
 		>
 			<button
 				onclick={() => dispatch('tail', { spawnerId, instanceId: instance.id })}
-				class="p-2 text-stone-600 hover:text-white hover:bg-stone-900 transition-all border border-transparent"
-				title="Access Terminal"
+				class="p-2.5 text-stone-600 hover:text-white hover:bg-stone-900 transition-all border border-transparent hover:shadow-lg"
+				title="Terminal"
 			>
 				<TerminalSquare class="w-4 h-4" />
 			</button>
 
-			<div class="w-px h-4 bg-stone-800 mx-1"></div>
+			<div class="w-px h-5 bg-stone-800 mx-1"></div>
 
 			{#if instance.status !== 'Running'}
 				<button
 					onclick={() => dispatch('start', { spawnerId, instanceId: instance.id })}
-					class="p-2 text-emerald-600 hover:text-emerald-400 hover:bg-emerald-500/5 transition-all"
-					title="Execute Node"
+					class="p-2.5 text-emerald-600 hover:text-emerald-400 hover:bg-emerald-500/5 transition-all hover:shadow-emerald-500/10 hover:shadow-lg"
+					title="Start"
 				>
 					<Play class="w-4 h-4" />
 				</button>
 			{:else}
 				<button
 					onclick={() => dispatch('stop', { spawnerId, instanceId: instance.id })}
-					class="p-2 text-stone-600 hover:text-yellow-500 hover:bg-yellow-500/5 transition-all"
-					title="Terminate Node"
+					class="p-2.5 text-stone-600 hover:text-yellow-500 hover:bg-yellow-500/5 transition-all hover:shadow-yellow-500/10 hover:shadow-lg"
+					title="Stop"
 				>
 					<Square class="w-4 h-4" />
 				</button>
 				<button
 					onclick={() => dispatch('restart', { spawnerId, instanceId: instance.id })}
-					class="p-2 text-stone-600 hover:text-rust-light hover:bg-rust/5 transition-all"
-					title="Reboot Node"
+					class="p-2.5 text-stone-600 hover:text-rust-light hover:bg-rust/5 transition-all hover:shadow-rust/10 hover:shadow-lg"
+					title="Restart"
 				>
 					<RotateCw class="w-4 h-4" />
 				</button>
@@ -196,97 +197,97 @@
 	{#if expanded}
 		<div
 			transition:slide={{ duration: 300 }}
-			class="bg-black/20 border-t border-stone-800/50 p-6 space-y-6"
+			class="bg-[#050505]/60 border-t border-stone-800 p-8 space-y-8"
 		>
-			<div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+			<div class="grid grid-cols-1 xl:grid-cols-12 gap-10">
 				<!-- Left: Technical Readouts -->
-				<div class="xl:col-span-7 space-y-6">
+				<div class="xl:col-span-7 space-y-8">
 					<!-- Primary Toolbar -->
-					<div class="flex flex-wrap gap-2 pb-6 border-b border-stone-800/50">
+					<div class="flex flex-wrap gap-3 pb-8 border-b border-stone-800">
 						<button
 							onclick={() => dispatch('tail', { spawnerId, instanceId: instance.id })}
-							class="btn-industrial bg-stone-900 text-stone-400 hover:text-white border border-stone-800 hover:border-stone-600"
+							class="btn-industrial bg-stone-950 text-stone-400 hover:text-white border border-stone-800 hover:border-rust/50 shadow-lg active:translate-y-px transition-all"
 						>
-							<TerminalSquare class="w-3 h-3" />
-							<span>Terminal_Bridge</span>
+							<TerminalSquare class="w-3.5 h-3.5" />
+							<span>Console</span>
 						</button>
 						<button
 							onclick={() => dispatch('update', { spawnerId, instanceId: instance.id })}
 							disabled={!isOutdated}
-							class="btn-industrial {isOutdated ? 'bg-rust/10 text-rust-light border-rust/30 hover:bg-rust hover:text-white' : 'bg-stone-900/50 text-stone-600 border-stone-800 opacity-50 cursor-not-allowed'}"
+							class="btn-industrial {isOutdated ? 'bg-rust text-white border-rust-light shadow-rust/20' : 'bg-stone-900/50 text-stone-600 border-stone-800 opacity-50 cursor-not-allowed'}"
 						>
-							<ArrowDownToLine class="w-3 h-3" />
-							<span>{isOutdated ? 'Sync_Patch' : 'Registry_Up_to_Date'}</span>
+							<ArrowDownToLine class="w-3.5 h-3.5" />
+							<span>{isOutdated ? 'Update Version' : 'Version Up-to-date'}</span>
 						</button>
 						<button
 							onclick={() => dispatch('delete', { spawnerId, instanceId: instance.id })}
 							disabled={instance.status === 'Running'}
-							class="btn-industrial bg-red-950/10 text-red-600/70 hover:text-red-500 border border-red-900/20 hover:border-red-600/40 ml-auto"
+							class="btn-industrial bg-red-950/20 text-red-500 hover:bg-red-600 hover:text-white border border-red-900/30 ml-auto shadow-red-900/10"
 						>
-							<Trash2 class="w-3 h-3" />
-							<span>Decommission_Record</span>
+							<Trash2 class="w-3.5 h-3.5" />
+							<span>Delete</span>
 						</button>
 					</div>
 
 					<!-- Load Chart -->
-					<div class="space-y-3">
+					<div class="space-y-4">
 						<div class="flex justify-between items-end">
-							<div class="flex flex-col">
-								<span class="text-[8px] font-mono text-stone-600 uppercase tracking-widest">Stream_Buffer</span>
-								<h4 class="text-[10px] font-bold text-stone-300 uppercase tracking-wider">Client_Interaction_Telemetry</h4>
+							<div class="flex flex-col gap-1">
+								<span class="text-[9px] font-jetbrains font-black text-stone-600 uppercase tracking-[0.2em]">Player Telemetry</span>
+								<h4 class="text-[11px] font-heading font-black text-stone-300 uppercase tracking-[0.1em]">Concurrent Clients (24h)</h4>
 							</div>
-							<div class="text-[10px] font-mono text-rust-light bg-rust/5 px-2 py-0.5 border border-rust/20">
-								SIGNAL: {instance.player_count || 0}_ACTIVE
+							<div class="text-[10px] font-jetbrains font-black text-rust-light bg-rust/5 px-3 py-1 border border-rust/20 shadow-inner">
+								Status: {instance.player_count || 0} Connected
 							</div>
 						</div>
-						<div class="bg-stone-950/40 border border-stone-800/50 p-4">
-							<PlayersChart data={chartData} height={140} color="var(--color-rust)" />
+						<div class="bg-stone-950/60 border border-stone-800 p-6 industrial-frame shadow-inner">
+							<PlayersChart data={chartData} height={160} color="var(--color-rust)" />
 						</div>
 					</div>
 				</div>
 
 				<!-- Right: Node Configuration -->
-				<div class="xl:col-span-5 space-y-4">
-					<div class="bg-stone-900/30 border border-stone-800/50 p-5 space-y-4">
-						<div class="space-y-2">
-							<label for={'name-' + instance.id} class="text-[9px] font-mono text-stone-600 uppercase tracking-widest block">Instance_Identifier</label>
-							<div class="flex gap-2">
+				<div class="xl:col-span-5 space-y-6">
+					<div class="bg-stone-900/40 border border-stone-800 p-6 space-y-6 industrial-frame">
+						<div class="space-y-3">
+							<label for={'name-' + instance.id} class="text-[10px] font-jetbrains font-black text-stone-500 uppercase tracking-[0.2em] block">Identifier</label>
+							<div class="flex gap-3">
 								<input
 									id={'name-' + instance.id}
 									type="text"
 									bind:value={renameValue}
-									class="flex-1 bg-black border border-stone-800 px-4 py-2 text-xs font-mono text-white focus:border-rust/50 outline-none transition-all"
+									class="flex-1 bg-stone-950 border border-stone-800 px-4 py-2.5 text-xs font-jetbrains font-bold text-white focus:border-rust outline-none transition-all uppercase tracking-widest"
 									placeholder={instance.id}
 								/>
 								<button
 									onclick={handleRename}
 									disabled={renameValue === instance.id || !renameValue.trim()}
-									class="bg-stone-800 hover:bg-rust text-stone-400 hover:text-white px-4 py-2 text-[9px] font-black uppercase transition-all disabled:opacity-30 border border-stone-700 hover:border-rust"
+									class="bg-stone-800 hover:bg-rust text-stone-400 hover:text-white px-5 py-2.5 text-[10px] font-heading font-black uppercase tracking-widest transition-all disabled:opacity-20 border border-stone-700 hover:border-rust-light shadow-lg"
 								>
-									Commit
+									Rename
 								</button>
 							</div>
 						</div>
 
 						<div class="grid grid-cols-2 gap-4 pt-2">
-							<div class="bg-black/40 border border-stone-800/50 p-3 flex flex-col">
-								<span class="text-[8px] font-mono text-stone-700 uppercase mb-1">Runtime_PID</span>
-								<span class="text-xs font-mono text-stone-300 uppercase">{instance.pid || 'NULL'}</span>
+							<div class="bg-stone-950 border border-stone-800 p-4 flex flex-col gap-1 shadow-inner">
+								<span class="text-[9px] font-jetbrains font-black text-stone-600 uppercase tracking-widest">Process ID</span>
+								<span class="text-xs font-jetbrains font-black text-stone-300 uppercase tracking-tighter">{instance.pid || 'N/A'}</span>
 							</div>
-							<div class="bg-black/40 border border-stone-800/50 p-3 flex flex-col">
-								<span class="text-[8px] font-mono text-stone-700 uppercase mb-1">Network_Port</span>
-								<span class="text-xs font-mono text-rust-light uppercase">{instance.port || 'AUTO'}</span>
+							<div class="bg-stone-950 border border-stone-800 p-4 flex flex-col gap-1 shadow-inner">
+								<span class="text-[9px] font-jetbrains font-black text-stone-600 uppercase tracking-widest">Network Port</span>
+								<span class="text-xs font-jetbrains font-black text-rust uppercase tracking-tighter">{instance.port || 'Auto'}</span>
 							</div>
 						</div>
 					</div>
 
-					<div class="bg-amber-950/5 border border-amber-900/20 p-4 flex gap-4 items-start">
-						<div class="p-2 bg-amber-900/20 text-amber-500">
+					<div class="bg-amber-500/5 border border-amber-500/20 p-5 flex gap-5 items-start industrial-frame">
+						<div class="p-2.5 bg-amber-500/10 text-amber-500 border border-amber-500/20">
 							<Activity class="w-4 h-4" />
 						</div>
-						<div class="space-y-1">
-							<span class="text-[9px] font-black text-amber-600 uppercase tracking-widest block">Maintenance_Protocol</span>
-							<p class="text-[10px] font-mono text-stone-500 leading-tight">System ensures node stability through real-time heartbeat monitoring. Manual restarts recommended only for fatal buffer overflows.</p>
+						<div class="space-y-2">
+							<span class="text-[10px] font-heading font-black text-amber-600 uppercase tracking-[0.2em] block">Node Maintenance</span>
+							<p class="text-[11px] font-jetbrains font-medium text-stone-500 leading-relaxed uppercase tracking-tight">Standard health checks are active. Manual intervention is only required if heartbeats fail to sync.</p>
 						</div>
 					</div>
 				</div>

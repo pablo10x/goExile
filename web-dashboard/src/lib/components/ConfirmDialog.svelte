@@ -81,115 +81,113 @@
 
 		<!-- Modal Container - Industrial Terminal Style -->
 		<div
-			class="relative w-full max-w-lg bg-black border-2 {$siteSettings.aesthetic.industrial_styling ? 'rounded-sm' : 'rounded-2xl'} {isCritical ? 'border-red-900' : 'border-rust/30'} {$siteSettings.aesthetic.glow_effects ? (isCritical ? 'shadow-[0_0_40px_rgba(153,27,27,0.2)]' : 'shadow-[0_0_40px_rgba(120,53,15,0.1)]') : ''} overflow-hidden z-[460]"
+			class="relative w-full max-w-lg bg-[#050505] border border-stone-800 rounded-none {isCritical ? 'border-red-900/50' : 'border-rust/30'} shadow-2xl glass-panel overflow-hidden z-[460] industrial-frame"
 			transition:modalScale
 		>
 			<!-- Status Bar -->
-			{#if $siteSettings.aesthetic.animations_enabled}
-				<div class="h-1 w-full {isCritical ? 'bg-red-600' : 'bg-rust'} opacity-50 animate-pulse"></div>
-			{:else}
-				<div class="h-1 w-full {isCritical ? 'bg-red-600' : 'bg-rust'} opacity-50"></div>
-			{/if}
+			<div class={`h-1 w-full ${isCritical ? 'bg-red-600' : 'bg-rust'} opacity-40 ${$siteSettings.aesthetic.animations_enabled ? 'animate-pulse' : ''}`}></div>
 
 			<!-- Header -->
-			<div class="px-8 py-5 border-b border-white/5 flex justify-between items-center bg-black">
+			<div class="px-8 py-5 border-b border-stone-800 flex justify-between items-center bg-[#0a0a0a]">
 				<div class="flex items-center gap-4">
 					{#if isCritical}
-						<ShieldAlert class="w-5 h-5 text-red-600 {$siteSettings.aesthetic.animations_enabled ? 'animate-flicker' : ''}" />
+						<ShieldAlert class="w-5 h-5 text-red-500 {$siteSettings.aesthetic.animations_enabled ? 'animate-flicker' : ''}" />
 					{:else}
-						<Terminal class="w-5 h-5 text-rust" />
+						<Terminal class="w-5 h-5 text-rust-light" />
 					{/if}
-					<h3 class="text-lg font-black italic tracking-tighter text-white uppercase">
+					<h3 class="text-xl font-heading font-black tracking-tighter text-white uppercase italic">
 						{title}
 					</h3>
 				</div>
 				<button
 					onclick={close}
-					class="text-slate-700 hover:text-white transition-all p-1"
+					class="text-stone-600 hover:text-white transition-all p-1"
 				>
 					<X class="w-5 h-5" />
 				</button>
 			</div>
 
 			<!-- Content -->
-			<div class="p-8 space-y-6 relative overflow-hidden bg-[#050505]">
+			<div class="p-10 space-y-8 relative overflow-hidden bg-[#050505]">
+				<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
+				
 				<div class="flex items-start gap-6 relative z-10">
-					<div class="flex-1 space-y-4">
-						<div class="flex items-center gap-3 text-[10px] font-black text-slate-600 tracking-[0.4em] uppercase italic">
-							<ChevronRight class="w-3 h-3 {isCritical ? 'text-red-600' : 'text-[#f97316]'}" />
-							System_Prompt
+					<div class="flex-1 space-y-6">
+						<div class="flex items-center gap-3 font-jetbrains text-[9px] font-black text-stone-600 tracking-[0.4em] uppercase italic">
+							<ChevronRight class="w-3.5 h-3.5 {isCritical ? 'text-red-600' : 'text-rust'}" />
+							SYSTEM_PROMPT_BUFFER
 						</div>
-						<div class="text-slate-400 text-sm leading-relaxed italic font-bold uppercase tracking-tight">
+						<div class="text-stone-300 font-jetbrains font-bold uppercase tracking-tight leading-relaxed">
 							{#if loading && statusMessage}
 								<p class="{$siteSettings.aesthetic.animations_enabled ? 'animate-pulse' : ''} text-rust">
 									>> {statusMessage}
 								</p>
 							{:else}
-								<p>&gt;&gt; {message}</p>
+								<p class="opacity-90">&gt;&gt; {message}</p>
 							{/if}
 						</div>
-						<div class="pt-2 border-t border-white/5">
-							<slot />
-						</div>
+						{#if $$slots.default}
+							<div class="pt-4 border-t border-stone-800/50">
+								<slot />
+							</div>
+						{/if}
 					</div>
 				</div>
 
 				{#if error}
 					<div
-						class="p-4 bg-red-950/20 border-l-4 border-red-600 text-red-500 text-xs italic font-black animate-flicker"
+						class="p-5 bg-red-950/20 border border-red-500/30 text-red-500 font-jetbrains text-[10px] font-black uppercase tracking-widest industrial-frame"
 						transition:scale={{ start: 0.98, duration: 200 }}
 					>
-						<div class="flex items-center gap-3">
-							<AlertTriangle class="w-4 h-4" />
-							<span>ERROR: {error}</span>
+						<div class="flex items-center gap-4">
+							<AlertTriangle class="w-5 h-5 shrink-0" />
+							<span>OP_FAULT: {error}</span>
 						</div>
 					</div>
 				{/if}
 
 				{#if loading && progress !== null}
 					<!-- Progress -->
-					<div class="space-y-3" transition:fade>
-						<div class="flex justify-between text-[9px] font-black text-slate-600 uppercase tracking-widest italic">
-							<span>Stream_Progress</span>
-							<span>{Math.round(progress)}%</span>
+					<div class="space-y-4" transition:fade>
+						<div class="flex justify-between font-jetbrains text-[9px] font-black text-stone-500 uppercase tracking-widest italic">
+							<span>STREAM_PROGRESS</span>
+							<span class="text-rust">{Math.round(progress)}%</span>
 						</div>
-						<div class="w-full h-3 bg-black border border-white/10 p-[2px] shadow-inner">
+						<div class="w-full h-1.5 bg-stone-950 border border-stone-800 p-0 relative shadow-inner overflow-hidden">
 							<div
-								class="h-full {isCritical ? 'bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.5)]' : 'bg-[#f97316] shadow-[0_0_10px_rgba(249,115,22,0.5)]'} transition-all duration-300 ease-out relative"
+								class="h-full {isCritical ? 'bg-red-600 shadow-red-900/40' : 'bg-rust shadow-rust/40'} transition-all duration-300 ease-out shadow-lg"
 								style="width: {progress}%"
-							>
-								<div class="absolute inset-0 bg-white/20 animate-pulse"></div>
-							</div>
+							></div>
 						</div>
 					</div>
 				{/if}
 			</div>
 
 			<!-- Commands -->
-			<div class="px-8 py-6 bg-black border-t border-white/5 flex justify-between items-center">
-				<div class="text-[8px] font-black text-slate-800 tracking-[0.5em] uppercase italic">
-					Waiting_For_Instruction
+			<div class="px-8 py-6 bg-[#0a0a0a] border-t border-stone-800 flex justify-between items-center">
+				<div class="font-jetbrains text-[8px] font-black text-stone-700 tracking-[0.5em] uppercase italic">
+					AWAITING_INPUT
 				</div>
 				<div class="flex gap-6">
 					{#if loading && progress !== null}
-						<div class="text-[10px] font-black text-slate-600 uppercase italic animate-pulse">
+						<div class="font-heading font-black text-[11px] text-stone-600 uppercase italic animate-pulse tracking-widest">
 							[BUSY]
 						</div>
 					{:else if loading}
-						<div class="flex items-center gap-3 text-[10px] font-black text-[#f97316] uppercase italic animate-pulse">
+						<div class="flex items-center gap-3 font-heading font-black text-[11px] text-rust uppercase italic animate-pulse tracking-widest">
 							<RefreshCw class="w-4 h-4 animate-spin" />
 							EXECUTING...
 						</div>
 					{:else}
 						<button
 							onclick={close}
-							class="px-6 py-2 text-[11px] font-black text-slate-600 hover:text-white uppercase tracking-widest italic transition-all"
+							class="px-6 py-2 font-heading font-black text-[11px] text-stone-600 hover:text-white uppercase tracking-widest italic transition-all"
 						>
 							[Cancel]
 						</button>
 						<button
 							onclick={handleConfirm}
-							class="px-8 py-3 text-[11px] font-black uppercase tracking-[0.3em] italic transition-all {isCritical ? 'bg-red-700 text-black hover:bg-red-600' : 'bg-[#f97316] text-black hover:bg-white'} shadow-[6px_6px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+							class="px-8 py-3 font-heading font-black text-[11px] uppercase tracking-[0.2em] italic transition-all {isCritical ? 'bg-red-700 text-white hover:bg-red-600' : 'bg-rust text-white hover:bg-rust-light'} shadow-lg active:translate-y-px active:shadow-none industrial-frame"
 						>
 							{confirmText.toUpperCase()}
 						</button>

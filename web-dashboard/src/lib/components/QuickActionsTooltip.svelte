@@ -86,13 +86,13 @@
 	function getVariantClass(v: string | undefined) {
 		switch (v) {
 			case 'danger':
-				return 'text-red-400 hover:bg-red-500/10 hover:text-red-300';
+				return 'text-red-500 hover:bg-red-600 hover:text-white shadow-lg shadow-red-900/20';
 			case 'warning':
-				return 'text-yellow-400 hover:bg-yellow-500/10 hover:text-yellow-300';
+				return 'text-amber-500 hover:bg-amber-600 hover:text-white shadow-lg shadow-amber-900/20';
 			case 'success':
-				return 'text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300';
+				return 'text-emerald-500 hover:bg-emerald-600 hover:text-white shadow-lg shadow-emerald-900/20';
 			default:
-				return 'text-slate-700 dark:text-slate-300 hover:bg-slate-700/50 hover:text-slate-900 dark:text-white';
+				return 'text-stone-400 hover:bg-white hover:text-black shadow-lg';
 		}
 	}
 </script>
@@ -110,9 +110,9 @@
 		<div
 			use:portal
 			transition:scale={{ duration: 200, start: 0.9, opacity: 0, easing: quintOut }}
-			class="fixed z-[9999] w-48 bg-slate-900/95 backdrop-blur-xl border border-slate-300/50 dark:border-slate-700/50 shadow-2xl shadow-black/50 rounded-xl overflow-hidden p-1.5 {getPlacementClass(
+			class="fixed z-[9999] w-48 bg-black/90 backdrop-blur-xl border border-stone-800 shadow-2xl shadow-black/80 rounded-none overflow-hidden p-1.5 {getPlacementClass(
 				placement
-			)}"
+			)} industrial-frame"
 			style="top: {coords.y}px; left: {coords.x}px;"
 			onmouseenter={show}
 			onmouseleave={hide}
@@ -120,9 +120,9 @@
 		>
 			{#if title}
 				<div
-					class="px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-300/50 dark:border-slate-700/50 mb-1 flex items-center gap-2"
+					class="px-3 py-2 text-[10px] font-black text-stone-500 uppercase tracking-[0.2em] border-b border-stone-800 mb-1 flex items-center gap-2"
 				>
-					<span class="w-1 h-1 bg-rust-light rounded-full"></span>
+					<span class="w-1 h-1 bg-rust shadow-[0_0_8px_var(--color-rust)] rounded-full"></span>
 					{title}
 				</div>
 			{/if}
@@ -136,14 +136,14 @@
 							visible = false;
 						}}
 						disabled={action.disabled}
-						class="w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group {getVariantClass(
+						class="w-full text-left flex items-center gap-3 px-3 py-2 rounded-none text-xs font-jetbrains font-black uppercase transition-all duration-200 disabled:opacity-20 disabled:cursor-not-allowed group {getVariantClass(
 							action.variant
 						)}"
 					>
 						{#if action.icon}
-							<action.icon class="w-4 h-4 transition-transform group-hover:scale-110" />
+							<action.icon class="w-3.5 h-3.5 transition-transform group-hover:scale-110 group-hover:text-rust" />
 						{/if}
-						<span>{action.label}</span>
+						<span class="tracking-widest">{action.label}</span>
 					</button>
 				{/each}
 			</div>

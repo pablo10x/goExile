@@ -11,7 +11,8 @@
 		AlertCircle,
 		Terminal,
 		CheckCircle2,
-		Sparkles
+		Sparkles,
+		RefreshCw
 	} from 'lucide-svelte';
 
 	let {
@@ -231,24 +232,19 @@
 
 		<!-- Modal Container -->
 		<div
-			class="modal-container relative w-full max-w-xl bg-slate-900/50 border border-slate-300/50 dark:border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-white/10 backdrop-blur-xl"
+			class="modal-container relative w-full max-w-xl bg-[#050505] border border-stone-800 rounded-none shadow-2xl overflow-hidden backdrop-blur-xl industrial-frame"
 			transition:modalScale
 		>
 			<!-- Animated gradient backgrounds -->
 			<div class="absolute inset-0 pointer-events-none overflow-hidden">
 				<!-- Primary gradient blob -->
 				<div
-					class="gradient-blob blob-1 bg-gradient-to-br from-emerald-500/30 via-cyan-600/20 to-transparent"
+					class="gradient-blob blob-1 bg-gradient-to-br from-rust/20 via-rust-dark/10 to-transparent"
 				></div>
 
 				<!-- Secondary gradient blob -->
 				<div
-					class="gradient-blob blob-2 bg-gradient-to-tl from-blue-400/25 via-emerald-500/15 to-transparent"
-				></div>
-
-				<!-- Tertiary gradient blob -->
-				<div
-					class="gradient-blob blob-3 bg-gradient-to-tr from-teal-600/20 via-cyan-400/10 to-transparent"
+					class="gradient-blob blob-2 bg-gradient-to-tl from-stone-800/25 via-rust/10 to-transparent"
 				></div>
 			</div>
 
@@ -256,7 +252,7 @@
 			<div class="absolute inset-0 pointer-events-none overflow-hidden">
 				{#each particles as particle (particle.id)}
 					<div
-						class="particle bg-emerald-400/60"
+						class="particle bg-rust/40"
 						style="
 							left: {particle.x}%;
 							top: {particle.y}%;
@@ -270,192 +266,187 @@
 			</div>
 
 			<!-- Shimmer overlay -->
-			<div class="absolute inset-0 opacity-15 pointer-events-none gradient-overlay"></div>
+			<div class="absolute inset-0 opacity-10 pointer-events-none gradient-overlay"></div>
 
 			<!-- Header Pattern -->
 			<div
-				class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-emerald-500 opacity-80 shimmer-bar"
+				class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rust via-rust-light to-rust opacity-80 shimmer-bar"
 			></div>
 
 			<!-- Close Button -->
 			<button
 				onclick={close}
-				class="absolute top-4 right-4 z-20 p-2 rounded-lg bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 hover:bg-slate-700/50 transition-all"
+				class="absolute top-6 right-6 z-20 p-2 rounded-none bg-stone-900 border border-stone-800 text-stone-500 hover:text-white transition-all active:scale-95"
 				aria-label="Close"
 			>
 				<X class="w-5 h-5" />
 			</button>
 
 			<!-- Content -->
-			<div class="p-6 sm:p-8 relative z-10">
+			<div class="p-8 sm:p-10 relative z-10">
 				<!-- Header -->
-				<div class="flex items-center gap-4 mb-6">
+				<div class="flex items-center gap-5 mb-8">
 					<div
-						class="icon-wrapper flex-shrink-0 p-3 rounded-xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 backdrop-blur-sm"
+						class="icon-wrapper flex-shrink-0 p-4 rounded-none bg-rust/10 border border-rust/30 industrial-frame shadow-lg"
 					>
 						<div class="animate-icon-pop">
-							<Server class="w-7 h-7 text-emerald-400" />
+							<Server class="w-8 h-8 text-rust-light" />
 						</div>
 					</div>
 					<div>
-						<h2 class="text-2xl font-bold text-slate-100 tracking-tight slide-in-text">
-							Add New Spawner
+						<h2 class="text-3xl font-heading font-black text-white tracking-tighter uppercase slide-in-text">
+							Register_Node
 						</h2>
-						<p class="text-slate-500 dark:text-slate-400 text-sm mt-0.5 slide-in-text-delayed">
-							Generate an enrollment key to register a new spawner
+						<p class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest mt-1 slide-in-text-delayed">
+							Generate encrypted enrollment key for new cluster integration
 						</p>
 					</div>
 				</div>
 
 				{#if loading}
 					<!-- Loading State -->
-					<div class="flex flex-col items-center justify-center py-12" transition:fade>
+					<div class="flex flex-col items-center justify-center py-16" transition:fade>
 						<div class="relative">
 							<div
-								class="w-20 h-20 border-4 border-slate-300 dark:border-slate-700 rounded-full animate-pulse"
+								class="w-24 h-24 border-2 border-stone-800 rounded-none animate-pulse"
 							></div>
 							<div
-								class="absolute inset-0 w-20 h-20 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"
+								class="absolute inset-0 w-24 h-24 border-2 border-rust border-t-transparent rounded-none animate-spin"
 							></div>
-							<Key class="absolute inset-0 m-auto w-8 h-8 text-emerald-400 animate-pulse" />
+							<div class="absolute inset-0 flex items-center justify-center">
+								<Key class="w-10 h-10 text-rust animate-pulse shadow-rust/50 shadow-lg" />
+							</div>
 						</div>
-						<p class="mt-6 text-slate-500 dark:text-slate-400 font-medium">
-							Generating enrollment key...
+						<p class="mt-8 font-heading font-black text-[11px] text-stone-500 uppercase tracking-[0.2em]">
+							AUTHORIZING_ENROLLMENT...
 						</p>
 					</div>
 				{:else if error}
 					<!-- Error State -->
 					<div
-						class="flex flex-col items-center justify-center py-8 error-bounce"
+						class="flex flex-col items-center justify-center py-10 error-bounce"
 						transition:scale={{ start: 0.95, duration: 300, easing: cubicOut }}
 					>
-						<div class="p-4 rounded-full bg-red-500/10 border border-red-500/30 mb-4">
-							<AlertCircle class="w-10 h-10 text-red-400 animate-shake-error" />
+						<div class="p-6 rounded-none bg-red-500/5 border border-red-500/20 mb-6 industrial-frame shadow-2xl">
+							<AlertCircle class="w-14 h-14 text-red-500 animate-shake-error" />
 						</div>
-						<h3 class="text-lg font-semibold text-red-400 mb-2">Failed to Generate Key</h3>
-						<p class="text-slate-500 dark:text-slate-400 text-sm text-center max-w-sm mb-6">
+						<h3 class="text-xl font-heading font-black text-red-500 mb-2 uppercase tracking-tighter">PROTO_FAULT_0x04</h3>
+						<p class="font-jetbrains text-[11px] text-stone-500 text-center max-w-sm mb-8 uppercase leading-relaxed font-bold">
 							{error}
 						</p>
 						<button
 							onclick={generateKey}
-							class="px-5 py-2.5 text-sm font-semibold text-slate-900 dark:text-white bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 rounded-lg shadow-lg transition-all transform hover:-translate-y-0.5 active:scale-95"
+							class="px-10 py-3 bg-red-600 hover:bg-red-500 text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-red-900/20 transition-all active:translate-y-px"
 						>
-							Try Again
+							Retry_Sequence
 						</button>
 					</div>
 				{:else if isEnrolled && enrolledSpawner}
 					<!-- Spawner Enrolled Success State -->
 					<div
-						class="space-y-6 success-state"
+						class="space-y-8 success-state"
 						transition:scale={{ start: 0.9, duration: 400, easing: backOut }}
 					>
 						<!-- Success Icon with Celebration -->
 						<div class="flex flex-col items-center justify-center py-4">
 							<div class="relative">
 								<!-- Sparkle effects -->
-								<div class="absolute -inset-8 flex items-center justify-center">
+								<div class="absolute -inset-10 flex items-center justify-center">
 									<Sparkles
-										class="absolute -top-6 -left-4 w-5 h-5 text-yellow-400 animate-sparkle-1"
+										class="absolute -top-8 -left-6 w-6 h-6 text-rust animate-sparkle-1"
 									/>
 									<Sparkles
-										class="absolute -top-4 -right-6 w-4 h-4 text-emerald-400 animate-sparkle-2"
+										class="absolute -top-6 -right-8 w-5 h-5 text-rust-light animate-sparkle-2"
 									/>
 									<Sparkles
-										class="absolute -bottom-4 -left-6 w-4 h-4 text-cyan-400 animate-sparkle-3"
+										class="absolute -bottom-6 -left-8 w-5 h-5 text-rust animate-sparkle-3"
 									/>
 									<Sparkles
-										class="absolute -bottom-6 -right-4 w-5 h-5 text-emerald-300 animate-sparkle-4"
+										class="absolute -bottom-8 -right-6 w-6 h-6 text-rust-light animate-sparkle-4"
 									/>
 								</div>
 
 								<!-- Success circle -->
 								<div
-									class="relative w-24 h-24 rounded-full bg-gradient-to-br from-emerald-500/30 to-cyan-500/30 border-2 border-emerald-500/50 flex items-center justify-center success-circle"
+									class="relative w-28 h-28 rounded-none bg-rust/10 border-2 border-rust/40 flex items-center justify-center success-circle industrial-frame shadow-rust/20 shadow-2xl"
 								>
-									<CheckCircle2 class="w-12 h-12 text-emerald-400 animate-check-pop" />
+									<CheckCircle2 class="w-14 h-12 text-rust animate-check-pop" />
 								</div>
 
 								<!-- Ripple effect -->
 								<div
-									class="absolute inset-0 rounded-full border-2 border-emerald-400/50 animate-ripple"
-								></div>
-								<div
-									class="absolute inset-0 rounded-full border-2 border-emerald-400/30 animate-ripple-delayed"
+									class="absolute inset-0 border-2 border-rust/30 animate-ripple"
 								></div>
 							</div>
 
-							<h3 class="mt-6 text-xl font-bold text-emerald-400 animate-text-slide">
-								Spawner Enrolled Successfully!
+							<h3 class="mt-8 text-2xl font-heading font-black text-white uppercase tracking-tighter animate-text-slide">
+								NODE_AUTHORIZED
 							</h3>
-							<p class="text-slate-500 dark:text-slate-400 text-sm mt-1 animate-text-slide-delayed">
-								The spawner is now connected to your master server
+							<p class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest mt-2 animate-text-slide-delayed">
+								Sector registry updated // Handshake complete
 							</p>
 						</div>
 
 						<!-- Spawner Info Card -->
 						<div
-							class="spawner-card relative overflow-hidden bg-slate-800/70 border border-emerald-500/30 rounded-xl p-5 backdrop-blur-sm"
+							class="spawner-card modern-industrial-card glass-panel p-6"
 						>
-							<div
-								class="absolute inset-0 bg-gradient-to-r from-emerald-500/5 via-cyan-500/5 to-emerald-500/5"
-							></div>
-
-							<div class="relative flex items-center gap-4">
-								<div class="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/30">
-									<Server class="w-8 h-8 text-emerald-400" />
+							<div class="relative flex items-center gap-6">
+								<div class="p-4 rounded-none bg-rust/10 border border-rust/30 industrial-frame">
+									<Server class="w-10 h-10 text-rust-light" />
 								</div>
 								<div class="flex-1">
-									<div class="flex items-center gap-2 mb-1">
-										<span class="text-lg font-bold text-slate-100">
-											{enrolledSpawner.region || 'Spawner'}
+									<div class="flex items-center gap-3 mb-2">
+										<span class="text-xl font-heading font-black text-white uppercase tracking-tighter">
+											{enrolledSpawner.region || 'CORE_NODE'}
 										</span>
 										<span
-											class="px-2 py-0.5 text-xs font-semibold bg-emerald-500/20 text-emerald-400 rounded-full border border-emerald-500/30"
+											class="px-2 py-0.5 font-jetbrains text-[9px] font-black bg-rust text-white uppercase tracking-widest shadow-lg shadow-rust/20"
 										>
-											ID: {enrolledSpawner.id}
+											ID_{enrolledSpawner.id}
 										</span>
 									</div>
-									<div class="text-sm text-slate-500 dark:text-slate-400 font-mono">
-										{enrolledSpawner.host}:{enrolledSpawner.port}
+									<div class="font-jetbrains text-[11px] text-stone-500 font-bold tracking-tight">
+										INTERFACE: {enrolledSpawner.host}:{enrolledSpawner.port}
 									</div>
 								</div>
 								<div
-									class="flex items-center gap-1 px-3 py-1.5 bg-emerald-500/20 rounded-lg border border-emerald-500/30"
+									class="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]"
 								>
-									<div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-									<span class="text-xs font-semibold text-emerald-400">Online</span>
+									<div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-emerald-500/50 shadow-lg"></div>
+									<span class="font-heading font-black text-[10px] text-emerald-400 uppercase tracking-widest">ONLINE</span>
 								</div>
 							</div>
 						</div>
 
 						<!-- Action Buttons -->
-						<div class="flex justify-center gap-3 pt-2">
+						<div class="flex justify-center gap-4 pt-4">
 							<button
 								onclick={generateKey}
-								class="px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-emerald-400 bg-slate-800/50 hover:bg-slate-800 border border-slate-300/50 dark:border-slate-700/50 hover:border-emerald-500/30 rounded-lg transition-all flex items-center gap-2"
+								class="px-6 py-3 font-heading font-black text-[10px] text-stone-400 hover:text-rust bg-stone-900 border border-stone-800 hover:border-rust/40 transition-all flex items-center gap-3 uppercase tracking-widest shadow-lg"
 							>
 								<Key class="w-4 h-4" />
-								Add Another Spawner
+								Append_Node
 							</button>
 							<button
 								onclick={close}
-								class="px-5 py-2.5 text-sm font-semibold text-slate-900 dark:text-white bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 rounded-lg shadow-lg transition-all transform hover:-translate-y-0.5 active:scale-95"
+								class="px-8 py-3 font-heading font-black text-[11px] text-white bg-rust hover:bg-rust-light shadow-lg shadow-rust/20 transition-all uppercase tracking-widest active:translate-y-px"
 							>
-								Done
+								Finalize
 							</button>
 						</div>
 					</div>
 				{:else if enrollmentKey}
 					<!-- Waiting for Enrollment State -->
-					<div class="space-y-6" transition:fade>
+					<div class="space-y-8" transition:fade>
 						<!-- Status Indicator -->
 						<div class="flex items-center justify-center gap-2 py-2">
 							<div
-								class="flex items-center gap-2 px-4 py-2 bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-full"
+								class="flex items-center gap-3 px-5 py-2.5 bg-stone-900 border border-stone-800 shadow-inner"
 							>
-								<div class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div>
-								<span class="text-sm font-medium text-slate-700 dark:text-slate-300"
-									>Waiting for spawner to connect...</span
+								<div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse shadow-amber-500/50 shadow-lg"></div>
+								<span class="font-jetbrains text-[10px] font-black text-stone-400 uppercase tracking-widest"
+									>AWAITING_EXTERNAL_HANDSHAKE...</span
 								>
 							</div>
 						</div>
@@ -464,48 +455,48 @@
 						<div class="flex items-center justify-center">
 							<div class="relative">
 								<!-- Circular Progress -->
-								<svg class="w-28 h-28 -rotate-90 transform">
+								<svg class="w-32 h-32 -rotate-90 transform">
 									<!-- Background circle -->
 									<circle
-										cx="56"
-										cy="56"
-										r="50"
+										cx="64"
+										cy="64"
+										r="60"
 										fill="none"
 										stroke="currentColor"
-										stroke-width="6"
-										class="text-slate-700/50"
+										stroke-width="4"
+										class="text-stone-900"
 									/>
 									<!-- Progress circle -->
 									<circle
-										cx="56"
-										cy="56"
-										r="50"
+										cx="64"
+										cy="64"
+										r="60"
 										fill="none"
 										stroke="url(#timerGradient)"
-										stroke-width="6"
+										stroke-width="4"
 										stroke-linecap="round"
-										stroke-dasharray={314}
-										stroke-dashoffset={314 - (314 * progressPercent) / 100}
+										stroke-dasharray={377}
+										stroke-dashoffset={377 - (377 * progressPercent) / 100}
 										class="transition-all duration-1000 ease-linear {isExpiringSoon
 											? 'animate-pulse'
 											: ''}"
 									/>
 									<defs>
 										<linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-											<stop offset="0%" stop-color={isExpiringSoon ? '#ef4444' : '#10b981'} />
-											<stop offset="100%" stop-color={isExpiringSoon ? '#f97316' : '#06b6d4'} />
+											<stop offset="0%" stop-color={isExpiringSoon ? '#ef4444' : '#f97316'} />
+											<stop offset="100%" stop-color={isExpiringSoon ? '#7c2d12' : '#fb923c'} />
 										</linearGradient>
 									</defs>
 								</svg>
 								<!-- Time Display -->
 								<div class="absolute inset-0 flex flex-col items-center justify-center">
 									<Clock
-										class="w-5 h-5 mb-1 {isExpiringSoon ? 'text-red-400' : 'text-emerald-400'}"
+										class="w-6 h-6 mb-1.5 {isExpiringSoon ? 'text-red-500' : 'text-rust'}"
 									/>
 									<span
-										class="text-2xl font-bold font-mono {isExpiringSoon
-											? 'text-red-400'
-											: 'text-slate-100'}"
+										class="text-3xl font-heading font-black {isExpiringSoon
+											? 'text-red-500'
+											: 'text-white'}"
 									>
 										{formatTime(remainingSeconds)}
 									</span>
@@ -516,75 +507,75 @@
 						<!-- Key Display -->
 						<div class="key-container relative">
 							<div
-								class="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-cyan-500/10 to-emerald-500/10 rounded-xl blur-xl"
+								class="absolute inset-0 bg-rust/5 rounded-none blur-xl"
 							></div>
 							<div
-								class="relative bg-slate-800/70 border border-slate-600/50 rounded-xl p-4 backdrop-blur-sm"
+								class="relative bg-stone-950 border border-stone-800 p-6 shadow-inner industrial-frame"
 							>
-								<div class="flex items-center gap-2 mb-2">
-									<Key class="w-4 h-4 text-emerald-400" />
+								<div class="flex items-center gap-3 mb-3">
+									<Key class="w-4 h-4 text-rust" />
 									<span
-										class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-										>Enrollment Key</span
+										class="font-jetbrains text-[10px] font-black text-stone-500 uppercase tracking-[0.2em]"
+										>ENROLLMENT_KEY_RAW</span
 									>
 								</div>
-								<div class="font-mono text-lg text-emerald-300 break-all tracking-wider">
+								<div class="font-jetbrains text-2xl font-black text-rust-light break-all tracking-[0.1em] uppercase">
 									{enrollmentKey}
 								</div>
 							</div>
 						</div>
 
 						<!-- Command Display -->
-						<div>
-							<div class="flex items-center gap-2 mb-2">
-								<Terminal class="w-4 h-4 text-slate-500 dark:text-slate-400" />
+						<div class="space-y-3">
+							<div class="flex items-center gap-3">
+								<Terminal class="w-4 h-4 text-stone-600" />
 								<span
-									class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-									>Run this command on your spawner</span
+									class="font-jetbrains text-[10px] font-black text-stone-500 uppercase tracking-widest"
+									>EXECUTE_CLI_DIRECTIVE</span
 								>
 							</div>
-							<div
-								class="group relative bg-white/70 dark:bg-slate-950/70 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-4 font-mono text-sm overflow-x-auto"
-							>
-								<code class="text-cyan-300">./spawner</code>
-								<code class="text-slate-500 dark:text-slate-400"> -key </code>
-								<code class="text-emerald-400">{enrollmentKey}</code>
+							<div class="group relative bg-stone-950 border border-stone-800 p-5 font-jetbrains text-xs overflow-hidden shadow-inner">
+								<div class="flex items-center gap-2">
+									<code class="text-rust">./spawner</code>
+									<code class="text-stone-600"> -key </code>
+									<code class="text-white font-black">{enrollmentKey}</code>
+								</div>
 
 								<!-- Copy Button -->
 								<button
 									onclick={copyToClipboard}
-									class="absolute top-2 right-2 p-2 rounded-lg bg-slate-800/80 border border-slate-300/50 dark:border-slate-700/50 text-slate-500 dark:text-slate-400 hover:text-emerald-400 hover:border-emerald-500/50 hover:bg-slate-700/80 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+									class="absolute top-0 right-0 h-full px-4 bg-stone-900 border-l border-stone-800 text-stone-500 hover:text-rust transition-all opacity-0 group-hover:opacity-100 active:bg-rust active:text-white"
 									aria-label="Copy command"
 								>
 									{#if copied}
-										<Check class="w-4 h-4 text-emerald-400" />
+										<Check class="w-5 h-5" />
 									{:else}
-										<Copy class="w-4 h-4" />
+										<Copy class="w-5 h-5" />
 									{/if}
 								</button>
 							</div>
 							{#if copied}
-								<p class="text-xs text-emerald-400 mt-2 flex items-center gap-1" transition:fade>
-									<Check class="w-3 h-3" />
-									Copied to clipboard!
-								</p>
+								<div class="font-jetbrains text-[9px] font-black text-emerald-500 mt-2 flex items-center gap-2 uppercase tracking-widest" transition:fade>
+									<div class="w-1 h-1 bg-emerald-500 animate-pulse"></div>
+									Buffered_to_System_Clipboard
+								</div>
 							{/if}
 						</div>
 
 						<!-- Instructions -->
 						<div
-							class="bg-slate-800/30 border border-slate-300/30 dark:border-slate-700/30 rounded-xl p-4"
+							class="bg-stone-900/40 border border-stone-800 p-5 industrial-frame"
 						>
-							<h4 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-								Instructions
+							<h4 class="font-heading font-black text-[10px] text-stone-400 uppercase tracking-[0.2em] mb-3">
+								OPERATIONAL_STEPS
 							</h4>
 							<ol
-								class="text-xs text-slate-500 dark:text-slate-400 space-y-1.5 list-decimal list-inside"
+								class="font-jetbrains text-[10px] text-stone-500 space-y-2 list-none uppercase tracking-tight"
 							>
-								<li>Copy the command above</li>
-								<li>Run it on the machine where your spawner is installed</li>
-								<li>The spawner will automatically register with the master server</li>
-								<li>The API key will be saved for future connections</li>
+								<li class="flex gap-3"><span class="text-rust font-black">[01]</span> Copy raw directive from buffer</li>
+								<li class="flex gap-3"><span class="text-rust font-black">[02]</span> Initialize on target node architecture</li>
+								<li class="flex gap-3"><span class="text-rust font-black">[03]</span> Spawner will handshake via encrypted channel</li>
+								<li class="flex gap-3"><span class="text-rust font-black">[04]</span> Identity persistence will be cached locally</li>
 							</ol>
 						</div>
 
@@ -592,10 +583,10 @@
 						<div class="flex justify-center pt-2">
 							<button
 								onclick={generateKey}
-								class="px-4 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-emerald-400 hover:bg-slate-800/50 rounded-lg transition-all flex items-center gap-2"
+								class="font-jetbrains text-[10px] font-black text-stone-600 hover:text-rust transition-all flex items-center gap-2 uppercase tracking-widest"
 							>
-								<Key class="w-4 h-4" />
-								Generate New Key
+								<RefreshCw class="w-3.5 h-3.5" />
+								Cycle_Enrollment_Token
 							</button>
 						</div>
 					</div>

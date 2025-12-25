@@ -297,11 +297,11 @@
 
 			<!-- Modal Container -->
 			<div
-				class="relative w-full h-full sm:h-[90vh] sm:max-w-7xl bg-stone-950 border-2 border-stone-800 shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden"
+				class="relative w-full h-full sm:h-[90vh] sm:max-w-7xl bg-[#050505] border border-stone-800 shadow-2xl flex flex-col overflow-hidden glass-panel industrial-frame"
 				transition:scale={{ start: 0.98, duration: 300, easing: cubicOut }}
 			>
 				<!-- CRT Overlay -->
-				<div class="absolute inset-0 pointer-events-none z-50 opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%]"></div>
+				<div class="absolute inset-0 pointer-events-none z-50 opacity-[0.02] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%]"></div>
 				
 				<div class="contents">
 					{@render content()}
@@ -309,9 +309,9 @@
 			</div>
 		</div>
 	{:else}
-		<div class="h-full flex flex-col bg-stone-950 overflow-hidden border-2 border-stone-800 relative">
+		<div class="h-full flex flex-col bg-[#050505] overflow-hidden border border-stone-800 relative glass-panel industrial-frame">
 			<!-- CRT Overlay -->
-			<div class="absolute inset-0 pointer-events-none z-50 opacity-[0.02] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%]"></div>
+			<div class="absolute inset-0 pointer-events-none z-50 opacity-[0.01] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%]"></div>
 			{@render content()}
 		</div>
 	{/if}
@@ -320,53 +320,57 @@
 {#snippet content()}
 	<!-- Header -->
 	<div
-		class="px-6 py-4 border-b-2 border-stone-800 flex justify-between items-center bg-stone-900/50"
+		class="px-6 py-5 border-b border-stone-800 flex justify-between items-center bg-[#0a0a0a]"
 	>
-		<div class="flex items-center gap-4 overflow-hidden">
-			<div class="p-2 bg-rust/10 border border-rust/30">
-				<Activity class="w-4 h-4 text-rust-light" />
+		<div class="flex items-center gap-5 overflow-hidden">
+			<div class="p-2.5 bg-rust/10 border border-rust/30 rounded-none industrial-frame shadow-lg">
+				<Activity class="w-5 h-5 text-rust-light" />
 			</div>
 			<div class="flex flex-col">
-				<h2 class="text-white font-black military-label text-lg tracking-tighter uppercase leading-none">
-					LOG_ARCHIVE : <span class="text-rust-light">NODE_{spawnerId}</span>
+				<h2 class="text-white font-heading font-black text-xl tracking-tighter uppercase leading-none">
+					LOG_ARCHIVE : <span class="text-rust">NODE_{spawnerId}</span>
 				</h2>
-				<div class="flex items-center gap-3 mt-1">
-					<span class="text-[8px] font-mono text-stone-600 tracking-[0.2em] uppercase">Status: Streaming</span>
+				<div class="flex items-center gap-4 mt-1.5">
+					<div class="flex items-center gap-2">
+						<div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-emerald-500/50 shadow-lg"></div>
+						<span class="font-jetbrains text-[9px] font-black text-stone-500 tracking-[0.2em] uppercase">STATUS: STREAMING</span>
+					</div>
 					{#if fileSize > 0}
-						<span class="text-[8px] font-mono text-rust-light/60 bg-rust/5 px-1.5 py-0.5 border border-rust/20 uppercase"
-							>{formatBytes(fileSize)} Buffer</span>
+						<div class="w-px h-3 bg-stone-800"></div>
+						<span class="font-jetbrains text-[9px] font-black text-rust/60 uppercase tracking-widest"
+							>{formatBytes(fileSize)} BUFFER_ACTIVE</span>
 					{/if}
 				</div>
 			</div>
 			{#if loading && parsedLogs.length > 0}
-				<RefreshCw class="w-3 h-3 text-rust-light animate-spin" />
+				<RefreshCw class="w-4 h-4 text-rust animate-spin ml-2" />
 			{/if}
 		</div>
 
-		<div class="flex items-center gap-3">
-			<div class="hidden sm:flex items-center gap-4 mr-4 text-[10px] font-mono text-stone-500">
-				<label class="flex items-center gap-2 cursor-pointer group">
+		<div class="flex items-center gap-4">
+			<div class="hidden sm:flex items-center gap-6 mr-6 font-jetbrains text-[9px] font-black text-stone-500">
+				<label class="flex items-center gap-3 cursor-pointer group">
 					<input
 						type="checkbox"
 						bind:checked={shouldAutoScroll}
 						class="sr-only peer"
 					/>
-					<div class="w-3 h-3 border border-stone-700 peer-checked:bg-rust peer-checked:border-rust transition-all"></div>
-					<span class="group-hover:text-stone-300 transition-colors uppercase tracking-widest">Auto_Scroll</span>
+					<div class="w-3.5 h-3.5 bg-stone-950 border border-stone-800 peer-checked:bg-rust peer-checked:border-rust transition-all shadow-inner"></div>
+					<span class="group-hover:text-stone-300 transition-colors uppercase tracking-widest">AUTO_SCROLL</span>
 				</label>
-				<label class="flex items-center gap-2 cursor-pointer group">
+				<label class="flex items-center gap-3 cursor-pointer group">
 					<input
 						type="checkbox"
 						bind:checked={isAutoRefreshing}
 						class="sr-only peer"
 					/>
-					<div class="w-3 h-3 border border-stone-700 peer-checked:bg-rust peer-checked:border-rust transition-all"></div>
-					<span class="group-hover:text-stone-300 transition-colors uppercase tracking-widest">Live_Sync</span>
+					<div class="w-3.5 h-3.5 bg-stone-950 border border-stone-800 peer-checked:bg-rust peer-checked:border-rust transition-all shadow-inner"></div>
+					<span class="group-hover:text-stone-300 transition-colors uppercase tracking-widest">LIVE_SYNC</span>
 				</label>
 			</div>
 
 			<button
-				class="p-2 bg-stone-900 border border-stone-800 text-stone-500 hover:text-white hover:border-rust transition-all"
+				class="p-2.5 bg-stone-900 border border-stone-800 text-stone-500 hover:text-rust hover:border-rust transition-all active:translate-y-px shadow-lg"
 				title="Manual_Refresh"
 				onclick={fetchLogs}
 			>
@@ -374,7 +378,7 @@
 			</button>
 
 			<button
-				class="p-2 bg-stone-900 border border-stone-800 text-stone-500 hover:text-red-500 hover:border-red-900/50 transition-all"
+				class="p-2.5 bg-stone-900 border border-stone-800 text-stone-500 hover:text-red-500 hover:border-red-900/50 transition-all active:translate-y-px shadow-lg"
 				title="Clear_Registry"
 				onclick={() => (isConfirmOpen = true)}
 			>
@@ -382,10 +386,10 @@
 			</button>
 
 			{#if !embedded}
-				<div class="h-8 w-px bg-stone-800 mx-1"></div>
+				<div class="h-10 w-px bg-stone-800 mx-2"></div>
 				<button
 					onclick={onClose}
-					class="p-2 bg-red-950/10 border border-red-900/30 text-red-600 hover:bg-red-600 hover:text-black transition-all"
+					class="p-2.5 bg-red-950/20 border border-red-900/30 text-red-600 hover:bg-red-600 hover:text-white transition-all active:scale-95 shadow-lg"
 				>
 					<X class="w-5 h-5" />
 				</button>
@@ -395,22 +399,22 @@
 
 	<!-- Toolbar: Tabs & Search -->
 	<div
-		class="px-6 py-4 bg-stone-950 border-b border-stone-800 flex flex-col md:flex-row gap-6 md:items-center"
+		class="px-6 py-5 bg-[#0a0a0a]/80 border-b border-stone-800 flex flex-col md:flex-row gap-8 md:items-center"
 	>
 		<!-- Tabs -->
-		<div class="flex gap-1 bg-black p-1 border border-stone-800">
+		<div class="flex gap-1.5 bg-stone-950 p-1 border border-stone-800 shadow-inner industrial-frame">
 			{#each tabs as tab}
 				{@const Icon = tab.icon}
 				<button
-					class="px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2
+					class="px-5 py-2.5 font-jetbrains text-[9px] font-black uppercase tracking-[0.2em] transition-all flex items-center gap-3
 					                        {selectedTab === tab.id
-						? 'bg-rust text-white shadow-[0_0_15px_rgba(120,53,15,0.3)]'
+						? 'bg-rust text-white shadow-lg shadow-rust/20'
 						: 'text-stone-600 hover:text-stone-300 hover:bg-stone-900'}"
 					onclick={() => (selectedTab = tab.id)}
 				>
 					<Icon class="w-3.5 h-3.5" />
 					<span class="hidden sm:inline">{tab.label}</span>
-					<span class="ml-1 opacity-40 font-mono">[{stats[tab.id]}]</span>
+					<span class="ml-1 opacity-40">[{stats[tab.id]}]</span>
 				</button>
 			{/each}
 		</div>
@@ -422,67 +426,73 @@
 				type="text"
 				placeholder="FILTER_BUFFER_BY_IDENTIFIER..."
 				bind:value={searchTerm}
-				class="w-full pl-12 pr-4 py-2.5 bg-black border border-stone-800 focus:border-rust text-white text-[11px] font-mono uppercase tracking-widest outline-none transition-all placeholder:text-stone-800"
+				class="w-full pl-12 pr-4 py-3 bg-stone-950 border border-stone-800 focus:border-rust text-white font-jetbrains text-[10px] font-bold uppercase tracking-[0.2em] outline-none transition-all placeholder:text-stone-800 shadow-inner"
 			/>
 		</div>
 	</div>
 
 	<!-- Logs Area -->
-	<div class="flex-1 relative bg-stone-950 min-h-0">
+	<div class="flex-1 relative bg-[#050505] min-h-0">
+		<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
+		
 		{#if loading && parsedLogs.length === 0}
-			<div class="absolute inset-0 flex flex-col items-center justify-center text-stone-700 gap-4">
-				<RefreshCw class="w-10 h-10 animate-spin opacity-20" />
-				<span class="text-[10px] font-mono uppercase tracking-[0.5em] animate-pulse">Initializing_Buffer_Link...</span>
+			<div class="absolute inset-0 flex flex-col items-center justify-center text-stone-700 gap-6">
+				<div class="w-16 h-16 border-2 border-rust border-t-transparent rounded-none animate-spin shadow-lg shadow-rust/20"></div>
+				<span class="font-heading font-black text-[11px] uppercase tracking-[0.5em] animate-pulse text-rust">Initializing_Buffer_Link...</span>
 			</div>
 		{:else if error}
-			<div class="absolute inset-0 flex flex-col items-center justify-center text-red-500 gap-4 p-8 text-center">
-				<AlertTriangle class="w-12 h-12 opacity-40" />
-				<div class="space-y-1">
-					<span class="text-xs font-black uppercase tracking-widest block">FATAL_CONNECTION_FAULT</span>
-					<p class="text-[10px] font-mono opacity-60 uppercase">{error}</p>
+			<div class="absolute inset-0 flex flex-col items-center justify-center text-red-500 gap-8 p-10 text-center">
+				<div class="p-6 bg-red-950/10 border border-red-900/30 industrial-frame shadow-2xl">
+					<AlertTriangle class="w-16 h-16 opacity-80 animate-pulse" />
 				</div>
-				<button class="px-6 py-2 bg-red-950/20 border border-red-900 text-red-500 text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all" onclick={fetchLogs}>Retry_Protocol</button>
+				<div class="space-y-3">
+					<span class="font-heading font-black text-lg uppercase tracking-[0.3em] block">FATAL_CONNECTION_FAULT</span>
+					<p class="font-jetbrains text-[11px] font-bold opacity-60 uppercase tracking-widest max-w-md mx-auto leading-relaxed">{error}</p>
+				</div>
+				<button class="px-12 py-4 bg-red-600 border border-red-400 text-white font-heading font-black text-[11px] uppercase tracking-widest hover:bg-red-500 transition-all shadow-lg active:translate-y-px shadow-red-900/30" onclick={fetchLogs}>Retry_Protocol</button>
 			</div>
 		{:else if filteredLogs.length === 0}
-			<div class="absolute inset-0 flex flex-col items-center justify-center text-stone-800 gap-4">
-				<Search class="w-12 h-12 opacity-10" />
-				<span class="text-[10px] font-mono uppercase tracking-[0.3em]">NULL_RECORDS_LOCATED</span>
+			<div class="absolute inset-0 flex flex-col items-center justify-center text-stone-800 gap-6">
+				<div class="p-8 bg-stone-900/40 border border-stone-800 industrial-frame shadow-inner">
+					<Search class="w-16 h-16 opacity-20" />
+				</div>
+				<span class="font-jetbrains text-[11px] font-black uppercase tracking-[0.4em] text-stone-600">Null_Records_Located_In_Buffer</span>
 			</div>
 		{:else}
 			<div
 				bind:this={logContainer}
 				onscroll={handleScroll}
-				class="absolute inset-0 overflow-y-auto overflow-x-auto p-4 font-mono text-[11px] space-y-1 custom-scrollbar bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.01)_1px,transparent_0)] bg-[size:40px_40px]"
+				class="absolute inset-0 overflow-y-auto overflow-x-auto p-6 font-jetbrains text-[11px] space-y-1.5 custom-scrollbar"
 			>
 				{#each filteredLogs as l (l.id)}
 					<div
-						class="flex items-start gap-4 hover:bg-white/[0.03] px-3 py-1.5 border-l-2 border-transparent hover:border-rust/40 transition-all select-text group"
+						class="flex items-start gap-6 hover:bg-rust/5 px-4 py-2 border-l-2 border-transparent hover:border-rust/60 transition-all select-text group relative"
 					>
 						<!-- Time -->
-						<span class="text-stone-600 shrink-0 w-24 tabular-nums select-none opacity-60 font-medium"
+						<span class="font-jetbrains font-black text-stone-600 shrink-0 w-28 tabular-nums select-none opacity-50"
 							>{l.time}</span
 						>
 
 						<!-- Level -->
-						<span class="shrink-0 w-12 font-black select-none text-[10px] {getLevelClass(l.level)} uppercase tracking-tighter">
+						<span class="shrink-0 w-14 font-black select-none text-[10px] {getLevelClass(l.level)} uppercase tracking-tighter">
 							[{l.level}]
 						</span>
 
 						<!-- Message -->
-						<div class="flex-1 min-w-0 break-all sm:break-words text-stone-300 leading-relaxed font-medium">
+						<div class="flex-1 min-w-0 break-all sm:break-words text-stone-300 leading-relaxed font-bold uppercase tracking-tight">
 							<span>{l.message}</span>
 
 							<!-- Structured Context -->
 							{#if l.raw && Object.keys(l.raw).length > 3}
 								<div
-									class="mt-2 ml-2 space-y-1 border-l-2 border-stone-800 bg-stone-900/30 p-3 opacity-70 group-hover:opacity-100 transition-opacity"
+									class="mt-3 ml-4 space-y-2 border-l border-stone-800 bg-stone-900/40 p-4 opacity-60 group-hover:opacity-100 transition-opacity industrial-frame shadow-inner"
 								>
 									{#each Object.entries(l.raw) as [k, v]}
 										{#if !['time', 'level', 'msg', 'message'].includes(k)}
-											<div class="flex gap-3 flex-wrap">
-												<span class="text-rust-light/60 font-bold uppercase text-[9px] tracking-widest">{k}:</span>
+											<div class="flex gap-4 flex-wrap">
+												<span class="text-rust-light/60 font-black uppercase text-[9px] tracking-widest">{k}:</span>
 												<span
-													class="text-stone-400 font-mono text-[10px] whitespace-pre-wrap break-all"
+													class="text-stone-400 font-jetbrains font-bold text-[10px] whitespace-pre-wrap break-all"
 													>{JSON.stringify(v)}</span
 												>
 											</div>
@@ -495,7 +505,7 @@
 				{/each}
 
 				{#if shouldAutoScroll}
-					<div class="h-8"></div>
+					<div class="h-12"></div>
 				{/if}
 			</div>
 		{/if}

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { fade, fly } from 'svelte/transition';
-	import { cubicOut } from 'svelte/easing';
+	import { fade, fly, scale } from 'svelte/transition';
 	import {
 		Users,
 		Search,
@@ -21,7 +20,8 @@
 		Hash,
 		Dna,
 		AlertOctagon,
-		Signal
+		Signal,
+		Check
 	} from 'lucide-svelte';
 	import EditPlayerModal from '$lib/components/players/EditPlayerModal.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
@@ -167,56 +167,59 @@
 	});
 </script>
 
-<div class="min-h-screen bg-[#0a0a0a] text-[#a0a0a0] font-['JetBrains_Mono',monospace] p-0 relative overflow-hidden selection:bg-[#f97316] selection:text-black font-medium">
+<div class="w-full h-full flex flex-col overflow-hidden relative font-sans">
 	<!-- Cinematic Overlays -->
 	<div class="fixed inset-0 pointer-events-none z-[100] bg-vignette opacity-40"></div>
 	
 	<!-- Main Content Chassis -->
-	<div class="max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-10 space-y-8 relative z-10">
+	<div class="w-full h-full flex flex-col gap-10 relative z-10 pb-32 md:pb-12">
 		
 		<!-- Intelligence Header (Responsive Scale) -->
-		<div class="flex flex-col xl:flex-row xl:items-end justify-between gap-8 border-l-2 border-[#f97316] pl-6 py-1 bg-[#121212]/40 backdrop-blur-md">
-			<div class="space-y-3 p-2">
-				<div class="flex items-center gap-3">
-					<span class="bg-[#f97316] text-black px-1.5 py-0.5 text-[9px] font-black uppercase tracking-widest">Classified</span>
-					<span class="text-[9px] font-bold text-slate-600 uppercase tracking-[0.3em] italic font-['JetBrains_Mono']">STATION: EXILE_HIVE</span>
+		<div class="flex flex-col xl:flex-row xl:items-end justify-between gap-8 border-l-4 border-rust pl-10 py-2 bg-[#0a0a0a]/60 backdrop-blur-xl shadow-2xl relative overflow-hidden industrial-frame">
+			<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
+			
+			<div class="space-y-4 p-2 relative z-10">
+				<div class="flex items-center gap-4">
+					<span class="bg-rust text-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-rust/20">CLASSIFIED_ACCESS</span>
+					<div class="w-px h-3 bg-stone-800"></div>
+					<span class="font-jetbrains text-[9px] font-black text-stone-500 uppercase tracking-[0.4em] italic">STATION: EXILE_HIVE_CORE</span>
 				</div>
-				<h1 class="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter text-white uppercase font-['Inter',sans-serif] leading-none">
-					Subject_<span class="text-[#f97316]">Registry</span>
+				<h1 class="text-5xl sm:text-6xl lg:text-7xl font-heading font-black tracking-tighter text-white uppercase leading-none">
+					Player_<span class="text-rust">Registry</span>
 				</h1>
-				<div class="flex items-center gap-4 pt-1">
-					<div class="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-[0.1em]">
-						<div class="w-1.5 h-1.5 bg-[#f97316] shadow-[0_0_8px_#f97316]"></div>
-						Signal_Stable
+				<div class="flex items-center gap-6 pt-2">
+					<div class="flex items-center gap-3 font-jetbrains text-[10px] font-black text-stone-500 uppercase tracking-widest">
+						<div class="w-2 h-2 bg-emerald-500 shadow-[0_0_10px_#10b981] animate-pulse"></div>
+						SIGNAL_LOCK: STABLE
 					</div>
-					<div class="w-[1px] h-3 bg-white/10"></div>
-					<div class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.1em] italic">
-						Role: Super_Admin
+					<div class="w-px h-4 bg-stone-800"></div>
+					<div class="font-jetbrains text-[10px] font-black text-stone-600 uppercase tracking-widest italic">
+						AUTH_VECTOR: ROOT_ADMIN
 					</div>
 				</div>
 			</div>
 
-			<div class="flex flex-wrap items-center gap-6 p-2">
+			<div class="flex flex-wrap items-center gap-8 p-4 relative z-10">
 				<!-- Tactical Tab Switcher -->
-				<div class="flex gap-2">
+				<div class="flex gap-2 bg-black/40 p-1.5 border border-stone-800 shadow-inner">
 					<button
 						onclick={() => (activeTab = 'players')}
-						class="flex flex-col items-start px-6 py-3 border transition-all duration-300 relative {activeTab === 'players' ? 'border-[#f97316] bg-[#f97316]/10 text-white shadow-[0_0_15px_rgba(249,115,22,0.1)]' : 'border-white/10 bg-[#1a1a1a]/40 text-slate-600'}"
+						class="flex flex-col items-start px-8 py-4 transition-all duration-500 relative group {activeTab === 'players' ? 'bg-rust text-white shadow-xl shadow-rust/30' : 'text-stone-600 hover:text-stone-300 hover:bg-stone-900'}"
 					>
-						<span class="text-[8px] font-black tracking-widest uppercase mb-0.5 opacity-50 font-['JetBrains_Mono']">Identity_Base</span>
-						<span class="text-sm font-black tracking-tight uppercase font-['Inter',sans-serif]">01_SUBJECTS</span>
+						<span class="font-jetbrains text-[8px] font-black tracking-[0.3em] uppercase mb-1 opacity-50">Identity Base</span>
+						<span class="font-heading text-base font-black tracking-widest uppercase">Players</span>
 						{#if activeTab === 'players'}
-							<div class="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-[#f97316]"></div>
+							<div class="absolute -top-1 -right-1 w-2 h-2 bg-rust shadow-[0_0_10px_var(--color-rust)]"></div>
 						{/if}
 					</button>
 					<button
 						onclick={() => (activeTab = 'reports')}
-						class="flex flex-col items-start px-6 py-3 border transition-all duration-300 relative {activeTab === 'reports' ? 'border-red-600 bg-red-600/10 text-white shadow-[0_0_15px_rgba(239,68,68,0.1)]' : 'border-white/10 bg-[#1a1a1a]/40 text-slate-600'}"
+						class="flex flex-col items-start px-8 py-4 transition-all duration-500 relative group {activeTab === 'reports' ? 'bg-red-600 text-white shadow-xl shadow-red-900/30' : 'text-stone-600 hover:text-stone-300 hover:bg-stone-900'}"
 					>
-						<span class="text-[8px] font-black tracking-widest uppercase mb-0.5 opacity-50 font-['JetBrains_Mono']">Violation_Logs</span>
-						<span class="text-sm font-black tracking-tight uppercase font-['Inter',sans-serif]">02_INCIDENTS</span>
+						<span class="font-jetbrains text-[8px] font-black tracking-[0.3em] uppercase mb-1 opacity-50">Violation Logs</span>
+						<span class="font-heading text-base font-black tracking-widest uppercase">Reports</span>
 						{#if activeTab === 'reports'}
-							<div class="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-600"></div>
+							<div class="absolute -top-1 -right-1 w-2 h-2 bg-red-600 shadow-[0_0_100px_#ef4444]"></div>
 						{/if}
 					</button>
 				</div>
@@ -224,227 +227,243 @@
 				<button
 					onclick={refreshCurrentTab}
 					disabled={activeTab === 'players' ? playersLoading : reportsLoading}
-					class="p-4 border border-white/10 bg-[#1a1a1a]/40 hover:border-white/30 transition-all text-slate-600 disabled:opacity-20"
+					class="p-5 border border-stone-800 bg-stone-950/60 hover:bg-rust hover:text-white hover:border-rust transition-all shadow-xl active:translate-y-px disabled:opacity-20"
 				>
-					<RefreshCw class="w-5 h-5 {(activeTab === 'players' ? playersLoading : reportsLoading) ? 'animate-spin' : ''}" />
+					<RefreshCw class="w-6 h-6 {(activeTab === 'players' ? playersLoading : reportsLoading) ? 'animate-spin' : ''}" />
 				</button>
 			</div>
 		</div>
 
 		<!-- Command & Query Line -->
-		<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:items-center">
-			<div class="lg:col-span-9 relative font-['JetBrains_Mono']">
-				<div class="absolute left-5 top-1/2 -translate-y-1/2 text-[#f97316] font-black text-lg pointer-events-none">$</div>
+		<div class="grid grid-cols-1 xl:grid-cols-12 gap-8 items-center px-2">
+			<div class="xl:col-span-10 relative group">
+				<div class="absolute left-6 top-1/2 -translate-y-1/2 text-rust font-black text-xl pointer-events-none opacity-50 group-focus-within:opacity-100 transition-opacity">$</div>
 				{#if activeTab === 'players'}
 					<input
 						type="text"
 						bind:value={playerSearchQuery}
-						placeholder="FILTER_BY_SUBJECT_ID..."
-						class="w-full bg-[#121212] border border-white/10 pl-12 pr-10 py-4 text-base text-white font-bold tracking-widest focus:border-[#f97316]/40 transition-all outline-none uppercase placeholder:text-slate-800 italic shadow-inner"
+						placeholder="FILTER_BY_NEURAL_SIGNATURE..."
+						class="w-full bg-stone-950 border border-stone-800 pl-14 pr-10 py-5 font-jetbrains text-sm text-stone-200 font-bold tracking-[0.2em] focus:border-rust outline-none transition-all uppercase placeholder:text-stone-900 italic shadow-inner industrial-frame"
 					/>
 				{:else}
 					<input
 						type="text"
 						bind:value={reportSearchQuery}
-						placeholder="FILTER_BY_FAULT_LOG..."
-						class="w-full bg-[#121212] border border-white/10 pl-12 pr-10 py-4 text-base text-white font-bold tracking-widest focus:border-[#f97316]/40 transition-all outline-none uppercase placeholder:text-slate-800 italic shadow-inner"
+						placeholder="FILTER_BY_FAULT_LOG_VECTOR..."
+						class="w-full bg-stone-950 border border-stone-800 pl-14 pr-10 py-5 font-jetbrains text-sm text-stone-200 font-bold tracking-[0.2em] focus:border-rust outline-none transition-all uppercase placeholder:text-stone-900 italic shadow-inner industrial-frame"
 					/>
 				{/if}
 			</div>
-			<div class="lg:col-span-3 flex items-center justify-end gap-4 text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] italic shrink-0">
-				<Activity class="w-3.5 h-3.5 text-[#f97316] animate-pulse" />
-				Streaming_Data
+			<div class="xl:col-span-2 flex items-center justify-end gap-5 font-jetbrains text-[10px] font-black text-stone-600 uppercase tracking-[0.3em] italic shrink-0">
+				<div class="flex items-center gap-3">
+					<div class="w-1.5 h-1.5 bg-rust animate-ping"></div>
+					SYNC_ACTIVE
+				</div>
+				<div class="w-px h-4 bg-stone-800"></div>
+				<Activity class="w-4 h-4 text-rust" />
 			</div>
 		</div>
 
 		<!-- Data Briefing Cards -->
-		<div class="space-y-3">
+		<div class="flex-1 overflow-y-auto custom-scrollbar px-2 space-y-4">
 			{#if activeTab === 'players'}
 				{#if playersLoading && players.length === 0}
-					<div class="py-24 flex flex-col items-center gap-4 opacity-40">
-						<div class="w-12 h-[1px] bg-[#f97316] animate-pulse"></div>
-						<span class="text-[10px] font-black tracking-[0.5em] uppercase text-[#f97316]">Uplink_Sync</span>
+					<div class="py-40 flex flex-col items-center gap-6">
+						<div class="w-16 h-16 border-2 border-rust border-t-transparent rounded-none animate-spin shadow-lg shadow-rust/20"></div>
+						<span class="font-heading font-black text-[12px] font-black tracking-[0.6em] uppercase text-rust animate-pulse">Uplink_Synchronizing...</span>
 					</div>
 				{:else if filteredPlayers.length === 0}
-					<div class="py-24 flex flex-col items-center gap-4 opacity-20">
-						<span class="text-lg font-black tracking-[0.3em] uppercase italic text-[#f97316]">>> NO_RECORDS_LOCATED</span>
+					<div class="py-40 flex flex-col items-center gap-6 opacity-40">
+						<div class="p-8 bg-stone-900/20 border border-stone-800 industrial-frame">
+							<Search class="w-16 h-16 opacity-10" />
+						</div>
+						<span class="font-heading font-black text-xl tracking-[0.4em] uppercase italic text-stone-700">>> ZERO_RECORDS_MAPPED</span>
 					</div>
 				{:else}
-					{#each filteredPlayers as player (player.id)}
-						<div 
-							class="group relative flex flex-col lg:flex-row items-stretch bg-[#121212] border border-white/10 hover:border-white/30 transition-all duration-300 overflow-hidden shadow-lg hover:shadow-[#f97316]/5"
-							in:fade={{ duration: 200 }}
-						>
-							<!-- Subject Signal Marker -->
-							<div class="w-1.5 {player.online ? 'bg-[#10b981]' : 'bg-slate-800'} shrink-0 relative">
-								{#if player.online}
-									<div class="absolute inset-0 bg-white/10 animate-pulse"></div>
-								{/if}
-							</div>
-
-							<!-- Identification Block -->
-							<div class="flex-1 p-6 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-								<div class="md:col-span-4 flex items-center gap-5">
-									<div class="w-10 h-10 bg-black border border-white/10 flex items-center justify-center text-white font-black italic text-lg group-hover:border-[#f97316] transition-colors shrink-0">
-										{player.name.charAt(0).toUpperCase()}
-									</div>
-									<div class="min-w-0">
-										<h3 class="text-2xl font-black tracking-tight text-white uppercase font-['Inter',sans-serif] leading-none group-hover:text-[#f97316] transition-colors truncate">{player.name}</h3>
-										<p class="text-[9px] font-black text-slate-600 tracking-[0.2em] uppercase mt-1.5 italic font-['JetBrains_Mono']">ID: 0x{player.id.toString(16).toUpperCase()}</p>
-									</div>
+					<div class="grid grid-cols-1 gap-4">
+						{#each filteredPlayers as player (player.id)}
+							<div 
+								class="modern-industrial-card glass-panel group relative flex flex-col xl:flex-row items-stretch overflow-hidden shadow-2xl !rounded-none"
+								in:fade={{ duration: 200 }}
+							>
+								<!-- Subject Signal Marker -->
+								<div class={`w-2 ${player.online ? 'bg-emerald-500 shadow-[0_0_15px_#10b981]' : 'bg-stone-800'} shrink-0 relative transition-colors duration-500`}>
+									{#if player.online}
+										<div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+									{/if}
 								</div>
 
-								<!-- Metadata Briefing -->
-								<div class="md:col-span-5 grid grid-cols-2 gap-6 border-l border-white/10 pl-6 font-['JetBrains_Mono']">
-									<div>
-										<div class="text-[8px] font-black text-slate-700 uppercase tracking-widest mb-1 italic">Registry_UID</div>
-										<div class="text-[11px] font-bold text-slate-500 tracking-tight truncate uppercase italic">{player.uid || 'N/A'}</div>
+								<!-- Identification Block -->
+								<div class="flex-1 p-8 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+									<div class="lg:col-span-4 flex items-center gap-8">
+										<div class="w-16 h-16 bg-stone-950 border border-stone-800 flex items-center justify-center text-white font-heading font-black italic text-2xl group-hover:border-rust group-hover:text-rust transition-all duration-500 industrial-frame shadow-inner">
+											{player.name.charAt(0).toUpperCase()}
+										</div>
+										<div class="min-w-0">
+											<h3 class="text-3xl font-heading font-black tracking-tighter text-white uppercase leading-none group-hover:text-rust transition-all duration-500 truncate">{player.name}</h3>
+											<p class="font-jetbrains text-[10px] font-black text-stone-600 tracking-[0.3em] uppercase mt-2 italic">Player ID: 0x{player.id.toString(16).toUpperCase()}</p>
+										</div>
 									</div>
-									<div>
-										<div class="text-[8px] font-black text-slate-700 uppercase tracking-widest mb-1 italic">Stored_XP</div>
-										<div class="text-lg font-black text-[#fbbf24] italic tracking-tight leading-none">
-											{player.xp.toLocaleString()} <span class="text-[8px] opacity-30 uppercase font-bold text-[#f97316]">Units</span>
+
+									<!-- Metadata Briefing -->
+									<div class="lg:col-span-5 grid grid-cols-2 gap-10 border-l border-stone-800/50 pl-10 font-jetbrains">
+										<div>
+											<div class="text-[9px] font-black text-stone-700 uppercase tracking-[0.2em] mb-2 italic">Registry_UID_Hash</div>
+											<div class="text-xs font-black text-stone-500 tracking-tight truncate uppercase italic">{player.uid || 'NULL_PTR'}</div>
+										</div>
+										<div>
+											<div class="text-[9px] font-black text-stone-700 uppercase tracking-[0.2em] mb-2 italic">Accumulated_XP</div>
+											<div class="text-2xl font-heading font-black text-amber-500 tracking-tighter leading-none flex items-baseline gap-2">
+												{player.xp.toLocaleString()} <span class="font-jetbrains text-[9px] font-black text-stone-700 uppercase tracking-widest">UNITS</span>
+											</div>
+										</div>
+									</div>
+
+									<!-- Uplink Info -->
+									<div class="lg:col-span-3 space-y-2 border-l border-stone-800/50 pl-10 hidden xl:block font-jetbrains">
+										<div class="flex items-center gap-3">
+											<Clock class="w-4 h-4 text-stone-700" />
+											<span class="text-[11px] font-black text-white uppercase tracking-widest">{new Date(player.updated_at).toLocaleDateString()}</span>
+										</div>
+										<div class="font-jetbrains text-[9px] font-black text-rust-light tracking-[0.3em] uppercase pl-7 opacity-60">
+											TIMESTAMP: {new Date(player.updated_at).toLocaleTimeString([], { hour12: false })}
 										</div>
 									</div>
 								</div>
 
-								<!-- Uplink Info -->
-								<div class="md:col-span-3 space-y-1.5 border-l border-white/10 pl-6 hidden lg:block font-['JetBrains_Mono']">
-									<div class="flex items-center gap-2">
-										<Clock class="w-3 h-3 text-slate-600" />
-										<span class="text-[10px] font-bold text-white uppercase tracking-tighter">{new Date(player.updated_at).toLocaleDateString()}</span>
-									</div>
-									<div class="text-[9px] font-black text-[#f97316] tracking-[0.2em] uppercase pl-5 opacity-50">
-										{new Date(player.updated_at).toLocaleTimeString()}
-									</div>
+								<!-- Tactical Actions -->
+								<div class="flex flex-row xl:flex-col divide-x xl:divide-x-0 xl:divide-y divide-stone-800 border-l border-stone-800 bg-stone-900/20">
+									<button 
+										onclick={() => openEditModal(player)}
+										class="flex-1 px-8 py-6 xl:py-0 xl:h-1/2 hover:bg-rust/20 hover:text-rust transition-all flex items-center justify-center group/btn text-stone-600"
+										title="Modify_Subject"
+									>
+										<Pencil class="w-5 h-5 transition-transform duration-500 group-hover/btn:scale-125" />
+									</button>
+									<button 
+										onclick={() => confirmDelete(player)}
+										class="flex-1 px-8 py-6 xl:py-0 xl:h-1/2 hover:bg-red-600/20 hover:text-red-500 transition-all flex items-center justify-center group/btn text-stone-600"
+										title="Purge_Subject"
+									>
+										<Trash2 class="w-5 h-5 transition-transform duration-500 group-hover/btn:scale-125" />
+									</button>
 								</div>
 							</div>
-
-							<!-- Tactical Actions -->
-							<div class="flex flex-row lg:flex-col divide-x lg:divide-x-0 lg:divide-y divide-white/10 border-l border-white/10 bg-[#1a1a1a]/60">
-								<button 
-									onclick={() => openEditModal(player)}
-									class="flex-1 px-6 py-4 lg:py-0 lg:h-1/2 hover:bg-[#f97316]/20 hover:text-[#f97316] transition-all flex items-center justify-center group/btn text-slate-600"
-								>
-									<Pencil class="w-4 h-4 transition-transform group-hover/btn:scale-110" />
-								</button>
-								<button 
-									onclick={() => confirmDelete(player)}
-									class="flex-1 px-6 py-4 lg:py-0 lg:h-1/2 hover:bg-red-600/20 hover:text-red-600 transition-all flex items-center justify-center group/btn text-slate-600"
-								>
-									<Trash2 class="w-4 h-4 transition-transform group-hover/btn:scale-110" />
-								</button>
-							</div>
-						</div>
-					{/each}
+						{/each}
+					</div>
 				{/if}
 			{:else}
 				<!-- Incident Briefing Cards -->
 				{#if reportsLoading && reports.length === 0}
-					<div class="py-24 flex flex-col items-center gap-4 opacity-40">
-						<div class="w-12 h-[1px] bg-red-600 animate-pulse"></div>
-						<span class="text-[10px] font-black tracking-[0.5em] uppercase text-red-600">Fault_Log_Sync</span>
+					<div class="py-40 flex flex-col items-center gap-6">
+						<div class="w-16 h-[1px] bg-red-600 animate-pulse"></div>
+						<span class="font-heading font-black text-[12px] font-black tracking-[0.6em] uppercase text-red-600">INCIDENT_BUFFER_SYNC...</span>
 					</div>
 				{:else if filteredReports.length === 0}
-					<div class="py-24 flex flex-col items-center gap-4 opacity-20">
-						<span class="text-lg font-black tracking-[0.3em] uppercase italic text-red-600">>> NO_INCIDENTS_LOGGED</span>
+					<div class="py-40 flex flex-col items-center gap-6 opacity-40">
+						<div class="p-8 bg-stone-900/20 border border-stone-800 industrial-frame">
+							<AlertOctagon class="w-16 h-16 opacity-10" />
+						</div>
+						<span class="font-heading font-black text-xl tracking-[0.4em] uppercase italic text-red-900">>> ZERO_INCIDENTS_MAPPED</span>
 					</div>
 				{:else}
-					{#each filteredReports as report (report.id)}
-						<div 
-							class="group relative flex flex-col lg:flex-row items-stretch bg-[#121212] border border-white/10 hover:border-red-600/30 transition-all duration-300 overflow-hidden font-['JetBrains_Mono'] shadow-lg"
-							in:fade={{ duration: 200 }}
-						>
-							<!-- Fault Level Marker -->
-							<div class="w-1.5 bg-red-600 shrink-0 relative overflow-hidden opacity-60">
-								<div class="absolute inset-0 bg-white/10 animate-pulse"></div>
-							</div>
-
-							<div class="flex-1 p-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-								<!-- Violation Detail -->
-								<div class="lg:col-span-5 space-y-3">
-									<div class="flex items-center gap-4">
-										<div class="p-2 border border-red-600/20 bg-red-600/10 text-red-600 shrink-0">
-											<ShieldAlert class="w-5 h-5 animate-pulse" />
-										</div>
-										<div class="min-w-0">
-											<h3 class="text-xl font-black tracking-tight text-white uppercase font-['Inter',sans-serif] leading-none truncate">Fault_{report.id}</h3>
-											<p class="text-[8px] font-black text-slate-600 tracking-[0.2em] uppercase mt-1.5 italic">Threat_Priority: HIGH</p>
-										</div>
-									</div>
-									<div class="text-[11px] font-bold text-red-600/80 italic border-l-2 border-red-600/20 pl-4 py-1.5 bg-white/[0.02] tracking-wide uppercase leading-relaxed">
-										&gt;&gt; "{report.reason.toUpperCase()}"
-									</div>
+					<div class="grid grid-cols-1 gap-4">
+						{#each filteredReports as report (report.id)}
+							<div 
+								class="modern-industrial-card glass-panel group relative flex flex-col xl:flex-row items-stretch overflow-hidden shadow-2xl !rounded-none"
+								in:fade={{ duration: 200 }}
+							>
+								<!-- Fault Level Marker -->
+								<div class="w-2 bg-red-600 shrink-0 relative overflow-hidden shadow-[0_0_20px_#ef4444]">
+									<div class="absolute inset-0 bg-white/20 animate-pulse"></div>
 								</div>
 
-								<!-- Origin & Target Nodes -->
-								<div class="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 gap-8 border-l border-white/10 pl-8">
-									<div class="space-y-2">
-										<div class="text-[8px] font-black text-slate-700 uppercase tracking-widest italic">Origin_Node</div>
-										<div class="flex items-center gap-3">
-											<div class="w-7 h-7 bg-black border border-white/10 flex items-center justify-center text-[10px] font-black italic text-slate-500 shrink-0">{ (report.reporter_name || 'U').charAt(0).toUpperCase() }</div>
+								<div class="flex-1 p-8 grid grid-cols-1 xl:grid-cols-12 gap-10 items-start">
+									<!-- Violation Detail -->
+									<div class="xl:col-span-5 space-y-4">
+										<div class="flex items-center gap-5">
+											<div class="p-3 border border-red-600/30 bg-red-600/10 text-red-500 industrial-frame shrink-0">
+												<ShieldAlert class="w-6 h-6 animate-pulse" />
+											</div>
 											<div class="min-w-0">
-												<div class="text-[11px] font-black text-white italic uppercase truncate">{report.reporter_name || 'ANON'}</div>
-												<div class="text-[8px] text-slate-700 font-bold uppercase tracking-widest">ID: {report.reporter_id}</div>
+												<h3 class="text-2xl font-heading font-black tracking-tighter text-white uppercase leading-none truncate">Report ID: {report.id}</h3>
+												<p class="font-jetbrains text-[9px] font-black text-red-900 uppercase tracking-[0.3em] mt-2 italic font-bold">Severity: High</p>
 											</div>
 										</div>
-									</div>
-									<div class="space-y-2">
-										<div class="text-[8px] font-black text-slate-700 uppercase tracking-widest italic">Target_Node</div>
-										<div class="flex items-center gap-3">
-											<div class="w-7 h-7 bg-red-950/20 border border-red-600/20 flex items-center justify-center text-[10px] font-black italic text-red-600 shrink-0">{ (report.reported_user_name || 'U').charAt(0).toUpperCase() }</div>
-											<div class="min-w-0">
-												<div class="text-[11px] font-black text-red-600 italic uppercase truncate underline decoration-1 decoration-red-600/20 underline-offset-2">{report.reported_user_name || 'VOID'}</div>
-												<div class="text-[8px] text-slate-700 font-bold uppercase tracking-widest">ID: {report.reported_user_id}</div>
-											</div>
+										<div class="font-jetbrains text-xs font-bold text-red-500 bg-red-950/10 border-l-2 border-red-600 p-5 tracking-widest uppercase leading-relaxed shadow-inner">
+											&gt;&gt; "{report.reason.toUpperCase()}"
 										</div>
 									</div>
-								</div>
 
-								<!-- Context & Time -->
-								<div class="lg:col-span-3 space-y-4 border-l border-white/10 pl-8">
-									<div>
-										<div class="text-[8px] font-black text-slate-700 uppercase tracking-widest mb-1.5 italic">Sector_Link</div>
-										{#if report.game_server_instance_id}
-											<div class="flex items-center gap-2.5 text-[9px] font-black text-slate-500 italic uppercase bg-black/40 px-3 py-1.5 border border-white/10">
-												<Server class="w-3 h-3 text-[#f97316]" />
-												<span class="tracking-widest">{report.game_server_instance_id.slice(0, 8)}...</span>
+									<!-- Origin & Target Nodes -->
+									<div class="xl:col-span-4 grid grid-cols-1 sm:grid-cols-2 gap-10 border-l border-stone-800/50 pl-10">
+										<div class="space-y-3">
+											<div class="font-jetbrains text-[9px] font-black text-stone-700 uppercase tracking-[0.3em] italic">Origin_Node_Sig</div>
+											<div class="flex items-center gap-4">
+												<div class="w-10 h-10 bg-stone-950 border border-stone-800 flex items-center justify-center text-xs font-heading font-black italic text-stone-500 shrink-0 industrial-frame">{ (report.reporter_name || 'U').charAt(0).toUpperCase() }</div>
+												<div class="min-w-0">
+													<div class="font-heading text-sm font-black text-white italic uppercase truncate tracking-tight">{report.reporter_name || 'ANON_USER'}</div>
+													<div class="font-jetbrains text-[9px] text-stone-700 font-bold uppercase tracking-widest mt-1">HEX: 0x{report.reporter_id.toString(16).toUpperCase()}</div>
+												</div>
 											</div>
-										{:else}
-											<span class="text-[8px] text-slate-800 font-black italic tracking-[0.2em] uppercase opacity-40 italic">&gt;&gt; NULL_LINK</span>
-										{/if}
+										</div>
+										<div class="space-y-3">
+											<div class="font-jetbrains text-[9px] font-black text-stone-700 uppercase tracking-[0.3em] italic">Target_Node_Sig</div>
+											<div class="flex items-center gap-4">
+												<div class="w-10 h-10 bg-red-950/30 border border-red-600/30 flex items-center justify-center text-xs font-heading font-black italic text-red-500 shrink-0 industrial-frame shadow-lg shadow-red-900/10">{ (report.reported_user_name || 'U').charAt(0).toUpperCase() }</div>
+												<div class="min-w-0">
+													<div class="font-heading text-sm font-black text-red-500 italic uppercase truncate underline decoration-1 decoration-red-600/20 underline-offset-4 tracking-tight">{report.reported_user_name || 'VOID_RECO'}</div>
+													<div class="font-jetbrains text-[9px] text-stone-700 font-bold uppercase tracking-widest mt-1">HEX: 0x{report.reported_user_id.toString(16).toUpperCase()}</div>
+												</div>
+											</div>
+										</div>
 									</div>
-									<div class="flex flex-col gap-1">
-										<div class="text-[11px] font-black text-white italic tracking-tighter uppercase font-['Inter',sans-serif]">{new Date(report.timestamp).toLocaleDateString()}</div>
-										<div class="text-[9px] text-slate-700 font-black italic tracking-[0.2em] uppercase opacity-80">{new Date(report.timestamp).toLocaleTimeString()}</div>
+
+									<!-- Context & Time -->
+									<div class="xl:col-span-3 space-y-6 border-l border-stone-800/50 pl-10">
+										<div>
+											<div class="font-jetbrains text-[9px] font-black text-stone-700 uppercase tracking-[0.3em] mb-3 italic">Sector_Linkage</div>
+											{#if report.game_server_instance_id}
+												<div class="flex items-center gap-3 font-jetbrains text-[10px] font-black text-rust-light italic uppercase bg-stone-950 px-4 py-2 border border-stone-800 shadow-inner group-hover:border-rust/30 transition-all">
+													<Server class="w-4 h-4 text-rust shadow-rust/50" />
+													<span class="tracking-widest">{report.game_server_instance_id.slice(0, 12)}...</span>
+												</div>
+											{:else}
+												<div class="font-jetbrains text-[10px] text-stone-800 font-black italic tracking-[0.3em] uppercase opacity-30">&gt;&gt; NULL_MAP_PTR</div>
+											{/if}
+										</div>
+										<div class="flex flex-col gap-1.5">
+											<div class="font-heading text-base font-black text-white italic tracking-tighter uppercase tabular-nums">{new Date(report.timestamp).toLocaleDateString()}</div>
+											<div class="font-jetbrains text-[10px] text-stone-700 font-black italic tracking-[0.4em] uppercase opacity-80 tabular-nums">{new Date(report.timestamp).toLocaleTimeString([], { hour12: false })}</div>
+										</div>
 									</div>
 								</div>
 							</div>
-						</div>
-					{/each}
+						{/each}
+					</div>
 				{/if}
 			{/if}
 		</div>
 
 		<!-- Tactical Intel Footer -->
-		<div class="border-t border-white/10 bg-[#121212]/40 pt-10 flex flex-col md:flex-row justify-between items-center gap-10 text-[10px] font-black tracking-[0.4em] uppercase text-slate-700 italic font-['JetBrains_Mono']">
-			<div class="flex flex-wrap justify-center gap-10">
-				<div class="flex items-center gap-3 group/item cursor-default">
-					<Cpu class="w-4 h-4 text-[#f97316] group-hover/item:scale-110 transition-transform opacity-60" />
-					<span class="group-hover/item:text-slate-500 transition-colors">Core_Load: Nominal</span>
+		<div class="border-t border-stone-800 bg-[#0a0a0a]/60 p-8 flex flex-col md:flex-row justify-between items-center gap-10 font-jetbrains text-[10px] font-black tracking-[0.4em] uppercase text-stone-700 italic industrial-frame">
+			<div class="flex flex-wrap justify-center gap-16">
+				<div class="flex items-center gap-4 group/item cursor-default">
+					<Cpu class="w-5 h-5 text-rust group-hover/item:scale-125 transition-all duration-500 opacity-40 group-hover:opacity-100" />
+					<span class="group-hover/item:text-stone-400 transition-colors">Core_Load: Nominal</span>
 				</div>
-				<div class="flex items-center gap-3 group/item cursor-default">
-					<Database class="w-4 h-4 text-[#f97316] group-hover/item:scale-110 transition-transform opacity-60" />
-					<span class="group-hover/item:text-slate-500 transition-colors">Registry: Active</span>
+				<div class="flex items-center gap-4 group/item cursor-default">
+					<Database class="w-5 h-5 text-rust group-hover/item:scale-125 transition-all duration-500 opacity-40 group-hover:opacity-100" />
+					<span class="group-hover/item:text-stone-400 transition-colors">Registry: Synchronized</span>
 				</div>
-				<div class="flex items-center gap-3 group/item cursor-default text-white opacity-80">
-					<Lock class="w-4 h-4 text-[#f97316]" />
-					<span>Encryption: AES_256</span>
+				<div class="flex items-center gap-4 group/item cursor-default text-white/80 border-b border-rust/30 pb-1">
+					<Lock class="w-5 h-5 text-rust shadow-rust/50" />
+					<span class="tracking-[0.5em]">Cipher: AES_256_GCM</span>
 				</div>
 			</div>
-			<div class="flex items-center gap-4 text-slate-800 font-bold px-4 py-2 border border-white/5 bg-black/20">
-				<ChevronRight class="w-4 h-4 animate-pulse text-[#f97316]" />
-				<span>Ver: 0.9.1-TAC_HD</span>
+			<div class="flex items-center gap-5 text-stone-800 font-black px-6 py-3 border border-stone-800 bg-black/40 shadow-inner industrial-frame">
+				<ChevronRight class="w-5 h-5 animate-pulse text-rust" />
+				<span class="text-white opacity-40">Ver: 0.9.4-TAC_PRIME_HD</span>
 			</div>
 		</div>
 	</div>
@@ -467,72 +486,41 @@
 </div>
 
 <style>
-	/* Cinematic Command UI Styles (Lighter Contrast) */
+	/* Cinematic Command UI Styles (High-Definition Modern Industrial) */
 	.bg-vignette {
-		background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.7) 100%);
-	}
-
-	.bg-amber-scanlines {
-		background: linear-gradient(
-			rgba(18, 16, 16, 0) 50%,
-			rgba(0, 0, 0, 0.1) 50%
-		),
-		linear-gradient(
-			90deg,
-			rgba(255, 0, 0, 0.02),
-			rgba(0, 255, 0, 0.01),
-			rgba(0, 0, 255, 0.02)
-		);
-		background-size: 100% 4px, 4px 100%;
-	}
-
-	@keyframes flicker {
-		0%, 100% { opacity: 1; }
-		50% { opacity: 0.9; }
-		55% { opacity: 0.95; }
-		60% { opacity: 0.85; }
-	}
-	.animate-flicker {
-		animation: flicker 0.3s infinite;
+		background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.8) 100%);
 	}
 
 	@keyframes warmup {
-		0% { opacity: 1; filter: contrast(2) brightness(0); }
-		20% { opacity: 1; filter: contrast(1.5) brightness(1.2); }
+		0% { opacity: 1; filter: contrast(3) brightness(0); }
+		15% { opacity: 1; filter: contrast(2) brightness(1.5); }
+		30% { opacity: 1; filter: contrast(1.5) brightness(0.5); }
 		100% { opacity: 0; filter: contrast(1) brightness(1); visibility: hidden; }
 	}
 	.animate-warmup {
-		animation: warmup 0.8s forwards ease-out;
+		animation: warmup 1.5s forwards cubic-bezier(0.23, 1, 0.32, 1);
 	}
 
-	.animate-spin-slow {
-		animation: rotate 15s linear infinite;
-	}
-	@keyframes rotate {
-		from { transform: rotate(0deg); }
-		to { transform: rotate(360deg); }
-	}
-
-	/* Industrial High-Res Scrollbar (Clean) */
+	/* Industrial High-Res Scrollbar (Modernized) */
 	.custom-scrollbar::-webkit-scrollbar {
-		width: 6px;
-		height: 6px;
+		width: 4px;
+		height: 4px;
 	}
 	.custom-scrollbar::-webkit-scrollbar-track {
-		background: #0a0a0a;
+		background: #050505;
 	}
 	.custom-scrollbar::-webkit-scrollbar-thumb {
-		background: #222;
-		border: 1px solid #111;
+		background: #1a1a1a;
+		border: 1px solid #050505;
 	}
 	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-		background: #f97316;
+		background: var(--color-rust);
 	}
 
 	:global(body) {
 		-webkit-font-smoothing: antialiased;
 		-moz-osx-font-smoothing: grayscale;
-		background-color: #0a0a0a;
+		background-color: #050505;
 	}
 
 	input:focus {

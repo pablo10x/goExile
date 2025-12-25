@@ -65,83 +65,83 @@
 
 {#if isOpen}
 	<div
-		class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+		class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
 		transition:slide={{ duration: 100 }}
 	>
 		<div
-			class="bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh]"
+			class="bg-[#050505] border border-stone-800 rounded-none w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh] industrial-frame"
 		>
 			<div
-				class="p-4 border-b border-slate-300 dark:border-slate-700 flex justify-between items-center"
+				class="p-6 border-b border-stone-800 flex justify-between items-center bg-[#0a0a0a]"
 			>
-				<h3 class="text-lg font-bold text-slate-100">
-					Create Table in <span class="text-blue-400 font-mono">{schema}</span>
+				<h3 class="text-xl font-heading font-black text-slate-100 uppercase tracking-tighter">
+					Initialize_Sector in <span class="text-rust font-jetbrains text-xs ml-3 uppercase tracking-widest">{schema}</span>
 				</h3>
 				<button
 					onclick={onClose}
-					class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white"
+					class="text-stone-600 hover:text-white transition-colors"
 				>
 					<X class="w-5 h-5" />
 				</button>
 			</div>
 
-			<div class="p-6 overflow-y-auto space-y-6">
+			<div class="p-8 overflow-y-auto space-y-8 custom-scrollbar">
 				<div>
 					<label
 						for="tableName"
-						class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5"
-						>Table Name</label
+						class="block font-jetbrains text-[10px] font-black text-stone-500 uppercase tracking-widest mb-3"
+						>Table_ID</label
 					>
 					<input
 						type="text"
 						id="tableName"
 						bind:value={tableName}
-						class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500"
-						placeholder="e.g. users"
+						class="w-full bg-stone-950 border border-stone-800 py-3 px-4 text-stone-200 font-jetbrains text-xs focus:border-rust outline-none uppercase tracking-widest transition-all"
+						placeholder="e.g. USER_REGISTRY"
 					/>
 				</div>
 
-				<div class="space-y-3">
-					<div class="flex justify-between items-center">
+				<div class="space-y-4">
+					<div class="flex justify-between items-center border-b border-stone-800/50 pb-3">
 						<h4
-							class="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+							class="font-heading font-black text-xs text-stone-500 uppercase tracking-[0.2em]"
 						>
-							Columns
+							COLUMN_DEFINITIONS
 						</h4>
 						<button
 							onclick={addColumn}
-							class="text-xs flex items-center gap-1 text-emerald-400 hover:text-emerald-300 font-bold"
+							class="font-jetbrains text-[10px] font-black flex items-center gap-2 text-emerald-500 hover:text-emerald-400 uppercase tracking-widest transition-colors"
 						>
-							<Plus class="w-3 h-3" /> Add Column
+							<Plus class="w-3.5 h-3.5" /> Add_Field
 						</button>
 					</div>
 
-					<div class="space-y-2">
+					<div class="space-y-3">
 						{#each columns as col, i}
 							<div
-								class="flex flex-col gap-2 p-3 bg-white/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-lg group"
+								class="flex flex-col gap-4 p-5 bg-stone-900/40 border border-stone-800 rounded-none group industrial-frame"
 							>
-								<div class="flex gap-2 items-start">
-									<div class="flex flex-col gap-1 w-full">
-										<label for="columnName-{i}" class="text-xs text-slate-500 dark:text-slate-400"
-											>Name</label
+								<div class="flex gap-4 items-start">
+									<div class="flex flex-col gap-2 w-full">
+										<label for="columnName-{i}" class="font-jetbrains text-[9px] font-bold text-stone-600 uppercase tracking-widest"
+											>Field_ID</label
 										>
 										<input
 											type="text"
 											id="columnName-{i}"
 											bind:value={col.name}
-											placeholder="Column Name"
-											class="flex-1 bg-slate-900 border border-slate-300 dark:border-slate-700 rounded px-2 py-1.5 text-sm text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500"
+											placeholder="Identifier"
+											class="w-full bg-stone-950 border border-stone-800 py-2 px-3 text-stone-200 font-jetbrains text-xs focus:border-rust outline-none uppercase tracking-widest"
 										/>
 									</div>
-									<div class="flex flex-col gap-1 w-full">
-										<label for="columnType-{i}" class="text-xs text-slate-500 dark:text-slate-400"
-											>Type</label
+									<div class="flex flex-col gap-2 w-full">
+										<label for="columnType-{i}" class="font-jetbrains text-[9px] font-bold text-stone-600 uppercase tracking-widest"
+											>Data_Type</label
 										>
 										<select
 											id="columnType-{i}"
 											bind:value={col.type}
-											class="bg-slate-900 border border-slate-300 dark:border-slate-700 rounded px-2 py-1.5 text-sm text-blue-400 outline-none focus:border-blue-500 font-mono"
+											class="w-full bg-stone-950 border border-stone-800 py-2 px-3 text-rust font-jetbrains text-xs focus:border-rust outline-none cursor-pointer uppercase tracking-widest"
 										>
 											{#each dataTypes as type}
 												<option value={type}>{type}</option>
@@ -150,7 +150,7 @@
 									</div>
 									<button
 										onclick={() => removeColumn(i)}
-										class="p-1.5 text-slate-500 hover:text-red-400 rounded"
+										class="p-2 mt-6 text-stone-700 hover:text-red-500 transition-colors"
 										title="Remove Column"
 									>
 										<Trash2 class="w-4 h-4" />
@@ -161,11 +161,11 @@
 									{#each constraints as c}
 										<button
 											onclick={() => toggleConstraint(i, c)}
-											class="px-2 py-0.5 rounded text-xs border transition-colors {col.constraints.includes(
+											class="px-2 py-1 font-jetbrains text-[9px] font-black border transition-all uppercase tracking-tighter {col.constraints.includes(
 												c
 											)
-												? 'bg-blue-500/20 text-blue-300 border-blue-500/40'
-												: 'bg-slate-900 text-slate-500 border-slate-300 dark:border-slate-700 hover:border-slate-500'}"
+												? 'bg-rust/10 text-rust border-rust/40'
+												: 'bg-stone-950 text-stone-600 border-stone-800 hover:border-stone-600'}"
 										>
 											{c}
 										</button>
@@ -178,27 +178,28 @@
 			</div>
 
 			<div
-				class="p-4 border-t border-slate-300 dark:border-slate-700 bg-slate-900/50 flex justify-end gap-3"
+				class="p-6 border-t border-stone-800 bg-[#0a0a0a] flex justify-end gap-4"
 			>
 				<button
 					onclick={onClose}
-					class="px-4 py-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-800 rounded-lg transition-colors"
+					class="px-6 py-3 font-heading font-black text-[10px] text-stone-500 hover:text-white transition-all uppercase tracking-widest"
 				>
-					Cancel
+					Abort_OP
 				</button>
 				<button
 					onclick={handleSave}
 					disabled={loading || !tableName.trim()}
-					class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-slate-900 dark:text-white rounded-lg font-bold flex items-center gap-2 shadow-lg disabled:opacity-50"
+					class="px-8 py-3 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rust/20 disabled:opacity-20 transition-all active:translate-y-px"
 				>
 					{#if loading}
 						<div
-							class="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"
+							class="w-4 h-4 border-2 border-white/30 border-t-white animate-spin"
 						></div>
+						SYNCING...
 					{:else}
 						<Save class="w-4 h-4" />
+						Authorize_Init
 					{/if}
-					Create Table
 				</button>
 			</div>
 		</div>

@@ -10,117 +10,112 @@
 
 {#if isOpen}
 	<div
-		class="fixed z-50 w-96 p-4 bg-slate-900/95 backdrop-blur-md border border-slate-300/50 dark:border-slate-700/50 rounded-xl shadow-2xl pointer-events-none"
+		class="fixed z-50 w-96 p-6 bg-black/90 backdrop-blur-md border border-stone-800 rounded-none shadow-[0_0_50px_rgba(0,0,0,0.8)] pointer-events-none industrial-frame"
 		style="top: {y + 20}px; left: {x - 192}px;"
 		transition:scale={{ duration: 200, start: 0.95 }}
 	>
 		<div
-			class="flex items-center gap-3 mb-4 border-b border-slate-300/50 dark:border-slate-700/50 pb-3"
+			class="flex items-center gap-4 mb-6 border-b border-stone-800 pb-4"
 		>
-			<div class="p-2 bg-emerald-500/10 rounded-lg">
+			<div class="p-2.5 bg-emerald-500/10 border border-emerald-500/30 industrial-frame">
 				<Database class="w-5 h-5 text-emerald-400" />
 			</div>
 			<div>
-				<h3 class="font-bold text-slate-100">PostgreSQL Metrics</h3>
-				<div class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
-					<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-					Live Connection Pool
+				<h3 class="font-heading font-black text-white uppercase tracking-widest text-sm">Persistence_Cores</h3>
+				<div class="text-[9px] text-stone-500 font-jetbrains font-bold flex items-center gap-2 uppercase tracking-tight">
+					<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#10b981]"></span>
+					Live_Pool_Synchronized
 				</div>
 			</div>
 		</div>
 
-		<div class="space-y-4">
+		<div class="space-y-6">
 			<!-- Pool Stats -->
-			<div class="grid grid-cols-2 gap-3">
+			<div class="grid grid-cols-2 gap-4">
 				<div
-					class="bg-slate-800/50 p-3 rounded-lg border border-slate-300/30 dark:border-slate-700/30"
+					class="bg-stone-900/40 p-4 border border-stone-800 shadow-inner"
 				>
-					<div class="text-xs text-slate-500 dark:text-slate-400 mb-1">Open / Max</div>
-					<div class="text-lg font-bold text-slate-100 font-mono">
-						{stats.db_open_connections} <span class="text-slate-500 text-sm">/ 10</span>
+					<div class="text-[8px] font-jetbrains font-black text-stone-600 mb-2 uppercase tracking-widest">Active / Cap</div>
+					<div class="text-xl font-heading font-black text-white tracking-tighter">
+						{stats.db_open_connections} <span class="text-stone-700 text-xs font-jetbrains">/ 10</span>
 					</div>
 				</div>
 				<div
-					class="bg-slate-800/50 p-3 rounded-lg border border-slate-300/30 dark:border-slate-700/30"
+					class="bg-stone-900/40 p-4 border border-stone-800 shadow-inner"
 				>
-					<div class="text-xs text-slate-500 dark:text-slate-400 mb-1">In Use / Idle</div>
-					<div class="text-lg font-bold text-emerald-400 font-mono">
-						{stats.db_in_use} <span class="text-slate-500 text-sm">/ {stats.db_idle}</span>
+					<div class="text-[8px] font-jetbrains font-black text-stone-600 mb-2 uppercase tracking-widest">Load / Idle</div>
+					<div class="text-xl font-heading font-black text-emerald-400 tracking-tighter">
+						{stats.db_in_use} <span class="text-stone-700 text-xs font-jetbrains">/ {stats.db_idle}</span>
 					</div>
 				</div>
 			</div>
 
 			<!-- Wait Stats -->
 			<div
-				class="bg-slate-800/50 p-3 rounded-lg border border-slate-300/30 dark:border-slate-700/30 flex items-center justify-between"
+				class="bg-stone-900/40 p-4 border border-stone-800 flex items-center justify-between shadow-inner"
 			>
 				<div>
-					<div class="text-xs text-slate-500 dark:text-slate-400 mb-1">Wait Duration</div>
-					<div class="text-sm font-bold text-slate-800 dark:text-slate-200">
+					<div class="text-[8px] font-jetbrains font-black text-stone-600 mb-1 uppercase tracking-widest">Buffer_Latency</div>
+					<div class="text-xs font-jetbrains font-black text-rust-light tracking-tight">
 						{stats.db_wait_duration}
 					</div>
 				</div>
 				<div class="text-right">
-					<div class="text-xs text-slate-500 dark:text-slate-400 mb-1">Wait Count</div>
-					<div class="text-sm font-bold text-slate-800 dark:text-slate-200">
+					<div class="text-[8px] font-jetbrains font-black text-stone-600 mb-1 uppercase tracking-widest">Queue_Wait</div>
+					<div class="text-xs font-jetbrains font-black text-stone-300">
 						{stats.db_wait_count}
 					</div>
 				</div>
 			</div>
 
-			<div class="h-px bg-slate-700/50 my-2"></div>
+			<div class="h-px bg-stone-800/50 my-2"></div>
 
 			<!-- Advanced Stats -->
-			<div class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-				<div class="flex justify-between items-center">
-					<span class="text-slate-500 dark:text-slate-400 flex items-center gap-1.5"
-						><HardDrive class="w-3 h-3" /> DB Size</span
-					>
-					<span class="font-mono text-slate-800 dark:text-slate-200">{stats.db_size || 'N/A'}</span>
+			<div class="grid grid-cols-2 gap-x-6 gap-y-4 text-[10px]">
+				<div class="flex justify-between items-center group">
+					<span class="text-stone-600 flex items-center gap-2 uppercase font-jetbrains font-bold"
+						><HardDrive class="w-3.5 h-3.5" /> Storage</span>
+					<span class="font-jetbrains font-black text-stone-300">{stats.db_size || 'NULL'}</span>
 				</div>
-				<div class="flex justify-between items-center">
-					<span class="text-slate-500 dark:text-slate-400 flex items-center gap-1.5"
-						><Activity class="w-3 h-3" /> Cache Hit</span
-					>
-					<span class="font-mono text-emerald-400"
-						>{stats.db_cache_hit ? stats.db_cache_hit?.toFixed(2) : 0}%</span
-					>
+				<div class="flex justify-between items-center group">
+					<span class="text-stone-600 flex items-center gap-2 uppercase font-jetbrains font-bold"
+						><Activity class="w-3.5 h-3.5 text-rust" /> Hit_Rate</span>
+					<span class="font-jetbrains font-black text-emerald-400"
+						>{stats.db_cache_hit ? stats.db_cache_hit?.toFixed(2) : 0}%</span>
 				</div>
-				<div class="flex justify-between items-center">
-					<span class="text-slate-500 dark:text-slate-400 flex items-center gap-1.5"
-						><Server class="w-3 h-3" /> Commits</span
-					>
-					<span class="font-mono text-slate-800 dark:text-slate-200">{stats.db_commits || 0}</span>
+				<div class="flex justify-between items-center group">
+					<span class="text-stone-600 flex items-center gap-2 uppercase font-jetbrains font-bold"
+						><Server class="w-3.5 h-3.5" /> Commits</span>
+					<span class="font-jetbrains font-black text-stone-300">{stats.db_commits || 0}</span>
 				</div>
-				<div class="flex justify-between items-center">
-					<span class="text-slate-500 dark:text-slate-400 flex items-center gap-1.5"
-						><Archive class="w-3 h-3" /> Rollbacks</span
-					>
-					<span class="font-mono text-red-400">{stats.db_rollbacks || 0}</span>
+				<div class="flex justify-between items-center group">
+					<span class="text-stone-600 flex items-center gap-2 uppercase font-jetbrains font-bold"
+						><Archive class="w-3.5 h-3.5 text-red-500" /> Rejects</span>
+					<span class="font-jetbrains font-black text-red-400">{stats.db_rollbacks || 0}</span>
 				</div>
 			</div>
 
 			<!-- Tuple Stats -->
 			<div
-				class="bg-slate-800/30 p-2 rounded border border-slate-300/30 dark:border-slate-700/30 grid grid-cols-4 gap-1 text-center text-xs mt-2"
+				class="bg-stone-950 p-3 border border-stone-800 grid grid-cols-4 gap-2 text-center text-[8px] font-jetbrains font-black uppercase mt-2 shadow-inner"
 			>
 				<div>
-					<div class="text-slate-500 mb-0.5">Fetch</div>
-					<div class="font-mono text-slate-700 dark:text-slate-300">
+					<div class="text-stone-700 mb-1">In</div>
+					<div class="text-stone-400">
 						{stats.db_tup_fetched || 0}
 					</div>
 				</div>
 				<div>
-					<div class="text-slate-500 mb-0.5">Ins</div>
-					<div class="font-mono text-green-400">{stats.db_tup_inserted || 0}</div>
+					<div class="text-stone-700 mb-1">Add</div>
+					<div class="text-emerald-500">{stats.db_tup_inserted || 0}</div>
 				</div>
 				<div>
-					<div class="text-slate-500 mb-0.5">Upd</div>
-					<div class="font-mono text-blue-400">{stats.db_tup_updated || 0}</div>
+					<div class="text-stone-700 mb-1">Mod</div>
+					<div class="text-rust">{stats.db_tup_updated || 0}</div>
 				</div>
 				<div>
-					<div class="text-slate-500 mb-0.5">Del</div>
-					<div class="font-mono text-red-400">{stats.db_tup_deleted || 0}</div>
+					<div class="text-stone-700 mb-1">Del</div>
+					<div class="text-red-500">{stats.db_tup_deleted || 0}</div>
 				</div>
 			</div>
 		</div>

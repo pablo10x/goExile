@@ -14,15 +14,15 @@
 <div class="relative">
 	<button
 		onclick={toggleNotificationPanel}
-		class="p-2 text-slate-500 dark:text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700 rounded-lg transition-all border border-slate-300/50 dark:border-slate-700/50 hover:border-rust/30 shadow-lg shadow-black/50"
+		class="p-2 text-stone-500 hover:text-white bg-stone-900/50 hover:bg-rust/10 rounded-none transition-all border border-stone-800 hover:border-rust shadow-xl active:translate-y-px"
 	>
-		<Bell class="w-5 h-5" />
+		<Bell class="w-5 h-5 transition-transform group-hover:scale-110" />
 		{#if $notifications.length > 0}
 			<span
-				class="absolute top-1 right-1 w-2.5 h-2.5 bg-rust rounded-full border-2 border-slate-900 animate-ping"
+				class="absolute top-1 right-1 w-2.5 h-2.5 bg-rust rounded-full border-2 border-stone-950 animate-ping"
 			></span>
 			<span
-				class="absolute top-1 right-1 w-2.5 h-2.5 bg-rust rounded-full border-2 border-slate-900"
+				class="absolute top-1 right-1 w-2.5 h-2.5 bg-rust rounded-full border-2 border-stone-950"
 			></span>
 		{/if}
 	</button>
@@ -30,54 +30,64 @@
 	<!-- Notification Dropdown -->
 	{#if isNotificationPanelOpen}
 		<div
-			class="absolute right-0 top-12 w-80 bg-[var(--card-bg)] backdrop-blur-xl border border-[var(--border-color)] rounded-xl shadow-2xl z-50 overflow-hidden"
+			class="absolute right-0 top-12 w-80 bg-black/90 backdrop-blur-xl border border-stone-800 rounded-none shadow-[0_0_50px_rgba(0,0,0,0.8)] z-50 overflow-hidden industrial-frame"
 			transition:slide={{ duration: 200 }}
 		>
 			<div
-				class="px-4 py-3 border-b border-[var(--border-color)] flex justify-between items-center bg-black/40"
+				class="px-5 py-4 border-b border-stone-800 flex justify-between items-center bg-[#0a0a0a]"
 			>
-				<span class="font-black text-slate-200 text-[10px] uppercase tracking-[0.2em] font-mono">Recent Activity</span>
+				<span class="font-heading font-black text-white text-[10px] uppercase tracking-[0.2em]">Recent_Activity_Buffer</span>
 				<button
 					onclick={() => notifications.clearHistory()}
-					class="text-[9px] font-bold uppercase tracking-widest text-rust-light hover:text-rust transition-colors italic">Clear_Log</button
+					class="text-[9px] font-black uppercase tracking-widest text-rust hover:text-rust-light transition-all italic border border-stone-800 px-3 py-1 bg-stone-950 hover:border-rust shadow-inner">PURGE</button
 				>
 			</div>
-			<div class="max-h-80 overflow-y-auto p-2 space-y-2 no-scrollbar">
+			<div class="max-h-80 overflow-y-auto p-3 space-y-3 no-scrollbar bg-[#050505] relative">
+				<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
+				
 				{#if $history && $history.length > 0}
 					{#each $history as note (note.id)}
 						<div
-							class="flex gap-3 p-3 rounded-lg bg-black/40 border border-white/5 hover:border-rust/20 transition-all group"
+							class="flex gap-4 p-4 rounded-none bg-stone-900/40 border border-stone-800 hover:border-rust/30 transition-all group relative overflow-hidden"
 						>
-							<div class="mt-0.5">
+							<div class="mt-0.5 shrink-0">
 								{#if note.type === 'success'}
-									<CheckCircle class="w-4 h-4 text-emerald-500" />
+									<div class="p-1.5 bg-emerald-500/10 border border-emerald-500/30 industrial-frame">
+										<CheckCircle class="w-3.5 h-3.5 text-emerald-500" />
+									</div>
 								{:else if note.type === 'error'}
-									<XCircle class="w-4 h-4 text-red-500" />
+									<div class="p-1.5 bg-red-500/10 border border-red-500/30 industrial-frame">
+										<XCircle class="w-3.5 h-3.5 text-red-500" />
+									</div>
 								{:else if note.type === 'warning'}
-									<AlertCircle class="w-4 h-4 text-rust" />
+									<div class="p-1.5 bg-rust/10 border border-rust/30 industrial-frame">
+										<AlertCircle class="w-3.5 h-3.5 text-rust" />
+									</div>
 								{:else}
-									<Info class="w-4 h-4 text-rust-light" />
+									<div class="p-1.5 bg-stone-800 border border-stone-700 industrial-frame">
+										<Info class="w-3.5 h-3.5 text-stone-400" />
+									</div>
 								{/if}
 							</div>
 							<div class="flex-1 min-w-0">
-								<p class="text-[11px] font-bold text-slate-200 leading-tight uppercase tracking-tight">
+								<p class="text-[11px] font-black text-stone-200 leading-tight uppercase tracking-tight">
 									{note.message}
 								</p>
 								{#if note.details}
-									<p class="text-[9px] text-slate-500 mt-1 font-mono italic">{note.details}</p>
+									<p class="text-[9px] text-stone-500 mt-2 font-jetbrains font-bold leading-relaxed uppercase opacity-60 italic border-l border-stone-800 pl-3">{note.details}</p>
 								{/if}
-								<span class="text-[8px] text-slate-600 mt-2 block font-mono">
-									{new Date(note.timestamp || Date.now()).toLocaleTimeString()}
+								<span class="text-[8px] font-jetbrains font-black text-stone-700 mt-3 block uppercase tracking-widest">
+									Captured: {new Date(note.timestamp || Date.now()).toLocaleTimeString([], { hour12: false })}
 								</span>
 							</div>
 						</div>
 					{/each}
 				{:else}
-					<div class="text-center py-10">
-						<div class="inline-block p-3 rounded-full bg-white/5 mb-2">
-							<Bell class="w-6 h-6 text-stone-700" />
+					<div class="text-center py-16 opacity-40">
+						<div class="inline-block p-5 bg-stone-900/40 border border-stone-800 industrial-frame mb-4">
+							<Bell class="w-8 h-8 text-stone-700" />
 						</div>
-						<p class="text-stone-600 text-[10px] font-mono uppercase tracking-widest">No signals detected</p>
+						<p class="text-stone-600 text-[10px] font-jetbrains font-black uppercase tracking-[0.3em]">No_Signals_Detected</p>
 					</div>
 				{/if}
 			</div>

@@ -549,47 +549,47 @@
 	});
 </script>
 
-<div class="relative z-10 p-4 sm:p-6 max-w-7xl mx-auto pb-24 md:pb-6">
+<div class="relative z-10 w-full space-y-10 pb-32 md:pb-12">
 	<!-- Header -->
-	<div class="mb-10">
-		<div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-			<div class="flex items-center gap-5">
+	<div class="space-y-10">
+		<div class="flex flex-col xl:flex-row xl:items-center justify-between gap-8 mb-10">
+			<div class="flex items-center gap-6">
 				<div
-					class="p-3 bg-rust border-2 border-rust-light shadow-[0_0_20px_rgba(120,53,15,0.4)]"
+					class="p-4 bg-rust border-2 border-rust-light shadow-[0_0_30px_rgba(120,53,15,0.4)] industrial-frame"
 				>
-					<Settings class="w-8 h-8 text-white" />
+					<Settings class="w-10 h-10 text-white" />
 				</div>
 				<div>
-					<div class="flex items-center gap-2 mb-1">
-						<div class="h-px w-6 bg-rust"></div>
-						<span class="tactical-code text-rust">System_Environment_Bus</span>
+					<div class="flex items-center gap-3 mb-1">
+						<div class="h-0.5 w-8 bg-rust"></div>
+						<span class="font-jetbrains text-[10px] font-black text-rust uppercase tracking-[0.3em]">System_Environment_Bus</span>
 					</div>
-					<h1 class="text-3xl sm:text-4xl font-black military-label text-white uppercase tracking-tighter">
+					<h1 class="text-4xl sm:text-5xl font-heading font-black text-white uppercase tracking-tighter">
 						CONFIGURATION_CORE
 					</h1>
 				</div>
 			</div>
 
 			<!-- Actions Bar -->
-			<div class="flex items-center gap-3">
+			<div class="flex items-center gap-4">
 				{#if hasUnsavedChanges}
 					<div
-						class="flex items-center gap-3 px-4 py-2 bg-rust/10 border-2 border-rust/30"
+						class="flex items-center gap-4 px-5 py-3 bg-rust/10 border border-rust/30 industrial-frame"
 						transition:slide={{ axis: 'x' }}
 					>
-						<div class="w-2 h-2 bg-rust animate-pulse"></div>
-						<span class="font-jetbrains text-[10px] font-black text-rust-light uppercase tracking-widest" >{pendingChangeCount}_UNCOMMITTED_CHANGES</span>
+						<div class="w-2.5 h-2.5 bg-rust animate-pulse shadow-rust/50 shadow-lg"></div>
+						<span class="font-jetbrains text-[11px] font-black text-rust-light uppercase tracking-[0.2em]" >{pendingChangeCount}_UNCOMMITTED_CHANGES</span>
 					</div>
 					<button
 						onclick={discardChanges}
-						class="px-6 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 font-black text-[10px] uppercase tracking-widest transition-all border border-stone-700"
+						class="px-8 py-3 bg-stone-900 hover:bg-stone-800 text-stone-400 font-heading font-black text-[11px] uppercase tracking-widest transition-all border border-stone-800"
 					>
 						Rollback
 					</button>
 					<button
 						onclick={saveChanges}
 						disabled={saving}
-						class="px-8 py-2 bg-rust hover:bg-rust-light text-white font-black text-[10px] uppercase tracking-widest shadow-[4px_4px_0px_rgba(120,53,15,0.3)] transition-all disabled:opacity-50"
+						class="px-10 py-3 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rust/20 transition-all disabled:opacity-20 active:translate-y-px"
 					>
 						{#if saving}
 							COMMITTING...
@@ -601,10 +601,10 @@
 					<button
 						onclick={loadConfig}
 						disabled={loading}
-						class="px-6 py-2 bg-stone-900 hover:bg-white hover:text-black text-stone-400 font-black text-[10px] uppercase tracking-widest transition-all border border-stone-800 ml-auto md:ml-0"
+						class="px-8 py-3 bg-stone-950 hover:bg-white hover:text-black text-stone-500 font-heading font-black text-[11px] uppercase tracking-widest transition-all border border-stone-800 active:translate-y-px"
 					>
-						<RefreshCw class="w-3 h-3 inline mr-2 {loading ? 'animate-spin' : ''}" />
-						Recalibrate
+						<RefreshCw class="w-4 h-4 inline mr-3 {loading ? 'animate-spin' : ''}" />
+						Recalibrate_Registry
 					</button>
 				{/if}
 			</div>
@@ -612,63 +612,63 @@
 
 		<!-- Tab Navigation -->
 		<div
-			class="flex items-center p-1 bg-black/60 border-2 border-stone-800 backdrop-blur-md overflow-x-auto no-scrollbar"
+			class="flex items-center p-1.5 bg-[#0a0a0a]/80 border border-stone-800 backdrop-blur-xl overflow-x-auto no-scrollbar industrial-frame shadow-2xl"
 		>
 			<button
 				onclick={() => (activeTab = 'master')}
-				class="flex-1 flex flex-col items-center gap-1 px-6 py-3 transition-all {activeTab === 'master'
-					? 'bg-rust text-white'
+				class="flex-1 flex flex-col items-center gap-1.5 px-8 py-4 transition-all {activeTab === 'master'
+					? 'bg-rust text-white shadow-lg'
 					: 'text-stone-600 hover:text-white hover:bg-stone-900'}"
 			>
-				<span class="font-black text-[11px] uppercase tracking-widest">MASTER_NODE</span>
-				<span class="font-mono text-[7px] opacity-50">CORE_RESOURCES</span>
+				<span class="font-heading font-black text-[12px] uppercase tracking-[0.2em]">MASTER_NODE</span>
+				<span class="font-jetbrains text-[8px] font-black opacity-40 uppercase tracking-widest">CORE_RESOURCES</span>
 			</button>
 			<button
 				onclick={() => (activeTab = 'spawner')}
-				class="flex-1 flex flex-col items-center gap-1 px-6 py-3 transition-all {activeTab === 'spawner'
-					? 'bg-rust text-white'
+				class="flex-1 flex flex-col items-center gap-1.5 px-8 py-4 transition-all {activeTab === 'spawner'
+					? 'bg-rust text-white shadow-lg'
 					: 'text-stone-600 hover:text-white hover:bg-stone-900'}"
 			>
-				<span class="font-black text-[11px] uppercase tracking-widest">SPAWNER_BUS</span>
-				<span class="font-mono text-[7px] opacity-50">REGISTRY_DEFAULTS</span>
+				<span class="font-heading font-black text-[12px] uppercase tracking-[0.2em]">SPAWNER_BUS</span>
+				<span class="font-jetbrains text-[8px] font-black opacity-40 uppercase tracking-widest">REGISTRY_DEFAULTS</span>
 			</button>
 			<button
 				onclick={() => (activeTab = 'firebase')}
-				class="flex-1 flex flex-col items-center gap-1 px-6 py-3 transition-all {activeTab === 'firebase'
-					? 'bg-orange-600 text-white'
+				class="flex-1 flex flex-col items-center gap-1.5 px-8 py-4 transition-all {activeTab === 'firebase'
+					? 'bg-orange-600 text-white shadow-lg'
 					: 'text-stone-600 hover:text-white hover:bg-stone-900'}"
 			>
-				<span class="font-black text-[11px] uppercase tracking-widest">REMOTE_SIGNAL</span>
-				<span class="font-mono text-[7px] opacity-50">FIREBASE_SYNC</span>
+				<span class="font-heading font-black text-[12px] uppercase tracking-[0.2em]">REMOTE_SIGNAL</span>
+				<span class="font-jetbrains text-[8px] font-black opacity-40 uppercase tracking-widest">FIREBASE_SYNC</span>
 			</button>
 			<button
 				onclick={() => (activeTab = 'aesthetic')}
-				class="flex-1 flex flex-col items-center gap-1 px-6 py-3 transition-all {activeTab === 'aesthetic'
-					? 'bg-stone-100 text-black'
+				class="flex-1 flex flex-col items-center gap-1.5 px-8 py-4 transition-all {activeTab === 'aesthetic'
+					? 'bg-stone-100 text-black shadow-lg'
 					: 'text-stone-600 hover:text-white hover:bg-stone-900'}"
 			>
-				<span class="font-black text-[11px] uppercase tracking-widest">AESTHETICS</span>
-				<span class="font-mono text-[7px] opacity-50">INTERFACE_GEOMETRY</span>
+				<span class="font-heading font-black text-[12px] uppercase tracking-[0.2em]">AESTHETICS</span>
+				<span class="font-jetbrains text-[8px] font-black opacity-40 uppercase tracking-widest">INTERFACE_GEOMETRY</span>
 			</button>
 		</div>
 
 		<!-- Search Bar -->
-		<div class="mt-4 relative group">
+		<div class="relative group">
 			<Search
-				class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500 group-focus-within:text-rust-light transition-colors"
+				class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-600 group-focus-within:text-rust transition-colors"
 			/>
 			<input
 				type="text"
 				bind:value={searchQuery}
-				placeholder="Filter identifiers..."
-				class="w-full pl-10 sm:pl-12 pr-10 py-2.5 sm:py-3 bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl text-sm sm:text-base text-slate-200 placeholder:text-slate-600 focus:border-rust-light focus:ring-2 focus:ring-rust-light/20 outline-none transition-all font-mono"
+				placeholder="FILTER_SYSTEM_IDENTIFIERS..."
+				class="w-full pl-14 pr-10 py-4 bg-stone-950 border border-stone-800 text-stone-200 font-jetbrains text-xs focus:border-rust outline-none transition-all uppercase tracking-widest shadow-inner"
 			/>
 			{#if searchQuery}
 				<button
 					onclick={() => (searchQuery = '')}
-					class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+					class="absolute right-5 top-1/2 -translate-y-1/2 text-stone-600 hover:text-white"
 				>
-					<X class="w-4 h-4" />
+					<X class="w-5 h-5" />
 				</button>
 			{/if}
 		</div>
@@ -860,205 +860,285 @@
 												</div>
 											{/if}
 			{#if activeTab === 'aesthetic'}
-				<div class="space-y-6" transition:fade={{ duration: 200 }}>
-					<!-- System Aesthetic Section -->
-					<div class="bg-[var(--card-bg)] backdrop-blur-sm border border-[var(--border-color)] rounded-2xl overflow-hidden shadow-2xl">
-						<div class="px-6 py-4 border-b border-[var(--border-color)] flex items-center gap-3 bg-black/20">
-							<div class="p-2 bg-gradient-to-br from-rust to-rust-light rounded-lg shadow-lg">
-								<Monitor class="w-5 h-5 text-white" />
+				<div class="space-y-8" transition:fade={{ duration: 200 }}>
+					<!-- Theme Presets -->
+					<div class="modern-industrial-card glass-panel p-8 !rounded-none shadow-2xl">
+						<div class="flex items-center gap-4 mb-8 border-b border-stone-800 pb-4">
+							<div class="p-2.5 bg-rust/10 border border-rust/30 industrial-frame">
+								<Zap class="w-5 h-5 text-rust-light" />
 							</div>
-							<h3 class="text-xl font-bold text-slate-100 font-heading tracking-widest uppercase">System Interface Aesthetic</h3>
+							<div>
+								<h3 class="text-xl font-heading font-black text-white uppercase tracking-widest">Interface Presets</h3>
+								<p class="text-[10px] font-jetbrains text-stone-500 uppercase tracking-widest mt-1">Select a calibrated system aesthetic</p>
+							</div>
 						</div>
-					<div class="p-6">
-						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+						<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 							{#each [
-									{ key: 'crt_effect', label: 'CRT Simulation', desc: 'Cathode-ray visualization', icon: Monitor },
-									{ key: 'industrial_styling', label: 'Industrial Geometry', desc: 'Sharp edges & heavy borders', icon: Shield },
-									{ key: 'glassmorphism', label: 'Refractive Glass', desc: 'Backdrop occlusion effects', icon: Cloud },
-									{ key: 'glow_effects', label: 'Luminous Core', desc: 'Signal & shadow radiance', icon: Zap },
-									{ key: 'animations_enabled', label: 'Aggressive Overlays', desc: 'Fluid state synchronization', icon: RefreshCw },
-									{ key: 'panic_mode', label: 'Red Alert Protocol', desc: 'Critical state visualization', icon: AlertCircle }
-							] as toggle}
-								<div class="flex items-center justify-between p-4 bg-black/40 rounded-xl border border-white/5 hover:border-rust-light/30 transition-all">
-									<div class="flex items-center gap-3">
-										<toggle.icon class="w-4 h-4 text-rust-light" />
-										<div>
-											<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">{toggle.label}</h4>
-											<p class="text-[9px] text-slate-500 font-mono uppercase">{toggle.desc}</p>
+								{ 
+									id: 'deep_command', 
+									name: 'Deep Command', 
+									desc: 'Classic dystopian industrial',
+									config: { bg_color: '#050505', accent_color: '#f97316', card_alpha: 0.4, backdrop_blur: 16, industrial_styling: true, crt_effect: true, glow_effects: true }
+								},
+								{ 
+									id: 'slate_minimal', 
+									name: 'Slate Minimal', 
+									desc: 'Clean tactical interface',
+									config: { bg_color: '#0a0a0a', accent_color: '#0ea5e9', card_alpha: 0.6, backdrop_blur: 8, industrial_styling: false, crt_effect: false, glow_effects: false }
+								},
+								{ 
+									id: 'toxic_hazard', 
+									name: 'Toxic Hazard', 
+									desc: 'High-visibility alert system',
+									config: { bg_color: '#050505', accent_color: '#10b981', card_alpha: 0.3, backdrop_blur: 20, industrial_styling: true, crt_effect: true, glow_effects: true }
+								},
+								{ 
+									id: 'red_alert', 
+									name: 'Red Alert', 
+									desc: 'Critical state visualization',
+									config: { bg_color: '#050505', accent_color: '#ef4444', card_alpha: 0.5, backdrop_blur: 12, industrial_styling: true, crt_effect: true, glow_effects: true, panic_mode: true }
+								}
+							] as preset}
+								<button 
+									onclick={() => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, ...preset.config } }))}
+									class="flex flex-col p-5 bg-stone-900/40 border border-stone-800 hover:border-rust transition-all group industrial-frame text-left"
+								>
+									<div class="flex items-center justify-between mb-3">
+										<span class="font-heading font-black text-xs text-white uppercase tracking-widest">{preset.name}</span>
+										<div class="w-3 h-3 border border-white/20" style="background-color: {preset.config.accent_color}"></div>
+									</div>
+									<p class="text-[9px] font-jetbrains text-stone-500 uppercase tracking-tight leading-relaxed">{preset.desc}</p>
+								</button>
+							{/each}
+						</div>
+					</div>
+
+					<div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+						<!-- System Interface Aesthetic -->
+						<div class="modern-industrial-card glass-panel !rounded-none shadow-2xl h-full">
+							<div class="px-8 py-6 border-b border-stone-800 flex items-center gap-4 bg-black/20">
+								<div class="p-2.5 bg-rust/10 border border-rust/30 industrial-frame">
+									<Monitor class="w-5 h-5 text-rust-light" />
+								</div>
+								<h3 class="text-lg font-heading font-black text-white uppercase tracking-widest">Global Parameters</h3>
+							</div>
+							
+							<div class="p-8 space-y-10">
+								<!-- Toggles -->
+								<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+									{#each [
+											{ key: 'crt_effect', label: 'CRT Overlay', desc: 'Cathode-ray simulation', icon: Monitor },
+											{ key: 'industrial_styling', label: 'Angular Geometry', desc: 'Sharp edges & frames', icon: Shield },
+											{ key: 'glassmorphism', label: 'Refractive Glass', desc: 'Backdrop occlusion', icon: Cloud },
+											{ key: 'glow_effects', label: 'Luminous Core', desc: 'Signal & shadow radiance', icon: Zap },
+											{ key: 'animations_enabled', label: 'State Syncing', desc: 'Aggressive overlays', icon: RefreshCw },
+											{ key: 'panic_mode', label: 'Red Alert', desc: 'Critical state logic', icon: AlertCircle }
+									] as toggle}
+										<div class="flex items-center justify-between p-4 bg-stone-950 border border-stone-800 hover:border-rust/30 transition-all industrial-frame">
+											<div class="flex items-center gap-3">
+												<toggle.icon class="w-4 h-4 text-rust" />
+												<div>
+													<h4 class="font-black text-stone-200 uppercase text-[10px] tracking-widest">{toggle.label}</h4>
+													<p class="text-[8px] text-stone-600 font-jetbrains uppercase">{toggle.desc}</p>
+												</div>
+											</div>
+											<label class="relative inline-flex items-center cursor-pointer">
+												<input type="checkbox" checked={($siteSettings.aesthetic as any)[toggle.key]} onchange={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, [toggle.key]: e.currentTarget.checked } }))} class="sr-only peer">
+												<div class="w-10 h-5 bg-stone-800 border border-stone-700 peer-focus:outline-none rounded-none peer peer-checked:after:translate-x-5 peer-checked:after:bg-rust after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-stone-600 after:rounded-none after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-rust/20 peer-checked:border-rust"></div>
+											</label>
+										</div>
+									{/each}
+								</div>
+
+								<!-- Sliders -->
+								<div class="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-6 border-t border-stone-800">
+									{#each [
+										{ key: 'scanlines_opacity', label: 'Scanline Depth', icon: Wind, max: 0.3, step: 0.01, unit: '%' },
+										{ key: 'noise_opacity', label: 'Signal Static', icon: Activity, max: 0.15, step: 0.005, unit: '%' },
+										{ key: 'card_alpha', label: 'Panel Density', icon: Palette, max: 1, step: 0.05, unit: '%' },
+										{ key: 'backdrop_blur', label: 'Focus Diffusion', icon: Cloud, max: 40, step: 1, unit: 'px' },
+										{ key: 'card_border_width', label: 'Frame Weight', icon: Shield, max: 10, step: 1, unit: 'px' },
+										{ key: 'card_shadow_size', label: 'Glow Magnitude', icon: Zap, max: 100, step: 1, unit: 'px' }
+									] as slider}
+										<div class="space-y-4">
+											<div class="flex justify-between items-center">
+												<div class="flex items-center gap-3">
+													<slider.icon class="w-3.5 h-3.5 text-rust" />
+													<h4 class="font-black text-stone-400 uppercase text-[10px] tracking-widest">{slider.label}</h4>
+												</div>
+												<span class="text-[10px] font-mono text-rust-light tabular-nums">
+													{slider.unit === '%' ? (((($siteSettings.aesthetic as any)[slider.key]) || 0) * 100).toFixed(0) : ($siteSettings.aesthetic as any)[slider.key] || 0}{slider.unit}
+												</span>
+											</div>
+											<div class="relative flex items-center h-2 bg-stone-950 border border-stone-800 shadow-inner">
+												<input 
+													type="range" 
+													min="0" 
+													max={slider.max} 
+													step={slider.step} 
+													value={($siteSettings.aesthetic as any)[slider.key]} 
+													oninput={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, [slider.key]: parseFloat(e.currentTarget.value) } }))} 
+													class="w-full h-full appearance-none cursor-pointer bg-transparent accent-rust z-10" 
+												/>
+												<div class="absolute top-0 left-0 h-full bg-rust/30 pointer-events-none" style="width: {(($siteSettings.aesthetic as any)[slider.key] / slider.max) * 100}%"></div>
+											</div>
+										</div>
+									{/each}
+								</div>
+							</div>
+						</div>
+
+						<!-- Atmospheric & Engine Section -->
+						<div class="space-y-8 h-full">
+							<!-- Atmosphere -->
+							<div class="modern-industrial-card glass-panel !rounded-none shadow-2xl">
+								<div class="px-8 py-6 border-b border-stone-800 flex items-center gap-4 bg-black/20">
+									<div class="p-2.5 bg-rust/10 border border-rust/30 industrial-frame">
+										<CloudRain class="w-5 h-5 text-rust-light" />
+									</div>
+									<h3 class="text-lg font-heading font-black text-white uppercase tracking-widest">Atmospheric Modulation</h3>
+								</div>
+								
+								<div class="p-8 space-y-8">
+									<div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+										{#each [
+												{ key: 'show_smoke', label: 'Exhaust', icon: Wind },
+												{ key: 'show_rain', label: 'Rain', icon: CloudRain },
+												{ key: 'show_clouds', label: 'Cover', icon: Cloud },
+												{ key: 'show_vignette', label: 'Vignette', icon: Monitor },
+												{ key: 'show_navbar_particles', label: 'Ash Fall', icon: Waves }
+										] as effect}
+											<button 
+												onclick={() => backgroundConfig.update((b: any) => ({ ...b, [effect.key]: !b[effect.key] }))}
+												class="flex flex-col items-center gap-3 p-4 bg-stone-950 border transition-all industrial-frame {($backgroundConfig as any)[effect.key] ? 'border-rust text-rust-light shadow-rust/10' : 'border-stone-800 text-stone-600 hover:border-stone-700'}"
+											>
+												<effect.icon class="w-5 h-5" />
+												<span class="font-black uppercase text-[9px] tracking-widest">{effect.label}</span>
+											</button>
+										{/each}
+									</div>
+
+									<div class="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-6 border-t border-stone-800">
+										<div class="space-y-4">
+											<div class="flex justify-between items-center">
+												<h4 class="font-black text-stone-400 uppercase text-[10px] tracking-widest">Precipitation</h4>
+												<span class="text-[10px] font-mono text-rust-light">{($backgroundConfig.rain_opacity * 100).toFixed(0)}%</span>
+											</div>
+											<input type="range" min="0" max="1" step="0.05" value={$backgroundConfig.rain_opacity} oninput={e => backgroundConfig.update(b => ({ ...b, rain_opacity: parseFloat(e.currentTarget.value) }))} class="w-full h-1 bg-stone-950 border border-stone-800 appearance-none cursor-pointer accent-rust" />
+										</div>
+										<div class="space-y-4">
+											<div class="flex justify-between items-center">
+												<h4 class="font-black text-stone-400 uppercase text-[10px] tracking-widest">Vapor</h4>
+												<span class="text-[10px] font-mono text-rust-light">{($backgroundConfig.clouds_opacity * 100).toFixed(0)}%</span>
+											</div>
+											<input type="range" min="0" max="1" step="0.05" value={$backgroundConfig.clouds_opacity} oninput={e => backgroundConfig.update(b => ({ ...b, clouds_opacity: parseFloat(e.currentTarget.value) }))} class="w-full h-1 bg-stone-950 border border-stone-800 appearance-none cursor-pointer accent-rust" />
 										</div>
 									</div>
-									<label class="relative inline-flex items-center cursor-pointer">
-										<input type="checkbox" checked={($siteSettings.aesthetic as any)[toggle.key]} onchange={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, [toggle.key]: e.currentTarget.checked } }))} class="sr-only peer">
-										<div class="w-10 h-5 bg-stone-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rust"></div>
-									</label>
 								</div>
-							{/each}
 							</div>
 
-							<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 pt-8 border-t border-white/5">
-								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5">
-									<div class="flex justify-between items-center mb-1">
-										<div class="flex items-center gap-2">
-											<Wind class="w-3 h-3 text-rust-light" />
-											<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Scanline Intensity</h4>
-										</div>
-										<span class="text-[10px] font-mono text-rust-light">{(($siteSettings.aesthetic.scanlines_opacity || 0) * 100).toFixed(0)}%</span>
+							<!-- Engine -->
+							<div class="modern-industrial-card glass-panel !rounded-none shadow-2xl">
+								<div class="px-8 py-6 border-b border-stone-800 flex items-center gap-4 bg-black/20">
+									<div class="p-2.5 bg-rust/10 border border-rust/30 industrial-frame">
+										<Zap class="w-5 h-5 text-rust-light" />
 									</div>
-									<input type="range" min="0" max="0.2" step="0.01" value={$siteSettings.aesthetic.scanlines_opacity} oninput={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, scanlines_opacity: parseFloat(e.currentTarget.value) } }))} class="w-full h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-rust" />
+									<h3 class="text-lg font-heading font-black text-white uppercase tracking-widest">Visual Core Engine</h3>
 								</div>
-
-								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5">
-									<div class="flex justify-between items-center mb-1">
-										<div class="flex items-center gap-2">
-											<Activity class="w-3 h-3 text-rust-light" />
-											<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Static Noise</h4>
-										</div>
-										<span class="text-[10px] font-mono text-rust-light">{(($siteSettings.aesthetic.noise_opacity || 0) * 100).toFixed(0)}%</span>
-									</div>
-									<input type="range" min="0" max="0.1" step="0.005" value={$siteSettings.aesthetic.noise_opacity} oninput={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, noise_opacity: parseFloat(e.currentTarget.value) } }))} class="w-full h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-rust" />
-								</div>
-
-								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5">
-									<div class="flex justify-between items-center mb-1">
-										<div class="flex items-center gap-2">
-											<Palette class="w-3 h-3 text-rust-light" />
-											<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Card Opacity</h4>
-										</div>
-										<span class="text-[10px] font-mono text-rust-light">{(($siteSettings.aesthetic.card_alpha || 0) * 100).toFixed(0)}%</span>
-									</div>
-									<input type="range" min="0" max="1" step="0.05" value={$siteSettings.aesthetic.card_alpha} oninput={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, card_alpha: parseFloat(e.currentTarget.value) } }))} class="w-full h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-rust" />
-								</div>
-
-								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5">
-									<div class="flex justify-between items-center mb-1">
-										<div class="flex items-center gap-2">
-											<Cloud class="w-3 h-3 text-rust-light" />
-											<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Backdrop Blur</h4>
-										</div>
-										<span class="text-[10px] font-mono text-rust-light">{$siteSettings.aesthetic.backdrop_blur || 0}px</span>
-									</div>
-									<input type="range" min="0" max="40" step="1" value={$siteSettings.aesthetic.backdrop_blur} oninput={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, backdrop_blur: parseInt(e.currentTarget.value) } }))} class="w-full h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-rust" />
-								</div>
-
-								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5">
-									<div class="flex justify-between items-center mb-1">
-										<div class="flex items-center gap-2">
-											<Shield class="w-3 h-3 text-rust-light" />
-											<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Border Weight</h4>
-										</div>
-										<span class="text-[10px] font-mono text-rust-light">{$siteSettings.aesthetic.card_border_width || 0}px</span>
-									</div>
-									<input type="range" min="0" max="10" step="1" value={$siteSettings.aesthetic.card_border_width} oninput={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, card_border_width: parseInt(e.currentTarget.value) } }))} class="w-full h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-rust" />
-								</div>
-
-								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5">
-									<div class="flex justify-between items-center mb-1">
-										<div class="flex items-center gap-2">
-											<Zap class="w-3 h-3 text-rust-light" />
-											<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Shadow Magnitude</h4>
-										</div>
-										<span class="text-[10px] font-mono text-rust-light">{$siteSettings.aesthetic.card_shadow_size || 0}px</span>
-									</div>
-									<input type="range" min="0" max="50" step="1" value={$siteSettings.aesthetic.card_shadow_size} oninput={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, card_shadow_size: parseInt(e.currentTarget.value) } }))} class="w-full h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-rust" />
-								</div>
-
-								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5">
-									<div class="flex justify-between items-center mb-1">
-										<div class="flex items-center gap-2">
-											<LayoutDashboard class="w-3 h-3 text-rust-light" />
-											<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Sidebar Opacity</h4>
-										</div>
-										<span class="text-[10px] font-mono text-rust-light">{(($siteSettings.aesthetic.sidebar_alpha || 0) * 100).toFixed(0)}%</span>
-									</div>
-									<input type="range" min="0" max="1" step="0.05" value={$siteSettings.aesthetic.sidebar_alpha} oninput={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, sidebar_alpha: parseFloat(e.currentTarget.value) } }))} class="w-full h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-rust" />
-								</div>
-
-								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5">
-									<div class="flex justify-between items-center mb-1">
-										<div class="flex items-center gap-2">
-											<Monitor class="w-3 h-3 text-rust-light" />
-											<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Global BG Opacity</h4>
-										</div>
-										<span class="text-[10px] font-mono text-rust-light">{(($siteSettings.aesthetic.bg_opacity || 0) * 100).toFixed(0)}%</span>
-									</div>
-									<input type="range" min="0" max="1" step="0.05" value={$siteSettings.aesthetic.bg_opacity} oninput={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, bg_opacity: parseFloat(e.currentTarget.value) } }))} class="w-full h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-rust" />
-								</div>
-
-								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5 md:col-span-2">
-									<div class="flex justify-between items-center mb-1">
-										<div class="flex items-center gap-2">
-											<Code2 class="w-3 h-3 text-rust-light" />
-											<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">System Typeface</h4>
-										</div>
-										<span class="text-[10px] font-mono text-rust-light">{$siteSettings.aesthetic.font_primary || 'Inter'}</span>
-									</div>
-									<div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-										{#each ['Inter', 'Space Grotesk', 'Michroma', 'Orbitron', 'Red Hat Mono', 'Syncopate', 'Kanit', 'JetBrains Mono'] as font}
+								
+								<div class="p-8">
+									<div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+										{#each [
+												{ id: 'architecture', label: 'Brutalist', icon: Server },
+												{ id: 'tactical_grid', label: 'Radar', icon: Network },
+												{ id: 'neural_network', label: 'Neural', icon: Activity },
+												{ id: 'data_flow', label: 'Data Flow', icon: FileJson },
+												{ id: 'digital_horizon', label: 'Horizon', icon: Globe },
+												{ id: 'none', label: 'Minimal', icon: Zap }
+										] as engine}
 											<button 
-												onclick={() => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, font_primary: font } }))}
-												class="px-3 py-2 bg-stone-900 border transition-all text-xs {$siteSettings.aesthetic.font_primary === font ? 'border-rust text-rust-light bg-rust/5' : 'border-stone-800 text-stone-500 hover:border-stone-700'}"
-												style="font-family: '{font}', sans-serif;"
+												onclick={() => backgroundConfig.update(b => ({ ...b, global_type: engine.id as any }))}
+												class="flex flex-col items-center gap-3 p-5 bg-stone-950 border transition-all industrial-frame {$backgroundConfig.global_type === engine.id ? 'border-rust text-white shadow-rust/20' : 'border-stone-800 text-stone-600 hover:border-stone-700'}"
 											>
-												{font}
+												<engine.icon class="w-6 h-6 {$backgroundConfig.global_type === engine.id ? 'text-rust-light' : 'text-stone-700'}" />
+												<span class="font-black uppercase text-[10px] tracking-widest">{engine.label}</span>
 											</button>
 										{/each}
 									</div>
 								</div>
+							</div>
+						</div>
+					</div>
 
-								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5 md:col-span-2">
-									<div class="flex justify-between items-center mb-1">
-										<div class="flex items-center gap-2">
-											<Monitor class="w-3 h-3 text-rust-light" />
-											<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Global Base Color</h4>
-										</div>
-										<span class="text-[10px] font-mono text-rust-light">{$siteSettings.aesthetic.bg_color}</span>
+					<!-- Advanced Typeface & Colors -->
+					<div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+						<div class="modern-industrial-card glass-panel p-8 !rounded-none shadow-2xl">
+							<h4 class="font-black text-stone-400 uppercase text-[10px] tracking-widest mb-6 border-b border-stone-800 pb-4">System Typeface</h4>
+							<div class="grid grid-cols-1 gap-2">
+								{#each ['Inter', 'Space Grotesk', 'Michroma', 'Orbitron', 'Red Hat Mono', 'Syncopate', 'Kanit', 'JetBrains Mono'] as font}
+									<button 
+										onclick={() => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, font_primary: font } }))}
+										class="px-4 py-3 bg-stone-950 border transition-all text-xs text-left industrial-frame {$siteSettings.aesthetic.font_primary === font ? 'border-rust text-rust-light bg-rust/5' : 'border-stone-800 text-stone-600 hover:border-stone-700'}"
+										style="font-family: '{font}', sans-serif;"
+									>
+										{font}
+									</button>
+								{/each}
+							</div>
+						</div>
+
+						<div class="modern-industrial-card glass-panel p-8 !rounded-none shadow-2xl xl:col-span-2">
+							<h4 class="font-black text-stone-400 uppercase text-[10px] tracking-widest mb-8 border-b border-stone-800 pb-4">Core Color Mapping</h4>
+							<div class="grid grid-cols-1 sm:grid-cols-2 gap-12">
+								<div class="space-y-6">
+									<div class="flex justify-between items-center">
+										<span class="text-[10px] font-black text-stone-500 uppercase tracking-widest">Base Color</span>
+										<span class="text-[10px] font-mono text-stone-600">{$siteSettings.aesthetic.bg_color}</span>
 									</div>
 									<div class="flex gap-4 items-center">
-										<div class="relative group">
+										<div class="relative">
 											<input 
 												type="color" 
 												value={$siteSettings.aesthetic.bg_color || '#050505'} 
 												oninput={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, bg_color: e.currentTarget.value } }))} 
-												class="w-14 h-14 bg-transparent border-none cursor-pointer appearance-none" 
+												class="w-16 h-16 bg-transparent border-none cursor-pointer appearance-none" 
 											/>
-											<div class="absolute inset-0 border-2 border-stone-800 pointer-events-none group-hover:border-rust transition-colors"></div>
+											<div class="absolute inset-0 border-2 border-stone-800 pointer-events-none group-hover:border-rust transition-colors industrial-frame"></div>
 										</div>
 										<div class="grid grid-cols-5 gap-2 flex-1">
 											{#each ['#050505', '#0a0a0a', '#121212', '#1c1917', '#0c0a09'] as color}
 												<button 
 													onclick={() => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, bg_color: color } }))}
-													class="h-10 border transition-transform hover:scale-105 {$siteSettings.aesthetic.bg_color === color ? 'border-rust shadow-[0_0_10px_rgba(120,53,15,0.3)]' : 'border-white/10'}"
+													class="h-10 border transition-all hover:scale-105 industrial-frame {$siteSettings.aesthetic.bg_color === color ? 'border-rust shadow-[0_0_10px_rgba(120,53,15,0.3)]' : 'border-stone-800'}"
 													style="background-color: {color}"
-													aria-label="Set background color to {color}"
+													aria-label="Set base color to {color}"
 												></button>
 											{/each}
 										</div>
 									</div>
 								</div>
 
-								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5 md:col-span-2">
-									<div class="flex justify-between items-center mb-1">
-										<div class="flex items-center gap-2">
-											<Palette class="w-3 h-3 text-rust-light" />
-											<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Primary System Accent</h4>
-										</div>
-										<span class="text-[10px] font-mono text-rust-light">{$siteSettings.aesthetic.accent_color}</span>
+								<div class="space-y-6">
+									<div class="flex justify-between items-center">
+										<span class="text-[10px] font-black text-stone-500 uppercase tracking-widest">Accent Vector</span>
+										<span class="text-[10px] font-mono text-stone-600">{$siteSettings.aesthetic.accent_color}</span>
 									</div>
 									<div class="flex gap-4 items-center">
-										<div class="relative group">
+										<div class="relative">
 											<input 
 												type="color" 
 												value={$siteSettings.aesthetic.accent_color} 
 												oninput={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, accent_color: e.currentTarget.value } }))} 
-												class="w-14 h-14 bg-transparent border-none cursor-pointer appearance-none" 
+												class="w-16 h-16 bg-transparent border-none cursor-pointer appearance-none" 
 											/>
-											<div class="absolute inset-0 border-2 border-stone-800 pointer-events-none group-hover:border-rust transition-colors"></div>
+											<div class="absolute inset-0 border-2 border-stone-800 pointer-events-none group-hover:border-rust transition-colors industrial-frame"></div>
 										</div>
 										<div class="grid grid-cols-5 gap-2 flex-1">
-											{#each ['#78350f', '#92400e', '#ef4444', '#10b981', '#0ea5e9'] as color}
+											{#each ['#f97316', '#92400e', '#ef4444', '#10b981', '#0ea5e9'] as color}
 												<button 
 													onclick={() => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, accent_color: color } }))}
-													class="h-10 border transition-transform hover:scale-105 {$siteSettings.aesthetic.accent_color === color ? 'border-rust shadow-[0_0_10px_rgba(120,53,15,0.3)]' : 'border-white/10'}"
+													class="h-10 border transition-all hover:scale-105 industrial-frame {$siteSettings.aesthetic.accent_color === color ? 'border-rust shadow-[0_0_10px_rgba(120,53,15,0.3)]' : 'border-stone-800'}"
 													style="background-color: {color}"
 													aria-label="Set accent color to {color}"
 												></button>
@@ -1069,93 +1149,8 @@
 							</div>
 						</div>
 					</div>
-
-					<!-- Atmospheric Modulation Section -->
-					<div class="bg-[var(--card-bg)] backdrop-blur-sm border border-[var(--border-color)] rounded-2xl overflow-hidden shadow-2xl">
-						<div class="px-6 py-4 border-b border-[var(--border-color)] flex items-center gap-3 bg-black/20">
-							<div class="p-2 bg-gradient-to-br from-rust to-rust-light rounded-lg shadow-lg">
-								<CloudRain class="w-5 h-5 text-white" />
-							</div>
-							<h3 class="text-xl font-bold text-slate-100 font-heading tracking-widest uppercase">Atmospheric Modulation</h3>
-						</div>
-					<div class="p-6">
-						<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-							{#each [
-									{ key: 'show_smoke', label: 'Thermal Exhaust', icon: Wind },
-									{ key: 'show_rain', label: 'Acid Rain', icon: CloudRain },
-									{ key: 'show_clouds', label: 'Vapor Cover', icon: Cloud },
-									{ key: 'show_vignette', label: 'Vignette', icon: Monitor },
-									{ key: 'show_navbar_particles', label: 'Ash Fall', icon: Waves }
-							] as effect}
-								<button 
-									onclick={() => backgroundConfig.update((b: any) => ({ ...b, [effect.key]: !b[effect.key] }))}
-									class="flex items-center justify-between p-4 rounded-xl border transition-all {($backgroundConfig as any)[effect.key] ? 'bg-rust/10 border-rust/40 text-rust-light' : 'bg-black/40 border-white/5 text-slate-500 hover:border-white/10'}"
-								>
-									<div class="flex items-center gap-3">
-										<effect.icon class="w-4 h-4" />
-										<span class="font-bold uppercase text-[10px] tracking-widest">{effect.label}</span>
-									</div>
-									<div class="w-1.5 h-1.5 rounded-full {($backgroundConfig as any)[effect.key] ? 'bg-rust shadow-[0_0_8px_var(--color-rust)]' : 'bg-stone-800'}"></div>
-								</button>
-							{/each}
-							</div>
-
-							<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 pt-8 border-t border-white/5">
-								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5">
-									<div class="flex justify-between items-center">
-										<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Precipitation Density</h4>
-										<span class="text-[10px] font-mono text-rust-light">{($backgroundConfig.rain_opacity * 100).toFixed(0)}%</span>
-									</div>
-									<input type="range" min="0" max="1" step="0.05" value={$backgroundConfig.rain_opacity} oninput={e => backgroundConfig.update(b => ({ ...b, rain_opacity: parseFloat(e.currentTarget.value) }))} class="w-full h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-rust" />
-								</div>
-								<div class="space-y-3 p-4 bg-black/40 rounded-xl border border-white/5">
-									<div class="flex justify-between items-center">
-										<h4 class="font-bold text-slate-200 uppercase text-[10px] tracking-widest">Vapor Opacity</h4>
-										<span class="text-[10px] font-mono text-rust-light">{($backgroundConfig.clouds_opacity * 100).toFixed(0)}%</span>
-									</div>
-									<input type="range" min="0" max="1" step="0.05" value={$backgroundConfig.clouds_opacity} oninput={e => backgroundConfig.update(b => ({ ...b, clouds_opacity: parseFloat(e.currentTarget.value) }))} class="w-full h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-rust" />
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<!-- Visual Core Engine Section -->
-					<div class="bg-[var(--card-bg)] backdrop-blur-sm border border-[var(--border-color)] rounded-2xl overflow-hidden shadow-2xl">
-						<div class="px-6 py-4 border-b border-[var(--border-color)] flex items-center gap-3 bg-black/20">
-							<div class="p-2 bg-gradient-to-br from-amber-600 to-orange-600 rounded-lg shadow-lg">
-								<Zap class="w-5 h-5 text-white" />
-							</div>
-							<h3 class="text-xl font-bold text-slate-100 font-heading tracking-widest uppercase">Visual Core Engine</h3>
-						</div>
-					<div class="p-6">
-						<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-							{#each [
-									{ id: 'architecture', label: 'Brutalist', desc: 'Floating masses', icon: Server },
-									{ id: 'tactical_grid', label: 'Radar', desc: 'Scanning nodes', icon: Network },
-									{ id: 'neural_network', label: 'Neural', desc: 'Plexus mapping', icon: Activity },
-									{ id: 'data_flow', label: 'Data Flow', desc: 'Signal stream', icon: FileJson },
-									{ id: 'digital_horizon', label: 'Horizon', desc: 'Infinite grid', icon: Globe },
-									{ id: 'none', label: 'Minimal', desc: 'Zero noise', icon: Zap }
-							] as engine}
-								<button 
-									onclick={() => backgroundConfig.update(b => ({ ...b, global_type: engine.id as any }))}
-									class="flex flex-col items-center gap-2 p-4 rounded-xl border transition-all {$backgroundConfig.global_type === engine.id ? 'bg-rust/20 border-rust shadow-[0_0_20px_rgba(120,53,15,0.3)] text-white' : 'bg-black/40 border-white/5 text-slate-500 hover:bg-slate-800/50'}"
-								>
-									<div class="flex items-center justify-between w-full">
-										<engine.icon class="w-4 h-4 {$backgroundConfig.global_type === engine.id ? 'text-rust-light' : 'text-slate-600'}" />
-										{#if $backgroundConfig.global_type === engine.id}
-											<div class="w-1.5 h-1.5 bg-rust rounded-full shadow-[0_0_8px_var(--color-rust)] animate-pulse"></div>
-										{/if}
-									</div>
-									<span class="font-bold uppercase text-[10px] tracking-widest"> {engine.label} </span>
-									<span class="text-[8px] font-mono opacity-40 uppercase leading-tight">{engine.desc}</span>
-								</button>
-							{/each}
-						</div>
-					</div>
 				</div>
-			</div>
-		{/if}
+			{/if}
 		</div>
 	{/if}
 </div>

@@ -315,7 +315,7 @@
 	});
 </script>
 
-<div class="p-6 h-full flex flex-col overflow-hidden relative font-sans">
+<div class="w-full h-full flex flex-col overflow-hidden relative font-sans">
 	<!-- Tech Background elements -->
 	<div class="absolute inset-0 pointer-events-none opacity-5">
 		<div class="absolute top-0 left-0 w-full h-full bg-[url('/grid.svg')]"></div>
@@ -325,109 +325,110 @@
 	</div>
 
 	<!-- Header -->
-	<div class="flex justify-between items-center mb-8 shrink-0 relative z-10">
-		<div class="flex items-center gap-4">
+	<div class="flex justify-between items-center mb-10 shrink-0 relative z-10">
+		<div class="flex items-center gap-6">
 			<div class="relative">
-				<div class="absolute inset-0 bg-red-500 blur-xl opacity-20 animate-pulse"></div>
-				<div class="relative bg-slate-900 border border-red-500/50 p-3 rounded-xl">
-					<Eye class="w-8 h-8 text-red-500" />
+				<div class="absolute inset-0 bg-red-500 blur-2xl opacity-20 animate-pulse"></div>
+				<div class="relative bg-stone-950 border border-red-500/50 p-4 rounded-none industrial-frame shadow-2xl">
+					<Eye class="w-10 h-10 text-red-500 animate-flicker" />
 				</div>
 			</div>
 			<div>
-				<div class="flex items-center gap-2">
-					<h1 class="text-3xl font-black tracking-tighter text-slate-900 dark:text-white uppercase">
-						RedEye <span class="text-red-500">Protocol</span>
+				<div class="flex items-center gap-4">
+					<h1 class="text-4xl font-heading font-black tracking-tighter text-white uppercase">
+						RedEye_<span class="text-red-500">Security</span>
 					</h1>
 					<div
-						class="px-2 py-0.5 {stats.system_active
-							? 'bg-red-500 text-black'
-							: 'bg-slate-700 text-slate-300'} text-[10px] font-bold rounded uppercase"
+						class="px-3 py-1 {stats.system_active
+							? 'bg-red-500 text-black shadow-red-500/50 shadow-lg'
+							: 'bg-stone-800 text-stone-400'} text-[10px] font-black uppercase tracking-widest"
 					>
-						{stats.system_active ? 'Active' : 'Inactive'}
+						{stats.system_active ? 'Active' : 'Offline'}
 					</div>
 				</div>
-				<p class="text-slate-500 text-xs font-mono tracking-widest mt-1">
-					NEURAL THREAT MITIGATION SYSTEM // {stats.system_error
-						? `ERR: ${stats.system_error}`
-						: 'REV 4.0.2'}
+				<p class="font-jetbrains text-stone-500 text-[10px] tracking-[0.3em] uppercase mt-2 font-black">
+					Threat Mitigation Core // {stats.system_error
+						? `Fault: ${stats.system_error}`
+						: 'Status: Nominal'}
 				</p>
 			</div>
 		</div>
 
-		<div class="flex items-center gap-3">
-			<div class="hidden md:flex flex-col items-end mr-4 text-right">
-				<span class="text-[10px] text-slate-500 font-mono uppercase tracking-tighter"
-					>System Entropy</span
+		<div class="flex items-center gap-6">
+			<div class="hidden xl:flex flex-col items-end mr-6 text-right">
+				<span class="font-jetbrains text-[9px] text-stone-600 font-black uppercase tracking-[0.3em]"
+					>SYSTEM_ENTROPY_DELTA</span
 				>
-				<span class="text-xs text-red-400 font-mono">{stats.entropy?.toFixed(4) || '0.0000'}%</span>
+				<span class="text-lg text-red-500 font-jetbrains font-black tracking-widest">{stats.entropy?.toFixed(4) || '0.0000'}%</span>
 			</div>
 			<button
 				onclick={refreshAll}
-				class="p-2.5 bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-red-500/50 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white rounded-xl transition-all shadow-lg"
+				class="p-3 bg-stone-900 border border-stone-800 hover:border-red-500/50 text-stone-500 hover:text-red-500 transition-all shadow-xl active:translate-y-px"
 				aria-label="Refresh security data"
 			>
-				<RefreshCw class="w-5 h-5 {loading ? 'animate-spin' : ''}" />
+				<RefreshCw class="w-6 h-6 {loading ? 'animate-spin' : ''}" />
 			</button>
 		</div>
 	</div>
 
 	<!-- System Status Banner -->
 	<div
-		class="mb-6 p-4 bg-white/50 dark:bg-slate-950/50 border-y border-slate-200 dark:border-slate-800 flex flex-wrap gap-8 items-center relative overflow-hidden"
+		class="mb-8 p-6 bg-[#0a0a0a]/80 backdrop-blur-md border-y border-stone-800 flex flex-wrap gap-12 items-center relative overflow-hidden"
 	>
 		<div
-			class="absolute inset-y-0 left-0 w-1 {stats.system_active ? 'bg-red-500' : 'bg-slate-600'}"
+			class="absolute inset-y-0 left-0 w-1.5 {stats.system_active ? 'bg-red-500 shadow-[0_0_15px_#ef4444]' : 'bg-stone-700'}"
 		></div>
-		<div class="flex items-center gap-3">
+		<div class="flex items-center gap-4">
 			<div
-				class="w-2 h-2 rounded-full {stats.system_active
-					? 'bg-red-500 animate-ping'
-					: 'bg-slate-600'}"
+				class="w-2.5 h-2.5 rounded-full {stats.system_active
+					? 'bg-red-500 animate-pulse shadow-[0_0_10px_#ef4444]'
+					: 'bg-stone-700'}"
 			></div>
-			<span class="text-xs font-mono text-slate-500 dark:text-slate-400 uppercase tracking-widest"
-				>Live Monitoring: <span
-					class={stats.system_active ? 'text-slate-900 dark:text-white' : 'text-slate-600'}
-					>{stats.system_active ? 'Enabled' : 'Disabled'}</span
+			<span class="font-jetbrains text-[10px] font-black text-stone-500 uppercase tracking-[0.3em]"
+				>LIVE_MONITORING: <span
+					class={stats.system_active ? 'text-white' : 'text-stone-700'}
+					>{stats.system_active ? 'ENGAGED' : 'OFFLINE'}</span
 				></span
 			>
 		</div>
-		<div class="flex items-center gap-2 text-xs font-mono">
-			<span class="text-slate-500">Uptime:</span>
-			<span class="text-red-400">{stats.uptime}</span>
+		<div class="flex items-center gap-3 font-jetbrains text-[10px] font-black uppercase tracking-widest">
+			<span class="text-stone-600">UPTIME_STABILITY:</span>
+			<span class="text-red-500">{stats.uptime}</span>
 		</div>
-		<div class="flex items-center gap-2 text-xs font-mono">
-			<span class="text-slate-500">Threat Level:</span>
+		<div class="flex items-center gap-3 font-jetbrains text-[10px] font-black uppercase tracking-widest">
+			<span class="text-stone-600">THREAT_SPECTRUM:</span>
 			<span
-				class={stats.threat_level === 'Low'
-					? 'text-emerald-400'
+				class={`px-2 py-0.5 border ${stats.threat_level === 'Low'
+					? 'text-emerald-500 border-emerald-500/20 bg-emerald-500/5'
 					: stats.threat_level === 'Medium'
-						? 'text-amber-400'
-						: 'text-red-500'}>{stats.threat_level}</span
-			>
+						? 'text-amber-500 border-amber-500/20 bg-amber-500/5'
+						: 'text-red-500 border-red-500/20 bg-red-500/5'}`}>{stats.threat_level?.toUpperCase()}</span>
 		</div>
-		<div class="ml-auto text-[10px] font-mono text-slate-600 hidden lg:block">
-			CRC: {stats.crc} - NODE: {stats.node_id}
+		<div class="ml-auto font-jetbrains text-[9px] font-black text-stone-700 hidden xl:flex gap-6 uppercase tracking-widest">
+			<span>CRC_HASH: {stats.crc}</span>
+			<div class="w-px h-3 bg-stone-800"></div>
+			<span>NODE_UPLINK: {stats.node_id}</span>
 		</div>
 	</div>
 
 	<!-- Navigation Controls -->
 	<div
-		class="flex gap-1 mb-6 shrink-0 bg-white/80 dark:bg-slate-950/80 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800"
+		class="flex gap-1.5 mb-8 shrink-0 bg-[#0a0a0a] p-1.5 border border-stone-800 industrial-frame"
 	>
-		{#each [['overview', BarChart3, 'Status'], ['rules', ShieldCheck, 'Rules'], ['bans', Ban, 'Bans'], ['anticheat', AlertTriangle, 'Anti-Cheat'], ['logs', Terminal, 'Logs'], ['config', Settings, 'System']] as [id, icon, label]}
+		{#each [['overview', BarChart3, 'Overview'], ['rules', ShieldCheck, 'Security Rules'], ['bans', Ban, 'Banned IPs'], ['anticheat', AlertTriangle, 'Threat Intel'], ['logs', Terminal, 'Access Logs'], ['config', Settings, 'Settings']] as [id, icon, label]}
 			{@const Icon = icon as any}
 			<button
 				onclick={() => {
 					activeTab = id as any;
 					refreshAll();
 				}}
-				class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all {activeTab ===
+				class="flex-1 flex items-center justify-center gap-3 py-3.5 transition-all font-heading font-black text-[10px] uppercase tracking-widest {activeTab ===
 				id
-					? 'bg-red-600 text-slate-900 dark:text-white shadow-xl shadow-red-900/20'
-					: 'text-slate-500 hover:text-slate-800 dark:text-slate-200 hover:bg-slate-900'}"
+					? 'bg-red-600 text-white shadow-xl shadow-red-900/30'
+					: 'text-stone-600 hover:text-stone-300 hover:bg-stone-900'}"
 			>
 				<Icon class="w-4 h-4" />
-				<span class="hidden sm:inline">{label}</span>
+				<span class="hidden md:inline">{label}</span>
 			</button>
 		{/each}
 	</div>
@@ -435,24 +436,24 @@
 	<!-- Main Display -->
 	<div class="flex-1 min-h-0 relative z-10">
 		{#if activeTab === 'overview'}
-			<div class="h-full overflow-auto space-y-6 custom-scrollbar pr-2">
-				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-					{#each [{ icon: ShieldCheck, val: stats.total_rules, label: 'Protocols', color: 'text-emerald-400' }, { icon: Ban, val: stats.active_bans, label: 'Quarantined', color: 'text-red-500' }, { icon: ShieldAlert, val: stats.events_24h, label: 'Incidents', color: 'text-amber-400' }, { icon: Activity, val: stats.logs_24h, label: 'Scans', color: 'text-sky-400' }] as card}
+			<div class="h-full overflow-auto space-y-8 custom-scrollbar pr-4">
+				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+					{#each [{ icon: ShieldCheck, val: stats.total_rules, label: 'Protocols_Loaded', color: 'text-emerald-500' }, { icon: Ban, val: stats.active_bans, label: 'Entities_Quarantined', color: 'text-red-500' }, { icon: ShieldAlert, val: stats.events_24h, label: 'Anomalies_24h', color: 'text-amber-500' }, { icon: Activity, val: stats.logs_24h, label: 'Neural_Scans_24h', color: 'text-sky-500' }] as card}
 						{@const CardIcon = card.icon as any}
 						<div
-							class="bg-slate-900/40 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl flex items-center gap-4 hover:border-slate-300 dark:border-slate-700 transition-colors group"
+							class="modern-industrial-card glass-panel p-6 flex items-center gap-6 group !rounded-none"
 						>
 							<div
-								class="p-3 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 group-hover:border-slate-600 transition-colors"
+								class="p-4 bg-stone-950 border border-stone-800 group-hover:border-stone-600 transition-all shadow-lg industrial-frame"
 							>
-								<CardIcon class="w-6 h-6 {card.color}" />
+								<CardIcon class="w-7 h-7 {card.color}" />
 							</div>
-							<div class="flex flex-col">
+							<div class="flex flex-col gap-1">
 								<span
-									class="text-2xl font-black text-slate-900 dark:text-white font-mono leading-none"
+									class="text-3xl font-heading font-black text-white tabular-nums leading-none tracking-tighter"
 									>{card.val}</span
 								>
-								<span class="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1"
+								<span class="font-jetbrains text-[9px] font-black text-stone-500 uppercase tracking-widest mt-1"
 									>{card.label}</span
 								>
 							</div>
@@ -460,108 +461,108 @@
 					{/each}
 				</div>
 
-				<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+				<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 					<!-- Visual Threat Monitor -->
 					<div
-						class="lg:col-span-2 bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 relative overflow-hidden flex flex-col items-center justify-center min-h-[350px]"
+						class="lg:col-span-2 modern-industrial-card glass-panel p-12 relative overflow-hidden flex flex-col items-center justify-center min-h-[450px] !rounded-none"
 					>
-						<div class="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
+						<div class="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.03]"></div>
 						<div
-							class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"
+							class="absolute inset-0 bg-gradient-to-t from-red-900/5 via-transparent to-transparent"
 						></div>
 
-						<div class="relative z-10 w-full max-w-lg text-center">
+						<div class="relative z-10 w-full max-w-2xl text-center">
 							<div
-								class="inline-flex items-center gap-2 px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-full mb-6"
+								class="inline-flex items-center gap-3 px-4 py-1.5 bg-red-500/10 border border-red-500/30 rounded-none mb-10 industrial-frame"
 							>
-								<div class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
-								<span class="text-[10px] font-mono text-red-400 uppercase font-bold"
-									>Neural Core Scan Active</span
-								>
+								<div class="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-red-500/50 shadow-lg"></div>
+								<span class="font-jetbrains text-[10px] font-black text-red-500 uppercase tracking-[0.3em]"
+									>Neural_Core_Active_Surveillance</span>
 							</div>
 
-							<div class="relative mx-auto w-48 h-48 mb-8">
+							<div class="relative mx-auto w-64 h-64 mb-12">
 								<div
-									class="absolute inset-0 border-4 border-slate-200 dark:border-slate-800 rounded-full"
+									class="absolute inset-0 border-[3px] border-stone-800 rounded-full"
 								></div>
 								<div
-									class="absolute inset-0 border-t-4 border-red-500 rounded-full animate-[spin_3s_linear_infinite]"
+									class="absolute inset-0 border-t-[3px] border-red-500 rounded-full animate-[spin_4s_linear_infinite] shadow-[0_0_20px_rgba(239,68,68,0.3)]"
 								></div>
 								<div
-									class="absolute inset-4 border border-slate-200 dark:border-slate-800 rounded-full border-dashed"
+									class="absolute inset-6 border border-stone-800 rounded-full border-dashed opacity-40"
 								></div>
 								<div class="absolute inset-0 flex items-center justify-center">
-									<Activity class="w-16 h-16 text-red-500 animate-pulse" />
+									<Activity class="w-20 h-20 text-red-500 animate-pulse drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]" />
 								</div>
 							</div>
 
 							<h3
-								class="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight"
+								class="text-3xl font-heading font-black text-white uppercase tracking-tighter"
 							>
-								Active Neural Defense
+								AUTONOMOUS_NEURAL_DEFENSE
 							</h3>
-							<p class="text-slate-500 dark:text-slate-400 text-sm mt-3 leading-relaxed">
-								Autonomous traffic analysis is patrolling all endpoints. Current processing latency: <span
-									class="text-red-400 font-mono">1.2ms</span
-								>. Targeting
-								<span class="text-slate-900 dark:text-white font-mono"
+							<p class="font-jetbrains text-stone-500 text-[11px] font-bold mt-4 leading-relaxed uppercase tracking-tight max-w-xl mx-auto">
+								System patrols all regional ingress points. Current sync latency: <span
+									class="text-red-500 font-black">1.2ms_delta</span
+								>. Monitoring
+								<span class="text-white font-black"
 									>{stats.reputation_count}</span
-								> known entities across all regions.
+								> identity signatures across global registry.
 							</p>
 						</div>
 					</div>
 
 					<!-- Quick Tech Stats -->
-					<div class="space-y-4">
+					<div class="space-y-6">
 						<div
-							class="bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-2xl p-6"
+							class="modern-industrial-card glass-panel p-8 !rounded-none h-full flex flex-col justify-between"
 						>
-							<h4
-								class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2"
-							>
-								<Cpu class="w-3 h-3" /> System Load
-							</h4>
-							<div class="space-y-4">
-								{#each [['Core Analyzer', Number(Math.min(100, 5 + stats.logs_24h / 100)), 'text-emerald-400'], ['Ban Sequencer', Number(Math.min(100, 2 + stats.active_bans * 2)), 'text-red-400'], ['Log Indexer', Number(Math.min(100, 1 + stats.reputation_count / 10)), 'text-rust-light']] as [label, perc, color]}
-									<div class="space-y-1.5">
-										<div class="flex justify-between text-[10px] font-mono uppercase">
-											<span class="text-slate-500 dark:text-slate-400">{label}</span>
-											<span class="text-slate-900 dark:text-white"
-												>{Math.round(perc as number)}%</span
-											>
+							<div class="space-y-8">
+								<h4
+									class="font-heading font-black text-[11px] text-stone-500 uppercase tracking-[0.3em] mb-6 flex items-center gap-3"
+								>
+									<Cpu class="w-4 h-4 text-red-500" /> SYSTEM_LOAD_METRICS
+								</h4>
+								<div class="space-y-8">
+									{#each [['Heuristic_Analyzer', Number(Math.min(100, 5 + stats.logs_24h / 100)), 'text-emerald-500', 'bg-emerald-500'], ['Identity_Sequencer', Number(Math.min(100, 2 + stats.active_bans * 2)), 'text-red-500', 'bg-red-500'], ['Neural_Indexer', Number(Math.min(100, 1 + stats.reputation_count / 10)), 'text-rust', 'bg-rust']] as [label, perc, colorText, colorBg]}
+										<div class="space-y-3">
+											<div class="flex justify-between font-jetbrains text-[9px] font-black uppercase tracking-widest">
+												<span class="text-stone-500">{label}</span>
+												<span class={colorText as string}
+													>{Math.round(perc as number)}%</span>
+											</div>
+											<div class="h-1 bg-stone-950 border border-stone-800 p-0 relative overflow-hidden">
+												<div
+													class="h-full {colorBg} transition-all duration-1000 shadow-lg"
+													style="width: {perc}%; box-shadow: 0 0 10px rgba(255,255,255,0.05);"
+												></div>
+											</div>
 										</div>
-										<div class="h-1 bg-white dark:bg-slate-950 rounded-full overflow-hidden">
-											<div
-												class="h-full bg-slate-700 transition-all duration-1000"
-												style="width: {perc}%"
-											></div>
-										</div>
-									</div>
-								{/each}
-							</div>
-						</div>
-
-						<div
-							class="bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 flex flex-col justify-between"
-						>
-							<h4
-								class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2"
-							>
-								<Globe class="w-3 h-3" /> Global Reach
-							</h4>
-							<div class="flex items-center gap-4">
-								<div class="text-3xl font-black text-slate-900 dark:text-white font-mono">08</div>
-								<div class="text-[10px] text-slate-500 font-mono leading-tight">
-									ACTIVE<br />ZONES
+									{/each}
 								</div>
 							</div>
-							<div class="mt-4 flex gap-1">
-								{#each Array(8) as _, i}
-									<div
-										class="h-4 w-1 bg-red-500 rounded-full"
-										style="opacity: {0.2 + i * 0.1}"
-									></div>
-								{/each}
+
+							<div class="mt-10 pt-8 border-t border-stone-800">
+								<h4
+									class="font-heading font-black text-[11px] text-stone-500 uppercase tracking-[0.3em] mb-6 flex items-center gap-3"
+								>
+									<Globe class="w-4 h-4 text-rust" /> CLUSTER_TOPOLOGY
+								</h4>
+								<div class="flex items-center justify-between">
+									<div class="flex items-center gap-5">
+										<div class="text-5xl font-heading font-black text-white tabular-nums tracking-tighter">08</div>
+										<div class="font-jetbrains text-[9px] font-black text-stone-600 leading-tight uppercase tracking-widest">
+											ACTIVE<br />Neural_Zones
+										</div>
+									</div>
+									<div class="flex gap-1.5">
+										{#each Array(8) as _, i}
+											<div
+												class="h-6 w-1 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.3)]"
+												style="opacity: {0.2 + i * 0.1}"
+											></div>
+										{/each}
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -569,93 +570,93 @@
 			</div>
 		{:else if activeTab === 'rules'}
 			<div
-				class="h-full flex flex-col bg-white/30 dark:bg-slate-950/30 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden"
+				class="h-full flex flex-col bg-[#0a0a0a]/60 backdrop-blur-md border border-stone-800 overflow-hidden industrial-frame"
 			>
 				<div
-					class="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-900/50"
+					class="p-6 border-b border-stone-800 flex justify-between items-center bg-[#0a0a0a]"
 				>
-					<div class="flex items-center gap-2">
-						<div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-						<h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest">
-							Active Rule Set
+					<div class="flex items-center gap-4">
+						<div class="w-2.5 h-2.5 bg-emerald-500 shadow-[0_0_10px_#10b981] animate-pulse"></div>
+						<h3 class="font-heading font-black text-xs text-white uppercase tracking-[0.3em]">
+							DEPLOYED_PROTOCOL_SET
 						</h3>
 					</div>
 					<button
 						onclick={() => openModal()}
-						class="px-4 py-2 bg-red-600 hover:bg-red-500 text-slate-900 dark:text-white rounded-xl text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg shadow-red-900/20"
+						class="px-6 py-2.5 bg-red-600 hover:bg-red-500 text-white font-heading font-black text-[10px] uppercase tracking-widest flex items-center gap-3 transition-all shadow-lg shadow-red-900/20 active:translate-y-px"
 					>
-						<Plus class="w-3 h-3" /> Initialize Protocol
+						<Plus class="w-4 h-4" /> Initialize_Protocol
 					</button>
 				</div>
 				<div class="flex-1 overflow-auto custom-scrollbar">
-					<table class="w-full text-left text-sm border-separate border-spacing-0">
-						<thead class="bg-slate-900/80 text-slate-500 sticky top-0 z-10">
-							<tr class="text-[10px] uppercase font-mono tracking-tighter">
-								<th class="px-6 py-4 border-b border-slate-200 dark:border-slate-800"
-									>Protocol Name</th
+					<table class="w-full text-left font-jetbrains text-[11px] border-collapse">
+						<thead class="bg-[#0a0a0a] text-stone-500 sticky top-0 z-10 border-b border-stone-800">
+							<tr class="uppercase font-black tracking-widest">
+								<th class="px-8 py-5 border-r border-stone-800/30"
+									>Protocol_ID</th
 								>
-								<th class="px-6 py-4 border-b border-slate-200 dark:border-slate-800"
-									>Destination/Path</th
+								<th class="px-8 py-5 border-r border-stone-800/30"
+									>Target_Path</th
 								>
-								<th class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 text-center"
-									>Action</th
+								<th class="px-8 py-5 border-r border-stone-800/30 text-center"
+									>Action_Directive</th
 								>
-								<th class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 text-right"
-									>Sequence</th
+								<th class="px-8 py-5 text-right"
+									>Sequence_Op</th
 								>
 							</tr>
 						</thead>
-						<tbody class="divide-y divide-slate-800/50">
+						<tbody class="divide-y divide-stone-900">
 							{#each rules as rule (rule.id)}
-								<tr class="hover:bg-slate-800/30 transition-all group">
-									<td class="px-6 py-4">
-										<div class="flex flex-col">
+								<tr class="hover:bg-red-500/5 transition-all group">
+									<td class="px-8 py-5 border-r border-stone-800/20">
+										<div class="flex flex-col gap-1">
 											<span
-												class="font-bold text-slate-800 dark:text-slate-200 group-hover:text-slate-900 dark:text-white transition-colors"
+												class="font-black text-stone-200 group-hover:text-red-500 transition-colors uppercase tracking-tight"
 												>{rule.name}</span
 											>
-											<span class="text-[10px] font-mono text-slate-500 mt-0.5 tracking-tighter"
+											<span class="text-[9px] text-stone-600 tracking-widest font-bold"
 												>{rule.cidr}</span
 											>
 										</div>
 									</td>
-									<td class="px-6 py-4 font-mono text-xs">
-										<div class="flex items-center gap-2">
+									<td class="px-8 py-5 border-r border-stone-800/20">
+										<div class="flex items-center gap-3">
 											<span
-												class="text-slate-500 dark:text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800"
+												class="text-stone-500 bg-stone-950 px-2 py-1 border border-stone-800 font-bold"
 												>PORT:{rule.port}</span
 											>
 											{#if rule.path_pattern}
-												<span class="text-slate-500 truncate max-w-[150px]"
+												<span class="text-stone-600 truncate max-w-[200px] uppercase font-bold"
 													>{rule.path_pattern}</span
 												>
 											{/if}
 										</div>
 									</td>
-									<td class="px-6 py-4 text-center">
+									<td class="px-8 py-5 border-r border-stone-800/20 text-center">
 										<span
-											class="px-2.5 py-1 text-[10px] font-black rounded uppercase border tracking-tighter {getActionColor(
+											class={`px-3 py-1 text-[9px] font-black rounded-none border tracking-[0.2em] uppercase ${getActionColor(
 												rule.action
-											)}"
+											)}`}
 										>
 											{rule.action}
 										</span>
 									</td>
-									<td class="px-6 py-4">
+									<td class="px-8 py-5">
 										<div
-											class="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+											class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300"
 										>
 											<button
 												onclick={() => openModal(rule)}
-												class="p-2 hover:bg-slate-700 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-all"
+												class="p-2 bg-stone-900 border border-stone-800 hover:border-rust hover:text-rust transition-all"
 											>
-												<Edit2 class="w-3.5 h-3.5" />
+												<Edit2 class="w-4 h-4" />
 											</button>
 											<button
 												onclick={() => deleteRule(rule.id)}
-												class="p-2 hover:bg-rose-950/30 rounded-lg text-slate-500 dark:text-slate-400 hover:text-rose-400 transition-all"
+												class="p-2 bg-stone-900 border border-stone-800 hover:border-red-500 hover:text-red-500 transition-all"
 											>
-												<Trash2 class="w-3.5 h-3.5" />
+												<Trash2 class="w-4 h-4" />
 											</button>
 										</div>
 									</td>
@@ -666,63 +667,62 @@
 				</div>
 			</div>
 		{:else if activeTab === 'bans'}
-			<div class="h-full overflow-auto grid grid-cols-1 xl:grid-cols-2 gap-4 custom-scrollbar">
+			<div class="h-full overflow-auto grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6 custom-scrollbar pr-4">
 				{#each bans as ban}
 					<div
-						class="bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 group hover:border-red-500/30 transition-all"
+						class="modern-industrial-card glass-panel p-6 group hover:border-red-500/40 transition-all !rounded-none"
 					>
-						<div class="flex justify-between items-start">
-							<div class="flex items-center gap-4">
+						<div class="flex justify-between items-start mb-6">
+							<div class="flex items-center gap-5">
 								<div
-									class="bg-white dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-red-500 group-hover:border-red-500/50 transition-all"
+									class="bg-stone-950 p-4 border border-stone-800 text-red-500 group-hover:border-red-500/50 transition-all industrial-frame shadow-lg shadow-red-900/10"
 								>
-									<Lock class="w-6 h-6" />
+									<Lock class="w-8 h-8" />
 								</div>
 								<div>
 									<h4
-										class="text-lg font-mono font-bold text-slate-900 dark:text-white leading-none"
+										class="text-xl font-jetbrains font-black text-white leading-none tracking-tighter"
 									>
 										{ban.ip}
 									</h4>
-									<div class="flex items-center gap-2 mt-2">
-										<div class="w-20 h-1 bg-slate-800 rounded-full overflow-hidden">
+									<div class="flex items-center gap-3 mt-3">
+										<div class="w-24 h-1 bg-stone-900 border border-stone-800 p-0 relative overflow-hidden">
 											<div
-												class="h-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"
+												class="h-full bg-red-600 shadow-[0_0_10px_rgba(239,68,68,0.5)]"
 												style="width: {ban.reputation_score}%"
 											></div>
 										</div>
-										<span class="text-[10px] font-mono text-slate-500 uppercase tracking-tighter"
-											>Threat: {ban.reputation_score}%</span
-										>
+										<span class="font-jetbrains text-[9px] font-black text-stone-500 uppercase tracking-widest"
+											>Threat: {ban.reputation_score}%</span>
 									</div>
 								</div>
 							</div>
 							<button
 								onclick={() => unbanIP(ban.ip)}
-								class="px-3 py-1.5 bg-white dark:bg-slate-950 hover:bg-emerald-600 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all"
+								class="px-4 py-2 bg-stone-900 border border-stone-800 hover:border-emerald-500 hover:text-emerald-400 font-heading font-black text-[9px] uppercase tracking-widest transition-all shadow-lg active:translate-y-px"
 							>
-								De-Quarantine
+								DE_QUARANTINE
 							</button>
 						</div>
 						<div
-							class="mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-800/50 grid grid-cols-2 gap-4"
+							class="pt-6 border-t border-stone-800 grid grid-cols-2 gap-6"
 						>
-							<div class="flex flex-col gap-1">
-								<span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest"
-									>Incident Cause</span
+							<div class="flex flex-col gap-2">
+								<span class="font-jetbrains text-[8px] text-stone-600 uppercase font-black tracking-[0.2em]"
+									>INCIDENT_REPORT</span
 								>
-								<p class="text-xs text-slate-700 dark:text-slate-300 line-clamp-1 italic">
+								<p class="font-jetbrains text-[10px] text-stone-400 line-clamp-2 italic uppercase leading-tight">
 									"{ban.ban_reason}"
 								</p>
 							</div>
-							<div class="flex flex-col gap-1 text-right">
-								<span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest"
-									>Expiration</span
+							<div class="flex flex-col gap-2 text-right">
+								<span class="font-jetbrains text-[8px] text-stone-600 uppercase font-black tracking-[0.2em]"
+									>RESTORATION_T</span
 								>
-								<span class="text-xs text-slate-500 dark:text-slate-400 font-mono"
+								<span class="font-jetbrains text-[10px] text-red-500/80 font-black tracking-widest"
 									>{ban.ban_expires_at
 										? new Date(ban.ban_expires_at).toLocaleDateString()
-										: 'PERPETUAL'}</span
+										: 'PERPETUAL_LOCK'}</span
 								>
 							</div>
 						</div>
@@ -730,89 +730,89 @@
 				{/each}
 			</div>
 		{:else if activeTab === 'anticheat'}
-			<div class="h-full overflow-auto space-y-2 custom-scrollbar">
+			<div class="h-full overflow-auto space-y-3 custom-scrollbar pr-4">
 				{#each events as event}
 					<div
-						class="bg-white/50 dark:bg-slate-950/50 border-l-2 {event.severity > 80
-							? 'border-red-500 bg-red-500/5'
-							: 'border-slate-200 dark:border-slate-800'} p-4 rounded-r-xl flex items-center gap-6 group transition-all hover:bg-slate-900/50"
+						class="bg-stone-900/40 border border-stone-800 border-l-4 {event.severity > 80
+							? 'border-l-red-600 bg-red-950/10'
+							: 'border-l-stone-700'} p-6 rounded-none flex items-center gap-10 group transition-all hover:bg-stone-900 hover:border-stone-700 industrial-frame"
 					>
-						<div class="text-center w-20 shrink-0">
-							<div class="text-[10px] font-mono text-slate-500 leading-none">
+						<div class="text-center w-28 shrink-0 border-r border-stone-800 pr-10">
+							<div class="font-jetbrains text-[10px] font-black text-stone-600 uppercase tracking-widest">
 								{new Date(event.timestamp).toLocaleDateString()}
 							</div>
-							<div class="text-xs font-mono text-slate-700 dark:text-slate-300 font-bold mt-1">
+							<div class="font-jetbrains text-[11px] font-black text-stone-300 mt-1 tabular-nums tracking-widest">
 								{new Date(event.timestamp).toLocaleTimeString([], {
 									hour: '2-digit',
 									minute: '2-digit',
-									second: '2-digit'
+									second: '2-digit',
+									hour12: false
 								})}
 							</div>
 						</div>
 
 						<div class="flex-1">
-							<div class="flex items-center gap-3">
+							<div class="flex items-center gap-5">
 								<span
-									class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tighter"
+									class="text-lg font-heading font-black text-white uppercase tracking-tighter"
 									>{event.event_type}</span
 								>
 								<div
-									class="px-1.5 py-0.5 bg-slate-900 border border-slate-200 dark:border-slate-800 text-[9px] font-mono text-slate-500 dark:text-slate-400 rounded"
+									class="px-3 py-1 bg-stone-950 border border-stone-800 text-[10px] font-jetbrains font-black text-red-500/70 tracking-widest uppercase shadow-inner"
 								>
-									IP:{event.client_ip}
+									IP::{event.client_ip}
 								</div>
 							</div>
-							<p class="text-xs text-slate-500 mt-1 font-mono">
-								{event.player_id || 'UNKNOWN_ENTITY'}
+							<p class="font-jetbrains text-[10px] font-bold text-stone-500 mt-2 uppercase tracking-widest opacity-60">
+								TARGET_IDENTITY: {event.player_id || 'NULL_REFERENCE'}
 							</p>
 						</div>
 
-						<div class="flex flex-col items-end gap-2 pr-2">
-							<div class="flex gap-0.5">
+						<div class="flex flex-col items-end gap-3 pr-4">
+							<div class="flex gap-1">
 								{#each Array(5) as _, i}
 									<div
-										class="w-3 h-1 rounded-full {i < Math.ceil(event.severity / 20)
+										class={`w-4 h-1.5 rounded-none ${i < Math.ceil(event.severity / 20)
 											? event.severity > 80
-												? 'bg-red-500'
-												: 'bg-amber-500'
-											: 'bg-slate-800'}"
+												? 'bg-red-600 shadow-[0_0_8px_#ef4444]'
+												: 'bg-amber-500 shadow-[0_0_8px_#f59e0b]'
+											: 'bg-stone-800'}`}
 									></div>
 								{/each}
 							</div>
 							<span
-								class="text-[10px] font-bold uppercase tracking-widest {event.severity > 80
+								class={`font-heading font-black text-[10px] uppercase tracking-[0.2em] ${event.severity > 80
 									? 'text-red-500'
-									: 'text-slate-500'}">Level {event.severity}</span
-							>
+									: 'text-stone-600'}`}>THREAT_LVL: {event.severity}</span>
 						</div>
 					</div>
 				{/each}
 			</div>
 		{:else if activeTab === 'config'}
-			<div class="h-full flex items-center justify-center p-6 overflow-auto">
+			<div class="h-full flex items-center justify-center p-8 overflow-auto">
 				<div
-					class="w-full max-w-2xl bg-white/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-2xl relative overflow-hidden"
+					class="w-full max-w-3xl modern-industrial-card glass-panel p-12 shadow-[0_0_100px_rgba(239,68,68,0.05)] relative overflow-hidden !rounded-none"
 				>
-					<div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-						<Settings class="w-32 h-32" />
+					<div class="absolute top-0 right-0 p-6 opacity-[0.02] pointer-events-none">
+						<Settings class="w-48 h-48" />
 					</div>
 
 					<h3
-						class="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter mb-8 flex items-center gap-3"
+						class="text-2xl font-heading font-black text-white uppercase tracking-tighter mb-12 flex items-center gap-4"
 					>
-						<Zap class="w-6 h-6 text-red-500" /> System Protocols
+						<Zap class="w-8 h-8 text-red-500 animate-pulse" /> Security Configuration
 					</h3>
 
-					<div class="space-y-10">
+					<div class="space-y-12">
 						<div class="flex items-center justify-between group">
 							<div class="max-w-[70%]">
 								<h4
-									class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide group-hover:text-red-400 transition-colors"
+									class="text-base font-heading font-black text-stone-200 uppercase tracking-widest group-hover:text-red-500 transition-colors"
 								>
-									Autonomous Neutralization
+									Auto-Ban System
 								</h4>
-								<p class="text-xs text-slate-500 mt-1">
-									Engage automatic quarantine protocols for entities exceeding risk thresholds.
+								<p class="font-jetbrains text-[11px] text-stone-500 mt-2 uppercase font-bold leading-relaxed tracking-tight">
+									Automatically quarantine players who exceed the reputation risk threshold.
 								</p>
 							</div>
 							<button
@@ -820,35 +820,34 @@
 									config['redeye.auto_ban_enabled'] = !config['redeye.auto_ban_enabled'];
 									updateConfig();
 								}}
-								class="w-14 h-7 rounded-full transition-all relative {config[
+								class={`w-16 h-8 rounded-none transition-all relative border-2 ${config[
 									'redeye.auto_ban_enabled'
 								]
-									? 'bg-red-600 shadow-[0_0_15px_rgba(220,38,38,0.4)]'
-									: 'bg-slate-800'}"
+									? 'bg-red-600 border-red-400 shadow-[0_0_20px_rgba(239,68,68,0.4)]'
+									: 'bg-stone-900 border-stone-800'}`}
 								aria-label="Toggle autonomous neutralization"
 							>
 								<div
-									class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-all {config[
+									class={`absolute top-1 left-1 w-4.5 h-4.5 bg-white transition-all ${config[
 										'redeye.auto_ban_enabled'
 									]
-										? 'translate-x-7'
-										: ''}"
+										? 'translate-x-8 bg-white shadow-lg'
+										: 'bg-stone-700'}`}
 								></div>
 							</button>
 						</div>
 
-						<div class="space-y-4">
+						<div class="space-y-6">
 							<div class="flex justify-between items-end">
 								<h4
-									class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide"
+									class="font-heading font-black text-base text-stone-200 uppercase tracking-widest"
 								>
-									Threat Sensitivity
+									THREAT_SENSITIVITY_TUNING
 								</h4>
-								<span class="text-xl font-black font-mono text-red-500"
-									>{config['redeye.auto_ban_threshold']}</span
-								>
+								<span class="text-3xl font-heading font-black text-red-500 tracking-widest tabular-nums"
+									>{config['redeye.auto_ban_threshold']}</span>
 							</div>
-							<div class="relative py-2">
+							<div class="relative py-4">
 								<input
 									type="range"
 									min="10"
@@ -856,25 +855,25 @@
 									step="10"
 									bind:value={config['redeye.auto_ban_threshold']}
 									onchange={updateConfig}
-									class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-red-500"
+									class="w-full h-1.5 bg-stone-950 border border-stone-800 appearance-none cursor-pointer accent-red-600"
 									aria-label="Threat sensitivity threshold"
 								/>
 							</div>
-							<div class="flex justify-between text-[10px] font-mono text-slate-600 uppercase">
-								<span>High Tolerance</span>
-								<span>Aggressive Mitigation</span>
+							<div class="flex justify-between font-jetbrains text-[9px] font-black text-stone-600 uppercase tracking-[0.3em]">
+								<span>Passive_Mitigation</span>
+								<span>Aggressive_Purge</span>
 							</div>
 						</div>
 
 						<div class="flex items-center justify-between group">
 							<div class="max-w-[70%]">
 								<h4
-									class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide"
+									class="text-base font-heading font-black text-stone-200 uppercase tracking-widest"
 								>
-									Global Notification Feed
+									Neural_Notification_Feed
 								</h4>
-								<p class="text-xs text-slate-500 mt-1">
-									Broadcast critical security events to the neural command center.
+								<p class="font-jetbrains text-[11px] text-stone-500 mt-2 uppercase font-bold leading-relaxed tracking-tight">
+									Broadcast real-time intercept telemetry to decentralized command terminals.
 								</p>
 							</div>
 							<button
@@ -882,25 +881,25 @@
 									config['redeye.alert_enabled'] = !config['redeye.alert_enabled'];
 									updateConfig();
 								}}
-								class="w-14 h-7 rounded-full transition-all relative {config['redeye.alert_enabled']
-									? 'bg-emerald-600 shadow-[0_0_15px_rgba(5,150,105,0.4)]'
-									: 'bg-slate-800'}"
+								class={`w-16 h-8 rounded-none transition-all relative border-2 ${config['redeye.alert_enabled']
+									? 'bg-emerald-600 border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.4)]'
+									: 'bg-stone-900 border-stone-800'}`}
 								aria-label="Toggle alert notifications"
 							>
 								<div
-									class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-all {config[
+									class={`absolute top-1 left-1 w-4.5 h-4.5 bg-white transition-all ${config[
 										'redeye.alert_enabled'
 									]
-										? 'translate-x-7'
-										: ''}"
+										? 'translate-x-8 bg-white shadow-lg'
+										: 'bg-stone-700'}`}
 								></div>
 							</button>
 						</div>
 					</div>
 
-					<div class="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800 text-center">
-						<div class="text-[10px] font-mono text-slate-600 uppercase">
-							Status: Syncing with Mainframe...
+					<div class="mt-16 pt-10 border-t border-stone-800 text-center">
+						<div class="font-jetbrains text-[10px] font-black text-stone-700 uppercase tracking-[0.5em] animate-pulse">
+							Status: Synchronizing_With_Mainframe_Cores...
 						</div>
 					</div>
 				</div>
@@ -908,36 +907,40 @@
 		{:else}
 			<!-- Logs -->
 			<div
-				class="h-full flex flex-col bg-white/30 dark:bg-slate-950/30 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden"
+				class="h-full flex flex-col bg-[#0a0a0a]/60 backdrop-blur-md border border-stone-800 overflow-hidden industrial-frame"
 			>
 				<div
-					class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-900/50 flex items-center gap-2"
+					class="p-6 border-b border-stone-800 bg-[#0a0a0a] flex items-center justify-between"
 				>
-					<Terminal class="w-4 h-4 text-sky-400" />
-					<h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest">
-						Packet Intercept Feed
-					</h3>
+					<div class="flex items-center gap-4">
+						<Terminal class="w-5 h-5 text-sky-500" />
+						<h3 class="font-heading font-black text-xs text-white uppercase tracking-[0.3em]">
+							PACKET_INTERCEPT_STREAM
+						</h3>
+					</div>
+					<div class="font-jetbrains text-[9px] font-black text-stone-600 uppercase tracking-widest">
+						CHANNEL_0xFF // eth0_UPLINK
+					</div>
 				</div>
-				<div class="flex-1 overflow-auto custom-scrollbar font-mono text-[11px]">
-					<div class="p-4 space-y-1">
+				<div class="flex-1 overflow-auto custom-scrollbar font-jetbrains text-[11px] p-6">
+					<div class="space-y-2">
 						{#each logs as log}
 							<div
-								class="flex items-center gap-4 py-1 border-b border-slate-200/30 dark:border-slate-800/30 hover:bg-slate-800/20 px-2 rounded transition-colors group"
+								class="flex items-center gap-6 py-2 border-b border-stone-800/30 hover:bg-white/[0.02] px-4 transition-colors group"
 							>
-								<span class="text-slate-600 shrink-0"
-									>[{new Date(log.timestamp).toLocaleTimeString()}]</span
+								<span class="text-stone-600 shrink-0 font-bold tabular-nums"
+									>[{new Date(log.timestamp).toLocaleTimeString([], { hour12: false })}]</span
 								>
-								<span class="font-bold {getActionColor(log.action).split(' ')[0]} w-24 shrink-0"
+								<span class={`font-black uppercase tracking-tighter w-28 shrink-0 ${getActionColor(log.action).split(' ')[0]}`}
 									>{log.action}</span
 								>
-								<span class="text-slate-500 dark:text-slate-400 shrink-0">SOURCE:</span>
+								<span class="text-stone-700 font-black shrink-0 tracking-widest text-[9px]">SOURCE_IP:</span>
 								<span
-									class="text-slate-900 dark:text-white group-hover:text-red-400 transition-colors"
+									class="text-stone-300 group-hover:text-red-500 transition-colors font-black tracking-tight"
 									>{log.source_ip}</span
 								>
-								<span class="text-[9px] text-slate-700 ml-auto uppercase hidden sm:block"
-									>Intercepted @ eth0</span
-								>
+								<span class="font-jetbrains text-[9px] text-stone-800 ml-auto uppercase font-black tracking-[0.2em] hidden xl:block"
+									>Intercepted_Verified_0x88</span>
 							</div>
 						{/each}
 					</div>

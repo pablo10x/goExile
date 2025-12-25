@@ -13,9 +13,12 @@
   --font-michroma: var(--font-michroma);
   --font-jetbrains: var(--font-jetbrains);
 
-  --color-grunge-950: #050505;
   --color-rust: var(--color-rust);
   --color-rust-light: var(--color-rust-light);
+  --color-rust-dark: var(--color-rust-dark);
+  --color-bg-core: var(--bg-core);
+  --color-bg-surface: var(--bg-surface);
+  
   --color-cyan-500: #06b6d4;
   --color-green-500: #22c55e;
   --color-red-500: #ef4444;
@@ -212,24 +215,40 @@
 }
 
 :root {
-  --bg-color: #050505;
-  --bg-opacity: 1.0;
-  --font-primary: "Inter", sans-serif;
+  /* Core Palette - Modern Industrial */
+  --bg-core: #050505;
+  --bg-surface: #0a0a0a;
+  --bg-surface-header: #0f0f0f;
+  --bg-surface-raised: #161616;
+  
   --text-primary: #e7e5e4;
   --text-secondary: #a8a29e;
-  --card-alpha: 0.4;
-  --card-bg: rgba(28, 25, 23, var(--card-alpha));
-  --card-bg-hex: #1c1917;
-  --sidebar-bg: rgba(5, 5, 5, var(--sidebar-alpha));
-  --sidebar-alpha: 0.7;
+  --text-dim: #57534e;
+  
+  --color-rust: #f97316;
+  --color-rust-light: #fb923c;
+  --color-rust-dark: #7c2d12;
+  
+  --color-steel: #27272a;
+  --color-steel-light: #3f3f46;
+  
+  --border-color: #262626;
+  --border-color-light: #404040;
+  
+  /* Modern Effects - Controlled by Svelte Store */
   --backdrop-blur: 16px;
-  --border-color: #44403c;
-  --card-border-width: 1px;
-  --card-shadow-size: 4px;
-  --accent-color: #78350f;
-  --accent-color-light: #92400e;
-  --color-rust: var(--accent-color);
-  --color-rust-light: var(--accent-color-light);
+  --card-alpha: 0.4;
+  --glass-border-alpha: 0.1;
+  --glow-intensity: 0.4;
+  
+  /* Legacy mapping for compatibility */
+  --bg-color: var(--bg-core);
+  --bg-opacity: 1.0;
+  --font-primary: "Inter", sans-serif;
+  --card-bg: rgba(15, 15, 15, var(--card-alpha));
+  --sidebar-bg: rgba(5, 5, 5, var(--sidebar-alpha, 0.8));
+  --accent-color: var(--color-rust);
+  --accent-color-light: var(--color-rust-light);
   --rain-opacity: 0.2;
   
   --font-heading: 'Kanit', sans-serif;
@@ -240,13 +259,62 @@
   --font-syncopate: 'Syncopate', sans-serif;
   --font-michroma: 'Michroma', sans-serif;
   --font-jetbrains: 'JetBrains Mono', monospace;
-  --radius-sm: 2px;
+  --radius-sm: 0px;
   --radius-md: 4px;
   --radius-lg: 8px;
 }
 
+/* Modern Industrial Utilities */
+.glass-panel {
+  @apply backdrop-blur-[var(--backdrop-blur)] border-[var(--card-border-width,1px)] border-white/[var(--glass-border-alpha)] bg-black/[var(--card-alpha)];
+}
+
+.modern-industrial-card {
+  @apply relative overflow-hidden transition-all duration-300;
+  background: var(--card-bg-hex, #1c1917);
+  background-color: rgba(0, 0, 0, var(--card-alpha));
+  border: var(--card-border-width, 1px) solid var(--border-color);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+}
+
+.modern-industrial-card::before {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-tr from-rust/5 via-transparent to-transparent opacity-0 transition-opacity duration-500 pointer-events-none;
+}
+
+.modern-industrial-card:hover::before {
+  @apply opacity-100;
+}
+
+.modern-industrial-card:hover {
+  @apply border-stone-700 -translate-y-1 shadow-rust/10;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.7), 0 0 20px rgba(249, 115, 22, 0.05);
+}
+
+.tactical-glow {
+  filter: drop-shadow(0 0 8px rgba(249, 115, 22, var(--glow-intensity)));
+}
+
+.tactical-glow-blue {
+  filter: drop-shadow(0 0 8px rgba(59, 130, 246, var(--glow-intensity)));
+}
+
+.industrial-noise {
+  position: relative;
+}
+
+.industrial-noise::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("https://www.transparenttextures.com/patterns/carbon-fibre.png");
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 1;
+}
+
 body {
-  background-color: var(--bg-color);
+  background-color: var(--bg-core);
   font-family: var(--font-primary);
   color: var(--text-primary);
   @apply font-body selection:bg-rust selection:text-white transition-colors duration-300;

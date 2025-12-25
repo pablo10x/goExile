@@ -3,21 +3,22 @@
 	import { serverVersions } from '$lib/stores';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import { setContext } from 'svelte';
-	import { History, Package, Upload, Play, Trash2, CheckCircle, Clock } from 'lucide-svelte';
+	import { History, Package, Upload, Play, Trash2, CheckCircle, Clock, RefreshCw, ArrowDownToLine, ArrowDown, ArrowUp, AlertCircle, HardDrive, Activity, Search } from 'lucide-svelte';
+	import { fade } from 'svelte/transition';
 
-	let activeTab = 'upload';
-	let isDragging = false;
+	let activeTab = $state('upload');
+	let isDragging = $state(false);
 	let dragCounter = 0;
 
-	let fileInput: HTMLInputElement;
-	let comment = '';
-	let version = '';
-	let uploading = false;
-	let uploadProgress = 0;
-	let uploadStatus = '';
-	let uploadError = false;
-	let selectedFile: File | null = null;
-	let fileAnalysis: {
+	let fileInput = $state<HTMLInputElement>();
+	let comment = $state('');
+	let version = $state('');
+	let uploading = $state(false);
+	let uploadProgress = $state(0);
+	let uploadStatus = $state('');
+	let uploadError = $state(false);
+	let selectedFile = $state<File | null>(null);
+	let fileAnalysis = $state<{
 		isUnity: boolean;
 		unityVersion?: string;
 		platform?: string;
@@ -25,21 +26,21 @@
 		fileCount?: number;
 		estimatedTime?: string;
 		compatibility?: 'excellent' | 'good' | 'fair' | 'poor';
-	} | null = null;
-	let analyzing = false;
+	} | null>(null);
+	let analyzing = $state(false);
 
-	let isConfirmOpen = false;
-	let confirmTitle = '';
-	let confirmMessage = '';
-	let confirmAction: () => Promise<void> = async () => {};
-	let confirmIsCritical = false;
-	let confirmButtonText = 'Confirm';
+	let isConfirmOpen = $state(false);
+	let confirmTitle = $state('');
+	let confirmMessage = $state('');
+	let confirmAction: () => Promise<void> = $state(async () => {});
+	let confirmIsCritical = $state(false);
+	let confirmButtonText = $state('Confirm');
 
-	let searchQuery = '';
-	let filterStatus: 'all' | 'active' | 'inactive' = 'all';
-	let sortBy: 'date' | 'version' | 'size' = 'date';
-	let sortOrder: 'asc' | 'desc' = 'desc';
-	let showAdvancedFilters = false;
+	let searchQuery = $state('');
+	let filterStatus = $state<'all' | 'active' | 'inactive'>('all');
+	let sortBy = $state<'date' | 'version' | 'size'>('date');
+	let sortOrder = $state<'asc' | 'desc'>('desc');
+	let showAdvancedFilters = $state(false);
 
 	async function loadVersions() {
 		try {
@@ -122,7 +123,7 @@
 			const file = e.dataTransfer.files[0];
 			if (file.name.endsWith('.zip')) {
 				selectedFile = file;
-				fileInput.files = e.dataTransfer.files;
+				if (fileInput) fileInput.files = e.dataTransfer.files;
 				uploadStatus = '';
 				await analyzeFile(file);
 			} else {
@@ -135,15 +136,15 @@
 	function getCompatibilityColor(compatibility: string) {
 		switch (compatibility) {
 			case 'excellent':
-				return 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20';
+				return 'text-emerald-400 border-emerald-500/20 bg-emerald-500/5';
 			case 'good':
-				return 'text-blue-400 bg-blue-400/10 border-blue-400/20';
+				return 'text-blue-400 border-blue-500/20 bg-blue-500/5';
 			case 'fair':
-				return 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20';
+				return 'text-yellow-400 border-yellow-500/20 bg-yellow-500/5';
 			case 'poor':
-				return 'text-red-400 bg-red-400/10 border-red-400/20';
+				return 'text-red-400 border-red-500/20 bg-red-500/5';
 			default:
-				return 'text-slate-500 dark:text-slate-400 bg-slate-400/10 border-slate-400/20';
+				return 'text-slate-500 border-slate-500/20 bg-slate-500/5';
 		}
 	}
 
@@ -215,7 +216,7 @@
 	});
 
 	async function handleUpload() {
-		if (!fileInput.files || fileInput.files.length === 0) {
+		if (!fileInput?.files || fileInput.files.length === 0) {
 			uploadStatus = 'Please select a file first.';
 			uploadError = true;
 			return;
@@ -266,7 +267,7 @@
 			if (response.ok) {
 				uploadStatus = 'Upload successful! Processing file...';
 				uploadError = false;
-				fileInput.value = '';
+				if (fileInput) fileInput.value = '';
 				selectedFile = null;
 				fileAnalysis = null;
 				comment = '';
@@ -341,59 +342,65 @@
 	}
 </script>
 
-<div class="min-h-screen space-y-6 relative">
-	<!-- Background Pattern -->
-	<div class="fixed inset-0 -z-10 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-		<div
-			class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgPGcgZmlsbD0iIzY0NzQ4YiIgZmlsbC1vcGFjaXR5PSIwLjAzIj4KICAgICAgPHBhdGggZD0iTTM2IDM0di00aC0ydjRoLTR2Mmg0djRoMnYtNGg0di0yaC00em0wLTMwVjBoLTJ2NGgtNHYyaDR2NGgyVjZoNFY0aC00ek02IDM0di00SDR2NEgwdjJoNHY0aDJ2LTRoNHYtMkg2ek02IDRWMEg0djRIMHYyaDR2NGgyVjZoNFY0SDZ6Ii8+CiAgICA8L2c+CiAgPC9nPgo8L3N2Zz4=')] opacity-20"
-		></div>
-		<div class="absolute inset-0 bg-gradient-to-t from-slate-900/50 to-transparent"></div>
-	</div>
-	<div class="flex justify-between items-center">
-		<h2 class="text-2xl font-bold text-slate-50">Game Server Files</h2>
+<div class="w-full h-full space-y-10 pb-32 md:pb-12">
+	<div class="flex justify-between items-center mb-10">
+		<div class="flex items-center gap-6">
+			<div class="p-4 bg-rust/10 border border-rust/30 industrial-frame shadow-2xl">
+				<HardDrive class="w-10 h-10 text-rust-light" />
+			</div>
+			<div>
+				<h1 class="text-4xl sm:text-5xl font-heading font-black text-white uppercase tracking-tighter">
+					Server Build Assets
+				</h1>
+				<p class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest font-black mt-2">Manage game server binaries and versions</p>
+			</div>
+		</div>
 	</div>
 
 	<!-- Tabs -->
-	<div class="border-b border-slate-300 dark:border-slate-700">
-		<nav class="-mb-px flex space-x-8">
-			<button
-				onclick={() => (activeTab = 'upload')}
-				class="{activeTab === 'upload'
-					? 'border-blue-500 text-blue-400'
-					: 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-300 hover:border-slate-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
-			>
-				Upload New Version
-			</button>
-			<button
-				onclick={() => (activeTab = 'history')}
-				class="{activeTab === 'history'
-					? 'border-blue-500 text-blue-400'
-					: 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-300 hover:border-slate-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
-			>
-				Version History
-			</button>
-		</nav>
+	<div class="flex gap-1.5 p-1.5 bg-[#0a0a0a]/80 border border-stone-800 backdrop-blur-xl industrial-frame shadow-2xl">
+		<button
+			onclick={() => (activeTab = 'upload')}
+			class="flex-1 flex flex-col items-center gap-1.5 px-8 py-4 transition-all {activeTab === 'upload'
+				? 'bg-rust text-white shadow-lg'
+				: 'text-stone-600 hover:text-white hover:bg-stone-900'}"
+		>
+			<span class="font-heading font-black text-[12px] uppercase tracking-[0.2em]">Upload Build</span>
+			<span class="font-jetbrains text-[8px] font-black opacity-40 uppercase tracking-widest">New Binary</span>
+		</button>
+		<button
+			onclick={() => (activeTab = 'history')}
+			class="flex-1 flex flex-col items-center gap-1.5 px-8 py-4 transition-all {activeTab === 'history'
+				? 'bg-rust text-white shadow-lg'
+				: 'text-stone-600 hover:text-white hover:bg-stone-900'}"
+		>
+			<span class="font-heading font-black text-[12px] uppercase tracking-[0.2em]">Build History</span>
+			<span class="font-jetbrains text-[8px] font-black opacity-40 uppercase tracking-widest">Version Logs</span>
+		</button>
 	</div>
 
 	{#if activeTab === 'upload'}
-		<div class="grid lg:grid-cols-3 gap-6">
+		<div class="grid xl:grid-cols-12 gap-8 items-start">
 			<!-- Upload Area -->
-			<div class="lg:col-span-2">
+			<div class="xl:col-span-8">
 				<div
-					class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-8"
+					class="modern-industrial-card glass-panel p-10 !rounded-none"
 				>
-					<div class="mb-6">
-						<h3 class="text-lg font-semibold text-slate-50 mb-2">Upload Game Server Package</h3>
-						<p class="text-slate-500 dark:text-slate-400 text-sm">
-							Upload a new <code class="px-1 py-0.5 bg-slate-700 rounded text-xs"
-								>game_server.zip</code
-							> package with version information and release notes.
-						</p>
+					<div class="mb-10 flex items-center gap-6">
+						<div class="p-3 bg-stone-900 border border-stone-800 industrial-frame">
+							<Upload class="w-6 h-6 text-rust" />
+						</div>
+						<div>
+							<h3 class="text-2xl font-heading font-black text-white uppercase tracking-tighter">Build Upload</h3>
+							<p class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest mt-1">
+								Upload a new <code class="text-rust">game_server.zip</code> package to central registry.
+							</p>
+						</div>
 					</div>
 
 					<!-- Enhanced Drag & Drop Area -->
 					<div
-						class="relative"
+						class="relative group"
 						ondragenter={handleDragEnter}
 						ondragleave={handleDragLeave}
 						ondragover={handleDragOver}
@@ -402,92 +409,84 @@
 						aria-label="File Upload Drop Zone"
 					>
 						<div
-							class="group relative border-2 border-dashed rounded-xl transition-all duration-200 bg-slate-900/30 hover:bg-slate-900/50 {isDragging
-								? 'border-blue-400 bg-blue-400/5'
-								: 'border-slate-300 dark:border-slate-700 hover:border-slate-600'}"
+							class="relative border border-stone-800 bg-black/40 p-16 transition-all duration-500 overflow-hidden {isDragging
+								? 'border-rust bg-rust/5 scale-[0.99]'
+								: 'hover:border-rust/30'}"
 						>
+							<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
+							
 							<input
 								id="file-upload"
 								name="file-upload"
 								type="file"
-								class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+								class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
 								accept=".zip"
 								bind:this={fileInput}
 								onchange={handleFileSelect}
 							/>
 
-							<div class="p-12 text-center">
+							<div class="relative z-10 text-center space-y-8">
 								{#if uploading}
-									<div class="space-y-4">
+									<div class="space-y-6">
 										<div
-											class="w-16 h-16 mx-auto border-4 border-blue-500 border-t-transparent rounded-full animate-spin"
+											class="w-20 h-20 mx-auto border-2 border-rust border-t-transparent rounded-none animate-spin shadow-lg shadow-rust/20"
 										></div>
-										<div class="space-y-2">
-											<p class="text-blue-400 font-medium">{uploadStatus}</p>
+										<div class="space-y-4">
+											<p class="font-heading font-black text-[11px] text-rust uppercase tracking-[0.3em] animate-pulse">{uploadStatus}</p>
 											{#if uploadProgress > 0}
-												<div class="w-full max-w-md mx-auto">
-													<div class="h-2 bg-slate-700 rounded-full overflow-hidden">
+												<div class="w-full max-w-lg mx-auto">
+													<div class="h-1 bg-stone-900 border border-stone-800 rounded-none overflow-hidden p-0 relative">
 														<div
-															class="h-full bg-blue-500 transition-all duration-300"
+															class="h-full bg-rust shadow-[0_0_15px_rgba(249,115,22,0.5)] transition-all duration-300"
 															style="width: {uploadProgress}%"
 														></div>
 													</div>
-													<p class="text-xs text-slate-500 mt-1">
-														{Math.round(uploadProgress)}% complete
+													<p class="font-jetbrains text-[9px] font-black text-stone-600 mt-3 uppercase tracking-widest">
+														PROGRESS: {Math.round(uploadProgress)}%_SYNCED
 													</p>
 												</div>
 											{/if}
 										</div>
 									</div>
 								{:else if analyzing}
-									<div class="space-y-4">
+									<div class="space-y-6">
 										<div
-											class="w-16 h-16 mx-auto border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"
+											class="w-20 h-20 mx-auto border-2 border-amber-500 border-t-transparent rounded-none animate-spin shadow-lg shadow-amber-900/20"
 										></div>
 										<div class="space-y-2">
-											<p class="text-yellow-400 font-medium">Analyzing file...</p>
-											<p class="text-xs text-slate-500">
-												Checking compatibility and extracting metadata
+											<p class="font-heading font-black text-[11px] text-amber-500 uppercase tracking-[0.3em] animate-pulse">ANALYZING_PAYLOAD...</p>
+											<p class="font-jetbrains text-[9px] font-black text-stone-600 uppercase tracking-widest">
+												Verifying compatibility and sector mapping
 											</p>
 										</div>
 									</div>
 								{:else}
-									<div class="space-y-4">
+									<div class="space-y-6">
 										<div
-											class="w-16 h-16 mx-auto mx-auto flex items-center justify-center rounded-full bg-slate-800 group-hover:bg-slate-700 transition-colors"
+											class="w-24 h-24 mx-auto flex items-center justify-center bg-stone-950 border border-stone-800 industrial-frame group-hover:border-rust group-hover:scale-110 transition-all duration-500 shadow-xl"
 										>
-											<svg
-												class="w-8 h-8 text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:text-slate-300"
-												fill="none"
-												stroke="currentColor"
-												viewBox="0 0 24 24"
-											>
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="1.5"
-													d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-												/>
-											</svg>
+											<Upload
+												class="w-10 h-10 text-stone-700 group-hover:text-rust transition-colors"
+											/>
 										</div>
-										<div class="space-y-2">
-											<p class="text-slate-700 dark:text-slate-300 font-medium">
+										<div class="space-y-3">
+											<p class="font-heading font-black text-lg text-white uppercase tracking-widest">
 												{selectedFile
 													? selectedFile.name
-													: 'Drop your zip file here or click to browse'}
+													: 'DROP_ARCHIVE_OR_ACTIVATE_SELECTOR'}
 											</p>
-											<p class="text-xs text-slate-500">
+											<p class="font-jetbrains text-[10px] font-bold text-stone-600 uppercase tracking-widest">
 												{selectedFile
 													? formatFileSize(selectedFile.size)
-													: 'Maximum file size: 1GB • ZIP files only'}
+													: 'MAX_LIMIT: 1GB // FORMAT: .ZIP_ONLY'}
 											</p>
 										</div>
 										{#if !selectedFile}
-											<button
-												class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-slate-900 dark:text-white rounded-lg text-sm font-medium transition-colors"
-											>
-												Choose File
-											</button>
+											<div class="pt-4">
+												<span class="px-8 py-3 bg-stone-900 border border-stone-800 text-stone-500 font-heading font-black text-[10px] uppercase tracking-widest group-hover:border-rust group-hover:text-white transition-all shadow-lg">
+													Browse_Buffer
+												</span>
+											</div>
 										{/if}
 									</div>
 								{/if}
@@ -498,43 +497,44 @@
 					<!-- File Analysis Results -->
 					{#if fileAnalysis && !uploading}
 						<div
-							class="mt-6 p-4 bg-slate-900/50 rounded-lg border border-slate-300 dark:border-slate-700"
+							class="mt-10 p-8 bg-stone-950 border border-stone-800 industrial-frame shadow-inner"
 						>
-							<h4 class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
-								File Analysis
+							<h4 class="font-heading font-black text-xs text-stone-500 uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
+								<Activity class="w-4 h-4 text-rust" />
+								Build Summary
 							</h4>
-							<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-								<div class="text-center">
-									<p class="text-xs text-slate-500 mb-1">Type</p>
-									<p class="text-sm font-medium text-slate-700 dark:text-slate-300">
-										{fileAnalysis.isUnity ? 'Unity Server' : 'Game Server'}
+							<div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+								<div class="space-y-2">
+									<p class="font-jetbrains text-[9px] font-black text-stone-700 uppercase tracking-widest">DATA_TYPE</p>
+									<p class="font-jetbrains text-[11px] font-black text-stone-300 uppercase">
+										{fileAnalysis.isUnity ? 'UNITY_KERNEL' : 'GENERIC_BINARY'}
 									</p>
 								</div>
-								<div class="text-center">
-									<p class="text-xs text-slate-500 mb-1">Size</p>
-									<p class="text-sm font-medium text-slate-700 dark:text-slate-300">
+								<div class="space-y-2">
+									<p class="font-jetbrains text-[9px] font-black text-stone-700 uppercase tracking-widest">BUFFER_SIZE</p>
+									<p class="font-jetbrains text-[11px] font-black text-stone-300 uppercase">
 										{fileAnalysis.size}
 									</p>
 								</div>
-								<div class="text-center">
-									<p class="text-xs text-slate-500 mb-1">Files</p>
-									<p class="text-sm font-medium text-slate-700 dark:text-slate-300">
+								<div class="space-y-2">
+									<p class="font-jetbrains text-[9px] font-black text-stone-700 uppercase tracking-widest">FILE_ENTITIES</p>
+									<p class="font-jetbrains text-[11px] font-black text-stone-300 uppercase">
 										{fileAnalysis.fileCount}
 									</p>
 								</div>
-								<div class="text-center">
-									<p class="text-xs text-slate-500 mb-1">Est. Time</p>
-									<p class="text-sm font-medium text-slate-700 dark:text-slate-300">
+								<div class="space-y-2">
+									<p class="font-jetbrains text-[9px] font-black text-stone-700 uppercase tracking-widest">SYNC_ESTIMATE</p>
+									<p class="font-jetbrains text-[11px] font-black text-stone-300 uppercase">
 										{fileAnalysis.estimatedTime}
 									</p>
 								</div>
 							</div>
 							{#if fileAnalysis.compatibility}
-								<div class="mt-3 flex items-center justify-center">
+								<div class="mt-8 pt-6 border-t border-stone-900 flex items-center justify-center">
 									<span
-										class={`px-3 py-1 rounded-full text-xs font-medium border ${getCompatibilityColor(fileAnalysis.compatibility)}`}
+										class={`px-4 py-1.5 font-jetbrains text-[10px] font-black border uppercase tracking-widest ${getCompatibilityColor(fileAnalysis.compatibility)}`}
 									>
-										Compatibility: {fileAnalysis.compatibility}
+										INTEGRITY_INDEX: {fileAnalysis.compatibility}
 									</span>
 								</div>
 							{/if}
@@ -544,83 +544,82 @@
 			</div>
 
 			<!-- Version Details Panel -->
-			<div class="lg:col-span-1 space-y-6">
+			<div class="xl:col-span-4 space-y-8">
 				<!-- Version Information -->
 				<div
-					class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-6"
+					class="modern-industrial-card glass-panel p-8 !rounded-none"
 				>
-					<h3 class="text-lg font-semibold text-slate-50 mb-4">Version Information</h3>
+					<h3 class="font-heading font-black text-base text-white uppercase tracking-widest mb-8 border-b border-stone-800 pb-4">Build Metadata</h3>
 
-					<div class="space-y-4">
-						<div>
+					<div class="space-y-8">
+						<div class="space-y-3">
 							<label
 								for="version"
-								class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+								class="block font-jetbrains text-[10px] font-black text-stone-500 uppercase tracking-widest"
 							>
-								Version Number <span class="text-red-400">*</span>
+								VERSION_IDENTIFIER <span class="text-red-500">*</span>
 							</label>
 							<input
 								type="text"
 								id="version"
 								bind:value={version}
-								class="w-full px-3 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-slate-800 dark:text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-sm"
-								placeholder="1.0.0"
+								class="w-full bg-stone-950 border border-stone-800 px-4 py-3 font-jetbrains text-xs text-stone-200 focus:border-rust outline-none transition-all uppercase tracking-widest shadow-inner"
+								placeholder="e.g. 1.0.0"
 								required
 							/>
-							<p class="text-xs text-slate-500 mt-1">Semantic versioning (e.g., 1.2.3)</p>
+							<p class="font-jetbrains text-[8px] text-stone-700 uppercase tracking-widest">Format: Semantic_Versioning (X.Y.Z)</p>
 						</div>
 
-						<div>
+						<div class="space-y-3">
 							<label
 								for="comment"
-								class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+								class="block font-jetbrains text-[10px] font-black text-stone-500 uppercase tracking-widest"
 							>
-								Release Notes
+								PROTOCOL_CHANGELOG
 							</label>
 							<textarea
 								id="comment"
 								bind:value={comment}
-								rows="4"
-								class="w-full px-3 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-slate-800 dark:text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-sm resize-none"
-								placeholder="Describe what's new in this version..."
+								rows="6"
+								class="w-full bg-stone-950 border border-stone-800 px-4 py-3 font-jetbrains text-xs text-stone-200 focus:border-rust outline-none transition-all uppercase tracking-widest shadow-inner resize-none leading-relaxed"
+								placeholder="Describe binary modifications..."
 							></textarea>
 						</div>
 					</div>
 				</div>
 
 				<!-- Upload Button & Status -->
-				<div class="space-y-4">
+				<div class="space-y-6">
 					<button
 						onclick={handleUpload}
 						disabled={uploading || !selectedFile || !version}
-						class="w-full px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-500 text-slate-900 dark:text-white rounded-lg font-semibold transition-all transform active:scale-95 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 shadow-lg shadow-blue-900/20"
+						class="w-full px-8 py-4 bg-rust hover:bg-rust-light text-white font-heading font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-rust/20 transition-all active:translate-y-px disabled:opacity-20 flex items-center justify-center gap-4 industrial-frame"
 					>
 						{#if uploading}
 							<div
-								class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+								class="w-5 h-5 border-2 border-white border-t-transparent rounded-none animate-spin"
 							></div>
-							Uploading...
+							SYNCHRONIZING...
 						{:else}
-							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-								/>
-							</svg>
-							Upload Version
+							<Upload class="w-5 h-5" />
+							AUTHORIZE_DEPLOYMENT
 						{/if}
 					</button>
 
 					{#if uploadStatus}
 						<div
-							class={`p-4 rounded-lg text-sm font-medium border flex items-start gap-3 ${uploadError ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}
+							class={`p-6 border flex items-start gap-5 industrial-frame ${uploadError ? 'bg-red-950/20 text-red-500 border-red-900/40 shadow-red-900/10' : 'bg-emerald-950/20 text-emerald-400 border-emerald-900/40 shadow-emerald-900/10'}`}
 						>
-							<span class="flex-shrink-0 mt-0.5">{uploadError ? '⚠️' : '✓'}</span>
+							<div class="shrink-0 mt-1">
+								{#if uploadError}
+									<AlertCircle class="w-6 h-6" />
+								{:else}
+									<CheckCircle class="w-6 h-6" />
+								{/if}
+							</div>
 							<div>
-								<p class="font-medium">{uploadError ? 'Upload Failed' : 'Upload Successful'}</p>
-								<p class="text-xs opacity-75 mt-1">{uploadStatus}</p>
+								<p class="font-heading font-black text-xs uppercase tracking-widest">{uploadError ? 'PROTOCOL_FAULT' : 'BUFFER_SYNC_COMPLETE'}</p>
+								<p class="font-jetbrains text-[10px] font-bold opacity-75 mt-2 uppercase leading-relaxed tracking-tight">{uploadStatus}</p>
 							</div>
 						</div>
 					{/if}
@@ -628,79 +627,53 @@
 			</div>
 		</div>
 	{:else}
-		<div class="space-y-6">
+		<div class="space-y-8" transition:fade={{ duration: 200 }}>
 			<!-- Filters and Search -->
 			<div
-				class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-6"
+				class="modern-industrial-card glass-panel p-8 !rounded-none"
 			>
-				<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-					<div class="flex-1 max-w-md">
-						<div class="relative">
-							<input
-								type="text"
-								bind:value={searchQuery}
-								placeholder="Search versions, comments, or filenames..."
-								class="w-full pl-10 pr-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-slate-800 dark:text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-sm"
-							/>
-							<svg
-								class="absolute left-3 top-2.5 w-4 h-4 text-slate-500"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-								/>
-							</svg>
-						</div>
+				<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+					<div class="flex-1 max-w-2xl relative group">
+						<Search class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-600 group-focus-within:text-rust transition-colors" />
+						<input
+							type="text"
+							bind:value={searchQuery}
+							placeholder="FILTER_ARCHIVE_BY_METADATA..."
+							class="w-full bg-stone-950 border border-stone-800 pl-14 pr-4 py-3.5 font-jetbrains text-xs text-stone-200 focus:border-rust outline-none transition-all uppercase tracking-widest shadow-inner"
+						/>
 					</div>
 
-					<div class="flex flex-wrap items-center gap-3">
+					<div class="flex flex-wrap items-center gap-4">
 						<!-- Status Filter -->
 						<select
 							bind:value={filterStatus}
-							class="px-3 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+							class="bg-stone-950 border border-stone-800 px-4 py-3 font-jetbrains text-[10px] font-black text-stone-400 focus:border-rust outline-none cursor-pointer uppercase tracking-widest appearance-none min-w-[160px]"
 						>
-							<option value="all">All Status</option>
-							<option value="active">Active Only</option>
-							<option value="inactive">Inactive Only</option>
+							<option value="all">ALL_RECORDS</option>
+							<option value="all">ACTIVE_ONLY</option>
+							<option value="inactive">HALTED_ONLY</option>
 						</select>
 
 						<!-- Sort Options -->
-						<div class="flex items-center gap-2">
+						<div class="flex items-center gap-3">
 							<select
 								bind:value={sortBy}
-								class="px-3 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+								class="bg-stone-950 border border-stone-800 px-4 py-3 font-jetbrains text-[10px] font-black text-stone-400 focus:border-rust outline-none cursor-pointer uppercase tracking-widest appearance-none min-w-[160px]"
 							>
-								<option value="date">Sort by Date</option>
-								<option value="version">Sort by Version</option>
-								<option value="size">Sort by Size</option>
+								<option value="date">SORT_BY_TIME</option>
+								<option value="version">SORT_BY_REV</option>
+								<option value="size">SORT_BY_SIZE</option>
 							</select>
 							<button
 								onclick={() => (sortOrder = sortOrder === 'desc' ? 'asc' : 'desc')}
-								class="p-2 bg-slate-900/50 border border-slate-600 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 hover:border-slate-500 transition-colors"
+								class="p-3 bg-stone-950 border border-stone-800 text-stone-600 hover:text-rust transition-all active:translate-y-px shadow-lg"
 								title="Toggle sort order"
 							>
-								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									{#if sortOrder === 'desc'}
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M19 9l-7 7-7-7"
-										/>
-									{:else}
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M5 15l7-7 7 7"
-										/>
-									{/if}
-								</svg>
+								{#if sortOrder === 'desc'}
+									<ArrowDown class="w-5 h-5" />
+								{:else}
+									<ArrowUp class="w-5 h-5" />
+								{/if}
 							</button>
 						</div>
 					</div>
@@ -710,130 +683,101 @@
 			<!-- Version Grid -->
 			{#if getFilteredVersions().length === 0}
 				<div
-					class="bg-slate-800/50 border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-12 text-center"
+					class="modern-industrial-card glass-panel p-32 text-center border-dashed !rounded-none bg-stone-950/20"
 				>
-					<svg
-						class="w-16 h-16 mx-auto text-slate-600 mb-4"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="1.5"
-							d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-						/>
-					</svg>
-					<h3 class="text-lg font-medium text-slate-700 dark:text-slate-300 mb-2">
-						No versions found
+					<Package class="w-20 h-20 mx-auto text-stone-800 mb-8 opacity-20" />
+					<h3 class="font-heading font-black text-xl text-stone-700 uppercase tracking-[0.3em] mb-3">
+						Archive_Registry_Empty
 					</h3>
-					<p class="text-slate-500">
+					<p class="font-jetbrains text-[10px] font-bold text-stone-600 uppercase tracking-widest">
 						{searchQuery
-							? 'Try adjusting your search or filters.'
-							: 'Upload your first game server version to get started.'}
+							? 'Neural filters returned zero logical matches.'
+							: 'Initial deployment binary pending synchronization.'}
 					</p>
 				</div>
 			{:else}
-				<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+				<div class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 3xl:grid-cols-4 gap-8">
 					{#each getFilteredVersions() as version (version.id)}
 						<div
-							class="bg-slate-800/60 border border-slate-300/50 dark:border-slate-700/50 rounded-xl overflow-hidden hover:bg-gradient-to-br hover:from-slate-800/80 hover:via-blue-900/30 hover:to-slate-800/80 hover:border-blue-500/30 transition-all duration-300 group preserve-3d transform-gpu hover:rotate-y-6 hover:scale-105 shadow-lg hover:shadow-2xl hover:shadow-blue-500/10"
-							style="transform-style: preserve-3d; perspective: 1000px;"
+							class="modern-industrial-card glass-panel group relative transition-all duration-500 hover:border-rust/40 shadow-xl !rounded-none"
 						>
-							<!-- Header with Status -->
-							<div class="p-6 pb-4 relative overflow-hidden">
-								<div class="flex items-start justify-between mb-3">
+							<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.01] pointer-events-none"></div>
+							
+							<div class="p-8 relative z-10 space-y-8">
+								<!-- Header with Status -->
+								<div class="flex items-start justify-between">
+									<div class="p-3 bg-rust/5 border border-rust/20 industrial-frame group-hover:border-rust/40 transition-all shadow-inner">
+										<Package class="w-6 h-6 text-rust group-hover:text-rust-light group-hover:scale-110 transition-all" />
+									</div>
+									
 									<div class="flex items-center gap-3">
 										{#if version.is_active}
-											<div class="relative">
-												<span
-													class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-												>
-													<span class="w-2 h-2 bg-emerald-400 rounded-full mr-2 animate-pulse"
-													></span>
-													Active
-												</span>
-											</div>
+											<span
+												class="px-3 py-1 font-jetbrains text-[9px] font-black bg-rust text-white uppercase tracking-[0.2em] shadow-lg shadow-rust/30"
+											>
+												CORE_ACTIVE
+											</span>
 										{:else}
 											<span
-												class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-slate-700 text-slate-500 dark:text-slate-400"
+												class="px-3 py-1 font-jetbrains text-[9px] font-black bg-stone-900 border border-stone-800 text-stone-600 uppercase tracking-[0.2em]"
 											>
-												Inactive
+												STANDBY
 											</span>
 										{/if}
-									</div>
-
-									<!-- Action Buttons that appear on hover -->
-									<div
-										class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-10"
-									>
-										{#if !version.is_active}
-											<button
-												onclick={() => requestActivate(version.id)}
-												class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-slate-900 dark:text-white rounded-lg text-xs font-medium transition-all duration-200 transform hover:scale-110 shadow-lg hover:shadow-emerald-500/25 flex items-center gap-1"
-												title="Activate this version"
-											>
-												<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														stroke-width="2"
-														d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-													/>
-												</svg>
-												Activate
-											</button>
-										{/if}
-										<button
-											onclick={() => requestDelete(version.id)}
-											class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-slate-900 dark:text-white rounded-lg text-xs font-medium transition-all duration-200 transform hover:scale-110 shadow-lg hover:shadow-red-500/25 flex items-center gap-1"
-											title="Delete this version"
-										>
-											<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="2"
-													d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-												/>
-											</svg>
-											Delete
-										</button>
 									</div>
 								</div>
 
 								<!-- Version Info -->
-								<div class="space-y-3">
-									<div>
-										<h4 class="text-lg font-semibold text-slate-50 mb-1">
-											{version.version || 'Unknown Version'}
-										</h4>
-										<p class="text-xs font-mono text-slate-500">{version.filename}</p>
-									</div>
+								<div class="space-y-2">
+									<h4 class="text-3xl font-heading font-black text-white uppercase tracking-tighter group-hover:text-rust transition-colors duration-500">
+										REV_{version.version || 'UNKNOWN'}
+									</h4>
+									<p class="font-jetbrains text-[10px] font-black text-stone-600 uppercase tracking-widest truncate">{version.filename}</p>
+								</div>
 
-									<!-- Metadata -->
-									<div class="space-y-2">
-										<div class="flex items-center justify-between text-sm">
-											<span class="text-slate-500">Uploaded</span>
-											<span class="text-slate-500 dark:text-slate-400"
-												>{new Date(version.uploaded_at).toLocaleDateString()}</span
-											>
-										</div>
-										<div class="flex items-center justify-between text-sm">
-											<span class="text-slate-500">Time</span>
-											<span class="text-slate-500 dark:text-slate-400"
-												>{new Date(version.uploaded_at).toLocaleTimeString()}</span
-											>
-										</div>
+								<!-- Metadata Table -->
+								<div class="grid grid-cols-2 gap-6 pt-6 border-t border-stone-800/50">
+									<div class="space-y-1.5">
+										<span class="block font-jetbrains text-[8px] font-black text-stone-700 uppercase tracking-widest">DEPLOY_DATE</span>
+										<span class="font-jetbrains text-[10px] font-black text-stone-400 uppercase tracking-tight">{new Date(version.uploaded_at).toLocaleDateString()}</span>
 									</div>
+									<div class="space-y-1.5 text-right">
+										<span class="block font-jetbrains text-[8px] font-black text-stone-700 uppercase tracking-widest">TIMESTAMP</span>
+										<span class="font-jetbrains text-[10px] font-black text-stone-400 uppercase tracking-tight">{new Date(version.uploaded_at).toLocaleTimeString([], { hour12: false })}</span>
+									</div>
+								</div>
 
-									<!-- Comment -->
-									{#if version.comment}
-										<div class="pt-3 border-t border-slate-300 dark:border-slate-700">
-											<p class="text-sm text-slate-500 dark:text-slate-400 line-clamp-3">
-												{version.comment}
-											</p>
+								<!-- Release Notes -->
+								{#if version.comment}
+									<div class="bg-black/40 p-4 border-l-2 border-stone-800 group-hover:border-rust/30 transition-all">
+										<p class="font-jetbrains text-[10px] font-bold text-stone-500 leading-relaxed uppercase italic">
+											&gt;&gt; "{version.comment}"
+										</p>
+									</div>
+								{/if}
+
+								<!-- Tactical Actions -->
+								<div class="flex gap-3 pt-4 border-t border-stone-800/50">
+									{#if !version.is_active}
+										<button
+											onclick={() => requestActivate(version.id)}
+											class="flex-1 px-6 py-3 bg-stone-900 hover:bg-rust border border-stone-800 hover:border-rust-light text-stone-500 hover:text-white font-heading font-black text-[10px] uppercase tracking-widest transition-all shadow-lg active:translate-y-px"
+										>
+											Execute_Activate
+										</button>
+										<button
+											onclick={() => requestDelete(version.id)}
+											class="p-3 bg-red-950/20 border border-red-900/30 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-lg active:scale-95"
+											title="Delete Version"
+										>
+											<Trash2 class="w-4 h-4" />
+										</button>
+									{:else}
+										<div
+											class="flex-1 py-3 bg-rust/5 border border-rust/20 text-rust font-heading font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-inner"
+										>
+											<CheckCircle class="w-4 h-4 animate-pulse" />
+											Primary_Kernel_Active
 										</div>
 									{/if}
 								</div>
@@ -848,145 +792,141 @@
 	{#if activeTab === 'history'}
 		<!-- Modern Version History -->
 		<div
-			class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-800/40 via-slate-900/40 to-slate-800/40 border border-slate-300/50 dark:border-slate-700/50 backdrop-blur-sm shadow-2xl"
+			class="relative overflow-hidden bg-[#0a0a0a]/60 border border-stone-800 shadow-2xl industrial-frame"
 		>
+			<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.01] pointer-events-none"></div>
+			
 			<!-- Section Header -->
 			<div
-				class="relative px-8 py-6 border-b border-slate-300/50 dark:border-slate-700/50 bg-gradient-to-r from-slate-800/60 to-slate-900/60 backdrop-blur-sm"
+				class="relative px-10 py-8 border-b border-stone-800 bg-[#0a0a0a] backdrop-blur-xl"
 			>
-				<div class="flex items-center justify-between">
-					<div class="flex items-center gap-4">
+				<div class="flex flex-col md:flex-row md:items-center justify-between gap-8">
+					<div class="flex items-center gap-6">
 						<div
-							class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/25"
+							class="p-4 bg-rust/10 border border-rust/30 industrial-frame shadow-xl"
 						>
-							<History class="w-5 h-5 text-slate-900 dark:text-white" />
+							<History class="w-8 h-8 text-rust-light" />
 						</div>
 						<div>
-							<h2 class="text-xl font-bold text-slate-100">Version History</h2>
-							<p class="text-sm text-slate-500 dark:text-slate-400">
-								Manage deployed server versions and deployments
+							<h2 class="text-2xl font-heading font-black text-white uppercase tracking-tighter">VERSION_DEPLOYMENT_ARCHIVE</h2>
+							<p class="font-jetbrains text-[10px] text-stone-500 font-black uppercase tracking-widest mt-1">
+								Audit server-side binary transitions and state activations
 							</p>
 						</div>
 					</div>
 					<div
-						class="text-xs text-slate-500 bg-slate-800/50 px-3 py-1 rounded-md border border-slate-300/50 dark:border-slate-700/50"
+						class="px-5 py-2 font-jetbrains text-[10px] font-black text-stone-500 bg-stone-950 border border-stone-800 uppercase tracking-[0.2em] shadow-inner"
 					>
-						{$serverVersions.length} total versions
+						{$serverVersions.length}_TOTAL_RECORDS_MAPPED
 					</div>
 				</div>
 			</div>
 
 			<!-- Version List -->
-			<div class="p-6">
+			<div class="p-8">
 				{#if $serverVersions.length === 0}
 					<!-- Empty State -->
-					<div class="flex flex-col items-center justify-center py-16 text-center">
+					<div class="flex flex-col items-center justify-center py-32 text-center">
 						<div
-							class="w-20 h-20 bg-slate-800/30 rounded-full flex items-center justify-center border border-slate-300/30 dark:border-slate-700/30 mb-6"
+							class="w-24 h-24 bg-stone-900/40 border border-dashed border-stone-800 flex items-center justify-center industrial-frame mb-8 opacity-40"
 						>
-							<Package class="w-10 h-10 opacity-50 text-slate-500" />
+							<Package class="w-12 h-12 text-stone-600" />
 						</div>
-						<h3 class="text-xl font-semibold text-slate-500 dark:text-slate-400 mb-2">
-							No Versions Yet
+						<h3 class="font-heading font-black text-xl text-stone-700 uppercase tracking-[0.3em] mb-3">
+							Registry_Empty
 						</h3>
-						<p class="text-slate-600 max-w-md">
-							Upload your first game server package to get started with version management.
+						<p class="font-jetbrains text-[10px] font-bold text-stone-600 uppercase tracking-widest max-w-lg mx-auto">
+							Initialize first binary synchronization protocol to populate history buffer.
 						</p>
 						<button
 							onclick={() => (activeTab = 'upload')}
-							class="mt-6 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-slate-900 dark:text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/25 transition-all duration-300 flex items-center gap-2"
+							class="mt-10 px-8 py-3 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rust/20 transition-all active:translate-y-px"
 						>
-							<Upload class="w-5 h-5" />
-							Upload First Version
+							<Upload class="w-4 h-4 inline mr-2" />
+							Initialize_Ingress
 						</button>
 					</div>
 				{:else}
 					<!-- Version Cards Grid -->
-					<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+					<div class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 3xl:grid-cols-4 gap-8">
 						{#each $serverVersions as version}
 							<div
-								class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-300/50 dark:border-slate-700/50 backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-indigo-500/10"
+								class="group modern-industrial-card glass-panel relative overflow-hidden transition-all duration-500 hover:border-rust/40 shadow-xl !rounded-none"
 							>
 								<!-- Status Indicator -->
 								{#if version.is_active}
-									<div class="absolute top-4 right-4 z-20">
+									<div class="absolute top-6 right-6 z-20">
 										<div
-											class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-sm"
+											class="flex items-center gap-2.5 px-3 py-1 bg-rust text-white shadow-lg shadow-rust/20"
 										>
-											<div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-											<span class="text-xs font-semibold text-emerald-400">Active</span>
+											<div class="w-1.5 h-1.5 bg-white rounded-full animate-pulse shadow-lg"></div>
+											<span class="font-jetbrains text-[9px] font-black uppercase tracking-widest">ACTIVE</span>
 										</div>
 									</div>
 								{/if}
 
-								<!-- Background Effects -->
-								<div
-									class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-								></div>
-
-								<div class="relative z-10 p-6">
+								<div class="relative z-10 p-8 space-y-8">
 									<!-- Version Header -->
-									<div class="flex items-start justify-between mb-4">
-										<div class="space-y-1">
-											<h3 class="text-lg font-bold text-slate-100">
-												v{version.version || 'Unknown'}
+									<div class="flex items-start justify-between">
+										<div class="p-3 bg-rust/5 border border-rust/20 industrial-frame group-hover:border-rust/40 transition-all shadow-inner mr-4">
+											<Package class="w-6 h-6 text-rust group-hover:text-rust-light group-hover:scale-110 transition-all" />
+										</div>
+										<div class="space-y-2 flex-1 min-w-0">
+											<h3 class="text-3xl font-heading font-black text-white uppercase tracking-tighter group-hover:text-rust transition-colors duration-500">
+												REV_{version.version || '0.0.0'}
 											</h3>
-											<p class="text-xs text-slate-500 dark:text-slate-400 font-mono">
+											<p class="font-jetbrains text-[10px] font-black text-stone-600 uppercase tracking-widest truncate max-w-[200px]">
 												{version.filename}
 											</p>
 										</div>
 										{#if !version.is_active}
 											<div
-												class="px-2 py-1 rounded-md bg-slate-700/50 text-xs text-slate-500 dark:text-slate-400 border border-slate-600/30"
+												class="px-3 py-1 bg-stone-900 border border-stone-800 text-[9px] font-jetbrains font-black text-stone-600 uppercase tracking-widest"
 											>
-												Inactive
+												HALTED
 											</div>
 										{/if}
 									</div>
 
 									<!-- Upload Info -->
-									<div class="space-y-3 mb-6">
-										<div class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-											<Clock class="w-4 h-4" />
-											<span>Uploaded {new Date(version.uploaded_at).toLocaleDateString()}</span>
+									<div class="space-y-6">
+										<div class="flex items-center gap-3 font-jetbrains text-[10px] font-bold text-stone-500 uppercase tracking-widest">
+											<Clock class="w-4 h-4 text-stone-700" />
+											<span>DEPLOYED: {new Date(version.uploaded_at).toLocaleDateString()}</span>
 										</div>
 										{#if version.comment}
 											<div
-												class="p-3 bg-slate-800/50 rounded-lg border border-slate-300/30 dark:border-slate-700/30"
+												class="p-5 bg-stone-950 border-l-2 border-stone-800 group-hover:border-rust/30 transition-all shadow-inner"
 											>
-												<p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-													{version.comment}
+												<p class="font-jetbrains text-[10px] font-bold text-stone-500 leading-relaxed uppercase italic">
+													&gt;&gt; "{version.comment}"
 												</p>
 											</div>
 										{/if}
 									</div>
 
 									<!-- Actions -->
-									<div class="flex gap-2">
+									<div class="flex gap-3 pt-4 border-t border-stone-800/50">
 										{#if !version.is_active}
 											<button
 												onclick={() => requestActivate(version.id)}
-												class="flex-1 group/btn relative overflow-hidden bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-slate-900 dark:text-white font-semibold py-2.5 px-4 rounded-lg shadow-lg shadow-indigo-500/25 transition-all duration-300 flex items-center justify-center gap-2"
+												class="flex-1 px-6 py-3 bg-stone-900 hover:bg-rust border border-stone-800 hover:border-rust-light text-stone-500 hover:text-white font-heading font-black text-[10px] uppercase tracking-widest transition-all shadow-lg active:translate-y-px"
 											>
-												<div
-													class="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"
-												></div>
-												<Play class="w-4 h-4 relative z-10" />
-												<span class="text-sm relative z-10">Activate</span>
+												Execute_Activate
 											</button>
 											<button
 												onclick={() => requestDelete(version.id)}
-												class="p-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-lg transition-all duration-300 hover:scale-105"
+												class="p-3 bg-red-950/20 border border-red-900/30 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-lg active:scale-95"
 												title="Delete Version"
 											>
 												<Trash2 class="w-4 h-4" />
 											</button>
 										{:else}
 											<div
-												class="flex-1 py-2.5 px-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center gap-2"
+												class="flex-1 py-3 bg-rust/5 border border-rust/20 text-rust font-heading font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-inner"
 											>
-												<CheckCircle class="w-4 h-4 text-emerald-400" />
-												<span class="text-sm font-semibold text-emerald-400">Currently Active</span>
+												<CheckCircle class="w-4 h-4 animate-pulse" />
+												Primary_Kernel_Active
 											</div>
 										{/if}
 									</div>

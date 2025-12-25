@@ -377,42 +377,44 @@
 	}
 </script>
 
-<div class="flex justify-between items-center mb-10 relative">
+<div class="flex justify-between items-center mb-12 relative">
 	<div
 		class="transform transition-all duration-700 {isLoaded
 			? 'translate-x-0 opacity-100'
 			: '-translate-x-4 opacity-0'}"
 	>
-		<div class="flex items-center gap-3 mb-1">
-			<div class="h-px w-8 bg-rust"></div>
-			<span class="tactical-code text-rust">Sector_01 // Registry</span>
+		<div class="flex items-center gap-4 mb-2">
+			<div class="h-0.5 w-10 bg-rust"></div>
+			<span class="font-jetbrains text-[10px] font-black text-rust uppercase tracking-[0.3em]">Sector_01 // Registry_Sync</span>
 		</div>
 		<h1
-			class="text-4xl sm:text-5xl font-blackops text-white military-label tracking-tighter"
+			class="text-5xl sm:text-6xl font-heading font-black text-white tracking-tighter uppercase"
 		>
 			<span class="text-rust">EXILE</span>_SYSTEM_CORE
 		</h1>
-		<div class="flex items-center gap-3 mt-2">
+		<div class="flex items-center gap-4 mt-3">
 			<div
-				class={`px-2 py-0.5 tactical-code flex items-center gap-2 ${$isConnected ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}
+				class={`px-3 py-1 font-jetbrains font-bold text-[10px] uppercase flex items-center gap-2.5 ${$isConnected ? 'bg-emerald-500/5 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/5 text-red-400 border border-red-500/20 shadow-red-900/10'}`}
 			>
-				<span class={`w-1.5 h-1.5 rounded-full ${$isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`}></span>
+				<span class={`w-2 h-2 rounded-full ${$isConnected ? 'bg-emerald-400 animate-pulse shadow-emerald-500/50 shadow-lg' : 'bg-red-400'}`}></span>
 				{$connectionStatus}
 			</div>
-			<span class="text-[10px] font-industrial text-stone-600 uppercase tracking-[0.2em]">Sync_Protocol: Active</span>
+			<div class="w-px h-4 bg-stone-800"></div>
+			<span class="text-[10px] font-jetbrains font-bold text-stone-600 uppercase tracking-widest">Protocol_Active: v0.9.4</span>
 		</div>
 	</div>
 
-	<div class="flex items-center gap-4">
+	<div class="flex items-center gap-6">
 		<!-- Add Spawner Button -->
 		<button
 			onclick={() => (showAddSpawnerModal = true)}
-			class="group relative flex items-center gap-3 px-6 py-3 bg-white text-black font-black font-heading text-xs rounded-none border-2 border-white hover:bg-rust hover:text-white hover:border-rust transition-all duration-300 shadow-[4px_4px_0px_rgba(255,255,255,0.2)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none {isLoaded
+			class="group relative flex items-center gap-4 px-8 py-4 bg-white text-black font-black font-heading text-xs rounded-none border-2 border-white hover:bg-rust hover:text-white hover:border-rust transition-all duration-500 shadow-2xl active:translate-y-px {isLoaded
 				? 'translate-x-0 opacity-100'
 				: 'translate-x-4 opacity-0'}"
 		>
-			<Plus class="w-4 h-4" />
-			<span class="uppercase tracking-widest">Init_Instance</span>
+			<Plus class="w-5 h-5" />
+			<span class="uppercase tracking-[0.2em]">Initialize_Node</span>
+			<div class="absolute -bottom-1 -right-1 w-full h-full border-r-2 border-b-2 border-rust/30 group-hover:border-white/30 transition-colors"></div>
 		</button>
 
 		<div class="relative group">
@@ -422,7 +424,7 @@
 </div>
 
 <!-- Stats Grid -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
 	<div
 		class="transform transition-all duration-700 {animateStats
 			? 'translate-y-0 opacity-100'
@@ -469,7 +471,7 @@
 </div>
 
 <!-- Secondary Stats & Resources -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-10">
 	<div
 		class="transform transition-all duration-700 hover:scale-[1.01] {animateStats
 			? 'translate-y-0 opacity-100'
@@ -508,7 +510,7 @@
 
 <!-- System Topology -->
 <div
-	class="mb-8 h-[400px] lg:h-[600px] transform transition-all duration-700 {animateStats
+	class="mb-10 h-[500px] lg:h-[700px] xl:h-[800px] w-full transform transition-all duration-700 {animateStats
 		? 'translate-y-0 opacity-100'
 		: 'translate-y-12 opacity-0'}"
 	style="animation-delay: 0.65s;"
@@ -518,38 +520,39 @@
 
 <!-- Spawners Section -->
 <div
-	class="bg-stone-900/20 border-2 border-stone-800 rounded-none overflow-hidden transform transition-all duration-700 hover:border-rust/30 shadow-xl {animateStats
+	class="modern-industrial-card border-stone-800 rounded-none overflow-hidden transform transition-all duration-700 hover:border-rust/30 shadow-2xl {animateStats
 		? 'translate-y-0 opacity-100'
 		: 'translate-y-12 opacity-0'}"
 	style="animation-delay: 0.7s;"
 >
 	<div
-		class="border-b-2 border-stone-800 px-6 py-4 flex justify-between items-center bg-stone-900/40"
+		class="border-b border-stone-800 px-6 py-5 flex justify-between items-center bg-stone-950/60 backdrop-blur-xl"
 	>
 		<div class="flex items-center gap-4">
-			<div class="p-2 bg-rust/10 border border-rust/30 rounded-none">
-				<Server class="w-4 h-4 text-rust-light" />
+			<div class="p-2.5 bg-rust/10 border border-rust/30 rounded-none industrial-frame">
+				<Server class="w-5 h-5 text-rust-light" />
 			</div>
 			<div>
-				<h2 class="text-xl font-bold text-stone-100 tracking-tight uppercase">Synchronized_Nodes</h2>
-				<div class="flex items-center gap-2">
-					<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-					<span class="text-[9px] font-mono text-stone-500 uppercase tracking-widest">Active_Registry_Stream</span>
+				<h2 class="text-xl font-heading font-black text-stone-100 tracking-tighter uppercase">Synchronized_Nodes</h2>
+				<div class="flex items-center gap-2 mt-0.5">
+					<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.4)]"></span>
+					<span class="text-[9px] font-jetbrains font-bold text-stone-500 uppercase tracking-[0.2em]">Active_Registry_Stream</span>
 				</div>
 			</div>
 		</div>
-		<div class="flex items-center gap-4">
+		<div class="flex items-center gap-6">
 			<div class="hidden sm:flex flex-col items-end">
-				<span class="tactical-code text-rust-light">System_Archive</span>
-				<span class="text-[10px] font-industrial text-white uppercase tracking-widest">Buffer_Optimized</span>
+				<span class="font-jetbrains text-[9px] font-black text-rust-light uppercase tracking-widest">System_Archive</span>
+				<span class="text-[10px] font-heading font-black text-white uppercase tracking-widest mt-0.5">Buffer_Optimized</span>
 			</div>
-			<div class="h-10 w-px bg-stone-800"></div>
+			<div class="h-10 w-px bg-stone-800/50"></div>
 			<span
-				class="text-[10px] font-black font-industrial bg-rust/20 text-rust-light px-4 py-1.5 border border-rust/30 uppercase tracking-widest"
+				class="text-[10px] font-heading font-black bg-rust/20 text-rust-light px-5 py-2 border border-rust/30 uppercase tracking-[0.2em] shadow-inner"
 				>Real-time</span>
 		</div>
 	</div>
-	<div class="p-0 bg-black/20 backdrop-blur-sm">
+	<div class="p-0 bg-black/40 backdrop-blur-md relative">
+		<div class="absolute inset-0 bg-gradient-to-b from-transparent via-rust/5 to-transparent pointer-events-none opacity-20"></div>
 		<SpawnerTable
 			bind:this={spawnerTableComponent}
 			spawners={$spawners}
