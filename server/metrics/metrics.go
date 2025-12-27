@@ -115,6 +115,18 @@ type CombinedMetrics struct {
 	Spawners SpawnerMetrics  `json:"spawners"`
 	Database DatabaseMetrics `json:"database"`
 	Network  NetworkMetrics  `json:"network"`
+	RedEye   RedEyeMetrics   `json:"redeye"`
+}
+
+// RedEyeMetrics holds security-related metrics
+type RedEyeMetrics struct {
+	TotalBlocks          int64  `json:"total_blocks"`
+	TotalRateLimits      int64  `json:"total_rate_limits"`
+	ActiveBans           int    `json:"active_bans"`
+	TotalRules           int    `json:"total_rules"`
+	AvgProcessingTimeMs  float64 `json:"avg_processing_time_ms"`
+	ThreatLevel          string `json:"threat_level"`
+	LastBlockAt          string `json:"last_block_at"`
 }
 
 // DatabaseMetrics holds database-specific metrics
@@ -485,6 +497,32 @@ func (mc *MetricsCollector) CollectAllMetrics() CombinedMetrics {
 		Spawners: mc.CollectSpawnerMetrics(),
 		Database: mc.CollectDatabaseMetrics(),
 		Network:  mc.CollectNetworkMetrics(),
+		RedEye:   mc.CollectRedEyeMetrics(),
+	}
+}
+
+// CollectRedEyeMetrics gathers security statistics
+func (mc *MetricsCollector) CollectRedEyeMetrics() RedEyeMetrics {
+	registry.GlobalStats.Mu.RLock()
+	defer registry.GlobalStats.Mu.RUnlock()
+
+	threatLevel := "LOW"
+	if registry.GlobalStats.RedEyeActiveBans > 100 || registry.GlobalStats.RedEyeTotalBlocks > 5000 {
+		threatLevel = "CRITICAL"
+	} else if registry.GlobalStats.RedEyeActiveBans > 20 || registry.GlobalStats.RedEyeTotalBlocks > 1000 {
+		threatLevel = "HIGH"
+	} else if registry.GlobalStats.RedEyeActiveBans > 5 || registry.GlobalStats.RedEyeTotalBlocks > 100 {
+		threatLevel = "MODERATE"
+	}
+
+	return RedEyeMetrics{
+		TotalBlocks:         registry.GlobalStats.RedEyeTotalBlocks,
+		TotalRateLimits:     registry.GlobalStats.RedEyeTotalRateLimit,
+		ActiveBans:          registry.GlobalStats.RedEyeActiveBans,
+		TotalRules:           0, // Would need redeye registry for this
+		AvgProcessingTimeMs: 0.12, // Placeholder for actual timing
+		ThreatLevel:         threatLevel,
+		LastBlockAt:         time.Now().Format(time.RFC3339), // Placeholder
 	}
 }
 

@@ -377,7 +377,7 @@
 	}
 </script>
 
-<div class="flex justify-between items-center mb-12 relative">
+<div class="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-12 relative gap-8">
 	<div
 		class="transform transition-all duration-700 {isLoaded
 			? 'translate-x-0 opacity-100'
@@ -385,35 +385,35 @@
 	>
 		<div class="flex items-center gap-4 mb-2">
 			<div class="h-0.5 w-10 bg-rust"></div>
-			<span class="font-jetbrains text-[10px] font-black text-rust uppercase tracking-[0.3em]">Sector_01 // Registry_Sync</span>
+			<span class="font-jetbrains text-[10px] font-black text-rust uppercase tracking-[0.3em]">System Overview // Controller</span>
 		</div>
 		<h1
-			class="text-5xl sm:text-6xl font-heading font-black text-white tracking-tighter uppercase"
+			class="text-3xl sm:text-5xl lg:text-6xl font-heading font-black text-white tracking-tighter uppercase leading-none"
 		>
-			<span class="text-rust">EXILE</span>_SYSTEM_CORE
+			<span class="text-rust">EXILE</span>_CONTROLLER
 		</h1>
-		<div class="flex items-center gap-4 mt-3">
+		<div class="flex flex-wrap items-center gap-4 mt-3">
 			<div
 				class={`px-3 py-1 font-jetbrains font-bold text-[10px] uppercase flex items-center gap-2.5 ${$isConnected ? 'bg-emerald-500/5 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/5 text-red-400 border border-red-500/20 shadow-red-900/10'}`}
 			>
 				<span class={`w-2 h-2 rounded-full ${$isConnected ? 'bg-emerald-400 animate-pulse shadow-emerald-500/50 shadow-lg' : 'bg-red-400'}`}></span>
 				{$connectionStatus}
 			</div>
-			<div class="w-px h-4 bg-stone-800"></div>
-			<span class="text-[10px] font-jetbrains font-bold text-stone-600 uppercase tracking-widest">Protocol_Active: v0.9.4</span>
+			<div class="w-px h-4 bg-stone-800 hidden sm:block"></div>
+			<span class="text-[10px] font-jetbrains font-bold text-stone-600 uppercase tracking-widest">Version 0.9.4</span>
 		</div>
 	</div>
 
-	<div class="flex items-center gap-6">
+	<div class="flex items-center justify-between sm:justify-end gap-4 lg:gap-6 w-full lg:w-auto">
 		<!-- Add Spawner Button -->
 		<button
 			onclick={() => (showAddSpawnerModal = true)}
-			class="group relative flex items-center gap-4 px-8 py-4 bg-white text-black font-black font-heading text-xs rounded-none border-2 border-white hover:bg-rust hover:text-white hover:border-rust transition-all duration-500 shadow-2xl active:translate-y-px {isLoaded
-				? 'translate-x-0 opacity-100'
-				: 'translate-x-4 opacity-0'}"
+			class="group relative flex items-center gap-4 px-6 sm:px-8 py-3 sm:py-4 bg-white text-black font-black font-heading text-[10px] sm:text-xs rounded-none border-2 border-white hover:bg-rust hover:text-white hover:border-rust transition-all duration-500 shadow-2xl active:translate-y-px flex-1 sm:flex-initial {isLoaded
+				? 'translate-y-0 opacity-100'
+				: 'translate-y-4 opacity-0'}"
 		>
-			<Plus class="w-5 h-5" />
-			<span class="uppercase tracking-[0.2em]">Initialize_Node</span>
+			<Plus class="w-4 h-4 sm:w-5 sm:h-5" />
+			<span class="uppercase tracking-[0.2em]">Add Node</span>
 			<div class="absolute -bottom-1 -right-1 w-full h-full border-r-2 border-b-2 border-rust/30 group-hover:border-white/30 transition-colors"></div>
 		</button>
 
@@ -431,7 +431,7 @@
 			: 'translate-y-8 opacity-0'}"
 		style="animation-delay: 0.1s;"
 	>
-		<StatsCard title="OPERATIONAL_UPTIME" value={formatUptime($stats.uptime)} Icon={Clock} color="blue" />
+		<StatsCard title="UPTIME" value={formatUptime($stats.uptime)} Icon={Clock} color="cyan" />
 	</div>
 	<div
 		class="transform transition-all duration-700 {animateStats
@@ -440,7 +440,7 @@
 		style="animation-delay: 0.2s;"
 	>
 		<StatsCard
-			title="RECOGNIZED_SPAWNERS"
+			title="ACTIVE NODES"
 			value={$stats.active_spawners}
 			Icon={Server}
 			color="emerald"
@@ -453,7 +453,7 @@
 		style="animation-delay: 0.3s;"
 	>
 		<StatsCard
-			title="TOTAL_BUFFER_REQUESTS"
+			title="TOTAL REQUESTS"
 			value={$stats.total_requests}
 			Icon={Activity}
 			color="purple"
@@ -466,7 +466,7 @@
 			: 'translate-y-8 opacity-0'}"
 		style="animation-delay: 0.4s;"
 	>
-		<StatsCard title="CRITICAL_FAULT_COUNT" value={$stats.total_errors} Icon={AlertCircle} color="red" />
+		<StatsCard title="SYSTEM ERRORS" value={$stats.total_errors} Icon={AlertCircle} color="red" />
 	</a>
 </div>
 
@@ -479,9 +479,9 @@
 		style="animation-delay: 0.5s;"
 	>
 		<StatsCard
-			title="NETWORK_TRAFFIC"
+			title="TRAFFIC"
 			value=""
-			subValue={`<span class="text-orange-400">UP: ${formatBytes($stats.bytes_sent)}</span> <span class="text-stone-700 mx-2">|</span> <span class="text-rust-light">DOWN: ${formatBytes($stats.bytes_received)}</span>`}
+			subValue={`<span class="text-orange-400">SENT: ${formatBytes($stats.bytes_sent)}</span> <span class="text-stone-700 mx-2">|</span> <span class="text-rust-light">RECEIVED: ${formatBytes($stats.bytes_received)}</span>`}
 			Icon={Network}
 			color="orange"
 		/>
@@ -497,10 +497,10 @@
 		role="tooltip"
 	>
 		<StatsCard
-			title="DATABASE_ENGINE"
+			title="DATABASE"
 			value={$stats.db_connected ? 'CONNECTED' : 'OFFLINE'}
 			subValue={$stats.db_connected
-				? `<span class="text-emerald-400">CONNECTIONS: ${$stats.db_open_connections}</span> <span class="text-stone-700 mx-2">|</span> <span class="text-rust-light">IN_USE: ${$stats.db_in_use}</span>`
+				? `<span class="text-emerald-400">CONNS: ${$stats.db_open_connections}</span> <span class="text-stone-700 mx-2">|</span> <span class="text-rust-light">IN USE: ${$stats.db_in_use}</span>`
 				: 'RECONNECTING...'}
 			Icon={Database}
 			color={$stats.db_connected ? 'emerald' : 'red'}

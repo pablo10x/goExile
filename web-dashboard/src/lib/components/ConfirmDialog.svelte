@@ -81,7 +81,11 @@
 
 		<!-- Modal Container - Industrial Terminal Style -->
 		<div
-			class="relative w-full max-w-lg bg-[#050505] border border-stone-800 rounded-none {isCritical ? 'border-red-900/50' : 'border-rust/30'} shadow-2xl glass-panel overflow-hidden z-[460] industrial-frame"
+			class="relative w-full max-w-lg bg-[#050505] shadow-2xl glass-panel overflow-hidden z-[460]
+			{isCritical && !$siteSettings.aesthetic.industrial_styling ? 'border-red-900/50' : ''}
+			{!isCritical && !$siteSettings.aesthetic.industrial_styling ? 'border-rust/30' : ''}"
+			class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
+			class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
 			transition:modalScale
 		>
 			<!-- Status Bar -->
@@ -136,7 +140,9 @@
 
 				{#if error}
 					<div
-						class="p-5 bg-red-950/20 border border-red-500/30 text-red-500 font-jetbrains text-[10px] font-black uppercase tracking-widest industrial-frame"
+						class="p-5 bg-red-950/20 text-red-500 font-jetbrains text-[10px] font-black uppercase tracking-widest"
+						class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
+						class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
 						transition:scale={{ start: 0.98, duration: 200 }}
 					>
 						<div class="flex items-center gap-4">
@@ -187,7 +193,9 @@
 						</button>
 						<button
 							onclick={handleConfirm}
-							class="px-8 py-3 font-heading font-black text-[11px] uppercase tracking-[0.2em] italic transition-all {isCritical ? 'bg-red-700 text-white hover:bg-red-600' : 'bg-rust text-white hover:bg-rust-light'} shadow-lg active:translate-y-px active:shadow-none industrial-frame"
+							class="px-8 py-3 font-heading font-black text-[11px] uppercase tracking-[0.2em] italic transition-all {isCritical ? 'bg-red-700 text-white hover:bg-red-600' : 'bg-rust text-white hover:bg-rust-light'} shadow-lg active:translate-y-px active:shadow-none"
+							class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
+							class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
 						>
 							{confirmText.toUpperCase()}
 						</button>

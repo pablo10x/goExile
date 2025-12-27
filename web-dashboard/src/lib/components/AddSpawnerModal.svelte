@@ -14,6 +14,7 @@
 		Sparkles,
 		RefreshCw
 	} from 'lucide-svelte';
+	import { siteSettings } from '$lib/stores';
 
 	let {
 		isOpen = $bindable(false)
@@ -232,7 +233,9 @@
 
 		<!-- Modal Container -->
 		<div
-			class="modal-container relative w-full max-w-xl bg-[#050505] border border-stone-800 rounded-none shadow-2xl overflow-hidden backdrop-blur-xl industrial-frame"
+			class="modal-container relative w-full max-w-xl bg-[#050505] border border-stone-800 rounded-none shadow-2xl overflow-hidden backdrop-blur-xl"
+			class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
+			class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
 			transition:modalScale
 		>
 			<!-- Animated gradient backgrounds -->
@@ -287,7 +290,9 @@
 				<!-- Header -->
 				<div class="flex items-center gap-5 mb-8">
 					<div
-						class="icon-wrapper flex-shrink-0 p-4 rounded-none bg-rust/10 border border-rust/30 industrial-frame shadow-lg"
+						class="icon-wrapper flex-shrink-0 p-4 rounded-none bg-rust/10 border border-rust/30 shadow-lg"
+						class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
+						class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
 					>
 						<div class="animate-icon-pop">
 							<Server class="w-8 h-8 text-rust-light" />
@@ -327,7 +332,10 @@
 						class="flex flex-col items-center justify-center py-10 error-bounce"
 						transition:scale={{ start: 0.95, duration: 300, easing: cubicOut }}
 					>
-						<div class="p-6 rounded-none bg-red-500/5 border border-red-500/20 mb-6 industrial-frame shadow-2xl">
+						<div class="p-6 rounded-none bg-red-500/5 border border-red-500/20 mb-6 shadow-2xl"
+							 class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
+							 class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
+						>
 							<AlertCircle class="w-14 h-14 text-red-500 animate-shake-error" />
 						</div>
 						<h3 class="text-xl font-heading font-black text-red-500 mb-2 uppercase tracking-tighter">PROTO_FAULT_0x04</h3>
@@ -368,7 +376,9 @@
 
 								<!-- Success circle -->
 								<div
-									class="relative w-28 h-28 rounded-none bg-rust/10 border-2 border-rust/40 flex items-center justify-center success-circle industrial-frame shadow-rust/20 shadow-2xl"
+									class="relative w-28 h-28 rounded-none bg-rust/10 border-2 border-rust/40 flex items-center justify-center success-circle shadow-rust/20 shadow-2xl"
+									class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
+									class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
 								>
 									<CheckCircle2 class="w-14 h-12 text-rust animate-check-pop" />
 								</div>
@@ -392,7 +402,10 @@
 							class="spawner-card modern-industrial-card glass-panel p-6"
 						>
 							<div class="relative flex items-center gap-6">
-								<div class="p-4 rounded-none bg-rust/10 border border-rust/30 industrial-frame">
+								<div class="p-4 rounded-none bg-rust/10 border border-rust/30"
+									 class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
+									 class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
+								>
 									<Server class="w-10 h-10 text-rust-light" />
 								</div>
 								<div class="flex-1">
@@ -510,7 +523,9 @@
 								class="absolute inset-0 bg-rust/5 rounded-none blur-xl"
 							></div>
 							<div
-								class="relative bg-stone-950 border border-stone-800 p-6 shadow-inner industrial-frame"
+								class="relative bg-stone-950 border border-stone-800 p-6 shadow-inner"
+								class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
+								class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
 							>
 								<div class="flex items-center gap-3 mb-3">
 									<Key class="w-4 h-4 text-rust" />
@@ -564,7 +579,9 @@
 
 						<!-- Instructions -->
 						<div
-							class="bg-stone-900/40 border border-stone-800 p-5 industrial-frame"
+							class="bg-stone-900/40 border border-stone-800 p-5"
+							class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
+							class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
 						>
 							<h4 class="font-heading font-black text-[10px] text-stone-400 uppercase tracking-[0.2em] mb-3">
 								OPERATIONAL_STEPS

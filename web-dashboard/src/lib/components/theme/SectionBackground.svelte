@@ -9,22 +9,25 @@
 		mixBlend = 'screen',
 		speed = undefined,
 		color = undefined,
-		density = undefined 
+		density = undefined,
+		size = undefined
 	} = $props<{
 		type?: string;
 		mixBlend?: string;
 		speed?: number;
 		color?: string;
 		density?: number;
+		size?: number;
 	}>();
 
-	let currentSettings = $derived(($backgroundConfig.settings as any)[type] || { intensity: 0.5, speed: 1, density: 1, color: '#f97316' });
+	let currentSettings = $derived(($backgroundConfig.settings as any)[type] || { intensity: 0.5, speed: 1, density: 1, color: '#f97316', size: 1.0 });
 
 	// Use prop if provided, else use global config, else fallback defaults
 	let activeSpeed = $derived(speed ?? currentSettings.speed ?? 1);
 	let activeColor = $derived(color ?? currentSettings.color ?? '#f97316');
 	let activeDensity = $derived(density ?? currentSettings.density ?? 1);
 	let activeIntensity = $derived(currentSettings.intensity ?? 0.5);
+	let activeSize = $derived(size ?? currentSettings.size ?? 1.0);
 
 	let perf = $derived($siteSettings.performance || { high_quality_smoke: true, particle_density: 0.8, low_power_mode: false });
 	
@@ -48,9 +51,47 @@
 	let materials: (THREE.Material | THREE.ShaderMaterial)[] = [];
 	let geometries: THREE.BufferGeometry[] = [];
 
+	// Cached data to avoid flickering on settings change
+	let cachedParticles = $state<{id: number, x: number, y: number, baseSize: number, baseDuration: number, delay: number}[]>([]);
+	let lastInitType = '';
+	let lastInitDensity = 0;
+
 	function init() {
 		if (!container || type === 'none' || perf.low_power_mode) return;
 		
+		const isTypeChange = type !== lastInitType;
+		const isDensityChange = activeDensity !== lastInitDensity;
+
+		// Clear cached particles if type changed
+		if (isTypeChange) {
+			cachedParticles = [];
+		}
+
+		if (type === 'particle_network') {
+			cleanup();
+			const count = Math.floor(40 * activeDensity);
+			if (cachedParticles.length !== count) {
+				cachedParticles = Array.from({ length: count }, (_, i) => ({
+					id: i,
+					x: Math.random() * 100,
+					y: Math.random() * 100,
+					baseSize: Math.random() * 4 + 2,
+					baseDuration: Math.random() * 4 + 3,
+					delay: Math.random() * 3
+				}));
+			}
+			lastInitType = type;
+			lastInitDensity = activeDensity;
+			return; 
+		}
+
+		// For Three.js engines, only full re-init if structure changes
+		if (!isTypeChange && !isDensityChange && renderer) {
+			return;
+		}
+
+		cleanup();
+
 		const width = container.clientWidth;
 		const height = container.clientHeight;
 		const isMobile = window.innerWidth < 768;
@@ -75,95 +116,84 @@
 		// --- ARCHITECTURE: Floating Brutalist Blocks ---
 		if (type === 'architecture') {
 			const group = new THREE.Group();
-			const count = Math.floor(15 * activeDensity * mobileDensityMultiplier);
+			const count = Math.floor(25 * activeDensity * mobileDensityMultiplier);
 			const geometry = new THREE.BoxGeometry(1, 1, 1);
 			geometries.push(geometry);
 
 			for(let i=0; i<count; i++) {
+				const isWireframe = Math.random() > 0.7;
 				const material = new THREE.MeshBasicMaterial({ 
 					color: themeColor,
-					wireframe: Math.random() > 0.5,
+					wireframe: isWireframe,
 					transparent: true,
-					opacity: (0.1 + Math.random() * 0.2) * activeIntensity * 2
+					opacity: (isWireframe ? 0.05 : 0.1) * activeIntensity * 2
 				});
 				materials.push(material);
 				const box = new THREE.Mesh(geometry, material);
 				
-				const scaleX = 1 + Math.random() * 10;
-				const scaleY = 1 + Math.random() * 20;
-				const scaleZ = 1 + Math.random() * 10;
+				const scaleX = 0.5 + Math.random() * 15;
+				const scaleY = 0.5 + Math.random() * 30;
+				const scaleZ = 0.5 + Math.random() * 15;
 				box.scale.set(scaleX, scaleY, scaleZ);
 				
 				box.position.set(
+					(Math.random() - 0.5) * 80,
 					(Math.random() - 0.5) * 60,
-					(Math.random() - 0.5) * 40,
-					(Math.random() - 0.5) * 40
+					(Math.random() - 0.5) * 50
 				);
 				box.userData = { 
-					rotX: (Math.random() - 0.5) * 0.002, 
-					rotY: (Math.random() - 0.5) * 0.002 
+					rotX: (Math.random() - 0.5) * 0.001, 
+					rotY: (Math.random() - 0.5) * 0.001,
+					floatSpeed: 0.001 + Math.random() * 0.002,
+					floatOffset: Math.random() * Math.PI * 2
 				};
 				group.add(box);
 			}
 			mesh = group;
 		}
 
-		// --- TACTICAL_GRID: Advanced Radar Mapping ---
+		// --- TACTICAL_GRID: Radar Scan Line ---
 		else if (type === 'tactical_grid') {
 			const group = new THREE.Group();
-			const gridGeo = new THREE.PlaneGeometry(100, 100, isMobile ? 10 : 20, isMobile ? 10 : 20);
-			geometries.push(gridGeo);
-			const gridMat = new THREE.MeshBasicMaterial({ 
+			const geometry = new THREE.PlaneGeometry(100, 100, 1, 1);
+			geometries.push(geometry);
+			const material = new THREE.MeshBasicMaterial({ 
 				color: themeColor, 
-				wireframe: true, 
 				transparent: true, 
-				opacity: 0.05 * activeIntensity * 2
+				opacity: 0.05 * activeIntensity,
+				wireframe: true 
 			});
-			materials.push(gridMat);
-			const grid = new THREE.Mesh(gridGeo, gridMat);
+			materials.push(material);
+			const grid = new THREE.Mesh(geometry, material);
 			grid.rotation.x = -Math.PI / 2;
-			grid.position.y = -10;
 			group.add(grid);
 
-			// Scanning Plane
-			const scanGeo = new THREE.PlaneGeometry(100, 2);
+			const scanGeo = new THREE.PlaneGeometry(100, 2, 1, 1);
 			geometries.push(scanGeo);
 			const scanMat = new THREE.MeshBasicMaterial({ 
 				color: themeColor, 
 				transparent: true, 
-				opacity: 0.2 * activeIntensity * 2, 
-				side: THREE.DoubleSide 
+				opacity: 0.3 * activeIntensity,
+				side: THREE.DoubleSide
 			});
 			materials.push(scanMat);
 			const scan = new THREE.Mesh(scanGeo, scanMat);
 			scan.rotation.x = -Math.PI / 2;
-			scan.position.y = -9.9;
 			group.add(scan);
 			group.userData = { scanNode: scan };
-
-			// Random Blips
-			const blipGeo = new THREE.SphereGeometry(0.2, 8, 8);
-			geometries.push(blipGeo);
-			for(let i=0; i<Math.floor(10 * activeDensity * mobileDensityMultiplier); i++) {
-				const blipMat = new THREE.MeshBasicMaterial({ color: themeColor, transparent: true, opacity: activeIntensity });
-				materials.push(blipMat);
-				const blip = new THREE.Mesh(blipGeo, blipMat);
-				blip.position.set((Math.random()-0.5)*80, -9.8, (Math.random()-0.5)*80);
-				group.add(blip);
-			}
 			mesh = group;
 		}
 
 		// --- NEURAL_NETWORK: Plexus Connection Nodes ---
 		else if (type === 'neural_network') {
-			const count = Math.floor(100 * activeDensity * perf.particle_density * mobileDensityMultiplier);
+			const count = Math.floor(150 * activeDensity * perf.particle_density * mobileDensityMultiplier);
 			const positions = new Float32Array(count * 3);
 			const velocities = [];
 			for(let i=0; i<count; i++) {
-				positions[i*3] = (Math.random() - 0.5) * 50;
-				positions[i*3+1] = (Math.random() - 0.5) * 50;
-				positions[i*3+2] = (Math.random() - 0.5) * 50;
-				velocities.push(new THREE.Vector3((Math.random()-0.5)*0.02, (Math.random()-0.5)*0.02, (Math.random()-0.5)*0.02));
+				positions[i*3] = (Math.random() - 0.5) * 60;
+				positions[i*3+1] = (Math.random() - 0.5) * 60;
+				positions[i*3+2] = (Math.random() - 0.5) * 60;
+				velocities.push(new THREE.Vector3((Math.random()-0.5)*0.015, (Math.random()-0.5)*0.015, (Math.random()-0.5)*0.015));
 			}
 
 			const geometry = new THREE.BufferGeometry();
@@ -172,9 +202,9 @@
 
 			const material = new THREE.PointsMaterial({ 
 				color: themeColor, 
-				size: 0.5, 
+				size: isMobile ? 0.4 : 0.6, 
 				transparent: true, 
-				opacity: 0.5 * activeIntensity
+				opacity: 0.6 * activeIntensity
 			});
 			materials.push(material);
 
@@ -182,9 +212,14 @@
 			
 			// Lines for connections
 			const lineGeo = new THREE.BufferGeometry();
-			lineGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(count * count * 2 * 3), 3));
+			lineGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(count * 10 * 2 * 3), 3));
 			geometries.push(lineGeo);
-			const lineMat = new THREE.LineBasicMaterial({ color: themeColor, transparent: true, opacity: 0.1 * activeIntensity });
+			const lineMat = new THREE.LineBasicMaterial({ 
+				color: themeColor, 
+				transparent: true, 
+				opacity: 0.08 * activeIntensity,
+				blending: THREE.AdditiveBlending 
+			});
 			materials.push(lineMat);
 			const lines = new THREE.LineSegments(lineGeo, lineMat);
 
@@ -240,9 +275,9 @@
 					varying float vDist;
 					void main() {
 						vec3 pos = position;
-						float noise = sin(pos.x * 0.1 + uTime) * cos(pos.y * 0.1 + uTime) * 2.0;
+						float noise = sin(pos.x * 0.05 + uTime * 0.5) * cos(pos.y * 0.05 + uTime * 0.5) * 4.0;
 						pos.z += noise;
-						vDist = 1.0 - (length(pos.xy) / 100.0);
+						vDist = 1.0 - (length(pos.xy) / 140.0);
 						gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
 					}
 				`,
@@ -251,18 +286,91 @@
 					uniform float uIntensity;
 					varying float vDist;
 					void main() {
-						gl_FragColor = vec4(uColor, vDist * 0.2 * uIntensity * 2.0);
+						float scanline = sin(gl_FragCoord.y * 0.5) * 0.1 + 0.9;
+						gl_FragColor = vec4(uColor, vDist * 0.15 * uIntensity * 2.0 * scanline);
 					}
 				`
 			});
 			materials.push(material);
 			const plane = new THREE.Mesh(geometry, material);
-			plane.rotation.x = -Math.PI / 2.5;
-			plane.position.y = -15;
+			plane.rotation.x = -Math.PI / 2.2;
+			plane.position.y = -20;
 			mesh = plane;
 		}
 
+		// --- CYBER_OCEAN: Rolling Waves of Data ---
+		else if (type === 'cyber_ocean') {
+			const segs = isMobile ? 40 : 80;
+			const geometry = new THREE.PlaneGeometry(150, 150, segs, segs);
+			geometries.push(geometry);
+
+			uniforms = {
+				uTime: { value: 0 },
+				uColor: { value: themeColor },
+				uIntensity: { value: activeIntensity }
+			};
+
+			const material = new THREE.ShaderMaterial({
+				uniforms,
+				wireframe: true,
+				transparent: true,
+				vertexShader: `
+					uniform float uTime;
+					varying float vHeight;
+					varying float vDist;
+					void main() {
+						vec3 pos = position;
+						float h = sin(pos.x * 0.1 + uTime) * cos(pos.y * 0.1 + uTime * 0.5) * 5.0;
+						h += sin(pos.x * 0.05 - uTime * 0.3) * 2.0;
+						pos.z += h;
+						vHeight = h;
+						vDist = 1.0 - (length(pos.xy) / 100.0);
+						gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+					}
+				`,
+				fragmentShader: `
+					uniform vec3 uColor;
+					uniform float uIntensity;
+					varying float vHeight;
+					varying float vDist;
+					void main() {
+						float alpha = (vHeight + 7.0) / 14.0;
+						gl_FragColor = vec4(uColor, alpha * 0.1 * uIntensity * 2.0 * vDist);
+					}
+				`
+			});
+			materials.push(material);
+			const ocean = new THREE.Mesh(geometry, material);
+			ocean.rotation.x = -Math.PI / 2.1;
+			ocean.position.y = -15;
+			mesh = ocean;
+		}
+		// --- STATIC_VOID: Noise Field ---
+		else if (type === 'static_void') {
+			const count = Math.floor(1000 * activeDensity * mobileDensityMultiplier);
+			const positions = new Float32Array(count * 3);
+			for(let i=0; i<count; i++) {
+				positions[i*3] = (Math.random() - 0.5) * 100;
+				positions[i*3+1] = (Math.random() - 0.5) * 100;
+				positions[i*3+2] = (Math.random() - 0.5) * 100;
+			}
+			const geometry = new THREE.BufferGeometry();
+			geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+			geometries.push(geometry);
+
+			const material = new THREE.PointsMaterial({
+				color: themeColor,
+				size: 0.1,
+				transparent: true,
+				opacity: 0.3 * activeIntensity
+			});
+			materials.push(material);
+			mesh = new THREE.Points(geometry, material);
+		}
+
 		if (mesh) scene.add(mesh);
+		lastInitType = type;
+		lastInitDensity = activeDensity;
 
 		let lastTime = 0;
 		const targetFPS = isMobile ? 30 : 60;
@@ -273,6 +381,12 @@
 				cleanup();
 				return;
 			}
+			
+			if ($siteSettings.aesthetic?.reduced_motion) {
+				if (renderer && scene && camera) renderer.render(scene, camera);
+				return;
+			}
+
 			frameId = requestAnimationFrame(animate);
 			
 			if (!$siteSettings.aesthetic.animations_enabled) {
@@ -286,10 +400,23 @@
 
 			const calcTime = (Date.now() * 0.001) * activeSpeed;
 
+			// Live update uniforms/materials without re-init
+			const themeColor = parseThreeColor(activeColor);
 			if (uniforms) {
 				uniforms.uTime.value = calcTime;
 				uniforms.uScroll.value = scrollY;
+				if (uniforms.uColor) uniforms.uColor.value = themeColor;
+				if (uniforms.uIntensity) uniforms.uIntensity.value = activeIntensity;
 			}
+
+			// Update non-shader materials
+			materials.forEach(mat => {
+				if (mat instanceof THREE.MeshBasicMaterial || mat instanceof THREE.PointsMaterial || mat instanceof THREE.LineBasicMaterial) {
+					mat.color.copy(themeColor);
+					// Logic for opacity update could be added here if needed, 
+					// but usually requires knowledge of the base opacity.
+				}
+			});
 
 			if (type === 'architecture' && mesh instanceof THREE.Group) {
 				mesh.rotation.y = calcTime * 0.05;
@@ -379,16 +506,52 @@
 
 	$effect(() => {
 		const t = type;
-		const c = activeColor;
-		const s = activeSpeed;
 		const d = activeDensity;
-		const i = activeIntensity;
-		const m = mixBlend;
+		const p = perf.low_power_mode;
 		untrack(() => {
-			cleanup();
+			// Only re-init if structure changes (type or density)
 			init();
 		});
 	});
 </script>
+
+{#if type === 'particle_network'}
+	<div class="absolute inset-0 pointer-events-none overflow-hidden" style="opacity: {activeIntensity}">
+		<!-- Gradient Blobs -->
+		<div class="absolute inset-0 overflow-hidden">
+			<div 
+				class="absolute rounded-full blur-[60px] opacity-60 animate-blob-float-1"
+				style="width: 400px; height: 400px; top: -100px; right: -100px; background: radial-gradient(circle, {activeColor}20, transparent 70%);"
+			></div>
+			<div 
+				class="absolute rounded-full blur-[60px] opacity-60 animate-blob-float-2"
+				style="width: 350px; height: 350px; bottom: -80px; left: -80px; background: radial-gradient(circle, {activeColor}15, transparent 70%);"
+			></div>
+			<div 
+				class="absolute rounded-full blur-[60px] opacity-60 animate-blob-float-3"
+				style="width: 300px; height: 300px; top: 50%; left: 50%; transform: translate(-50%, -50%); background: radial-gradient(circle, {activeColor}10, transparent 70%);"
+			></div>
+		</div>
+
+		<!-- Particles -->
+		<div class="absolute inset-0">
+			{#each cachedParticles as particle (particle.id)}
+				<div
+					class="absolute rounded-full pointer-events-none animate-particle-float"
+					style="
+						background-color: {activeColor};
+						left: {particle.x}%;
+						top: {particle.y}%;
+						width: {particle.baseSize * activeSize}px;
+						height: {particle.baseSize * activeSize}px;
+						animation-duration: {particle.baseDuration / activeSpeed}s;
+						animation-delay: {particle.delay}s;
+						box-shadow: 0 0 10px {activeColor};
+					"
+				></div>
+			{/each}
+		</div>
+	</div>
+{/if}
 
 <div bind:this={container} class="absolute inset-0 pointer-events-none -z-10 overflow-hidden" style="mix-blend-mode: {mixBlend}"></div>

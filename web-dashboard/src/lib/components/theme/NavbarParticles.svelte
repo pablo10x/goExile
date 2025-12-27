@@ -88,8 +88,8 @@
 		scene.add(mesh);
 
 		function animate() {
-			if ($siteSettings.performance?.low_power_mode) {
-				cleanup();
+			if ($siteSettings.performance?.low_power_mode || $siteSettings.aesthetic?.reduced_motion) {
+				if (renderer && scene && camera) renderer.render(scene, camera);
 				return;
 			}
 			frameId = requestAnimationFrame(animate);

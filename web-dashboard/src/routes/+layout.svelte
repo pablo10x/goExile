@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '../app.css';
 	import { onMount, onDestroy } from 'svelte';
+	import { fade, slide } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import {
@@ -26,7 +27,7 @@
 		StickyNote,
 		LayoutDashboard,
 		Activity,
-		Settings,
+		Settings as SettingsIcon,
 		Server,
 		Database,
 		Code2,
@@ -43,9 +44,9 @@
 		ZapOff,
 		Eye,
 		Sun,
-		Moon
+		Moon,
+		Palette
 	} from 'lucide-svelte';
-	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	import QuickActionsTooltip from '$lib/components/QuickActionsTooltip.svelte';
 	import NoteModal from '$lib/components/notes/NoteModal.svelte';
 
@@ -76,16 +77,57 @@
 			// Sync aesthetic variables
 			const root = document.documentElement;
 			if ($siteSettings.aesthetic) {
-				root.style.setProperty('--card-alpha', ($siteSettings.aesthetic.card_alpha ?? 0.4).toString());
+				root.style.setProperty('--card-alpha', ($siteSettings.aesthetic.glass_strength ?? $siteSettings.aesthetic.card_alpha ?? 0.6).toString());
 				root.style.setProperty('--backdrop-blur', ($siteSettings.aesthetic.backdrop_blur ?? 16) + 'px');
 				root.style.setProperty('--sidebar-alpha', ($siteSettings.aesthetic.sidebar_alpha ?? 0.7).toString());
 				root.style.setProperty('--bg-opacity', ($siteSettings.aesthetic.bg_opacity ?? 1.0).toString());
 				root.style.setProperty('--bg-color', $siteSettings.aesthetic.bg_color || '#050505');
-				root.style.setProperty('--font-primary', ($siteSettings.aesthetic.font_primary || 'Inter') + ', sans-serif');
+				
+				// Fonts
+				root.style.setProperty('--font-primary', ($siteSettings.aesthetic.font_body || 'Inter') + ', sans-serif');
+				root.style.setProperty('--font-header', ($siteSettings.aesthetic.font_header || 'Kanit') + ', sans-serif');
+				root.style.setProperty('--font-body', ($siteSettings.aesthetic.font_body || 'Inter') + ', sans-serif');
+				root.style.setProperty('--font-mono', ($siteSettings.aesthetic.font_mono || 'JetBrains Mono') + ', monospace');
+
+				// Geometry
+				root.style.setProperty('--radius-sm', ($siteSettings.aesthetic.border_radius_sm ?? 2) + 'px');
+				root.style.setProperty('--radius-md', ($siteSettings.aesthetic.border_radius_md ?? 4) + 'px');
+				root.style.setProperty('--radius-lg', ($siteSettings.aesthetic.border_radius_lg ?? 8) + 'px');
+
 				root.style.setProperty('--card-border-width', ($siteSettings.aesthetic.card_border_width ?? 1) + 'px');
 				root.style.setProperty('--card-shadow-size', ($siteSettings.aesthetic.card_shadow_size ?? 4) + 'px');
 				
-				let accent = $siteSettings.aesthetic.accent_color ?? '#78350f';
+				// Granular Colors
+				root.style.setProperty('--primary-color', $siteSettings.aesthetic.primary_color || '#d97706');
+				root.style.setProperty('--secondary-color', $siteSettings.aesthetic.secondary_color || '#1e293b');
+				root.style.setProperty('--card-bg-color', $siteSettings.aesthetic.card_bg_color || '#0f172a');
+				root.style.setProperty('--hover-color', $siteSettings.aesthetic.hover_color || '#1e293b');
+				root.style.setProperty('--text-primary', $siteSettings.aesthetic.text_color_primary || '#e2e2e2');
+				root.style.setProperty('--text-secondary', $siteSettings.aesthetic.text_color_secondary || '#888888');
+				root.style.setProperty('--border-color', $siteSettings.aesthetic.border_color || '#1e293b');
+
+				// New settings
+				root.style.setProperty('--scanline-speed', ($siteSettings.aesthetic.scanline_speed ?? 4) + 's');
+				root.style.setProperty('--scanline-density', ($siteSettings.aesthetic.scanline_density ?? 3) + 'px');
+				root.style.setProperty('--vignette-intensity', ($siteSettings.aesthetic.vignette_intensity ?? 0.5).toString());
+				root.style.setProperty('--glow-intensity', ($siteSettings.aesthetic.border_glow_intensity ?? 0.4).toString());
+				root.style.setProperty('--sidebar-width', ($siteSettings.aesthetic.sidebar_width ?? 280) + 'px');
+				root.style.setProperty('--font-size-base', ($siteSettings.aesthetic.font_size_base ?? 14) + 'px');
+				root.style.setProperty('--glow-color', $siteSettings.aesthetic.card_glow_color || '#d97706');
+				
+				if ($siteSettings.aesthetic.reduced_motion) {
+					root.classList.add('reduced-motion');
+				} else {
+					root.classList.remove('reduced-motion');
+				}
+
+				if ($siteSettings.aesthetic.text_glow) {
+					root.classList.add('text-glow-enabled');
+				} else {
+					root.classList.remove('text-glow-enabled');
+				}
+
+				let accent = $siteSettings.aesthetic.primary_color || '#d97706';
 				
 				// RED ALERT / PANIC MODE
 				if ($siteSettings.aesthetic.panic_mode) {
@@ -93,8 +135,7 @@
 					root.style.setProperty('--border-color', '#991b1b');
 					root.style.setProperty('--card-bg-hex', '#450a0a');
 				} else {
-					root.style.setProperty('--border-color', $siteSettings.aesthetic.industrial_border_color || '#44403c');
-					root.style.setProperty('--card-bg-hex', $siteSettings.aesthetic.card_bg_color || '#1c1917');
+					root.style.setProperty('--card-bg-hex', $siteSettings.aesthetic.card_bg_color || '#0f172a');
 				}
 
 				root.style.setProperty('--accent-color', accent);
@@ -113,6 +154,7 @@
 	let mouseY = $state(0);
 	let hoveredItem = $state(-1);
 	let isSidebarCollapsed = $state(true);
+	let isMobileMenuOpen = $state(false);
 
 	function connectSSE() {
 		if (typeof window === 'undefined') return;
@@ -346,7 +388,7 @@
 	</div>
 {:else}
 	{#if $isAuthenticated && page.url.pathname !== '/login'}
-		<div class="relative min-h-screen {localSiteSettings?.aesthetic?.crt_effect ? 'crt-container' : ''} {localSiteSettings?.aesthetic?.panic_mode ? 'panic-mode' : ''}">
+		<div class="relative min-h-screen {localSiteSettings?.aesthetic?.crt_effect ? 'crt-container' : ''} {localSiteSettings?.aesthetic?.crt_curve ? 'crt-curve' : ''} {localSiteSettings?.aesthetic?.panic_mode ? 'panic-mode' : ''}">
 			<!-- System Ticker Header (New) -->
 			<div class="fixed top-0 left-0 right-0 h-6 bg-black/80 backdrop-blur-md border-b border-stone-800 z-[110] flex items-center px-4 overflow-hidden">
 				<div class="flex items-center gap-6 animate-text-reveal whitespace-nowrap">
@@ -486,7 +528,7 @@
 			<aside
 				class="hidden md:flex relative transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] bg-[var(--sidebar-bg)] backdrop-blur-xl border-r-2 border-stone-800 flex-col shrink-0 overflow-hidden z-20 {isSidebarCollapsed
 					? 'w-20'
-					: 'w-72'} {$siteSettings.aesthetic.panic_mode ? 'border-red-600 shadow-[0_0_30px_rgba(220,38,38,0.2)]' : 'shadow-2xl'}"
+					: 'w-[var(--sidebar-width)]'} {$siteSettings.aesthetic.panic_mode ? 'border-red-600 shadow-[0_0_30px_rgba(220,38,38,0.2)]' : 'shadow-2xl'}"
 			>
 				{#if localBackgroundConfig?.show_navbar_particles}
 					<NavbarParticles />
@@ -504,17 +546,19 @@
 					<div
 						class="p-6 border-b-2 border-stone-800 bg-black/40 transform transition-all duration-700 {sidebarLoaded
 							? 'translate-y-0 opacity-100'
-							: '-translate-y-4 opacity-0'} flex items-center justify-between"
+							: '-translate-y-4 opacity-0'} flex items-center justify-between tactical-border"
 					>
 						{#if !isSidebarCollapsed}
+							<div class="corner-tl"></div>
+							<div class="corner-tr"></div>
 							<div class="flex flex-col animate-in fade-in zoom-in duration-500">
 								<div class="flex items-center gap-2">
 									<div class="w-2 h-2 bg-rust shadow-[0_0_8px_var(--color-rust)]"></div>
 									<h1 class="text-xl font-black military-label text-white tracking-tighter uppercase">
-										EXILE_<span class="text-rust-light">OS</span>
+										EXILE_<span class="text-rust-light">CONTROLLER</span>
 									</h1>
 								</div>
-								<span class="text-[8px] font-mono text-stone-600 mt-1 tracking-[0.3em]">VERSION_0.9.4_STABLE</span>
+								<span class="text-[8px] font-mono text-stone-600 mt-1 tracking-[0.3em]">VERSION 0.9.4</span>
 							</div>
 						{/if}
 						<button
@@ -531,8 +575,8 @@
 						<!-- Terminal Output Simulation -->
 						{#if !isSidebarCollapsed}
 							<div class="px-2 py-1 mb-4 border-l-2 border-rust/30 opacity-40">
-								<div class="tactical-code text-stone-500 animate-pulse">>> ACCESSING_CORES...</div>
-								<div class="tactical-code text-stone-600">>> BUFFER_READY</div>
+								<div class="tactical-code text-stone-500 animate-pulse">>> SYSTEM READY</div>
+								<div class="tactical-code text-stone-600">>> READY FOR INPUT</div>
 							</div>
 						{/if}
 
@@ -547,8 +591,8 @@
 								</div>
 								{#if !isSidebarCollapsed}
 									<div class="flex flex-col">
-										<span class="nav-text">CORE_INTERFACE</span>
-										<span class="nav-subtext">Unified_Dash</span>
+										<span class="nav-text">DASHBOARD</span>
+										<span class="nav-subtext">System Overview</span>
 									</div>
 								{/if}
 							</a>
@@ -563,8 +607,8 @@
 								</div>
 								{#if !isSidebarCollapsed}
 									<div class="flex flex-col">
-										<span class="nav-text">TELEMETRY_BUS</span>
-										<span class="nav-subtext">Metric_Stream</span>
+										<span class="nav-text">PERFORMANCE</span>
+										<span class="nav-subtext">Real-time Metrics</span>
 									</div>
 								{/if}
 							</a>
@@ -575,12 +619,28 @@
 								class:active={isRouteActive('/config')}
 							>
 								<div class="nav-icon-container">
-									<Settings class="w-4 h-4" />
+									<SettingsIcon class="w-4 h-4" />
 								</div>
 								{#if !isSidebarCollapsed}
 									<div class="flex flex-col">
-										<span class="nav-text">SYS_PARAMETERS</span>
-										<span class="nav-subtext">Config_Buffer</span>
+										<span class="nav-text">CONFIGURATION</span>
+										<span class="nav-subtext">App Settings</span>
+									</div>
+								{/if}
+							</a>
+
+							<a
+								href="/config/theme"
+								class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}"
+								class:active={isRouteActive('/config/theme')}
+							>
+								<div class="nav-icon-container">
+									<Palette class="w-4 h-4" />
+								</div>
+								{#if !isSidebarCollapsed}
+									<div class="flex flex-col">
+										<span class="nav-text">THEME LAB</span>
+										<span class="nav-subtext">Visual Calibration</span>
 									</div>
 								{/if}
 							</a>
@@ -595,8 +655,8 @@
 								</div>
 								{#if !isSidebarCollapsed}
 									<div class="flex flex-col">
-										<span class="nav-text">ASSET_INDEX</span>
-										<span class="nav-subtext">Binary_Storage</span>
+										<span class="nav-text">FILE_STORAGE</span>
+										<span class="nav-subtext">Game Binaries</span>
 									</div>
 								{/if}
 							</a>
@@ -611,8 +671,8 @@
 								</div>
 								{#if !isSidebarCollapsed}
 									<div class="flex flex-col">
-										<span class="nav-text">DATA_ARCHIVE</span>
-										<span class="nav-subtext">Persistence_Cores</span>
+										<span class="nav-text">DATABASE</span>
+										<span class="nav-subtext">Data Explorer</span>
 									</div>
 								{/if}
 							</a>
@@ -627,8 +687,8 @@
 								</div>
 								{#if !isSidebarCollapsed}
 									<div class="flex flex-col">
-										<span class="nav-text">IDENTITY_VAULT</span>
-										<span class="nav-subtext">Client_Protocols</span>
+										<span class="nav-text">PLAYER_ACCOUNTS</span>
+										<span class="nav-subtext">User Records</span>
 									</div>
 								{/if}
 							</a>
@@ -643,8 +703,8 @@
 								</div>
 								{#if !isSidebarCollapsed}
 									<div class="flex flex-col">
-										<span class="nav-text">NETWORK_SHIELD</span>
-										<span class="nav-subtext">Security_Sentinel</span>
+										<span class="nav-text">FIREWALL</span>
+										<span class="nav-subtext">Security Management</span>
 									</div>
 								{/if}
 							</a>
@@ -659,8 +719,8 @@
 								</div>
 								{#if !isSidebarCollapsed}
 									<div class="flex flex-col">
-										<span class="nav-text">SIGNAL_LOGS</span>
-										<span class="nav-subtext">Notation_Drive</span>
+										<span class="nav-text">NOTES & TASKS</span>
+										<span class="nav-subtext">System Journal</span>
 									</div>
 								{/if}
 							</a>
@@ -676,12 +736,12 @@
 						{#if !isSidebarCollapsed}
 							<div class="grid grid-cols-2 gap-2 mb-2">
 								<div class="flex flex-col">
-									<span class="text-[7px] text-stone-600 font-mono uppercase">Sync_Rate</span>
+									<span class="text-[7px] text-stone-600 font-mono uppercase">Refresh Rate</span>
 									<span class="text-[9px] font-bold text-rust-light font-mono">124.5 Hz</span>
 								</div>
 								<div class="text-right flex flex-col">
-									<span class="text-[7px] text-stone-600 font-mono uppercase">Buffer_Cap</span>
-									<span class="text-[9px] font-bold text-emerald-500 font-mono">NOMINAL</span>
+									<span class="text-[7px] text-stone-600 font-mono uppercase">Status</span>
+									<span class="text-[9px] font-bold text-emerald-500 font-mono">OK</span>
 								</div>
 							</div>
 						{/if}
@@ -690,16 +750,16 @@
 							<button
 								onclick={toggleTheme}
 								class="p-2 border border-stone-800 bg-stone-950/50 text-stone-500 hover:text-white hover:border-rust transition-all flex-1 flex justify-center"
-								title="Cycle_Luminance"
+								title="Toggle Theme"
 							>
 								{#if $theme === 'dark'}<Moon class="w-4 h-4"/>{:else}<Sun class="w-4 h-4"/>{/if}
 							</button>
 							<button
 								onclick={logout}
 								class="p-2 border border-red-900/30 bg-red-950/10 text-red-600 hover:bg-red-600 hover:text-black transition-all flex-1 flex justify-center group"
-								title="Deauthenticate"
+								title="Logout"
 							>
-								<code class="text-[10px] font-black group-hover:animate-pulse">BYE_</code>
+								<code class="text-[10px] font-black group-hover:animate-pulse">EXIT</code>
 							</button>
 						</div>
 					</div>
@@ -709,16 +769,26 @@
 			<div class="flex-1 flex flex-col h-full overflow-hidden relative">
 				<!-- Mobile Top Header -->
 				<header
-					class="md:hidden h-14 bg-black/80 backdrop-blur-md border-b-2 border-stone-800 flex items-center justify-between px-4 z-30 shrink-0"
+					class="md:hidden h-14 bg-black/80 backdrop-blur-md border-b-2 border-stone-800 flex items-center justify-between px-4 z-30 shrink-0 tactical-border"
 				>
-					<div class="flex flex-col">
-						<div class="flex items-center gap-2">
-							<div class="w-1.5 h-1.5 bg-rust shadow-[0_0_5px_var(--color-rust)]"></div>
-							<h1 class="text-sm font-black military-label text-white tracking-tighter uppercase">
-								EXILE_<span class="text-rust-light">OS</span>
-							</h1>
+					<div class="corner-bl"></div>
+					<div class="corner-br"></div>
+					<div class="flex items-center gap-3">
+						<button 
+							onclick={() => isMobileMenuOpen = true}
+							class="p-2 -ml-2 text-stone-400 hover:text-white transition-colors"
+						>
+							<Menu class="w-6 h-6" />
+						</button>
+						<div class="flex flex-col">
+							<div class="flex items-center gap-2">
+								<div class="w-1.5 h-1.5 bg-rust shadow-[0_0_5px_var(--color-rust)]"></div>
+								<h1 class="text-sm font-black military-label text-white tracking-tighter uppercase">
+									EXILE_<span class="text-rust-light">OS</span>
+								</h1>
+							</div>
+							<span class="text-[6px] font-mono text-stone-600 tracking-[0.3em]">MOBILE_INTERFACE_V1</span>
 						</div>
-						<span class="text-[6px] font-mono text-stone-600 tracking-[0.3em]">MOBILE_INTERFACE_V1</span>
 					</div>
 					<div class="flex items-center gap-2">
 						<button
@@ -735,6 +805,85 @@
 						</button>
 					</div>
 				</header>
+
+				<!-- Mobile Sidebar Overlay -->
+				{#if isMobileMenuOpen}
+					<div 
+						class="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm md:hidden"
+						transition:fade={{ duration: 200 }}
+						onclick={() => isMobileMenuOpen = false}
+						onkeydown={(e) => e.key === 'Escape' && (isMobileMenuOpen = false)}
+						role="button"
+						tabindex="0"
+					>
+						<aside 
+							class="w-72 h-full bg-black border-r-2 border-stone-800 flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.5)]"
+							transition:slide={{ axis: 'x', duration: 300 }}
+							onclick={(e) => e.stopPropagation()}
+							onkeydown={(e) => e.stopPropagation()}
+							role="none"
+						>
+							<div class="p-6 border-b-2 border-stone-800 bg-black/40 flex items-center justify-between">
+								<div class="flex flex-col">
+									<div class="flex items-center gap-2">
+										<div class="w-2 h-2 bg-rust shadow-[0_0_8px_var(--color-rust)]"></div>
+										<h1 class="text-xl font-black military-label text-white tracking-tighter uppercase">
+											EXILE_<span class="text-rust-light">OS</span>
+										</h1>
+									</div>
+									<span class="text-[8px] font-mono text-stone-600 mt-1 tracking-[0.3em]">MOBILE_V1.0</span>
+								</div>
+								<button 
+									onclick={() => isMobileMenuOpen = false}
+									class="p-2 text-stone-500 hover:text-white"
+								>
+									<Trash2 class="w-5 h-5 rotate-45" />
+								</button>
+							</div>
+
+							<nav class="flex-1 p-3 space-y-2 overflow-y-auto">
+								<a href="/dashboard" class="nav-link-industrial" class:active={isRouteActive('/dashboard') || isRouteActive('/')} onclick={() => isMobileMenuOpen = false}>
+									<div class="nav-icon-container"><LayoutDashboard class="w-4 h-4" /></div>
+									<div class="flex flex-col"><span class="nav-text">CORE_INTERFACE</span><span class="nav-subtext">Unified_Dash</span></div>
+								</a>
+								<a href="/performance" class="nav-link-industrial" class:active={isRouteActive('/performance')} onclick={() => isMobileMenuOpen = false}>
+									<div class="nav-icon-container"><Activity class="w-4 h-4" /></div>
+									<div class="flex flex-col"><span class="nav-text">TELEMETRY_BUS</span><span class="nav-subtext">Metric_Stream</span></div>
+								</a>
+								<a href="/config" class="nav-link-industrial" class:active={isRouteActive('/config')} onclick={() => isMobileMenuOpen = false}>
+									<div class="nav-icon-container"><SettingsIcon class="w-4 h-4" /></div>
+									<div class="flex flex-col"><span class="nav-text">SYS_PARAMETERS</span><span class="nav-subtext">Config_Buffer</span></div>
+								</a>
+								<a href="/server" class="nav-link-industrial" class:active={isRouteActive('/server')} onclick={() => isMobileMenuOpen = false}>
+									<div class="nav-icon-container"><HardDrive class="w-4 h-4" /></div>
+									<div class="flex flex-col"><span class="nav-text">ASSET_INDEX</span><span class="nav-subtext">Binary_Storage</span></div>
+								</a>
+								<a href="/database" class="nav-link-industrial" class:active={isRouteActive('/database')} onclick={() => isMobileMenuOpen = false}>
+									<div class="nav-icon-container"><Database class="w-4 h-4" /></div>
+									<div class="flex flex-col"><span class="nav-text">DATA_ARCHIVE</span><span class="nav-subtext">Persistence_Cores</span></div>
+								</a>
+								<a href="/users" class="nav-link-industrial" class:active={isRouteActive('/users')} onclick={() => isMobileMenuOpen = false}>
+									<div class="nav-icon-container"><Users class="w-4 h-4" /></div>
+									<div class="flex flex-col"><span class="nav-text">IDENTITY_VAULT</span><span class="nav-subtext">Client_Protocols</span></div>
+								</a>
+								<a href="/redeye" class="nav-link-industrial" class:active={isRouteActive('/redeye')} onclick={() => isMobileMenuOpen = false}>
+									<div class="nav-icon-container"><ShieldCheck class="w-4 h-4" /></div>
+									<div class="flex flex-col"><span class="nav-text">NETWORK_SHIELD</span><span class="nav-subtext">Security_Sentinel</span></div>
+								</a>
+								<a href="/notes" class="nav-link-industrial" class:active={isRouteActive('/notes')} onclick={() => isMobileMenuOpen = false}>
+									<div class="nav-icon-container"><StickyNote class="w-4 h-4" /></div>
+									<div class="flex flex-col"><span class="nav-text">SIGNAL_LOGS</span><span class="nav-subtext">Notation_Drive</span></div>
+								</a>
+							</nav>
+
+							<div class="p-6 border-t-2 border-stone-800 bg-black/60">
+								<button onclick={logout} class="w-full p-3 border border-red-900/30 bg-red-950/10 text-red-600 font-black uppercase text-xs tracking-widest hover:bg-red-600 hover:text-black transition-all">
+									Deauthenticate_Session
+								</button>
+							</div>
+						</aside>
+					</div>
+				{/if}
 
 				<!-- Main Content -->
 				<main class="flex-1 overflow-auto relative">
@@ -777,7 +926,7 @@
 							? 'text-rust-light'
 							: 'text-stone-600'} transition-colors"
 					>
-						<Settings class="w-5 h-5" />
+						<SettingsIcon class="w-5 h-5" />
 						<span class="font-mono text-[8px] font-black uppercase">CNFG</span>
 					</a>
 					<a

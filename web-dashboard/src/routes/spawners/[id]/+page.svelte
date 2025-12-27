@@ -387,7 +387,7 @@
 				value={`${spawner.current_instances} / ${spawner.max_instances}`}
 				subValue={`CAPACITY_LOAD: ${spawner.max_instances > 0 ? ((spawner.current_instances / spawner.max_instances) * 100).toFixed(0) : 0}%`}
 				Icon={Server}
-				color="blue"
+				color="cyan"
 			/>
 			<StatsCard
 				title="Core_Utilization"

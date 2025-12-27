@@ -3,7 +3,7 @@
 	import DOMPurify from 'dompurify';
 	import { siteSettings } from '$lib/stores';
 
-	type ColorKey = 'blue' | 'emerald' | 'orange' | 'red' | 'purple';
+	type ColorKey = 'rust' | 'emerald' | 'orange' | 'red' | 'purple' | 'cyan';
 
 	let {
 		title,
@@ -11,7 +11,7 @@
 		Icon = null,
 		subValue = '',
 		subValueClass = 'tactical-code text-stone-500',
-		color = 'blue'
+		color = 'rust'
 	} = $props<{
 		title: string;
 		value: string | number;
@@ -32,7 +32,7 @@
 		ColorKey,
 		{ border: string; text: string; bg: string; iconBg: string; glow: string; accent: string }
 	> = {
-		blue: {
+		rust: {
 			border: 'border-rust/30',
 			text: 'text-rust-light',
 			bg: 'bg-rust/5',
@@ -71,15 +71,30 @@
 			iconBg: 'bg-purple-600',
 			glow: 'shadow-purple-500/10',
 			accent: 'bg-purple-500'
+		},
+		cyan: {
+			border: 'border-cyan-500/20',
+			text: 'text-cyan-400',
+			bg: 'bg-cyan-500/5',
+			iconBg: 'bg-cyan-600',
+			glow: 'shadow-cyan-500/10',
+			accent: 'bg-cyan-500'
 		}
 	};
 
-	let colors = $derived(colorMap[color as ColorKey] || colorMap.blue);
+	let colors = $derived(colorMap[color as ColorKey] || colorMap.rust);
 </script>
 
 <div
-	class={`group modern-industrial-card ${$siteSettings.aesthetic.industrial_styling ? 'rounded-none' : 'rounded-2xl'} cursor-pointer font-primary`}
+	class={`group modern-industrial-card tactical-border ${!$siteSettings.aesthetic.industrial_styling ? 'rounded-2xl' : ''} cursor-pointer font-primary`}
+	class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
 >
+	<!-- Tactical Corners -->
+	<div class="corner-tl"></div>
+	<div class="corner-tr"></div>
+	<div class="corner-bl"></div>
+	<div class="corner-br"></div>
+
 	<!-- Status Bar Accent -->
 	<div class={`absolute top-0 left-0 w-full h-0.5 ${colors.accent} opacity-30 group-hover:opacity-100 transition-opacity duration-500`}></div>
 
@@ -104,7 +119,9 @@
 			{#if Icon}
 				{@const CardIcon = Icon}
 				<div
-					class={`p-2.5 rounded-none border border-white/10 ${colors.iconBg} bg-opacity-20 backdrop-blur-xl transition-all duration-500 group-hover:bg-opacity-100 group-hover:scale-110 shadow-lg industrial-frame`}
+					class={`p-2.5 bg-opacity-20 backdrop-blur-xl transition-all duration-500 group-hover:bg-opacity-100 group-hover:scale-110 shadow-lg ${colors.iconBg}`}
+					class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
+					class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
 				>
 					<CardIcon class="w-4 h-4 text-white drop-shadow-md" />
 				</div>
@@ -116,7 +133,10 @@
 				{value}
 			</div>
 			{#if subValue}
-				<div class={`text-[10px] font-jetbrains font-bold leading-relaxed uppercase tracking-wider ${subValueClass} bg-black/30 p-2 border-l-2 ${colors.border.replace('/20', '/40')} backdrop-blur-md`}>
+				<div class={`text-[10px] font-jetbrains font-bold leading-relaxed uppercase tracking-wider ${subValueClass} bg-black/30 p-2 backdrop-blur-md`}
+					 class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
+					 class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
+				>
 					{@html sanitizedSubValue}
 				</div>
 			{/if}

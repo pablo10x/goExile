@@ -10,6 +10,7 @@ type Player struct {
 	Name             string    `json:"name" db:"name"`
 	DeviceID         string    `json:"device_id" db:"device_id"`
 	XP               int64     `json:"xp" db:"xp"`
+	Banned           bool      `json:"banned" db:"banned"`
 	LastJoinedServer string    `json:"last_joined_server" db:"last_joined_server"`
 	CreatedAt        time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt        time.Time `json:"updated_at" db:"updated_at"`

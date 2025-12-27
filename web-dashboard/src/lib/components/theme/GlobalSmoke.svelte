@@ -117,6 +117,12 @@
 				cleanup();
 				return;
 			}
+
+			if ($siteSettings.aesthetic?.reduced_motion) {
+				if (renderer && scene && camera) renderer.render(scene, camera);
+				return;
+			}
+
 			frameId = requestAnimationFrame(animate);
 
 			if (!$siteSettings.aesthetic.animations_enabled) {

@@ -188,10 +188,10 @@
 	onMount(loadData);
 </script>
 
-<div class="w-full h-[calc(100vh-140px)] md:h-[calc(100vh-160px)] flex flex-col lg:flex-row gap-8 overflow-hidden relative border border-stone-800 bg-[#050505] shadow-2xl">
+<div class="w-full min-h-[calc(100vh-140px)] md:min-h-[calc(100vh-160px)] flex flex-col lg:flex-row gap-8 overflow-hidden relative border border-stone-800 bg-[#050505] shadow-2xl">
 	<!-- Left Column: Tasks -->
 	<div
-		class="w-full lg:w-[450px] flex-shrink-0 flex flex-col bg-[#0a0a0a]/60 border-r border-stone-800 overflow-hidden backdrop-blur-xl h-[500px] lg:h-full"
+		class="w-full lg:w-[450px] flex-shrink-0 flex flex-col bg-[#0a0a0a]/60 border-b lg:border-b-0 lg:border-r border-stone-800 overflow-hidden backdrop-blur-xl h-[600px] lg:h-auto"
 	>
 		<!-- Tasks Header -->
 		<div

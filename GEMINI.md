@@ -243,6 +243,12 @@ The following security improvements have been implemented:
     *   Updated Dashboard "Total Errors" card to link to the new logs page.
 
 ### UI Improvements
+*   **Player Account Page Overhaul:**
+    *   Refactored the layout to include a strategic summary section with StatsCards (Total Subjects, Online Count, Cumulative XP, Active Reports).
+    *   Implemented a new sorting engine allowing administrators to sort by ID, Name, XP, or Last Seen.
+    *   Upgraded Player and Report cards with "Tactical Corners", monospace typography for identifiers/values, and dynamic theme-aware rounding.
+    *   Introduced "Ban/Restore" functionality with real-time UI feedback and backend integration.
+    *   Modernized the `EditPlayerModal` to match the industrial aesthetic, featuring monospace input fields and theme-calibrated accents.
 *   **Performance Page Overhaul:**
     *   Refactored the layout to introduce a new "Network Operations" card alongside the "Memory Matrix", optimizing screen real estate usage.
     *   Implemented detailed network metrics display: Active Links, Inbound/Outbound traffic stats, and Error Vector visualization.

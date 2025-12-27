@@ -4,17 +4,17 @@
 	import { serverVersions, siteSettings } from '$lib/stores';
 	import { compareVersions } from '$lib/semver';
 	import PlayersChart from './PlayersChart.svelte';
-	import QuickActionsTooltip from './QuickActionsTooltip.svelte';
 	import {
 		ChevronRight,
-		Settings,
 		Play,
 		Square,
 		RotateCw,
 		ArrowDownToLine,
+		ArrowUpToLine,
 		Trash2,
 		TerminalSquare,
-		Activity
+		Activity,
+		Clock
 	} from 'lucide-svelte';
 
 	let { spawnerId, instance }: { spawnerId: number; instance: any } = $props();
@@ -22,6 +22,11 @@
 	let expanded = $state(false);
 	let renameValue = $state(instance.id);
 	let chartData = $state<any[]>([]);
+
+    // Static binary content for visual effect (no GC overhead)
+    const binaryLines = Array.from({ length: 8 }, () => 
+        Array.from({ length: 16 }, () => Math.random() > 0.5 ? '1' : '0').join('')
+    );
 
 	$effect(() => {
 		renameValue = instance.id;
@@ -69,11 +74,25 @@
 </script>
 
 <div
-	class={`border border-stone-800 ${$siteSettings.aesthetic.industrial_styling ? 'rounded-none' : 'rounded-xl'} bg-stone-950/40 glass-panel overflow-hidden mb-2 hover:border-rust/40 transition-all duration-500 shadow-lg group/row`}
+	class={`border border-stone-800 ${$siteSettings.aesthetic.industrial_styling ? 'rounded-none' : 'rounded-xl'} bg-stone-950/40 glass-panel overflow-hidden mb-2 hover:border-rust/40 transition-all duration-500 shadow-lg group/row relative`}
+	class:heartbeat-pulse={instance.status === 'Running' && !$siteSettings.aesthetic.reduced_motion}
 >
+	<!-- Binary Animation Overlays -->
+	{#if instance.status === 'Running' && !$siteSettings.aesthetic.reduced_motion}
+		<div class="absolute left-0 top-0 bottom-0 flex flex-col justify-center px-2 pointer-events-none overflow-hidden opacity-20">
+            <div class="animate-binary-slide flex flex-col gap-0.5 will-change-transform">
+                {#each [...binaryLines, ...binaryLines] as line}
+                    <div class="font-mono text-[6px] text-emerald-500 whitespace-nowrap leading-tight mask-fade-right">
+                        {line}
+                    </div>
+                {/each}
+            </div>
+		</div>
+	{/if}
+
 	<!-- Header / Collapsed View -->
 	<div
-		class="flex flex-col sm:flex-row sm:items-center gap-4 px-6 py-4 cursor-pointer hover:bg-rust/5 transition-all"
+		class="flex flex-col sm:flex-row sm:items-center gap-4 px-6 py-4 cursor-pointer hover:bg-rust/5 transition-all relative z-10"
 		onclick={toggle}
 		role="button"
 		tabindex="0"
@@ -89,9 +108,9 @@
 		</div>
 
 		<!-- Name & Identity -->
-		<div class="flex flex-col min-w-[160px]">
+		<div class="flex flex-col min-w-[160px] ml-4 sm:ml-8">
 			<div class="flex items-center gap-2">
-				<span class="text-[9px] font-jetbrains font-black text-stone-600 uppercase tracking-tighter">ID</span>
+				<span class="text-[9px] font-jetbrains font-black text-stone-600 uppercase tracking-tighter">INSTANCE</span>
 				<span class="font-heading font-black text-sm text-white tracking-widest uppercase">{instance.id.split('-').pop() || instance.port}</span>
 			</div>
 			<div class="flex items-center gap-2 mt-1">
@@ -131,14 +150,14 @@
 			<div class="flex items-center gap-2">
 				<span class="text-[10px] font-jetbrains font-bold text-stone-400">{instance.version || '0.0.0'}</span>
 				{#if isOutdated}
-					<span class="text-[7px] font-black font-heading bg-rust/20 text-rust px-1.5 py-0.5 border border-rust/30 uppercase animate-pulse shadow-rust/10 shadow-lg">UPDATE_RQ</span>
+					<span class="text-[7px] font-black font-heading bg-rust/20 text-rust px-1.5 py-0.5 border border-rust/30 uppercase animate-pulse shadow-rust/10 shadow-lg">UPDATE</span>
 				{/if}
 			</div>
 		</div>
 
 		<!-- Player Load -->
 		<div class="flex flex-col hidden lg:flex ml-6">
-			<span class="text-[8px] font-jetbrains font-black text-stone-700 uppercase tracking-widest">Clients</span>
+			<span class="text-[8px] font-jetbrains font-black text-stone-700 uppercase tracking-widest">Players</span>
 			<div class="flex items-center gap-3">
 				<div class="w-20 h-1 bg-stone-950 border border-stone-800 rounded-none overflow-hidden relative p-0">
 					<div class="h-full bg-rust-light shadow-rust/40 shadow-lg transition-all duration-1000 ease-out" style="width: {Math.min(100, (instance.player_count / 100) * 100)}%"></div>
@@ -153,13 +172,13 @@
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
 			role="toolbar"
-			aria-label="Instance Quick Actions"
+			aria-label="Instance Actions"
 			tabindex="0"
 		>
 			<button
 				onclick={() => dispatch('tail', { spawnerId, instanceId: instance.id })}
 				class="p-2.5 text-stone-600 hover:text-white hover:bg-stone-900 transition-all border border-transparent hover:shadow-lg"
-				title="Terminal"
+				title="Console"
 			>
 				<TerminalSquare class="w-4 h-4" />
 			</button>
@@ -197,7 +216,7 @@
 	{#if expanded}
 		<div
 			transition:slide={{ duration: 300 }}
-			class="bg-[#050505]/60 border-t border-stone-800 p-8 space-y-8"
+			class="bg-[#050505]/60 border-t border-stone-800 p-8 space-y-8 relative z-10"
 		>
 			<div class="grid grid-cols-1 xl:grid-cols-12 gap-10">
 				<!-- Left: Technical Readouts -->
@@ -206,23 +225,37 @@
 					<div class="flex flex-wrap gap-3 pb-8 border-b border-stone-800">
 						<button
 							onclick={() => dispatch('tail', { spawnerId, instanceId: instance.id })}
-							class="btn-industrial bg-stone-950 text-stone-400 hover:text-white border border-stone-800 hover:border-rust/50 shadow-lg active:translate-y-px transition-all"
+							class="flex items-center gap-2 px-4 py-2 transition-all font-mono text-[9px] font-black uppercase bg-stone-950 text-stone-400 hover:text-white border border-stone-800 hover:border-rust/50 shadow-lg active:translate-y-px"
 						>
 							<TerminalSquare class="w-3.5 h-3.5" />
 							<span>Console</span>
 						</button>
-						<button
-							onclick={() => dispatch('update', { spawnerId, instanceId: instance.id })}
-							disabled={!isOutdated}
-							class="btn-industrial {isOutdated ? 'bg-rust text-white border-rust-light shadow-rust/20' : 'bg-stone-900/50 text-stone-600 border-stone-800 opacity-50 cursor-not-allowed'}"
-						>
-							<ArrowDownToLine class="w-3.5 h-3.5" />
-							<span>{isOutdated ? 'Update Version' : 'Version Up-to-date'}</span>
-						</button>
+						
+						<!-- Version Controls -->
+						<div class="flex gap-1 bg-black/40 p-1 border border-stone-800">
+							<button
+								onclick={() => dispatch('update', { spawnerId, instanceId: instance.id })}
+								disabled={!isOutdated}
+								class="flex items-center gap-2 px-4 py-2 transition-all font-mono text-[9px] font-black uppercase {isOutdated ? 'bg-emerald-600 text-white hover:bg-emerald-500' : 'text-stone-600 opacity-50 cursor-not-allowed'}"
+								title="Upgrade to latest version"
+							>
+								<ArrowUpToLine class="w-3.5 h-3.5" />
+								<span>Upgrade</span>
+							</button>
+							<button
+								onclick={() => dispatch('update', { spawnerId, instanceId: instance.id })}
+								class="flex items-center gap-2 px-4 py-2 transition-all font-mono text-[9px] font-black uppercase text-stone-500 hover:bg-stone-800 hover:text-white"
+								title="Downgrade version (Select manually in spawner config)"
+							>
+								<ArrowDownToLine class="w-3.5 h-3.5" />
+								<span>Downgrade</span>
+							</button>
+						</div>
+
 						<button
 							onclick={() => dispatch('delete', { spawnerId, instanceId: instance.id })}
 							disabled={instance.status === 'Running'}
-							class="btn-industrial bg-red-950/20 text-red-500 hover:bg-red-600 hover:text-white border border-red-900/30 ml-auto shadow-red-900/10"
+							class="flex items-center gap-2 px-4 py-2 transition-all font-mono text-[9px] font-black uppercase bg-red-950/20 text-red-500 hover:bg-red-600 hover:text-white border border-red-900/30 ml-auto shadow-red-900/10"
 						>
 							<Trash2 class="w-3.5 h-3.5" />
 							<span>Delete</span>
@@ -233,11 +266,11 @@
 					<div class="space-y-4">
 						<div class="flex justify-between items-end">
 							<div class="flex flex-col gap-1">
-								<span class="text-[9px] font-jetbrains font-black text-stone-600 uppercase tracking-[0.2em]">Player Telemetry</span>
-								<h4 class="text-[11px] font-heading font-black text-stone-300 uppercase tracking-[0.1em]">Concurrent Clients (24h)</h4>
+								<span class="text-[9px] font-jetbrains font-black text-stone-600 uppercase tracking-[0.2em]">Usage Telemetry</span>
+								<h4 class="text-[11px] font-heading font-black text-stone-300 uppercase tracking-[0.1em]">Concurrent Players (24h)</h4>
 							</div>
 							<div class="text-[10px] font-jetbrains font-black text-rust-light bg-rust/5 px-3 py-1 border border-rust/20 shadow-inner">
-								Status: {instance.player_count || 0} Connected
+								Status: {instance.player_count || 0} Online
 							</div>
 						</div>
 						<div class="bg-stone-950/60 border border-stone-800 p-6 industrial-frame shadow-inner">
@@ -250,7 +283,7 @@
 				<div class="xl:col-span-5 space-y-6">
 					<div class="bg-stone-900/40 border border-stone-800 p-6 space-y-6 industrial-frame">
 						<div class="space-y-3">
-							<label for={'name-' + instance.id} class="text-[10px] font-jetbrains font-black text-stone-500 uppercase tracking-[0.2em] block">Identifier</label>
+							<label for={'name-' + instance.id} class="text-[10px] font-jetbrains font-black text-stone-500 uppercase tracking-[0.2em] block">Label</label>
 							<div class="flex gap-3">
 								<input
 									id={'name-' + instance.id}
@@ -286,7 +319,7 @@
 							<Activity class="w-4 h-4" />
 						</div>
 						<div class="space-y-2">
-							<span class="text-[10px] font-heading font-black text-amber-600 uppercase tracking-[0.2em] block">Node Maintenance</span>
+							<span class="text-[10px] font-heading font-black text-amber-600 uppercase tracking-[0.2em] block">Monitoring</span>
 							<p class="text-[11px] font-jetbrains font-medium text-stone-500 leading-relaxed uppercase tracking-tight">Standard health checks are active. Manual intervention is only required if heartbeats fail to sync.</p>
 						</div>
 					</div>
@@ -297,16 +330,6 @@
 </div>
 
 <style>
-	@reference "../../app.css";
-	
-	.btn-industrial {
-		@apply flex items-center gap-2 px-4 py-2 transition-all font-mono text-[9px] font-black uppercase;
-	}
-
-	.btn-toolbar {
-		@apply gap-2 px-4 py-2 rounded-none text-[10px] font-black uppercase flex items-center transition-all active:translate-x-[1px] active:translate-y-[1px];
-	}
-
 	@keyframes flicker {
 		0%, 100% { opacity: 1; }
 		50% { opacity: 0.4; }
@@ -314,4 +337,31 @@
 	.animate-flicker {
 		animation: flicker 0.2s infinite;
 	}
+
+	.heartbeat-pulse::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: radial-gradient(circle at 0% 50%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
+		pointer-events: none;
+		animation: heartbeat 4s ease-in-out infinite;
+		z-index: 0;
+	}
+
+	@keyframes heartbeat {
+		0%, 100% { opacity: 0.2; transform: scaleX(1); }
+		10%, 20% { opacity: 0.5; transform: scaleX(1.1); }
+	}
+
+	.mask-fade-right {
+		mask-image: linear-gradient(to right, white 0%, transparent 100%);
+	}
+
+    @keyframes binary-slide {
+        0% { transform: translateY(0); }
+        100% { transform: translateY(-50%); }
+    }
+    .animate-binary-slide {
+        animation: binary-slide 10s linear infinite;
+    }
 </style>

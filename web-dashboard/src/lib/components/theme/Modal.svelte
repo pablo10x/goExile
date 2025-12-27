@@ -2,6 +2,8 @@
 	import { portal } from '../../actions/portal';
     import type { Snippet } from 'svelte';
 	import { siteSettings } from '$lib/stores';
+	import { fade, scale, slide } from 'svelte/transition';
+	import { backOut, cubicOut } from 'svelte/easing';
 
 	let { 
         show = $bindable(), 
@@ -25,6 +27,18 @@
 		show = false;
 		onclose();
 	}
+
+	// Dynamic transition picker
+	function getTransition(node: HTMLElement) {
+		const type = $siteSettings.aesthetic.modal_animation || 'scale';
+		if (!$siteSettings.aesthetic.animations_enabled) return { duration: 0 };
+		
+		switch (type) {
+			case 'slide': return slide(node, { duration: 400, easing: cubicOut });
+			case 'fade': return fade(node, { duration: 300 });
+			default: return scale(node, { duration: 400, easing: backOut, start: 0.9 });
+		}
+	}
 </script>
 
 {#if show}
@@ -32,16 +46,19 @@
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div 
 		use:portal
-		class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-[var(--bg-color)]/90 {$siteSettings.aesthetic.glassmorphism ? 'backdrop-blur-sm' : ''} {$siteSettings.aesthetic.animations_enabled ? 'animate-in fade-in duration-300' : ''}"
+		class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 {$siteSettings.aesthetic.glassmorphism ? 'backdrop-blur-sm' : ''}"
 		onclick={close}
+		transition:fade={{ duration: 200 }}
 	>
 		<div 
-			class="industrial-modal w-full {maxWidth} {$siteSettings.aesthetic.industrial_styling ? 'rounded-sm' : 'rounded-2xl'} overflow-hidden {$siteSettings.aesthetic.animations_enabled ? 'animate-in zoom-in-95 slide-in-from-bottom-4 duration-300' : ''}"
+			class="industrial-modal w-full {maxWidth} overflow-hidden shadow-2xl"
+			style="border-radius: var(--radius-lg); border: var(--card-border-width) solid var(--border-color);"
 			onclick={e => e.stopPropagation()}
+			transition:getTransition
 		>
 			<!-- Header -->
-			<div class="flex items-center justify-between bg-[var(--card-bg)] px-6 py-4 border-b border-stone-800">
-				<h3 class="font-heading text-xl text-rust-light tracking-widest">{title}</h3>
+			<div class="flex items-center justify-between bg-black/40 backdrop-blur-md px-6 py-4 border-b border-stone-800">
+				<h3 class="font-heading text-xl text-rust-light tracking-widest uppercase">{title}</h3>
 				<button 
 					onclick={close}
 					class="text-stone-500 hover:text-white transition-colors p-1"
@@ -52,7 +69,7 @@
 			</div>
 
 			<!-- Content -->
-			<div class="p-6 md:p-8 max-h-[70vh] overflow-y-auto bg-[var(--bg-color)]/50 relative custom-scrollbar">
+			<div class="p-6 md:p-8 max-h-[70vh] overflow-y-auto bg-stone-950 relative custom-scrollbar">
 				<div class="relative z-10">
 					{@render children()}
 				</div>
@@ -64,11 +81,14 @@
 
 			<!-- Footer -->
 			{#if !hideFooter}
-				<div class="bg-[var(--card-bg)] px-6 py-4 border-t border-stone-800 text-right">
+				<div class="bg-black/20 px-6 py-4 border-t border-stone-800 text-right">
 					{#if footer}
 						{@render footer()}
 					{:else}
-						<button onclick={close} class="industrial-btn">
+						<button 
+							onclick={close} 
+							class="px-6 py-2 bg-rust hover:bg-rust-light text-white font-heading font-black text-[10px] uppercase tracking-widest transition-all"
+						>
 							ACKNOWLEDGE
 						</button>
 					{/if}

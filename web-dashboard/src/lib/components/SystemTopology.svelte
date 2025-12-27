@@ -179,6 +179,7 @@
 	});
 
 	function triggerPulse(id: number) {
+		if ($siteSettings.aesthetic.reduced_motion) return;
 		pulsingSpawners.add(id);
 		pulsingSpawners = new Set(pulsingSpawners);
 
@@ -346,7 +347,7 @@
 	<div
 		class="absolute inset-0 transition-transform duration-600 ease-out pointer-events-none"
 		style="transform: scale({zoom}) translate({panOffset.x / zoom}px, {panOffset.y /
-			zoom}px); transform-origin: center center;"
+			zoom}px); transform-origin: center center; will-change: transform;"
 	>
 		<div class="pointer-events-auto">
 			<svg

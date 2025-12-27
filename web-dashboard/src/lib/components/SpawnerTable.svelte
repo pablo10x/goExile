@@ -23,7 +23,8 @@
 		Radio,
 		List,
 		Plus,
-		Globe
+		Globe,
+		ArrowDownToLine
 	} from 'lucide-svelte';
 	import { slide, fade } from 'svelte/transition';
 
@@ -136,11 +137,17 @@
 	{#each spawners as spawner (spawner.id)}
 		{@const isExpanded = expandedRows.has(spawner.id)}
 		<div
-			class="modern-industrial-card glass-panel !rounded-none transition-all duration-500 group {spawner.id ===
+			class="modern-industrial-card glass-panel tactical-border !rounded-none transition-all duration-500 group {spawner.id ===
 			highlightNewSpawnerId && $siteSettings.aesthetic.animations_enabled
 				? 'animate-highlight-new-spawner border-rust'
 				: 'hover:border-rust/30'} shadow-2xl overflow-hidden"
 		>
+			<!-- Tactical Corners -->
+			<div class="corner-tl"></div>
+			<div class="corner-tr"></div>
+			<div class="corner-bl"></div>
+			<div class="corner-br"></div>
+
 			<!-- Header / Identity -->
 			<div class="p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-8 bg-stone-950/40 relative">
 				<div class="flex items-center gap-6 flex-1 min-w-0">
@@ -166,7 +173,7 @@
 							>
 								{spawner.name || spawner.region}
 							</h3>
-							<span class="text-[9px] bg-stone-900 border border-stone-800 text-stone-500 px-3 py-1 font-black uppercase tracking-widest">UNIT_{spawner.id.toString().padStart(3, '0')}</span>
+							<span class="text-[9px] bg-stone-900 border border-stone-800 text-stone-500 px-3 py-1 font-black uppercase tracking-widest">Node {spawner.id.toString().padStart(3, '0')}</span>
 							<div
 								class={`px-3 py-1 font-jetbrains font-bold text-[9px] uppercase flex items-center gap-2 border ${getStatusClass(spawner.status)}`}
 							>
@@ -185,12 +192,28 @@
 				<!-- Quick Actions - ALWAYS ON TOP/RIGHT -->
 				<div class="flex items-center gap-3 shrink-0">
 					{#if spawner.status !== 'Offline'}
+						<div class="flex items-center gap-1 bg-black/20 p-1 border border-stone-800 mr-2">
+							<button 
+								onclick={() => dispatch('updateSpawnerBuild', spawner.id)}
+								class="p-2 text-emerald-500 hover:bg-emerald-500/10 transition-all title='Update Game Build'"
+							>
+								<ArrowDownToLine class="w-4 h-4" />
+							</button>
+							<button 
+								onclick={() => dispatch('updateSpawnerBuild', spawner.id)}
+								class="p-2 text-stone-500 hover:bg-stone-500/10 transition-all"
+								title="Downgrade Build (N/A)"
+								disabled
+							>
+								<RefreshCw class="w-4 h-4 rotate-180" />
+							</button>
+						</div>
 						<a 
 							href={`/spawners/${spawner.id}`}
 							class="px-6 py-2.5 bg-stone-900 text-stone-400 border border-stone-800 font-heading font-black text-[10px] uppercase tracking-widest hover:bg-white hover:text-black transition-all active:scale-95 shadow-lg flex items-center gap-2"
 						>
 							<Settings class="w-3.5 h-3.5" />
-							Manager
+							Manage
 						</a>
 						<button 
 							onclick={() => dispatch('spawn', spawner.id)} 
@@ -225,7 +248,7 @@
 			<div class="px-8 py-4 bg-stone-900/20 border-t border-stone-800/50 grid grid-cols-1 md:grid-cols-4 gap-8">
 				<div class="flex flex-col justify-center">
 					<div class="flex justify-between items-center mb-2">
-						<span class="text-[9px] font-black text-stone-600 uppercase tracking-widest italic">Node Capacity</span>
+						<span class="text-[9px] font-black text-stone-600 uppercase tracking-widest italic">Capacity</span>
 						<span class="text-[10px] font-black text-rust-light tabular-nums">{spawner.current_instances} / {spawner.max_instances}</span>
 					</div>
 					<div class="h-1.5 bg-stone-950 border border-stone-800 p-0 overflow-hidden shadow-inner">
@@ -234,8 +257,8 @@
 				</div>
 
 				{#each [
-					{ label: 'CPU Load', val: spawner.cpu_usage, icon: Cpu },
-					{ label: 'RAM Load', val: spawner.mem_total ? (spawner.mem_used / spawner.mem_total) * 100 : 0, icon: Zap },
+					{ label: 'CPU Usage', val: spawner.cpu_usage, icon: Cpu },
+					{ label: 'RAM Usage', val: spawner.mem_total ? (spawner.mem_used / spawner.mem_total) * 100 : 0, icon: Zap },
 					{ label: 'Disk IO', val: spawner.disk_total ? (spawner.disk_used / spawner.disk_total) * 100 : 0, icon: HardDrive }
 				] as metric}
 					<div class="hidden md:flex flex-col justify-center">
@@ -256,7 +279,7 @@
 					class="md:hidden w-full py-2 text-[9px] font-black text-rust uppercase tracking-[0.2em]"
 					onclick={() => toggleRow(spawner.id)}
 				>
-					{isExpanded ? 'Collapse Telemetry' : 'View Expanded Telemetry'}
+					{isExpanded ? 'Collapse Stats' : 'View Stats'}
 				</button>
 			</div>
 
@@ -270,7 +293,7 @@
 					<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
 						<div class="bg-stone-900/40 border border-stone-800 p-6 industrial-frame shadow-xl group/m hover:border-rust/30 transition-all">
 							<div class="flex justify-between items-center mb-4">
-								<span class="text-[10px] font-black text-stone-500 uppercase tracking-widest italic group-hover/m:text-rust transition-colors">Processor Load</span>
+								<span class="text-[10px] font-black text-stone-500 uppercase tracking-widest italic group-hover/m:text-rust transition-colors">CPU LOAD</span>
 								<Cpu class="w-4 h-4 text-stone-700" />
 							</div>
 							<div class="text-4xl font-heading font-black text-white tracking-tighter tabular-nums mb-4">{spawner.cpu_usage ? spawner.cpu_usage?.toFixed(1) : 0}%</div>
@@ -281,7 +304,7 @@
 
 						<div class="bg-stone-900/40 border border-stone-800 p-6 industrial-frame shadow-xl group/m hover:border-rust/30 transition-all">
 							<div class="flex justify-between items-center mb-4">
-								<span class="text-[10px] font-black text-stone-500 uppercase tracking-widest italic group-hover/m:text-rust transition-colors">Memory Allocation</span>
+								<span class="text-[10px] font-black text-stone-500 uppercase tracking-widest italic group-hover/m:text-rust transition-colors">RAM USAGE</span>
 								<Zap class="w-4 h-4 text-stone-700" />
 							</div>
 							<div class="text-2xl font-heading font-black text-white tracking-tighter mb-2 tabular-nums">
@@ -295,7 +318,7 @@
 
 						<div class="bg-stone-900/40 border border-stone-800 p-6 industrial-frame shadow-xl group/m hover:border-rust/30 transition-all">
 							<div class="flex justify-between items-center mb-4">
-								<span class="text-[10px] font-black text-stone-500 uppercase tracking-widest italic group-hover/m:text-rust transition-colors">Disk Storage</span>
+								<span class="text-[10px] font-black text-stone-500 uppercase tracking-widest italic group-hover/m:text-rust transition-colors">DISK USAGE</span>
 								<HardDrive class="w-4 h-4 text-stone-700" />
 							</div>
 							<div class="text-2xl font-heading font-black text-white tracking-tighter mb-2 tabular-nums">
@@ -315,14 +338,14 @@
 								<div class="p-2 bg-rust/5 industrial-frame">
 									<List class="w-5 h-5 text-rust-light" />
 								</div>
-								<h4 class="text-sm font-heading font-black text-white uppercase tracking-widest">Active Logic Clusters</h4>
+								<h4 class="text-sm font-heading font-black text-white uppercase tracking-widest">Active Instances</h4>
 							</div>
 							<div class="flex items-center gap-6">
 								<Dropdown label="Bulk Operations">
 									{#snippet children()}
-										<button onclick={() => dispatchBulkAction('start', spawner.id)} class="w-full text-left px-6 py-3 text-[10px] font-black font-jetbrains uppercase text-emerald-400 hover:bg-emerald-500/10 tracking-widest">Execute All</button>
-										<button onclick={() => dispatchBulkAction('stop', spawner.id)} class="w-full text-left px-6 py-3 text-[10px] font-black font-jetbrains uppercase text-rose-400 hover:bg-rose-500/10 tracking-widest">Terminate All</button>
-										<button onclick={() => dispatchBulkAction('restart', spawner.id)} class="w-full text-left px-6 py-3 text-[10px] font-black font-jetbrains uppercase text-rust hover:bg-rust/10 tracking-widest">Reboot All</button>
+										<button onclick={() => dispatchBulkAction('start', spawner.id)} class="w-full text-left px-6 py-3 text-[10px] font-black font-jetbrains uppercase text-emerald-400 hover:bg-emerald-500/10 tracking-widest">Start All</button>
+										<button onclick={() => dispatchBulkAction('stop', spawner.id)} class="w-full text-left px-6 py-3 text-[10px] font-black font-jetbrains uppercase text-rose-400 hover:bg-rose-500/10 tracking-widest">Stop All</button>
+										<button onclick={() => dispatchBulkAction('restart', spawner.id)} class="w-full text-left px-6 py-3 text-[10px] font-black font-jetbrains uppercase text-rust hover:bg-rust/10 tracking-widest">Restart All</button>
 										<button onclick={() => dispatchBulkAction('update', spawner.id)} class="w-full text-left px-6 py-3 text-[10px] font-black font-jetbrains uppercase text-amber-400 hover:bg-amber-500/10 border-t border-stone-800 tracking-widest">Update All</button>
 									{/snippet}
 								</Dropdown>
@@ -376,8 +399,8 @@
 			<div class="inline-block p-8 bg-stone-900/40 border border-dashed border-stone-800 industrial-frame mb-8">
 				<Server class="w-16 h-16 text-stone-800" />
 			</div>
-			<h3 class="font-heading font-black text-2xl text-stone-700 uppercase tracking-[0.4em] mb-3">Registry Offline</h3>
-			<p class="font-jetbrains text-[11px] font-bold text-stone-600 uppercase tracking-widest">Waiting for nodes to synchronize with master core.</p>
+			<h3 class="font-heading font-black text-2xl text-stone-700 uppercase tracking-[0.4em] mb-3">No Nodes Active</h3>
+			<p class="font-jetbrains text-[11px] font-bold text-stone-600 uppercase tracking-widest">Waiting for nodes to synchronize with controller.</p>
 		</div>
 	{/each}
 </div>

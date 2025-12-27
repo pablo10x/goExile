@@ -275,8 +275,8 @@
 						<Database class="w-6 h-6 text-rust-light" />
 					</div>
 					<div>
-						<h2 class="font-heading font-black text-sm tracking-tighter text-slate-100">DATA_CORE</h2>
-						<p class="font-jetbrains text-[9px] text-rust/60 uppercase tracking-widest font-black mt-0.5">DB_MANAGER_V1</p>
+						<h2 class="font-heading font-black text-sm tracking-tighter text-slate-100">DATABASE</h2>
+						<p class="font-jetbrains text-[9px] text-rust/60 uppercase tracking-widest font-black mt-0.5">MANAGER V1</p>
 					</div>
 				</div>
 			{/if}
@@ -371,172 +371,171 @@
 							
 							<!-- Header -->
 							<div
-								class="p-8 sm:p-12 border-b border-stone-800 bg-[#0a0a0a]"
+								class="p-6 sm:p-12 border-b border-stone-800 bg-[#0a0a0a]"
 							>
-								<div class="flex items-center gap-8 mb-2">
+								<div class="flex flex-col sm:flex-row items-center gap-6 sm:gap-8 mb-2 text-center sm:text-left">
 									<div
-										class="p-5 bg-rust/10 border border-rust/30 shadow-2xl shadow-rust/10 industrial-frame"
+										class="p-4 sm:p-5 bg-rust/10 border border-rust/30 shadow-2xl shadow-rust/10 industrial-frame"
 									>
-										<Database class="w-10 h-10 text-rust-light" />
+										<Database class="w-8 h-8 sm:w-10 sm:h-10 text-rust-light" />
 									</div>
 									<div>
-										<h1 class="text-4xl sm:text-5xl font-heading font-black tracking-tighter text-white uppercase">
-											CLUSTER_STORAGE_OVERVIEW
+										<h1 class="text-2xl sm:text-4xl lg:text-5xl font-heading font-black tracking-tighter text-white uppercase">
+											DATABASE_OVERVIEW
 										</h1>
-										<div class="font-jetbrains text-[11px] text-stone-500 mt-2 uppercase tracking-[0.3em] font-black hidden sm:flex items-center gap-3">
+										<div class="font-jetbrains text-[9px] sm:text-[11px] text-stone-500 mt-2 uppercase tracking-[0.3em] font-black flex items-center justify-center sm:justify-start gap-3">
 											<div class="w-1.5 h-1.5 bg-rust animate-pulse shadow-rust/50 shadow-lg"></div>
-											System_Persistence // Global_Data_Cores // Real-time
+											PostgreSQL System // Real-time
 										</div>
 									</div>
 								</div>
 							</div>
 
 							<!-- Stats Grid -->
-							<div class="p-8 sm:p-12">
-								<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-8 mb-12">
+							<div class="p-6 sm:p-12">
+								<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-8 mb-12">
 									<!-- Database Size Card -->
-									<div class="modern-industrial-card glass-panel p-8 !rounded-none">
+									<div class="modern-industrial-card glass-panel p-6 sm:p-8 !rounded-none">
 										<div class="relative">
-											<div class="flex items-center justify-between mb-8">
-												<div class="p-3 bg-rust/10 border border-rust/20 industrial-frame">
-													<HardDrive class="w-7 h-7 text-rust-light" />
+											<div class="flex items-center justify-between mb-6 sm:mb-8">
+												<div class="p-2.5 sm:p-3 bg-rust/10 border border-rust/20 industrial-frame">
+													<HardDrive class="w-5 h-5 sm:w-7 sm:h-7 text-rust-light" />
 												</div>
-												<span class="font-jetbrains text-[10px] font-black text-rust-light bg-rust/10 px-3 py-1.5 uppercase tracking-[0.2em] border border-rust/30">Storage</span>
+												<span class="font-jetbrains text-[8px] sm:text-[10px] font-black text-rust-light bg-rust/10 px-2 sm:px-3 py-1 sm:py-1.5 uppercase tracking-[0.2em] border border-rust/30">Size</span>
 											</div>
-											<div class="text-4xl font-heading font-black text-white mb-2 tracking-tighter">
+											<div class="text-3xl sm:text-4xl font-heading font-black text-white mb-2 tracking-tighter">
 												{formatBytes(dbStats.size_bytes)}
 											</div>
-											<div class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest font-bold">Allocated_Buffer_Space</div>
+											<div class="font-jetbrains text-[8px] sm:text-[10px] text-stone-500 uppercase tracking-widest font-bold">Total Storage Size</div>
 										</div>
 									</div>
 
 									<!-- Connections Card -->
-									<div class="modern-industrial-card glass-panel p-8 !rounded-none">
+									<div class="modern-industrial-card glass-panel p-6 sm:p-8 !rounded-none">
 										<div class="relative">
-											<div class="flex items-center justify-between mb-8">
-												<div class="p-3 bg-emerald-500/10 border border-emerald-500/20 industrial-frame">
-													<Activity class="w-7 h-7 text-emerald-400" />
+											<div class="flex items-center justify-between mb-6 sm:mb-8">
+												<div class="p-2.5 sm:p-3 bg-emerald-500/10 border border-emerald-500/20 industrial-frame">
+													<Activity class="w-5 h-5 sm:w-7 sm:h-7 text-emerald-400" />
 												</div>
-												<span class="font-jetbrains text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-3 py-1.5 uppercase tracking-[0.2em] border border-emerald-500/30">Active</span>
+												<span class="font-jetbrains text-[8px] sm:text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-2 sm:px-3 py-1 sm:py-1.5 uppercase tracking-[0.2em] border border-emerald-500/30">Active</span>
 											</div>
-											<div class="text-4xl font-heading font-black text-white mb-2 tracking-tighter">
+											<div class="text-3xl sm:text-4xl font-heading font-black text-white mb-2 tracking-tighter">
 												{dbStats.connections}
 											</div>
-											<div class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest font-bold">Total_Net_Sockets</div>
+											<div class="font-jetbrains text-[8px] sm:text-[10px] text-stone-500 uppercase tracking-widest font-bold">Active Connections</div>
 										</div>
 									</div>
 
 									<!-- Uptime Card -->
-									<div class="modern-industrial-card glass-panel p-8 !rounded-none">
+									<div class="modern-industrial-card glass-panel p-6 sm:p-8 !rounded-none">
 										<div class="relative">
-											<div class="flex items-center justify-between mb-8">
-												<div class="p-3 bg-purple-500/10 border border-purple-500/20 industrial-frame">
-													<Clock class="w-7 h-7 text-purple-400" />
+											<div class="flex items-center justify-between mb-6 sm:mb-8">
+												<div class="p-2.5 sm:p-3 bg-purple-500/10 border border-purple-500/20 industrial-frame">
+													<Clock class="w-5 h-5 sm:w-7 sm:h-7 text-purple-400" />
 												</div>
-												<span class="font-jetbrains text-[10px] font-black text-purple-400 bg-purple-500/10 px-3 py-1.5 uppercase tracking-[0.2em] border border-purple-500/30">Uptime</span>
+												<span class="font-jetbrains text-[8px] sm:text-[10px] font-black text-purple-400 bg-purple-500/10 px-2 sm:px-3 py-1 sm:py-1.5 uppercase tracking-[0.2em] border border-purple-500/30">Uptime</span>
 											</div>
-											<div class="text-4xl font-heading font-black text-white mb-2 tracking-tighter">
+											<div class="text-3xl sm:text-4xl font-heading font-black text-white mb-2 tracking-tighter">
 												{Math.floor(dbStats.uptime_seconds / 3600)}h
 											</div>
-											<div class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest font-bold">
-												{Math.floor((dbStats.uptime_seconds % 3600) / 60)}m Persistent_State
+											<div class="font-jetbrains text-[8px] sm:text-[10px] text-stone-500 uppercase tracking-widest font-bold">
+												{Math.floor((dbStats.uptime_seconds % 3600) / 60)}m Online Time
 											</div>
 										</div>
 									</div>
 
 									<!-- Version Card -->
-									<div class="modern-industrial-card glass-panel p-8 !rounded-none">
+									<div class="modern-industrial-card glass-panel p-6 sm:p-8 !rounded-none">
 										<div class="relative">
-											<div class="flex items-center justify-between mb-8">
-												<div class="p-3 bg-amber-500/10 border border-amber-500/20 industrial-frame">
-													<Server class="w-7 h-7 text-amber-400" />
+											<div class="flex items-center justify-between mb-6 sm:mb-8">
+												<div class="p-2.5 sm:p-3 bg-amber-500/10 border border-amber-500/20 industrial-frame">
+													<Server class="w-5 h-5 sm:w-7 sm:h-7 text-amber-400" />
 												</div>
-												<span class="font-jetbrains text-[10px] font-black text-amber-400 bg-amber-500/10 px-3 py-1.5 uppercase tracking-[0.2em] border border-amber-500/30">Kernel</span>
+												<span class="font-jetbrains text-[8px] sm:text-[10px] font-black text-amber-400 bg-amber-500/10 px-2 sm:px-3 py-1 sm:py-1.5 uppercase tracking-[0.2em] border border-amber-500/30">Postgres</span>
 											</div>
-											<div class="text-4xl font-heading font-black text-white mb-2 tracking-tighter truncate">
+											<div class="text-3xl sm:text-4xl font-heading font-black text-white mb-2 tracking-tighter truncate">
 												{dbStats.version.split(' ')[0] || 'PGSQL'}
 											</div>
-											<div class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest font-bold truncate">
-												{dbStats.version.split(',')[0] || 'Build_Active'}
+											<div class="font-jetbrains text-[8px] sm:text-[10px] text-stone-500 uppercase tracking-widest font-bold truncate">
+												{dbStats.version.split(',')[0] || 'Build Information'}
 											</div>
 										</div>
 									</div>
 								</div>
 
-								<!-- Quick Actions -->
-								<div class="mb-16">
-									<h2 class="font-heading font-black text-sm tracking-[0.3em] text-stone-500 mb-8 flex items-center gap-4">
-										<Zap class="w-5 h-5 text-rust animate-pulse" />
-										CORE_DIRECTIVES
-									</h2>
-									<div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
-										<button
-											onclick={() => openTab('sql', 'SQL Editor', 'sql')}
-											class="flex flex-col items-center gap-6 p-10 bg-stone-900/40 border border-stone-800 hover:border-rust hover:bg-rust/5 transition-all duration-500 group industrial-frame"
-										>
-											<div class="p-5 bg-stone-950 border border-stone-800 group-hover:border-rust/40 group-hover:text-rust transition-all group-hover:scale-110 shadow-lg">
-												<Terminal class="w-8 h-8 text-stone-600 group-hover:text-rust" />
-											</div>
-											<span class="font-heading text-[12px] font-black tracking-[0.2em] text-stone-500 group-hover:text-white uppercase transition-colors">Neural_Query</span>
-										</button>
-
-										<button
-											onclick={() => openTab('functions', 'Functions', 'functions')}
-											class="flex flex-col items-center gap-6 p-10 bg-stone-900/40 border border-stone-800 hover:border-rust hover:bg-rust/5 transition-all duration-500 group industrial-frame"
-										>
-											<div class="p-5 bg-stone-950 border border-stone-800 group-hover:border-rust/40 group-hover:text-rust transition-all group-hover:scale-110 shadow-lg">
-												<Code2 class="w-8 h-8 text-stone-600 group-hover:text-rust" />
-											</div>
-											<span class="font-heading text-[12px] font-black tracking-[0.2em] text-stone-500 group-hover:text-white uppercase transition-colors">Logic_Units</span>
-										</button>
-
-										<button
-											onclick={() => openTab('backups', 'Backups', 'backups')}
-											class="flex flex-col items-center gap-6 p-10 bg-stone-900/40 border border-stone-800 hover:border-rust hover:bg-rust/5 transition-all duration-500 group industrial-frame"
-										>
-											<div class="p-5 bg-stone-950 border border-stone-800 group-hover:border-rust/40 group-hover:text-rust transition-all group-hover:scale-110 shadow-lg">
-												<HardDrive class="w-8 h-8 text-stone-600 group-hover:text-rust" />
-											</div>
-											<span class="font-heading text-[12px] font-black tracking-[0.2em] text-stone-500 group-hover:text-white uppercase transition-colors">Snapshot_IO</span>
-										</button>
-
-										<button
-											onclick={() => openTab('roles', 'Roles', 'roles')}
-											class="flex flex-col items-center gap-6 p-10 bg-stone-900/40 border border-stone-800 hover:border-rust hover:bg-rust/5 transition-all duration-500 group industrial-frame"
-										>
-											<div class="p-5 bg-stone-950 border border-stone-800 group-hover:border-rust/40 group-hover:text-rust transition-all group-hover:scale-110 shadow-lg">
-												<Shield class="w-8 h-8 text-stone-600 group-hover:text-rust" />
-											</div>
-											<span class="font-heading text-[12px] font-black tracking-[0.2em] text-stone-500 group-hover:text-white uppercase transition-colors">Auth_Sector</span>
-										</button>
-									</div>
-								</div>
-
-								<!-- Table Stats -->
-								{#if tableCounts.length > 0}
-									<div class="w-full">
-										<h2 class="font-heading font-black text-sm tracking-[0.3em] text-stone-500 mb-8 flex items-center gap-4">
-											<BarChart3 class="w-5 h-5 text-rust animate-pulse" />
-											SECTOR_DATA_METRICS
-										</h2>
-										<div
-											class="bg-stone-900/30 border border-stone-800 overflow-hidden industrial-frame"
-										>
-											<div class="overflow-x-auto custom-scrollbar">
-												<table class="w-full">
-													<thead class="bg-stone-950 border-b border-stone-800">
-														<tr>
-															<th
-																class="px-8 py-5 text-left text-[11px] font-black text-stone-500 uppercase tracking-[0.3em]"
-																>Subject_ID</th
-															>
-															<th
-																class="px-8 py-5 text-right text-[11px] font-black text-stone-500 uppercase tracking-[0.3em]"
-																>Entity_Count</th
-															>
-														</tr>
-													</thead>
-													<tbody class="divide-y divide-stone-800/50">
+								                                <!-- Quick Actions -->
+								                                <div class="mb-12 sm:mb-16">
+								                                    <h2 class="font-heading font-black text-xs sm:text-sm tracking-[0.3em] text-stone-500 mb-6 sm:mb-8 flex items-center gap-4">
+								                                        <Zap class="w-4 h-4 sm:w-5 sm:h-5 text-rust animate-pulse" />
+								                                        DATABASE ACTIONS
+								                                    </h2>
+								                                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+								                                        <button
+								                                            onclick={() => openTab('sql', 'SQL Editor', 'sql')}
+								                                            class="flex flex-col items-center gap-4 sm:gap-6 p-6 sm:p-10 bg-stone-900/40 border border-stone-800 hover:border-rust hover:bg-rust/5 transition-all duration-500 group industrial-frame"
+								                                        >
+								                                            <div class="p-3 sm:p-5 bg-stone-950 border border-stone-800 group-hover:border-rust/40 group-hover:text-rust transition-all group-hover:scale-110 shadow-lg">
+								                                                <Terminal class="w-6 h-6 sm:w-8 sm:h-8 text-stone-600 group-hover:text-rust" />
+								                                            </div>
+								                                            <span class="font-heading text-[10px] sm:text-[12px] font-black tracking-[0.2em] text-stone-500 group-hover:text-white uppercase transition-colors">SQL Editor</span>
+								                                        </button>
+								
+								                                        <button
+								                                            onclick={() => openTab('functions', 'Functions', 'functions')}
+								                                            class="flex flex-col items-center gap-4 sm:gap-6 p-6 sm:p-10 bg-stone-900/40 border border-stone-800 hover:border-rust hover:bg-rust/5 transition-all duration-500 group industrial-frame"
+								                                        >
+								                                            <div class="p-3 sm:p-5 bg-stone-950 border border-stone-800 group-hover:border-rust/40 group-hover:text-rust transition-all group-hover:scale-110 shadow-lg">
+								                                                <Code2 class="w-6 h-6 sm:w-8 sm:h-8 text-stone-600 group-hover:text-rust" />
+								                                            </div>
+								                                            <span class="font-heading text-[10px] sm:text-[12px] font-black tracking-[0.2em] text-stone-500 group-hover:text-white uppercase transition-colors">Functions</span>
+								                                        </button>
+								
+								                                        <button
+								                                            onclick={() => openTab('backups', 'Backups', 'backups')}
+								                                            class="flex flex-col items-center gap-4 sm:gap-6 p-6 sm:p-10 bg-stone-900/40 border border-stone-800 hover:border-rust hover:bg-rust/5 transition-all duration-500 group industrial-frame"
+								                                        >
+								                                            <div class="p-3 sm:p-5 bg-stone-950 border border-stone-800 group-hover:border-rust/40 group-hover:text-rust transition-all group-hover:scale-110 shadow-lg">
+								                                                <HardDrive class="w-6 h-6 sm:w-8 sm:h-8 text-stone-600 group-hover:text-rust" />
+								                                            </div>
+								                                            <span class="font-heading text-[10px] sm:text-[12px] font-black tracking-[0.2em] text-stone-500 group-hover:text-white uppercase transition-colors">Backups</span>
+								                                        </button>
+								
+								                                        <button
+								                                            onclick={() => openTab('roles', 'Roles', 'roles')}
+								                                            class="flex flex-col items-center gap-4 sm:gap-6 p-6 sm:p-10 bg-stone-900/40 border border-stone-800 hover:border-rust hover:bg-rust/5 transition-all duration-500 group industrial-frame"
+								                                        >
+								                                            <div class="p-3 sm:p-5 bg-stone-950 border border-stone-800 group-hover:border-rust/40 group-hover:text-rust transition-all group-hover:scale-110 shadow-lg">
+								                                                <Shield class="w-6 h-6 sm:w-8 sm:h-8 text-stone-600 group-hover:text-rust" />
+								                                            </div>
+								                                            <span class="font-heading text-[10px] sm:text-[12px] font-black tracking-[0.2em] text-stone-500 group-hover:text-white uppercase transition-colors">Security</span>
+								                                        </button>
+								                                    </div>
+								                                </div>
+								
+								                                <!-- Table Stats -->
+								                                {#if tableCounts.length > 0}
+								                                    <div class="w-full">
+								                                        <h2 class="font-heading font-black text-sm tracking-[0.3em] text-stone-500 mb-8 flex items-center gap-4">
+								                                            <BarChart3 class="w-5 h-5 text-rust animate-pulse" />
+								                                            TABLE STATISTICS
+								                                        </h2>
+								                                        <div
+								                                            class="bg-stone-900/30 border border-stone-800 overflow-hidden industrial-frame"
+								                                        >
+								                                            <div class="overflow-x-auto custom-scrollbar">
+								                                                <table class="w-full">
+								                                                    <thead class="bg-stone-950 border-b border-stone-800">
+								                                                        <tr>
+								                                                            <th
+								                                                                class="px-8 py-5 text-left text-[11px] font-black text-stone-500 uppercase tracking-[0.3em]"
+								                                                                >Table Name</th
+								                                                            >
+								                                                            <th
+								                                                                class="px-8 py-5 text-right text-[11px] font-black text-stone-500 uppercase tracking-[0.3em]"
+								                                                                >Row Count</th
+								                                                            >
+								                                                        </tr>
+								                                                    </thead>													<tbody class="divide-y divide-stone-800/50">
 														{#each tableCounts as table}
 															<tr class="hover:bg-rust/5 transition-all duration-300 group">
 																<td class="px-8 py-5">

@@ -42,7 +42,7 @@ export interface ResourceMetricsState {
 }
 
 export type ResourceType = 'cpu' | 'memory' | 'disk';
-export type ResourceColor = 'orange' | 'blue' | 'green' | 'red' | 'purple' | 'teal';
+export type ResourceColor = 'orange' | 'blue' | 'green' | 'red' | 'purple' | 'teal' | 'emerald';
 export type TrendDirection = 'up' | 'down' | 'stable';
 
 export interface ResourceStatsCardProps {

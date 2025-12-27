@@ -25,6 +25,7 @@
 	} from 'lucide-svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
+	import { siteSettings } from '$lib/stores';
 
 	// Types
 	interface RuntimeMetrics {
@@ -359,13 +360,23 @@
 					{ label: 'Shield Vector', val: formatNumber(metrics.redeye?.total_blocks || 0), icon: ShieldAlert, color: 'text-red-500', detail: `${metrics.redeye?.active_bans || 0} Active Bans` },
 					{ label: 'Error Flux', val: `${metrics.network.error_rate?.toFixed(2)}%`, icon: AlertTriangle, color: metrics.network.error_rate > 5 ? 'text-red-500' : 'text-stone-400', detail: `${metrics.network.total_errors} Faults` }
 				] as block}
-					<div class="modern-industrial-card glass-panel group p-4 sm:p-6 !rounded-none shadow-2xl flex flex-col justify-between min-h-[120px] sm:min-h-[140px]">
-						<div class="flex justify-between items-start">
+					<div 
+						class="modern-industrial-card glass-panel group p-4 sm:p-6 shadow-2xl flex flex-col justify-between min-h-[120px] sm:min-h-[140px] relative"
+						class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
+						class:rounded-2xl={!$siteSettings.aesthetic.industrial_styling}
+					>
+						<!-- Tactical Corners -->
+						<div class="corner-tl"></div>
+						<div class="corner-tr"></div>
+						<div class="corner-bl"></div>
+						<div class="corner-br"></div>
+
+						<div class="flex justify-between items-start relative z-10">
 							<span class="text-[8px] sm:text-[9px] font-jetbrains font-black text-stone-600 uppercase tracking-[0.3em] italic">{block.label}</span>
 							<block.icon class="w-3 h-3 sm:w-4 sm:h-4 {block.color || 'text-stone-800'} group-hover:text-rust transition-colors" />
 						</div>
-						<div class="flex items-end justify-between mt-4">
-							<div class="text-xl sm:text-2xl font-heading font-black italic tracking-tighter text-white truncate">{block.val}</div>
+						<div class="flex items-end justify-between mt-4 relative z-10">
+							<div class="text-2xl sm:text-3xl font-mono font-bold text-white tracking-tight truncate">{block.val}</div>
 							{#if block.trend && block.trend !== 'stable'}
 								<div class="text-lg sm:text-xl font-black {block.trend === 'up' ? 'text-red-500' : 'text-emerald-500'} animate-pulse">
 									{block.trend === 'up' ? '▲' : '▼'}
@@ -373,7 +384,7 @@
 							{/if}
 						</div>
 						{#if block.detail}
-							<div class="text-[7px] sm:text-[8px] font-jetbrains font-black text-rust-light/60 uppercase tracking-widest mt-2">{block.detail}</div>
+							<div class="text-[7px] sm:text-[8px] font-jetbrains font-black text-rust-light/60 uppercase tracking-widest mt-2 relative z-10">{block.detail}</div>
 						{/if}
 					</div>
 				{/each}
@@ -385,8 +396,18 @@
 			<div class="grid grid-cols-1 xl:grid-cols-12 gap-6 px-2 flex-1">
 				<!-- Memory Matrix -->
 				<div class="xl:col-span-8 flex flex-col gap-6">
-					<div class="modern-industrial-card glass-panel !rounded-none flex-1 flex flex-col">
-						<div class="p-6 border-b border-stone-800 bg-stone-950/40 flex items-center justify-between">
+					<div 
+						class="modern-industrial-card glass-panel flex-1 flex flex-col relative"
+						class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
+						class:rounded-2xl={!$siteSettings.aesthetic.industrial_styling}
+					>
+						<!-- Tactical Corners -->
+						<div class="corner-tl"></div>
+						<div class="corner-tr"></div>
+						<div class="corner-bl"></div>
+						<div class="corner-br"></div>
+
+						<div class="p-6 border-b border-stone-800 bg-stone-950/40 flex items-center justify-between relative z-10">
 							<div class="flex items-center gap-4">
 								<div class="p-2 bg-rust/5 border border-rust/20 industrial-frame">
 									<MemoryStick class="w-5 h-5 text-rust-light" />
@@ -399,7 +420,7 @@
 							</div>
 						</div>
 						
-						<div class="p-8 space-y-10 flex-1 overflow-y-auto custom-scrollbar">
+						<div class="p-8 space-y-10 flex-1 overflow-y-auto custom-scrollbar relative z-10">
 							<!-- Visual Heap Load -->
 							<div class="space-y-4">
 								<div class="flex justify-between font-jetbrains text-[9px] font-black uppercase tracking-[0.2em] text-stone-600 italic">
@@ -430,7 +451,7 @@
 								] as item}
 									<div class="bg-black/40 border border-stone-800 p-5 industrial-frame group hover:border-rust/30 transition-all">
 										<div class="text-[8px] font-jetbrains font-black text-stone-700 tracking-widest uppercase mb-2 group-hover:text-rust transition-colors italic">{item.label}</div>
-										<div class="text-xl font-heading font-black text-stone-200 uppercase tracking-tighter">{item.val}</div>
+										<div class="text-xl font-mono font-bold text-stone-200 tracking-tight">{item.val}</div>
 									</div>
 								{/each}
 							</div>
@@ -440,8 +461,18 @@
 
 				<!-- Network Operations -->
 				<div class="xl:col-span-4 flex flex-col gap-6">
-					<div class="modern-industrial-card glass-panel !rounded-none flex-1 flex flex-col border-stone-800">
-						<div class="p-6 border-b border-stone-800 bg-stone-950/40 flex items-center justify-between">
+					<div 
+						class="modern-industrial-card glass-panel flex-1 flex flex-col border-stone-800 relative"
+						class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
+						class:rounded-2xl={!$siteSettings.aesthetic.industrial_styling}
+					>
+						<!-- Tactical Corners -->
+						<div class="corner-tl"></div>
+						<div class="corner-tr"></div>
+						<div class="corner-bl"></div>
+						<div class="corner-br"></div>
+
+						<div class="p-6 border-b border-stone-800 bg-stone-950/40 flex items-center justify-between relative z-10">
 							<div class="flex items-center gap-4">
 								<div class="p-2 bg-stone-500/10 border border-stone-500/20 industrial-frame">
 									<Signal class="w-5 h-5 text-stone-400" />
@@ -451,12 +482,12 @@
 							<div class="w-2 h-2 bg-stone-500 rounded-full animate-pulse"></div>
 						</div>
 
-						<div class="p-6 flex-1 flex flex-col gap-6">
+						<div class="p-6 flex-1 flex flex-col gap-6 relative z-10">
 							<!-- Connection Status -->
 							<div class="bg-black/40 border border-stone-800 p-4 industrial-frame">
 								<div class="flex justify-between items-end mb-2">
 									<span class="text-[9px] font-black text-stone-600 uppercase tracking-widest">Active Links</span>
-									<span class="text-2xl font-heading font-black text-white tracking-tighter">{metrics.network.active_connections}</span>
+									<span class="text-2xl font-mono font-bold text-white tracking-tight">{metrics.network.active_connections}</span>
 								</div>
 								<div class="w-full h-1 bg-stone-900 overflow-hidden">
 									<div class="h-full bg-stone-500 animate-pulse" style="width: 100%"></div>
@@ -467,12 +498,12 @@
 							<div class="grid grid-cols-2 gap-4">
 								<div class="space-y-1">
 									<span class="text-[8px] font-black text-stone-600 uppercase tracking-widest block">Inbound</span>
-									<div class="text-lg font-heading font-black text-white">{formatBytes(metrics.network.bytes_received)}</div>
+									<div class="text-lg font-mono font-bold text-white">{formatBytes(metrics.network.bytes_received)}</div>
 									<div class="text-[8px] text-emerald-500 font-mono">RX_OK</div>
 								</div>
 								<div class="space-y-1 text-right">
 									<span class="text-[8px] font-black text-stone-600 uppercase tracking-widest block">Outbound</span>
-									<div class="text-lg font-heading font-black text-white">{formatBytes(metrics.network.bytes_sent)}</div>
+									<div class="text-lg font-mono font-bold text-white">{formatBytes(metrics.network.bytes_sent)}</div>
 									<div class="text-[8px] text-rust font-mono">TX_OK</div>
 								</div>
 							</div>

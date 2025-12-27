@@ -1,24 +1,31 @@
 import { render, screen, waitFor } from '@testing-library/svelte';
-import { tick } from 'svelte'; // Import tick from svelte
+import { tick } from 'svelte';
 import { describe, it, expect } from 'vitest';
 import Page from './+page.svelte';
 
 describe('Login Page', () => {
-	it('renders login form', async () => {
+	it('renders the modern login form correctly', async () => {
 		render(Page);
-		await tick(); // Force Svelte to flush updates
-		await Promise.resolve(); // Allow Svelte's reactivity to settle
+		// Wait for the component to mount and animations to start
+		await tick();
+		await new Promise(r => setTimeout(r, 100)); // Allow time for {#if mounted}
+		
 		await waitFor(() => {
-			const heading = screen.getByText('GoExile Admin');
+			// Check for the main heading
+			const heading = screen.getByRole('heading', { name: /Asset Registry/i, level: 1 });
 			expect(heading).toBeInTheDocument();
 
-			const emailInput = screen.getByLabelText('Email');
+			// Check for input fields by their labels
+			const emailInput = screen.getByLabelText(/Operator ID/i);
 			expect(emailInput).toBeInTheDocument();
+			expect(emailInput).toHaveAttribute('placeholder', 'operator@system.node');
 
-			const passwordInput = screen.getByLabelText('Password');
+			const passwordInput = screen.getByLabelText(/Access Key/i);
 			expect(passwordInput).toBeInTheDocument();
+			expect(passwordInput).toHaveAttribute('placeholder', '••••••••••••');
 
-			const loginButton = screen.getByRole('button', { name: /login/i });
+			// Check for the main action button
+			const loginButton = screen.getByRole('button', { name: /Authorize Access/i });
 			expect(loginButton).toBeInTheDocument();
 		});
 	});

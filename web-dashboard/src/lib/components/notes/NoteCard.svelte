@@ -3,6 +3,7 @@
 	import { scale, fade } from 'svelte/transition';
 	import { cubicOut, cubicIn } from 'svelte/easing';
 	import type { Note } from '$lib/stores';
+	import { siteSettings } from '$lib/stores';
 
 	// Explosive shatter animation - creates multiple pieces flying away
 	function shatter(
@@ -221,9 +222,9 @@
 
 <div
 	data-note-id={note.id}
-	class="note-card relative group w-full h-full min-h-[220px] p-6 rounded-2xl border-2 transition-all duration-300 hover:scale-[1.03] hover:z-10 flex flex-col {getStatusRing(
+	class="note-card relative group w-full h-full min-h-[220px] p-6 border-2 transition-all duration-300 hover:scale-[1.03] hover:z-10 flex flex-col font-jetbrains {getStatusRing(
 		note.status
-	)}"
+	)} {!$siteSettings.aesthetic.industrial_styling ? 'rounded-2xl' : 'rounded-none'}"
 	style="{rotationStyle}
            background: {noteStyles.background};
            box-shadow: {noteStyles.boxShadow};
@@ -324,7 +325,8 @@
 		}}
 	>
 		<div
-			class="modal-content"
+			class="modal-content font-jetbrains"
+			class:rounded-none={$siteSettings.aesthetic.industrial_styling}
 			onclick={(e) => e.stopPropagation()}
 			transition:scale={{ duration: 300, easing: cubicOut, start: 0.9 }}
 		>
@@ -393,7 +395,6 @@
 <style>
 	.note-card {
 		position: relative;
-		font-family: 'Courier New', 'Courier', monospace;
 		isolation: isolate;
 	}
 
@@ -795,7 +796,6 @@
 		line-height: 1.75;
 		white-space: pre-wrap;
 		word-wrap: break-word;
-		font-family: 'Courier New', 'Courier', monospace;
 		font-weight: 500;
 		padding-left: 60px;
 		min-height: 200px;
@@ -892,7 +892,6 @@
 		gap: 6px;
 		font-size: 0.7rem;
 		color: rgba(0, 0, 0, 0.5);
-		font-family: 'Courier New', monospace;
 		letter-spacing: 0.02em;
 	}
 </style>

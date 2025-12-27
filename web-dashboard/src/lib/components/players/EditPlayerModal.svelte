@@ -2,7 +2,7 @@
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { X, Save, User, Smartphone, Trophy, Hash, Terminal, ChevronRight, RefreshCw } from 'lucide-svelte';
-	import { notifications } from '$lib/stores';
+	import { notifications, siteSettings } from '$lib/stores';
 
 	let { isOpen, player, onClose, onSave } = $props();
 
@@ -64,28 +64,33 @@
 		onkeydown={(e) => e.key === 'Escape' && onClose()}
 	>
 		<div
-			class="relative w-full max-w-xl bg-black border-2 border-white/10 shadow-[0_0_50px_rgba(0,0,0,1)] overflow-hidden"
+			class="relative w-full max-w-xl bg-black border border-stone-800 shadow-2xl overflow-hidden"
+			class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
+			class:rounded-2xl={!$siteSettings.aesthetic.industrial_styling}
 			onclick={(e) => e.stopPropagation()}
 			transition:scale={{ duration: 300, easing: cubicOut, start: 0.98 }}
 			role="button"
 			tabindex="0"
 			onkeydown={(e) => e.stopPropagation()}
 		>
-			<!-- CRT Scanline Effect -->
-			<div class="absolute inset-0 pointer-events-none opacity-[0.03] bg-amber-scanlines z-50"></div>
+			<!-- Tactical Corners -->
+			<div class="corner-tl"></div>
+			<div class="corner-tr"></div>
+			<div class="corner-bl"></div>
+			<div class="corner-br"></div>
 
 			<!-- Header -->
 			<div
-				class="px-8 py-6 border-b-2 border-[#f97316]/30 flex justify-between items-center bg-black relative overflow-hidden group"
+				class="px-8 py-6 border-b border-stone-800 flex justify-between items-center bg-stone-950 relative overflow-hidden group"
 			>
-				<div class="absolute inset-0 bg-[#f97316]/5 animate-pulse"></div>
-				<h2 class="text-2xl font-black text-white italic tracking-tighter uppercase flex items-center gap-4 relative z-10">
-					<Terminal class="w-6 h-6 text-[#f97316]" />
-					Mod_Subject_<span class="text-[#f97316]">0x{player?.id.toString(16).toUpperCase()}</span>
+				<div class="absolute inset-0 bg-rust/5 animate-pulse"></div>
+				<h2 class="text-2xl font-heading font-black italic tracking-tighter text-white uppercase flex items-center gap-4 relative z-10">
+					<Terminal class="w-6 h-6 text-rust" />
+					Mod_Subject_<span class="text-rust font-mono">0x{player?.id.toString(16).toUpperCase()}</span>
 				</h2>
 				<button
 					onclick={onClose}
-					class="text-slate-600 hover:text-[#f97316] transition-all p-2 border border-transparent hover:border-[#f97316]/30 relative z-10"
+					class="text-stone-600 hover:text-white transition-all p-2 border border-transparent hover:border-rust/30 relative z-10"
 				>
 					<X class="w-6 h-6" />
 				</button>
@@ -94,8 +99,8 @@
 			<!-- Body -->
 			<div class="p-10 space-y-8 relative z-10 bg-[#050505]">
 				<!-- Identification Header -->
-				<div class="flex items-center gap-4 text-[10px] font-black text-slate-600 tracking-[0.4em] uppercase italic border-b border-white/5 pb-4">
-					<ChevronRight class="w-3 h-3 text-[#f97316]" />
+				<div class="flex items-center gap-4 text-[10px] font-black text-stone-600 tracking-[0.4em] uppercase italic border-b border-stone-800 pb-4">
+					<ChevronRight class="w-3 h-3 text-rust" />
 					Field_Modification_Buffer
 				</div>
 
@@ -104,29 +109,29 @@
 					<!-- Name -->
 					<div class="space-y-3">
 						<label
-							class="text-[10px] font-black text-[#f97316]/60 uppercase tracking-[0.3em] flex items-center gap-3 italic"
+							class="text-[10px] font-black text-rust/60 uppercase tracking-[0.3em] flex items-center gap-3 italic"
 						>
 							<User class="w-3 h-3" /> Ident_Subject
 						</label>
 						<input
 							type="text"
 							bind:value={formData.name}
-							class="w-full bg-black border-b-2 border-white/5 px-0 py-3 text-white font-bold italic text-lg focus:border-[#f97316] outline-none transition-all placeholder:text-slate-900"
+							class="w-full bg-stone-950 border border-stone-800 px-4 py-3 text-white font-bold italic text-lg focus:border-rust outline-none transition-all placeholder:text-stone-900 industrial-frame"
 							placeholder="NULL_PTR"
 						/>
 					</div>
 
 					<!-- Firebase UID -->
-					<div class="space-y-3 text-slate-500">
+					<div class="space-y-3">
 						<label
-							class="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] flex items-center gap-3 italic"
+							class="text-[10px] font-black text-stone-600 uppercase tracking-[0.3em] flex items-center gap-3 italic"
 						>
 							<Hash class="w-3 h-3" /> Core_UID
 						</label>
 						<input
 							type="text"
 							bind:value={formData.uid}
-							class="w-full bg-black border-b-2 border-white/5 px-0 py-3 text-slate-400 font-bold tracking-tighter text-sm focus:border-[#f97316] outline-none transition-all placeholder:text-slate-900"
+							class="w-full bg-stone-950 border border-stone-800 px-4 py-3 text-stone-400 font-mono font-bold tracking-tighter text-sm focus:border-rust outline-none transition-all placeholder:text-stone-900 industrial-frame"
 							placeholder="0x000...000"
 						/>
 					</div>
@@ -134,14 +139,14 @@
 					<!-- Device ID -->
 					<div class="space-y-3 md:col-span-2">
 						<label
-							class="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] flex items-center gap-3 italic"
+							class="text-[10px] font-black text-stone-600 uppercase tracking-[0.3em] flex items-center gap-3 italic"
 						>
 							<Smartphone class="w-3 h-3" /> Node_Signature
 						</label>
 						<input
 							type="text"
 							bind:value={formData.device_id}
-							class="w-full bg-black border-b-2 border-white/5 px-0 py-3 text-slate-400 font-bold tracking-tighter text-sm focus:border-[#f97316] outline-none transition-all placeholder:text-slate-900"
+							class="w-full bg-stone-950 border border-stone-800 px-4 py-3 text-stone-400 font-mono font-bold tracking-tighter text-sm focus:border-rust outline-none transition-all placeholder:text-stone-900 industrial-frame"
 							placeholder="UNK_HARDWARE_SIG"
 						/>
 					</div>
@@ -149,41 +154,41 @@
 					<!-- XP -->
 					<div class="space-y-3">
 						<label
-							class="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] flex items-center gap-3 italic"
+							class="text-[10px] font-black text-stone-600 uppercase tracking-[0.3em] flex items-center gap-3 italic"
 						>
-							<Trophy class="w-3 h-3 text-[#fbbf24]" /> Exp_Accumulation
+							<Trophy class="w-3 h-3 text-amber-500" /> Exp_Accumulation
 						</label>
 						<input
 							type="number"
 							bind:value={formData.xp}
-							class="w-full bg-black border-b-2 border-white/5 px-0 py-3 text-[#fbbf24] font-black italic text-2xl focus:border-[#f97316] outline-none transition-all placeholder:text-slate-900"
+							class="w-full bg-stone-950 border border-stone-800 px-4 py-3 text-amber-500 font-mono font-bold italic text-2xl focus:border-rust outline-none transition-all placeholder:text-stone-900 industrial-frame"
 							placeholder="0"
 						/>
 					</div>
 				</div>
 
 				<!-- Warning Area -->
-				<div class="mt-4 p-4 bg-[#ef4444]/5 border-l-4 border-[#ef4444]/30 text-[10px] text-[#ef4444]/60 font-bold uppercase italic tracking-widest leading-relaxed">
+				<div class="mt-4 p-4 bg-red-600/5 border-l-4 border-red-600/30 text-[10px] text-red-600/60 font-bold uppercase italic tracking-widest leading-relaxed">
 					Warning: Direct database mutation detected. All write operations are logged to the central surveillance engine.
 				</div>
 			</div>
 
 			<!-- Footer Commands -->
-			<div class="p-8 border-t-2 border-white/5 bg-black flex justify-between items-center relative overflow-hidden">
-				<div class="text-[9px] font-black text-slate-800 tracking-[0.5em] uppercase italic">
+			<div class="p-8 border-t border-stone-800 bg-stone-950 flex justify-between items-center relative overflow-hidden">
+				<div class="text-[9px] font-black text-stone-800 tracking-[0.5em] uppercase italic">
 					Waiting_For_Acknowledge
 				</div>
 				<div class="flex gap-6">
 					<button
 						onclick={onClose}
-						class="px-8 py-3 text-[11px] font-black text-slate-600 hover:text-white uppercase tracking-widest italic transition-all border border-transparent hover:border-white/10"
+						class="px-8 py-3 text-[11px] font-black text-stone-600 hover:text-white uppercase tracking-widest italic transition-all border border-transparent hover:border-stone-800"
 					>
 						[Abort]
 					</button>
 					<button
 						onclick={handleSave}
 						disabled={isSaving}
-						class="px-10 py-4 text-[11px] font-black bg-[#f97316] hover:bg-white text-black uppercase tracking-[0.3em] italic transition-all disabled:opacity-20 shadow-[8px_8px_0px_#000] relative group overflow-hidden"
+						class="px-10 py-4 text-[11px] font-black bg-rust hover:bg-rust-light text-white uppercase tracking-[0.3em] italic transition-all disabled:opacity-20 shadow-xl relative group overflow-hidden"
 					>
 						{#if isSaving}
 							<div class="flex items-center gap-3 animate-pulse">

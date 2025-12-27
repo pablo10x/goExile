@@ -276,6 +276,47 @@ func DeletePlayerHandler(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, map[string]string{"message": "player deleted"})
 }
 
+func BanPlayerHandler(w http.ResponseWriter, r *http.Request) {
+	if database.DBConn == nil {
+		utils.WriteError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+
+	vars := mux.Vars(r)
+	idStr := vars["id"]
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		utils.WriteError(w, r, http.StatusBadRequest, "invalid id")
+		return
+	}
+
+	var req struct {
+		Banned bool `json:"banned"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.WriteError(w, r, http.StatusBadRequest, "invalid request")
+		return
+	}
+
+	p, err := database.GetPlayerByID(database.DBConn, id)
+	if err != nil {
+		utils.WriteError(w, r, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if p == nil {
+		utils.WriteError(w, r, http.StatusNotFound, "player not found")
+		return
+	}
+
+	p.Banned = req.Banned
+	if err := database.UpdatePlayer(database.DBConn, p); err != nil {
+		utils.WriteError(w, r, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, p)
+}
+
 // -- Friend System Handlers --
 
 func SendFriendRequestHandler(w http.ResponseWriter, r *http.Request) {

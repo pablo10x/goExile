@@ -23,31 +23,34 @@ func InitPlayerSystem(db *sqlx.DB) error {
 		id BIGSERIAL PRIMARY KEY,
 		uid TEXT UNIQUE, -- Firebase UID
 		name TEXT NOT NULL,
-		device_id TEXT NOT NULL UNIQUE,
-		xp BIGINT DEFAULT 0,
-		last_joined_server TEXT DEFAULT '',
-		created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-		updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-	);`
-	if _, err := db.Exec(playersTable); err != nil {
-		return fmt.Errorf("create players table: %w", err)
-	}
-
-	// Ensure ID sequence starts at 1,000,000 for nice IDs
-	var maxID int64
-	if err := db.Get(&maxID, "SELECT COALESCE(MAX(id), 0) FROM player_system.players"); err == nil && maxID < 1000000 {
-		// Attempt to alter sequence. Ignore error if sequence name differs (unlikely with Postgres defaults)
-		_, _ = db.Exec("ALTER SEQUENCE player_system.players_id_seq RESTART WITH 1000000")
-	}
-
-	// Migration: Add uid column if it doesn't exist
-	_, err := db.Exec(`DO $$
-	BEGIN
-		IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='player_system' AND table_name='players' AND column_name='uid') THEN
-			ALTER TABLE player_system.players ADD COLUMN uid TEXT UNIQUE;
-		END IF;
-	END $$;`)
-	if err != nil {
+		                device_id TEXT NOT NULL UNIQUE,
+		                xp BIGINT DEFAULT 0,
+		                banned BOOLEAN DEFAULT FALSE,
+		                last_joined_server TEXT DEFAULT '',
+		                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+		                updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+		        );`
+		        if _, err := db.Exec(playersTable); err != nil {
+		                return fmt.Errorf("create players table: %w", err)
+		        }
+		
+		        // Ensure ID sequence starts at 1,000,000 for nice IDs
+		        var maxID int64
+		        if err := db.Get(&maxID, "SELECT COALESCE(MAX(id), 0) FROM player_system.players"); err == nil && maxID < 1000000 {
+		                // Attempt to alter sequence. Ignore error if sequence name differs (unlikely with Postgres defaults)
+		                _, _ = db.Exec("ALTER SEQUENCE player_system.players_id_seq RESTART WITH 1000000")
+		        }
+		
+		        // Migration: Add uid column if it doesn't exist
+		        _, err := db.Exec(`DO $$
+		        BEGIN
+		                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='player_system' AND table_name='players' AND column_name='uid') THEN
+		                        ALTER TABLE player_system.players ADD COLUMN uid TEXT UNIQUE;
+		                END IF;
+		                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='player_system' AND table_name='players' AND column_name='banned') THEN
+		                        ALTER TABLE player_system.players ADD COLUMN banned BOOLEAN DEFAULT FALSE;
+		                END IF;
+		        END $$;`)	if err != nil {
 		log.Printf("Warning: Failed to add uid column to players: %v", err)
 	}
 
@@ -122,17 +125,16 @@ func GetAllReports(db *sqlx.DB) ([]models.Report, error) {
 // -- Player CRUD --
 
 func CreatePlayer(db *sqlx.DB, p *models.Player) (int64, error) {
-	var id int64
-	query := `INSERT INTO player_system.players (uid, name, device_id, xp, last_joined_server, created_at, updated_at)
-			  VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
+        var id int64
+        query := `INSERT INTO player_system.players (uid, name, device_id, xp, banned, last_joined_server, created_at, updated_at)
+                          VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
 
-	p.CreatedAt = time.Now().UTC()
-	p.UpdatedAt = time.Now().UTC()
+        p.CreatedAt = time.Now().UTC()
+        p.UpdatedAt = time.Now().UTC()
 
-	err := db.QueryRow(query, p.UID, p.Name, p.DeviceID, p.XP, p.LastJoinedServer, p.CreatedAt, p.UpdatedAt).Scan(&id)
-	return id, err
+        err := db.QueryRow(query, p.UID, p.Name, p.DeviceID, p.XP, p.Banned, p.LastJoinedServer, p.CreatedAt, p.UpdatedAt).Scan(&id)
+        return id, err
 }
-
 func GetPlayerByUID(db *sqlx.DB, uid string) (*models.Player, error) {
 	var p models.Player
 	query := `SELECT * FROM player_system.players WHERE uid = $1`
@@ -180,12 +182,11 @@ func GetAllPlayers(db *sqlx.DB) ([]models.Player, error) {
 }
 
 func UpdatePlayer(db *sqlx.DB, p *models.Player) error {
-	p.UpdatedAt = time.Now().UTC()
-	query := `UPDATE player_system.players SET uid=:uid, name=:name, device_id=:device_id, xp=:xp, last_joined_server=:last_joined_server, updated_at=:updated_at WHERE id=:id`
-	_, err := db.NamedExec(query, p)
-	return err
+        p.UpdatedAt = time.Now().UTC()
+        query := `UPDATE player_system.players SET uid=:uid, name=:name, device_id=:device_id, xp=:xp, banned=:banned, last_joined_server=:last_joined_server, updated_at=:updated_at WHERE id=:id`
+        _, err := db.NamedExec(query, p)
+        return err
 }
-
 func DeletePlayer(db *sqlx.DB, id int64) error {
 	_, err := db.Exec(`DELETE FROM player_system.players WHERE id = $1`, id)
 	return err

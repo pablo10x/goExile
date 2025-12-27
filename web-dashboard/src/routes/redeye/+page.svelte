@@ -22,7 +22,8 @@
 		ChevronRight,
 		Monitor,
 		BarChart3,
-		Settings
+		Settings,
+		X
 	} from 'lucide-svelte';
 
 	interface RedEyeRule {
@@ -325,28 +326,28 @@
 	</div>
 
 	<!-- Header -->
-	<div class="flex justify-between items-center mb-10 shrink-0 relative z-10">
-		<div class="flex items-center gap-6">
+	<div class="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-8 lg:mb-10 gap-8 shrink-0 relative z-10">
+		<div class="flex items-center gap-4 sm:gap-6">
 			<div class="relative">
 				<div class="absolute inset-0 bg-red-500 blur-2xl opacity-20 animate-pulse"></div>
-				<div class="relative bg-stone-950 border border-red-500/50 p-4 rounded-none industrial-frame shadow-2xl">
-					<Eye class="w-10 h-10 text-red-500 animate-flicker" />
+				<div class="relative bg-stone-950 border border-red-500/50 p-3 sm:p-4 rounded-none industrial-frame shadow-2xl">
+					<Eye class="w-8 h-8 sm:w-10 sm:h-10 text-red-500 animate-flicker" />
 				</div>
 			</div>
-			<div>
-				<div class="flex items-center gap-4">
-					<h1 class="text-4xl font-heading font-black tracking-tighter text-white uppercase">
+			<div class="min-w-0">
+				<div class="flex flex-wrap items-center gap-3 sm:gap-4">
+					<h1 class="text-2xl sm:text-4xl font-heading font-black tracking-tighter text-white uppercase leading-none">
 						RedEye_<span class="text-red-500">Security</span>
 					</h1>
 					<div
-						class="px-3 py-1 {stats.system_active
+						class="px-2 py-0.5 sm:px-3 sm:py-1 {stats.system_active
 							? 'bg-red-500 text-black shadow-red-500/50 shadow-lg'
-							: 'bg-stone-800 text-stone-400'} text-[10px] font-black uppercase tracking-widest"
+							: 'bg-stone-800 text-stone-400'} text-[8px] sm:text-[10px] font-black uppercase tracking-widest"
 					>
 						{stats.system_active ? 'Active' : 'Offline'}
 					</div>
 				</div>
-				<p class="font-jetbrains text-stone-500 text-[10px] tracking-[0.3em] uppercase mt-2 font-black">
+				<p class="font-jetbrains text-stone-500 text-[8px] sm:text-[10px] tracking-[0.2em] sm:tracking-[0.3em] uppercase mt-2 font-black truncate">
 					Threat Mitigation Core // {stats.system_error
 						? `Fault: ${stats.system_error}`
 						: 'Status: Nominal'}
@@ -354,48 +355,48 @@
 			</div>
 		</div>
 
-		<div class="flex items-center gap-6">
-			<div class="hidden xl:flex flex-col items-end mr-6 text-right">
-				<span class="font-jetbrains text-[9px] text-stone-600 font-black uppercase tracking-[0.3em]"
+		<div class="flex items-center justify-between sm:justify-end gap-6 w-full lg:w-auto">
+			<div class="flex flex-col items-start sm:items-end sm:mr-6 text-left sm:text-right">
+				<span class="font-jetbrains text-[8px] sm:text-[9px] text-stone-600 font-black uppercase tracking-[0.3em]"
 					>SYSTEM_ENTROPY_DELTA</span
 				>
-				<span class="text-lg text-red-500 font-jetbrains font-black tracking-widest">{stats.entropy?.toFixed(4) || '0.0000'}%</span>
+				<span class="text-base sm:text-lg text-red-500 font-jetbrains font-black tracking-widest">{stats.entropy?.toFixed(4) || '0.0000'}%</span>
 			</div>
 			<button
 				onclick={refreshAll}
-				class="p-3 bg-stone-900 border border-stone-800 hover:border-red-500/50 text-stone-500 hover:text-red-500 transition-all shadow-xl active:translate-y-px"
+				class="p-2.5 sm:p-3 bg-stone-900 border border-stone-800 hover:border-red-500/50 text-stone-500 hover:text-red-500 transition-all shadow-xl active:translate-y-px"
 				aria-label="Refresh security data"
 			>
-				<RefreshCw class="w-6 h-6 {loading ? 'animate-spin' : ''}" />
+				<RefreshCw class="w-5 h-5 sm:w-6 sm:h-6 {loading ? 'animate-spin' : ''}" />
 			</button>
 		</div>
 	</div>
 
 	<!-- System Status Banner -->
 	<div
-		class="mb-8 p-6 bg-[#0a0a0a]/80 backdrop-blur-md border-y border-stone-800 flex flex-wrap gap-12 items-center relative overflow-hidden"
+		class="mb-8 p-4 sm:p-6 bg-[#0a0a0a]/80 backdrop-blur-md border-y border-stone-800 flex flex-nowrap overflow-x-auto no-scrollbar gap-8 sm:gap-12 items-center relative"
 	>
 		<div
-			class="absolute inset-y-0 left-0 w-1.5 {stats.system_active ? 'bg-red-500 shadow-[0_0_15px_#ef4444]' : 'bg-stone-700'}"
+			class="absolute inset-y-0 left-0 w-1 {stats.system_active ? 'bg-red-500 shadow-[0_0_15px_#ef4444]' : 'bg-stone-700'} shrink-0"
 		></div>
-		<div class="flex items-center gap-4">
+		<div class="flex items-center gap-3 sm:gap-4 shrink-0">
 			<div
-				class="w-2.5 h-2.5 rounded-full {stats.system_active
+				class="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full {stats.system_active
 					? 'bg-red-500 animate-pulse shadow-[0_0_10px_#ef4444]'
 					: 'bg-stone-700'}"
 			></div>
-			<span class="font-jetbrains text-[10px] font-black text-stone-500 uppercase tracking-[0.3em]"
+			<span class="font-jetbrains text-[9px] sm:text-[10px] font-black text-stone-500 uppercase tracking-[0.3em] whitespace-nowrap"
 				>LIVE_MONITORING: <span
 					class={stats.system_active ? 'text-white' : 'text-stone-700'}
 					>{stats.system_active ? 'ENGAGED' : 'OFFLINE'}</span
 				></span
 			>
 		</div>
-		<div class="flex items-center gap-3 font-jetbrains text-[10px] font-black uppercase tracking-widest">
+		<div class="flex items-center gap-3 font-jetbrains text-[9px] sm:text-[10px] font-black uppercase tracking-widest shrink-0 whitespace-nowrap">
 			<span class="text-stone-600">UPTIME_STABILITY:</span>
 			<span class="text-red-500">{stats.uptime}</span>
 		</div>
-		<div class="flex items-center gap-3 font-jetbrains text-[10px] font-black uppercase tracking-widest">
+		<div class="flex items-center gap-3 font-jetbrains text-[9px] sm:text-[10px] font-black uppercase tracking-widest shrink-0 whitespace-nowrap">
 			<span class="text-stone-600">THREAT_SPECTRUM:</span>
 			<span
 				class={`px-2 py-0.5 border ${stats.threat_level === 'Low'
@@ -404,7 +405,7 @@
 						? 'text-amber-500 border-amber-500/20 bg-amber-500/5'
 						: 'text-red-500 border-red-500/20 bg-red-500/5'}`}>{stats.threat_level?.toUpperCase()}</span>
 		</div>
-		<div class="ml-auto font-jetbrains text-[9px] font-black text-stone-700 hidden xl:flex gap-6 uppercase tracking-widest">
+		<div class="ml-auto font-jetbrains text-[8px] sm:text-[9px] font-black text-stone-700 hidden lg:flex gap-6 uppercase tracking-widest shrink-0 whitespace-nowrap">
 			<span>CRC_HASH: {stats.crc}</span>
 			<div class="w-px h-3 bg-stone-800"></div>
 			<span>NODE_UPLINK: {stats.node_id}</span>
@@ -413,22 +414,22 @@
 
 	<!-- Navigation Controls -->
 	<div
-		class="flex gap-1.5 mb-8 shrink-0 bg-[#0a0a0a] p-1.5 border border-stone-800 industrial-frame"
+		class="flex overflow-x-auto no-scrollbar gap-1.5 mb-8 shrink-0 bg-[#0a0a0a] p-1.5 border border-stone-800 industrial-frame"
 	>
-		{#each [['overview', BarChart3, 'Overview'], ['rules', ShieldCheck, 'Security Rules'], ['bans', Ban, 'Banned IPs'], ['anticheat', AlertTriangle, 'Threat Intel'], ['logs', Terminal, 'Access Logs'], ['config', Settings, 'Settings']] as [id, icon, label]}
+		{#each [['overview', BarChart3, 'Overview'], ['rules', ShieldCheck, 'Rules'], ['bans', Ban, 'Bans'], ['anticheat', AlertTriangle, 'Intel'], ['logs', Terminal, 'Logs'], ['config', Settings, 'Settings']] as [id, icon, label]}
 			{@const Icon = icon as any}
 			<button
 				onclick={() => {
 					activeTab = id as any;
 					refreshAll();
 				}}
-				class="flex-1 flex items-center justify-center gap-3 py-3.5 transition-all font-heading font-black text-[10px] uppercase tracking-widest {activeTab ===
+				class="flex-1 min-w-[80px] sm:min-w-[120px] flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-3.5 transition-all font-heading font-black text-[9px] sm:text-[10px] uppercase tracking-widest {activeTab ===
 				id
 					? 'bg-red-600 text-white shadow-xl shadow-red-900/30'
 					: 'text-stone-600 hover:text-stone-300 hover:bg-stone-900'}"
 			>
-				<Icon class="w-4 h-4" />
-				<span class="hidden md:inline">{label}</span>
+				<Icon class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+				<span class="inline-block">{label}</span>
 			</button>
 		{/each}
 	</div>
@@ -436,24 +437,24 @@
 	<!-- Main Display -->
 	<div class="flex-1 min-h-0 relative z-10">
 		{#if activeTab === 'overview'}
-			<div class="h-full overflow-auto space-y-8 custom-scrollbar pr-4">
-				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-					{#each [{ icon: ShieldCheck, val: stats.total_rules, label: 'Protocols_Loaded', color: 'text-emerald-500' }, { icon: Ban, val: stats.active_bans, label: 'Entities_Quarantined', color: 'text-red-500' }, { icon: ShieldAlert, val: stats.events_24h, label: 'Anomalies_24h', color: 'text-amber-500' }, { icon: Activity, val: stats.logs_24h, label: 'Neural_Scans_24h', color: 'text-sky-500' }] as card}
+			<div class="h-full overflow-auto space-y-8 custom-scrollbar pr-0 sm:pr-4">
+				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+					{#each [{ icon: ShieldCheck, val: stats.total_rules, label: 'Protocols', color: 'text-emerald-500' }, { icon: Ban, val: stats.active_bans, label: 'Quarantined', color: 'text-red-500' }, { icon: ShieldAlert, val: stats.events_24h, label: 'Anomalies', color: 'text-amber-500' }, { icon: Activity, val: stats.logs_24h, label: 'Neural_Scans', color: 'text-sky-500' }] as card}
 						{@const CardIcon = card.icon as any}
 						<div
-							class="modern-industrial-card glass-panel p-6 flex items-center gap-6 group !rounded-none"
+							class="modern-industrial-card glass-panel p-4 sm:p-6 flex items-center gap-4 sm:gap-6 group !rounded-none"
 						>
 							<div
-								class="p-4 bg-stone-950 border border-stone-800 group-hover:border-stone-600 transition-all shadow-lg industrial-frame"
+								class="p-3 sm:p-4 bg-stone-950 border border-stone-800 group-hover:border-stone-600 transition-all shadow-lg industrial-frame"
 							>
-								<CardIcon class="w-7 h-7 {card.color}" />
+								<CardIcon class="w-6 h-6 sm:w-7 sm:h-7 {card.color}" />
 							</div>
 							<div class="flex flex-col gap-1">
 								<span
-									class="text-3xl font-heading font-black text-white tabular-nums leading-none tracking-tighter"
+									class="text-2xl sm:text-3xl font-heading font-black text-white tabular-nums leading-none tracking-tighter"
 									>{card.val}</span
 								>
-								<span class="font-jetbrains text-[9px] font-black text-stone-500 uppercase tracking-widest mt-1"
+								<span class="font-jetbrains text-[8px] sm:text-[9px] font-black text-stone-500 uppercase tracking-widest mt-1"
 									>{card.label}</span
 								>
 							</div>
@@ -461,10 +462,10 @@
 					{/each}
 				</div>
 
-				<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+				<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
 					<!-- Visual Threat Monitor -->
 					<div
-						class="lg:col-span-2 modern-industrial-card glass-panel p-12 relative overflow-hidden flex flex-col items-center justify-center min-h-[450px] !rounded-none"
+						class="lg:col-span-2 modern-industrial-card glass-panel p-6 sm:p-12 relative overflow-hidden flex flex-col items-center justify-center min-h-[350px] sm:min-h-[450px] !rounded-none"
 					>
 						<div class="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.03]"></div>
 						<div
@@ -473,40 +474,40 @@
 
 						<div class="relative z-10 w-full max-w-2xl text-center">
 							<div
-								class="inline-flex items-center gap-3 px-4 py-1.5 bg-red-500/10 border border-red-500/30 rounded-none mb-10 industrial-frame"
+								class="inline-flex items-center gap-3 px-3 py-1 sm:px-4 sm:py-1.5 bg-red-500/10 border border-red-500/30 rounded-none mb-6 sm:mb-10 industrial-frame"
 							>
-								<div class="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-red-500/50 shadow-lg"></div>
-								<span class="font-jetbrains text-[10px] font-black text-red-500 uppercase tracking-[0.3em]"
-									>Neural_Core_Active_Surveillance</span>
+								<div class="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-red-500 animate-pulse shadow-red-500/50 shadow-lg"></div>
+								<span class="font-jetbrains text-[8px] sm:text-[10px] font-black text-red-500 uppercase tracking-[0.2em] sm:tracking-[0.3em]"
+									>Neural_Surveillance_Active</span>
 							</div>
 
-							<div class="relative mx-auto w-64 h-64 mb-12">
+							<div class="relative mx-auto w-48 h-48 sm:w-64 sm:h-64 mb-8 sm:mb-12">
 								<div
-									class="absolute inset-0 border-[3px] border-stone-800 rounded-full"
+									class="absolute inset-0 border-[2px] sm:border-[3px] border-stone-800 rounded-full"
 								></div>
 								<div
-									class="absolute inset-0 border-t-[3px] border-red-500 rounded-full animate-[spin_4s_linear_infinite] shadow-[0_0_20px_rgba(239,68,68,0.3)]"
+									class="absolute inset-0 border-t-[2px] sm:border-t-[3px] border-red-500 rounded-full animate-[spin_4s_linear_infinite] shadow-[0_0_20px_rgba(239,68,68,0.3)]"
 								></div>
 								<div
-									class="absolute inset-6 border border-stone-800 rounded-full border-dashed opacity-40"
+									class="absolute inset-4 sm:inset-6 border border-stone-800 rounded-full border-dashed opacity-40"
 								></div>
 								<div class="absolute inset-0 flex items-center justify-center">
-									<Activity class="w-20 h-20 text-red-500 animate-pulse drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]" />
+									<Activity class="w-12 h-12 sm:w-20 sm:h-20 text-red-500 animate-pulse drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]" />
 								</div>
 							</div>
 
 							<h3
-								class="text-3xl font-heading font-black text-white uppercase tracking-tighter"
+								class="text-xl sm:text-3xl font-heading font-black text-white uppercase tracking-tighter"
 							>
 								AUTONOMOUS_NEURAL_DEFENSE
 							</h3>
-							<p class="font-jetbrains text-stone-500 text-[11px] font-bold mt-4 leading-relaxed uppercase tracking-tight max-w-xl mx-auto">
-								System patrols all regional ingress points. Current sync latency: <span
+							<p class="font-jetbrains text-stone-500 text-[9px] sm:text-[11px] font-bold mt-4 leading-relaxed uppercase tracking-tight max-w-xl mx-auto">
+								System patrols regional ingress points. Latency: <span
 									class="text-red-500 font-black">1.2ms_delta</span
 								>. Monitoring
 								<span class="text-white font-black"
 									>{stats.reputation_count}</span
-								> identity signatures across global registry.
+								> identity signatures global.
 							</p>
 						</div>
 					</div>
@@ -514,18 +515,18 @@
 					<!-- Quick Tech Stats -->
 					<div class="space-y-6">
 						<div
-							class="modern-industrial-card glass-panel p-8 !rounded-none h-full flex flex-col justify-between"
+							class="modern-industrial-card glass-panel p-6 sm:p-8 !rounded-none h-full flex flex-col justify-between"
 						>
-							<div class="space-y-8">
+							<div class="space-y-6 sm:space-y-8">
 								<h4
-									class="font-heading font-black text-[11px] text-stone-500 uppercase tracking-[0.3em] mb-6 flex items-center gap-3"
+									class="font-heading font-black text-[9px] sm:text-[11px] text-stone-500 uppercase tracking-[0.3em] mb-4 sm:mb-6 flex items-center gap-3"
 								>
-									<Cpu class="w-4 h-4 text-red-500" /> SYSTEM_LOAD_METRICS
+									<Cpu class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-500" /> LOAD_METRICS
 								</h4>
-								<div class="space-y-8">
-									{#each [['Heuristic_Analyzer', Number(Math.min(100, 5 + stats.logs_24h / 100)), 'text-emerald-500', 'bg-emerald-500'], ['Identity_Sequencer', Number(Math.min(100, 2 + stats.active_bans * 2)), 'text-red-500', 'bg-red-500'], ['Neural_Indexer', Number(Math.min(100, 1 + stats.reputation_count / 10)), 'text-rust', 'bg-rust']] as [label, perc, colorText, colorBg]}
-										<div class="space-y-3">
-											<div class="flex justify-between font-jetbrains text-[9px] font-black uppercase tracking-widest">
+								<div class="space-y-6 sm:space-y-8">
+									{#each [['Heuristic', Number(Math.min(100, 5 + stats.logs_24h / 100)), 'text-emerald-500', 'bg-emerald-500'], ['Sequencer', Number(Math.min(100, 2 + stats.active_bans * 2)), 'text-red-500', 'bg-red-500'], ['Indexer', Number(Math.min(100, 1 + stats.reputation_count / 10)), 'text-rust', 'bg-rust']] as [label, perc, colorText, colorBg]}
+										<div class="space-y-2 sm:space-y-3">
+											<div class="flex justify-between font-jetbrains text-[8px] sm:text-[9px] font-black uppercase tracking-widest">
 												<span class="text-stone-500">{label}</span>
 												<span class={colorText as string}
 													>{Math.round(perc as number)}%</span>
@@ -533,7 +534,7 @@
 											<div class="h-1 bg-stone-950 border border-stone-800 p-0 relative overflow-hidden">
 												<div
 													class="h-full {colorBg} transition-all duration-1000 shadow-lg"
-													style="width: {perc}%; box-shadow: 0 0 10px rgba(255,255,255,0.05);"
+													style="width: {perc}%;"
 												></div>
 											</div>
 										</div>
@@ -541,23 +542,23 @@
 								</div>
 							</div>
 
-							<div class="mt-10 pt-8 border-t border-stone-800">
+							<div class="mt-8 sm:mt-10 pt-6 sm:pt-8 border-t border-stone-800">
 								<h4
-									class="font-heading font-black text-[11px] text-stone-500 uppercase tracking-[0.3em] mb-6 flex items-center gap-3"
+									class="font-heading font-black text-[9px] sm:text-[11px] text-stone-500 uppercase tracking-[0.3em] mb-4 sm:mb-6 flex items-center gap-3"
 								>
-									<Globe class="w-4 h-4 text-rust" /> CLUSTER_TOPOLOGY
+									<Globe class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rust" /> TOPOLOGY
 								</h4>
 								<div class="flex items-center justify-between">
-									<div class="flex items-center gap-5">
-										<div class="text-5xl font-heading font-black text-white tabular-nums tracking-tighter">08</div>
-										<div class="font-jetbrains text-[9px] font-black text-stone-600 leading-tight uppercase tracking-widest">
+									<div class="flex items-center gap-4 sm:gap-5">
+										<div class="text-3xl sm:text-5xl font-heading font-black text-white tabular-nums tracking-tighter">08</div>
+										<div class="font-jetbrains text-[8px] sm:text-[9px] font-black text-stone-600 leading-tight uppercase tracking-widest">
 											ACTIVE<br />Neural_Zones
 										</div>
 									</div>
-									<div class="flex gap-1.5">
+									<div class="flex gap-1 sm:gap-1.5">
 										{#each Array(8) as _, i}
 											<div
-												class="h-6 w-1 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.3)]"
+												class="h-4 sm:h-6 w-0.5 sm:w-1 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.3)]"
 												style="opacity: {0.2 + i * 0.1}"
 											></div>
 										{/each}
@@ -953,8 +954,8 @@
 <!-- Modal -->
 {#if showModal}
 	<div
-		class="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
-		transition:fade
+		class="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
+		transition:fade={{ duration: 150 }}
 		onclick={() => (showModal = false)}
 		role="button"
 		tabindex="0"
@@ -963,36 +964,37 @@
 		}}
 	>
 		<div
-			class="bg-slate-900 border border-red-500/30 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden relative"
+			class="bg-[#050505] border border-red-500/30 rounded-none shadow-[0_0_100px_rgba(0,0,0,0.8)] w-full max-w-lg overflow-hidden relative industrial-frame"
 			onclick={(e) => e.stopPropagation()}
-			transition:scale={{ duration: 300, start: 0.95 }}
+			transition:scale={{ duration: 200, start: 0.95 }}
 		>
 			<div
-				class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-transparent"
+				class="absolute top-0 left-0 w-full h-1 bg-red-600 shadow-[0_0_15px_#ef4444]"
 			></div>
 
 			<div
-				class="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-white/50 dark:bg-slate-950/50"
+				class="p-6 sm:p-8 border-b border-stone-800 flex justify-between items-center bg-[#0a0a0a]"
 			>
 				<div>
-					<h3 class="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">
-						{editingRule ? 'Edit' : 'New'} Protocol
+					<h3 class="text-xl font-heading font-black text-white uppercase tracking-tighter">
+						{editingRule ? 'Modify' : 'Init'} Protocol
 					</h3>
-					<p class="text-[10px] text-slate-500 font-mono mt-1 uppercase">
+					<p class="text-[10px] text-stone-500 font-jetbrains mt-1 uppercase tracking-widest font-bold">
 						Define neural gateway parameters
 					</p>
 				</div>
 				<button
 					onclick={() => (showModal = false)}
-					class="text-slate-500 hover:text-slate-900 dark:text-white transition-colors">✕</button
-				>
+					class="p-2 text-stone-600 hover:text-white transition-all hover:rotate-90">
+					<X class="w-6 h-6" />
+				</button>
 			</div>
 
-			<div class="p-8 space-y-6">
-				<div class="space-y-1.5">
+			<div class="p-6 sm:p-8 space-y-6 bg-[#050505]">
+				<div class="space-y-2">
 					<label
 						for="ruleName"
-						class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1"
+						class="text-[10px] font-black text-stone-600 uppercase tracking-widest ml-1"
 						>Identity Tag</label
 					>
 					<input
@@ -1000,15 +1002,15 @@
 						type="text"
 						bind:value={form.name}
 						placeholder="Protocol Identifier"
-						class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-red-500 transition-all font-mono"
+						class="w-full bg-stone-950 border border-stone-800 px-4 py-3 text-sm text-white focus:outline-none focus:border-red-500 transition-all font-jetbrains uppercase tracking-widest shadow-inner"
 					/>
 				</div>
 
-				<div class="grid grid-cols-2 gap-6">
-					<div class="space-y-1.5">
+				<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+					<div class="space-y-2">
 						<label
 							for="ruleCidrIp"
-							class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1"
+							class="text-[10px] font-black text-stone-600 uppercase tracking-widest ml-1"
 							>Target IP / CIDR</label
 						>
 						<input
@@ -1016,29 +1018,29 @@
 							type="text"
 							bind:value={form.cidr}
 							placeholder="0.0.0.0/0"
-							class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-red-500 transition-all font-mono"
+							class="w-full bg-stone-950 border border-stone-800 px-4 py-3 text-sm text-white focus:outline-none focus:border-red-500 transition-all font-jetbrains tracking-widest shadow-inner"
 						/>
 					</div>
-					<div class="space-y-1.5">
+					<div class="space-y-2">
 						<label
 							for="rulePort"
-							class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1"
+							class="text-[10px] font-black text-stone-600 uppercase tracking-widest ml-1"
 							>Gateway Port</label
 						>
 						<input
 							id="rulePort"
 							type="text"
 							bind:value={form.port}
-							class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-red-500 transition-all font-mono text-center"
+							class="w-full bg-stone-950 border border-stone-800 px-4 py-3 text-sm text-white focus:outline-none focus:border-red-500 transition-all font-jetbrains text-center shadow-inner"
 							placeholder="*"
 						/>
 					</div>
 				</div>
 
-				<div class="space-y-1.5">
+				<div class="space-y-2">
 					<label
 						for="rulePathPattern"
-						class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1"
+						class="text-[10px] font-black text-stone-600 uppercase tracking-widest ml-1"
 						>Path Filter (Optional)</label
 					>
 					<input
@@ -1046,26 +1048,26 @@
 						type="text"
 						bind:value={form.path_pattern}
 						placeholder="/v1/secure/..."
-						class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-red-500 transition-all font-mono"
+						class="w-full bg-stone-950 border border-stone-800 px-4 py-3 text-sm text-white focus:outline-none focus:border-red-500 transition-all font-jetbrains shadow-inner"
 					/>
 				</div>
 
 				<div class="space-y-3">
-					<label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1"
+					<label class="text-[10px] font-black text-stone-600 uppercase tracking-widest ml-1"
 						>Action Protocol</label
 					>
 					<div class="grid grid-cols-3 gap-2">
 						{#each ['ALLOW', 'DENY', 'RATE_LIMIT'] as action}
 							<button
 								onclick={() => (form.action = action as any)}
-								class="py-3 rounded-xl border-2 text-[10px] font-black uppercase tracking-tighter transition-all {form.action ===
+								class="py-3 border-2 text-[9px] font-black uppercase tracking-widest transition-all {form.action ===
 								action
 									? action === 'ALLOW'
-										? 'bg-emerald-600/20 border-emerald-500 text-emerald-400'
+										? 'bg-emerald-600/20 border-emerald-500 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
 										: action === 'DENY'
-											? 'bg-red-600/20 border-red-500 text-red-400'
-											: 'bg-amber-600/20 border-amber-500 text-amber-400'
-									: 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 hover:border-slate-300 dark:border-slate-700'}"
+											? 'bg-red-600/20 border-red-500 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.2)]'
+											: 'bg-amber-600/20 border-amber-500 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]'
+									: 'bg-stone-900 border-stone-800 text-stone-600 hover:border-stone-700'}"
 							>
 								{action.replace('_', ' ')}
 							</button>
@@ -1075,33 +1077,33 @@
 
 				{#if form.action === 'RATE_LIMIT'}
 					<div
-						class="grid grid-cols-2 gap-6 bg-amber-500/5 p-4 rounded-2xl border border-amber-500/10"
+						class="grid grid-cols-2 gap-6 bg-amber-500/5 p-4 border border-amber-500/20 shadow-inner"
 						transition:slide
 					>
 						<div class="space-y-1.5">
 							<label
 								for="ruleLimit"
-								class="text-[9px] font-bold text-amber-500/70 uppercase tracking-widest"
+								class="text-[9px] font-black text-amber-500/70 uppercase tracking-widest"
 								>Rate (req/sec)</label
 							>
 							<input
 								id="ruleLimit"
 								type="number"
 								bind:value={form.rate_limit}
-								class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 transition-all font-mono"
+								class="w-full bg-black border border-stone-800 px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 transition-all font-jetbrains shadow-inner"
 							/>
 						</div>
 						<div class="space-y-1.5">
 							<label
 								for="ruleBurst"
-								class="text-[9px] font-bold text-amber-500/70 uppercase tracking-widest"
+								class="text-[9px] font-black text-amber-500/70 uppercase tracking-widest"
 								>Burst Capacity</label
 							>
 							<input
 								id="ruleBurst"
 								type="number"
 								bind:value={form.burst}
-								class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 transition-all font-mono"
+								class="w-full bg-black border border-stone-800 px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 transition-all font-jetbrains shadow-inner"
 							/>
 						</div>
 					</div>
@@ -1109,17 +1111,17 @@
 			</div>
 
 			<div
-				class="p-6 border-t border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 flex justify-end gap-3"
+				class="p-6 sm:p-8 border-t border-stone-800 bg-[#0a0a0a] flex justify-end gap-4"
 			>
 				<button
 					onclick={() => (showModal = false)}
-					class="px-6 py-3 rounded-xl text-[10px] font-bold text-slate-500 hover:text-slate-900 dark:text-white uppercase tracking-widest transition-all"
+					class="px-6 py-2.5 text-[10px] font-black text-stone-600 hover:text-white uppercase tracking-widest transition-all"
 				>
 					Abort
 				</button>
 				<button
 					onclick={saveRule}
-					class="px-8 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-xl shadow-red-900/20"
+					class="px-8 py-3 bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-xl shadow-red-900/20 active:translate-y-px"
 				>
 					Initialize
 				</button>

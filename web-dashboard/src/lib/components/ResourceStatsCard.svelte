@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ResourceStatsCardProps } from '$lib/types/resource-metrics';
+	import { siteSettings } from '$lib/stores';
 
 	let {
 		title,
@@ -43,14 +44,14 @@
 
 	function getColors() {
 		const map = {
-			orange: { text: 'text-orange-400', bg: 'bg-orange-500', border: 'border-orange-500/20' },
-			blue: { text: 'text-blue-400', bg: 'bg-blue-500', border: 'border-blue-500/20' },
+			orange: { text: 'text-rust-light', bg: 'bg-rust', border: 'border-rust/20' },
+			blue: { text: 'text-cyan-400', bg: 'bg-cyan-500', border: 'border-cyan-500/20' },
 			green: { text: 'text-emerald-400', bg: 'bg-emerald-500', border: 'border-emerald-500/20' },
 			red: { text: 'text-red-400', bg: 'bg-red-500', border: 'border-red-500/20' },
 			purple: { text: 'text-purple-400', bg: 'bg-purple-500', border: 'border-purple-500/20' },
 			teal: { text: 'text-teal-400', bg: 'bg-teal-500', border: 'border-teal-500/20' }
 		};
-		return map[color] || map.blue;
+		return map[color as keyof typeof map] || map.blue;
 	}
 
 	const c = $derived(getColors());
@@ -58,39 +59,44 @@
 </script>
 
 <div
-	class="modern-industrial-card glass-panel p-5 relative overflow-hidden group hover:border-rust/40 transition-all duration-500 shadow-xl"
+	class="modern-industrial-card glass-panel p-6 relative overflow-hidden group hover:border-rust/40 transition-all duration-500 shadow-xl"
+	class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
+	class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
 >
-	<div class="flex justify-between items-start mb-4 relative z-10">
+	<div class="flex justify-between items-start mb-5 relative z-10">
 		<div>
-			<div class="text-[9px] font-jetbrains font-black text-stone-500 uppercase tracking-[0.2em] mb-1">
+			<div class="text-[9px] font-jetbrains font-black text-stone-500 uppercase tracking-[0.3em] mb-1.5 flex items-center gap-2">
+				<div class="w-1 h-1 rounded-full {c.bg} shadow-lg shadow-current"></div>
 				{title}
 			</div>
 			<div
 				class="text-3xl font-heading font-black text-white tabular-nums tracking-tighter"
 			>
-				{displayCurrent.toFixed(1)}<span class="text-xs text-stone-500 ml-1 font-jetbrains">{unit}</span>
+				{displayCurrent.toFixed(1)}<span class="text-xs text-stone-600 ml-1 font-jetbrains font-bold uppercase">{unit}</span>
 			</div>
 		</div>
 		<div
-			class="p-2.5 rounded-none border border-stone-800 bg-stone-900/50 text-xl group-hover:scale-110 group-hover:text-rust transition-all industrial-frame shadow-inner"
+			class="p-2.5 rounded-none border border-stone-800 bg-stone-950 text-[10px] font-black font-jetbrains text-stone-500 group-hover:scale-110 group-hover:text-rust transition-all shadow-inner"
+			class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
+			class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
 		>
 			{icon}
 		</div>
 	</div>
 
 	<!-- Progress Bar -->
-	<div class="relative h-1 w-full bg-stone-950 border border-stone-800 rounded-none overflow-hidden mb-3 p-0 relative z-10">
+	<div class="h-1 w-full bg-stone-950 border border-stone-800/50 rounded-none overflow-hidden mb-4 p-0 relative z-10 shadow-inner">
 		<div
-			class="absolute top-0 left-0 h-full {c.bg.replace('bg-', 'bg-')} transition-all duration-700 ease-out shadow-lg"
-			style="width: {pct}%; box-shadow: 0 0 10px rgba(249, 115, 22, 0.2);"
+			class="absolute top-0 left-0 h-full {c.bg} transition-all duration-700 ease-out"
+			style="width: {pct}%; box-shadow: 0 0 15px currentColor;"
 		></div>
 	</div>
 
 	<!-- Footer -->
-	<div class="flex items-center justify-between text-[9px] font-jetbrains font-bold text-stone-600 uppercase tracking-widest relative z-10">
-		<span class="flex items-center gap-2">PEAK_VALUE: <span class="text-stone-400">{peak.toFixed(1)}{unit}</span></span>
-		<span class={`px-1.5 py-0.5 border ${trend === 'up' ? 'text-red-500 border-red-500/20 bg-red-500/5' : 'text-emerald-500 border-emerald-500/20 bg-emerald-500/5'}`}>
+	<div class="flex items-center justify-between text-[9px] font-jetbrains font-black text-stone-600 uppercase tracking-widest relative z-10">
+		<span class="flex items-center gap-2">MAX_DETECTION: <span class="text-stone-400">{peak.toFixed(1)} {unit}</span></span>
+		<div class={`px-2 py-0.5 border ${trend === 'up' ? 'text-red-500 border-red-500/20 bg-red-500/5' : 'text-emerald-500 border-emerald-500/20 bg-emerald-500/5'}`}>
 			{pct.toFixed(0)}%_LOAD
-		</span>
+		</div>
 	</div>
 </div>
