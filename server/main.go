@@ -300,7 +300,7 @@ func run() error {
 		// Configuration Management Routes
 		router.Handle("/api/config", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(config.GetAllConfigHandler))).Methods("GET")
 		router.Handle("/api/config", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(config.CreateConfigHandler))).Methods("POST")
-		router.Handle("/api/config/{category}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(config.GetConfigByCategoryHandler))).Methods("GET")
+		router.Handle("/api/config/category/{category}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(config.GetConfigByCategoryHandler))).Methods("GET")
 		router.Handle("/api/config/{key}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(config.UpdateConfigHandler))).Methods("PUT")
 		router.Handle("/api/config/key/{key}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(config.GetConfigByKeyHandler))).Methods("GET")
 

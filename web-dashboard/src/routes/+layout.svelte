@@ -130,6 +130,21 @@
 				root.style.setProperty('--grid-opacity', ($siteSettings.aesthetic.grid_opacity ?? 0.05).toString());
 				root.style.setProperty('--border-opacity', ($siteSettings.aesthetic.border_opacity ?? 0.3).toString());
 
+				// Micro-Typography
+				root.style.setProperty('--text-letter-spacing', ($siteSettings.aesthetic.letter_spacing ?? 0.05) + 'em');
+				root.style.setProperty('--text-line-height', ($siteSettings.aesthetic.line_height ?? 1.5).toString());
+				root.style.setProperty('--text-transform', $siteSettings.aesthetic.text_transform || 'uppercase');
+				root.style.setProperty('--heading-weight', $siteSettings.aesthetic.heading_weight || '900');
+				root.style.setProperty('--base-weight', $siteSettings.aesthetic.font_weight_base || '400');
+				root.style.setProperty('--mono-weight', $siteSettings.aesthetic.font_weight_mono || '400');
+				root.style.setProperty('--paragraph-spacing', ($siteSettings.aesthetic.paragraph_spacing ?? 1.0) + 'em');
+				root.style.setProperty('--text-glow-intensity', ($siteSettings.aesthetic.text_glow_intensity ?? 0.5).toString());
+
+				// Kinetic Physics
+				root.style.setProperty('--global-transition', ($siteSettings.aesthetic.global_transition_speed ?? 300) + 'ms');
+				root.style.setProperty('--hover-scale', ($siteSettings.aesthetic.hover_scale_factor ?? 1.02).toString());
+				root.style.setProperty('--press-depth', ($siteSettings.aesthetic.button_press_depth ?? 2) + 'px');
+
 				if ($siteSettings.aesthetic.reduced_motion) {
 					root.classList.add('reduced-motion');
 				} else {

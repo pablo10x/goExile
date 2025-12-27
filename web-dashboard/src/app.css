@@ -168,153 +168,27 @@ body {
   font-family: var(--font-primary);
   color: var(--text-primary);
   font-size: var(--font-size-base);
+  line-height: var(--text-line-height, 1.5);
+  letter-spacing: var(--text-letter-spacing, normal);
+  font-weight: var(--base-weight, 400);
   @apply font-body selection:bg-rust selection:text-white transition-colors duration-300;
   position: relative;
   overflow-x: hidden;
   min-height: 100vh;
 }
 
-/* Tactical Industrial Utilities */
-.tactical-border {
-  position: relative;
-  border: var(--card-border-width, 1px) solid var(--border-color);
+p {
+  margin-bottom: var(--paragraph-spacing, 1em);
 }
 
-.corner-tl, .corner-tr, .corner-bl, .corner-br {
-  content: '';
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  border-color: var(--glow-color);
-  opacity: 0.4;
-  pointer-events: none;
-  z-index: 10;
+code, pre, .font-mono {
+  font-weight: var(--mono-weight, 400);
 }
 
-.corner-tl { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
-.corner-tr { top: -1px; right: -1px; border-top: 2px solid; border-right: 2px solid; }
-.corner-bl { bottom: -1px; left: -1px; border-bottom: 2px solid; border-left: 2px solid; }
-.corner-br { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
-
-.modern-industrial-card {
-  @apply relative overflow-hidden transition-all duration-500;
-  background: var(--card-bg-color, linear-gradient(135deg, rgba(15, 23, 42, var(--card-alpha)), rgba(2, 6, 23, var(--card-alpha))));
-  backdrop-filter: blur(var(--backdrop-blur));
-  border: var(--card-border-width, 1px) solid var(--border-color);
-  box-shadow: 0 var(--card-shadow-size) calc(var(--card-shadow-size) * 2) calc(var(--card-shadow-size) * -1) rgba(0, 0, 0, 0.8);
-  border-radius: var(--radius-lg);
-  will-change: transform;
-  content-visibility: auto;
-}
-
-.will-change-transform {
-  will-change: transform;
-}
-
-.modern-industrial-card::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: url("https://www.transparenttextures.com/patterns/p6.png");
-  opacity: 0.02;
-  pointer-events: none;
-  mix-blend-mode: overlay;
-}
-
-.modern-industrial-card:hover {
-  border-color: var(--primary-color, rgba(217, 119, 6, 0.3));
-  transform: translateY(-2px);
-  box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.9), 0 0 20px var(--border-accent);
-}
-
-.industrial-noise::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: url("https://www.transparenttextures.com/patterns/micro-carbon.png");
-  opacity: 0.04;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.glass-panel {
-  @apply backdrop-blur-[var(--backdrop-blur)] border-white/[var(--glass-border-alpha)] bg-black/[var(--card-alpha)];
-}
-
-.nav-link-industrial {
-  @apply flex items-center gap-4 p-3 relative transition-all duration-500 overflow-hidden border border-transparent;
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
-}
-
-.nav-link-industrial::before {
-  content: '';
-  @apply absolute inset-0 bg-transparent transition-all duration-500;
-  z-index: -1;
-}
-
-.nav-link-industrial:hover {
-  @apply border-white/5 translate-x-1;
-  background-color: var(--hover-color, rgba(30, 41, 59, 0.4));
-  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02), 0 0 15px rgba(0, 0, 0, 0.1);
-}
-
-.nav-link-industrial:hover::before {
-  background: radial-gradient(circle at center, var(--primary-color) 0%, transparent 70%);
-  opacity: 0.1;
-}
-
-/* Light beam sweep */
-.nav-link-industrial::after {
-  content: '';
-  @apply absolute top-0 -left-full w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-[-25deg] transition-all duration-1000;
-}
-
-.nav-link-industrial:hover::after {
-  @apply left-full;
-}
-
-.nav-link-industrial.active {
-  @apply text-white;
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
-  box-shadow: 0 0 25px var(--border-accent), inset 0 0 10px rgba(0, 0, 0, 0.2);
-}
-
-.nav-link-industrial.active .nav-text {
-  @apply text-white;
-}
-
-.nav-link-industrial.active .nav-subtext {
-  @apply text-white/60;
-}
-
-.nav-link-industrial.active::before {
-  @apply opacity-20;
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.nav-icon-container {
-  @apply w-8 h-8 flex items-center justify-center bg-stone-950 border border-stone-800 transition-all duration-500;
-}
-
-.nav-link-industrial:hover .nav-icon-container {
-  @apply border-rust/50 shadow-[0_0_15px_rgba(249,115,22,0.2)];
-}
-
-.nav-text {
-  @apply font-jetbrains text-[11px] font-black tracking-widest leading-none;
-}
-
-.nav-subtext {
-  @apply font-mono text-[7px] text-stone-600 uppercase tracking-[0.3em] mt-1;
-}
-
-.panic-mode {
-  animation: panic-flash 0.5s step-end infinite !important;
-}
-
-.panic-mode * {
-  border-color: rgba(220, 38, 38, 0.5) !important;
+h1, h2, h3, h4, .font-heading {
+  font-weight: var(--heading-weight, 900);
+  text-transform: var(--text-transform, uppercase);
+  letter-spacing: calc(var(--text-letter-spacing, 0.05em) * 2);
 }
 
 .text-glow-enabled .military-label,
@@ -322,7 +196,7 @@ body {
 .text-glow-enabled h1,
 .text-glow-enabled h2,
 .text-glow-enabled .font-heading {
-  text-shadow: 0 0 10px var(--glow-color, rgba(249, 115, 22, var(--glow-intensity, 0.4)));
+  text-shadow: 0 0 calc(var(--text-glow-intensity, 0.5) * 20px) var(--glow-color, rgba(249, 115, 22, var(--glow-intensity, 0.4)));
 }
 
 /* CRT Effects */

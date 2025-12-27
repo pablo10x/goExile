@@ -271,6 +271,20 @@ export const siteSettings = createDatabaseStore('site.settings', {
 		corner_style: 'clipped' as 'clipped' | 'rounded' | 'sharp',
 		border_opacity: 0.3,
 		grid_opacity: 0.05,
+		// Micro-Typography
+		letter_spacing: 0.05, // em
+		line_height: 1.5,
+		text_transform: 'uppercase' as 'uppercase' | 'none',
+		heading_weight: '900',
+		font_weight_base: '400',
+		font_weight_mono: '400',
+		text_glow_intensity: 0.5,
+		paragraph_spacing: 1.0, // em
+		// Kinetic Physics (Animations)
+		global_transition_speed: 300, // ms
+		hover_scale_factor: 1.02,
+		button_press_depth: 2, // px
+		ui_animation_intensity: 1.0,
 		// Specialized Colors
 		success_color: '#10b981ff',
 		warning_color: '#f59e0bff',

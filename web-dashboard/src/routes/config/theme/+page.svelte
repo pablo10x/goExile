@@ -18,7 +18,6 @@
 		Cloud, 
 		RefreshCw, 
 		AlertCircle,
-		Check,
 		CheckCircle,
 		LayoutDashboard,
 		Server,
@@ -43,19 +42,24 @@
 		Layers,
 		Dna,
 		Lock,
-		Radio
+		Radio,
+		Type,
+		Move,
+		Check
 	} from 'lucide-svelte';
 	import StatsCard from '$lib/components/StatsCard.svelte';
 	import { fade, slide, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 
 	// Calibration Subsystems
-	let activeSubsystem = $state<'chromatic' | 'atmospheric' | 'geometric' | 'structural'>('chromatic');
+	let activeSubsystem = $state<'chromatic' | 'atmospheric' | 'geometric' | 'structural' | 'typography' | 'kinetic'>('chromatic');
 
 	const subsystems = [
 		{ id: 'chromatic', label: 'Chromatic_Matrix', icon: Palette, desc: 'Color calibration & luminance' },
 		{ id: 'atmospheric', label: 'Atmospheric_Core', icon: Cloud, desc: 'CRT, Scanlines & Noise' },
 		{ id: 'geometric', label: 'Geometric_Logic', icon: Box, desc: 'Frames, Radii & Layout' },
+		{ id: 'typography', label: 'Typography_Engine', icon: Type, desc: 'Micro-spacing & weight' },
+		{ id: 'kinetic', label: 'Kinetic_Physics', icon: Move, desc: 'Transitions & Hover physics' },
 		{ id: 'structural', label: 'Structural_Engine', icon: Layers, desc: 'Background & Particles' }
 	];
 
@@ -145,7 +149,6 @@
 
 	function resetToDefault() {
 		if (confirm('Are you sure you want to reset all aesthetic settings to default?')) {
-			// (Implementation remains similar but with new properties)
 			location.reload(); 
 		}
 	}
@@ -199,7 +202,7 @@
 		<div class="2xl:col-span-8 space-y-8">
 			
 			<!-- Subsystem Tabs -->
-			<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+			<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
 				{#each subsystems as sub}
 					<button
 						onclick={() => activeSubsystem = sub.id as any}
@@ -209,8 +212,7 @@
 							<sub.icon class="w-5 h-5 {activeSubsystem === sub.id ? 'text-white' : 'text-stone-700 group-hover:text-rust'}" />
 							<div class="w-1.5 h-1.5 rounded-full {activeSubsystem === sub.id ? 'bg-white animate-pulse' : 'bg-stone-900'}"></div>
 						</div>
-						<span class="text-[10px] font-black uppercase tracking-widest mb-1">{sub.label}</span>
-						<span class="text-[8px] opacity-60 uppercase tracking-tight line-clamp-1">{sub.desc}</span>
+						<span class="text-[9px] font-black uppercase tracking-widest mb-1">{sub.label}</span>
 						
 						{#if activeSubsystem === sub.id}
 							<div class="absolute bottom-0 left-0 w-full h-0.5 bg-white"></div>
@@ -228,11 +230,6 @@
 							<h3 class="font-heading font-black text-lg text-white uppercase tracking-widest">{subsystems.find(s => s.id === activeSubsystem)?.label}</h3>
 							<span class="text-[9px] text-stone-600 uppercase tracking-widest italic">Subsystem_Active_Node_0x{activeSubsystem.substring(0,2).toUpperCase()}</span>
 						</div>
-					</div>
-					<div class="flex gap-2">
-						{#each [1,2,3] as i}
-							<div class="w-1 h-1 bg-stone-800 rounded-full"></div>
-						{/each}
 					</div>
 				</div>
 
@@ -296,33 +293,148 @@
 									</div>
 								{/each}
 							</div>
-
-							<!-- Specialized Signals -->
-							<div class="pt-10 border-t border-stone-800">
-								<h4 class="text-[10px] font-black text-stone-500 uppercase tracking-[0.4em] mb-8 italic">Specialized_Signal_Calibration</h4>
-								<div class="grid grid-cols-2 lg:grid-cols-4 gap-8">
+						</div>
+					{:else if activeSubsystem === 'typography'}
+						<div in:fade={{ duration: 300 }} class="space-y-12">
+							<div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+								<div class="space-y-8">
+									<h4 class="text-[10px] font-black text-stone-500 uppercase tracking-[0.4em] border-b border-stone-800 pb-4">Micro_Typography_Rules</h4>
+									
 									{#each [
-										{ key: 'success_color', label: 'Success_Sig', color: 'text-emerald-500' },
-										{ key: 'warning_color', label: 'Warning_Sig', color: 'text-amber-500' },
-										{ key: 'danger_color', label: 'Critical_Sig', color: 'text-red-500' },
-										{ key: 'info_color', label: 'Info_Sig', color: 'text-cyan-500' }
-									] as sig}
-										<div class="flex items-center gap-4 p-4 bg-stone-900/30 border border-stone-800 hover:border-rust/30 transition-all group relative">
-											<div class="w-10 h-10 shrink-0 relative">
-												<input 
-													type="color" 
-													value={getHex(($siteSettings.aesthetic as any)[sig.key])} 
-													oninput={e => updateColor(sig.key, e.currentTarget.value, getAlpha(($siteSettings.aesthetic as any)[sig.key]))}
-													class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
-												/>
-												<div class="absolute inset-0 border border-stone-700 group-hover:border-rust transition-colors" style="background-color: {($siteSettings.aesthetic as any)[sig.key]}"></div>
+										{ key: 'letter_spacing', label: 'Tracking_Spread', min: -0.05, max: 0.5, step: 0.01, unit: 'em' },
+										{ key: 'line_height', label: 'Vertical_Density', min: 1, max: 2, step: 0.1, unit: 'lh' },
+										{ key: 'paragraph_spacing', label: 'Block_Separation', min: 0, max: 3, step: 0.1, unit: 'em' },
+										{ key: 'font_size_base', label: 'Kernel_Size', min: 10, max: 20, step: 1, unit: 'px' },
+										{ key: 'text_glow_intensity', label: 'Glow_Radiation', min: 0, max: 1, step: 0.05, unit: 'α' }
+									] as slider}
+										<div class="space-y-4">
+											<div class="flex justify-between items-center">
+												<span class="text-[10px] font-black text-stone-400 uppercase tracking-widest">{slider.label}</span>
+												<span class="text-[10px] font-mono text-rust-light">{(($siteSettings.aesthetic as any)[slider.key])}{slider.unit}</span>
 											</div>
-											<div>
-												<span class="text-[9px] font-black text-stone-500 uppercase tracking-widest block">{sig.label}</span>
-												<span class="text-[10px] font-mono font-bold {sig.color}">{getHex(($siteSettings.aesthetic as any)[sig.key])}</span>
+											<div class="relative flex items-center h-1.5 bg-stone-950 border border-stone-800">
+												<input 
+													type="range" 
+													min={slider.min} 
+													max={slider.max} 
+													step={slider.step} 
+													value={($siteSettings.aesthetic as any)[slider.key]} 
+													oninput={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, [slider.key]: parseFloat(e.currentTarget.value) } }))} 
+													class="w-full h-full appearance-none cursor-pointer bg-transparent accent-rust z-10" 
+												/>
+												<div class="absolute top-0 left-0 h-full bg-rust/30" style="width: {((($siteSettings.aesthetic as any)[slider.key] - slider.min) / (slider.max - slider.min)) * 100}%"></div>
 											</div>
 										</div>
 									{/each}
+
+									<div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-stone-800/50">
+										<div class="space-y-4">
+											<span class="text-[9px] font-black text-stone-600 uppercase tracking-widest block">Heading_Weight_Level</span>
+											<div class="grid grid-cols-3 gap-2">
+												{#each ['300', '500', '900'] as weight}
+													<button
+														onclick={() => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, heading_weight: weight } }))}
+														class="py-2 border text-[9px] font-black transition-all {$siteSettings.aesthetic.heading_weight === weight ? 'bg-rust text-white border-rust' : 'bg-stone-950 border-stone-800 text-stone-600'}"
+													>
+														{weight}
+													</button>
+												{/each}
+											</div>
+										</div>
+										<div class="space-y-4">
+											<span class="text-[9px] font-black text-stone-600 uppercase tracking-widest block">Base_Weight_Level</span>
+											<div class="grid grid-cols-3 gap-2">
+												{#each ['300', '400', '700'] as weight}
+													<button
+														onclick={() => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, font_weight_base: weight } }))}
+														class="py-2 border text-[9px] font-black transition-all {$siteSettings.aesthetic.font_weight_base === weight ? 'bg-rust text-white border-rust' : 'bg-stone-950 border-stone-800 text-stone-600'}"
+													>
+														{weight}
+													</button>
+												{/each}
+											</div>
+										</div>
+									</div>
+
+									<div class="space-y-4 pt-4 border-t border-stone-800/50">
+										<span class="text-[9px] font-black text-stone-600 uppercase tracking-widest block">Text_Transformation_Protocol</span>
+										<div class="grid grid-cols-2 gap-4">
+											{#each ['uppercase', 'none'] as mode}
+												<button
+													onclick={() => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, text_transform: mode as any } }))}
+													class="py-3 border-2 text-[10px] font-black uppercase transition-all {$siteSettings.aesthetic.text_transform === mode ? 'bg-rust/10 border-rust text-white' : 'bg-stone-950 border-stone-800 text-stone-600'}"
+												>
+													{mode}
+												</button>
+											{/each}
+										</div>
+									</div>
+								</div>
+
+								<div class="space-y-8 bg-stone-950/30 p-8 border border-stone-800 industrial-frame">
+									<h4 class="text-[10px] font-black text-rust uppercase tracking-widest italic mb-4">Uplink_Text_Preview</h4>
+									<div class="space-y-6">
+										<div class="space-y-2">
+											<span class="text-[8px] text-stone-700 uppercase font-mono">Heading_H1</span>
+											<h1 class="text-3xl text-white truncate">Critical_Breach</h1>
+										</div>
+										<div class="space-y-2">
+											<span class="text-[8px] text-stone-700 uppercase font-mono">Body_Paragraph</span>
+											<p class="text-xs text-stone-400 leading-relaxed uppercase">Neural interface synchronization complete. All decentralized modules are reporting nominal operational capacity within sector Delta-9.</p>
+										</div>
+										<div class="space-y-2">
+											<span class="text-[8px] text-stone-700 uppercase font-mono">Telemetry_Data</span>
+											<div class="font-mono text-[10px] text-emerald-500">0xAF77 :: STATUS_OK :: 124.5Hz</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					{:else if activeSubsystem === 'kinetic'}
+						<div in:fade={{ duration: 300 }} class="space-y-12">
+							<div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+								<div class="space-y-8">
+									<h4 class="text-[10px] font-black text-stone-500 uppercase tracking-[0.4em] border-b border-stone-800 pb-4">Kinetic_Physics_Calibration</h4>
+									
+									{#each [
+										{ key: 'global_transition_speed', label: 'Transition_Velocity', min: 0, max: 1000, step: 50, unit: 'ms' },
+										{ key: 'hover_scale_factor', label: 'Expansion_Depth', min: 1, max: 1.2, step: 0.01, unit: 'x' },
+										{ key: 'button_press_depth', label: 'Pressure_Offset', min: 0, max: 10, step: 1, unit: 'px' },
+										{ key: 'ui_animation_intensity', label: 'Glitch_Amplitude', min: 0, max: 2, step: 0.1, unit: 'α' }
+									] as slider}
+										<div class="space-y-4">
+											<div class="flex justify-between items-center">
+												<span class="text-[10px] font-black text-stone-400 uppercase tracking-widest">{slider.label}</span>
+												<span class="text-[10px] font-mono text-rust-light">{(($siteSettings.aesthetic as any)[slider.key])}{slider.unit}</span>
+											</div>
+											<div class="relative flex items-center h-1.5 bg-stone-950 border border-stone-800">
+												<input 
+													type="range" 
+													min={slider.min} 
+													max={slider.max} 
+													step={slider.step} 
+													value={($siteSettings.aesthetic as any)[slider.key]} 
+													oninput={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, [slider.key]: parseFloat(e.currentTarget.value) } }))} 
+													class="w-full h-full appearance-none cursor-pointer bg-transparent accent-rust z-10" 
+												/>
+												<div class="absolute top-0 left-0 h-full bg-rust/30" style="width: {((($siteSettings.aesthetic as any)[slider.key] - slider.min) / (slider.max - slider.min)) * 100}%"></div>
+											</div>
+										</div>
+									{/each}
+								</div>
+
+								<div class="space-y-8">
+									<h4 class="text-[10px] font-black text-stone-500 uppercase tracking-[0.4em] border-b border-stone-800 pb-4">Kinetic_Stress_Test</h4>
+									<div class="grid grid-cols-1 gap-6">
+										<button class="modern-industrial-card glass-panel p-8 text-center group">
+											<span class="text-sm font-black uppercase group-hover:text-rust transition-colors">Hover_Motion_Test</span>
+										</button>
+										<div class="flex gap-4">
+											{#each [1,2,3] as i}
+												<button class="flex-1 py-4 bg-rust text-white font-black text-[10px] uppercase shadow-lg shadow-rust/20 active:translate-y-[var(--press-depth)]">Press_0{i}</button>
+											{/each}
+										</div>
+									</div>
 								</div>
 							</div>
 						</div>
@@ -388,32 +500,6 @@
 					{:else if activeSubsystem === 'geometric'}
 						<div in:fade={{ duration: 300 }} class="space-y-12">
 							<div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-								<!-- Typography -->
-								<div class="space-y-8">
-									<h4 class="text-[10px] font-black text-stone-500 uppercase tracking-[0.4em] border-b border-stone-800 pb-4">Typeface_Engine_Calibration</h4>
-									
-									{#each [
-										{ key: 'font_header', label: 'Heading_Font' },
-										{ key: 'font_body', label: 'Interface_Font' },
-										{ key: 'font_mono', label: 'Telemetry_Font' }
-									] as type}
-										<div class="space-y-3">
-											<span class="text-[9px] font-black text-stone-600 uppercase tracking-[0.3em] ml-1">{type.label}</span>
-											<div class="grid grid-cols-2 gap-2">
-												{#each fontOptions as font}
-													<button 
-														onclick={() => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, [type.key]: font } }))}
-														class="px-3 py-2 border transition-all text-[9px] font-black uppercase text-left industrial-frame {($siteSettings.aesthetic as any)[type.key] === font ? 'border-rust text-white bg-rust/10' : 'border-stone-800 text-stone-600 hover:border-stone-700'}"
-														style="font-family: '{font}';"
-													>
-														{font}
-													</button>
-												{/each}
-											</div>
-										</div>
-									{/each}
-								</div>
-
 								<!-- Frame Geometry -->
 								<div class="space-y-8">
 									<h4 class="text-[10px] font-black text-stone-500 uppercase tracking-[0.4em] border-b border-stone-800 pb-4">Structural_Geometry_Rules</h4>
@@ -483,32 +569,6 @@
 													</div>
 												{/if}
 											</button>
-										{/each}
-									</div>
-								</div>
-
-								<div class="pt-10 border-t border-stone-800">
-									<h4 class="text-[10px] font-black text-stone-500 uppercase tracking-[0.4em] border-b border-stone-800 pb-4 mb-8">Atmosphere_Particles</h4>
-									<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-										{#each [
-											{ key: 'show_smoke', label: 'Volumetric_Fluid', desc: 'Simulate neural smoke exhaust', icon: Cloud },
-											{ key: 'show_rain', label: 'Digital_Precipitation', desc: 'Vertical packet stream falling', icon: CloudRain },
-											{ key: 'show_clouds', label: 'Nebula_Overlay', desc: 'High-altitude gas formation', icon: Wind },
-											{ key: 'show_navbar_particles', label: 'Interface_Dust', desc: 'Sidebar ambient magnetic dust', icon: Sparkles }
-										] as toggle}
-											<div class="flex items-center justify-between p-5 bg-stone-900/30 border border-stone-800 hover:border-rust/30 transition-all group industrial-frame">
-												<div class="flex items-center gap-4">
-													<toggle.icon class="w-5 h-5 text-rust opacity-40 group-hover:opacity-100 transition-opacity" />
-													<div class="space-y-1">
-														<span class="text-[10px] font-black text-white uppercase tracking-widest block">{toggle.label}</span>
-														<span class="text-[8px] text-stone-600 uppercase tracking-tight italic">{toggle.desc}</span>
-													</div>
-												</div>
-												<label class="relative inline-flex items-center cursor-pointer">
-													<input type="checkbox" checked={($backgroundConfig as any)[toggle.key]} onchange={e => backgroundConfig.update(b => ({ ...b, [toggle.key]: e.currentTarget.checked }))} class="sr-only peer">
-													<div class="w-12 h-6 bg-stone-950 border border-stone-800 peer-focus:outline-none rounded-none peer-checked:after:translate-x-6 peer-checked:after:bg-rust after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-stone-700 after:rounded-none after:h-4 after:w-4 after:transition-all peer-checked:bg-rust/10 peer-checked:border-rust"></div>
-												</label>
-											</div>
 										{/each}
 									</div>
 								</div>
@@ -601,7 +661,7 @@
 							</div>
 							<div class="space-y-2">
 								{#each [1,2] as i}
-									<div class="h-8 bg-stone-950/50 border border-stone-800 flex items-center px-4 justify-between">
+									<div class="h-8 bg-stone-950/50 border border-stone-800 flex items-center px-4 justify-between transition-transform hover:scale-[var(--hover-scale)]">
 										<span class="text-[8px] text-stone-500 uppercase font-mono">Kernel_Module_0{i}</span>
 										<span class="text-[8px] text-emerald-500 font-mono font-bold">RUNNING</span>
 									</div>
@@ -609,10 +669,7 @@
 							</div>
 						</div>
 
-						<div class="p-4 bg-red-950/10 border-l-2 border-red-600 text-red-500 flex items-center gap-4">
-							<AlertCircle class="w-4 h-4 animate-pulse" />
-							<span class="text-[9px] font-black uppercase tracking-widest">Breach_Attempt_Detected_Sector_7</span>
-						</div>
+						<button class="w-full py-3 bg-rust text-white font-black text-[10px] uppercase active:translate-y-[var(--press-depth)] transition-all">Test_Action_Trigger</button>
 					</div>
 
 					<!-- Post-processing Simulation Layer -->

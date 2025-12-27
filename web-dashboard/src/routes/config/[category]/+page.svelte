@@ -21,7 +21,7 @@
 			loading = true;
 			error = null;
 
-			const response = await fetch(`/api/config/${category}`);
+			const response = await fetch(`/api/config/category/${category}`);
 			if (!response.ok) {
 				throw new Error(`Failed to load ${category} configuration: ${response.statusText}`);
 			}

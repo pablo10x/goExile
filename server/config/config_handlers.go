@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"exile/server/database"
 	"exile/server/models"
 	"exile/server/utils"
+
+	"github.com/gorilla/mux"
 )
 
 // GetAllConfigHandler returns all configuration settings
@@ -25,7 +26,8 @@ func GetAllConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 // GetConfigByCategoryHandler returns configuration settings for a specific category
 func GetConfigByCategoryHandler(w http.ResponseWriter, r *http.Request) {
-	category := strings.TrimPrefix(r.URL.Path, "/api/config/category/")
+	vars := mux.Vars(r)
+	category := vars["category"]
 	if category == "" {
 		utils.WriteError(w, r, http.StatusBadRequest, "Category is required")
 		return
@@ -42,7 +44,8 @@ func GetConfigByCategoryHandler(w http.ResponseWriter, r *http.Request) {
 
 // GetConfigByKeyHandler returns a specific configuration setting by key
 func GetConfigByKeyHandler(w http.ResponseWriter, r *http.Request) {
-	key := strings.TrimPrefix(r.URL.Path, "/api/config/")
+	vars := mux.Vars(r)
+	key := vars["key"]
 	if key == "" {
 		utils.WriteError(w, r, http.StatusBadRequest, "Key is required")
 		return
@@ -69,7 +72,8 @@ func UpdateConfigHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	key := strings.TrimPrefix(r.URL.Path, "/api/config/")
+	vars := mux.Vars(r)
+	key := vars["key"]
 	if key == "" {
 		utils.WriteError(w, r, http.StatusBadRequest, "Key is required")
 		return
