@@ -45,7 +45,17 @@
 		Eye,
 		Sun,
 		Moon,
-		Palette
+		Palette,
+		Radio,
+		Compass,
+		Cpu,
+		Terminal,
+		Lock,
+		Shield,
+		Layers,
+		BarChart3,
+		ChevronRight,
+		X
 	} from 'lucide-svelte';
 	import QuickActionsTooltip from '$lib/components/QuickActionsTooltip.svelte';
 	import NoteModal from '$lib/components/notes/NoteModal.svelte';
@@ -419,30 +429,41 @@
 {:else}
 	{#if $isAuthenticated && page.url.pathname !== '/login'}
 		<div class="relative min-h-screen {localSiteSettings?.aesthetic?.crt_effect ? 'crt-container' : ''} {localSiteSettings?.aesthetic?.crt_curve ? 'crt-curve' : ''} {localSiteSettings?.aesthetic?.panic_mode ? 'panic-mode' : ''}">
-			<!-- System Ticker Header (New) -->
-			<div class="fixed top-0 left-0 right-0 h-6 bg-black/80 backdrop-blur-md border-b border-stone-800 z-[110] flex items-center px-4 overflow-hidden">
-				<div class="flex items-center gap-6 animate-text-reveal whitespace-nowrap">
-					<span class="tactical-code text-rust-light">[SYSTEM_READY]</span>
-					<span class="tactical-code text-stone-600">CONNECTION: {$connectionStatus}</span>
-					<span class="tactical-code text-stone-600">ACTIVE_NODES: {$stats.active_spawners}</span>
-					<span class="tactical-code text-stone-600">TIMESTAMP: {new Date().toISOString()}</span>
-					<span class="tactical-code text-rust-light">[BUFFER_OPTIMIZED]</span>
+			<!-- System Ticker Header -->
+			<div class="fixed top-0 left-0 right-0 h-7 bg-black border-b border-stone-800 z-[120] flex items-center px-4 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.8)]">
+				<div class="flex items-center gap-8 animate-text-reveal whitespace-nowrap w-full">
+					<div class="flex items-center gap-2 shrink-0">
+						<div class="w-1 h-1 rounded-full bg-rust animate-ping"></div>
+						<span class="tactical-code text-rust font-black">[SYSTEM_UPLINK_ESTABLISHED]</span>
+					</div>
+					<div class="flex items-center gap-6 text-stone-600">
+						<span class="tactical-code">NET_STATUS: <span class="text-stone-400">{$connectionStatus}</span></span>
+						<span class="tactical-code">NODES_ACTIVE: <span class="text-stone-400">{$stats.active_spawners}</span></span>
+						<span class="tactical-code hidden sm:inline">ENTROPY: <span class="text-stone-400">0.0042</span></span>
+						<span class="tactical-code">TIMESTAMP: <span class="text-stone-400 font-mono tracking-tighter">{new Date().toISOString()}</span></span>
+					</div>
+					<div class="ml-auto flex items-center gap-4 shrink-0">
+						<span class="tactical-code text-rust-light italic hidden md:inline">SECURITY_LEVEL: 4_OMNI</span>
+						<div class="w-[2px] h-3 bg-stone-800"></div>
+						<div class="flex gap-1">
+							{#each [1,2,3] as i}<div class="w-1 h-1 bg-stone-800 rounded-full"></div>{/each}
+						</div>
+					</div>
 				</div>
 			</div>
 
-			<!-- Overlays -->
-			<div class="fixed inset-0 z-[100] pointer-events-none overflow-hidden">
+			<!-- Background/Atmospheric Overlays (Lower Z-Index) -->
+			<div class="fixed inset-0 z-[10] pointer-events-none overflow-hidden">
 				<div class="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" style="opacity: {localSiteSettings?.aesthetic?.scanlines_opacity || 0.05}"></div>
 				<div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/asfalt-dark.png')] opacity-20 mix-blend-overlay" style="opacity: {localSiteSettings?.aesthetic?.noise_opacity || 0.03}"></div>
 			</div>
 
 			{#if localBackgroundConfig?.show_clouds}
-				<div class="clouds-overlay" style="opacity: {localBackgroundConfig.clouds_opacity}"></div>
-				<div class="clouds-overlay opacity-40" style="animation-direction: reverse; animation-duration: 180s; opacity: {localBackgroundConfig.clouds_opacity * 0.5}"></div>
+				<div class="fixed inset-0 z-[5] clouds-overlay" style="opacity: {localBackgroundConfig.clouds_opacity}"></div>
 			{/if}
 
 			{#if localBackgroundConfig?.show_rain}
-				<div class="rain-container">
+				<div class="fixed inset-0 z-[5] rain-container">
 					<div class="rain-layer rain-layer-back"></div>
 					<div class="rain-layer rain-layer-mid"></div>
 					<div class="rain-layer rain-layer-front" style="opacity: {localBackgroundConfig.rain_opacity * 0.5}"></div>
@@ -450,11 +471,11 @@
 			{/if}
 
 			{#if localBackgroundConfig?.show_smoke}
-				<GlobalSmoke />
+				<div class="fixed inset-0 z-[5] pointer-events-none"><GlobalSmoke /></div>
 			{/if}
 
 			{#if localBackgroundConfig?.show_vignette}
-				<div class="vignette"></div>
+				<div class="vignette z-[100]"></div>
 			{/if}
 
 			{#if localBackgroundConfig?.global_type && localBackgroundConfig.global_type !== 'none'}
@@ -463,15 +484,8 @@
 				</div>
 			{/if}
 
-			{#if localSiteSettings?.site_notice?.enabled}
-				<div class="relative z-[60] py-2 px-4 text-center text-[10px] font-heading tracking-[0.3em] uppercase transition-colors duration-500 {localSiteSettings.site_notice.type === 'critical' ? 'bg-red-600 text-white animate-pulse' : localSiteSettings.site_notice.type === 'warning' ? 'bg-rust text-white' : 'bg-stone-800 text-stone-300'}">
-					<span class="mr-2">[{localSiteSettings.site_notice.type.toUpperCase()}_BROADCAST]</span>
-					{localSiteSettings.site_notice.message}
-				</div>
-			{/if}
-
 			<div
-				class="flex h-screen text-stone-400 overflow-hidden relative bg-transparent transition-colors duration-300"
+				class="flex h-screen text-stone-400 overflow-hidden relative bg-transparent transition-colors duration-300 pt-7"
 			>
 			<!-- Global Restart Banner -->
 			{#if $restartRequired}
@@ -601,159 +615,71 @@
 						</button>
 					</div>
 
-					<nav class="flex-1 p-3 space-y-4 overflow-y-auto overflow-x-hidden no-scrollbar">
+					<nav class="flex-1 p-3 space-y-6 overflow-y-auto overflow-x-hidden no-scrollbar">
 						<!-- Terminal Output Simulation -->
 						{#if !isSidebarCollapsed}
 							<div class="px-2 py-1 mb-4 border-l-2 border-rust/30 opacity-40">
-								<div class="tactical-code text-stone-500 animate-pulse">>> SYSTEM READY</div>
-								<div class="tactical-code text-stone-600">>> READY FOR INPUT</div>
+								<div class="tactical-code text-stone-500 animate-pulse">>> COMMAND_MODULE_ACTIVE</div>
+								<div class="tactical-code text-stone-600">>> HANDSHAKE_OK</div>
 							</div>
 						{/if}
 
-						<div class="space-y-1">
-							<a
-								href="/dashboard"
-								class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}"
-								class:active={isRouteActive('/dashboard') || isRouteActive('/')}
-							>
-								<div class="nav-icon-container">
-									<LayoutDashboard class="w-4 h-4" />
-								</div>
-								{#if !isSidebarCollapsed}
-									<div class="flex flex-col">
-										<span class="nav-text">DASHBOARD</span>
-										<span class="nav-subtext">System Overview</span>
-									</div>
-								{/if}
-							</a>
+						<div class="space-y-6">
+							<!-- CATEGORY: CORE -->
+							<div class="space-y-1">
+								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Core_Systems</span>{/if}
+								<a href="/dashboard" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/dashboard') || isRouteActive('/')}>
+									<div class="nav-icon-container"><LayoutDashboard class="w-4 h-4" /></div>
+									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">CORE_DASH</span><span class="nav-subtext">Unified Interface</span></div>{/if}
+								</a>
+								<a href="/performance" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/performance')}>
+									<div class="nav-icon-container"><Activity class="w-4 h-4" /></div>
+									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">PERFORMANCE</span><span class="nav-subtext">RT_Telemetry</span></div>{/if}
+								</a>
+							</div>
 
-							<a
-								href="/performance"
-								class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}"
-								class:active={isRouteActive('/performance')}
-							>
-								<div class="nav-icon-container">
-									<Activity class="w-4 h-4" />
-								</div>
-								{#if !isSidebarCollapsed}
-									<div class="flex flex-col">
-										<span class="nav-text">PERFORMANCE</span>
-										<span class="nav-subtext">Real-time Metrics</span>
-									</div>
-								{/if}
-							</a>
+							<!-- CATEGORY: FLEET -->
+							<div class="space-y-1">
+								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Fleet_Ops</span>{/if}
+								<a href="/server" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/server')}>
+									<div class="nav-icon-container"><Server class="w-4 h-4" /></div>
+									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">NODE_FLEET</span><span class="nav-subtext">Spawner_Matrix</span></div>{/if}
+								</a>
+								<a href="/users" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/users')}>
+									<div class="nav-icon-container"><Users class="w-4 h-4" /></div>
+									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">IDENTITIES</span><span class="nav-subtext">Subject Registry</span></div>{/if}
+								</a>
+							</div>
 
-							<a
-								href="/config"
-								class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}"
-								class:active={isRouteActive('/config')}
-							>
-								<div class="nav-icon-container">
-									<SettingsIcon class="w-4 h-4" />
-								</div>
-								{#if !isSidebarCollapsed}
-									<div class="flex flex-col">
-										<span class="nav-text">CONFIGURATION</span>
-										<span class="nav-subtext">App Settings</span>
-									</div>
-								{/if}
-							</a>
+							<!-- CATEGORY: LOGISTICS -->
+							<div class="space-y-1">
+								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Logistics</span>{/if}
+								<a href="/database" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/database')}>
+									<div class="nav-icon-container"><Database class="w-4 h-4" /></div>
+									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">DATABASE</span><span class="nav-subtext">Data_Explorer</span></div>{/if}
+								</a>
+								<a href="/notes" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/notes')}>
+									<div class="nav-icon-container"><StickyNote class="w-4 h-4" /></div>
+									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">JOURNAL</span><span class="nav-subtext">Task_Buffer</span></div>{/if}
+								</a>
+							</div>
 
-							<a
-								href="/config/theme"
-								class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}"
-								class:active={isRouteActive('/config/theme')}
-							>
-								<div class="nav-icon-container">
-									<Palette class="w-4 h-4" />
-								</div>
-								{#if !isSidebarCollapsed}
-									<div class="flex flex-col">
-										<span class="nav-text">THEME LAB</span>
-										<span class="nav-subtext">Visual Calibration</span>
-									</div>
-								{/if}
-							</a>
-
-							<a
-								href="/server"
-								class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}"
-								class:active={isRouteActive('/server')}
-							>
-								<div class="nav-icon-container">
-									<HardDrive class="w-4 h-4" />
-								</div>
-								{#if !isSidebarCollapsed}
-									<div class="flex flex-col">
-										<span class="nav-text">FILE_STORAGE</span>
-										<span class="nav-subtext">Game Binaries</span>
-									</div>
-								{/if}
-							</a>
-
-							<a
-								href="/database"
-								class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}"
-								class:active={isRouteActive('/database')}
-							>
-								<div class="nav-icon-container">
-									<Database class="w-4 h-4" />
-								</div>
-								{#if !isSidebarCollapsed}
-									<div class="flex flex-col">
-										<span class="nav-text">DATABASE</span>
-										<span class="nav-subtext">Data Explorer</span>
-									</div>
-								{/if}
-							</a>
-
-							<a
-								href="/users"
-								class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}"
-								class:active={isRouteActive('/users')}
-							>
-								<div class="nav-icon-container">
-									<Users class="w-4 h-4" />
-								</div>
-								{#if !isSidebarCollapsed}
-									<div class="flex flex-col">
-										<span class="nav-text">PLAYER_ACCOUNTS</span>
-										<span class="nav-subtext">User Records</span>
-									</div>
-								{/if}
-							</a>
-
-							<a
-								href="/redeye"
-								class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}"
-								class:active={isRouteActive('/redeye')}
-							>
-								<div class="nav-icon-container">
-									<ShieldCheck class="w-4 h-4" />
-								</div>
-								{#if !isSidebarCollapsed}
-									<div class="flex flex-col">
-										<span class="nav-text">FIREWALL</span>
-										<span class="nav-subtext">Security Management</span>
-									</div>
-								{/if}
-							</a>
-
-							<a
-								href="/notes"
-								class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}"
-								class:active={isRouteActive('/notes')}
-							>
-								<div class="nav-icon-container">
-									<StickyNote class="w-4 h-4" />
-								</div>
-								{#if !isSidebarCollapsed}
-									<div class="flex flex-col">
-										<span class="nav-text">NOTES & TASKS</span>
-										<span class="nav-subtext">System Journal</span>
-									</div>
-								{/if}
-							</a>
+							<!-- CATEGORY: CONFIGURATION -->
+							<div class="space-y-1">
+								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Calibrations</span>{/if}
+								<a href="/config" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/config')}>
+									<div class="nav-icon-container"><SettingsIcon class="w-4 h-4" /></div>
+									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">SYSTEM_CONFIG</span><span class="nav-subtext">Kernel_Params</span></div>{/if}
+								</a>
+								<a href="/config/theme" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/config/theme')}>
+									<div class="nav-icon-container"><Palette class="w-4 h-4" /></div>
+									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">THEME_LAB</span><span class="nav-subtext">Visual_Sync</span></div>{/if}
+								</a>
+								<a href="/redeye" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/redeye')}>
+									<div class="nav-icon-container"><ShieldCheck class="w-4 h-4" /></div>
+									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">SENTINEL</span><span class="nav-subtext">Security_Shield</span></div>{/if}
+								</a>
+							</div>
 						</div>
 					</nav>
 
@@ -799,39 +725,35 @@
 			<div class="flex-1 flex flex-col h-full overflow-hidden relative">
 				<!-- Mobile Top Header -->
 				<header
-					class="md:hidden h-14 bg-black/80 backdrop-blur-md border-b-2 border-stone-800 flex items-center justify-between px-4 z-30 shrink-0 tactical-border"
+					class="md:hidden h-14 bg-black border-b border-stone-800 flex items-center justify-between px-4 z-[130] shrink-0 relative"
 				>
-					<div class="corner-bl"></div>
-					<div class="corner-br"></div>
-					<div class="flex items-center gap-3">
+					<div class="flex items-center gap-4">
 						<button 
 							onclick={() => isMobileMenuOpen = true}
-							class="p-2 -ml-2 text-stone-400 hover:text-white transition-colors"
+							class="p-2 -ml-2 text-stone-500 hover:text-white transition-colors border border-transparent hover:border-stone-800"
 						>
 							<Menu class="w-6 h-6" />
 						</button>
 						<div class="flex flex-col">
 							<div class="flex items-center gap-2">
-								<div class="w-1.5 h-1.5 bg-rust shadow-[0_0_5px_var(--color-rust)]"></div>
+								<div class="w-1.5 h-1.5 bg-rust shadow-[0_0_5px_var(--color-rust)] animate-pulse"></div>
 								<h1 class="text-sm font-black military-label text-white tracking-tighter uppercase">
 									EXILE_<span class="text-rust-light">OS</span>
 								</h1>
 							</div>
-							<span class="text-[6px] font-mono text-stone-600 tracking-[0.3em]">MOBILE_INTERFACE_V1</span>
+							<span class="text-[6px] font-mono text-stone-600 tracking-[0.3em]">NODE_MOBILE_V1</span>
 						</div>
 					</div>
 					<div class="flex items-center gap-2">
+						<div class="hidden sm:flex flex-col items-end mr-2">
+							<span class="text-[6px] text-stone-700 uppercase font-mono">Status</span>
+							<span class="text-[8px] text-emerald-500 font-mono font-bold uppercase">Linked</span>
+						</div>
 						<button
 							onclick={toggleTheme}
 							class="p-2 border border-stone-800 bg-stone-900/50 text-stone-500 hover:text-white transition-all"
 						>
 							{#if $theme === 'dark'}<Moon class="w-4 h-4"/>{:else}<Sun class="w-4 h-4"/>{/if}
-						</button>
-						<button
-							onclick={logout}
-							class="p-2 border border-red-900/30 bg-red-950/10 text-red-600 hover:bg-red-600 hover:text-black transition-all group"
-						>
-							<code class="text-[8px] font-black uppercase">Exit_</code>
 						</button>
 					</div>
 				</header>
@@ -839,7 +761,7 @@
 				<!-- Mobile Sidebar Overlay -->
 				{#if isMobileMenuOpen}
 					<div 
-						class="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm md:hidden"
+						class="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md md:hidden"
 						transition:fade={{ duration: 200 }}
 						onclick={() => isMobileMenuOpen = false}
 						onkeydown={(e) => e.key === 'Escape' && (isMobileMenuOpen = false)}
@@ -847,67 +769,81 @@
 						tabindex="0"
 					>
 						<aside 
-							class="w-72 h-full bg-black border-r-2 border-stone-800 flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.5)]"
-							transition:slide={{ axis: 'x', duration: 300 }}
+							class="w-80 h-full bg-black border-r border-stone-800 flex flex-col shadow-[0_0_100px_rgba(0,0,0,1)] relative"
+							transition:slide={{ axis: 'x', duration: 400, easing: cubicOut }}
 							onclick={(e) => e.stopPropagation()}
 							onkeydown={(e) => e.stopPropagation()}
 							role="none"
 						>
-							<div class="p-6 border-b-2 border-stone-800 bg-black/40 flex items-center justify-between">
+							<!-- Mobile Sidebar Tactical Corners -->
+							<div class="corner-tr opacity-20"></div>
+							<div class="corner-br opacity-20"></div>
+
+							<div class="p-8 border-b border-stone-800 bg-stone-950 flex items-center justify-between">
 								<div class="flex flex-col">
-									<div class="flex items-center gap-2">
+									<div class="flex items-center gap-3">
 										<div class="w-2 h-2 bg-rust shadow-[0_0_8px_var(--color-rust)]"></div>
-										<h1 class="text-xl font-black military-label text-white tracking-tighter uppercase">
-											EXILE_<span class="text-rust-light">OS</span>
+										<h1 class="text-2xl font-black military-label text-white tracking-tighter uppercase leading-none">
+											EXILE_<span class="text-rust-light">CORE</span>
 										</h1>
 									</div>
-									<span class="text-[8px] font-mono text-stone-600 mt-1 tracking-[0.3em]">MOBILE_V1.0</span>
+									<span class="text-[8px] font-mono text-stone-600 mt-2 tracking-[0.4em]">MOBILE_AUTH_TERMINAL</span>
 								</div>
 								<button 
 									onclick={() => isMobileMenuOpen = false}
-									class="p-2 text-stone-500 hover:text-white"
+									class="p-2 text-stone-600 hover:text-white border border-stone-800 hover:border-rust transition-all"
 								>
-									<Trash2 class="w-5 h-5 rotate-45" />
+									<X class="w-6 h-6" />
 								</button>
 							</div>
 
-							<nav class="flex-1 p-3 space-y-2 overflow-y-auto">
-								<a href="/dashboard" class="nav-link-industrial" class:active={isRouteActive('/dashboard') || isRouteActive('/')} onclick={() => isMobileMenuOpen = false}>
-									<div class="nav-icon-container"><LayoutDashboard class="w-4 h-4" /></div>
-									<div class="flex flex-col"><span class="nav-text">CORE_INTERFACE</span><span class="nav-subtext">Unified_Dash</span></div>
-								</a>
-								<a href="/performance" class="nav-link-industrial" class:active={isRouteActive('/performance')} onclick={() => isMobileMenuOpen = false}>
-									<div class="nav-icon-container"><Activity class="w-4 h-4" /></div>
-									<div class="flex flex-col"><span class="nav-text">TELEMETRY_BUS</span><span class="nav-subtext">Metric_Stream</span></div>
-								</a>
-								<a href="/config" class="nav-link-industrial" class:active={isRouteActive('/config')} onclick={() => isMobileMenuOpen = false}>
-									<div class="nav-icon-container"><SettingsIcon class="w-4 h-4" /></div>
-									<div class="flex flex-col"><span class="nav-text">SYS_PARAMETERS</span><span class="nav-subtext">Config_Buffer</span></div>
-								</a>
-								<a href="/server" class="nav-link-industrial" class:active={isRouteActive('/server')} onclick={() => isMobileMenuOpen = false}>
-									<div class="nav-icon-container"><HardDrive class="w-4 h-4" /></div>
-									<div class="flex flex-col"><span class="nav-text">ASSET_INDEX</span><span class="nav-subtext">Binary_Storage</span></div>
-								</a>
-								<a href="/database" class="nav-link-industrial" class:active={isRouteActive('/database')} onclick={() => isMobileMenuOpen = false}>
-									<div class="nav-icon-container"><Database class="w-4 h-4" /></div>
-									<div class="flex flex-col"><span class="nav-text">DATA_ARCHIVE</span><span class="nav-subtext">Persistence_Cores</span></div>
-								</a>
-								<a href="/users" class="nav-link-industrial" class:active={isRouteActive('/users')} onclick={() => isMobileMenuOpen = false}>
-									<div class="nav-icon-container"><Users class="w-4 h-4" /></div>
-									<div class="flex flex-col"><span class="nav-text">IDENTITY_VAULT</span><span class="nav-subtext">Client_Protocols</span></div>
-								</a>
-								<a href="/redeye" class="nav-link-industrial" class:active={isRouteActive('/redeye')} onclick={() => isMobileMenuOpen = false}>
-									<div class="nav-icon-container"><ShieldCheck class="w-4 h-4" /></div>
-									<div class="flex flex-col"><span class="nav-text">NETWORK_SHIELD</span><span class="nav-subtext">Security_Sentinel</span></div>
-								</a>
-								<a href="/notes" class="nav-link-industrial" class:active={isRouteActive('/notes')} onclick={() => isMobileMenuOpen = false}>
-									<div class="nav-icon-container"><StickyNote class="w-4 h-4" /></div>
-									<div class="flex flex-col"><span class="nav-text">SIGNAL_LOGS</span><span class="nav-subtext">Notation_Drive</span></div>
-								</a>
+							<nav class="flex-1 p-4 space-y-6 overflow-y-auto custom-scrollbar">
+								<div class="space-y-1">
+									<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Command</span>
+									<a href="/dashboard" class="nav-link-industrial" class:active={isRouteActive('/dashboard') || isRouteActive('/')} onclick={() => isMobileMenuOpen = false}>
+										<div class="nav-icon-container"><LayoutDashboard class="w-4 h-4" /></div>
+										<div class="flex flex-col"><span class="nav-text">INTERFACE</span><span class="nav-subtext">Core Dashboard</span></div>
+									</a>
+									<a href="/performance" class="nav-link-industrial" class:active={isRouteActive('/performance')} onclick={() => isMobileMenuOpen = false}>
+										<div class="nav-icon-container"><Activity class="w-4 h-4" /></div>
+										<div class="flex flex-col"><span class="nav-text">TELEMETRY</span><span class="nav-subtext">Real-time Stream</span></div>
+									</a>
+								</div>
+
+								<div class="space-y-1">
+									<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Assets</span>
+									<a href="/server" class="nav-link-industrial" class:active={isRouteActive('/server')} onclick={() => isMobileMenuOpen = false}>
+										<div class="nav-icon-container"><HardDrive class="w-4 h-4" /></div>
+										<div class="flex flex-col"><span class="nav-text">FILE_SYS</span><span class="nav-subtext">Binary Storage</span></div>
+									</a>
+									<a href="/database" class="nav-link-industrial" class:active={isRouteActive('/database')} onclick={() => isMobileMenuOpen = false}>
+										<div class="nav-icon-container"><Database class="w-4 h-4" /></div>
+										<div class="flex flex-col"><span class="nav-text">PERSISTENCE</span><span class="nav-subtext">Data Archive</span></div>
+									</a>
+									<a href="/users" class="nav-link-industrial" class:active={isRouteActive('/users')} onclick={() => isMobileMenuOpen = false}>
+										<div class="nav-icon-container"><Users class="w-4 h-4" /></div>
+										<div class="flex flex-col"><span class="nav-text">SUBJECTS</span><span class="nav-subtext">User Registry</span></div>
+									</a>
+								</div>
+
+								<div class="space-y-1">
+									<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Security</span>
+									<a href="/redeye" class="nav-link-industrial" class:active={isRouteActive('/redeye')} onclick={() => isMobileMenuOpen = false}>
+										<div class="nav-icon-container"><ShieldCheck class="w-4 h-4" /></div>
+										<div class="flex flex-col"><span class="nav-text">SENTINEL</span><span class="nav-subtext">Network Shield</span></div>
+									</a>
+								</div>
 							</nav>
 
-							<div class="p-6 border-t-2 border-stone-800 bg-black/60">
-								<button onclick={logout} class="w-full p-3 border border-red-900/30 bg-red-950/10 text-red-600 font-black uppercase text-xs tracking-widest hover:bg-red-600 hover:text-black transition-all">
+							<div class="p-8 border-t border-stone-800 bg-stone-950 flex flex-col gap-4">
+								<div class="flex items-center justify-between mb-2">
+									<div class="flex flex-col">
+										<span class="text-[7px] text-stone-700 font-mono uppercase">Session_Token</span>
+										<span class="text-[9px] text-stone-500 font-mono">0x{Math.random().toString(16).slice(2, 10).toUpperCase()}</span>
+									</div>
+									<div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+								</div>
+								<button onclick={logout} class="w-full py-4 bg-red-900/10 border border-red-900/30 text-red-600 font-heading font-black uppercase text-xs tracking-widest hover:bg-red-600 hover:text-white transition-all shadow-lg active:translate-y-px">
 									Deauthenticate_Session
 								</button>
 							</div>

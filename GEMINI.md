@@ -243,6 +243,16 @@ The following security improvements have been implemented:
     *   Updated Dashboard "Total Errors" card to link to the new logs page.
 
 ### UI Improvements
+*   **System Calibration Interface (Theme Lab Overhaul):**
+    *   Redesigned the Theme Lab into a comprehensive calibration workbench with four primary subsystems: Chromatic Matrix, Atmospheric Core, Geometric Logic, and Structural Engine.
+    *   **Advanced Typography Engine:** Implemented granular control over global letter-spacing, line-height, paragraph spacing, and weighted typeface levels (Heading vs. Base).
+    *   **Kinetic Physics System:** Added global calibration for transition velocities, hover expansion depth, and button-press depth across the entire UI.
+    *   **Atmospheric Effects:** Introduced advanced controls for glitch frequency, lens fringing (chromatic aberration), flicker intensity, and grid substrate opacity.
+    *   **Preset Engine:** Added industrial theme presets (DEEP_COMMAND, MERCURY_PROTO, SOLAR_FLARE, VOID_WALKER) for instant system-wide visual reconfiguration.
+*   **Layout & CSS Audit:**
+    *   **Z-Index Normalization:** Re-stratified UI layers to ensure the Command Module (Sidebar) and System Tickersit above all atmospheric overlays.
+    *   **Navigation Centering:** Fixed alignment bugs in the collapsed sidebar state, ensuring perfectly centered tactical icons.
+    *   **Typography Harmonization:** Migrated all text blocks, code segments, and headers to a unified CSS variable registry for real-time recalibration.
 *   **Player Account Page Overhaul:**
     *   Refactored the layout to include a strategic summary section with StatsCards (Total Subjects, Online Count, Cumulative XP, Active Reports).
     *   Implemented a new sorting engine allowing administrators to sort by ID, Name, XP, or Last Seen.
