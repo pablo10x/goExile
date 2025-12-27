@@ -19,7 +19,9 @@
 		Cpu,
 		Radio,
 		Dna,
-		AlertOctagon
+		AlertOctagon,
+		ShieldAlert,
+		Ban
 	} from 'lucide-svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -118,11 +120,22 @@
 		active_connections: number;
 	}
 
+	interface RedEyeMetrics {
+		total_blocks: number;
+		total_rate_limits: number;
+		active_bans: number;
+		total_rules: number;
+		avg_processing_time_ms: number;
+		threat_level: 'low' | 'moderate' | 'high' | 'critical';
+		last_block_at: string;
+	}
+
 	interface CombinedMetrics {
 		master: RuntimeMetrics;
 		spawners: SpawnerMetrics;
 		database: DatabaseMetrics;
 		network: NetworkMetrics;
+		redeye: RedEyeMetrics;
 	}
 
 	// State
@@ -278,24 +291,24 @@
 	<div class="w-full h-full flex flex-col gap-10 relative z-10 pb-32 md:pb-12">
 		
 		<!-- Intelligence Header -->
-		<div class="flex flex-col xl:flex-row xl:items-end justify-between gap-8 border-l-4 border-rust pl-10 py-2 bg-[#0a0a0a]/60 backdrop-blur-xl shadow-2xl relative overflow-hidden industrial-frame">
+		<div class="flex flex-col xl:flex-row xl:items-end justify-between gap-8 border-l-4 border-rust pl-4 sm:pl-10 py-2 bg-[#0a0a0a]/60 backdrop-blur-xl shadow-2xl relative overflow-hidden industrial-frame">
 			<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
 			
 			<div class="space-y-4 p-2 relative z-10">
 				<div class="flex items-center gap-4">
 					<span class="bg-rust text-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-rust/20">REALTIME_TELEMETRY</span>
 					<div class="w-px h-3 bg-stone-800"></div>
-					<span class="font-jetbrains text-[9px] font-black text-stone-500 uppercase tracking-[0.4em] italic">STATION: EXILE_HIVE_CORE</span>
+					<span class="font-jetbrains text-[9px] font-black text-stone-500 uppercase tracking-[0.4em] italic hidden sm:inline">STATION: EXILE_HIVE_CORE</span>
 				</div>
-				<h1 class="text-5xl sm:text-6xl lg:text-7xl font-heading font-black tracking-tighter text-white uppercase leading-none">
+				<h1 class="text-3xl sm:text-5xl lg:text-7xl font-heading font-black tracking-tighter text-white uppercase leading-none">
 					SYSTEM_<span class="text-rust">METRICS</span>
 				</h1>
-				<div class="flex items-center gap-6 pt-2">
+				<div class="flex flex-wrap items-center gap-4 sm:gap-6 pt-2">
 					<div class="flex items-center gap-3 font-jetbrains text-[10px] font-black text-stone-500 uppercase tracking-widest">
 						<div class="w-2 h-2 bg-emerald-500 shadow-[0_0_10px_#10b981] animate-pulse"></div>
 						LINK_STATUS: ACTIVE
 					</div>
-					<div class="w-px h-4 bg-stone-800"></div>
+					<div class="w-px h-4 bg-stone-800 hidden sm:block"></div>
 					{#if lastUpdate}
 						<div class="font-jetbrains text-[10px] font-black text-stone-600 uppercase tracking-widest italic">
 							SYNC_TIMESTAMP: {lastUpdate.toLocaleTimeString([], { hour12: false })}
@@ -304,61 +317,63 @@
 				</div>
 			</div>
 
-			<div class="flex flex-wrap items-center gap-6 p-4 relative z-10">
+			<div class="flex flex-wrap items-center gap-4 sm:gap-6 p-4 relative z-10">
 				<!-- Health Status Summary -->
 				{#if health}
-					<div class="flex items-center gap-4 bg-black/40 px-6 py-3 border border-stone-800 shadow-inner">
-						<health.icon class="w-5 h-5" style="color: {health.color}" />
+					<div class="flex items-center gap-4 bg-black/40 px-4 sm:px-6 py-3 border border-stone-800 shadow-inner">
+						<health.icon class="w-4 h-4 sm:w-5 sm:h-5" style="color: {health.color}" />
 						<div class="flex flex-col">
 							<span class="text-[8px] font-jetbrains font-black text-stone-600 uppercase tracking-widest">Global Integrity</span>
-							<span class="text-sm font-heading font-black uppercase italic" style="color: {health.color}">{health.status}</span>
+							<span class="text-xs sm:text-sm font-heading font-black uppercase italic" style="color: {health.color}">{health.status}</span>
 						</div>
 					</div>
 				{/if}
 
-				<div class="flex bg-black/40 p-1.5 border border-stone-800">
+				<div class="flex bg-black/40 p-1.5 border border-stone-800 flex-1 sm:flex-initial">
 					<button
 						onclick={toggleAutoRefresh}
-						class="flex flex-col items-start px-6 py-2 transition-all duration-500 relative group {autoRefresh ? 'bg-rust text-white shadow-xl shadow-rust/30' : 'text-stone-600 hover:text-stone-300'}"
+						class="flex flex-col items-start px-4 sm:px-6 py-2 transition-all duration-500 relative group flex-1 sm:flex-initial {autoRefresh ? 'bg-rust text-white shadow-xl shadow-rust/30' : 'text-stone-600 hover:text-stone-300'}"
 					>
 						<span class="font-jetbrains text-[8px] font-black tracking-[0.3em] uppercase mb-1 opacity-50">Stream</span>
-						<span class="font-heading text-xs font-black tracking-widest uppercase">{autoRefresh ? 'LIVE' : 'PAUSED'}</span>
+						<span class="font-heading text-[10px] sm:text-xs font-black tracking-widest uppercase">{autoRefresh ? 'LIVE' : 'PAUSED'}</span>
 					</button>
 					<button
 						onclick={fetchMetrics}
 						disabled={loading}
 						class="px-4 hover:text-white transition-all text-stone-600 disabled:opacity-20"
 					>
-						<RefreshCw class="w-5 h-5 {loading ? 'animate-spin' : ''}" />
+						<RefreshCw class="w-4 h-4 sm:w-5 sm:h-5 {loading ? 'animate-spin' : ''}" />
 					</button>
 				</div>
 			</div>
 		</div>
 
 		<!-- Top Level Briefing Cards -->
-		<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 px-2">
+		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 px-2">
 			{#if metrics}
 				{#each [
 					{ label: 'System Uptime', val: formatDuration(metrics.master.uptime_ms), icon: Timer, color: 'text-white' },
 					{ label: 'Routine Clusters', val: metrics.master.num_goroutine, icon: Activity, color: 'text-white', trend: goroutineTrend },
 					{ label: 'Memory Pressure', val: formatBytes(metrics.master.heap_alloc), icon: MemoryStick, color: 'text-white', detail: `${(metrics.master.heap_usage_ratio * 100).toFixed(1)}% Usage` },
-					{ label: 'Signal Velocity', val: `${metrics.network.requests_per_second?.toFixed(1)}Hz`, icon: Signal, color: 'text-white', detail: `${formatNumber(metrics.network.total_requests)} Total` }
+					{ label: 'Signal Velocity', val: `${metrics.network.requests_per_second?.toFixed(1)}Hz`, icon: Signal, color: 'text-white', detail: `${formatNumber(metrics.network.total_requests)} Total` },
+					{ label: 'Shield Vector', val: formatNumber(metrics.redeye?.total_blocks || 0), icon: ShieldAlert, color: 'text-red-500', detail: `${metrics.redeye?.active_bans || 0} Active Bans` },
+					{ label: 'Error Flux', val: `${metrics.network.error_rate?.toFixed(2)}%`, icon: AlertTriangle, color: metrics.network.error_rate > 5 ? 'text-red-500' : 'text-stone-400', detail: `${metrics.network.total_errors} Faults` }
 				] as block}
-					<div class="modern-industrial-card glass-panel group p-6 !rounded-none shadow-2xl flex flex-col justify-between min-h-[140px]">
+					<div class="modern-industrial-card glass-panel group p-4 sm:p-6 !rounded-none shadow-2xl flex flex-col justify-between min-h-[120px] sm:min-h-[140px]">
 						<div class="flex justify-between items-start">
-							<span class="text-[9px] font-jetbrains font-black text-stone-600 uppercase tracking-[0.3em] italic">{block.label}</span>
-							<block.icon class="w-4 h-4 text-stone-800 group-hover:text-rust transition-colors" />
+							<span class="text-[8px] sm:text-[9px] font-jetbrains font-black text-stone-600 uppercase tracking-[0.3em] italic">{block.label}</span>
+							<block.icon class="w-3 h-3 sm:w-4 sm:h-4 {block.color || 'text-stone-800'} group-hover:text-rust transition-colors" />
 						</div>
 						<div class="flex items-end justify-between mt-4">
-							<div class="text-4xl font-heading font-black italic tracking-tighter text-white">{block.val}</div>
+							<div class="text-xl sm:text-2xl font-heading font-black italic tracking-tighter text-white truncate">{block.val}</div>
 							{#if block.trend && block.trend !== 'stable'}
-								<div class="text-xl font-black {block.trend === 'up' ? 'text-red-500' : 'text-emerald-500'} animate-pulse">
+								<div class="text-lg sm:text-xl font-black {block.trend === 'up' ? 'text-red-500' : 'text-emerald-500'} animate-pulse">
 									{block.trend === 'up' ? '▲' : '▼'}
 								</div>
 							{/if}
 						</div>
 						{#if block.detail}
-							<div class="text-[8px] font-jetbrains font-black text-rust-light/60 uppercase tracking-widest mt-2">{block.detail}</div>
+							<div class="text-[7px] sm:text-[8px] font-jetbrains font-black text-rust-light/60 uppercase tracking-widest mt-2">{block.detail}</div>
 						{/if}
 					</div>
 				{/each}
@@ -366,109 +381,252 @@
 		</div>
 
 		<!-- Detailed Diagnostic Deck -->
-		<div class="grid grid-cols-1 xl:grid-cols-12 gap-6 px-2 flex-1">
-			<!-- Memory Matrix -->
-			<div class="xl:col-span-8 flex flex-col gap-6">
-				<div class="modern-industrial-card glass-panel !rounded-none flex-1 flex flex-col">
-					<div class="p-6 border-b border-stone-800 bg-stone-950/40 flex items-center justify-between">
-						<div class="flex items-center gap-4">
-							<div class="p-2 bg-rust/5 border border-rust/20 industrial-frame">
-								<MemoryStick class="w-5 h-5 text-rust-light" />
+		{#if metrics}
+			<div class="grid grid-cols-1 xl:grid-cols-12 gap-6 px-2 flex-1">
+				<!-- Memory Matrix -->
+				<div class="xl:col-span-8 flex flex-col gap-6">
+					<div class="modern-industrial-card glass-panel !rounded-none flex-1 flex flex-col">
+						<div class="p-6 border-b border-stone-800 bg-stone-950/40 flex items-center justify-between">
+							<div class="flex items-center gap-4">
+								<div class="p-2 bg-rust/5 border border-rust/20 industrial-frame">
+									<MemoryStick class="w-5 h-5 text-rust-light" />
+								</div>
+								<h3 class="font-heading font-black text-base text-white uppercase tracking-widest">Memory_Core_Diagnostics</h3>
 							</div>
-							<h3 class="font-heading font-black text-base text-white uppercase tracking-widest">Memory_Core_Diagnostics</h3>
-						</div>
-						<div class="flex gap-2">
-							<button onclick={forceGC} disabled={gcLoading} class="px-4 py-2 bg-stone-900 border border-stone-800 text-[9px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all">Flush</button>
-							<button onclick={freeMemory} disabled={freeMemLoading} class="px-4 py-2 bg-stone-900 border border-stone-800 text-[9px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all">Vacuum</button>
-						</div>
-					</div>
-					
-					<div class="p-8 space-y-10 flex-1 overflow-y-auto custom-scrollbar">
-						<!-- Visual Heap Load -->
-						<div class="space-y-4">
-							<div class="flex justify-between font-jetbrains text-[9px] font-black uppercase tracking-[0.2em] text-stone-600 italic">
-								<span>Heap_Allocation_Graph</span>
-								<span class="text-white">SYS_LIMIT: {formatBytes(metrics?.master.sys || 0)}</span>
+							<div class="flex gap-2">
+								<button onclick={forceGC} disabled={gcLoading} class="px-4 py-2 bg-stone-900 border border-stone-800 text-[9px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all">Flush</button>
+								<button onclick={freeMemory} disabled={freeMemLoading} class="px-4 py-2 bg-stone-900 border border-stone-800 text-[9px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all">Vacuum</button>
 							</div>
-							<div class="h-12 bg-stone-950 border border-stone-800 p-1 relative overflow-hidden shadow-inner industrial-frame">
-								<div
-									class="h-full bg-gradient-to-r from-rust/20 via-rust/60 to-rust border-r-2 border-rust transition-all duration-1000 ease-out"
-									style="width: {(metrics?.master.heap_usage_ratio || 0) * 100}%"
-								></div>
-								<div class="absolute inset-0 flex items-center justify-between px-6 font-heading font-black text-xs text-white mix-blend-difference uppercase tracking-widest">
-									<span>UTILIZED: {formatBytes(metrics?.master.heap_inuse || 0)}</span>
-									<span>{((metrics?.master.heap_usage_ratio || 0) * 100).toFixed(1)}%</span>
+						</div>
+						
+						<div class="p-8 space-y-10 flex-1 overflow-y-auto custom-scrollbar">
+							<!-- Visual Heap Load -->
+							<div class="space-y-4">
+								<div class="flex justify-between font-jetbrains text-[9px] font-black uppercase tracking-[0.2em] text-stone-600 italic">
+									<span>Heap_Allocation_Graph</span>
+									<span class="text-white">SYS_LIMIT: {formatBytes(metrics.master.sys || 0)}</span>
+								</div>
+								<div class="h-12 bg-stone-950 border border-stone-800 p-1 relative overflow-hidden shadow-inner industrial-frame">
+									<div
+										class="h-full bg-gradient-to-r from-rust/20 via-rust/60 to-rust border-r-2 border-rust transition-all duration-1000 ease-out"
+										style="width: {(metrics.master.heap_usage_ratio || 0) * 100}%"
+									></div>
+									<div class="absolute inset-0 flex items-center justify-between px-6 font-heading font-black text-xs text-white mix-blend-difference uppercase tracking-widest">
+										<span>UTILIZED: {formatBytes(metrics.master.heap_inuse || 0)}</span>
+										<span>{((metrics.master.heap_usage_ratio || 0) * 100).toFixed(1)}%</span>
+									</div>
 								</div>
 							</div>
-						</div>
 
-						<!-- Diagnostic Grid -->
-						<div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-							{#each [
-								{ label: 'Heap Live', val: formatBytes(metrics?.master.heap_alloc || 0) },
-								{ label: 'Stack Size', val: formatBytes(metrics?.master.stack_sys || 0) },
-								{ label: 'Object Cnt', val: formatNumber(metrics?.master.live_objects || 0) },
-								{ label: 'IO Velocity', val: `${formatBytes(metrics?.master.heap_alloc_rate || 0)}/s` },
-								{ label: 'Idle Buffer', val: formatBytes(metrics?.master.heap_idle || 0) },
-								{ label: 'Sync Target', val: formatBytes(metrics?.master.next_gc_target || 0) }
-							] as item}
-								<div class="bg-black/40 border border-stone-800 p-5 industrial-frame group hover:border-rust/30 transition-all">
-									<div class="text-[8px] font-jetbrains font-black text-stone-700 tracking-widest uppercase mb-2 group-hover:text-rust transition-colors italic">{item.label}</div>
-									<div class="text-xl font-heading font-black text-stone-200 uppercase tracking-tighter">{item.val}</div>
-								</div>
-							{/each}
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<!-- Auxiliary Logs & Scrubber -->
-			<div class="xl:col-span-4 flex flex-col gap-6">
-				<div class="modern-industrial-card glass-panel !rounded-none flex-1 flex flex-col">
-					<div class="p-6 border-b border-stone-800 bg-stone-950/40">
-						<div class="flex items-center gap-4">
-							<div class="p-2 bg-rust/5 border border-rust/20 industrial-frame">
-								<Trash2 class="w-5 h-5 text-rust-light" />
-							</div>
-							<h3 class="font-heading font-black text-base text-white uppercase tracking-widest">Scrubber_Activity</h3>
-						</div>
-					</div>
-					
-					<div class="p-8 space-y-8 flex-1 overflow-y-auto custom-scrollbar">
-						<div class="space-y-4">
-							<div class="flex justify-between text-[9px] font-black text-stone-600 uppercase tracking-[0.2em] italic">
-								<span>Interrupt Vector</span>
-								<span class="text-rust">{((metrics?.master.gc_cpu_fraction || 0) * 100).toFixed(4)}%</span>
-							</div>
-							<div class="flex h-8 gap-1 bg-stone-950 border border-stone-800 p-1 industrial-frame">
-								{#each Array(10) as _, i}
-									{@const isFilled = i < Math.min((metrics?.master.gc_cpu_fraction || 0) * 500, 10)}
-									<div class="flex-1 {isFilled ? 'bg-rust' : 'bg-stone-900/40'}"></div>
+							<!-- Diagnostic Grid -->
+							<div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+								{#each [
+									{ label: 'Heap Live', val: formatBytes(metrics.master.heap_alloc || 0) },
+									{ label: 'Stack Size', val: formatBytes(metrics.master.stack_sys || 0) },
+									{ label: 'Object Cnt', val: formatNumber(metrics.master.live_objects || 0) },
+									{ label: 'IO Velocity', val: `${formatBytes(metrics.master.heap_alloc_rate || 0)}/s` },
+									{ label: 'Idle Buffer', val: formatBytes(metrics.master.heap_idle || 0) },
+									{ label: 'Sync Target', val: formatBytes(metrics.master.next_gc_target || 0) }
+								] as item}
+									<div class="bg-black/40 border border-stone-800 p-5 industrial-frame group hover:border-rust/30 transition-all">
+										<div class="text-[8px] font-jetbrains font-black text-stone-700 tracking-widest uppercase mb-2 group-hover:text-rust transition-colors italic">{item.label}</div>
+										<div class="text-xl font-heading font-black text-stone-200 uppercase tracking-tighter">{item.val}</div>
+									</div>
 								{/each}
 							</div>
 						</div>
+					</div>
+				</div>
 
-						<div class="space-y-4 bg-black/40 p-6 border border-stone-800 industrial-frame">
-							{#each [
-								{ label: 'Total Cycles', val: metrics?.master.num_gc || 0 },
-								{ label: 'Avg Latency', val: formatNanoseconds(metrics?.master.avg_gc_pause_ns || 0) },
-								{ label: 'Peak Jitter', val: formatNanoseconds(metrics?.master.max_gc_pause_ns || 0), color: 'text-red-500' }
-							] as row}
-								<div class="flex justify-between border-b border-stone-800/50 pb-3 last:border-none last:pb-0">
-									<span class="text-[9px] font-jetbrains font-black text-stone-600 uppercase tracking-widest italic">{row.label}</span>
-									<span class="text-xs font-heading font-black {row.color || 'text-stone-300'}">{row.val}</span>
+				<!-- Network Operations -->
+				<div class="xl:col-span-4 flex flex-col gap-6">
+					<div class="modern-industrial-card glass-panel !rounded-none flex-1 flex flex-col border-stone-800">
+						<div class="p-6 border-b border-stone-800 bg-stone-950/40 flex items-center justify-between">
+							<div class="flex items-center gap-4">
+								<div class="p-2 bg-stone-500/10 border border-stone-500/20 industrial-frame">
+									<Signal class="w-5 h-5 text-stone-400" />
 								</div>
-							{/each}
+								<h3 class="font-heading font-black text-base text-white uppercase tracking-widest">Network_Ops</h3>
+							</div>
+							<div class="w-2 h-2 bg-stone-500 rounded-full animate-pulse"></div>
 						</div>
 
-						<div class="p-6 bg-stone-950/60 border border-stone-800 industrial-frame italic text-[10px] font-jetbrains font-bold uppercase leading-relaxed text-stone-500">
-							<div class="text-rust mb-2 font-black tracking-widest">[AUTO_AUDIT]</div>
-							Heuristic engine ensuring memory stability. All reclamation processes logged to persistent buffer.
+						<div class="p-6 flex-1 flex flex-col gap-6">
+							<!-- Connection Status -->
+							<div class="bg-black/40 border border-stone-800 p-4 industrial-frame">
+								<div class="flex justify-between items-end mb-2">
+									<span class="text-[9px] font-black text-stone-600 uppercase tracking-widest">Active Links</span>
+									<span class="text-2xl font-heading font-black text-white tracking-tighter">{metrics.network.active_connections}</span>
+								</div>
+								<div class="w-full h-1 bg-stone-900 overflow-hidden">
+									<div class="h-full bg-stone-500 animate-pulse" style="width: 100%"></div>
+								</div>
+							</div>
+
+							<!-- Traffic Stats -->
+							<div class="grid grid-cols-2 gap-4">
+								<div class="space-y-1">
+									<span class="text-[8px] font-black text-stone-600 uppercase tracking-widest block">Inbound</span>
+									<div class="text-lg font-heading font-black text-white">{formatBytes(metrics.network.bytes_received)}</div>
+									<div class="text-[8px] text-emerald-500 font-mono">RX_OK</div>
+								</div>
+								<div class="space-y-1 text-right">
+									<span class="text-[8px] font-black text-stone-600 uppercase tracking-widest block">Outbound</span>
+									<div class="text-lg font-heading font-black text-white">{formatBytes(metrics.network.bytes_sent)}</div>
+									<div class="text-[8px] text-rust font-mono">TX_OK</div>
+								</div>
+							</div>
+
+							<!-- Error Vector -->
+							<div class="space-y-3 mt-auto pt-6 border-t border-stone-800/50">
+								<div class="flex justify-between items-center">
+									<span class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Error_Vector</span>
+									<span class="{metrics.network.error_rate > 5 ? 'text-red-500' : 'text-stone-400'} font-bold font-mono text-xs">{metrics.network.error_rate.toFixed(2)}%</span>
+								</div>
+								<div class="h-2 bg-stone-950 border border-stone-800 relative overflow-hidden">
+									<div 
+										class="h-full {metrics.network.error_rate > 5 ? 'bg-red-500' : 'bg-stone-600'} transition-all duration-500" 
+										style="width: {Math.min(metrics.network.error_rate, 100)}%"
+									></div>
+								</div>
+								<div class="flex justify-between text-[8px] font-mono text-stone-600">
+									<span>ERR_COUNT: {metrics.network.total_errors}</span>
+									<span>REQ_TOTAL: {formatNumber(metrics.network.total_requests)}</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- RedEye Sentinel Core -->
+				<div class="xl:col-span-12 grid grid-cols-1 lg:grid-cols-2 gap-6">
+					<div class="modern-industrial-card glass-panel !rounded-none flex flex-col min-h-[400px] border-red-900/30">
+						<div class="p-6 border-b border-red-900/20 bg-red-950/10 flex items-center justify-between">
+							<div class="flex items-center gap-4">
+								<div class="p-2 bg-red-500/10 border border-red-500/20 industrial-frame">
+									<Lock class="w-5 h-5 text-red-500" />
+								</div>
+								<h3 class="font-heading font-black text-base text-white uppercase tracking-widest">RedEye_Sentinel_Core</h3>
+							</div>
+							<div class="flex items-center gap-3">
+								<span class="text-[8px] font-black text-stone-500 uppercase tracking-widest">Threat_Level:</span>
+								<div class="px-3 py-1 bg-red-600 text-white text-[9px] font-black uppercase animate-pulse shadow-lg shadow-red-900/20">
+									{metrics.redeye?.threat_level || 'LOW'}
+								</div>
+							</div>
+						</div>
+						
+						<div class="p-8 flex-1 relative overflow-hidden flex flex-col justify-center">
+							<!-- Cyber Scan Animation -->
+							<div class="absolute inset-0 pointer-events-none opacity-10">
+								<div class="w-full h-full bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.2)_0%,transparent_70%)]"></div>
+								<div class="absolute top-0 left-0 w-full h-1 bg-red-500 shadow-[0_0_20px_#ef4444] animate-scan-line"></div>
+							</div>
+
+							<div class="grid grid-cols-2 sm:grid-cols-4 gap-8 relative z-10">
+								{#each [
+									{ label: 'Intercepts', val: formatNumber(metrics.redeye?.total_blocks || 0), icon: ShieldAlert, color: 'text-red-500' },
+									{ label: 'Rate Limits', val: formatNumber(metrics.redeye?.total_rate_limits || 0), icon: Activity, color: 'text-amber-500' },
+									{ label: 'Active Bans', val: formatNumber(metrics.redeye?.active_bans || 0), icon: Ban, color: 'text-red-600' },
+									{ label: 'Rule Latency', val: `${metrics.redeye?.avg_processing_time_ms.toFixed(2)}ms`, icon: Timer, color: 'text-stone-400' }
+								] as item}
+									<div class="flex flex-col items-center text-center space-y-3">
+										<div class="p-4 bg-stone-950 border border-stone-800 rounded-full shadow-inner relative group cursor-help">
+											<item.icon class="w-6 h-6 {item.color}" />
+											<div class="absolute inset-0 rounded-full border border-red-500/20 animate-ping opacity-20"></div>
+										</div>
+										<div class="space-y-1">
+											<span class="text-[8px] font-black text-stone-600 uppercase tracking-[0.2em]">{item.label}</span>
+											<div class="text-2xl font-heading font-black text-white italic">{item.val}</div>
+										</div>
+									</div>
+								{/each}
+							</div>
+
+							<div class="mt-12 p-6 bg-red-950/5 border border-red-900/20 industrial-frame">
+								<div class="flex items-center gap-4 mb-4">
+									<div class="w-1.5 h-1.5 bg-red-500 animate-flicker"></div>
+									<span class="text-[9px] font-black text-red-500/70 uppercase tracking-widest">Neural_Response_Vector</span>
+								</div>
+								<div class="font-jetbrains text-[11px] text-stone-500 leading-relaxed uppercase italic">
+									Active surveillance protocols in effect. All inbound packets are currently undergoing deep header inspection. Last anomaly mitigated at: <span class="text-stone-300 not-italic font-bold">{metrics.redeye?.last_block_at ? new Date(metrics.redeye.last_block_at).toLocaleTimeString() : 'N/A'}</span>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="modern-industrial-card glass-panel !rounded-none flex flex-col min-h-[400px] border-emerald-900/30">
+						<div class="p-6 border-b border-emerald-900/20 bg-emerald-950/10 flex items-center justify-between">
+							<div class="flex items-center gap-4">
+								<div class="p-2 bg-emerald-500/10 border border-emerald-500/20 industrial-frame">
+									<Database class="w-5 h-5 text-emerald-500" />
+								</div>
+								<h3 class="font-heading font-black text-base text-white uppercase tracking-widest">Persistence_Cluster_Matrix</h3>
+							</div>
+							<div class="flex items-center gap-3">
+								<div class="w-2 h-2 bg-emerald-500 shadow-[0_0_8px_#10b981] animate-pulse"></div>
+								<span class="text-[9px] font-black text-emerald-500 uppercase tracking-widest italic">SYNC_OK</span>
+							</div>
+						</div>
+						
+						<div class="p-8 flex-1 space-y-10 flex flex-col justify-between">
+							<div class="grid grid-cols-2 gap-6">
+								<div class="space-y-4">
+									<span class="text-[9px] font-black text-stone-600 uppercase tracking-widest block italic">Connection Pool Flow</span>
+									<div class="grid grid-cols-2 gap-3">
+										<div class="bg-black/40 border border-stone-800 p-4">
+											<div class="text-[7px] text-stone-500 uppercase font-black mb-1">In Use</div>
+											<div class="text-xl font-heading font-black text-emerald-400">{metrics.database.in_use}</div>
+										</div>
+										<div class="bg-black/40 border border-stone-800 p-4">
+											<div class="text-[7px] text-stone-500 uppercase font-black mb-1">Idle</div>
+											<div class="text-xl font-heading font-black text-stone-400">{metrics.database.idle}</div>
+										</div>
+									</div>
+								</div>
+								<div class="space-y-4">
+									<span class="text-[9px] font-black text-stone-600 uppercase tracking-widest block italic">Transaction Health</span>
+									<div class="grid grid-cols-2 gap-3">
+										<div class="bg-black/40 border border-stone-800 p-4">
+											<div class="text-[7px] text-stone-500 uppercase font-black mb-1">Commits</div>
+											<div class="text-xl font-heading font-black text-white">{formatNumber(metrics.database.commits || 0)}</div>
+										</div>
+										<div class="bg-black/40 border border-stone-800 p-4">
+											<div class="text-[7px] text-stone-500 uppercase font-black mb-1">Rollbacks</div>
+											<div class="text-xl font-heading font-black text-red-500">{formatNumber(metrics.database.rollbacks || 0)}</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="space-y-4">
+								<div class="flex justify-between font-jetbrains text-[9px] font-black uppercase tracking-[0.2em] text-stone-600 italic">
+									<span>Memory_Cache_Hit_Ratio</span>
+									<span class="text-emerald-400">OPTIMAL: {(metrics.database.cache_hit_ratio || 0).toFixed(2)}%</span>
+								</div>
+								<div class="h-10 bg-stone-950 border border-stone-800 p-1 relative overflow-hidden industrial-frame">
+									<div
+										class="h-full bg-gradient-to-r from-emerald-900/40 via-emerald-500/60 to-emerald-400 border-r-2 border-emerald-400 transition-all duration-1000 ease-out"
+										style="width: {metrics.database.cache_hit_ratio || 0}%"
+									></div>
+								</div>
+							</div>
+
+							<div class="grid grid-cols-2 gap-4">
+								<div class="p-4 bg-stone-950/40 border border-stone-800 flex justify-between items-center group">
+									<span class="text-[8px] font-black text-stone-600 uppercase tracking-widest group-hover:text-rust transition-colors">Wait Count</span>
+									<span class="text-sm font-heading font-black text-white">{metrics.database.wait_count}</span>
+								</div>
+								<div class="p-4 bg-stone-950/40 border border-stone-800 flex justify-between items-center group">
+									<span class="text-[8px] font-black text-stone-600 uppercase tracking-widest group-hover:text-rust transition-colors">Wait Latency</span>
+									<span class="text-sm font-heading font-black text-white">{metrics.database.wait_duration_ms}ms</span>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-		</div>
+		{/if}
 
 		<!-- Fleet Status Footer -->
 		<div class="border-t border-stone-800 bg-[#0a0a0a]/60 p-8 flex flex-wrap justify-center gap-12 font-jetbrains text-[10px] font-black tracking-[0.4em] uppercase text-stone-700 italic industrial-frame mx-2 shadow-2xl">

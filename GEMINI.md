@@ -243,6 +243,11 @@ The following security improvements have been implemented:
     *   Updated Dashboard "Total Errors" card to link to the new logs page.
 
 ### UI Improvements
+*   **Performance Page Overhaul:**
+    *   Refactored the layout to introduce a new "Network Operations" card alongside the "Memory Matrix", optimizing screen real estate usage.
+    *   Implemented detailed network metrics display: Active Links, Inbound/Outbound traffic stats, and Error Vector visualization.
+    *   Fixed a TypeScript type mismatch error in the RedEye Sentinel Core component.
+    *   Resolved missing properties in `theme/+page.svelte` to satisfy `npm run check`.
 *   **Notes & Tasks**: Refactored `web-dashboard/src/routes/notes/+page.svelte` to feature a 2-column layout (Tasks sidebar, Notes grid).
 *   **Tasks**: Added `TaskItem` component with cleaner styling and animations.
 *   **Notes**: Enhanced `NoteCard` visuals with gradients, shadow effects, and better status indicators.
