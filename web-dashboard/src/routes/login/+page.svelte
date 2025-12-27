@@ -62,55 +62,73 @@
 </script>
 
 {#if mounted}
-<div class="min-h-screen w-full bg-black text-stone-300 font-jetbrains flex items-center justify-center p-8 relative overflow-hidden">
-	<div class="absolute inset-0 bg-grid opacity-[0.02]"></div>
-	
-	<!-- Ambient Glow -->
-	<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-rust/5 rounded-full blur-[120px] pointer-events-none"></div>
+<div class="min-h-screen w-full bg-black text-stone-300 font-jetbrains flex items-center justify-center p-4 sm:p-8 relative overflow-hidden">
+	<!-- Cinematic Background -->
+	<div class="absolute inset-0 bg-grid opacity-[0.03]"></div>
+	<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-rust/5 rounded-full blur-[150px] pointer-events-none opacity-50"></div>
+	<div class="fixed inset-0 pointer-events-none z-[100] bg-vignette opacity-60"></div>
 
-	<div class="w-full max-w-md relative z-10" class:animate-shake={formShake}>
-		<div class="text-center mb-12">
-			<div class="inline-block p-4 bg-rust/10 border border-rust/20 rounded-lg mb-4">
-				<Cpu class="w-10 h-10 text-rust" />
+	<!-- Login Chassis -->
+	<div 
+		class="w-full max-w-md relative z-10 modern-industrial-card glass-panel p-8 sm:p-12 !rounded-none shadow-[0_0_100px_rgba(0,0,0,0.8)] border-stone-800 transition-all duration-500" 
+		class:animate-shake={formShake}
+	>
+		<!-- Tactical Corners -->
+		<div class="corner-tl"></div>
+		<div class="corner-tr"></div>
+		<div class="corner-bl"></div>
+		<div class="corner-br"></div>
+
+		<div class="text-center mb-12 relative z-10">
+			<div class="inline-block p-5 bg-rust/5 border border-rust/20 industrial-frame mb-6 group">
+				<Cpu class="w-12 h-12 text-rust group-hover:scale-110 transition-transform duration-500" />
 			</div>
-			<h1 class="text-4xl font-black text-white uppercase tracking-tighter">Asset Registry</h1>
-			<p class="text-stone-500 mt-2">Secure access required to manage system assets.</p>
+			<div class="space-y-2">
+				<div class="flex items-center justify-center gap-3">
+					<div class="w-2 h-2 bg-rust animate-pulse shadow-[0_0_10px_var(--color-rust)]"></div>
+					<span class="text-[10px] font-black text-stone-500 uppercase tracking-[0.4em]">Secure_Uplink_v4.2</span>
+				</div>
+				<h1 class="text-5xl font-heading font-black text-white uppercase tracking-tighter leading-none">
+					EXILE_<span class="text-rust">CORE</span>
+				</h1>
+				<p class="text-[10px] font-black text-stone-600 uppercase tracking-widest italic pt-2">Neural Identity Verification Required</p>
+			</div>
 		</div>
 
-		<form onsubmit={handleLogin} class="space-y-6">
-			<div class="group">
-				<label for="email" class="text-xs font-bold text-stone-400 uppercase tracking-wider">Operator ID</label>
-				<div class="relative mt-2">
-					<User class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-600 group-focus-within:text-rust transition-colors" />
+		<form onsubmit={handleLogin} class="space-y-8 relative z-10">
+			<div class="space-y-3">
+				<label for="email" class="text-[9px] font-black text-stone-500 uppercase tracking-[0.3em] ml-1">Identity_Signature</label>
+				<div class="relative group">
+					<User class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-700 group-focus-within:text-rust transition-colors" />
 					<input
 						type="email"
 						id="email"
 						bind:value={email}
 						required
-						placeholder="operator@system.node"
-						class="w-full pl-12 pr-4 py-4 bg-stone-950 border-2 border-stone-800 rounded-md text-white placeholder:text-stone-600 outline-none focus:border-rust transition-all duration-300"
+						placeholder="OPERATOR@SYSTEM.NODE"
+						class="w-full pl-12 pr-4 py-4 bg-stone-950/50 border border-stone-800 text-white placeholder:text-stone-800 outline-none focus:border-rust transition-all duration-300 font-jetbrains text-sm industrial-frame"
 					/>
 				</div>
 			</div>
 
-			<div class="group">
-				<label for="password" class="text-xs font-bold text-stone-400 uppercase tracking-wider">Access Key</label>
-				<div class="relative mt-2">
-					<Lock class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-600 group-focus-within:text-rust transition-colors" />
+			<div class="space-y-3">
+				<label for="password" class="text-[9px] font-black text-stone-500 uppercase tracking-[0.3em] ml-1">Access_Cipher</label>
+				<div class="relative group">
+					<Lock class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-700 group-focus-within:text-rust transition-colors" />
 					<input
 						type="password"
 						id="password"
 						bind:value={password}
 						required
 						placeholder="••••••••••••"
-						class="w-full pl-12 pr-4 py-4 bg-stone-950 border-2 border-stone-800 rounded-md text-white placeholder:text-stone-600 outline-none focus:border-rust transition-all duration-300"
+						class="w-full pl-12 pr-4 py-4 bg-stone-950/50 border border-stone-800 text-white placeholder:text-stone-800 outline-none focus:border-rust transition-all duration-300 font-jetbrains text-sm industrial-frame"
 					/>
 				</div>
 			</div>
 
 			{#if error}
-			<div in:fade class="bg-red-900/50 border border-red-700 text-red-400 text-sm rounded-md p-3 flex items-center gap-3">
-				<Shield class="w-5 h-5" />
+			<div in:fade class="bg-red-950/20 border border-red-900/50 text-red-500 text-[10px] font-black p-4 flex items-center gap-4 uppercase tracking-widest shadow-inner industrial-frame">
+				<Shield class="w-4 h-4 shrink-0" />
 				<span>{error}</span>
 			</div>
 			{/if}
@@ -118,21 +136,23 @@
 			<button
 				type="submit"
 				disabled={loading || isSubmitting}
-				class="w-full py-4 bg-rust hover:bg-opacity-90 text-white font-bold uppercase tracking-wider rounded-md transition-all duration-300 shadow-[0_4px_20px_rgba(249,115,22,0.2)] hover:shadow-[0_6px_30px_rgba(249,115,22,0.3)] active:translate-y-px disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed flex items-center justify-center gap-3"
+				class="w-full py-5 bg-rust hover:bg-rust-light text-white font-heading font-black uppercase tracking-[0.2em] transition-all duration-500 shadow-2xl shadow-rust/20 active:translate-y-px disabled:opacity-20 flex items-center justify-center gap-4 group/btn overflow-hidden relative"
 			>
+				<div class="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000"></div>
 				{#if loading}
 					<Activity class="w-5 h-5 animate-spin" />
-					<span>Authenticating...</span>
+					<span class="text-xs">Authenticating...</span>
 				{:else}
-					<span>Authorize Access</span>
-					<ChevronRight class="w-5 h-5" />
+					<span class="text-sm">Authorize Access</span>
+					<ChevronRight class="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
 				{/if}
 			</button>
 		</form>
 
-		<div class="text-center mt-12 text-xs text-stone-600 font-mono">
-			<p>Node: {`main-registry-${randomHex()}`}</p>
-			<p>Security Protocol v3.1 Active</p>
+		<div class="text-center mt-12 space-y-2 relative z-10">
+			<div class="h-px w-full bg-gradient-to-r from-transparent via-stone-800 to-transparent mb-6"></div>
+			<p class="text-[8px] text-stone-700 font-mono uppercase tracking-[0.5em]">Node: {`main-registry-${randomHex()}`}</p>
+			<p class="text-[8px] text-stone-800 font-mono uppercase tracking-[0.3em]">Authorized Personnel Only</p>
 		</div>
 	</div>
 </div>
