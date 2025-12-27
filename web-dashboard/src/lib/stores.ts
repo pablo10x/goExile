@@ -260,7 +260,22 @@ export const siteSettings = createDatabaseStore('site.settings', {
 		sidebar_width: 260,
 		card_glow_color: '#f59e0bff',
 		font_size_base: 14,
-		theme_preset: 'modern_industrial'
+		theme_preset: 'modern_industrial',
+		// Advanced Atmospheric
+		glitch_intensity: 0.05,
+		chromatic_aberration: 0.02,
+		flicker_intensity: 0.01,
+		scanline_type: 'subtle' as 'subtle' | 'heavy' | 'rgb' | 'none',
+		noise_type: 'analog' as 'asfalt' | 'analog' | 'grain' | 'none',
+		// Advanced Geometry
+		corner_style: 'clipped' as 'clipped' | 'rounded' | 'sharp',
+		border_opacity: 0.3,
+		grid_opacity: 0.05,
+		// Specialized Colors
+		success_color: '#10b981ff',
+		warning_color: '#f59e0bff',
+		danger_color: '#ef4444ff',
+		info_color: '#06b6d4ff'
 	},
 	performance: {
 		high_quality_smoke: false,

@@ -653,15 +653,6 @@
 		animation: float2 15s ease-in-out infinite;
 	}
 
-	.blob-3 {
-		width: 250px;
-		height: 250px;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
-		animation: float3 10s ease-in-out infinite;
-	}
-
 	@keyframes float1 {
 		0%,
 		100% {
@@ -886,10 +877,6 @@
 
 	.animate-ripple {
 		animation: ripple 2s ease-out infinite;
-	}
-
-	.animate-ripple-delayed {
-		animation: ripple 2s ease-out 0.5s infinite;
 	}
 
 	@keyframes ripple {
