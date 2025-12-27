@@ -23,39 +23,38 @@ func InitPlayerSystem(db *sqlx.DB) error {
 		id BIGSERIAL PRIMARY KEY,
 		uid TEXT UNIQUE, -- Firebase UID
 		name TEXT NOT NULL,
-		                device_id TEXT NOT NULL UNIQUE,
-		                xp BIGINT DEFAULT 0,
-		                banned BOOLEAN DEFAULT FALSE,
-		                last_joined_server TEXT DEFAULT '',
-		                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-		                updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-		        );`
-		        if _, err := db.Exec(playersTable); err != nil {
-		                return fmt.Errorf("create players table: %w", err)
-		        }
-		
-		        // Ensure ID sequence starts at 1,000,000 for nice IDs
-		        var maxID int64
-		        if err := db.Get(&maxID, "SELECT COALESCE(MAX(id), 0) FROM player_system.players"); err == nil && maxID < 1000000 {
-		                // Attempt to alter sequence. Ignore error if sequence name differs (unlikely with Postgres defaults)
-		                _, _ = db.Exec("ALTER SEQUENCE player_system.players_id_seq RESTART WITH 1000000")
-		        }
-		
-		        // Migration: Add uid column if it doesn't exist
-		        _, err := db.Exec(`DO $$
-		        BEGIN
-		                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='player_system' AND table_name='players' AND column_name='uid') THEN
-		                        ALTER TABLE player_system.players ADD COLUMN uid TEXT UNIQUE;
-		                END IF;
-		                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='player_system' AND table_name='players' AND column_name='banned') THEN
-		                        ALTER TABLE player_system.players ADD COLUMN banned BOOLEAN DEFAULT FALSE;
-		                END IF;
-		        END $$;`)	if err != nil {
-		log.Printf("Warning: Failed to add uid column to players: %v", err)
+		device_id TEXT NOT NULL UNIQUE,
+		xp BIGINT DEFAULT 0,
+		banned BOOLEAN DEFAULT FALSE,
+		last_joined_server TEXT DEFAULT '',
+		created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+		updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+	);`
+	if _, err := db.Exec(playersTable); err != nil {
+		return fmt.Errorf("create players table: %w", err)
+	}
+
+	// Ensure ID sequence starts at 1,000,000 for nice IDs
+	var maxID int64
+	if err := db.Get(&maxID, "SELECT COALESCE(MAX(id), 0) FROM player_system.players"); err == nil && maxID < 1000000 {
+		_, _ = db.Exec("ALTER SEQUENCE player_system.players_id_seq RESTART WITH 1000000")
+	}
+
+	// Migration: Add columns if they don't exist
+	migration := `DO $$
+	BEGIN
+		IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='player_system' AND table_name='players' AND column_name='uid') THEN
+			ALTER TABLE player_system.players ADD COLUMN uid TEXT UNIQUE;
+		END IF;
+		IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='player_system' AND table_name='players' AND column_name='banned') THEN
+			ALTER TABLE player_system.players ADD COLUMN banned BOOLEAN DEFAULT FALSE;
+		END IF;
+	END $$;`
+	if _, err := db.Exec(migration); err != nil {
+		log.Printf("Warning: Failed to run player migrations: %v", err)
 	}
 
 	// Friendships Table (established friends)
-	// Constraint: player1_id < player2_id to ensure unique pairings
 	friendshipsTable := `CREATE TABLE IF NOT EXISTS player_system.friendships (
 		player1_id BIGINT NOT NULL REFERENCES player_system.players(id) ON DELETE CASCADE,
 		player2_id BIGINT NOT NULL REFERENCES player_system.players(id) ON DELETE CASCADE,
@@ -95,7 +94,6 @@ func InitPlayerSystem(db *sqlx.DB) error {
 
 	return nil
 }
-
 // -- Reports CRUD --
 
 func CreateReport(db *sqlx.DB, r *models.Report) (int64, error) {

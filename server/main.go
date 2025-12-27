@@ -419,10 +419,10 @@ func run() error {
 
 		// Dashboard: Player Management (Session Protected)
 		router.Handle("/api/admin/players", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ListAllPlayersHandler))).Methods("GET")
-	admin.HandleFunc("/players/{id}", handlers.GetPlayerDetailsHandler).Methods("GET")
-	admin.HandleFunc("/players/{id}", handlers.UpdatePlayerDetailsHandler).Methods("PUT")
-	admin.HandleFunc("/players/{id}", handlers.DeletePlayerHandler).Methods("DELETE")
-	admin.HandleFunc("/players/{id}/ban", handlers.BanPlayerHandler).Methods("POST")
+		router.Handle("/api/admin/players/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.GetPlayerDetailsHandler))).Methods("GET")
+		router.Handle("/api/admin/players/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.UpdatePlayerDetailsHandler))).Methods("PUT")
+		router.Handle("/api/admin/players/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.DeletePlayerHandler))).Methods("DELETE")
+		router.Handle("/api/admin/players/{id}/ban", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.BanPlayerHandler))).Methods("POST")
 
 		// Dashboard: Reports (Session Protected)
 		router.Handle("/api/reports", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ListReportsHandler))).Methods("GET")
