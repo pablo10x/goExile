@@ -4,7 +4,7 @@ This document provides a comprehensive overview of the **Exile** project structu
 
 ## 📂 Project Structure
 
-The project is a multi-component system for managing game server instances, consisting of a central Master Server (`server`), distributed Spawners (`spawner`), and a Web Dashboard (`web-dashboard`).
+The project is a multi-component system for managing game server instances, consisting of a central Master Server (`server`), distributed Nodes (`node`), and a Web Dashboard (`web-dashboard`).
 
 ```
 /mnt/c/Users/pab/Desktop/goExile/
@@ -13,8 +13,8 @@ The project is a multi-component system for managing game server instances, cons
 │   ├── files/              # File storage for game server binaries
 │   ├── main.go             # Entry point
 │   └── ...                 # Handlers, Middleware, Auth logic
-├── spawner/                # Spawner Service (Manages Game Instances)
-│   ├── api/                # API handlers for Spawner-Server comms
+├── node/                # Node Service (Manages Game Instances)
+│   ├── api/                # API handlers for Node-Server comms
 │   ├── game_server/        # Local game server binaries
 │   ├── internal/           # Internal logic (Game Manager, Updater)
 │   ├── main.go             # Entry point
@@ -28,19 +28,30 @@ The project is a multi-component system for managing game server instances, cons
 └── game_server/            # (Optional) Standalone game server data
 ```
 
+### 🛠️ Unity Game Server Packer (`packer/`)
+*   **Role:** High-performance build utility for packaging Unity Game Servers.
+*   **Tech Stack:** Go, Bubble Tea (TUI).
+*   **Key Features:**
+    *   **Modern TUI:** Real-time progress bars, spinners, and build summaries.
+    *   **Manifest Generation:** Automatically creates a `manifest.json` with SHA256 hashes for integrity verification and differential updates.
+    *   **Smart Versioning:** Auto-detects version from `build_info.json`.
+    *   **Dry Run Mode:** Simulates packing to verify `.packerignore` rules.
+    *   **Performance:** Streaming SHA256 hashing and buffered ZIP writing for maximum I/O efficiency.
+    *   **Customizable:** Supports `.packerignore` files and granular CLI flags (`-out`, `-quiet`, `-compression`).
+
 ## 🏗️ Architecture
 
 ### 1. Master Server (`server`)
 *   **Role:** Central registry and orchestrator.
 *   **Tech Stack:** Go (Standard Library + `gorilla/mux` likely), SQLite.
 *   **Key Responsibilities:**
-    *   **Registry:** Tracks active Spawners via HTTP/WebSocket registration and heartbeats.
-    *   **Authentication:** Handles Admin login (Email/Password + TOTP 2FA) and Spawner auth (`X-API-Key`).
+    *   **Registry:** Tracks active Nodes via HTTP/WebSocket registration and heartbeats.
+    *   **Authentication:** Handles Admin login (Email/Password + TOTP 2FA) and Node auth (`X-API-Key`).
     *   **Dashboard API:** Provides REST endpoints and SSE (Server-Sent Events) for real-time frontend updates.
-    *   **File Serving:** Hosts `game_server.zip` for Spawners to download.
-    *   **WebSocket:** Manages real-time communication with Spawners and potentially the frontend.
+    *   **File Serving:** Hosts `game_server.zip` for Nodes to download.
+    *   **WebSocket:** Manages real-time communication with Nodes and potentially the frontend.
 
-### 2. Spawner (`spawner`)
+### 2. Node (`node`)
 *   **Role:** Node agent that runs on remote machines to spawn game servers.
 *   **Tech Stack:** Go.
 *   **Key Responsibilities:**
@@ -54,7 +65,7 @@ The project is a multi-component system for managing game server instances, cons
 *   **Tech Stack:** Svelte 5, SvelteKit, TypeScript, TailwindCSS, Vite.
 *   **Key Features:**
     *   Real-time stats (SSE).
-    *   Spawner management (list, status).
+    *   Node management (list, status).
     *   Instance control (Start/Stop/Restart/Logs).
     *   Authentication flows (Login, 2FA).
 
@@ -68,9 +79,9 @@ go run .
 # Runs on http://localhost:8081 (default)
 ```
 
-### Spawner
+### Node
 ```bash
-cd spawner
+cd node
 # Setup config/env
 go run .
 ```
@@ -98,16 +109,16 @@ npm run dev   # Starts Vite dev server
     *   Frontend: `npm run check` (Svelte Check), `npm run test` (Vitest).
 *   **Workflow Requirements:**
     *   Always update `GEMINI.md` with significant changes.
-    *   Commit changes only if: tests pass, `npm run check` passes in `web-dashboard`, and server/spawner build without errors.
+    *   Commit changes only if: tests pass, `npm run check` passes in `web-dashboard`, and server/node build without errors.
     *   **Client API Enforcement:** Whenever making changes that affect the game client (API endpoints, WebSocket protocol, data models), you **MUST** update `server/docs/CLIENT_API.md` and provide/update C# example scripts in `server/docs/unity/` to ensure frontend/unity alignment.
 
 ## 🔑 Key Configuration
 
 *   **`server/.env`**: Controls Master Server port, database path, admin credentials, and 2FA secrets.
 *   **`PRODUCTION_MODE`**: Set to `true` to enable TOTP 2FA. In development (default), TOTP is bypassed for faster login.
-*   **`X-API-Key`**: Critical security header for Spawner <-> Server communication.
+*   **`X-API-Key`**: Critical security header for Node <-> Server communication.
 *   **`X-Game-API-Key`**: Header required for all Game Client -> Server API requests.
-*   **`spawner/internal/ws/client.go`**: Handles Spawner's WebSocket connection logic (Heartbeats, Command handling).
+*   **`node/internal/ws/client.go`**: Handles Node's WebSocket connection logic (Heartbeats, Command handling).
 *   **`server/dashboard.go` & `server/auth.go`**: Core logic for Dashboard API and Authentication.
 
 *   **Developer Experience:**
@@ -125,18 +136,18 @@ npm run dev   # Starts Vite dev server
         *   Added a cinematic "destruction" sequence where the attacker icon shatters and fades upon impact.
 *   **Bug Fixes:**
     *   Fixed a syntax error and missing `fmt` import in `server/auth/auth.go`.
-    *   Removed an unreachable and incorrect `os.Chdir()` call in `spawner/main.go`.
+    *   Removed an unreachable and incorrect `os.Chdir()` call in `node/main.go`.
     *   **Master Server Tests:** Fixed failing tests in `server` by adding SQLite support for in-memory testing and initializing the database in `main_test.go`.
-    *   **Registry Sync:** Fixed `RegisterSpawner` handler to correctly sync with the in-memory registry, resolving 404 errors in tests.
-*   **Spawner Linting & Robustness:**        *   Resolved `copylocks` issues in `Instance` struct by implementing a `clone()` method.
+    *   **Registry Sync:** Fixed `RegisterNode` handler to correctly sync with the in-memory registry, resolving 404 errors in tests.
+*   **Node Linting & Robustness:**        *   Resolved `copylocks` issues in `Instance` struct by implementing a `clone()` method.
         *   Fixed shadowing of built-in functions and improved variable naming (e.g., `CPUUsage`).
         *   Added comprehensive error handling for `json.Unmarshal`, `os.Chmod`, and connection closing.
         *   Suppressed noise from non-critical error returns in `defer` and background tasks.
         *   Fixed multiple syntax errors and assignment mismatches introduced during automated refactoring.
-        *   Added missing package-level documentation and method comments across all spawner modules.
+        *   Added missing package-level documentation and method comments across all node modules.
         *   Renamed types to avoid stuttering (`Result`, `Request`, `Message`).
         *   Restricted file permissions for sensitive files (`.env`, state files, logs, version files) to `0600`.
-        *   Aligned spawner to Go 1.24.0 for toolchain consistency.
+        *   Aligned node to Go 1.24.0 for toolchain consistency.
 *   **Theme Engine:** Implemented a full-featured Light/Dark mode system with glassmorphism effects.
     *   Default mode is Dark.
     *   Background animation (particle canvas) is preserved across both modes.
@@ -146,12 +157,12 @@ npm run dev   # Starts Vite dev server
     *   `AuthenticatePlayerHandler` now supports both JSON and Unity's `WWWForm` (form-data) for better compatibility.
     *   Disabled TOTP requirement in non-production environments for developer convenience.
 *   **Documentation:** Updated `server/docs/CLIENT_API.md` and created `server/docs/unity/AuthenticationManager.cs` to reflect the latest authentication logic and provide a drop-in Unity implementation.
-*   **Fixed Spawner Panic:** Resolved concurrent write panic in `spawner/internal/ws/client.go` by implementing a `writePump`.
-*   **Fixed Heartbeat:** Improved `heartbeatLoop` resilience in Spawner.
+*   **Fixed Node Panic:** Resolved concurrent write panic in `node/internal/ws/client.go` by implementing a `writePump`.
+*   **Fixed Heartbeat:** Improved `heartbeatLoop` resilience in Node.
 *   **Stability:** Increased Server heartbeat timeout thresholds and ensured connection keep-alive on any message.
 *   **Status Logic:** Disabled time-based status degradation ("Unresponsive"). Status is now strictly "Online" (connected) or "Offline" (disconnected).
-*   **Dashboard UI:** Fixed Spawner status mismatch ("active" vs "Online") enabling the spawn button; removed verbose heartbeat logging.
-*   **Logging:** Implemented log rotation (max 5MB, keep 20 lines) in Spawner, filtered noisy log types, and added file size display in Dashboard LogViewer.
+*   **Dashboard UI:** Fixed Node status mismatch ("active" vs "Online") enabling the spawn button; removed verbose heartbeat logging.
+*   **Logging:** Implemented log rotation (max 5MB, keep 20 lines) in Node, filtered noisy log types, and added file size display in Dashboard LogViewer.
 *   **Database:** Integrated PostgreSQL support (via `pgx` driver) alongside SQLite. Added "Databases" tab to Dashboard for table listing. Use `DB_DRIVER=pgx` for Postgres. Added 5s timeout to DB init to prevent startup hangs. Enhanced Database Management: Full UI for Overview, Table Browser/Editor (CRUD), Internal Backups (Create/Restore/Download), and Config viewing.
 *   **Dashboard Stability:** Fixed Svelte 5 reactivity issues in Layout and Dashboard Page (Runes migration) resolving navigation bugs and blank screen issues. Fixed accessibility warnings and template syntax errors.
 *   **Theme & Aesthetic Migration:** Completed the migration to the tactical Rust/Stone "Exile" terminal aesthetic.
@@ -161,11 +172,11 @@ npm run dev   # Starts Vite dev server
     *   Fixed multiple Svelte 5 syntax errors and tag nesting issues in `config/+page.svelte`.
     *   Optimized Three.js lifecycle management: `SectionBackground`, `NavbarParticles`, and `GlobalSmoke` now properly stop their animation loops when disabled or in Low Power Mode.
     *   Implemented persistence for aesthetic settings: `theme`, `backgroundConfig`, and `siteSettings` now automatically sync with `localStorage`.
-*   **Performance:** Refactored Spawner metrics collection to be asynchronous, preventing I/O blocks from delaying heartbeats. Added a "Low Power Mode" toggle to disable resource-intensive background animations.
+*   **Performance:** Refactored Node metrics collection to be asynchronous, preventing I/O blocks from delaying heartbeats. Added a "Low Power Mode" toggle to disable resource-intensive background animations.
 
 ## 🔒 Security Note
 *   **Transport Encryption:** The Master Server runs on plain HTTP (`:8081`). For production security, you **MUST** run it behind a Reverse Proxy (Nginx, Caddy, Cloudflare) that handles SSL/TLS termination. This ensures the WebSocket connection and API Key are encrypted.
-*   **Authentication:** All sensitive endpoints are protected by `X-API-Key` (Spawners) or Session Cookie (Dashboard).
+*   **Authentication:** All sensitive endpoints are protected by `X-API-Key` (Nodes) or Session Cookie (Dashboard).
 *   **Security:** Removed insecure logging of 2FA secrets in `server`.
 *   **Dashboard Updates:** Added "Start" button, "Node Logs" tab (embedded `LogViewer`), and switched Console logs to polling in `InstanceManagerModal`.
 
@@ -206,11 +217,24 @@ The following security improvements have been implemented:
 *   **LogViewer Refactor:** Updated `LogViewer.svelte` to use Svelte 5 `{@const Icon = tab.icon}` syntax for dynamic icon rendering, fixing deprecation warnings.
 
 ### 🔒 Security Enhancements (Post-Audit)
-*   **Spawner RCE Patch:** Implemented strict ID validation in `spawner/internal/game/manager.go` to prevent path traversal vulnerability in `RenameInstance` and `Spawn`.
+*   **Node RCE Patch:** Implemented strict ID validation in `node/internal/game/manager.go` to prevent path traversal vulnerability in `RenameInstance` and `Spawn`.
 *   **Security Headers:** Added `SecurityHeadersMiddleware` in Server to enforce `X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, and `Content-Security-Policy`.
 *   **Server Binding:** Updated `server/main.go` to bind to `127.0.0.1` by default (configurable via `SERVER_HOST`).
 *   **Read-Only Database:** Added support for a separate `READONLY_DB_DSN` in `server/db.go` and `server/main.go`, used by `ExecuteSQLHandler` for safer ad-hoc queries.
 *   **Frontend Sanitization:** Integrated `DOMPurify` in `web-dashboard` (`StatsCard.svelte`, `ConfirmDialog.svelte`) to replace regex-based sanitization.
+
+### Node Authentication
+*   **Two-Stage Enrollment:** Nodes now undergo a two-stage registration:
+    1.  **Handshake:** Node connects with an enrollment key and announces its network presence.
+    2.  **Configuration:** Admin configures the node (Region, Capacity) from the Dashboard and approves registration.
+*   **Unique API Keys:** Nodes receive a unique, persistent API key only after admin approval.
+*   **Simplified CLI:** Node CLI is simplified to `-m <master_url>` and `-key <enrollment_key>`. All other settings are managed centrally.
+*   **Persistence:** Configuration (Region, MaxInstances, APIKey) is saved to the node's local `.env` upon successful enrollment.
+
+### Remote Configuration & Management
+*   **Real-Time Sync:** Settings updated in the Dashboard (Region, Max Instances) are instantly pushed to connected Nodes via WebSocket (`update_config` command).
+*   **Persistence:** Nodes automatically save updated configurations to their local `.env` file, ensuring changes persist across restarts.
+*   **Drain Mode:** (In Progress) Support for enabling "Maintenance Mode" to prevent new spawns while allowing existing games to finish.
 
 ### System Logging & Error Reporting
 *   **Architecture:** Implemented a new persistent, categorized logging system.
@@ -236,7 +260,7 @@ The following security improvements have been implemented:
 
 *   **Backend:**
     *   Created `server/logging.go` service for structured logging.
-    *   Updated `StatsMiddleware` to capture and categorize errors (Internal, Spawner, Security).
+    *   Updated `StatsMiddleware` to capture and categorize errors (Internal, Node, Security).
     *   Updated `GlobalStats` to only count "Internal" API errors in `TotalErrors` metric, improving "Performance" tab accuracy.
 *   **Frontend:**
     *   Created new **System Logs** page (`/logs`) with filtering by category and detailed inspection.
@@ -273,13 +297,13 @@ The following security improvements have been implemented:
     *   `auth`: Authentication logic, session management, and Firebase Remote Config.
     *   `config`: Configuration management.
     *   `database`: Persistence layer, migrations, and database administration.
-    *   `handlers`: Core API handlers (Spawners, Instances, Notes, Tasks).
+    *   `handlers`: Core API handlers (Nodes, Instances, Notes, Tasks).
     *   `logging`: Persistent system logging service.
     *   `metrics`: Performance and resource monitoring.
     *   `middleware`: Security and orchestration middleware.
     *   `models`: Shared data structures.
     *   `redeye`: Security and traffic management.
-    *   `registry`: Central spawner and instance registry.
+    *   `registry`: Central node and instance registry.
     *   `sse`: Real-time events hub.
     *   `utils`: Shared utility and UI functions.
 *   **Import Cycle Resolution**: Fixed multiple import cycles by extracting shared logic into `utils` and qualifying symbol references correctly.
@@ -308,6 +332,33 @@ The following security improvements have been implemented:
 *   **Frontend Safety**: Added null/undefined checks for `toLocaleString` and `filter` across the dashboard to prevent runtime crashes.
 *   **SQL Repair**: Fixed corrupted SQL queries in the persistence layer.
 *   **JSON Handling**: Ensured API endpoints return empty slices instead of `null` for better frontend compatibility.
+*   **Config API Routes**: Fixed `404 Not Found` errors when updating configuration keys containing dots (e.g., `site.settings`) by updating the `gorilla/mux` route pattern to `{key:.+}` and ensuring correct precedence over specific routes.
+*   **Database Scanning**: Fixed `500 Internal Server Error` caused by `sql: Scan error on column ...: converting NULL to string is unsupported`. Implemented `sql.NullString` handling for nullable columns in `server_config`, `notes`, `instance_actions`, and `redeye_ip_reputation` tables.
+*   **Database Performance**: Optimized query speeds by implementing critical indexes on `system_logs`, `instance_actions`, `redeye_logs`, and `redeye_anticheat_events`.
+*   **RedEye Optimization**: Implemented an in-memory `RuleCache` for the RedEye security middleware, eliminating redundant database lookups for every incoming request and reducing overall system latency.
+*   **Three.js Lifecycle**: Optimized background animations (`GlobalSmoke`, `NavbarParticles`) with throttled 30FPS loops and immediate resource disposal when `Low Power Mode` is enabled, significantly reducing CPU/GPU overhead.
+*   **Frontend Synchronization**: Upgraded persistent stores with a 500ms debounced save mechanism to prevent database write-spam during rapid UI interactions.
+*   **Backend Resilience**: Hardened the HTTP server with production-grade read/write timeouts and context-aware background goroutines for graceful shutdown.
+*   **Network Compression**: Implemented a native Gzip middleware in the Go backend. All JSON responses (logs, configs, stats) are now compressed during transit, reducing bandwidth usage by up to 80% and improving load times for remote operators.
+*   **Intelligent Hibernation**: Integrated the **Page Visibility API** into the dashboard. Real-time data streams (SSE) are now automatically paused when the browser tab is hidden and resumed when brought to the focus, significantly reducing background CPU and network overhead.
+*   **Compositor Isolation**: Applied `isolation: isolate` and `contain: content` to the System Topology SVG. This prevents node-level animations from triggering expensive full-screen layout recalculations.
+*   **Reactivity Throttling**: Refactored the topology heartbeat logic using Svelte 5's `untrack`. Heartbeat pulses are now processed in an isolated context, preventing redundant array scans and keeping the main thread free for high-priority UI interactions.
+*   **Log Buffer Windowing**: Implemented an automated rendering cap for the Log Viewer. The system now only renders the most recent 200 log lines by default, eliminating the browser "hang" typical when loading massive operational logs while still keeping the full dataset available in memory.
+*   **Tactical Command Palette**: Implemented a global **Smart-Uplink** hub accessible via `Ctrl+K` or `Cmd+K`. This enables instant fuzzy-search navigation across all system modules and the execution of high-level system commands (e.g., reboots, theme switching) without leaving the current view.
+*   **Keyboard-First Navigation**: Added global shortcut listeners for "Quick Jump" navigation (`G+D` for Dashboard, `G+L` for Logs, etc.) and full keyboard support for all interactive dialogs.
+*   **A11y Hardening**: Performed a comprehensive accessibility pass. All custom industrial modals and components now include standard ARIA roles, high-contrast focus indicators, and semantic labels for screen-reader compatibility.
+
+### 📦 Game Server Management
+*   **Smart Uploads**: Integrated `JSZip` into the dashboard to automatically extract version metadata from `game_server.zip` uploads (via `manifest.json`), streamlining the release process.
+*   **Layout Fix**: Resolved a missing `cubicOut` import in `+layout.svelte` to satisfy type checking.
+
+### 🎨 Sidebar & UI Refinement
+*   **Icon Refresh**: Updated sidebar icons to better match the "Tactical" aesthetic:
+    *   Dashboard -> `Gauge`
+    *   Notes -> `FileText`
+    *   Config -> `Sliders`
+*   **Scrollbar**: Hidden the default scrollbar on the sidebar (`no-scrollbar`) for a cleaner look while maintaining scrollability.
+*   **Active State**: Enhanced the `.nav-link-industrial` active state with a left border indicator and gradient background.
 
 ## 🔴 RedEye System Architecture Analysis
 

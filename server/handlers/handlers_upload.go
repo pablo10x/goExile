@@ -17,7 +17,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// ServeGameServerFile serves the currently active game_server.zip to spawners.
+// ServeGameServerFile serves the currently active game_server.zip to nodes.
 func ServeGameServerFile(w http.ResponseWriter, r *http.Request) {
 	// If DB is connected, try to find the active version
 	var filename string = "game_server.zip" // default fallback

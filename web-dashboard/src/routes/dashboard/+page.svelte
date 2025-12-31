@@ -1,17 +1,18 @@
-<script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
-	import { stats, spawners, notifications, isConnected, connectionStatus } from '$lib/stores';
-	import StatsCard from '$lib/components/StatsCard.svelte';
-	import SpawnerTable from '$lib/components/SpawnerTable.svelte';
+	<script lang="ts">
+		import { onMount, onDestroy } from 'svelte';
+		import { stats, nodes, notifications, isConnected, connectionStatus, siteSettings } from '$lib/stores';	import StatsCard from '$lib/components/StatsCard.svelte';
+	import NodeTable from '$lib/components/NodeTable.svelte';
 	import LogViewer from '$lib/components/LogViewer.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import InstanceManagerModal from '$lib/components/InstanceManagerModal.svelte';
 	import DatabaseDetailModal from '$lib/components/DatabaseDetailModal.svelte';
 	import NotificationBell from '$lib/components/NotificationBell.svelte';
 	import SystemTopology from '$lib/components/SystemTopology.svelte';
-	import AddSpawnerModal from '$lib/components/AddSpawnerModal.svelte';
+	import AddNodeModal from '$lib/components/AddNodeModal.svelte';
+	import Skeleton from '$lib/components/Skeleton.svelte';
 	import { formatBytes, formatUptime } from '$lib/utils';
 	import { Clock, Server, Activity, AlertCircle, Database, Network, Plus } from 'lucide-svelte';
+	import Icon from '$lib/components/theme/Icon.svelte';
 
 	// Animation states
 	let isLoaded = $state(false);
@@ -44,11 +45,11 @@
 
 	// Log Viewer State
 	let isLogViewerOpen = $state(false);
-	let selectedSpawnerId = $state<number | null>(null);
+	let selectedNodeId = $state<number | null>(null);
 
 	// Instance Console State
 	let isConsoleOpen = $state(false);
-	let consoleSpawnerId = $state<number | null>(null);
+	let consoleNodeId = $state<number | null>(null);
 	let consoleInstanceId = $state<string | null>(null);
 
 	// Spawn Dialog State
@@ -68,10 +69,10 @@
 		| 'bulk_restart'
 		| 'bulk_update'
 		| 'bulk_start'
-		| 'update_spawner_build'
+		| 'update_node_build'
 		| null
 	>(null);
-	let instanceActionSpawnerId = $state<number | null>(null);
+	let instanceActionNodeId = $state<number | null>(null);
 	let instanceActionInstanceId = $state<string | null>(null);
 	let instanceActionNewID = $state<string | null>(null);
 	let instanceActionBulkIds = $state<string[]>([]);
@@ -81,32 +82,32 @@
 	let actionProgress = $state<number | null>(null);
 	let actionStatusMessage = $state<string | null>(null);
 
-	// Animation state for new spawners
-	let previousSpawnerIds = new Set<number>(); // Non-reactive to prevent loop
-	let highlightNewSpawnerId = $state<number | null>(null);
+	// Animation state for new nodes
+	let previousNodeIds = new Set<number>(); // Non-reactive to prevent loop
+	let highlightNewNodeId = $state<number | null>(null);
 	let highlightTimeout: ReturnType<typeof setTimeout> | null = null;
 
-	let spawnerTableComponent = $state<any>(null);
+	let nodeTableComponent = $state<any>(null);
 
-	// Spawner Deletion State
-	let isSpawnerDeleteDialogOpen = $state(false);
-	let spawnerToDeleteId = $state<number | null>(null);
+	// Node Deletion State
+	let isNodeDeleteDialogOpen = $state(false);
+	let nodeToDeleteId = $state<number | null>(null);
 
-	// Add Spawner State
-	let showAddSpawnerModal = $state(false);
+	// Add Node State
+	let showAddNodeModal = $state(false);
 
-	// Reactivity for new spawners animation
+	// Reactivity for new nodes animation
 	$effect(() => {
-		const currentSpawnerIds = new Set<number>($spawners.map((s: any) => s.id));
-		for (const spawner of $spawners) {
-			if (!previousSpawnerIds.has(spawner.id) && previousSpawnerIds.size > 0) {
-				highlightNewSpawnerId = spawner.id;
+		const currentNodeIds = new Set<number>($nodes.map((s: any) => s.id));
+		for (const node of $nodes) {
+			if (!previousNodeIds.has(node.id) && previousNodeIds.size > 0) {
+				highlightNewNodeId = node.id;
 				if (highlightTimeout) clearTimeout(highlightTimeout);
-				highlightTimeout = setTimeout(() => (highlightNewSpawnerId = null), 5000);
+				highlightTimeout = setTimeout(() => (highlightNewNodeId = null), 5000);
 				break;
 			}
 		}
-		previousSpawnerIds = currentSpawnerIds;
+		previousNodeIds = currentNodeIds;
 	});
 
 	onMount(() => {
@@ -116,15 +117,15 @@
 			mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
 		};
 
-		window.addEventListener('mousemove', handleMouseMove);
+		window.addEventListener('mousemove', handleMouseMove, { passive: true });
 
-		// Trigger animations after component mounts
-		setTimeout(() => {
+		// Trigger animations using RAF for maximum smoothness
+		requestAnimationFrame(() => {
 			isLoaded = true;
-			setTimeout(() => {
+			requestAnimationFrame(() => {
 				animateStats = true;
-			}, 200);
-		}, 100);
+			});
+		});
 
 		return () => {
 			window.removeEventListener('mousemove', handleMouseMove);
@@ -137,21 +138,21 @@
 		isSpawnDialogOpen = true;
 	}
 
-	function openStartInstanceDialog(event: CustomEvent<{ spawnerId: number; instanceId: string }>) {
+	function openStartInstanceDialog(event: CustomEvent<{ nodeId: number; instanceId: string }>) {
 		instanceActionType = 'start';
-		instanceActionSpawnerId = event.detail.spawnerId;
+		instanceActionNodeId = event.detail.nodeId;
 		instanceActionInstanceId = event.detail.instanceId;
 		instanceActionDialogTitle = 'Start Instance';
-		instanceActionDialogMessage = `Are you sure you want to start instance "${event.detail.instanceId}" on Spawner #${event.detail.spawnerId}?`;
+		instanceActionDialogMessage = `Are you sure you want to start instance "${event.detail.instanceId}" on Node #${event.detail.nodeId}?`;
 		instanceActionConfirmText = 'Start Instance';
 		isInstanceActionDialogOpen = true;
 	}
 
 	function openRestartInstanceDialog(
-		event: CustomEvent<{ spawnerId: number; instanceId: string }>
+		event: CustomEvent<{ nodeId: number; instanceId: string }>
 	) {
 		instanceActionType = 'restart';
-		instanceActionSpawnerId = event.detail.spawnerId;
+		instanceActionNodeId = event.detail.nodeId;
 		instanceActionInstanceId = event.detail.instanceId;
 		instanceActionDialogTitle = 'Restart Instance';
 		instanceActionDialogMessage = `Are you sure you want to restart instance "${event.detail.instanceId}"?`;
@@ -159,29 +160,29 @@
 		isInstanceActionDialogOpen = true;
 	}
 
-	function openStopInstanceDialog(event: CustomEvent<{ spawnerId: number; instanceId: string }>) {
+	function openStopInstanceDialog(event: CustomEvent<{ nodeId: number; instanceId: string }>) {
 		instanceActionType = 'stop';
-		instanceActionSpawnerId = event.detail.spawnerId;
+		instanceActionNodeId = event.detail.nodeId;
 		instanceActionInstanceId = event.detail.instanceId;
 		instanceActionDialogTitle = 'Stop Instance';
-		instanceActionDialogMessage = `Are you sure you want to stop instance "${event.detail.instanceId}" on Spawner #${event.detail.spawnerId}?`;
+		instanceActionDialogMessage = `Are you sure you want to stop instance "${event.detail.instanceId}" on Node #${event.detail.nodeId}?`;
 		instanceActionConfirmText = 'Stop Instance';
 		isInstanceActionDialogOpen = true;
 	}
 
-	function openDeleteInstanceDialog(event: CustomEvent<{ spawnerId: number; instanceId: string }>) {
+	function openDeleteInstanceDialog(event: CustomEvent<{ nodeId: number; instanceId: string }>) {
 		instanceActionType = 'delete';
-		instanceActionSpawnerId = event.detail.spawnerId;
+		instanceActionNodeId = event.detail.nodeId;
 		instanceActionInstanceId = event.detail.instanceId;
 		instanceActionDialogTitle = 'Delete Instance';
-		instanceActionDialogMessage = `Are you sure you want to PERMANENTLY DELETE instance "${event.detail.instanceId}" from Spawner #${event.detail.spawnerId}? ALL FILES WILL BE LOST.`;
+		instanceActionDialogMessage = `Are you sure you want to PERMANENTLY DELETE instance "${event.detail.instanceId}" from Node #${event.detail.nodeId}? ALL FILES WILL BE LOST.`;
 		instanceActionConfirmText = 'Delete Instance';
 		isInstanceActionDialogOpen = true;
 	}
 
-	function openUpdateInstanceDialog(event: CustomEvent<{ spawnerId: number; instanceId: string }>) {
+	function openUpdateInstanceDialog(event: CustomEvent<{ nodeId: number; instanceId: string }>) {
 		instanceActionType = 'update';
-		instanceActionSpawnerId = event.detail.spawnerId;
+		instanceActionNodeId = event.detail.nodeId;
 		instanceActionInstanceId = event.detail.instanceId;
 		instanceActionDialogTitle = 'Update Instance';
 		instanceActionDialogMessage = `Are you sure you want to reinstall game server files for instance "${event.detail.instanceId}"? This will stop the server if it's running.`;
@@ -190,10 +191,10 @@
 	}
 
 	function openRenameInstanceDialog(
-		event: CustomEvent<{ spawnerId: number; oldId: string; newId: string }>
+		event: CustomEvent<{ nodeId: number; oldId: string; newId: string }>
 	) {
 		instanceActionType = 'rename';
-		instanceActionSpawnerId = event.detail.spawnerId;
+		instanceActionNodeId = event.detail.nodeId;
 		instanceActionInstanceId = event.detail.oldId;
 		instanceActionNewID = event.detail.newId;
 		instanceActionDialogTitle = 'Rename Instance';
@@ -202,11 +203,11 @@
 		isInstanceActionDialogOpen = true;
 	}
 
-	function openUpdateSpawnerBuildDialog(event: CustomEvent<number>) {
-		instanceActionType = 'update_spawner_build';
-		instanceActionSpawnerId = event.detail;
-		instanceActionDialogTitle = 'Update Spawner Build';
-		instanceActionDialogMessage = `Are you sure you want Spawner #${instanceActionSpawnerId} to download the latest game server build? This might take a while.`;
+	function openUpdateNodeBuildDialog(event: CustomEvent<number>) {
+		instanceActionType = 'update_node_build';
+		instanceActionNodeId = event.detail;
+		instanceActionDialogTitle = 'Update Node Build';
+		instanceActionDialogMessage = `Are you sure you want Node #${instanceActionNodeId} to download the latest game server build? This might take a while.`;
 		instanceActionConfirmText = 'Update Build';
 		isInstanceActionDialogOpen = true;
 	}
@@ -214,50 +215,50 @@
 	function openBulkActionDialog(
 		event: CustomEvent<{
 			action: 'stop' | 'restart' | 'update';
-			spawnerId: number;
+			nodeId: number;
 			instanceIds: string[];
 		}>
 	) {
-		const { action, spawnerId, instanceIds } = event.detail;
+		const { action, nodeId, instanceIds } = event.detail;
 		instanceActionType = `bulk_${action}` as any;
-		instanceActionSpawnerId = spawnerId;
+		instanceActionNodeId = nodeId;
 		instanceActionBulkIds = instanceIds;
 
 		const actionName = action.charAt(0).toUpperCase() + action.slice(1);
 		instanceActionDialogTitle = `${actionName} All Instances`;
-		instanceActionDialogMessage = `Are you sure you want to ${action} ${instanceIds.length} instances on Spawner #${spawnerId}?`;
+		instanceActionDialogMessage = `Are you sure you want to ${action} ${instanceIds.length} instances on Node #${nodeId}?`;
 		instanceActionConfirmText = `${actionName} All`;
 		isInstanceActionDialogOpen = true;
 	}
 
-	function openDeleteSpawnerDialog(event: CustomEvent<number>) {
-		spawnerToDeleteId = event.detail;
-		isSpawnerDeleteDialogOpen = true;
+	function openDeleteNodeDialog(event: CustomEvent<number>) {
+		nodeToDeleteId = event.detail;
+		isNodeDeleteDialogOpen = true;
 	}
 
-	async function executeDeleteSpawner() {
-		if (!spawnerToDeleteId) return;
+	async function executeDeleteNode() {
+		if (!nodeToDeleteId) return;
 		try {
-			const res = await fetch(`/api/spawners/${spawnerToDeleteId}`, { method: 'DELETE' });
+			const res = await fetch(`/api/nodes/${nodeToDeleteId}`, { method: 'DELETE' });
 			if (!res.ok) {
 				const err = await res.json().catch(() => ({}));
-				throw new Error(err.error || 'Failed to delete spawner');
+				throw new Error(err.error || 'Failed to delete node');
 			}
 			notifications.add({
 				type: 'success',
-				message: `Spawner #${spawnerToDeleteId} deleted successfully.`
+				message: `Node #${nodeToDeleteId} deleted successfully.`
 			});
 		} catch (e: any) {
 			console.error(e);
-			notifications.add({ type: 'error', message: `Failed to delete spawner: ${e.message}` });
+			notifications.add({ type: 'error', message: `Failed to delete node: ${e.message}` });
 		}
-		isSpawnerDeleteDialogOpen = false;
+		isNodeDeleteDialogOpen = false;
 	}
 
 	async function executeSpawn() {
 		if (!spawnTargetId) return;
 
-		const res = await fetch(`/api/spawners/${spawnTargetId}/spawn`, { method: 'POST' });
+		const res = await fetch(`/api/nodes/${spawnTargetId}/spawn`, { method: 'POST' });
 		if (!res.ok) {
 			const err = await res.json();
 			throw new Error(err.error || `Server returned ${res.status}`);
@@ -265,39 +266,39 @@
 
 		// Open console for the new instance
 		const instance = await res.json();
-		consoleSpawnerId = spawnTargetId;
+		consoleNodeId = spawnTargetId;
 		consoleInstanceId = instance.id;
 		isConsoleOpen = true;
 	}
 
 	async function executeInstanceAction() {
-		if (!instanceActionSpawnerId || !instanceActionType) return;
+		if (!instanceActionNodeId || !instanceActionType) return;
 
 		let res: Response;
 		try {
 			if (instanceActionType === 'start') {
 				res = await fetch(
-					`/api/spawners/${instanceActionSpawnerId}/instances/${instanceActionInstanceId}/start`,
+					`/api/nodes/${instanceActionNodeId}/instances/${instanceActionInstanceId}/start`,
 					{ method: 'POST' }
 				);
 			} else if (instanceActionType === 'stop') {
 				res = await fetch(
-					`/api/spawners/${instanceActionSpawnerId}/instances/${instanceActionInstanceId}/stop`,
+					`/api/nodes/${instanceActionNodeId}/instances/${instanceActionInstanceId}/stop`,
 					{ method: 'POST' }
 				);
 			} else if (instanceActionType === 'delete') {
 				res = await fetch(
-					`/api/spawners/${instanceActionSpawnerId}/instances/${instanceActionInstanceId}`,
+					`/api/nodes/${instanceActionNodeId}/instances/${instanceActionInstanceId}`,
 					{ method: 'DELETE' }
 				);
 			} else if (instanceActionType === 'update') {
 				res = await fetch(
-					`/api/spawners/${instanceActionSpawnerId}/instances/${instanceActionInstanceId}/update`,
+					`/api/nodes/${instanceActionNodeId}/instances/${instanceActionInstanceId}/update`,
 					{ method: 'POST' }
 				);
 			} else if (instanceActionType === 'rename') {
 				res = await fetch(
-					`/api/spawners/${instanceActionSpawnerId}/instances/${instanceActionInstanceId}/rename`,
+					`/api/nodes/${instanceActionNodeId}/instances/${instanceActionInstanceId}/rename`,
 					{
 						method: 'POST',
 						headers: { 'Content-Type': 'application/json' },
@@ -306,15 +307,15 @@
 				);
 			} else if (instanceActionType === 'restart') {
 				res = await fetch(
-					`/api/spawners/${instanceActionSpawnerId}/instances/${instanceActionInstanceId}/stop`,
+					`/api/nodes/${instanceActionNodeId}/instances/${instanceActionInstanceId}/stop`,
 					{ method: 'POST' }
 				);
 				res = await fetch(
-					`/api/spawners/${instanceActionSpawnerId}/instances/${instanceActionInstanceId}/start`,
+					`/api/nodes/${instanceActionNodeId}/instances/${instanceActionInstanceId}/start`,
 					{ method: 'POST' }
 				);
-			} else if (instanceActionType === 'update_spawner_build') {
-				res = await fetch(`/api/spawners/${instanceActionSpawnerId}/update-template`, {
+			} else if (instanceActionType === 'update_node_build') {
+				res = await fetch(`/api/nodes/${instanceActionNodeId}/update-template`, {
 					method: 'POST'
 				});
 			} else if (
@@ -327,16 +328,16 @@
 					try {
 						let resUrl = '';
 						if (instanceActionType === 'bulk_stop') {
-							resUrl = `/api/spawners/${instanceActionSpawnerId}/instances/${id}/stop`;
+							resUrl = `/api/nodes/${instanceActionNodeId}/instances/${id}/stop`;
 						} else if (instanceActionType === 'bulk_start') {
-							resUrl = `/api/spawners/${instanceActionSpawnerId}/instances/${id}/start`;
+							resUrl = `/api/nodes/${instanceActionNodeId}/instances/${id}/start`;
 						} else if (instanceActionType === 'bulk_restart') {
-							await fetch(`/api/spawners/${instanceActionSpawnerId}/instances/${id}/stop`, {
+							await fetch(`/api/nodes/${instanceActionNodeId}/instances/${id}/stop`, {
 								method: 'POST'
 							});
-							resUrl = `/api/spawners/${instanceActionSpawnerId}/instances/${id}/start`;
+							resUrl = `/api/nodes/${instanceActionNodeId}/instances/${id}/start`;
 						} else if (instanceActionType === 'bulk_update') {
-							resUrl = `/api/spawners/${instanceActionSpawnerId}/instances/${id}/update`;
+							resUrl = `/api/nodes/${instanceActionNodeId}/instances/${id}/update`;
 						}
 						await fetch(resUrl, { method: 'POST' });
 					} catch (e) {
@@ -353,8 +354,8 @@
 				const errJson = await res.json().catch(() => ({}));
 				throw new Error(errJson.error || `Server returned ${res.status}`);
 			}
-			if (instanceActionSpawnerId) {
-				spawnerTableComponent?.refreshSpawner(instanceActionSpawnerId);
+			if (instanceActionNodeId) {
+				nodeTableComponent?.refreshNode(instanceActionNodeId);
 			}
 		} catch (e: any) {
 			notifications.add({
@@ -366,53 +367,68 @@
 	}
 
 	function handleViewLogs(event: CustomEvent<number>) {
-		selectedSpawnerId = event.detail;
+		selectedNodeId = event.detail;
 		isLogViewerOpen = true;
 	}
 
-	function handleTail(event: CustomEvent<{ spawnerId: number; instanceId: string }>) {
-		consoleSpawnerId = event.detail.spawnerId;
+	function handleTail(event: CustomEvent<{ nodeId: number; instanceId: string }>) {
+		consoleNodeId = event.detail.nodeId;
 		consoleInstanceId = event.detail.instanceId;
 		isConsoleOpen = true;
 	}
 </script>
 
-<div class="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-12 relative gap-8">
+{#snippet statsSkeleton()}
+	<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
+		{#each Array(4) as _}
+			<div class="modern-industrial-card p-6 h-32 flex flex-col justify-between">
+				<Skeleton width="40%" height="0.5rem" />
+				<Skeleton width="70%" height="1.5rem" />
+				<Skeleton width="100%" height="0.5rem" />
+			</div>
+		{/each}
+	</div>
+{/snippet}
+
+<div class="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-8 sm:mb-12 relative gap-6 sm:gap-8" class:!mb-6={$siteSettings.dashboard.compact_mode}>
 	<div
 		class="transform transition-all duration-700 {isLoaded
 			? 'translate-x-0 opacity-100'
 			: '-translate-x-4 opacity-0'}"
 	>
 		<div class="flex items-center gap-4 mb-2">
-			<div class="h-0.5 w-10 bg-rust"></div>
-			<span class="font-jetbrains text-[10px] font-black text-rust uppercase tracking-[0.3em]">System Overview // Controller</span>
+			<div class="h-0.5 w-6 sm:w-10 bg-rust"></div>
+			<span class="font-jetbrains text-[8px] sm:text-[10px] font-black text-rust uppercase tracking-[0.3em]">System Overview // Controller</span>
 		</div>
 		<h1
 			class="text-3xl sm:text-5xl lg:text-6xl font-heading font-black text-white tracking-tighter uppercase leading-none"
+			class:!text-2xl={$siteSettings.dashboard.compact_mode}
 		>
 			<span class="text-rust">EXILE</span>_CONTROLLER
 		</h1>
-		<div class="flex flex-wrap items-center gap-4 mt-3">
+		<div class="flex flex-wrap items-center gap-3 sm:gap-4 mt-3">
 			<div
-				class={`px-3 py-1 font-jetbrains font-bold text-[10px] uppercase flex items-center gap-2.5 ${$isConnected ? 'bg-emerald-500/5 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/5 text-red-400 border border-red-500/20 shadow-red-900/10'}`}
+				class={`px-2 sm:px-3 py-1 font-jetbrains font-bold text-[8px] sm:text-[10px] uppercase flex items-center gap-2.5 ${$isConnected ? 'bg-success/5 text-success border border-emerald-500/20' : 'bg-red-500/5 text-danger border border-red-500/20 shadow-red-900/10'}`}
 			>
-				<span class={`w-2 h-2 rounded-full ${$isConnected ? 'bg-emerald-400 animate-pulse shadow-emerald-500/50 shadow-lg' : 'bg-red-400'}`}></span>
-				{$connectionStatus}
+				<span class={`w-1.5 h-1.5 rounded-full ${$isConnected ? 'bg-success animate-pulse shadow-emerald-500/50 shadow-lg' : 'bg-danger'}`}></span>
+				<Icon name={$isConnected ? 'ph:check-circle-bold' : 'ph:warning-octagon-bold'} size="0.75rem" />
+				<span class="truncate max-w-[120px] sm:max-w-none">{$connectionStatus}</span>
 			</div>
-			<div class="w-px h-4 bg-stone-800 hidden sm:block"></div>
-			<span class="text-[10px] font-jetbrains font-bold text-stone-600 uppercase tracking-widest">Version 0.9.4</span>
+			<div class="w-px h-3 sm:h-4 bg-stone-800 hidden sm:block"></div>
+			<span class="text-[8px] sm:text-[10px] font-jetbrains font-bold text-text-dim uppercase tracking-widest">Version 0.9.4</span>
 		</div>
 	</div>
 
-	<div class="flex items-center justify-between sm:justify-end gap-4 lg:gap-6 w-full lg:w-auto">
-		<!-- Add Spawner Button -->
+	<div class="flex items-center justify-between sm:justify-end gap-3 sm:gap-6 w-full lg:w-auto">
+		<!-- Add Node Button -->
 		<button
-			onclick={() => (showAddSpawnerModal = true)}
-			class="group relative flex items-center gap-4 px-6 sm:px-8 py-3 sm:py-4 bg-white text-black font-black font-heading text-[10px] sm:text-xs rounded-none border-2 border-white hover:bg-rust hover:text-white hover:border-rust transition-all duration-500 shadow-2xl active:translate-y-px flex-1 sm:flex-initial {isLoaded
+			onclick={() => (showAddNodeModal = true)}
+			class="group relative flex items-center justify-center gap-3 sm:gap-4 px-4 sm:px-8 py-3 sm:py-4 bg-white text-black font-black font-heading text-[10px] sm:text-xs rounded-none border-2 border-white hover:bg-rust hover:text-white hover:border-rust transition-all duration-500 shadow-2xl active:translate-y-px flex-1 sm:flex-initial {isLoaded
 				? 'translate-y-0 opacity-100'
 				: 'translate-y-4 opacity-0'}"
+			class:!py-2={$siteSettings.dashboard.compact_mode}
 		>
-			<Plus class="w-4 h-4 sm:w-5 sm:h-5" />
+			<Icon name="ph:plus-bold" size="1.1rem" />
 			<span class="uppercase tracking-[0.2em]">Add Node</span>
 			<div class="absolute -bottom-1 -right-1 w-full h-full border-r-2 border-b-2 border-rust/30 group-hover:border-white/30 transition-colors"></div>
 		</button>
@@ -423,160 +439,180 @@
 	</div>
 </div>
 
-<!-- Stats Grid -->
-<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
-	<div
-		class="transform transition-all duration-700 {animateStats
-			? 'translate-y-0 opacity-100'
-			: 'translate-y-8 opacity-0'}"
-		style="animation-delay: 0.1s;"
-	>
-		<StatsCard title="UPTIME" value={formatUptime($stats.uptime)} Icon={Clock} color="cyan" />
+<!-- Optimized Data Fetching Render -->
+{#if !isLoaded}
+	{@render statsSkeleton()}
+	<div class="space-y-6">
+		<Skeleton height="350px" class="opacity-20" />
+		<Skeleton height="200px" class="opacity-10" />
 	</div>
-	<div
-		class="transform transition-all duration-700 {animateStats
-			? 'translate-y-0 opacity-100'
-			: 'translate-y-8 opacity-0'}"
-		style="animation-delay: 0.2s;"
-	>
-		<StatsCard
-			title="ACTIVE NODES"
-			value={$stats.active_spawners}
-			Icon={Server}
-			color="emerald"
-		/>
+{:else}
+	<!-- Stats Grid -->
+	{#if $siteSettings.dashboard.show_stats_cards}
+	<div class="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-10" class:!mb-6={$siteSettings.dashboard.compact_mode}>
+		<div
+			class="transform transition-all duration-700 {animateStats
+				? 'translate-y-0 opacity-100'
+				: 'translate-y-8 opacity-0'}"
+			style="animation-delay: 0.1s;"
+		>
+			<StatsCard title="UPTIME" value={formatUptime($stats.uptime)} iconName="clock" color="cyan" />
+		</div>
+		<div
+			class="transform transition-all duration-700 {animateStats
+				? 'translate-y-0 opacity-100'
+				: 'translate-y-8 opacity-0'}"
+			style="animation-delay: 0.2s;"
+		>
+			<StatsCard
+				title="ACTIVE NODES"
+				value={$stats.active_nodes}
+				iconName="server"
+				color="emerald"
+			/>
+		</div>
+		<div
+			class="transform transition-all duration-700 {animateStats
+				? 'translate-y-0 opacity-100'
+				: 'translate-y-8 opacity-0'}"
+			style="animation-delay: 0.3s;"
+		>
+			<StatsCard
+				title="TOTAL REQUESTS"
+				value={$stats.total_requests}
+				iconName="activity"
+				color="purple"
+			/>
+		</div>
+		<a
+			href="/logs"
+			class="block transition-all duration-700 {animateStats
+				? 'translate-y-0 opacity-100'
+				: 'translate-y-8 opacity-0'}"
+			style="animation-delay: 0.4s;"
+		>
+			<StatsCard title="SYSTEM ERRORS" value={$stats.total_errors} iconName="alert" color="red" />
+		</a>
 	</div>
-	<div
-		class="transform transition-all duration-700 {animateStats
-			? 'translate-y-0 opacity-100'
-			: 'translate-y-8 opacity-0'}"
-		style="animation-delay: 0.3s;"
-	>
-		<StatsCard
-			title="TOTAL REQUESTS"
-			value={$stats.total_requests}
-			Icon={Activity}
-			color="purple"
-		/>
-	</div>
-	<a
-		href="/logs"
-		class="block transition-all duration-700 {animateStats
-			? 'translate-y-0 opacity-100'
-			: 'translate-y-8 opacity-0'}"
-		style="animation-delay: 0.4s;"
-	>
-		<StatsCard title="SYSTEM ERRORS" value={$stats.total_errors} Icon={AlertCircle} color="red" />
-	</a>
-</div>
+	{/if}
 
-<!-- Secondary Stats & Resources -->
-<div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-10">
-	<div
-		class="transform transition-all duration-700 hover:scale-[1.01] {animateStats
-			? 'translate-y-0 opacity-100'
-			: 'translate-y-8 opacity-0'}"
-		style="animation-delay: 0.5s;"
-	>
-		<StatsCard
-			title="TRAFFIC"
-			value=""
-			subValue={`<span class="text-orange-400">SENT: ${formatBytes($stats.bytes_sent)}</span> <span class="text-stone-700 mx-2">|</span> <span class="text-rust-light">RECEIVED: ${formatBytes($stats.bytes_received)}</span>`}
-			Icon={Network}
-			color="orange"
-		/>
+	<!-- Secondary Stats & Resources -->
+	<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-10" class:!mb-6={$siteSettings.dashboard.compact_mode}>
+		{#if $siteSettings.dashboard.show_traffic_card}
+		<div
+			class="transform transition-all duration-700 hover:scale-[1.01] {animateStats
+				? 'translate-y-0 opacity-100'
+				: 'translate-y-8 opacity-0'}"
+			style="animation-delay: 0.5s;"
+		>
+			<StatsCard
+				title="TRAFFIC"
+				value=""
+				subValue={`<span class="text-warning">SENT: ${formatBytes($stats.bytes_sent)}</span> <span class="text-stone-700 mx-2">|</span> <span class="text-rust-light">RECEIVED: ${formatBytes($stats.bytes_received)}</span>`}
+				iconName="ri:wifi-line"
+				color="orange"
+			/>
+		</div>
+		{/if}
+		
+		{#if $siteSettings.dashboard.show_db_card}
+		<div
+			class="transform transition-all duration-700 hover:scale-[1.01] {animateStats
+				? 'translate-y-0 opacity-100'
+				: 'translate-y-8 opacity-0'}"
+			style="animation-delay: 0.6s;"
+			onmouseenter={handleDBMouseEnter}
+			onmouseleave={handleDBMouseLeave}
+			onmousemove={handleDBMouseMove}
+			role="tooltip"
+		>
+			<StatsCard
+				title="DATABASE"
+				value={$stats.db_connected ? 'CONNECTED' : 'OFFLINE'}
+				subValue={$stats.db_connected
+					? `<span class="text-success">CONNS: ${$stats.db_open_connections}</span> <span class="text-stone-700 mx-2">|</span> <span class="text-rust-light">IN USE: ${$stats.db_in_use}</span>`
+					: 'RECONNECTING...'}
+				iconName="database"
+				color={$stats.db_connected ? 'emerald' : 'red'}
+			/>
+		</div>
+		{/if}
 	</div>
+
+	<!-- System Topology -->
+	{#if $siteSettings.dashboard.show_topology}
 	<div
-		class="transform transition-all duration-700 hover:scale-[1.01] {animateStats
+		class="mb-8 sm:mb-10 h-[350px] sm:h-[500px] lg:h-[700px] xl:h-[800px] w-full transform transition-all duration-700 {animateStats
 			? 'translate-y-0 opacity-100'
-			: 'translate-y-8 opacity-0'}"
-		style="animation-delay: 0.6s;"
-		onmouseenter={handleDBMouseEnter}
-		onmouseleave={handleDBMouseLeave}
-		onmousemove={handleDBMouseMove}
-		role="tooltip"
+			: 'translate-y-12 opacity-0'}"
+		style="animation-delay: 0.65s;"
+		class:!h-[300px]={$siteSettings.dashboard.compact_mode}
 	>
-		<StatsCard
-			title="DATABASE"
-			value={$stats.db_connected ? 'CONNECTED' : 'OFFLINE'}
-			subValue={$stats.db_connected
-				? `<span class="text-emerald-400">CONNS: ${$stats.db_open_connections}</span> <span class="text-stone-700 mx-2">|</span> <span class="text-rust-light">IN USE: ${$stats.db_in_use}</span>`
-				: 'RECONNECTING...'}
-			Icon={Database}
-			color={$stats.db_connected ? 'emerald' : 'red'}
-		/>
+		<SystemTopology />
 	</div>
-</div>
+	{/if}
 
-<!-- System Topology -->
-<div
-	class="mb-10 h-[500px] lg:h-[700px] xl:h-[800px] w-full transform transition-all duration-700 {animateStats
-		? 'translate-y-0 opacity-100'
-		: 'translate-y-12 opacity-0'}"
-	style="animation-delay: 0.65s;"
->
-	<SystemTopology />
-</div>
-
-<!-- Spawners Section -->
-<div
-	class="modern-industrial-card border-stone-800 rounded-none overflow-hidden transform transition-all duration-700 hover:border-rust/30 shadow-2xl {animateStats
-		? 'translate-y-0 opacity-100'
-		: 'translate-y-12 opacity-0'}"
-	style="animation-delay: 0.7s;"
->
+	<!-- Nodes Section -->
+	{#if $siteSettings.dashboard.show_nodes_table}
 	<div
-		class="border-b border-stone-800 px-6 py-5 flex justify-between items-center bg-stone-950/60 backdrop-blur-xl"
+		class="modern-industrial-card border-stone-800 rounded-none overflow-hidden transform transition-all duration-700 hover:border-rust/30 shadow-2xl contain-paint"
+		style="animation-delay: 0.7s; contain: paint layout;"
 	>
-		<div class="flex items-center gap-4">
-			<div class="p-2.5 bg-rust/10 border border-rust/30 rounded-none industrial-frame">
-				<Server class="w-5 h-5 text-rust-light" />
-			</div>
-			<div>
-				<h2 class="text-xl font-heading font-black text-stone-100 tracking-tighter uppercase">Synchronized_Nodes</h2>
-				<div class="flex items-center gap-2 mt-0.5">
-					<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.4)]"></span>
-					<span class="text-[9px] font-jetbrains font-bold text-stone-500 uppercase tracking-[0.2em]">Active_Registry_Stream</span>
+		<div
+			class="border-b border-stone-800 px-4 sm:px-6 py-4 sm:py-5 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-stone-950/60 backdrop-blur-xl gap-4"
+			class:!py-3={$siteSettings.dashboard.compact_mode}
+		>
+			<div class="flex items-center gap-4">
+				<div class="p-2 bg-rust/10 border border-rust/30 rounded-none industrial-frame">
+					<Icon name="server" size="1.1rem" class="text-rust-light" />
+				</div>
+				<div>
+					<h2 class="text-lg sm:text-xl font-heading font-black text-stone-100 tracking-tighter uppercase">Synchronized_Nodes</h2>
+					<div class="flex items-center gap-2 mt-0.5">
+						<span class="w-1.5 h-1.5 rounded-full bg-success animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.4)]"></span>
+						<span class="text-[8px] sm:text-[9px] font-jetbrains font-bold text-text-dim uppercase tracking-[0.2em]">Active_Registry_Stream</span>
+					</div>
 				</div>
 			</div>
-		</div>
-		<div class="flex items-center gap-6">
-			<div class="hidden sm:flex flex-col items-end">
-				<span class="font-jetbrains text-[9px] font-black text-rust-light uppercase tracking-widest">System_Archive</span>
-				<span class="text-[10px] font-heading font-black text-white uppercase tracking-widest mt-0.5">Buffer_Optimized</span>
+			<div class="flex items-center gap-4 sm:gap-6 w-full sm:w-auto justify-between sm:justify-end">
+				<div class="hidden xs:flex flex-col items-end">
+					<span class="font-jetbrains text-[8px] sm:text-[9px] font-black text-rust-light uppercase tracking-widest">System_Archive</span>
+					<span class="text-[9px] sm:text-[10px] font-heading font-black text-white uppercase tracking-widest mt-0.5">Buffer_Optimized</span>
+				</div>
+				<div class="h-8 sm:h-10 w-px bg-stone-800/50 hidden xs:block"></div>
+				<span
+					class="text-[9px] sm:text-[10px] font-heading font-black bg-rust/20 text-rust-light px-4 sm:px-5 py-1.5 sm:py-2 border border-rust/30 uppercase tracking-[0.2em] shadow-inner"
+					>Real-time</span>
 			</div>
-			<div class="h-10 w-px bg-stone-800/50"></div>
-			<span
-				class="text-[10px] font-heading font-black bg-rust/20 text-rust-light px-5 py-2 border border-rust/30 uppercase tracking-[0.2em] shadow-inner"
-				>Real-time</span>
+		</div>
+		<div class="p-0 bg-black/40 backdrop-blur-md relative">
+			<div class="absolute inset-0 bg-gradient-to-b from-transparent via-rust/5 to-transparent pointer-events-none opacity-20"></div>
+			<NodeTable
+				bind:this={nodeTableComponent}
+				nodes={$nodes}
+				on:spawn={openSpawnDialog}
+				on:viewLogs={handleViewLogs}
+				on:startInstanceRequest={openStartInstanceDialog}
+				on:stopInstanceRequest={openStopInstanceDialog}
+				on:restartInstanceRequest={openRestartInstanceDialog}
+				on:deleteInstanceRequest={openDeleteInstanceDialog}
+				on:updateInstanceRequest={openUpdateInstanceDialog}
+				on:renameInstanceRequest={openRenameInstanceDialog}
+				on:updateNodeBuild={openUpdateNodeBuildDialog}
+				on:bulkInstanceActionRequest={openBulkActionDialog}
+				on:deleteNodeRequest={openDeleteNodeDialog}
+				on:tail={handleTail}
+				highlightNewNodeId={highlightNewNodeId}
+			/>
 		</div>
 	</div>
-	<div class="p-0 bg-black/40 backdrop-blur-md relative">
-		<div class="absolute inset-0 bg-gradient-to-b from-transparent via-rust/5 to-transparent pointer-events-none opacity-20"></div>
-		<SpawnerTable
-			bind:this={spawnerTableComponent}
-			spawners={$spawners}
-			on:spawn={openSpawnDialog}
-			on:viewLogs={handleViewLogs}
-			on:startInstanceRequest={openStartInstanceDialog}
-			on:stopInstanceRequest={openStopInstanceDialog}
-			on:restartInstanceRequest={openRestartInstanceDialog}
-			on:deleteInstanceRequest={openDeleteInstanceDialog}
-			on:updateInstanceRequest={openUpdateInstanceDialog}
-			on:renameInstanceRequest={openRenameInstanceDialog}
-			on:updateSpawnerBuild={openUpdateSpawnerBuildDialog}
-			on:bulkInstanceActionRequest={openBulkActionDialog}
-			on:deleteSpawnerRequest={openDeleteSpawnerDialog}
-			on:tail={handleTail}
-			{highlightNewSpawnerId}
-		/>
-	</div>
-</div>
+	{/if}
+{/if}
 
 <!-- Log Drawer -->
-{#if selectedSpawnerId}
+{#if selectedNodeId}
 	<LogViewer
-		spawnerId={selectedSpawnerId}
+		nodeId={selectedNodeId}
 		isOpen={isLogViewerOpen}
 		onClose={() => (isLogViewerOpen = false)}
 	/>
@@ -585,7 +621,7 @@
 <!-- Instance Console Modal -->
 <InstanceManagerModal
 	bind:isOpen={isConsoleOpen}
-	spawnerId={consoleSpawnerId}
+	nodeId={consoleNodeId}
 	instanceId={consoleInstanceId}
 	onClose={() => (isConsoleOpen = false)}
 />
@@ -594,19 +630,19 @@
 <ConfirmDialog
 	bind:isOpen={isSpawnDialogOpen}
 	title="Spawn New Instance"
-	message={`Are you sure you want to spawn a new game server instance on Spawner #${spawnTargetId}?`}
+	message={`Are you sure you want to spawn a new game server instance on Node #${spawnTargetId}?`}
 	confirmText="Spawn Server"
 	onConfirm={executeSpawn}
 />
 
-<!-- Spawner Deletion Confirmation Dialog -->
+<!-- Node Deletion Confirmation Dialog -->
 <ConfirmDialog
-	bind:isOpen={isSpawnerDeleteDialogOpen}
-	title="Delete Spawner"
-	message={`Are you sure you want to delete Spawner #${spawnerToDeleteId}? This will remove it from the registry. If it is still running, it might re-register.`}
-	confirmText="Delete Spawner"
+	bind:isOpen={isNodeDeleteDialogOpen}
+	title="Delete Node"
+	message={`Are you sure you want to delete Node #${nodeToDeleteId}? This will remove it from the registry. If it is still running, it might re-register.`}
+	confirmText="Delete Node"
 	isCritical={true}
-	onConfirm={executeDeleteSpawner}
+	onConfirm={executeDeleteNode}
 />
 
 <!-- Instance Action Confirmation Dialog (Start/Stop) -->
@@ -623,8 +659,8 @@
 <!-- Database Detail Modal -->
 <DatabaseDetailModal stats={$stats} isOpen={isDBHovered} x={dbHoverX} y={dbHoverY} />
 
-<!-- Add Spawner Modal -->
-<AddSpawnerModal bind:isOpen={showAddSpawnerModal} />
+<!-- Add Node Modal -->
+<AddNodeModal bind:isOpen={showAddNodeModal} />
 
 <style>
 	@keyframes float {

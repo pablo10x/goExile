@@ -344,28 +344,28 @@
 	function getTypeColor(type: string): string {
 		switch (type) {
 			case 'function':
-				return 'text-blue-400 bg-blue-500/10 border-blue-500/30';
+				return 'text-info bg-blue-500/10 border-blue-500/30';
 			case 'procedure':
 				return 'text-purple-400 bg-purple-500/10 border-purple-500/30';
 			case 'aggregate':
-				return 'text-amber-400 bg-amber-500/10 border-amber-500/30';
+				return 'text-warning bg-amber-500/10 border-amber-500/30';
 			case 'window':
-				return 'text-cyan-400 bg-cyan-500/10 border-cyan-500/30';
+				return 'text-info bg-cyan-500/10 border-cyan-500/30';
 			default:
-				return 'text-slate-500 dark:text-slate-400 bg-slate-500/10 border-slate-500/30';
+				return 'text-text-dim dark:text-text-dim bg-slate-500/10 border-slate-500/30';
 		}
 	}
 
 	function getVolatilityColor(vol: string): string {
 		switch (vol.toLowerCase()) {
 			case 'immutable':
-				return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30';
+				return 'text-success bg-success/10 border-emerald-500/30';
 			case 'stable':
-				return 'text-blue-400 bg-blue-500/10 border-blue-500/30';
+				return 'text-info bg-blue-500/10 border-blue-500/30';
 			case 'volatile':
-				return 'text-orange-400 bg-orange-500/10 border-orange-500/30';
+				return 'text-warning bg-orange-500/10 border-orange-500/30';
 			default:
-				return 'text-slate-500 dark:text-slate-400 bg-slate-500/10 border-slate-500/30';
+				return 'text-text-dim dark:text-text-dim bg-slate-500/10 border-slate-500/30';
 		}
 	}
 
@@ -379,10 +379,10 @@
 	});
 </script>
 
-<div class="h-full flex flex-col bg-[#050505]">
+<div class="h-full flex flex-col bg-[var(--terminal-bg)]">
 	<!-- Header -->
 	<div
-		class="p-6 border-b border-stone-800 bg-[#0a0a0a]"
+		class="p-6 border-b border-stone-800 bg-[var(--header-bg)]"
 	>
 		<div class="flex justify-between items-start">
 			<div class="flex items-center gap-4">
@@ -393,7 +393,7 @@
 				</div>
 				<div>
 					<h2 class="text-2xl font-heading font-black text-slate-100 uppercase tracking-tighter">PROCEDURAL_KERNEL</h2>
-					<p class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest mt-1">
+					<p class="font-jetbrains text-[10px] text-text-dim uppercase tracking-widest mt-1">
 						Manage PostgreSQL functions, procedures, and triggers
 					</p>
 				</div>
@@ -411,7 +411,7 @@
 		<div class="flex gap-4 mt-8">
 			<div class="relative flex-1 max-w-md">
 				<Search
-					class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-600 pointer-events-none"
+					class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim pointer-events-none"
 				/>
 				<input
 					type="text"
@@ -433,7 +433,7 @@
 
 			<button
 				onclick={() => loadFunctions()}
-				class="p-3 bg-stone-950 border border-stone-800 text-stone-500 hover:text-rust hover:border-rust transition-all"
+				class="p-3 bg-stone-950 border border-stone-800 text-text-dim hover:text-rust hover:border-rust transition-all"
 				title="Refresh"
 			>
 				<RefreshCw class="w-5 h-5 {loading ? 'animate-spin' : ''}" />
@@ -448,10 +448,10 @@
 				<div
 					class="w-10 h-10 border-2 border-rust border-t-transparent rounded-none animate-spin"
 				></div>
-				<p class="mt-6 font-heading font-black text-[11px] text-stone-500 uppercase tracking-[0.2em]">Synchronizing_Kernel...</p>
+				<p class="mt-6 font-heading font-black text-[11px] text-text-dim uppercase tracking-[0.2em]">Synchronizing_Kernel...</p>
 			</div>
 		{:else if filteredFunctions.length === 0}
-			<div class="flex flex-col items-center justify-center h-64 text-stone-600">
+			<div class="flex flex-col items-center justify-center h-64 text-text-dim">
 				<FileCode class="w-16 h-16 opacity-10 mb-6" />
 				<p class="font-heading font-black text-xs tracking-[0.2em] uppercase">No logical units found</p>
 				<p class="font-jetbrains text-[9px] mt-2 uppercase">
@@ -473,7 +473,7 @@
 								<div class="flex items-start gap-4 flex-1 min-w-0">
 									<button
 										onclick={() => toggleExpand(fn.oid)}
-										class="p-1 mt-1 text-stone-600 hover:text-rust transition-colors"
+										class="p-1 mt-1 text-text-dim hover:text-rust transition-colors"
 									>
 										{#if expandedFunctions.has(fn.oid)}
 											<ChevronDown class="w-5 h-5" />
@@ -500,7 +500,7 @@
 												{fn.volatility}
 											</span>
 											<span
-												class="px-2 py-0.5 text-[9px] font-black font-jetbrains bg-stone-800 text-stone-500 border border-stone-700 uppercase tracking-widest"
+												class="px-2 py-0.5 text-[9px] font-black font-jetbrains bg-stone-800 text-text-dim border border-stone-700 uppercase tracking-widest"
 											>
 												{fn.language}
 											</span>
@@ -508,15 +508,15 @@
 
 										<div class="mt-3 font-jetbrains text-xs font-bold">
 											<span class="text-rust">{fn.name}</span>
-											<span class="text-stone-600">(</span>
-											<span class="text-amber-500/70">{fn.argument_types || ''}</span>
-											<span class="text-stone-600">)</span>
-											<span class="text-stone-600 mx-3">::</span>
-											<span class="text-emerald-500">{fn.result_type}</span>
+											<span class="text-text-dim">(</span>
+											<span class="text-warning/70">{fn.argument_types || ''}</span>
+											<span class="text-text-dim">)</span>
+											<span class="text-text-dim mx-3">::</span>
+											<span class="text-success">{fn.result_type}</span>
 										</div>
 
 										{#if fn.description}
-											<p class="mt-3 font-jetbrains text-[10px] text-stone-500 uppercase tracking-tight">{fn.description}</p>
+											<p class="mt-3 font-jetbrains text-[10px] text-text-dim uppercase tracking-tight">{fn.description}</p>
 										{/if}
 									</div>
 								</div>
@@ -528,7 +528,7 @@
 									{#if fn.type === 'function'}
 										<button
 											onclick={() => openExecuteModal(fn)}
-											class="p-2 text-stone-600 hover:text-emerald-500 hover:bg-emerald-500/10 transition-all"
+											class="p-2 text-text-dim hover:text-success hover:bg-success/10 transition-all"
 											title="Execute"
 										>
 											<Play class="w-4 h-4" />
@@ -536,14 +536,14 @@
 									{/if}
 									<button
 										onclick={() => openEditModal(fn)}
-										class="p-2 text-stone-600 hover:text-rust hover:bg-rust/10 transition-all"
+										class="p-2 text-text-dim hover:text-rust hover:bg-rust/10 transition-all"
 										title="Edit"
 									>
 										<Edit3 class="w-4 h-4" />
 									</button>
 									<button
 										onclick={() => deleteFunction(fn)}
-										class="p-2 text-stone-600 hover:text-red-500 hover:bg-red-500/10 transition-all"
+										class="p-2 text-text-dim hover:text-danger hover:bg-red-500/10 transition-all"
 										title="Delete"
 									>
 										<Trash2 class="w-4 h-4" />
@@ -555,17 +555,17 @@
 						<!-- Expanded Source Code -->
 						{#if expandedFunctions.has(fn.oid)}
 							<div
-								class="border-t border-stone-800 bg-[#050505]/60"
+								class="border-t border-stone-800 bg-[var(--terminal-bg)]/60"
 								transition:slide={{ duration: 200 }}
 							>
 								<div class="p-6">
 									<div class="flex items-center justify-between mb-4">
-										<span class="font-heading text-[10px] font-black text-stone-500 uppercase tracking-[0.2em]"
+										<span class="font-heading text-[10px] font-black text-text-dim uppercase tracking-[0.2em]"
 											>LOGIC_SOURCE_RAW</span
 										>
 										<button
 											onclick={() => copySource(fn.source)}
-											class="flex items-center gap-2 px-3 py-1.5 font-jetbrains text-[9px] font-bold text-stone-500 hover:text-rust hover:bg-rust/5 border border-stone-800 transition-all uppercase tracking-widest"
+											class="flex items-center gap-2 px-3 py-1.5 font-jetbrains text-[9px] font-bold text-text-dim hover:text-rust hover:bg-rust/5 border border-stone-800 transition-all uppercase tracking-widest"
 										>
 											{#if copied}
 												<Check class="w-3 h-3" />
@@ -579,7 +579,7 @@
 									<pre
 										class="p-6 bg-stone-950 border border-stone-800 text-[11px] text-stone-400 font-jetbrains overflow-x-auto max-h-[500px] custom-scrollbar"><code>{fn.source}</code></pre>
 
-									<div class="flex items-center gap-6 mt-6 font-jetbrains text-[9px] font-black text-stone-600 uppercase tracking-widest">
+									<div class="flex items-center gap-6 mt-6 font-jetbrains text-[9px] font-black text-text-dim uppercase tracking-widest">
 										<span class="flex items-center gap-2">
 											<Shield class="w-3.5 h-3.5" />
 											Owner: {fn.owner}
@@ -616,7 +616,7 @@
 		>
 			<!-- Modal Header -->
 			<div
-				class="p-8 border-b border-stone-800 bg-[#0a0a0a]"
+				class="p-8 border-b border-stone-800 bg-[var(--header-bg)]"
 			>
 				<div class="flex items-center justify-between">
 					<div class="flex items-center gap-5">
@@ -631,7 +631,7 @@
 							<h3 class="text-2xl font-heading font-black text-white uppercase tracking-tighter">
 								{isCreating ? 'Initialize_Logic_Unit' : 'Modify_Logic_Buffer'}
 							</h3>
-							<p class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest mt-1">
+							<p class="font-jetbrains text-[10px] text-text-dim uppercase tracking-widest mt-1">
 								{isCreating
 									? 'Define a new procedural PostgreSQL unit'
 									: `Extracting and editing ${selectedFunction?.name}`}
@@ -640,7 +640,7 @@
 					</div>
 					<button
 						onclick={closeModal}
-						class="p-2 text-stone-600 hover:text-white transition-all"
+						class="p-2 text-text-dim hover:text-white transition-all"
 					>
 						<X class="w-6 h-6" />
 					</button>
@@ -648,13 +648,13 @@
 			</div>
 
 			<!-- Modal Body -->
-			<div class="flex-1 overflow-y-auto p-10 space-y-10 custom-scrollbar bg-[#050505]">
+			<div class="flex-1 overflow-y-auto p-10 space-y-10 custom-scrollbar bg-[var(--terminal-bg)]">
 				<!-- Basic Info -->
 				<div class="grid grid-cols-2 gap-8">
 					<div class="space-y-3">
 						<label
 							for="fnSchema"
-							class="block font-jetbrains text-[10px] font-black text-stone-600 uppercase tracking-widest italic"
+							class="block font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest italic"
 							>Schema_Vector</label
 						>
 						<select
@@ -670,7 +670,7 @@
 					<div class="space-y-3">
 						<label
 							for="fnName"
-							class="block font-jetbrains text-[10px] font-black text-stone-600 uppercase tracking-widest italic"
+							class="block font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest italic"
 							>Identifier_Tag</label
 						>
 						<input
@@ -687,7 +687,7 @@
 					<div class="space-y-3">
 						<label
 							for="fnArgs"
-							class="block font-jetbrains text-[10px] font-black text-stone-600 uppercase tracking-widest italic"
+							class="block font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest italic"
 							>Argument_Buffer</label
 						>
 						<input
@@ -701,7 +701,7 @@
 					<div class="space-y-3">
 						<label
 							for="fnReturns"
-							class="block font-jetbrains text-[10px] font-black text-stone-600 uppercase tracking-widest italic"
+							class="block font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest italic"
 							>Return_Signature</label
 						>
 						<select
@@ -720,7 +720,7 @@
 					<div class="space-y-3">
 						<label
 							for="fnLang"
-							class="block font-jetbrains text-[10px] font-black text-stone-600 uppercase tracking-widest italic"
+							class="block font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest italic"
 							>Language_Engine</label
 						>
 						<select
@@ -736,7 +736,7 @@
 					<div class="space-y-3">
 						<label
 							for="fnVol"
-							class="block font-jetbrains text-[10px] font-black text-stone-600 uppercase tracking-widest italic"
+							class="block font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest italic"
 							>Volatility_State</label
 						>
 						<select
@@ -758,7 +758,7 @@
 								bind:checked={formData.isStrict}
 								class="rounded-none text-rust focus:ring-rust bg-black border-stone-700"
 							/>
-							<span class="text-[10px] font-black text-stone-500 uppercase tracking-widest">Strict_Check</span>
+							<span class="text-[10px] font-black text-text-dim uppercase tracking-widest">Strict_Check</span>
 						</label>
 						<label
 							class="flex items-center gap-3 p-3 bg-stone-900 border border-stone-800 cursor-pointer hover:border-rust/50 transition-colors"
@@ -768,7 +768,7 @@
 								bind:checked={formData.securityDefiner}
 								class="rounded-none text-rust focus:ring-rust bg-black border-stone-700"
 							/>
-							<span class="text-[10px] font-black text-stone-500 uppercase tracking-widest">Sec_Definer</span>
+							<span class="text-[10px] font-black text-text-dim uppercase tracking-widest">Sec_Definer</span>
 						</label>
 					</div>
 				</div>
@@ -777,7 +777,7 @@
 				<div class="space-y-3">
 					<label
 						for="fnBody"
-						class="block font-jetbrains text-[10px] font-black text-stone-600 uppercase tracking-widest italic"
+						class="block font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest italic"
 						>Logic_Kernel_Body</label
 					>
 					<div class="relative">
@@ -796,7 +796,7 @@
 
 			<!-- Modal Footer -->
 			<div
-				class="p-8 border-t border-stone-800 bg-[#0a0a0a] flex justify-between items-center"
+				class="p-8 border-t border-stone-800 bg-[var(--header-bg)] flex justify-between items-center"
 			>
 				<div class="font-jetbrains text-[8px] font-black text-stone-800 uppercase tracking-[0.5em] italic">
 					Waiting_For_Acknowledge
@@ -804,7 +804,7 @@
 				<div class="flex gap-6">
 					<button
 						onclick={closeModal}
-						class="px-8 py-3 text-[11px] font-black text-stone-600 hover:text-white uppercase tracking-widest italic transition-all"
+						class="px-8 py-3 text-[11px] font-black text-text-dim hover:text-white uppercase tracking-widest italic transition-all"
 					>
 						[Abort]
 					</button>
@@ -844,21 +844,21 @@
 		>
 			<!-- Modal Header -->
 			<div
-				class="p-8 border-b border-stone-800 bg-[#0a0a0a]"
+				class="p-8 border-b border-stone-800 bg-[var(--header-bg)]"
 			>
 				<div class="flex items-center justify-between">
 					<div class="flex items-center gap-5">
-						<div class="p-3 bg-emerald-500/10 border border-emerald-500/30 industrial-frame shadow-lg">
-							<Play class="w-6 h-6 text-emerald-500" />
+						<div class="p-3 bg-success/10 border border-emerald-500/30 industrial-frame shadow-lg">
+							<Play class="w-6 h-6 text-success" />
 						</div>
 						<div>
 							<h3 class="text-2xl font-heading font-black text-white uppercase tracking-tighter">Execute_Unit</h3>
-							<p class="font-jetbrains text-[10px] text-stone-500 font-mono uppercase tracking-widest mt-1">{functionToExecute.name}()</p>
+							<p class="font-jetbrains text-[10px] text-text-dim font-mono uppercase tracking-widest mt-1">{functionToExecute.name}()</p>
 						</div>
 					</div>
 					<button
 						onclick={() => (executeModalOpen = false)}
-						class="p-2 text-stone-600 hover:text-white transition-all"
+						class="p-2 text-text-dim hover:text-white transition-all"
 					>
 						<X class="w-6 h-6" />
 					</button>
@@ -866,19 +866,19 @@
 			</div>
 
 			<!-- Modal Body -->
-			<div class="flex-1 overflow-y-auto p-10 space-y-10 custom-scrollbar bg-[#050505]">
+			<div class="flex-1 overflow-y-auto p-10 space-y-10 custom-scrollbar bg-[var(--terminal-bg)]">
 				{#if functionToExecute.argument_types}
 					<div role="group" aria-labelledby="args-label">
 						<div
 							id="args-label"
-							class="block font-jetbrains text-[10px] font-black text-stone-600 uppercase tracking-widest mb-6 italic border-l border-stone-800 pl-4"
+							class="block font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest mb-6 italic border-l border-stone-800 pl-4"
 						>
 							Input_Arguments
 						</div>
 						<div class="space-y-4">
 							{#each functionToExecute.argument_types.split(',') as arg, i}
 								<div class="flex items-center gap-6 group">
-									<label for={`execArg-${i}`} class="text-[10px] font-jetbrains font-black text-stone-500 uppercase tracking-widest min-w-[140px] italic group-hover:text-rust transition-colors"
+									<label for={`execArg-${i}`} class="text-[10px] font-jetbrains font-black text-text-dim uppercase tracking-widest min-w-[140px] italic group-hover:text-rust transition-colors"
 										>{arg.trim()}</label
 									>
 									<input
@@ -895,7 +895,7 @@
 				{:else}
 					<div class="flex flex-col items-center justify-center py-10 opacity-40">
 						<Info class="w-10 h-10 text-stone-700 mb-4" />
-						<p class="font-jetbrains text-[10px] font-black text-stone-600 uppercase tracking-widest">Procedural unit requires no inputs.</p>
+						<p class="font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest">Procedural unit requires no inputs.</p>
 					</div>
 				{/if}
 
@@ -912,7 +912,7 @@
 						>
 							<div class="overflow-x-auto custom-scrollbar">
 								<table class="w-full text-xs font-jetbrains">
-									<thead class="bg-stone-950 text-stone-600 border-b border-stone-800">
+									<thead class="bg-stone-950 text-text-dim border-b border-stone-800">
 										<tr>
 											{#each Object.keys(executeResult[0]) as key}
 												<th
@@ -942,18 +942,18 @@
 
 			<!-- Modal Footer -->
 			<div
-				class="p-8 border-t border-stone-800 bg-[#0a0a0a] flex justify-end gap-6"
+				class="p-8 border-t border-stone-800 bg-[var(--header-bg)] flex justify-end gap-6"
 			>
 				<button
 					onclick={() => (executeModalOpen = false)}
-					class="px-8 py-3 text-[11px] font-black text-stone-600 hover:text-white uppercase tracking-widest italic transition-all"
+					class="px-8 py-3 text-[11px] font-black text-text-dim hover:text-white uppercase tracking-widest italic transition-all"
 				>
 					[Close]
 				</button>
 				<button
 					onclick={executeFunction}
 					disabled={executeLoading}
-					class="px-10 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-emerald-900/20 transition-all active:translate-y-px"
+					class="px-10 py-4 bg-success hover:bg-success text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-emerald-900/20 transition-all active:translate-y-px"
 				>
 					{#if executeLoading}
 						<RefreshCw class="w-4 h-4 animate-spin inline mr-3" />

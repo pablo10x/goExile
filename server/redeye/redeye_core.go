@@ -22,6 +22,7 @@ import (
 
 var (
 	BannedIPCache = make(map[string]bool)
+	RuleCache     = []models.RedEyeRule{}
 	BanCacheMu    sync.RWMutex
 	RedEyeActive  = false
 	RedEyeError   = ""
@@ -91,6 +92,11 @@ func RefreshBanCache(db *sqlx.DB) {
 		return
 	}
 
+	rules, err := database.GetRedEyeRules(db)
+	if err != nil {
+		log.Printf("RedEye: Failed to refresh rule cache: %v", err)
+	}
+
 	newCache := make(map[string]bool)
 	for _, ip := range ips {
 		newCache[ip] = true
@@ -98,6 +104,9 @@ func RefreshBanCache(db *sqlx.DB) {
 
 	BanCacheMu.Lock()
 	BannedIPCache = newCache
+	if err == nil {
+		RuleCache = rules
+	}
 	BanCacheMu.Unlock()
 
 	registry.GlobalStats.UpdateRedEyeActiveBans(len(ips))
@@ -202,16 +211,12 @@ func RedEyeMiddleware(next http.Handler) http.Handler {
 
 		BanCacheMu.RLock()
 		isBanned := BannedIPCache[clientIP]
+		rules := RuleCache
 		BanCacheMu.RUnlock()
 
 		if isBanned {
 			registry.GlobalStats.RecordRedEyeBlock()
 			http.Error(w, "Access Denied (Banned)", http.StatusForbidden)
-			return
-		}
-		rules, err := database.GetRedEyeRules(database.DBConn)
-		if err != nil {
-			next.ServeHTTP(w, r)
 			return
 		}
 

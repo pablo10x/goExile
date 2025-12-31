@@ -1,14 +1,42 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { serverVersions } from '$lib/stores';
+	import JSZip from 'jszip';
+	import { serverVersions, nodes, notifications, stats } from '$lib/stores';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+	import NodeTable from '$lib/components/NodeTable.svelte';
+	import LogViewer from '$lib/components/LogViewer.svelte';
+	import InstanceManagerModal from '$lib/components/InstanceManagerModal.svelte';
+	import AddNodeModal from '$lib/components/AddNodeModal.svelte';
 	import { setContext } from 'svelte';
-	import { History, Package, Upload, Play, Trash2, CheckCircle, Clock, RefreshCw, ArrowDownToLine, ArrowDown, ArrowUp, AlertCircle, HardDrive, Activity, Search } from 'lucide-svelte';
+	import { History, Package, Upload, Play, Trash2, CheckCircle, Clock, RefreshCw, ArrowDownToLine, ArrowDown, ArrowUp, AlertCircle, HardDrive, Activity, Search, Cpu, List, Plus, Server } from 'lucide-svelte';
+	import Icon from '$lib/components/theme/Icon.svelte';
 	import { fade } from 'svelte/transition';
 
-	let activeTab = $state('upload');
+	let activeTab = $state('fleet');
 	let isDragging = $state(false);
 	let dragCounter = 0;
+
+	// Node State
+	let selectedNodeId = $state<number | null>(null);
+	let isLogViewerOpen = $state(false);
+	let isConsoleOpen = $state(false);
+	let consoleNodeId = $state<number | null>(null);
+	let consoleInstanceId = $state<string | null>(null);
+	let isSpawnDialogOpen = $state(false);
+	let spawnTargetNodeId = $state<number | null>(null);
+	let showAddNodeModal = $state(false);
+	let nodeTableComponent = $state<any>(null);
+
+	// Instance Action State
+	let isInstanceActionDialogOpen = $state(false);
+	let instanceActionType = $state<string | null>(null);
+	let instanceActionNodeId = $state<number | null>(null);
+	let instanceActionInstanceId = $state<string | null>(null);
+	let instanceActionNewID = $state<string | null>(null);
+	let instanceActionBulkIds = $state<string[]>([]);
+	let instanceActionDialogTitle = $state('');
+	let instanceActionDialogMessage = $state('');
+	let instanceActionConfirmText = $state('');
 
 	let fileInput = $state<HTMLInputElement>();
 	let comment = $state('');
@@ -58,6 +86,20 @@
 
 		analyzing = true;
 		fileAnalysis = null;
+
+		try {
+			const zip = await JSZip.loadAsync(file);
+			const manifestFile = zip.file('manifest.json');
+			if (manifestFile) {
+				const content = await manifestFile.async('string');
+				const manifest = JSON.parse(content);
+				if (manifest.version) {
+					version = manifest.version;
+				}
+			}
+		} catch (e) {
+			console.warn('Failed to read manifest:', e);
+		}
 
 		// Simulate enhanced file analysis
 		await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -136,15 +178,15 @@
 	function getCompatibilityColor(compatibility: string) {
 		switch (compatibility) {
 			case 'excellent':
-				return 'text-emerald-400 border-emerald-500/20 bg-emerald-500/5';
+				return 'text-success border-emerald-500/20 bg-success/5';
 			case 'good':
-				return 'text-blue-400 border-blue-500/20 bg-blue-500/5';
+				return 'text-info border-blue-500/20 bg-blue-500/5';
 			case 'fair':
 				return 'text-yellow-400 border-yellow-500/20 bg-yellow-500/5';
 			case 'poor':
-				return 'text-red-400 border-red-500/20 bg-red-500/5';
+				return 'text-danger border-red-500/20 bg-red-500/5';
 			default:
-				return 'text-slate-500 border-slate-500/20 bg-slate-500/5';
+				return 'text-text-dim border-slate-500/20 bg-slate-500/5';
 		}
 	}
 
@@ -296,7 +338,7 @@
 	function requestActivate(id: number) {
 		confirmTitle = 'Activate Version';
 		confirmMessage =
-			'Are you sure you want to activate this version? Spawners will download it on next check.';
+			'Are you sure you want to activate this version? Nodes will download it on next check.';
 		confirmButtonText = 'Activate';
 		confirmIsCritical = false;
 		confirmAction = async () => await activateVersion(id);
@@ -330,7 +372,7 @@
 		try {
 			const res = await fetch(`/api/versions/${id}`, { method: 'DELETE' });
 			if (res.ok) {
-				loadVersions();
+				await loadVersions();
 			} else {
 				const data = await res.json();
 				throw new Error(data.error || 'Failed to delete version');
@@ -340,30 +382,133 @@
 			throw e;
 		}
 	}
+
+	// --- Node Hub Logic ---
+	function handleSpawn(event: CustomEvent<number>) {
+		spawnTargetNodeId = event.detail;
+		isSpawnDialogOpen = true;
+	}
+
+	async function executeSpawn() {
+		if (!spawnTargetNodeId) return;
+		try {
+			const res = await fetch(`/api/nodes/${spawnTargetNodeId}/spawn`, { method: 'POST' });
+			if (!res.ok) throw new Error('Spawn failed');
+			const instance = await res.json();
+			consoleNodeId = spawnTargetNodeId;
+			consoleInstanceId = instance.id;
+			isConsoleOpen = true;
+		} catch (e) {
+			notifications.add({ type: 'error', message: 'Failed to spawn instance' });
+		}
+		isSpawnDialogOpen = false;
+	}
+
+	function handleViewLogs(event: CustomEvent<number>) {
+		selectedNodeId = event.detail;
+		isLogViewerOpen = true;
+	}
+
+	function handleTail(event: CustomEvent<{ nodeId: number; instanceId: string }>) {
+		consoleNodeId = event.detail.nodeId;
+		consoleInstanceId = event.detail.instanceId;
+		isConsoleOpen = true;
+	}
+
+	async function executeInstanceAction() {
+		if (!instanceActionNodeId || !instanceActionType) return;
+		try {
+			let res: Response;
+			const baseUrl = `/api/nodes/${instanceActionNodeId}/instances/${instanceActionInstanceId}`;
+			
+			if (instanceActionType === 'start') res = await fetch(`${baseUrl}/start`, { method: 'POST' });
+			else if (instanceActionType === 'stop') res = await fetch(`${baseUrl}/stop`, { method: 'POST' });
+			else if (instanceActionType === 'delete') res = await fetch(baseUrl, { method: 'DELETE' });
+			else if (instanceActionType === 'update') res = await fetch(`${baseUrl}/update`, { method: 'POST' });
+			else if (instanceActionType === 'rename') {
+				res = await fetch(`${baseUrl}/rename`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ new_id: instanceActionNewID })
+				});
+			} else if (instanceActionType === 'restart') {
+				await fetch(`${baseUrl}/stop`, { method: 'POST' });
+				res = await fetch(`${baseUrl}/start`, { method: 'POST' });
+			} else if (instanceActionType.startsWith('bulk_')) {
+				const action = instanceActionType.replace('bulk_', '');
+				const promises = instanceActionBulkIds.map(async (id) => {
+					const url = `/api/nodes/${instanceActionNodeId}/instances/${id}/${action === 'restart' ? 'stop' : action}`;
+					await fetch(url, { method: 'POST' });
+					if (action === 'restart') await fetch(`/api/nodes/${instanceActionNodeId}/instances/${id}/start`, { method: 'POST' });
+				});
+				await Promise.all(promises);
+				res = { ok: true } as Response;
+			} else res = { ok: false } as Response;
+
+			if (res.ok) {
+				nodeTableComponent?.refreshNode(instanceActionNodeId);
+				notifications.add({ type: 'success', message: 'Action executed successfully' });
+			} else {
+				throw new Error('Action failed');
+			}
+		} catch (e) {
+			notifications.add({ type: 'error', message: 'Operation failed' });
+		}
+		isInstanceActionDialogOpen = false;
+	}
+
+	function openInstanceActionDialog(type: string, nodeId: number, instanceId: string, title: string, msg: string, confirm: string) {
+		instanceActionType = type;
+		instanceActionNodeId = nodeId;
+		instanceActionInstanceId = instanceId;
+		instanceActionDialogTitle = title;
+		instanceActionDialogMessage = msg;
+		instanceActionConfirmText = confirm;
+		isInstanceActionDialogOpen = true;
+	}
 </script>
 
 <div class="w-full h-full space-y-10 pb-32 md:pb-12">
 	<div class="flex justify-between items-center mb-10">
 		<div class="flex items-center gap-6">
 			<div class="p-4 bg-rust/10 border border-rust/30 industrial-frame shadow-2xl">
-				<HardDrive class="w-10 h-10 text-rust-light" />
+				<Icon name="cpu" size="2.5rem" class="text-rust-light" />
 			</div>
 			<div>
 				<h1 class="text-4xl sm:text-5xl font-heading font-black text-white uppercase tracking-tighter">
-					Server Build Assets
+					Node Fleet Operations
 				</h1>
-				<p class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest font-black mt-2">Manage game server binaries and versions</p>
+				<p class="font-jetbrains text-[10px] text-text-dim uppercase tracking-widest font-black mt-2">Centralized command for nodes and binaries</p>
 			</div>
+		</div>
+		
+		<div class="flex items-center gap-4">
+			<button
+				onclick={() => (showAddNodeModal = true)}
+				class="hidden md:flex items-center gap-3 px-6 py-3 bg-white text-black font-heading font-black text-[10px] uppercase tracking-widest hover:bg-rust hover:text-white transition-all industrial-frame shadow-xl"
+			>
+				<Icon name="ph:plus-bold" />
+				Deploy_Node
+			</button>
 		</div>
 	</div>
 
 	<!-- Tabs -->
-	<div class="flex gap-1.5 p-1.5 bg-[#0a0a0a]/80 border border-stone-800 backdrop-blur-xl industrial-frame shadow-2xl">
+	<div class="flex gap-1.5 p-1.5 bg-[var(--header-bg)]/80 border border-stone-800 backdrop-blur-xl industrial-frame shadow-2xl">
+		<button
+			onclick={() => (activeTab = 'fleet')}
+			class="flex-1 flex flex-col items-center gap-1.5 px-8 py-4 transition-all {activeTab === 'fleet'
+				? 'bg-rust text-white shadow-lg'
+				: 'text-text-dim hover:text-white hover:bg-stone-900'}"
+		>
+			<span class="font-heading font-black text-[12px] uppercase tracking-[0.2em]">Fleet Status</span>
+			<span class="font-jetbrains text-[8px] font-black opacity-40 uppercase tracking-widest">Active Nodes</span>
+		</button>
 		<button
 			onclick={() => (activeTab = 'upload')}
 			class="flex-1 flex flex-col items-center gap-1.5 px-8 py-4 transition-all {activeTab === 'upload'
 				? 'bg-rust text-white shadow-lg'
-				: 'text-stone-600 hover:text-white hover:bg-stone-900'}"
+				: 'text-text-dim hover:text-white hover:bg-stone-900'}"
 		>
 			<span class="font-heading font-black text-[12px] uppercase tracking-[0.2em]">Upload Build</span>
 			<span class="font-jetbrains text-[8px] font-black opacity-40 uppercase tracking-widest">New Binary</span>
@@ -372,14 +517,66 @@
 			onclick={() => (activeTab = 'history')}
 			class="flex-1 flex flex-col items-center gap-1.5 px-8 py-4 transition-all {activeTab === 'history'
 				? 'bg-rust text-white shadow-lg'
-				: 'text-stone-600 hover:text-white hover:bg-stone-900'}"
+				: 'text-text-dim hover:text-white hover:bg-stone-900'}"
 		>
 			<span class="font-heading font-black text-[12px] uppercase tracking-[0.2em]">Build History</span>
 			<span class="font-jetbrains text-[8px] font-black opacity-40 uppercase tracking-widest">Version Logs</span>
 		</button>
 	</div>
 
-	{#if activeTab === 'upload'}
+	{#if activeTab === 'fleet'}
+		<div in:fade={{ duration: 200 }} class="space-y-8">
+			<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+				<div class="bg-stone-900/40 border border-stone-800 p-6 industrial-frame shadow-xl">
+					<div class="flex justify-between items-center mb-4">
+						<span class="text-[10px] font-black text-text-dim uppercase tracking-widest">Nodes Active</span>
+						<Server class="w-4 h-4 text-rust" />
+					</div>
+					<div class="text-4xl font-heading font-black text-white tracking-tighter">{$stats.active_nodes}</div>
+				</div>
+				<div class="bg-stone-900/40 border border-stone-800 p-6 industrial-frame shadow-xl">
+					<div class="flex justify-between items-center mb-4">
+						<span class="text-[10px] font-black text-text-dim uppercase tracking-widest">Total Instances</span>
+						<Activity class="w-4 h-4 text-success" />
+					</div>
+					<div class="text-4xl font-heading font-black text-white tracking-tighter">{$nodes.reduce((acc, s) => acc + s.current_instances, 0)}</div>
+				</div>
+				<div class="bg-stone-900/40 border border-stone-800 p-6 industrial-frame shadow-xl">
+					<div class="flex justify-between items-center mb-4">
+						<span class="text-[10px] font-black text-text-dim uppercase tracking-widest">Capacity Used</span>
+						<HardDrive class="w-4 h-4 text-warning" />
+					</div>
+					<div class="text-4xl font-heading font-black text-white tracking-tighter">
+						{Math.round(($nodes.reduce((acc, s) => acc + s.current_instances, 0) / ($nodes.reduce((acc, s) => acc + s.max_instances, 0) || 1)) * 100)}%
+					</div>
+				</div>
+			</div>
+
+			<div class="modern-industrial-card glass-panel !rounded-none overflow-hidden border-stone-800 shadow-2xl">
+				<NodeTable
+					bind:this={nodeTableComponent}
+					nodes={$nodes}
+					on:spawn={handleSpawn}
+					on:viewLogs={handleViewLogs}
+					on:tail={handleTail}
+					on:startInstanceRequest={(e) => openInstanceActionDialog('start', e.detail.nodeId, e.detail.instanceId, 'Start Instance', `Initialize execution of ${e.detail.instanceId}?`, 'Confirm Start')}
+					on:stopInstanceRequest={(e) => openInstanceActionDialog('stop', e.detail.nodeId, e.detail.instanceId, 'Stop Instance', `Terminate execution of ${e.detail.instanceId}?`, 'Confirm Stop')}
+					on:restartInstanceRequest={(e) => openInstanceActionDialog('restart', e.detail.nodeId, e.detail.instanceId, 'Restart Instance', `Reboot instance ${e.detail.instanceId}?`, 'Confirm Restart')}
+					on:deleteInstanceRequest={(e) => openInstanceActionDialog('delete', e.detail.nodeId, e.detail.instanceId, 'Delete Instance', `Permanently purge ${e.detail.instanceId}?`, 'Confirm Purge')}
+					on:updateInstanceRequest={(e) => openInstanceActionDialog('update', e.detail.nodeId, e.detail.instanceId, 'Update Instance', `Reinstall build for ${e.detail.instanceId}?`, 'Confirm Update')}
+					on:bulkInstanceActionRequest={(e) => {
+						instanceActionType = `bulk_${e.detail.action}`;
+						instanceActionNodeId = e.detail.nodeId;
+						instanceActionBulkIds = e.detail.instanceIds;
+						instanceActionDialogTitle = 'Bulk Operation';
+						instanceActionDialogMessage = `Execute ${e.detail.action} on ${e.detail.instanceIds.length} instances?`;
+						instanceActionConfirmText = 'Confirm Bulk';
+						isInstanceActionDialogOpen = true;
+					}}
+				/>
+			</div>
+		</div>
+	{:else if activeTab === 'upload'}
 		<div class="grid xl:grid-cols-12 gap-8 items-start">
 			<!-- Upload Area -->
 			<div class="xl:col-span-8">
@@ -392,7 +589,7 @@
 						</div>
 						<div>
 							<h3 class="text-2xl font-heading font-black text-white uppercase tracking-tighter">Build Upload</h3>
-							<p class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest mt-1">
+							<p class="font-jetbrains text-[10px] text-text-dim uppercase tracking-widest mt-1">
 								Upload a new <code class="text-rust">game_server.zip</code> package to central registry.
 							</p>
 						</div>
@@ -441,7 +638,7 @@
 															style="width: {uploadProgress}%"
 														></div>
 													</div>
-													<p class="font-jetbrains text-[9px] font-black text-stone-600 mt-3 uppercase tracking-widest">
+													<p class="font-jetbrains text-[9px] font-black text-text-dim mt-3 uppercase tracking-widest">
 														PROGRESS: {Math.round(uploadProgress)}%_SYNCED
 													</p>
 												</div>
@@ -454,8 +651,8 @@
 											class="w-20 h-20 mx-auto border-2 border-amber-500 border-t-transparent rounded-none animate-spin shadow-lg shadow-amber-900/20"
 										></div>
 										<div class="space-y-2">
-											<p class="font-heading font-black text-[11px] text-amber-500 uppercase tracking-[0.3em] animate-pulse">ANALYZING_PAYLOAD...</p>
-											<p class="font-jetbrains text-[9px] font-black text-stone-600 uppercase tracking-widest">
+											<p class="font-heading font-black text-[11px] text-warning uppercase tracking-[0.3em] animate-pulse">ANALYZING_PAYLOAD...</p>
+											<p class="font-jetbrains text-[9px] font-black text-text-dim uppercase tracking-widest">
 												Verifying compatibility and sector mapping
 											</p>
 										</div>
@@ -475,7 +672,7 @@
 													? selectedFile.name
 													: 'DROP_ARCHIVE_OR_ACTIVATE_SELECTOR'}
 											</p>
-											<p class="font-jetbrains text-[10px] font-bold text-stone-600 uppercase tracking-widest">
+											<p class="font-jetbrains text-[10px] font-bold text-text-dim uppercase tracking-widest">
 												{selectedFile
 													? formatFileSize(selectedFile.size)
 													: 'MAX_LIMIT: 1GB // FORMAT: .ZIP_ONLY'}
@@ -483,7 +680,7 @@
 										</div>
 										{#if !selectedFile}
 											<div class="pt-4">
-												<span class="px-8 py-3 bg-stone-900 border border-stone-800 text-stone-500 font-heading font-black text-[10px] uppercase tracking-widest group-hover:border-rust group-hover:text-white transition-all shadow-lg">
+												<span class="px-8 py-3 bg-stone-900 border border-stone-800 text-text-dim font-heading font-black text-[10px] uppercase tracking-widest group-hover:border-rust group-hover:text-white transition-all shadow-lg">
 													Browse_Buffer
 												</span>
 											</div>
@@ -499,7 +696,7 @@
 						<div
 							class="mt-10 p-8 bg-stone-950 border border-stone-800 industrial-frame shadow-inner"
 						>
-							<h4 class="font-heading font-black text-xs text-stone-500 uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
+							<h4 class="font-heading font-black text-xs text-text-dim uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
 								<Activity class="w-4 h-4 text-rust" />
 								Build Summary
 							</h4>
@@ -555,9 +752,9 @@
 						<div class="space-y-3">
 							<label
 								for="version"
-								class="block font-jetbrains text-[10px] font-black text-stone-500 uppercase tracking-widest"
+								class="block font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest"
 							>
-								VERSION_IDENTIFIER <span class="text-red-500">*</span>
+								VERSION_IDENTIFIER <span class="text-danger">*</span>
 							</label>
 							<input
 								type="text"
@@ -573,7 +770,7 @@
 						<div class="space-y-3">
 							<label
 								for="comment"
-								class="block font-jetbrains text-[10px] font-black text-stone-500 uppercase tracking-widest"
+								class="block font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest"
 							>
 								PROTOCOL_CHANGELOG
 							</label>
@@ -608,7 +805,7 @@
 
 					{#if uploadStatus}
 						<div
-							class={`p-6 border flex items-start gap-5 industrial-frame ${uploadError ? 'bg-red-950/20 text-red-500 border-red-900/40 shadow-red-900/10' : 'bg-emerald-950/20 text-emerald-400 border-emerald-900/40 shadow-emerald-900/10'}`}
+							class={`p-6 border flex items-start gap-5 industrial-frame ${uploadError ? 'bg-red-950/20 text-danger border-red-900/40 shadow-red-900/10' : 'bg-emerald-950/20 text-success border-emerald-900/40 shadow-emerald-900/10'}`}
 						>
 							<div class="shrink-0 mt-1">
 								{#if uploadError}
@@ -634,7 +831,7 @@
 			>
 				<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
 					<div class="flex-1 max-w-2xl relative group">
-						<Search class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-600 group-focus-within:text-rust transition-colors" />
+						<Search class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-dim group-focus-within:text-rust transition-colors" />
 						<input
 							type="text"
 							bind:value={searchQuery}
@@ -666,7 +863,7 @@
 							</select>
 							<button
 								onclick={() => (sortOrder = sortOrder === 'desc' ? 'asc' : 'desc')}
-								class="p-3 bg-stone-950 border border-stone-800 text-stone-600 hover:text-rust transition-all active:translate-y-px shadow-lg"
+								class="p-3 bg-stone-950 border border-stone-800 text-text-dim hover:text-rust transition-all active:translate-y-px shadow-lg"
 								title="Toggle sort order"
 							>
 								{#if sortOrder === 'desc'}
@@ -689,7 +886,7 @@
 					<h3 class="font-heading font-black text-xl text-stone-700 uppercase tracking-[0.3em] mb-3">
 						Archive_Registry_Empty
 					</h3>
-					<p class="font-jetbrains text-[10px] font-bold text-stone-600 uppercase tracking-widest">
+					<p class="font-jetbrains text-[10px] font-bold text-text-dim uppercase tracking-widest">
 						{searchQuery
 							? 'Neural filters returned zero logical matches.'
 							: 'Initial deployment binary pending synchronization.'}
@@ -719,7 +916,7 @@
 											</span>
 										{:else}
 											<span
-												class="px-3 py-1 font-jetbrains text-[9px] font-black bg-stone-900 border border-stone-800 text-stone-600 uppercase tracking-[0.2em]"
+												class="px-3 py-1 font-jetbrains text-[9px] font-black bg-stone-900 border border-stone-800 text-text-dim uppercase tracking-[0.2em]"
 											>
 												STANDBY
 											</span>
@@ -732,7 +929,7 @@
 									<h4 class="text-3xl font-heading font-black text-white uppercase tracking-tighter group-hover:text-rust transition-colors duration-500">
 										REV_{version.version || 'UNKNOWN'}
 									</h4>
-									<p class="font-jetbrains text-[10px] font-black text-stone-600 uppercase tracking-widest truncate">{version.filename}</p>
+									<p class="font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest truncate">{version.filename}</p>
 								</div>
 
 								<!-- Metadata Table -->
@@ -750,7 +947,7 @@
 								<!-- Release Notes -->
 								{#if version.comment}
 									<div class="bg-black/40 p-4 border-l-2 border-stone-800 group-hover:border-rust/30 transition-all">
-										<p class="font-jetbrains text-[10px] font-bold text-stone-500 leading-relaxed uppercase italic">
+										<p class="font-jetbrains text-[10px] font-bold text-text-dim leading-relaxed uppercase italic">
 											&gt;&gt; "{version.comment}"
 										</p>
 									</div>
@@ -761,13 +958,13 @@
 									{#if !version.is_active}
 										<button
 											onclick={() => requestActivate(version.id)}
-											class="flex-1 px-6 py-3 bg-stone-900 hover:bg-rust border border-stone-800 hover:border-rust-light text-stone-500 hover:text-white font-heading font-black text-[10px] uppercase tracking-widest transition-all shadow-lg active:translate-y-px"
+											class="flex-1 px-6 py-3 bg-stone-900 hover:bg-rust border border-stone-800 hover:border-rust-light text-text-dim hover:text-white font-heading font-black text-[10px] uppercase tracking-widest transition-all shadow-lg active:translate-y-px"
 										>
 											Execute_Activate
 										</button>
 										<button
 											onclick={() => requestDelete(version.id)}
-											class="p-3 bg-red-950/20 border border-red-900/30 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-lg active:scale-95"
+											class="p-3 bg-red-950/20 border border-red-900/30 text-red-600 hover:bg-danger hover:text-white transition-all shadow-lg active:scale-95"
 											title="Delete Version"
 										>
 											<Trash2 class="w-4 h-4" />
@@ -792,13 +989,13 @@
 	{#if activeTab === 'history'}
 		<!-- Modern Version History -->
 		<div
-			class="relative overflow-hidden bg-[#0a0a0a]/60 border border-stone-800 shadow-2xl industrial-frame"
+			class="relative overflow-hidden bg-[var(--header-bg)]/60 border border-stone-800 shadow-2xl industrial-frame"
 		>
 			<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.01] pointer-events-none"></div>
 			
 			<!-- Section Header -->
 			<div
-				class="relative px-10 py-8 border-b border-stone-800 bg-[#0a0a0a] backdrop-blur-xl"
+				class="relative px-10 py-8 border-b border-stone-800 bg-[var(--header-bg)] backdrop-blur-xl"
 			>
 				<div class="flex flex-col md:flex-row md:items-center justify-between gap-8">
 					<div class="flex items-center gap-6">
@@ -809,13 +1006,13 @@
 						</div>
 						<div>
 							<h2 class="text-2xl font-heading font-black text-white uppercase tracking-tighter">VERSION_DEPLOYMENT_ARCHIVE</h2>
-							<p class="font-jetbrains text-[10px] text-stone-500 font-black uppercase tracking-widest mt-1">
+							<p class="font-jetbrains text-[10px] text-text-dim font-black uppercase tracking-widest mt-1">
 								Audit server-side binary transitions and state activations
 							</p>
 						</div>
 					</div>
 					<div
-						class="px-5 py-2 font-jetbrains text-[10px] font-black text-stone-500 bg-stone-950 border border-stone-800 uppercase tracking-[0.2em] shadow-inner"
+						class="px-5 py-2 font-jetbrains text-[10px] font-black text-text-dim bg-stone-950 border border-stone-800 uppercase tracking-[0.2em] shadow-inner"
 					>
 						{$serverVersions.length}_TOTAL_RECORDS_MAPPED
 					</div>
@@ -830,12 +1027,12 @@
 						<div
 							class="w-24 h-24 bg-stone-900/40 border border-dashed border-stone-800 flex items-center justify-center industrial-frame mb-8 opacity-40"
 						>
-							<Package class="w-12 h-12 text-stone-600" />
+							<Package class="w-12 h-12 text-text-dim" />
 						</div>
 						<h3 class="font-heading font-black text-xl text-stone-700 uppercase tracking-[0.3em] mb-3">
 							Registry_Empty
 						</h3>
-						<p class="font-jetbrains text-[10px] font-bold text-stone-600 uppercase tracking-widest max-w-lg mx-auto">
+						<p class="font-jetbrains text-[10px] font-bold text-text-dim uppercase tracking-widest max-w-lg mx-auto">
 							Initialize first binary synchronization protocol to populate history buffer.
 						</p>
 						<button
@@ -875,13 +1072,13 @@
 											<h3 class="text-3xl font-heading font-black text-white uppercase tracking-tighter group-hover:text-rust transition-colors duration-500">
 												REV_{version.version || '0.0.0'}
 											</h3>
-											<p class="font-jetbrains text-[10px] font-black text-stone-600 uppercase tracking-widest truncate max-w-[200px]">
+											<p class="font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest truncate max-w-[200px]">
 												{version.filename}
 											</p>
 										</div>
 										{#if !version.is_active}
 											<div
-												class="px-3 py-1 bg-stone-900 border border-stone-800 text-[9px] font-jetbrains font-black text-stone-600 uppercase tracking-widest"
+												class="px-3 py-1 bg-stone-900 border border-stone-800 text-[9px] font-jetbrains font-black text-text-dim uppercase tracking-widest"
 											>
 												HALTED
 											</div>
@@ -890,7 +1087,7 @@
 
 									<!-- Upload Info -->
 									<div class="space-y-6">
-										<div class="flex items-center gap-3 font-jetbrains text-[10px] font-bold text-stone-500 uppercase tracking-widest">
+										<div class="flex items-center gap-3 font-jetbrains text-[10px] font-bold text-text-dim uppercase tracking-widest">
 											<Clock class="w-4 h-4 text-stone-700" />
 											<span>DEPLOYED: {new Date(version.uploaded_at).toLocaleDateString()}</span>
 										</div>
@@ -898,7 +1095,7 @@
 											<div
 												class="p-5 bg-stone-950 border-l-2 border-stone-800 group-hover:border-rust/30 transition-all shadow-inner"
 											>
-												<p class="font-jetbrains text-[10px] font-bold text-stone-500 leading-relaxed uppercase italic">
+												<p class="font-jetbrains text-[10px] font-bold text-text-dim leading-relaxed uppercase italic">
 													&gt;&gt; "{version.comment}"
 												</p>
 											</div>
@@ -910,13 +1107,13 @@
 										{#if !version.is_active}
 											<button
 												onclick={() => requestActivate(version.id)}
-												class="flex-1 px-6 py-3 bg-stone-900 hover:bg-rust border border-stone-800 hover:border-rust-light text-stone-500 hover:text-white font-heading font-black text-[10px] uppercase tracking-widest transition-all shadow-lg active:translate-y-px"
+												class="flex-1 px-6 py-3 bg-stone-900 hover:bg-rust border border-stone-800 hover:border-rust-light text-text-dim hover:text-white font-heading font-black text-[10px] uppercase tracking-widest transition-all shadow-lg active:translate-y-px"
 											>
 												Execute_Activate
 											</button>
 											<button
 												onclick={() => requestDelete(version.id)}
-												class="p-3 bg-red-950/20 border border-red-900/30 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-lg active:scale-95"
+												class="p-3 bg-red-950/20 border border-red-900/30 text-red-600 hover:bg-danger hover:text-white transition-all shadow-lg active:scale-95"
 												title="Delete Version"
 											>
 												<Trash2 class="w-4 h-4" />
@@ -947,4 +1144,37 @@
 		isCritical={confirmIsCritical}
 		onConfirm={confirmAction}
 	/>
+
+	<ConfirmDialog
+		bind:isOpen={isSpawnDialogOpen}
+		title="Spawn New Instance"
+		message={`Are you sure you want to spawn a new game server instance on Node #${spawnTargetNodeId}?`}
+		confirmText="Spawn Server"
+		onConfirm={executeSpawn}
+	/>
+
+	<ConfirmDialog
+		bind:isOpen={isInstanceActionDialogOpen}
+		title={instanceActionDialogTitle}
+		message={instanceActionDialogMessage}
+		confirmText={instanceActionConfirmText}
+		onConfirm={executeInstanceAction}
+	/>
+
+	{#if selectedNodeId}
+		<LogViewer
+			nodeId={selectedNodeId}
+			isOpen={isLogViewerOpen}
+			onClose={() => (isLogViewerOpen = false)}
+		/>
+	{/if}
+
+	<InstanceManagerModal
+		bind:isOpen={isConsoleOpen}
+		nodeId={consoleNodeId}
+		instanceId={consoleInstanceId}
+		onClose={() => (isConsoleOpen = false)}
+	/>
+
+	<AddNodeModal bind:isOpen={showAddNodeModal} />
 </div>

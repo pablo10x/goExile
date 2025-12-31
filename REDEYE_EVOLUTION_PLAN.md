@@ -15,13 +15,13 @@ This plan outlines a multi-phase approach, focusing on enhancing the existing Re
 *   **High Availability & Load Balancing:**
     *   Deploy the Master Server in a highly available configuration across multiple availability zones.
     *   Implement robust load balancing for API endpoints and WebSocket connections.
-    *   Ensure Spawners gracefully handle Master Server outages and reconnect.
+    *   Ensure Nodes gracefully handle Master Server outages and reconnect.
 *   **Performance Optimization:**
     *   **Network:** Optimize WebSocket protocol, potentially exploring custom binary protocols for high-frequency data. Implement efficient data compression.
     *   **Rule Matching:** Optimize in-memory rule matching algorithms for extremely low latency. Consider using specialized data structures (e.g., Trie for CIDR lookups).
-    *   **Resource Management:** Continuously profile and optimize CPU, memory, and I/O usage across Master and Spawner components.
+    *   **Resource Management:** Continuously profile and optimize CPU, memory, and I/O usage across Master and Node components.
 *   **API Security & Authentication Hardening:**
-    *   Implement **Mutual TLS (mTLS)** for all service-to-service communication (Spawner <-> Master).
+    *   Implement **Mutual TLS (mTLS)** for all service-to-service communication (Node <-> Master).
     *   Rotate API keys automatically and securely manage credentials.
     *   Strict input validation and output encoding for all API endpoints to prevent OWASP Top 10 vulnerabilities.
 
@@ -89,19 +89,19 @@ This plan outlines a multi-phase approach, focusing on enhancing the existing Re
     *   Regularly engage third-party security firms for penetration testing and vulnerability assessments of the entire system (client, server, infrastructure).
     *   Implement a bug bounty program.
 
-## Phase 5: Spawner-Level Security (Distributed Enforcement)
+## Phase 5: Node-Level Security (Distributed Enforcement)
 
-*   **Spawner Host Hardening:**
-    *   Implement stringent security configurations for all Spawner hosts (OS patching, minimum services, least privilege access).
-    *   Regular security scans of Spawner environments.
-*   **Local Firewall Enforcement (Spawner-Side):**
-    *   Empower Spawners to enforce local firewall rules (e.g., UFW on Linux, Windows Firewall/netsh on Windows) as instructed by the Master Server. This provides a decentralized layer of defense.
-    *   Implement secure communication channels for rule updates to Spawners.
+*   **Node Host Hardening:**
+    *   Implement stringent security configurations for all Node hosts (OS patching, minimum services, least privilege access).
+    *   Regular security scans of Node environments.
+*   **Local Firewall Enforcement (Node-Side):**
+    *   Empower Nodes to enforce local firewall rules (e.g., UFW on Linux, Windows Firewall/netsh on Windows) as instructed by the Master Server. This provides a decentralized layer of defense.
+    *   Implement secure communication channels for rule updates to Nodes.
 *   **Game Server Isolation:**
-    *   Run individual game server instances in isolated, lightweight environments (e.g., Docker containers, firecracker microVMs) on the Spawners.
+    *   Run individual game server instances in isolated, lightweight environments (e.g., Docker containers, firecracker microVMs) on the Nodes.
     *   Limit network access and resource visibility between game instances to contain potential compromises.
 *   **Integrity Verification:**
-    *   Spawners should periodically verify the integrity of game server binaries and configuration files running on their hosts.
+    *   Nodes should periodically verify the integrity of game server binaries and configuration files running on their hosts.
 
 ---
 
@@ -114,7 +114,7 @@ This plan outlines a multi-phase approach, focusing on enhancing the existing Re
 5.  **Server-Side Anticheat Engine:** Build detection logic, integrate ML models, and establish evidence collection.
 6.  **Advanced Firewall Integration:** Implement dynamic rules, geo-blocking, and threat intelligence feeds.
 7.  **Operational Tools & Dashboard:** Enhance monitoring, alerting, and the admin interface.
-8.  **Distributed Spawner Security:** Implement host hardening, local firewall enforcement, and instance isolation on Spawners.
+8.  **Distributed Node Security:** Implement host hardening, local firewall enforcement, and instance isolation on Nodes.
 9.  **Rigorous Testing:** Conduct extensive unit, integration, performance, stress, and security testing throughout all phases.
 10. **Pilot & Gradual Rollout:** Deploy features to a limited audience or specific game modes before full release.
 11. **Continuous Improvement Loop:** Establish ongoing processes for threat analysis, model retraining, and rule updates.

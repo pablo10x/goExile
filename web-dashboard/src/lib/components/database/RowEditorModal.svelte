@@ -96,7 +96,7 @@
 		if (!type)
 			return {
 				bg: 'bg-slate-500/20',
-				text: 'text-slate-500 dark:text-slate-400',
+				text: 'text-text-dim dark:text-text-dim',
 				border: 'border-slate-500/30'
 			};
 		const t = type.toLowerCase();
@@ -107,23 +107,23 @@
 			t.includes('decimal') ||
 			t === 'real'
 		) {
-			return { bg: 'bg-blue-500/20', text: 'text-blue-400', border: 'border-blue-500/30' };
+			return { bg: 'bg-blue-500/20', text: 'text-info', border: 'border-blue-500/30' };
 		}
 		if (t.includes('bool')) {
 			return { bg: 'bg-purple-500/20', text: 'text-purple-400', border: 'border-purple-500/30' };
 		}
 		if (t.includes('json')) {
-			return { bg: 'bg-amber-500/20', text: 'text-amber-400', border: 'border-amber-500/30' };
+			return { bg: 'bg-amber-500/20', text: 'text-warning', border: 'border-amber-500/30' };
 		}
 		if (t.includes('timestamp') || t.includes('date') || t.includes('time')) {
-			return { bg: 'bg-emerald-500/20', text: 'text-emerald-400', border: 'border-emerald-500/30' };
+			return { bg: 'bg-success/20', text: 'text-success', border: 'border-emerald-500/30' };
 		}
 		if (t.includes('text') || t.includes('char') || t === 'uuid') {
-			return { bg: 'bg-cyan-500/20', text: 'text-cyan-400', border: 'border-cyan-500/30' };
+			return { bg: 'bg-cyan-500/20', text: 'text-info', border: 'border-cyan-500/30' };
 		}
 		return {
 			bg: 'bg-slate-500/20',
-			text: 'text-slate-500 dark:text-slate-400',
+			text: 'text-text-dim dark:text-text-dim',
 			border: 'border-slate-500/30'
 		};
 	}
@@ -188,7 +188,7 @@
 	}
 
 	function getContainerClass(isSuccess: boolean, isFocused: boolean, isModified: boolean): string {
-		if (isSuccess) return 'border-emerald-500/50 bg-emerald-500/5';
+		if (isSuccess) return 'border-emerald-500/50 bg-success/5';
 		if (isFocused) return 'border-blue-500/50 bg-blue-500/5';
 		if (isModified) return 'border-amber-500/30 bg-amber-500/5';
 		return 'border-slate-300/50 dark:border-slate-700/50 bg-slate-800/30 hover:border-slate-600/50';
@@ -197,12 +197,12 @@
 	function getBoolButtonClass(formValue: any, optionValue: any, optionColor: string): string {
 		if (formValue === optionValue) {
 			if (optionColor === 'emerald')
-				return 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 shadow-lg shadow-emerald-500/10';
+				return 'bg-success/20 text-success border border-emerald-500/50 shadow-lg shadow-emerald-500/10';
 			if (optionColor === 'red')
-				return 'bg-red-500/20 text-red-400 border border-red-500/50 shadow-lg shadow-red-500/10';
+				return 'bg-red-500/20 text-danger border border-red-500/50 shadow-lg shadow-red-500/10';
 			return 'bg-slate-600/30 text-slate-700 dark:text-slate-300 border border-slate-500/50';
 		}
-		return 'bg-slate-800/50 text-slate-500 border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-600/50 hover:text-slate-500 dark:text-slate-400';
+		return 'bg-slate-800/50 text-text-dim border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-600/50 hover:text-text-dim dark:text-text-dim';
 	}
 </script>
 
@@ -264,9 +264,9 @@
 								transition:scale={{ start: 0.5, duration: 400, delay: 100, easing: backOut }}
 							>
 								{#if isEditing}
-									<Database class="w-6 h-6 text-blue-400" />
+									<Database class="w-6 h-6 text-info" />
 								{:else}
-									<Plus class="w-6 h-6 text-emerald-400" />
+									<Plus class="w-6 h-6 text-success" />
 								{/if}
 								<div
 									class="absolute inset-0 rounded-xl border-2 border-blue-400/50 animate-ping opacity-20"
@@ -283,11 +283,11 @@
 									{:else}
 										<span class="flex items-center gap-2">
 											Add New Row
-											<Sparkles class="w-4 h-4 text-amber-400 animate-pulse" />
+											<Sparkles class="w-4 h-4 text-warning animate-pulse" />
 										</span>
 									{/if}
 								</h2>
-								<p class="text-sm text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-2">
+								<p class="text-sm text-text-dim dark:text-text-dim mt-1 flex items-center gap-2">
 									<span class="px-2 py-0.5 bg-slate-800 rounded-md font-mono text-xs"
 										>{schema}.{table}</span
 									>
@@ -295,7 +295,7 @@
 									<span>{editableColumns.length} fields</span>
 									{#if modifiedCount > 0}
 										<span
-											class="px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-full text-xs font-medium"
+											class="px-2 py-0.5 bg-blue-500/20 text-info rounded-full text-xs font-medium"
 											transition:scale={{ start: 0.8, duration: 200 }}
 										>
 											{modifiedCount} modified
@@ -308,7 +308,7 @@
 						<button
 							onclick={onClose}
 							disabled={loading}
-							class="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-800/80 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50"
+							class="p-2 text-text-dim dark:text-text-dim hover:text-slate-900 dark:text-white hover:bg-slate-800/80 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50"
 							aria-label="Close modal"
 						>
 							<X class="w-5 h-5" />
@@ -321,14 +321,14 @@
 						class="mx-6 mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-start gap-3"
 						transition:fly={{ y: -10, duration: 300 }}
 					>
-						<AlertCircle class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+						<AlertCircle class="w-5 h-5 text-danger flex-shrink-0 mt-0.5" />
 						<div class="flex-1">
-							<p class="text-red-400 font-medium text-sm">Error saving row</p>
+							<p class="text-danger font-medium text-sm">Error saving row</p>
 							<p class="text-red-300/80 text-sm mt-1">{error}</p>
 						</div>
 						<button
 							onclick={() => (error = null)}
-							class="text-red-400/60 hover:text-red-400 transition-colors"
+							class="text-danger/60 hover:text-danger transition-colors"
 						>
 							<X class="w-4 h-4" />
 						</button>
@@ -343,8 +343,8 @@
 							>
 								<Database class="w-8 h-8 text-slate-600" />
 							</div>
-							<p class="text-slate-500 dark:text-slate-400 font-medium">No editable columns</p>
-							<p class="text-slate-500 text-sm mt-1">
+							<p class="text-text-dim dark:text-text-dim font-medium">No editable columns</p>
+							<p class="text-text-dim text-sm mt-1">
 								This table has no columns that can be edited
 							</p>
 						</div>
@@ -372,7 +372,7 @@
 											<label
 												for="field-{col.name}"
 												class="flex items-center gap-2 text-sm font-medium transition-colors {isFocused
-													? 'text-blue-400'
+													? 'text-info'
 													: 'text-slate-700 dark:text-slate-300'}"
 											>
 												<div class="p-1 rounded-md {colors.bg}">
@@ -390,14 +390,14 @@
 
 												{#if col.nullable === 'YES'}
 													<span
-														class="px-1.5 py-0.5 text-xs rounded-md bg-slate-700/50 text-slate-500"
+														class="px-1.5 py-0.5 text-xs rounded-md bg-slate-700/50 text-text-dim"
 														>nullable</span
 													>
 												{/if}
 
 												{#if isSuccess}
 													<div transition:scale={{ start: 0.5, duration: 300 }}>
-														<Check class="w-4 h-4 text-emerald-400" />
+														<Check class="w-4 h-4 text-success" />
 													</div>
 												{:else if isModified}
 													<div
@@ -501,7 +501,7 @@
 					></div>
 
 					<div class="flex items-center justify-between gap-4">
-						<div class="hidden sm:flex items-center gap-2 text-xs text-slate-500">
+						<div class="hidden sm:flex items-center gap-2 text-xs text-text-dim">
 							<kbd
 								class="px-2 py-1 bg-slate-800 rounded border border-slate-300 dark:border-slate-700 font-mono"
 								>Ctrl</kbd
@@ -518,7 +518,7 @@
 							<button
 								onclick={onClose}
 								disabled={loading}
-								class="px-5 py-2.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-800/80 rounded-xl font-medium transition-all duration-200 disabled:opacity-50"
+								class="px-5 py-2.5 text-text-dim dark:text-text-dim hover:text-slate-900 dark:text-white hover:bg-slate-800/80 rounded-xl font-medium transition-all duration-200 disabled:opacity-50"
 							>
 								Cancel
 							</button>

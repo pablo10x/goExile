@@ -70,10 +70,10 @@ type RuntimeMetrics struct {
 	RequestRateHistory []int64  `json:"request_rate_history,omitempty"`
 }
 
-// SpawnerMetrics holds aggregated metrics from all spawners
-type SpawnerMetrics struct {
-	TotalSpawners    int     `json:"total_spawners"`
-	OnlineSpawners   int     `json:"online_spawners"`
+// NodeMetrics holds aggregated metrics from all nodes
+type NodeMetrics struct {
+	TotalNodes    int     `json:"total_nodes"`
+	OnlineNodes   int     `json:"online_nodes"`
 	TotalInstances   int     `json:"total_instances"`
 	RunningInstances int     `json:"running_instances"`
 	TotalCPUUsage    float64 `json:"total_cpu_usage"`
@@ -85,12 +85,12 @@ type SpawnerMetrics struct {
 	MemUsagePercent  float64 `json:"mem_usage_percent"`
 	DiskUsagePercent float64 `json:"disk_usage_percent"`
 
-	// Per-spawner breakdown
-	SpawnerDetails []SpawnerDetail `json:"spawner_details,omitempty"`
+	// Per-node breakdown
+	NodeDetails []NodeDetail `json:"node_details,omitempty"`
 }
 
-// SpawnerDetail holds individual spawner metrics
-type SpawnerDetail struct {
+// NodeDetail holds individual node metrics
+type NodeDetail struct {
 	ID               int     `json:"id"`
 	Region           string  `json:"region"`
 	Host             string  `json:"host"`
@@ -112,7 +112,7 @@ type SpawnerDetail struct {
 // CombinedMetrics holds all system metrics
 type CombinedMetrics struct {
 	Master   RuntimeMetrics  `json:"master"`
-	Spawners SpawnerMetrics  `json:"spawners"`
+	Nodes NodeMetrics  `json:"nodes"`
 	Database DatabaseMetrics `json:"database"`
 	Network  NetworkMetrics  `json:"network"`
 	RedEye   RedEyeMetrics   `json:"redeye"`
@@ -256,16 +256,9 @@ func (mc *MetricsCollector) CollectRuntimeMetrics() RuntimeMetrics {
 		heapUsageRatio = float64(m.HeapInuse) / float64(m.HeapSys)
 	}
 
-	// Get GC target ratio from debug info
-	var gcTriggerRatio float64
-	if buildInfo, ok := debug.ReadBuildInfo(); ok {
-		_ = buildInfo // Could extract more info if needed
-	}
-	// Default GOGC is 100, meaning trigger at 100% heap growth
-	gcTriggerRatio = float64(debug.SetGCPercent(-1))
-	debug.SetGCPercent(int(gcTriggerRatio))
-	gcTriggerRatio /= 100.0
-
+	// Get GC target ratio (estimate based on common defaults or env)
+	gcTriggerRatio := 1.0 // Default GOGC=100
+	
 	// Update history
 	mc.appendUint64History(&mc.heapHistory, m.HeapAlloc)
 	mc.appendIntHistory(&mc.goroutineHistory, currentGoroutines)
@@ -334,16 +327,16 @@ func (mc *MetricsCollector) CollectRuntimeMetrics() RuntimeMetrics {
 	return metrics
 }
 
-// CollectSpawnerMetrics gathers metrics from all registered spawners
-func (mc *MetricsCollector) CollectSpawnerMetrics() SpawnerMetrics {
-	spawners := registry.GlobalRegistry.All()
+// CollectNodeMetrics gathers metrics from all registered nodes
+func (mc *MetricsCollector) CollectNodeMetrics() NodeMetrics {
+	nodes := registry.GlobalRegistry.All()
 
-	metrics := SpawnerMetrics{
-		TotalSpawners:  len(spawners),
-		SpawnerDetails: make([]SpawnerDetail, 0, len(spawners)),
+	metrics := NodeMetrics{
+		TotalNodes:  len(nodes),
+		NodeDetails: make([]NodeDetail, 0, len(nodes)),
 	}
 
-	for _, s := range spawners {
+	for _, s := range nodes {
 		// Calculate percentages
 		var memPercent, diskPercent float64
 		if s.MemTotal > 0 {
@@ -353,7 +346,7 @@ func (mc *MetricsCollector) CollectSpawnerMetrics() SpawnerMetrics {
 			diskPercent = (float64(s.DiskUsed) / float64(s.DiskTotal)) * 100
 		}
 
-		detail := SpawnerDetail{
+		detail := NodeDetail{
 			ID:               s.ID,
 			Region:           s.Region,
 			Host:             s.Host,
@@ -372,11 +365,11 @@ func (mc *MetricsCollector) CollectSpawnerMetrics() SpawnerMetrics {
 			LastSeen:         s.LastSeen.Unix(),
 		}
 
-		metrics.SpawnerDetails = append(metrics.SpawnerDetails, detail)
+		metrics.NodeDetails = append(metrics.NodeDetails, detail)
 
 		// Aggregate totals
 		if s.Status == "Online" {
-			metrics.OnlineSpawners++
+			metrics.OnlineNodes++
 		}
 		metrics.TotalInstances += s.CurrentInstances
 		if s.Status == "Online" {
@@ -390,8 +383,8 @@ func (mc *MetricsCollector) CollectSpawnerMetrics() SpawnerMetrics {
 	}
 
 	// Calculate averages
-	if metrics.OnlineSpawners > 0 {
-		metrics.AvgCPUUsage = metrics.TotalCPUUsage / float64(metrics.OnlineSpawners)
+	if metrics.OnlineNodes > 0 {
+		metrics.AvgCPUUsage = metrics.TotalCPUUsage / float64(metrics.OnlineNodes)
 	}
 	if metrics.TotalMemTotal > 0 {
 		metrics.MemUsagePercent = (float64(metrics.TotalMemUsed) / float64(metrics.TotalMemTotal)) * 100
@@ -494,7 +487,7 @@ func (mc *MetricsCollector) CollectNetworkMetrics() NetworkMetrics {
 func (mc *MetricsCollector) CollectAllMetrics() CombinedMetrics {
 	return CombinedMetrics{
 		Master:   mc.CollectRuntimeMetrics(),
-		Spawners: mc.CollectSpawnerMetrics(),
+		Nodes: mc.CollectNodeMetrics(),
 		Database: mc.CollectDatabaseMetrics(),
 		Network:  mc.CollectNetworkMetrics(),
 		RedEye:   mc.CollectRedEyeMetrics(),

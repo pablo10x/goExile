@@ -13,7 +13,7 @@
 
 			body {
 				overflow: hidden;
-				background: #0a0a0a;
+				background: var(--header-bg);
 				font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 			}
 

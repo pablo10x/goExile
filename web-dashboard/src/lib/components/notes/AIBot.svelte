@@ -109,7 +109,7 @@
 					<div class="flex justify-start">
 						<div class="bg-slate-800 rounded-2xl rounded-bl-none px-4 py-2 flex items-center gap-2">
 							<Loader2 class="w-4 h-4 text-violet-400 animate-spin" />
-							<span class="text-xs text-slate-500 dark:text-slate-400">Thinking...</span>
+							<span class="text-xs text-text-dim dark:text-text-dim">Thinking...</span>
 						</div>
 					</div>
 				{/if}

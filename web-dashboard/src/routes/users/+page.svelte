@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { fade, fly, scale } from 'svelte/transition';
+	import { onMount, tick } from 'svelte';
+	import { fade, fly, scale, slide } from 'svelte/transition';
 	import {
 		Users,
 		Search,
@@ -23,11 +23,19 @@
 		Signal,
 		Check,
 		Ban,
-		Shield
+		Shield,
+		ChevronDown,
+		History,
+		Eye,
+		MapPin,
+		HardDrive,
+		Smartphone,
+		Fingerprint
 	} from 'lucide-svelte';
 	import EditPlayerModal from '$lib/components/players/EditPlayerModal.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import StatsCard from '$lib/components/StatsCard.svelte';
+	import Icon from '$lib/components/theme/Icon.svelte';
 	import { notifications, siteSettings } from '$lib/stores';
 
 	interface Player {
@@ -58,6 +66,7 @@
 
 	// Players State
 	let players = $state<Player[]>([]);
+	let expandedPlayerId = $state<number | null>(null);
 
 	// Summary Derived
 	let totalXP = $derived(players.reduce((sum, p) => sum + p.xp, 0));
@@ -137,6 +146,10 @@
 		}
 	}
 
+	function toggleExpand(id: number) {
+		expandedPlayerId = expandedPlayerId === id ? null : id;
+	}
+
 	function refreshCurrentTab() {
 		if (activeTab === 'players') {
 			fetchPlayers();
@@ -213,31 +226,24 @@
 	<div class="fixed inset-0 pointer-events-none z-[100] bg-vignette opacity-40"></div>
 	
 	<!-- Main Content Chassis -->
-	<div class="w-full h-full flex flex-col gap-10 relative z-10 pb-32 md:pb-12">
+	<div class="w-full h-full flex flex-col gap-8 relative z-10 pb-32 md:pb-12">
 		
-		<!-- Intelligence Header (Responsive Scale) -->
-		<div class="flex flex-col xl:flex-row xl:items-end justify-between gap-8 border-l-4 border-rust pl-4 sm:pl-10 py-2 bg-[#0a0a0a]/60 backdrop-blur-xl shadow-2xl relative overflow-hidden industrial-frame">
+		<!-- Intelligence Header -->
+		<div class="flex flex-col xl:flex-row xl:items-end justify-between gap-8 border-l-4 border-rust pl-4 sm:pl-10 py-4 bg-[var(--header-bg)] shadow-2xl relative overflow-hidden industrial-frame">
 			<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
 			
 			<div class="space-y-4 p-2 relative z-10">
 				<div class="flex items-center gap-4">
-					<span class="bg-rust text-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-rust/20">CLASSIFIED_ACCESS</span>
+					<div class="flex items-center gap-2">
+						<Fingerprint class="w-4 h-4 text-rust animate-pulse" />
+						<span class="text-rust text-[9px] font-black uppercase tracking-[0.3em]">Neural_Registry_v2.0</span>
+					</div>
 					<div class="w-px h-3 bg-stone-800"></div>
-					<span class="font-jetbrains text-[9px] font-black text-stone-500 uppercase tracking-[0.4em] italic hidden sm:inline">STATION: EXILE_HIVE_CORE</span>
+					<span class="font-jetbrains text-[9px] font-black text-text-dim uppercase tracking-[0.4em] italic hidden sm:inline">STATION: EXILE_HIVE_CORE</span>
 				</div>
 				<h1 class="text-3xl sm:text-5xl lg:text-7xl font-heading font-black tracking-tighter text-white uppercase leading-none">
-					Player_<span class="text-rust">Registry</span>
+					Subject_<span class="text-rust">Dossiers</span>
 				</h1>
-				<div class="flex flex-wrap items-center gap-4 sm:gap-6 pt-2">
-					<div class="flex items-center gap-3 font-jetbrains text-[10px] font-black text-stone-500 uppercase tracking-widest">
-						<div class="w-2 h-2 bg-emerald-500 shadow-[0_0_10px_#10b981] animate-pulse"></div>
-						SIGNAL_LOCK: STABLE
-					</div>
-					<div class="w-px h-4 bg-stone-800 hidden sm:block"></div>
-					<div class="font-jetbrains text-[10px] font-black text-stone-600 uppercase tracking-widest italic">
-						AUTH_VECTOR: ROOT_ADMIN
-					</div>
-				</div>
 			</div>
 
 			<div class="flex flex-wrap items-center gap-4 sm:gap-8 p-4 relative z-10">
@@ -245,22 +251,22 @@
 				<div class="flex gap-2 bg-black/40 p-1 border border-stone-800 shadow-inner flex-1 sm:flex-initial">
 					<button
 						onclick={() => (activeTab = 'players')}
-						class="flex flex-col items-start px-4 sm:px-8 py-2 sm:py-4 transition-all duration-500 relative group flex-1 sm:flex-initial {activeTab === 'players' ? 'bg-rust text-white shadow-xl shadow-rust/30' : 'text-stone-600 hover:text-stone-300 hover:bg-stone-900'}"
+						class="flex flex-col items-start px-4 sm:px-8 py-2 sm:py-4 transition-all duration-500 relative group flex-1 sm:flex-initial {activeTab === 'players' ? 'bg-rust text-white shadow-xl shadow-rust/30' : 'text-text-dim hover:text-stone-300 hover:bg-stone-900'}"
 					>
-						<span class="font-jetbrains text-[8px] font-black tracking-[0.3em] uppercase mb-1 opacity-50">Identity Base</span>
-						<span class="font-heading text-xs sm:text-base font-black tracking-widest uppercase">Players</span>
+						<span class="font-jetbrains text-[8px] font-black tracking-[0.3em] uppercase mb-1 opacity-50">Operational Base</span>
+						<span class="font-heading text-xs sm:text-base font-black tracking-widest uppercase">Subjects</span>
 						{#if activeTab === 'players'}
 							<div class="absolute -top-1 -right-1 w-2 h-2 bg-rust shadow-[0_0_10px_var(--color-rust)]"></div>
 						{/if}
 					</button>
 					<button
 						onclick={() => (activeTab = 'reports')}
-						class="flex flex-col items-start px-4 sm:px-8 py-2 sm:py-4 transition-all duration-500 relative group flex-1 sm:flex-initial {activeTab === 'reports' ? 'bg-red-600 text-white shadow-xl shadow-red-900/30' : 'text-stone-600 hover:text-stone-300 hover:bg-stone-900'}"
+						class="flex flex-col items-start px-4 sm:px-8 py-2 sm:py-4 transition-all duration-500 relative group flex-1 sm:flex-initial {activeTab === 'reports' ? 'bg-danger text-white shadow-xl shadow-red-900/30' : 'text-text-dim hover:text-stone-300 hover:bg-stone-900'}"
 					>
-						<span class="font-jetbrains text-[8px] font-black tracking-[0.3em] uppercase mb-1 opacity-50">Violation Logs</span>
-						<span class="font-heading text-xs sm:text-base font-black tracking-widest uppercase">Reports</span>
+						<span class="font-jetbrains text-[8px] font-black tracking-[0.3em] uppercase mb-1 opacity-50">Anomaly Logs</span>
+						<span class="font-heading text-xs sm:text-base font-black tracking-widest uppercase">Incidents</span>
 						{#if activeTab === 'reports'}
-							<div class="absolute -top-1 -right-1 w-2 h-2 bg-red-600 shadow-[0_0_100px_#ef4444]"></div>
+							<div class="absolute -top-1 -right-1 w-2 h-2 bg-danger shadow-[0_0_100px_#ef4444]"></div>
 						{/if}
 					</button>
 				</div>
@@ -270,7 +276,7 @@
 					disabled={activeTab === 'players' ? playersLoading : reportsLoading}
 					class="p-3 sm:p-5 border border-stone-800 bg-stone-950/60 hover:bg-rust hover:text-white hover:border-rust transition-all shadow-xl active:translate-y-px disabled:opacity-20"
 				>
-					<RefreshCw class="w-4 h-4 sm:w-6 sm:h-6 {(activeTab === 'players' ? playersLoading : reportsLoading) ? 'animate-spin' : ''}" />
+					<Icon name="ph:arrows-clockwise-bold" size="1.25rem" class="{(activeTab === 'players' ? playersLoading : reportsLoading) ? 'animate-spin' : ''}" />
 				</button>
 			</div>
 		</div>
@@ -280,191 +286,292 @@
 			<StatsCard 
 				title="Total Subjects" 
 				value={players.length} 
-				Icon={Users} 
+				iconName="ph:users-bold" 
 				color="rust"
 				subValue="Neural Registry Size"
 			/>
 			<StatsCard 
 				title="Uplink Active" 
 				value={onlineCount} 
-				Icon={Activity} 
+				iconName="activity" 
 				color="emerald"
 				subValue={`${((onlineCount / (players.length || 1)) * 100).toFixed(1)}% Saturation`}
 			/>
 			<StatsCard 
 				title="Cumulative XP" 
 				value={totalXP.toLocaleString()} 
-				Icon={Dna} 
+				iconName="ph:dna-bold" 
 				color="orange"
 				subValue="Total Biomass Growth"
 			/>
 			<StatsCard 
 				title="Active Reports" 
 				value={reports.length} 
-				Icon={ShieldAlert} 
+				iconName="ph:shield-warning-bold" 
 				color="red"
 				subValue={`${bannedCount} Banned Entities`}
 			/>
 		</div>
 
-		<!-- Command & Query Line -->
-		<div class="grid grid-cols-1 xl:grid-cols-12 gap-8 items-center px-2">
-			<div class="xl:col-span-7 relative group">
-				<div class="absolute left-6 top-1/2 -translate-y-1/2 text-rust font-black text-xl pointer-events-none opacity-50 group-focus-within:opacity-100 transition-opacity">$</div>
+		<!-- Neural Scanner HUD -->
+		<div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-center px-2">
+			<div class="xl:col-span-8 relative group">
+				<div class="absolute left-6 top-1/2 -translate-y-1/2 flex items-center gap-3 pointer-events-none opacity-50 group-focus-within:opacity-100 transition-opacity">
+					<Search class="w-5 h-5 text-rust" />
+					<div class="w-px h-4 bg-stone-800"></div>
+				</div>
 				{#if activeTab === 'players'}
 					<input
 						type="text"
 						bind:value={playerSearchQuery}
-						placeholder="FILTER_BY_NEURAL_SIGNATURE..."
-						class="w-full bg-stone-950 border border-stone-800 pl-14 pr-10 py-5 font-jetbrains text-sm text-stone-200 font-bold tracking-[0.2em] focus:border-rust outline-none transition-all uppercase placeholder:text-stone-900 italic shadow-inner industrial-frame"
+						placeholder="SCAN_FOR_NEURAL_SIGNATURE (NAME / ID / DEVICE)..."
+						class="w-full bg-stone-950/80 backdrop-blur-md border border-stone-800 pl-16 pr-10 py-5 font-jetbrains text-sm text-stone-200 font-bold tracking-[0.2em] focus:border-rust outline-none transition-all uppercase placeholder:text-stone-900 italic shadow-2xl industrial-frame"
 					/>
 				{:else}
 					<input
 						type="text"
 						bind:value={reportSearchQuery}
-						placeholder="FILTER_BY_FAULT_LOG_VECTOR..."
-						class="w-full bg-stone-950 border border-stone-800 pl-14 pr-10 py-5 font-jetbrains text-sm text-stone-200 font-bold tracking-[0.2em] focus:border-rust outline-none transition-all uppercase placeholder:text-stone-900 italic shadow-inner industrial-frame"
+						placeholder="SCAN_FOR_FAULT_VECTORS (REASON / SERVER)..."
+						class="w-full bg-stone-950/80 backdrop-blur-md border border-stone-800 pl-16 pr-10 py-5 font-jetbrains text-sm text-stone-200 font-bold tracking-[0.2em] focus:border-rust outline-none transition-all uppercase placeholder:text-stone-900 italic shadow-2xl industrial-frame"
 					/>
 				{/if}
+				<!-- Scanning Line Effect -->
+				<div class="absolute inset-0 border border-rust/0 group-focus-within:border-rust/20 pointer-events-none transition-colors"></div>
 			</div>
 			
-			<div class="xl:col-span-3 flex items-center gap-4 bg-black/40 p-1 border border-stone-800 shadow-inner industrial-frame">
-				<span class="font-jetbrains text-[8px] font-black text-stone-600 uppercase tracking-widest pl-4 shrink-0">Sort_By:</span>
+			<div class="xl:col-span-4 flex items-center gap-4 bg-black/40 p-1.5 border border-stone-800 shadow-inner industrial-frame">
+				<span class="font-jetbrains text-[8px] font-black text-text-dim uppercase tracking-widest pl-4 shrink-0 italic">Sorting_Kernel:</span>
 				<div class="flex gap-1 flex-1">
 					{#each [
-						{ id: 'id', label: 'ID' },
-						{ id: 'name', label: 'NM' },
-						{ id: 'xp', label: 'XP' },
-						{ id: 'updated_at', label: 'TS' }
+						{ id: 'id', label: 'Hex_ID' },
+						{ id: 'name', label: 'Alpha' },
+						{ id: 'xp', label: 'Biomass' },
+						{ id: 'updated_at', label: 'Last_Seen' }
 					] as sort}
 						<button 
 							onclick={() => playerSortBy = sort.id as any}
-							class="flex-1 py-2 text-[9px] font-black uppercase transition-all {playerSortBy === sort.id ? 'bg-rust text-white shadow-lg shadow-rust/20' : 'text-stone-600 hover:text-stone-300 hover:bg-stone-900'}"
+							class="flex-1 py-3 text-[9px] font-black uppercase transition-all {playerSortBy === sort.id ? 'bg-rust text-white shadow-lg' : 'text-text-dim hover:text-stone-300 hover:bg-stone-900'}"
 						>
 							{sort.label}
 						</button>
 					{/each}
 				</div>
 			</div>
-
-			<div class="xl:col-span-2 flex items-center justify-end gap-5 font-jetbrains text-[10px] font-black text-stone-600 uppercase tracking-[0.3em] italic shrink-0">
-				<div class="flex items-center gap-3">
-					<div class="w-1.5 h-1.5 bg-rust animate-ping"></div>
-					SYNC_ACTIVE
-				</div>
-				<div class="w-px h-4 bg-stone-800"></div>
-				<Activity class="w-4 h-4 text-rust" />
-			</div>
 		</div>
 
-		<!-- Data Briefing Cards -->
-		<div class="flex-1 overflow-y-auto custom-scrollbar px-2 space-y-4">
+		<!-- Strategic Intelligence Grid -->
+		<div class="flex-1 overflow-y-auto custom-scrollbar px-2">
 			{#if activeTab === 'players'}
 				{#if playersLoading && players.length === 0}
 					<div class="py-40 flex flex-col items-center gap-6">
 						<div class="w-16 h-16 border-2 border-rust border-t-transparent rounded-none animate-spin shadow-lg shadow-rust/20"></div>
-						<span class="font-heading font-black text-[12px] font-black tracking-[0.6em] uppercase text-rust animate-pulse">Uplink_Synchronizing...</span>
+						<span class="font-heading font-black text-[12px] font-black tracking-[0.6em] uppercase text-rust animate-pulse">Neural_Sync_Active...</span>
 					</div>
 				{:else if filteredPlayers.length === 0}
 					<div class="py-40 flex flex-col items-center gap-6 opacity-40">
-						<div class="p-8 bg-stone-900/20 border border-stone-800 industrial-frame">
-							<Search class="w-16 h-16 opacity-10" />
+						<div class="p-10 bg-stone-900/40 border border-stone-800 industrial-frame">
+							<AlertOctagon class="w-16 h-16 text-stone-800" />
 						</div>
-						<span class="font-heading font-black text-xl tracking-[0.4em] uppercase italic text-stone-700">>> ZERO_RECORDS_MAPPED</span>
+						<span class="font-heading font-black text-xl tracking-[0.4em] uppercase italic text-stone-700">>> SUBJECT_NOT_FOUND_IN_SECTOR</span>
 					</div>
 				{:else}
-					<div class="grid grid-cols-1 gap-4">
+					<div class="grid grid-cols-1 xl:grid-cols-2 gap-6 pb-20">
 						{#each filteredPlayers as player (player.id)}
+							{@const isExpanded = expandedPlayerId === player.id}
 							<div 
-								class="modern-industrial-card glass-panel group relative flex flex-col xl:flex-row items-stretch overflow-hidden shadow-2xl"
+								class="modern-industrial-card glass-panel group relative flex flex-col overflow-hidden shadow-2xl transition-all duration-500 {isExpanded ? 'border-rust shadow-rust/20 ring-1 ring-rust/30' : 'hover:border-rust/40'}"
 								class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
-								class:rounded-2xl={!$siteSettings.aesthetic.industrial_styling}
 								in:fade={{ duration: 200 }}
 							>
-								<!-- Tactical Corners -->
-								<div class="corner-tl"></div>
-								<div class="corner-tr"></div>
-								<div class="corner-bl"></div>
-								<div class="corner-br"></div>
-
-								<!-- Subject Signal Marker -->
-								<div class={`w-2 shrink-0 relative transition-colors duration-500 z-10 ${player.banned ? 'bg-red-600 shadow-[0_0_15px_#ef4444]' : (player.online ? 'bg-emerald-500 shadow-[0_0_15px_#10b981]' : 'bg-stone-800')}`}>
+								<!-- Top Status Indicator -->
+								<div class={`h-1.5 w-full relative transition-colors duration-500 z-10 ${player.banned ? 'bg-danger' : (player.online ? 'bg-success' : 'bg-stone-800')}`}>
 									{#if player.online && !player.banned}
-										<div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+										<div class="absolute inset-0 bg-white/30 animate-glow-slide"></div>
 									{/if}
 								</div>
 
-								<!-- Identification Block -->
-								<div class="flex-1 p-4 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-10 items-center relative z-10">
-									<div class="lg:col-span-4 flex items-center gap-4 sm:gap-8">
-										<div class="w-12 h-12 sm:w-16 sm:h-16 bg-stone-950 border border-stone-800 flex items-center justify-center text-white font-heading font-black italic text-xl sm:text-2xl group-hover:border-rust group-hover:text-rust transition-all duration-500 industrial-frame shadow-inner shrink-0">
-											{player.name.charAt(0).toUpperCase()}
-										</div>
-										<div class="min-w-0">
-											<div class="flex items-center gap-3">
-												<h3 class="text-xl sm:text-3xl font-heading font-black tracking-tighter text-white uppercase leading-none group-hover:text-rust transition-all duration-500 truncate">{player.name}</h3>
+								<div class="p-6 flex flex-col gap-6 relative z-10">
+									<!-- Subject Primary Identity -->
+									<div class="flex items-start justify-between gap-4">
+										<div class="flex items-center gap-5">
+											<!-- Bio-Metric Icon -->
+											<div 
+												class="w-16 h-16 bg-stone-950 border border-stone-800 flex items-center justify-center text-white font-heading font-black italic text-2xl group-hover:border-rust transition-all duration-500 industrial-frame shadow-inner shrink-0 relative overflow-hidden"
+												onclick={() => toggleExpand(player.id)}
+												role="button"
+												tabindex="0"
+												onkeydown={(e) => e.key === 'Enter' && toggleExpand(player.id)}
+											>
+												<div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
 												{#if player.banned}
-													<span class="bg-red-600 text-white text-[8px] font-black px-2 py-0.5 animate-pulse uppercase tracking-widest">Banned</span>
+													<Ban class="w-8 h-8 text-danger/40" />
+												{:else if player.online}
+													<div class="absolute inset-0 flex items-center justify-center opacity-20 animate-pulse">
+														<Dna class="w-10 h-10 text-success" />
+													</div>
+													<span class="relative z-10">{player.name.charAt(0).toUpperCase()}</span>
+												{:else}
+													{player.name.charAt(0).toUpperCase()}
 												{/if}
 											</div>
-											<p class="font-mono text-[8px] sm:text-[10px] font-black text-stone-600 tracking-[0.3em] uppercase mt-2 italic">ID: 0x{player.id.toString(16).toUpperCase()}</p>
-										</div>
-									</div>
 
-									<!-- Metadata Briefing -->
-									<div class="lg:col-span-5 grid grid-cols-2 gap-4 sm:gap-10 border-l-0 sm:border-l border-stone-800/50 pl-0 sm:pl-10 font-jetbrains">
-										<div>
-											<div class="text-[8px] sm:text-[9px] font-black text-stone-700 uppercase tracking-[0.2em] mb-1 sm:mb-2 italic">UID_Hash</div>
-											<div class="text-[10px] sm:text-xs font-mono font-bold text-stone-500 tracking-tight truncate uppercase italic">{player.uid || 'NULL_PTR'}</div>
-										</div>
-										<div>
-											<div class="text-[8px] sm:text-[9px] font-black text-stone-700 uppercase tracking-[0.2em] mb-1 sm:mb-2 italic">XP_Buffer</div>
-											<div class="text-lg sm:text-2xl font-mono font-bold text-amber-500 tracking-tighter leading-none flex items-baseline gap-2">
-												{player.xp.toLocaleString()} <span class="font-jetbrains text-[8px] sm:text-[9px] font-black text-stone-700 uppercase tracking-widest">XP</span>
+											<div class="min-w-0 flex-1">
+												<div class="flex items-center gap-3 flex-wrap">
+													<h3 
+														class="text-2xl sm:text-3xl font-heading font-black tracking-tighter text-white uppercase leading-none group-hover:text-rust transition-all duration-500 truncate cursor-pointer"
+														onclick={() => toggleExpand(player.id)}
+														role="button"
+														tabindex="0"
+														onkeydown={(e) => e.key === 'Enter' && toggleExpand(player.id)}
+													>
+														{player.name}
+													</h3>
+													{#if player.banned}
+														<div class="bg-danger text-white text-[7px] font-black px-2 py-0.5 tracking-[0.2em] flex items-center gap-1 shadow-lg shadow-red-900/40 border border-red-400/30">
+															TERMINATED
+														</div>
+													{/if}
+													{#if player.online}
+														<div class="bg-success/10 text-success text-[7px] font-black px-2 py-0.5 tracking-[0.2em] border border-emerald-500/30">
+															UPLINK_LIVE
+														</div>
+													{/if}
+												</div>
+												<div class="flex items-center gap-4 mt-3">
+													<span class="font-mono text-[9px] font-black text-text-dim uppercase tracking-[0.2em] italic">Sig: 0x{player.id.toString(16).toUpperCase()}</span>
+													<div class="w-px h-2 bg-stone-800"></div>
+													<div class="flex items-center gap-2">
+														<div class={`w-1.5 h-1.5 rounded-full ${player.online ? 'bg-success shadow-[0_0_8px_var(--color-success)] animate-pulse' : 'bg-stone-800'}`}></div>
+														<span class="text-[8px] font-black text-stone-600 uppercase tracking-widest">{player.online ? 'Active' : 'Standby'}</span>
+													</div>
+												</div>
 											</div>
 										</div>
+
+										<div class="flex flex-col gap-1">
+											<button 
+												onclick={() => openEditModal(player)}
+												class="p-2.5 text-stone-600 hover:text-white hover:bg-rust/20 hover:border-rust/50 transition-all border border-stone-800/50 bg-stone-900/40"
+												title="Edit Dossier"
+											>
+												<Pencil class="w-4 h-4" />
+											</button>
+											<button 
+												onclick={() => toggleExpand(player.id)}
+												class="p-2.5 text-stone-600 hover:text-rust transition-all border border-stone-800/50 bg-stone-900/40"
+											>
+												<ChevronDown class="w-4 h-4 transition-transform duration-500 {isExpanded ? 'rotate-180' : ''}" />
+											</button>
+										</div>
 									</div>
 
-									<!-- Uplink Info -->
-									<div class="lg:col-span-3 space-y-2 border-l-0 sm:border-l border-stone-800/50 pl-0 sm:pl-10 hidden sm:block font-jetbrains">
-										<div class="flex items-center gap-3">
-											<Clock class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-stone-700" />
-											<span class="text-[10px] sm:text-[11px] font-mono font-bold text-white uppercase tracking-widest">{new Date(player.updated_at).toLocaleDateString()}</span>
+									<!-- Bio-Metric Data Rack -->
+									<div class="grid grid-cols-3 gap-4">
+										<div class="col-span-2 bg-black/40 p-4 border border-stone-800 industrial-frame relative overflow-hidden group/rack">
+											<div class="absolute top-0 left-0 w-full h-[1px] bg-warning/20"></div>
+											<span class="text-[7px] font-black text-stone-600 uppercase tracking-widest block italic mb-2">XP_Yield (Biomass)</span>
+											<div class="flex items-end justify-between">
+												<div class="text-2xl font-mono font-bold text-warning tracking-tighter flex items-center gap-2">
+													{player.xp.toLocaleString()}
+													<Dna class="w-4 h-4 opacity-20" />
+												</div>
+												<!-- Mini Sparkline Simulation -->
+												<div class="flex items-end gap-0.5 h-6 mb-1">
+													{#each Array(8) as _, i}
+														<div class="w-1 bg-warning/20 group-hover/rack:bg-warning/40 transition-all" style="height: {20 + Math.random() * 80}%; transition-delay: {i * 50}ms"></div>
+													{/each}
+												</div>
+											</div>
 										</div>
-										<div class="font-mono text-[8px] sm:text-[9px] font-black text-rust-light tracking-[0.3em] uppercase pl-7 opacity-60">
-											TS: {new Date(player.updated_at).toLocaleTimeString([], { hour12: false })}
+										<div class="bg-black/40 p-4 border border-stone-800 industrial-frame flex flex-col justify-between">
+											<span class="text-[7px] font-black text-stone-600 uppercase tracking-widest block italic">Clearance</span>
+											<div class="text-xl font-heading font-black text-rust-light tracking-tighter text-right">LV_{Math.floor(player.xp / 1000) + 1}</div>
+										</div>
+									</div>
+
+									<!-- Expandable Intel Dossier -->
+									{#if isExpanded}
+										<div class="space-y-6 pt-4 border-t border-stone-800/50" transition:slide>
+											<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+												<div class="space-y-4">
+													<div class="flex items-center gap-2 text-stone-500">
+														<Fingerprint class="w-3.5 h-3.5" />
+														<span class="text-[9px] font-black uppercase tracking-widest">Neural_Uplink_Signature</span>
+													</div>
+													<div class="bg-stone-950 p-3 border border-stone-800 text-[10px] font-mono text-text-dim break-all uppercase italic shadow-inner">
+														{player.uid || 'NO_SIGNATURE_DETECTED'}
+													</div>
+												</div>
+												<div class="space-y-4">
+													<div class="flex items-center gap-2 text-stone-500">
+														<Smartphone class="w-3.5 h-3.5" />
+														<span class="text-[9px] font-black uppercase tracking-widest">Hardware_Hash_Vector</span>
+													</div>
+													<div class="bg-stone-950 p-3 border border-stone-800 text-[10px] font-mono text-text-dim break-all uppercase italic shadow-inner">
+														{player.device_id || 'LOCAL_SIMULATION_NODE'}
+													</div>
+												</div>
+											</div>
+
+											<div class="grid grid-cols-3 gap-4">
+												<div class="bg-stone-900/40 p-4 border border-stone-800 flex flex-col gap-2">
+													<div class="flex items-center gap-2 text-stone-600">
+														<MapPin class="w-3 h-3" />
+														<span class="text-[8px] font-black uppercase tracking-widest">Last_Geo</span>
+													</div>
+													<span class="text-[10px] font-black text-stone-300 uppercase truncate">{player.last_joined_server?.split('-').pop() || 'Unknown'}</span>
+												</div>
+												<div class="bg-stone-900/40 p-4 border border-stone-800 flex flex-col gap-2">
+													<div class="flex items-center gap-2 text-stone-600">
+														<Clock class="w-3 h-3" />
+														<span class="text-[8px] font-black uppercase tracking-widest">Enlisted</span>
+													</div>
+													<span class="text-[10px] font-black text-stone-300 uppercase">{new Date(player.created_at).toLocaleDateString()}</span>
+												</div>
+												<div class="bg-stone-900/40 p-4 border border-stone-800 flex flex-col gap-2">
+													<div class="flex items-center gap-2 text-stone-600">
+														<Shield class="w-3 h-3" />
+														<span class="text-[8px] font-black uppercase tracking-widest">Status</span>
+													</div>
+													<span class={`text-[10px] font-black uppercase ${player.banned ? 'text-danger' : 'text-success'}`}>{player.banned ? 'Terminated' : 'Clear'}</span>
+												</div>
+											</div>
+										</div>
+									{/if}
+
+									<!-- Interaction Footer -->
+									<div class="flex items-center justify-between border-t border-stone-800/30 pt-4">
+										<div class="flex items-center gap-4 text-text-dim">
+											<div class="flex items-center gap-2">
+												<Clock class="w-3 h-3 opacity-40" />
+												<span class="text-[8px] font-black uppercase tracking-widest">Last_Uplink: {new Date(player.updated_at).toLocaleTimeString([], { hour12: false })}</span>
+											</div>
+										</div>
+										
+										<div class="flex gap-2">
+											<button 
+												onclick={() => toggleBan(player)}
+												class="px-4 py-1.5 text-[8px] font-black uppercase tracking-widest transition-all {player.banned ? 'bg-success text-white' : 'bg-red-950/20 text-danger border border-red-900/30 hover:bg-danger hover:text-white'}"
+											>
+												{player.banned ? '[RESTORE_ACCESS]' : '[TERMINATE_UPLINK]'}
+											</button>
+											<button 
+												onclick={() => confirmDelete(player)}
+												class="px-4 py-1.5 text-[8px] font-black text-stone-700 hover:text-white hover:bg-red-600 border border-stone-800 uppercase tracking-widest transition-all"
+											>
+												[PURGE_FILE]
+											</button>
 										</div>
 									</div>
 								</div>
 
-								<!-- Tactical Actions -->
-								<div class="flex flex-row xl:flex-col divide-x xl:divide-x-0 xl:divide-y divide-stone-800 border-l border-stone-800 bg-stone-900/20 relative z-10">
-									<button 
-										onclick={() => openEditModal(player)}
-										class="flex-1 px-8 py-6 xl:py-0 xl:h-1/3 hover:bg-rust/20 hover:text-rust transition-all flex items-center justify-center group/btn text-stone-600"
-										title="Modify_Subject"
-									>
-										<Pencil class="w-5 h-5 transition-transform duration-500 group-hover/btn:scale-125" />
-									</button>
-									<button 
-										onclick={() => toggleBan(player)}
-										class="flex-1 px-8 py-6 xl:py-0 xl:h-1/3 hover:bg-red-600/20 {player.banned ? 'text-emerald-500' : 'text-red-500'} transition-all flex items-center justify-center group/btn text-stone-600"
-										title={player.banned ? "Restore_Subject" : "Ban_Subject"}
-									>
-										{#if player.banned}
-											<CheckCircle class="w-5 h-5 transition-transform duration-500 group-hover/btn:scale-125" />
-										{:else}
-											<Ban class="w-5 h-5 transition-transform duration-500 group-hover/btn:scale-125" />
-										{/if}
-									</button>
-									<button 
-										onclick={() => confirmDelete(player)}
-										class="flex-1 px-8 py-6 xl:py-0 xl:h-1/3 hover:bg-red-600/20 hover:text-red-500 transition-all flex items-center justify-center group/btn text-stone-600"
-										title="Purge_Subject"
-									>
-										<Trash2 class="w-5 h-5 transition-transform duration-500 group-hover/btn:scale-125" />
-									</button>
-								</div>
+								<!-- Background Aesthetics -->
+								<div class="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('/grid.svg')] bg-center group-hover:opacity-[0.05] transition-opacity"></div>
+								{#if isExpanded}
+									<div class="absolute top-0 right-0 p-10 opacity-[0.02] pointer-events-none">
+										<Dna class="w-40 h-40 text-rust" />
+									</div>
+								{/if}
 							</div>
 						{/each}
 					</div>
@@ -473,7 +580,7 @@
 				<!-- Incident Briefing Cards -->
 				{#if reportsLoading && reports.length === 0}
 					<div class="py-40 flex flex-col items-center gap-6">
-						<div class="w-16 h-[1px] bg-red-600 animate-pulse"></div>
+						<div class="w-16 h-[1px] bg-danger animate-pulse"></div>
 						<span class="font-heading font-black text-[12px] font-black tracking-[0.6em] uppercase text-red-600">INCIDENT_BUFFER_SYNC...</span>
 					</div>
 				{:else if filteredReports.length === 0}
@@ -499,7 +606,7 @@
 								<div class="corner-br"></div>
 
 								<!-- Fault Level Marker -->
-								<div class="w-2 bg-red-600 shrink-0 relative overflow-hidden shadow-[0_0_20px_#ef4444] z-10">
+								<div class="w-2 bg-danger shrink-0 relative overflow-hidden shadow-[0_0_20px_#ef4444] z-10">
 									<div class="absolute inset-0 bg-white/20 animate-pulse"></div>
 								</div>
 
@@ -507,15 +614,15 @@
 									<!-- Violation Detail -->
 									<div class="xl:col-span-5 space-y-4">
 										<div class="flex items-center gap-5">
-											<div class="p-3 border border-red-600/30 bg-red-600/10 text-red-500 industrial-frame shrink-0">
-												<ShieldAlert class="w-6 h-6 animate-pulse" />
+											<div class="p-3 border border-red-600/30 bg-danger/10 text-danger industrial-frame shrink-0">
+												<Icon name="ph:shield-warning-bold" size="1.5rem" class="animate-pulse" />
 											</div>
 											<div class="min-w-0">
 												<h3 class="text-2xl font-heading font-black tracking-tighter text-white uppercase leading-none truncate">Report ID: {report.id}</h3>
 												<p class="font-jetbrains text-[9px] font-black text-red-900 uppercase tracking-[0.3em] mt-2 italic font-bold">Severity: High</p>
 											</div>
 										</div>
-										<div class="font-mono text-xs font-bold text-red-500 bg-red-950/10 border-l-2 border-red-600 p-5 tracking-widest uppercase leading-relaxed shadow-inner">
+										<div class="font-mono text-xs font-bold text-danger bg-red-950/10 border-l-2 border-red-600 p-5 tracking-widest uppercase leading-relaxed shadow-inner">
 											&gt;&gt; "{report.reason.toUpperCase()}"
 										</div>
 									</div>
@@ -525,7 +632,7 @@
 										<div class="space-y-3">
 											<div class="font-jetbrains text-[9px] font-black text-stone-700 uppercase tracking-[0.3em] italic">Origin_Node_Sig</div>
 											<div class="flex items-center gap-4">
-												<div class="w-10 h-10 bg-stone-950 border border-stone-800 flex items-center justify-center text-xs font-heading font-black italic text-stone-500 shrink-0 industrial-frame">{ (report.reporter_name || 'U').charAt(0).toUpperCase() }</div>
+												<div class="w-10 h-10 bg-stone-950 border border-stone-800 flex items-center justify-center text-xs font-heading font-black italic text-text-dim shrink-0 industrial-frame">{ (report.reporter_name || 'U').charAt(0).toUpperCase() }</div>
 												<div class="min-w-0">
 													<div class="font-heading text-sm font-black text-white italic uppercase truncate tracking-tight">{report.reporter_name || 'ANON_USER'}</div>
 													<div class="font-mono text-[9px] text-stone-700 font-bold uppercase tracking-widest mt-1">HEX: 0x{report.reporter_id.toString(16).toUpperCase()}</div>
@@ -535,9 +642,9 @@
 										<div class="space-y-3">
 											<div class="font-jetbrains text-[9px] font-black text-stone-700 uppercase tracking-[0.3em] italic">Target_Node_Sig</div>
 											<div class="flex items-center gap-4">
-												<div class="w-10 h-10 bg-red-950/30 border border-red-600/30 flex items-center justify-center text-xs font-heading font-black italic text-red-500 shrink-0 industrial-frame shadow-lg shadow-red-900/10">{ (report.reported_user_name || 'U').charAt(0).toUpperCase() }</div>
+												<div class="w-10 h-10 bg-red-950/30 border border-red-600/30 flex items-center justify-center text-xs font-heading font-black italic text-danger shrink-0 industrial-frame shadow-lg shadow-red-900/10">{ (report.reported_user_name || 'U').charAt(0).toUpperCase() }</div>
 												<div class="min-w-0">
-													<div class="font-heading text-sm font-black text-red-500 italic uppercase truncate underline decoration-1 decoration-red-600/20 underline-offset-4 tracking-tight">{report.reported_user_name || 'VOID_RECO'}</div>
+													<div class="font-heading text-sm font-black text-danger italic uppercase truncate underline decoration-1 decoration-red-600/20 underline-offset-4 tracking-tight">{report.reported_user_name || 'VOID_RECO'}</div>
 													<div class="font-mono text-[9px] text-stone-700 font-bold uppercase tracking-widest mt-1">HEX: 0x{report.reported_user_id.toString(16).toUpperCase()}</div>
 												</div>
 											</div>
@@ -550,7 +657,7 @@
 											<div class="font-jetbrains text-[9px] font-black text-stone-700 uppercase tracking-[0.3em] mb-3 italic">Sector_Linkage</div>
 											{#if report.game_server_instance_id}
 												<div class="flex items-center gap-3 font-mono text-[10px] font-black text-rust-light italic uppercase bg-stone-950 px-4 py-2 border border-stone-800 shadow-inner group-hover:border-rust/30 transition-all">
-													<Server class="w-4 h-4 text-rust shadow-rust/50" />
+													<Icon name="server" size="1rem" class="text-rust shadow-rust/50" />
 													<span class="tracking-widest">{report.game_server_instance_id.slice(0, 12)}...</span>
 												</div>
 											{:else}
@@ -570,25 +677,25 @@
 			{/if}
 		</div>
 
-		<!-- Tactical Intel Footer -->
-		<div class="border-t border-stone-800 bg-[#0a0a0a]/60 p-8 flex flex-col md:flex-row justify-between items-center gap-10 font-jetbrains text-[10px] font-black tracking-[0.4em] uppercase text-stone-700 italic industrial-frame">
-			<div class="flex flex-wrap justify-center gap-16">
+		<!-- Tactical Status Rail -->
+		<div class="border-t border-stone-800 bg-[var(--header-bg)]/80 backdrop-blur-xl p-6 flex flex-col md:flex-row justify-between items-center gap-10 font-jetbrains text-[9px] font-black tracking-[0.4em] uppercase text-stone-600 italic industrial-frame shadow-[0_-10px_50px_rgba(0,0,0,0.5)]">
+			<div class="flex flex-wrap justify-center gap-12 sm:gap-20">
 				<div class="flex items-center gap-4 group/item cursor-default">
-					<Cpu class="w-5 h-5 text-rust group-hover/item:scale-125 transition-all duration-500 opacity-40 group-hover:opacity-100" />
-					<span class="group-hover/item:text-stone-400 transition-colors">Core_Load: Nominal</span>
+					<Activity class="w-4 h-4 text-emerald-500 animate-pulse" />
+					<span class="group-hover/item:text-stone-400 transition-colors">Uplink_Signal: Optimized</span>
 				</div>
 				<div class="flex items-center gap-4 group/item cursor-default">
-					<Database class="w-5 h-5 text-rust group-hover/item:scale-125 transition-all duration-500 opacity-40 group-hover:opacity-100" />
-					<span class="group-hover/item:text-stone-400 transition-colors">Registry: Synchronized</span>
+					<Shield class="w-4 h-4 text-rust" />
+					<span class="group-hover/item:text-stone-400 transition-colors">Neural_Armor: Active</span>
 				</div>
-				<div class="flex items-center gap-4 group/item cursor-default text-white/80 border-b border-rust/30 pb-1">
-					<Lock class="w-5 h-5 text-rust shadow-rust/50" />
-					<span class="tracking-[0.5em]">Cipher: AES_256_GCM</span>
+				<div class="flex items-center gap-4 group/item cursor-default">
+					<Database class="w-4 h-4 text-rust opacity-40" />
+					<span class="group-hover/item:text-stone-400 transition-colors">Data_Integrity: 100%</span>
 				</div>
 			</div>
-			<div class="flex items-center gap-5 text-stone-800 font-black px-6 py-3 border border-stone-800 bg-black/40 shadow-inner industrial-frame">
-				<ChevronRight class="w-5 h-5 animate-pulse text-rust" />
-				<span class="text-white opacity-40">Ver: 0.9.4-TAC_PRIME_HD</span>
+			<div class="flex items-center gap-5 text-stone-800 font-black px-6 py-2 border border-stone-800 bg-black/40 shadow-inner industrial-frame group">
+				<div class="w-2 h-2 rounded-full bg-rust shadow-[0_0_10px_var(--color-rust)] group-hover:scale-125 transition-transform"></div>
+				<span class="text-white opacity-30 text-[10px]">OS_KERN: 0.9.4_X_HD</span>
 			</div>
 		</div>
 	</div>
@@ -611,32 +718,30 @@
 </div>
 
 <style>
-	/* Cinematic Command UI Styles (High-Definition Modern Industrial) */
+	/* Cinematic Intelligence Interface Styles */
 	.bg-vignette {
 		background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.8) 100%);
 	}
 
-	@keyframes warmup {
-		0% { opacity: 1; filter: contrast(3) brightness(0); }
-		15% { opacity: 1; filter: contrast(2) brightness(1.5); }
-		30% { opacity: 1; filter: contrast(1.5) brightness(0.5); }
-		100% { opacity: 0; filter: contrast(1) brightness(1); visibility: hidden; }
+	@keyframes glow-slide {
+		0% { transform: translateX(-100%); }
+		100% { transform: translateX(100%); }
 	}
-	.animate-warmup {
-		animation: warmup 1.5s forwards cubic-bezier(0.23, 1, 0.32, 1);
+	.animate-glow-slide {
+		animation: glow-slide 2s infinite linear;
 	}
 
-	/* Industrial High-Res Scrollbar (Modernized) */
+	/* Tactical High-Res Scrollbar */
 	.custom-scrollbar::-webkit-scrollbar {
 		width: 4px;
 		height: 4px;
 	}
 	.custom-scrollbar::-webkit-scrollbar-track {
-		background: #050505;
+		background: var(--terminal-bg);
 	}
 	.custom-scrollbar::-webkit-scrollbar-thumb {
 		background: #1a1a1a;
-		border: 1px solid #050505;
+		border: 1px solid var(--terminal-bg);
 	}
 	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
 		background: var(--color-rust);
@@ -645,7 +750,7 @@
 	:global(body) {
 		-webkit-font-smoothing: antialiased;
 		-moz-osx-font-smoothing: grayscale;
-		background-color: #050505;
+		background-color: var(--terminal-bg);
 	}
 
 	input:focus {

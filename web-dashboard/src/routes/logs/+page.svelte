@@ -16,18 +16,27 @@
 		X
 	} from 'lucide-svelte';
 	import type { SystemLog } from '$lib/types/logs';
+	import Icon from '$lib/components/theme/Icon.svelte';
+	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 
 	let logs = $state<SystemLog[]>([]);
 	let loading = $state(true);
 	let total = $state(0);
 	let limit = 50;
 	let offset = $state(0);
-	let category = $state<'All' | 'Internal' | 'Spawner' | 'Security'>('All');
+	let category = $state<'All' | 'Internal' | 'Node' | 'Security'>('All');
 	let selectedLog = $state<SystemLog | null>(null);
 	let counts = $state<Record<string, number>>({});
 	let selectedIds = $state(new Set<number>());
 
-	const categories = ['All', 'Internal', 'Spawner', 'Security'];
+	// Confirmation States
+	let isConfirmOpen = $state(false);
+	let confirmTitle = $state('');
+	let confirmMessage = $state('');
+	let isCriticalAction = $state(false);
+	let pendingAction = $state<() => Promise<void>>(async () => {});
+
+	const categories = ['All', 'Internal', 'Node', 'Security'];
 
 	async function fetchLogs() {
 		loading = true;
@@ -82,51 +91,39 @@
 		}
 	}
 
-	async function deleteSelected() {
-		const idsToDelete = Array.from(selectedIds);
-		if (idsToDelete.length === 0) return;
+	function requestDeleteSelected() {
+		confirmTitle = 'Purge Selected Signals';
+		confirmMessage = `Initiate localized wipe for ${selectedIds.size} encrypted signals? This action is irreversible.`;
+		isCriticalAction = true;
+		pendingAction = async () => {
+			const idsToDelete = Array.from(selectedIds);
+			const originalLogs = [...logs];
+			logs = logs.filter((l) => !selectedIds.has(l.id));
+			selectedIds = new Set();
 
-		// Optimistic UI update
-		const originalLogs = [...logs];
-		logs = logs.filter((l) => !selectedIds.has(l.id));
-		selectedIds = new Set();
-
-		// Perform deletions in parallel
-		try {
-			await Promise.all(idsToDelete.map((id) => fetch(`/api/logs/${id}`, { method: 'DELETE' })));
-
-			// Update counts approximately
-			if (counts[category]) counts[category] = Math.max(0, counts[category] - idsToDelete.length);
-			if (counts['All']) counts['All'] = Math.max(0, counts['All'] - idsToDelete.length);
-
-			fetchCounts(); // accurate count sync
-		} catch (e) {
-			console.error('Failed to delete selected:', e);
-			logs = originalLogs; // Revert on failure
-			fetchLogs();
-		}
+			try {
+				await Promise.all(idsToDelete.map((id) => fetch(`/api/logs/${id}`, { method: 'DELETE' })));
+				fetchCounts();
+			} catch (e) {
+				logs = originalLogs;
+				fetchLogs();
+				throw e;
+			}
+		};
+		isConfirmOpen = true;
 	}
 
 	async function deleteLog(e: MouseEvent, id: number) {
 		e.stopPropagation();
-		// Removed confirmation as requested
-
 		try {
 			const res = await fetch(`/api/logs/${id}`, { method: 'DELETE' });
 			if (res.ok) {
-				// Optimistically remove from UI to feel instant
 				logs = logs.filter((l) => l.id !== id);
 				if (selectedIds.has(id)) {
 					const newSet = new Set(selectedIds);
 					newSet.delete(id);
 					selectedIds = newSet;
 				}
-
-				if (counts[category]) counts[category]--;
-				if (counts['All']) counts['All']--;
-
-				// Only fetch counts to keep numbers accurate, but don't refetch logs
-				// as it interrupts the exit animation
 				fetchCounts();
 			}
 		} catch (e) {
@@ -134,18 +131,20 @@
 		}
 	}
 
-	async function clearLogs() {
-		if (!confirm('Are you sure you want to clear ALL logs? This cannot be undone.')) return;
-
-		try {
+	function requestClearLogs() {
+		confirmTitle = 'Global Buffer Wipe';
+		confirmMessage = 'Executing root-level protocol to clear ALL system logs. System history will be permanently erased.';
+		isCriticalAction = true;
+		pendingAction = async () => {
 			const res = await fetch('/api/logs', { method: 'DELETE' });
 			if (res.ok) {
 				fetchLogs();
 				fetchCounts();
+			} else {
+				throw new Error('CLEAR_OP_FAILED');
 			}
-		} catch (e) {
-			console.error('Failed to clear logs:', e);
-		}
+		};
+		isConfirmOpen = true;
 	}
 
 	function changeCategory(c: string) {
@@ -171,11 +170,11 @@
 	function getLevelColor(level: string) {
 		switch (level) {
 			case 'ERROR':
-				return 'text-red-400';
+				return 'text-danger';
 			case 'FATAL':
-				return 'text-rose-500 font-bold';
+				return 'text-danger font-bold';
 			case 'WARN':
-				return 'text-orange-400';
+				return 'text-warning';
 			default:
 				return 'text-rust-light';
 		}
@@ -187,18 +186,18 @@
 	});
 </script>
 
-<div class="w-full h-[calc(100vh-140px)] md:h-[calc(100vh-160px)] flex flex-col overflow-hidden relative border border-stone-800 bg-[#050505] shadow-2xl industrial-frame">
+<div class="w-full h-[calc(100vh-140px)] md:h-[calc(100vh-160px)] flex flex-col overflow-hidden relative border border-stone-800 bg-[var(--terminal-bg)] shadow-2xl industrial-frame">
 	<!-- Header -->
-	<div class="flex flex-col md:flex-row justify-between items-start md:items-center p-8 border-b border-stone-800 bg-[#0a0a0a] gap-6 shrink-0 relative z-10">
+	<div class="flex flex-col md:flex-row justify-between items-start md:items-center p-8 border-b border-stone-800 bg-[var(--header-bg)] gap-6 shrink-0 relative z-10">
 		<div class="flex items-center gap-6">
 			<div class="p-4 bg-rust/10 border border-rust/30 industrial-frame shadow-lg">
-				<Activity class="w-8 h-8 text-rust-light" />
+				<Icon name="activity" size="2rem" class="text-rust-light" />
 			</div>
 			<div>
 				<h1 class="text-3xl font-heading font-black text-white uppercase tracking-tighter">
 					SYSTEM_LOG_INTERCEPT
 				</h1>
-				<p class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest font-black mt-1">
+				<p class="font-jetbrains text-[10px] text-text-dim uppercase tracking-widest font-black mt-1">
 					Monitor system-wide anomalies and kernel events
 				</p>
 			</div>
@@ -206,20 +205,20 @@
 		<div class="flex flex-wrap gap-3 items-center w-full md:w-auto">
 			{#if selectedIds.size > 0}
 				<button
-					onclick={deleteSelected}
+					onclick={requestDeleteSelected}
 					transition:scale={{ duration: 200, start: 0.9 }}
-					class="flex-1 md:flex-none px-6 py-3 bg-red-600 hover:bg-red-500 text-white font-heading font-black text-[10px] uppercase tracking-widest shadow-lg shadow-red-900/20 active:translate-y-px transition-all"
+					class="flex-1 md:flex-none px-6 py-3 bg-danger hover:bg-red-500 text-white font-heading font-black text-[10px] uppercase tracking-widest shadow-lg shadow-red-900/20 active:translate-y-px transition-all"
 				>
-					<Trash2 class="w-4 h-4 inline mr-2" />
+					<Icon name="ph:trash-bold" size="1rem" class="inline mr-2" />
 					Purge_Selected ({selectedIds.size})
 				</button>
 			{/if}
 
 			<button
-				onclick={clearLogs}
-				class="flex-1 md:flex-none px-6 py-3 bg-stone-900 border border-stone-800 text-stone-500 hover:text-red-500 hover:border-red-500/30 font-heading font-black text-[10px] uppercase tracking-widest transition-all active:translate-y-px"
+				onclick={requestClearLogs}
+				class="flex-1 md:flex-none px-6 py-3 bg-stone-900 border border-stone-800 text-text-dim hover:text-danger hover:border-red-500/30 font-heading font-black text-[10px] uppercase tracking-widest transition-all active:translate-y-px"
 			>
-				<Trash2 class="w-4 h-4 inline mr-2" />
+				<Icon name="ph:trash-bold" size="1rem" class="inline mr-2" />
 				Global_Wipe
 			</button>
 			<button
@@ -227,9 +226,9 @@
 					fetchLogs();
 					fetchCounts();
 				}}
-				class="p-3 bg-stone-900 border border-stone-800 text-stone-500 hover:text-rust transition-all shadow-xl active:translate-y-px"
+				class="p-3 bg-stone-900 border border-stone-800 text-text-dim hover:text-rust transition-all shadow-xl active:translate-y-px"
 			>
-				<RefreshCw class="w-5 h-5 {loading ? 'animate-spin' : ''}" />
+				<Icon name="ph:arrows-clockwise-bold" size="1.25rem" class="{loading ? 'animate-spin' : ''}" />
 			</button>
 		</div>
 	</div>
@@ -242,7 +241,7 @@
 				class="px-6 py-2.5 font-heading font-black text-[10px] uppercase tracking-widest transition-all border {category ===
 				cat
 					? 'bg-rust text-white border-rust shadow-lg shadow-rust/20'
-					: 'bg-stone-900 text-stone-600 border-stone-800 hover:text-stone-300 hover:border-stone-700'}"
+					: 'bg-stone-900 text-text-dim border-stone-800 hover:text-stone-300 hover:border-stone-700'}"
 			>
 				{cat} <span class="ml-2 opacity-40 font-jetbrains">[{counts[cat] || 0}]</span>
 			</button>
@@ -255,7 +254,7 @@
 		
 		<div class="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar relative z-10">
 			<table class="w-full text-left font-jetbrains text-[11px] border-collapse">
-				<thead class="bg-[#0a0a0a] text-stone-500 sticky top-0 z-10 border-b border-stone-800 shadow-md">
+				<thead class="bg-[var(--header-bg)] text-text-dim sticky top-0 z-10 border-b border-stone-800 shadow-md">
 					<tr class="uppercase font-black tracking-widest">
 						<th class="px-6 py-4 w-16 text-center border-r border-stone-800/30">
 							<button
@@ -265,7 +264,7 @@
 																										? 'bg-rust border-rust shadow-[0_0_10px_rgba(249,115,22,0.3)]'
 																										: 'hover:border-stone-600'}"							>
 								{#if selectedIds.size === logs.length && logs.length > 0}
-									<Check class="w-3.5 h-3.5 text-white" />
+									<Icon name="ph:check-bold" size="0.875rem" class="text-white" />
 								{/if}
 							</button>
 						</th>
@@ -283,7 +282,7 @@
 							<td colspan="7" class="py-32">
 								<div class="flex flex-col items-center justify-center gap-4">
 									<div class="w-10 h-10 border-2 border-rust border-t-transparent rounded-none animate-spin shadow-lg"></div>
-									<span class="font-heading font-black text-[11px] text-stone-600 uppercase tracking-[0.4em] animate-pulse">Syncing_Active_Logs...</span>
+									<span class="font-heading font-black text-[11px] text-text-dim uppercase tracking-[0.4em] animate-pulse">Syncing_Active_Logs...</span>
 								</div>
 							</td>
 						</tr>
@@ -292,7 +291,7 @@
 							<td colspan="7" class="py-32">
 								<div class="flex flex-col items-center justify-center text-stone-800 gap-4">
 									<div class="p-6 border border-dashed border-stone-800 industrial-frame">
-										<Activity class="w-12 h-12 opacity-10" />
+										<Icon name="activity" size="3rem" class="opacity-10" />
 									</div>
 									<span class="font-jetbrains text-[10px] font-black uppercase tracking-[0.3em]">Null_Archive_Reported</span>
 								</div>
@@ -313,18 +312,18 @@
 																																		: 'group-hover:border-stone-600 bg-stone-950 shadow-inner'}"									>
 										{#if selectedIds.has(log.id)}
 											<div transition:scale={{ duration: 200, start: 0.5 }}>
-												<Check class="w-3.5 h-3.5 text-white" />
+												<Icon name="ph:check-bold" size="0.875rem" class="text-white" />
 											</div>
 										{/if}
 									</div>
 								</td>
-								<td class="px-6 py-4 whitespace-nowrap font-bold tabular-nums text-stone-500 group-hover:text-stone-300 transition-colors border-r border-stone-800/20"
+								<td class="px-6 py-4 whitespace-nowrap font-bold tabular-nums text-text-dim group-hover:text-stone-300 transition-colors border-r border-stone-800/20"
 									>{log.timestamp ? new Date(log.timestamp).toLocaleString([], { hour12: false }) : 'UNKNOWN_T'}</td
 								>
 								<td class="px-6 py-4 font-black tracking-tighter border-r border-stone-800/20 {getLevelColor(log.level)}">{log.level}</td>
 								<td class="px-6 py-4 border-r border-stone-800/20">
 									<span
-										class="px-2 py-0.5 font-black text-[9px] bg-stone-900 border border-stone-800 text-stone-500 uppercase tracking-widest"
+										class="px-2 py-0.5 font-black text-[9px] bg-stone-900 border border-stone-800 text-text-dim uppercase tracking-widest"
 									>
 										{log.category}
 									</span>
@@ -333,11 +332,11 @@
 									class="px-6 py-4 text-stone-400 group-hover:text-white transition-colors max-w-xl truncate uppercase font-bold tracking-tight border-r border-stone-800/20"
 									title={log.message}>{log.message}</td
 								>
-								<td class="px-6 py-4 font-bold text-stone-600 uppercase tracking-tighter border-r border-stone-800/20">{log.path || 'GLOBAL_CORE'}</td>
+								<td class="px-6 py-4 font-bold text-text-dim uppercase tracking-tighter border-r border-stone-800/20">{log.path || 'GLOBAL_CORE'}</td>
 								<td class="px-6 py-4 text-right">
 									<button
 										onclick={(e) => deleteLog(e, log.id)}
-										class="p-2 text-stone-700 hover:text-red-500 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
+										class="p-2 text-stone-700 hover:text-danger hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
 										title="Delete Log"
 									>
 										<Trash2 class="w-4 h-4" />
@@ -352,15 +351,15 @@
 
 		<!-- Pagination Footer -->
 		<div
-			class="p-6 border-t border-stone-800 bg-[#0a0a0a] flex flex-col sm:flex-row justify-between items-center gap-6 shrink-0 relative z-10"
+			class="p-6 border-t border-stone-800 bg-[var(--header-bg)] flex flex-col sm:flex-row justify-between items-center gap-6 shrink-0 relative z-10"
 		>
 			<div class="flex items-center gap-6">
-				<span class="font-jetbrains text-[10px] font-black text-stone-600 uppercase tracking-widest">
+				<span class="font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest">
 					Showing <span class="text-rust">{offset + 1}-{Math.min(offset + limit, total)}</span> // Total <span class="text-white">{total}</span> Signals_Mapped
 				</span>
 				{#if selectedIds.size > 0}
 					<div class="w-px h-4 bg-stone-800"></div>
-					<span class="font-jetbrains text-[10px] font-black text-red-500 uppercase tracking-widest animate-pulse">
+					<span class="font-jetbrains text-[10px] font-black text-danger uppercase tracking-widest animate-pulse">
 						{selectedIds.size} Targets_Locked
 					</span>
 				{/if}
@@ -370,16 +369,16 @@
 				<button
 					onclick={prevPage}
 					disabled={offset === 0}
-					class="p-3 bg-stone-950 border border-stone-800 hover:border-rust hover:text-rust disabled:opacity-20 text-stone-600 transition-all active:translate-x-px shadow-lg"
+					class="p-3 bg-stone-950 border border-stone-800 hover:border-rust hover:text-rust disabled:opacity-20 text-text-dim transition-all active:translate-x-px shadow-lg"
 				>
-					<ChevronLeft class="w-5 h-5" />
+					<Icon name="ph:caret-left-bold" size="1.25rem" />
 				</button>
 				<button
 					onclick={nextPage}
 					disabled={offset + limit >= total}
-					class="p-3 bg-stone-950 border border-stone-800 hover:border-rust hover:text-rust disabled:opacity-20 text-stone-600 transition-all active:translate-x-px shadow-lg"
+					class="p-3 bg-stone-950 border border-stone-800 hover:border-rust hover:text-rust disabled:opacity-20 text-text-dim transition-all active:translate-x-px shadow-lg"
 				>
-					<ChevronRight class="w-5 h-5" />
+					<Icon name="ph:caret-right-bold" size="1.25rem" />
 				</button>
 			</div>
 		</div>
@@ -398,11 +397,11 @@
 			}}
 		>
 			<div
-				class="bg-[#050505] border border-stone-800 rounded-none shadow-[0_0_100px_rgba(0,0,0,0.8)] w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden industrial-frame"
+				class="bg-[var(--terminal-bg)] border border-stone-800 rounded-none shadow-[0_0_100px_rgba(0,0,0,0.8)] w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden industrial-frame"
 				onclick={(e) => e.stopPropagation()}
 			>
 				<div
-					class="p-8 border-b border-stone-800 bg-[#0a0a0a] flex justify-between items-start"
+					class="p-8 border-b border-stone-800 bg-[var(--header-bg)] flex justify-between items-start"
 				>
 					<div class="flex items-center gap-6">
 						<div class="p-3 bg-stone-950 border border-stone-800 industrial-frame">
@@ -412,18 +411,18 @@
 							<h3 class="text-xl font-heading font-black text-white uppercase tracking-tighter flex items-center gap-3">
 								INTERCEPT_DETAIL_READOUT
 							</h3>
-							<p class="font-jetbrains text-[10px] text-stone-500 font-bold mt-1 uppercase tracking-widest">
+							<p class="font-jetbrains text-[10px] text-text-dim font-bold mt-1 uppercase tracking-widest">
 								Captured: {selectedLog.timestamp ? new Date(selectedLog.timestamp).toLocaleString([], { hour12: false }) : 'N/A'}
 							</p>
 						</div>
 					</div>
 					<button
 						onclick={() => (selectedLog = null)}
-						class="p-2 text-stone-600 hover:text-white transition-all hover:rotate-90">
-						<X class="w-6 h-6" />
+						class="p-2 text-text-dim hover:text-white transition-all hover:rotate-90">
+						<Icon name="ph:x-bold" size="1.5rem" />
 					</button>
 				</div>
-				<div class="p-10 overflow-y-auto space-y-10 custom-scrollbar bg-[#050505] relative">
+				<div class="p-10 overflow-y-auto space-y-10 custom-scrollbar bg-[var(--terminal-bg)] relative">
 					<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
 					
 					<div class="grid grid-cols-2 md:grid-cols-3 gap-8 relative z-10">
@@ -436,14 +435,14 @@
 							{ label: 'LOG_UID', val: `#${selectedLog.id}` }
 						] as meta}
 							<div class="space-y-2 bg-stone-900/40 border border-stone-800 p-4 industrial-frame">
-								<span class="block font-jetbrains text-[9px] font-black text-stone-600 uppercase tracking-widest">{meta.label}</span>
+								<span class="block font-jetbrains text-[9px] font-black text-text-dim uppercase tracking-widest">{meta.label}</span>
 								<span class="font-jetbrains text-[11px] font-black text-stone-200 uppercase tracking-tight break-all">{meta.val}</span>
 							</div>
 						{/each}
 					</div>
 
 					<div class="space-y-4 relative z-10">
-						<span class="block font-jetbrains text-[9px] font-black text-stone-600 uppercase tracking-[0.3em]">SIGNAL_MESSAGE_RAW</span>
+						<span class="block font-jetbrains text-[9px] font-black text-text-dim uppercase tracking-[0.3em]">SIGNAL_MESSAGE_RAW</span>
 						<div
 							class="bg-stone-950 p-6 border border-stone-800 text-stone-300 font-jetbrains text-xs whitespace-pre-wrap leading-relaxed uppercase tracking-wide shadow-inner"
 						>
@@ -453,7 +452,7 @@
 
 					{#if selectedLog.details}
 						<div class="space-y-4 relative z-10">
-							<span class="block font-jetbrains text-[9px] font-black text-stone-600 uppercase tracking-[0.3em]">EXTENDED_TELEMETRY_DATA</span>
+							<span class="block font-jetbrains text-[9px] font-black text-text-dim uppercase tracking-[0.3em]">EXTENDED_TELEMETRY_DATA</span>
 							<div
 								class="bg-stone-950 p-6 border border-stone-800 text-stone-400 font-jetbrains text-[11px] whitespace-pre-wrap overflow-x-auto shadow-inner leading-relaxed"
 							>
@@ -463,11 +462,12 @@
 					{/if}
 				</div>
 				
-				<div class="p-8 bg-[#0a0a0a] border-t border-stone-800 flex justify-end">
+				<div class="p-8 bg-[var(--header-bg)] border-t border-stone-800 flex justify-end">
 					<button 
 						onclick={() => (selectedLog = null)}
-						class="px-10 py-3 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rust/20 transition-all active:translate-y-px"
+						class="px-10 py-3 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rust/20 transition-all active:translate-y-px flex items-center gap-3"
 					>
+						<Icon name="ph:check-bold" size="1rem" />
 						Acknowledge_Signal
 					</button>
 				</div>
@@ -475,6 +475,14 @@
 		</div>
 	{/if}
 </div>
+
+<ConfirmDialog
+	bind:isOpen={isConfirmOpen}
+	title={confirmTitle}
+	message={confirmMessage}
+	isCritical={isCriticalAction}
+	onConfirm={pendingAction}
+/>
 
 <style>
 	.custom-scrollbar::-webkit-scrollbar {

@@ -2,19 +2,31 @@
 	import { Bell, CheckCircle, Info, XCircle, AlertCircle } from 'lucide-svelte';
 	import { slide } from 'svelte/transition';
 	import { notifications, siteSettings } from '$lib/stores';
+	import ConfirmDialog from './ConfirmDialog.svelte';
 
 	const history = notifications.history;
 	let isNotificationPanelOpen = $state(false);
 
+	let isConfirmOpen = $state(false);
+
 	function toggleNotificationPanel() {
 		isNotificationPanelOpen = !isNotificationPanelOpen;
+	}
+
+	async function requestPurge() {
+		isConfirmOpen = true;
+	}
+
+	async function executePurge() {
+		notifications.clearPermanentHistory();
+		isConfirmOpen = false;
 	}
 </script>
 
 <div class="relative">
 	<button
 		onclick={toggleNotificationPanel}
-		class="p-2 text-stone-500 hover:text-white bg-stone-900/50 hover:bg-rust/10 transition-all active:translate-y-px"
+		class="p-2 text-text-dim hover:text-white bg-stone-900/50 hover:bg-rust/10 transition-all active:translate-y-px"
 		class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
 		class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
 		class:tactical-glow={$notifications.length > 0}
@@ -39,18 +51,18 @@
 			transition:slide={{ duration: 200 }}
 		>
 			<div
-				class="px-5 py-4 border-b border-stone-800 flex justify-between items-center bg-[#0a0a0a]"
+				class="px-5 py-4 border-b border-zinc-800 flex justify-between items-center bg-[var(--header-bg)]"
 			>
 				<span class="font-heading font-black text-white text-[10px] uppercase tracking-[0.2em]">Recent_Activity_Buffer</span>
 				<button
-					onclick={() => notifications.clearHistory()}
+					onclick={requestPurge}
 					class="text-[9px] font-black uppercase tracking-widest text-rust hover:text-rust-light transition-all italic px-4 py-2"
 					class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
 					class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
 				>PURGE</button
 				>
 			</div>
-			<div class="max-h-80 overflow-y-auto p-3 space-y-3 no-scrollbar bg-[#050505] relative">
+			<div class="max-h-80 overflow-y-auto p-3 space-y-3 no-scrollbar bg-[var(--terminal-bg)] relative">
 				<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
 				
 				{#if $history && $history.length > 0}
@@ -62,12 +74,12 @@
 						>
 							<div class="mt-0.5 shrink-0">
 								{#if note.type === 'success'}
-									<div class="p-1.5 bg-emerald-500/10" class:industrial-frame={!$siteSettings.aesthetic.industrial_styling} class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}>
-										<CheckCircle class="w-3.5 h-3.5 text-emerald-500" />
+									<div class="p-1.5 bg-success/10" class:industrial-frame={!$siteSettings.aesthetic.industrial_styling} class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}>
+										<CheckCircle class="w-3.5 h-3.5 text-success" />
 									</div>
 								{:else if note.type === 'error'}
-									<div class="p-1.5 bg-red-500/10" class:industrial-frame={!$siteSettings.aesthetic.industrial_styling} class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}>
-										<XCircle class="w-3.5 h-3.5 text-red-500" />
+									<div class="p-1.5 bg-danger/10" class:industrial-frame={!$siteSettings.aesthetic.industrial_styling} class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}>
+										<XCircle class="w-3.5 h-3.5 text-danger" />
 									</div>
 								{:else if note.type === 'warning'}
 									<div class="p-1.5 bg-rust/10" class:industrial-frame={!$siteSettings.aesthetic.industrial_styling} class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}>
@@ -75,7 +87,7 @@
 									</div>
 								{:else}
 									<div class="p-1.5 bg-stone-800" class:industrial-frame={!$siteSettings.aesthetic.industrial_styling} class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}>
-										<Info class="w-3.5 h-3.5 text-stone-400" />
+										<Info class="w-3.5 h-3.5 text-text-dim" />
 									</div>
 								{/if}
 							</div>
@@ -84,9 +96,9 @@
 									{note.message}
 								</p>
 								{#if note.details}
-									<p class="text-[9px] text-stone-500 mt-2 font-jetbrains font-bold leading-relaxed uppercase opacity-60 italic border-l-2 border-stone-800 pl-3">{note.details}</p>
+									<p class="text-[9px] text-text-dim mt-2 font-jetbrains font-bold leading-relaxed uppercase opacity-60 italic border-l-2 border-zinc-800 pl-3">{note.details}</p>
 								{/if}
-								<span class="text-[8px] font-jetbrains font-black text-stone-700 mt-3 block uppercase tracking-widest">
+								<span class="text-[8px] font-jetbrains font-black text-text-dim mt-3 block uppercase tracking-widest">
 									Captured: {new Date(note.timestamp || Date.now()).toLocaleTimeString([], { hour12: false })}
 								</span>
 							</div>
@@ -95,12 +107,20 @@
 				{:else}
 					<div class="text-center py-16 opacity-40">
 						<div class="inline-block p-5 bg-stone-900/40" class:industrial-frame={!$siteSettings.aesthetic.industrial_styling} class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}>
-							<Bell class="w-8 h-8 text-stone-700" />
+							<Bell class="w-8 h-8 text-text-dim" />
 						</div>
-						<p class="text-stone-600 text-[10px] font-jetbrains font-black uppercase tracking-[0.3em]">No_Signals_Detected</p>
+						<p class="text-text-dim text-[10px] font-jetbrains font-black uppercase tracking-[0.3em]">No_Signals_Detected</p>
 					</div>
 				{/if}
 			</div>
 		</div>
 	{/if}
 </div>
+
+<ConfirmDialog
+	bind:isOpen={isConfirmOpen}
+	title="Purge Activity Buffer"
+	message="Are you sure you want to permanently delete all recent activity history? This action is localized and irreversible."
+	isCritical={true}
+	onConfirm={executePurge}
+/>

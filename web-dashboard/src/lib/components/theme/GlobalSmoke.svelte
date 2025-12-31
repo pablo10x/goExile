@@ -118,14 +118,9 @@
 				return;
 			}
 
-			if ($siteSettings.aesthetic?.reduced_motion) {
-				if (renderer && scene && camera) renderer.render(scene, camera);
-				return;
-			}
-
 			frameId = requestAnimationFrame(animate);
 
-			if (!$siteSettings.aesthetic.animations_enabled) {
+			if ($siteSettings.aesthetic?.reduced_motion || !$siteSettings.aesthetic.animations_enabled) {
 				if (renderer && scene && camera) renderer.render(scene, camera);
 				return;
 			}
@@ -136,8 +131,8 @@
 
 			if (smokeParticles) {
 				smokeParticles.children.forEach(p => {
-					p.rotation.z += p.userData.velocity;
-					p.position.x += p.userData.drift;
+					p.rotation.z += (p.userData.velocity || 0);
+					p.position.x += (p.userData.drift || 0);
 					
 					// Reset position if too far
 					if (p.position.x > 20) p.position.x = -20;

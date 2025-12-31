@@ -51,7 +51,7 @@
 	{#if isOpen}
 		<div
 			transition:slide={{ duration: 200 }}
-			class="absolute right-0 mt-2 w-56 bg-[#0a0a0a] border border-stone-800 shadow-[0_0_50px_rgba(0,0,0,0.8)] z-50 overflow-hidden"
+			class="absolute right-0 mt-2 w-56 bg-[var(--header-bg)] border border-stone-800 shadow-[0_0_50px_rgba(0,0,0,0.8)] z-50 overflow-hidden"
 			class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
 			class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
 		>

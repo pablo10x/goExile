@@ -90,7 +90,7 @@
 				</h2>
 				<button
 					onclick={onClose}
-					class="text-stone-600 hover:text-white transition-all p-2 border border-transparent hover:border-rust/30 relative z-10"
+					class="text-text-dim hover:text-white transition-all p-2 border border-transparent hover:border-rust/30 relative z-10"
 				>
 					<X class="w-6 h-6" />
 				</button>
@@ -99,7 +99,7 @@
 			<!-- Body -->
 			<div class="p-10 space-y-8 relative z-10 bg-[#050505]">
 				<!-- Identification Header -->
-				<div class="flex items-center gap-4 text-[10px] font-black text-stone-600 tracking-[0.4em] uppercase italic border-b border-stone-800 pb-4">
+				<div class="flex items-center gap-4 text-[10px] font-black text-text-dim tracking-[0.4em] uppercase italic border-b border-stone-800 pb-4">
 					<ChevronRight class="w-3 h-3 text-rust" />
 					Field_Modification_Buffer
 				</div>
@@ -124,7 +124,7 @@
 					<!-- Firebase UID -->
 					<div class="space-y-3">
 						<label
-							class="text-[10px] font-black text-stone-600 uppercase tracking-[0.3em] flex items-center gap-3 italic"
+							class="text-[10px] font-black text-text-dim uppercase tracking-[0.3em] flex items-center gap-3 italic"
 						>
 							<Hash class="w-3 h-3" /> Core_UID
 						</label>
@@ -139,7 +139,7 @@
 					<!-- Device ID -->
 					<div class="space-y-3 md:col-span-2">
 						<label
-							class="text-[10px] font-black text-stone-600 uppercase tracking-[0.3em] flex items-center gap-3 italic"
+							class="text-[10px] font-black text-text-dim uppercase tracking-[0.3em] flex items-center gap-3 italic"
 						>
 							<Smartphone class="w-3 h-3" /> Node_Signature
 						</label>
@@ -154,21 +154,21 @@
 					<!-- XP -->
 					<div class="space-y-3">
 						<label
-							class="text-[10px] font-black text-stone-600 uppercase tracking-[0.3em] flex items-center gap-3 italic"
+							class="text-[10px] font-black text-text-dim uppercase tracking-[0.3em] flex items-center gap-3 italic"
 						>
-							<Trophy class="w-3 h-3 text-amber-500" /> Exp_Accumulation
+							<Trophy class="w-3 h-3 text-warning" /> Exp_Accumulation
 						</label>
 						<input
 							type="number"
 							bind:value={formData.xp}
-							class="w-full bg-stone-950 border border-stone-800 px-4 py-3 text-amber-500 font-mono font-bold italic text-2xl focus:border-rust outline-none transition-all placeholder:text-stone-900 industrial-frame"
+							class="w-full bg-stone-950 border border-stone-800 px-4 py-3 text-warning font-mono font-bold italic text-2xl focus:border-rust outline-none transition-all placeholder:text-stone-900 industrial-frame"
 							placeholder="0"
 						/>
 					</div>
 				</div>
 
 				<!-- Warning Area -->
-				<div class="mt-4 p-4 bg-red-600/5 border-l-4 border-red-600/30 text-[10px] text-red-600/60 font-bold uppercase italic tracking-widest leading-relaxed">
+				<div class="mt-4 p-4 bg-danger/5 border-l-4 border-red-600/30 text-[10px] text-red-600/60 font-bold uppercase italic tracking-widest leading-relaxed">
 					Warning: Direct database mutation detected. All write operations are logged to the central surveillance engine.
 				</div>
 			</div>
@@ -181,7 +181,7 @@
 				<div class="flex gap-6">
 					<button
 						onclick={onClose}
-						class="px-8 py-3 text-[11px] font-black text-stone-600 hover:text-white uppercase tracking-widest italic transition-all border border-transparent hover:border-stone-800"
+						class="px-8 py-3 text-[11px] font-black text-text-dim hover:text-white uppercase tracking-widest italic transition-all border border-transparent hover:border-stone-800"
 					>
 						[Abort]
 					</button>

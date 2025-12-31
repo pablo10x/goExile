@@ -188,22 +188,22 @@
 	onMount(loadData);
 </script>
 
-<div class="w-full min-h-[calc(100vh-140px)] md:min-h-[calc(100vh-160px)] flex flex-col lg:flex-row gap-8 overflow-hidden relative border border-stone-800 bg-[#050505] shadow-2xl">
+<div class="w-full min-h-[calc(100vh-140px)] md:min-h-[calc(100vh-160px)] flex flex-col lg:flex-row gap-8 overflow-hidden relative border border-stone-800 bg-[var(--terminal-bg)] shadow-2xl">
 	<!-- Left Column: Tasks -->
 	<div
-		class="w-full lg:w-[450px] flex-shrink-0 flex flex-col bg-[#0a0a0a]/60 border-b lg:border-b-0 lg:border-r border-stone-800 overflow-hidden backdrop-blur-xl h-[600px] lg:h-auto"
+		class="w-full lg:w-[450px] flex-shrink-0 flex flex-col bg-[var(--header-bg)]/60 border-b lg:border-b-0 lg:border-r border-stone-800 overflow-hidden backdrop-blur-xl h-[600px] lg:h-auto"
 	>
 		<!-- Tasks Header -->
 		<div
-			class="p-6 border-b border-stone-800 bg-[#0a0a0a] flex justify-between items-center shrink-0"
+			class="p-6 border-b border-stone-800 bg-[var(--header-bg)] flex justify-between items-center shrink-0"
 		>
 			<h2 class="text-xl font-heading font-black text-white flex items-center gap-3 uppercase tracking-tighter">
-				<CheckSquare class="w-6 h-6 text-emerald-500" />
+				<CheckSquare class="w-6 h-6 text-success" />
 				TASK_REGISTRY
 			</h2>
 			<div class="flex items-center gap-3">
 				<span
-					class="px-3 py-1 bg-stone-900 border border-stone-800 font-jetbrains text-[10px] font-black text-stone-500 uppercase tracking-widest shadow-inner"
+					class="px-3 py-1 bg-stone-900 border border-stone-800 font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest shadow-inner"
 				>
 					{pendingTodos.length} PENDING
 				</span>
@@ -236,7 +236,7 @@
 				<div class="flex items-center gap-4">
 					<label
 						for="todo-deadline"
-						class="font-jetbrains text-[9px] font-black text-stone-600 uppercase tracking-[0.3em]">EXECUTION_DEADLINE:</label
+						class="font-jetbrains text-[9px] font-black text-text-dim uppercase tracking-[0.3em]">EXECUTION_DEADLINE:</label
 					>
 					<input
 						type="date"
@@ -248,7 +248,7 @@
 						<button
 							type="button"
 							onclick={() => (newTodoDeadline = '')}
-							class="font-jetbrains text-[9px] font-black text-red-500 hover:text-white transition-colors uppercase tracking-widest"
+							class="font-jetbrains text-[9px] font-black text-danger hover:text-white transition-colors uppercase tracking-widest"
 						>
 							[CLEAR]
 						</button>
@@ -263,7 +263,7 @@
 			{#if loading}
 				<div class="flex flex-col items-center justify-center py-20 gap-4">
 					<div class="w-8 h-8 border-2 border-rust border-t-transparent rounded-none animate-spin"></div>
-					<span class="font-jetbrains text-[9px] font-black text-stone-600 uppercase tracking-[0.4em]">Syncing_Buffer...</span>
+					<span class="font-jetbrains text-[9px] font-black text-text-dim uppercase tracking-[0.4em]">Syncing_Buffer...</span>
 				</div>
 			{:else}
 				{#if pendingTodos.length > 0}
@@ -285,7 +285,7 @@
 					{#if pendingTodos.length > 0}
 						<div class="h-px bg-stone-800 my-8 relative z-10">
 							<div class="absolute inset-0 flex items-center justify-center">
-								<div class="bg-[#0a0a0a] px-4 font-jetbrains text-[8px] font-black text-stone-700 tracking-[0.5em] uppercase">DEFRAGMENTED_UNITS</div>
+								<div class="bg-[var(--header-bg)] px-4 font-jetbrains text-[8px] font-black text-stone-700 tracking-[0.5em] uppercase">DEFRAGMENTED_UNITS</div>
 							</div>
 						</div>
 					{/if}
@@ -329,7 +329,7 @@
 					<h1 class="text-4xl font-heading font-black text-white uppercase tracking-tighter">
 						NEURAL_NOTATIONS
 					</h1>
-					<p class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest font-black mt-2">
+					<p class="font-jetbrains text-[10px] text-text-dim uppercase tracking-widest font-black mt-2">
 						Buffer asynchronous concepts and tactical intelligence
 					</p>
 				</div>
@@ -337,7 +337,7 @@
 
 			<div class="flex items-center gap-4 w-full xl:w-auto">
 				<div class="relative flex-1 xl:w-96 group">
-					<Search class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-600 group-focus-within:text-rust transition-colors" />
+					<Search class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-dim group-focus-within:text-rust transition-colors" />
 					<input
 						type="text"
 						bind:value={searchQuery}
@@ -381,7 +381,7 @@
 					<div class="p-10 bg-stone-900/40 border border-stone-800 mb-8 group">
 						<StickyNote class="w-16 h-16 text-stone-800 group-hover:text-rust transition-colors duration-500" />
 					</div>
-					<p class="font-heading font-black text-base text-stone-600 uppercase tracking-[0.4em]">
+					<p class="font-heading font-black text-base text-text-dim uppercase tracking-[0.4em]">
 						{searchQuery ? 'Zero_Signals_Matching_Query' : 'Registry_Clean_Initialize_Buffer'}
 					</p>
 				</div>

@@ -4,6 +4,7 @@
 	import { serverVersions, siteSettings } from '$lib/stores';
 	import { compareVersions } from '$lib/semver';
 	import PlayersChart from './PlayersChart.svelte';
+	import Icon from './theme/Icon.svelte';
 	import {
 		ChevronRight,
 		Play,
@@ -17,9 +18,10 @@
 		Clock
 	} from 'lucide-svelte';
 
-	let { spawnerId, instance }: { spawnerId: number; instance: any } = $props();
+	let { nodeId, instance }: { nodeId: number; instance: any } = $props();
 
 	let expanded = $state(false);
+	let isHovered = $state(false);
 	let renameValue = $state(instance.id);
 	let chartData = $state<any[]>([]);
 
@@ -51,7 +53,7 @@
 
 	async function fetchHistory() {
 		try {
-			const res = await fetch(`/api/spawners/${spawnerId}/instances/${instance.id}/stats/history`);
+			const res = await fetch(`/api/nodes/${nodeId}/instances/${instance.id}/stats/history`);
 			if (res.ok) {
 				const data = await res.json();
 				if (data.history) {
@@ -68,7 +70,7 @@
 
 	function handleRename() {
 		if (renameValue !== instance.id) {
-			dispatch('rename', { spawnerId, oldId: instance.id, newId: renameValue });
+			dispatch('rename', { nodeId: nodeId, oldId: instance.id, newId: renameValue });
 		}
 	}
 </script>
@@ -76,9 +78,11 @@
 <div
 	class={`border border-stone-800 ${$siteSettings.aesthetic.industrial_styling ? 'rounded-none' : 'rounded-xl'} bg-stone-950/40 glass-panel overflow-hidden mb-2 hover:border-rust/40 transition-all duration-500 shadow-lg group/row relative`}
 	class:heartbeat-pulse={instance.status === 'Running' && !$siteSettings.aesthetic.reduced_motion}
+	onmouseenter={() => isHovered = true}
+	onmouseleave={() => isHovered = false}
 >
 	<!-- Binary Animation Overlays -->
-	{#if instance.status === 'Running' && !$siteSettings.aesthetic.reduced_motion}
+	{#if instance.status === 'Running' && !$siteSettings.aesthetic.reduced_motion && isHovered}
 		<div class="absolute left-0 top-0 bottom-0 flex flex-col justify-center px-2 pointer-events-none overflow-hidden opacity-20">
             <div class="animate-binary-slide flex flex-col gap-0.5 will-change-transform">
                 {#each [...binaryLines, ...binaryLines] as line}
@@ -104,14 +108,13 @@
 				? 'rotate-90 text-rust shadow-rust/20'
 				: ''}"
 		>
-			<ChevronRight class="w-4 h-4" />
+			<Icon name="ph:caret-right-bold" size="1rem" />
 		</div>
 
 		<!-- Name & Identity -->
 		<div class="flex flex-col min-w-[160px] ml-4 sm:ml-8">
 			<div class="flex items-center gap-2">
-				<span class="text-[9px] font-jetbrains font-black text-stone-600 uppercase tracking-tighter">INSTANCE</span>
-				<span class="font-heading font-black text-sm text-white tracking-widest uppercase">{instance.id.split('-').pop() || instance.port}</span>
+				                <span class="text-[9px] font-jetbrains font-black uppercase tracking-tighter" style="color: var(--text-dim)">INSTANCE</span>				<span class="font-heading font-black text-sm text-white tracking-widest uppercase">{instance.id.split('-').pop() || instance.port}</span>
 			</div>
 			<div class="flex items-center gap-2 mt-1">
 				<span class="text-[8px] font-jetbrains font-bold text-stone-700 uppercase">Port:</span>
@@ -122,8 +125,8 @@
 		<!-- Status Badge -->
 		<div class="sm:w-36">
 			{#if instance.status === 'Running'}
-				<div class="flex items-center gap-2.5 text-emerald-400 bg-emerald-500/5 px-3 py-1 border border-emerald-500/20 rounded-none w-fit shadow-[0_0_15px_rgba(16,185,129,0.05)]">
-					<div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-emerald-500/50 shadow-lg"></div>
+				<div class="flex items-center gap-2.5 text-success bg-success/5 px-3 py-1 border border-success/20 rounded-none w-fit shadow-[0_0_15px_rgba(16,185,129,0.05)]">
+					<div class="w-1.5 h-1.5 rounded-full bg-success animate-pulse shadow-emerald-500/50 shadow-lg"></div>
 					<span class="text-[9px] font-heading font-black uppercase tracking-[0.2em]">Running</span>
 				</div>
 			{:else if instance.status === 'Provisioning'}
@@ -132,8 +135,8 @@
 					<span class="text-[9px] font-heading font-black uppercase tracking-[0.2em]">Starting</span>
 				</div>
 			{:else if instance.status === 'Error'}
-				<div class="flex items-center gap-2.5 text-red-500 bg-red-500/5 px-3 py-1 border border-red-500/20 rounded-none w-fit">
-					<div class="w-1.5 h-1.5 rounded-full bg-red-500 animate-flicker shadow-red-500/50 shadow-lg"></div>
+				<div class="flex items-center gap-2.5 text-danger bg-danger/5 px-3 py-1 border border-danger/20 rounded-none w-fit">
+					<div class="w-1.5 h-1.5 rounded-full bg-danger animate-flicker shadow-red-500/50 shadow-lg"></div>
 					<span class="text-[9px] font-heading font-black uppercase tracking-[0.2em]">Error</span>
 				</div>
 			{:else}
@@ -176,37 +179,37 @@
 			tabindex="0"
 		>
 			<button
-				onclick={() => dispatch('tail', { spawnerId, instanceId: instance.id })}
+				onclick={() => dispatch('tail', { nodeId, instanceId: instance.id })}
 				class="p-2.5 text-stone-600 hover:text-white hover:bg-stone-900 transition-all border border-transparent hover:shadow-lg"
 				title="Console"
 			>
-				<TerminalSquare class="w-4 h-4" />
+				<Icon name="ph:terminal-window-bold" size="1rem" />
 			</button>
 
 			<div class="w-px h-5 bg-stone-800 mx-1"></div>
 
 			{#if instance.status !== 'Running'}
 				<button
-					onclick={() => dispatch('start', { spawnerId, instanceId: instance.id })}
-					class="p-2.5 text-emerald-600 hover:text-emerald-400 hover:bg-emerald-500/5 transition-all hover:shadow-emerald-500/10 hover:shadow-lg"
+					onclick={() => dispatch('start', { nodeId, instanceId: instance.id })}
+					class="p-2.5 text-emerald-600 hover:text-success hover:bg-emerald-500/5 transition-all hover:shadow-emerald-500/10 hover:shadow-lg"
 					title="Start"
 				>
-					<Play class="w-4 h-4" />
+					<Icon name="ph:play-bold" size="1rem" />
 				</button>
 			{:else}
 				<button
-					onclick={() => dispatch('stop', { spawnerId, instanceId: instance.id })}
+					onclick={() => dispatch('stop', { nodeId, instanceId: instance.id })}
 					class="p-2.5 text-stone-600 hover:text-yellow-500 hover:bg-yellow-500/5 transition-all hover:shadow-yellow-500/10 hover:shadow-lg"
 					title="Stop"
 				>
-					<Square class="w-4 h-4" />
+					<Icon name="ph:stop-bold" size="1rem" />
 				</button>
 				<button
-					onclick={() => dispatch('restart', { spawnerId, instanceId: instance.id })}
+					onclick={() => dispatch('restart', { nodeId, instanceId: instance.id })}
 					class="p-2.5 text-stone-600 hover:text-rust-light hover:bg-rust/5 transition-all hover:shadow-rust/10 hover:shadow-lg"
 					title="Restart"
 				>
-					<RotateCw class="w-4 h-4" />
+					<Icon name="ph:arrows-clockwise-bold" size="1rem" />
 				</button>
 			{/if}
 		</div>
@@ -216,7 +219,7 @@
 	{#if expanded}
 		<div
 			transition:slide={{ duration: 300 }}
-			class="bg-[#050505]/60 border-t border-stone-800 p-8 space-y-8 relative z-10"
+			class="bg-[var(--terminal-bg)]/60 border-t border-stone-800 p-8 space-y-8 relative z-10"
 		>
 			<div class="grid grid-cols-1 xl:grid-cols-12 gap-10">
 				<!-- Left: Technical Readouts -->
@@ -224,40 +227,40 @@
 					<!-- Primary Toolbar -->
 					<div class="flex flex-wrap gap-3 pb-8 border-b border-stone-800">
 						<button
-							onclick={() => dispatch('tail', { spawnerId, instanceId: instance.id })}
+							onclick={() => dispatch('tail', { nodeId, instanceId: instance.id })}
 							class="flex items-center gap-2 px-4 py-2 transition-all font-mono text-[9px] font-black uppercase bg-stone-950 text-stone-400 hover:text-white border border-stone-800 hover:border-rust/50 shadow-lg active:translate-y-px"
 						>
-							<TerminalSquare class="w-3.5 h-3.5" />
+							<Icon name="ph:terminal-window-bold" size="0.875rem" />
 							<span>Console</span>
 						</button>
 						
 						<!-- Version Controls -->
 						<div class="flex gap-1 bg-black/40 p-1 border border-stone-800">
 							<button
-								onclick={() => dispatch('update', { spawnerId, instanceId: instance.id })}
+								onclick={() => dispatch('update', { nodeId, instanceId: instance.id })}
 								disabled={!isOutdated}
 								class="flex items-center gap-2 px-4 py-2 transition-all font-mono text-[9px] font-black uppercase {isOutdated ? 'bg-emerald-600 text-white hover:bg-emerald-500' : 'text-stone-600 opacity-50 cursor-not-allowed'}"
 								title="Upgrade to latest version"
 							>
-								<ArrowUpToLine class="w-3.5 h-3.5" />
+								<Icon name="ph:arrow-up-to-line-bold" size="0.875rem" />
 								<span>Upgrade</span>
 							</button>
 							<button
-								onclick={() => dispatch('update', { spawnerId, instanceId: instance.id })}
+								onclick={() => dispatch('update', { nodeId, instanceId: instance.id })}
 								class="flex items-center gap-2 px-4 py-2 transition-all font-mono text-[9px] font-black uppercase text-stone-500 hover:bg-stone-800 hover:text-white"
-								title="Downgrade version (Select manually in spawner config)"
+								title="Downgrade version (Select manually in node config)"
 							>
-								<ArrowDownToLine class="w-3.5 h-3.5" />
+								<Icon name="ph:arrow-down-to-line-bold" size="0.875rem" />
 								<span>Downgrade</span>
 							</button>
 						</div>
 
 						<button
-							onclick={() => dispatch('delete', { spawnerId, instanceId: instance.id })}
+							onclick={() => dispatch('delete', { nodeId, instanceId: instance.id })}
 							disabled={instance.status === 'Running'}
-							class="flex items-center gap-2 px-4 py-2 transition-all font-mono text-[9px] font-black uppercase bg-red-950/20 text-red-500 hover:bg-red-600 hover:text-white border border-red-900/30 ml-auto shadow-red-900/10"
+							class="flex items-center gap-2 px-4 py-2 transition-all font-mono text-[9px] font-black uppercase bg-red-950/20 text-danger hover:bg-red-600 hover:text-white border border-red-900/30 ml-auto shadow-red-900/10"
 						>
-							<Trash2 class="w-3.5 h-3.5" />
+							<Icon name="ph:trash-bold" size="0.875rem" />
 							<span>Delete</span>
 						</button>
 					</div>
@@ -316,7 +319,7 @@
 
 					<div class="bg-amber-500/5 border border-amber-500/20 p-5 flex gap-5 items-start industrial-frame">
 						<div class="p-2.5 bg-amber-500/10 text-amber-500 border border-amber-500/20">
-							<Activity class="w-4 h-4" />
+							<Icon name="activity" size="1rem" />
 						</div>
 						<div class="space-y-2">
 							<span class="text-[10px] font-heading font-black text-amber-600 uppercase tracking-[0.2em] block">Monitoring</span>

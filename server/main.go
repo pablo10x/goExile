@@ -1,19 +1,22 @@
-// Package main provides a lightweight HTTP-based spawner registry.
+// Package main provides a lightweight HTTP-based node registry.
 //
-// The registry acts as the central authority for tracking active Spawners.
+// The registry acts as the central authority for tracking active Nodes.
 // It exposes a REST API for:
-// - Spawner registration and heartbeats
+// - Node registration and heartbeats
 // - Dashboard monitoring (via WebSocket)
-// - Spawning new game instances (proxying to Spawners)
+// - Spawning new game instances (proxying to Nodes)
 package main
 
 import (
+	"compress/gzip"
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -34,19 +37,70 @@ import (
 	"exile/server/ws_player"
 )
 
+// GzipResponseWriter wraps http.ResponseWriter to provide gzip compression
+type GzipResponseWriter struct {
+	io.Writer
+	http.ResponseWriter
+}
+
+func (w GzipResponseWriter) Write(b []byte) (int, error) {
+	return w.Writer.Write(b)
+}
+
+func (w GzipResponseWriter) Flush() {
+	if flusher, ok := w.Writer.(*gzip.Writer); ok {
+		_ = flusher.Flush()
+	}
+	if flusher, ok := w.ResponseWriter.(http.Flusher); ok {
+		flusher.Flush()
+	}
+}
+
+// GzipMiddleware handles gzip compression for responses
+func GzipMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Skip WebSocket and SSE
+		if r.Header.Get("Upgrade") == "websocket" || r.URL.Path == "/events" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		w.Header().Set("Content-Encoding", "gzip")
+		gz := gzip.NewWriter(w)
+		defer gz.Close()
+
+		gzw := GzipResponseWriter{Writer: gz, ResponseWriter: w}
+		next.ServeHTTP(gzw, r)
+	})
+}
+
+// LoggerMiddleware logs basic info about incoming requests
+func LoggerMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		next.ServeHTTP(w, r)
+		log.Printf("INCOMING: %s %s from %s (%v)", r.Method, r.URL.Path, r.RemoteAddr, time.Since(start))
+	})
+}
+
 // Configuration constants used by the registry.
 const (
 	// maxBodySize is the maximum size accepted for request bodies.
 	maxBodySize = 1 << 20 // 1MB
 
-	// serverTTL defines how long a spawner is considered alive since its
-	// last heartbeat. Spawners older than this are removed by cleanup.
+	// serverTTL defines how long a node is considered alive since its
+	// last heartbeat. Nodes older than this are removed by cleanup.
 	serverTTL = 60 * time.Second
 
 	// cleanupInterval is how frequently the cleanup loop runs.
 	cleanupInterval = 30 * time.Second
 
-	// healthCheckInterval is how frequently the master server pings spawners for health checks.
+	// healthCheckInterval is how frequently the master server pings nodes for health checks.
 	healthCheckInterval = 10 * time.Second
 )
 
@@ -77,7 +131,7 @@ func run() error {
 	go sessionStore.CleanupExpiredSessions()
 	utils.PrintSection("Authentication", "ready", true)
 
-	// Initialize Enrollment Manager for spawner enrollment
+	// Initialize Enrollment Manager for node enrollment
 	enrollment.InitializeEnrollmentManager()
 	utils.PrintSection("Enrollment Manager", "ready", true)
 
@@ -102,8 +156,8 @@ func run() error {
 			registry.GlobalStats.SetDBConnected(false)
 		} else {
 			registry.GlobalStats.SetDBConnected(true)
-			// Load existing spawners from DB to restore state
-			loaded, _ := database.LoadSpawners(database.DBConn)
+			// Load existing nodes from DB to restore state
+			loaded, _ := database.LoadNodes(database.DBConn)
 			if len(loaded) > 0 {
 				maxID := registry.GetNextID() - 1
 				for i := range loaded {
@@ -111,7 +165,7 @@ func run() error {
 					copyS := s
 					// Reconcile status: if marked online in DB but not actually connected via WS, set to offline
 					if copyS.Status == "Online" && !ws.GlobalWSManager.IsClientConnected(copyS.ID) {
-						log.Printf("INFO: Spawner ID %d was marked 'Online' in DB but not connected to WebSocket. Marking 'Offline'.", copyS.ID)
+						log.Printf("INFO: Node ID %d was marked 'Online' in DB but not connected to WebSocket. Marking 'Offline'.", copyS.ID)
 						copyS.Status = "Offline"
 						// Optionally, persist this change to DB immediately, but WSManager will handle it on reconnect/disconnect
 						// For now, only update in-memory to reflect reality for the Dashboard
@@ -122,7 +176,7 @@ func run() error {
 					}
 				}
 				utils.PrintSection("Database", "connected", true)
-				utils.PrintSubItem(fmt.Sprintf("Loaded %d spawners", len(loaded)))
+				utils.PrintSubItem(fmt.Sprintf("Loaded %d nodes", len(loaded)))
 
 				// Get initial DB stats for display
 				if advStats, err := database.GetAdvancedDBStats(database.DBConn); err == nil {
@@ -185,8 +239,8 @@ func run() error {
 
 	// Define API Routes
 
-	// Spawner interactions (public/internal API) - Secured via API Key if set
-	apiRouter := router.PathPrefix("/api/spawners").Subrouter()
+	// Node interactions (public/internal API) - Secured via API Key if set
+	apiRouter := router.PathPrefix("/api/nodes").Subrouter()
 
 	apiKey := os.Getenv("MASTER_API_KEY")
 	gameAPIKey := os.Getenv("GAME_API_KEY")
@@ -219,31 +273,32 @@ func run() error {
 
 	apiRouter.HandleFunc("/ws", ws.GlobalWSManager.HandleWS) // WebSocket Endpoint
 	apiRouter.HandleFunc("/download", handlers.ServeGameServerFile).Methods("GET", "HEAD")
-	// apiRouter.HandleFunc("", RegisterSpawner).Methods("POST") // Disabled to enforce enrollment flow
-	apiRouter.HandleFunc("", handlers.ListSpawners).Methods("GET") // Maybe this should be public or auth? Keeping consistent
-	apiRouter.HandleFunc("/{id}", handlers.GetSpawner).Methods("GET")
-	apiRouter.HandleFunc("/{id}", handlers.DeleteSpawner).Methods("DELETE")
-	apiRouter.HandleFunc("/{id}/spawn", handlers.SpawnInstance).Methods("POST")
-	apiRouter.HandleFunc("/{id}/heartbeat", handlers.HeartbeatSpawner).Methods("POST")
-	apiRouter.HandleFunc("/{id}/logs", handlers.GetSpawnerLogs).Methods("GET")
-	apiRouter.HandleFunc("/{id}/logs", handlers.ClearSpawnerLogs).Methods("DELETE")
-	apiRouter.HandleFunc("/{id}/instances", handlers.ListSpawnerInstances).Methods("GET")
+	// apiRouter.HandleFunc("", RegisterNode).Methods("POST") // Disabled to enforce enrollment flow
+	apiRouter.HandleFunc("", handlers.ListNodes).Methods("GET") // Maybe this should be public or auth? Keeping consistent
+	apiRouter.HandleFunc("/{id}", handlers.GetNode).Methods("GET")
+	apiRouter.HandleFunc("/{id}", handlers.UpdateNodeSettings).Methods("PUT") // New settings update endpoint
+	apiRouter.HandleFunc("/{id}", handlers.DeleteNode).Methods("DELETE")
+	apiRouter.HandleFunc("/{id}/spawn", handlers.SpawnNodeInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/heartbeat", handlers.HeartbeatNode).Methods("POST")
+	apiRouter.HandleFunc("/{id}/logs", handlers.GetNodeLogs).Methods("GET")
+	apiRouter.HandleFunc("/{id}/logs", handlers.ClearNodeLogs).Methods("DELETE")
+	apiRouter.HandleFunc("/{id}/instances", handlers.ListNodeInstances).Methods("GET")
 	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/logs", handlers.GetInstanceLogs).Methods("GET")
 	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/logs", handlers.ClearInstanceLogs).Methods("DELETE")
 	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/stats", handlers.GetInstanceStats).Methods("GET")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/start", handlers.StartSpawnerInstance).Methods("POST")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/stop", handlers.StopSpawnerInstance).Methods("POST")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/restart", handlers.RestartSpawnerInstance).Methods("POST")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/update", handlers.UpdateSpawnerInstance).Methods("POST")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/rename", handlers.RenameSpawnerInstance).Methods("POST")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}", handlers.RemoveSpawnerInstance).Methods("DELETE")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/backup", handlers.BackupSpawnerInstance).Methods("POST")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/restore", handlers.RestoreSpawnerInstance).Methods("POST")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/backups", handlers.ListSpawnerBackups).Methods("GET")
-	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/backup/delete", handlers.DeleteSpawnerBackup).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/start", handlers.StartNodeInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/stop", handlers.StopNodeInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/restart", handlers.RestartNodeInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/update", handlers.UpdateNodeInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/rename", handlers.RenameNodeInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}", handlers.RemoveNodeInstance).Methods("DELETE")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/backup", handlers.BackupNodeInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/restore", handlers.RestoreNodeInstance).Methods("POST")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/backups", handlers.ListNodeBackups).Methods("GET")
+	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/backup/delete", handlers.DeleteNodeBackup).Methods("POST")
 	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/stats/history", handlers.GetInstanceHistory).Methods("GET")
 	apiRouter.HandleFunc("/{id}/instances/{instance_id:.+}/history", handlers.GetInstanceHistoryActions).Methods("GET")
-	apiRouter.HandleFunc("/{id}/update-template", handlers.UpdateSpawnerTemplate).Methods("POST")
+	apiRouter.HandleFunc("/{id}/update-template", handlers.UpdateNodeTemplate).Methods("POST")
 
 	// Game client routes - Secured via Game API Key
 	gameRouter := router.PathPrefix("/api/game").Subrouter()
@@ -301,8 +356,6 @@ func run() error {
 		router.Handle("/api/config", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(config.GetAllConfigHandler))).Methods("GET")
 		router.Handle("/api/config", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(config.CreateConfigHandler))).Methods("POST")
 		router.Handle("/api/config/category/{category}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(config.GetConfigByCategoryHandler))).Methods("GET")
-		router.Handle("/api/config/{key}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(config.UpdateConfigHandler))).Methods("PUT")
-		router.Handle("/api/config/key/{key}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(config.GetConfigByKeyHandler))).Methods("GET")
 
 		// Database Management Routes
 		router.Handle("/api/database/tables", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(database.GetAllTablesHandler))).Methods("GET")
@@ -356,7 +409,7 @@ func run() error {
 		// Performance Metrics API
 		router.Handle("/api/metrics", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.GetAllMetricsHandler))).Methods("GET")
 		router.Handle("/api/metrics/master", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.GetMasterMetricsHandler))).Methods("GET")
-		router.Handle("/api/metrics/spawners", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.GetSpawnerMetricsHandler))).Methods("GET")
+		router.Handle("/api/metrics/nodes", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.GetNodeMetricsHandler))).Methods("GET")
 		router.Handle("/api/metrics/database", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.GetDatabaseMetricsHandler))).Methods("GET")
 		router.Handle("/api/metrics/network", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.GetNetworkMetricsHandler))).Methods("GET")
 		router.Handle("/api/metrics/gc", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ForceGCHandler))).Methods("POST")
@@ -367,6 +420,7 @@ func run() error {
 		router.Handle("/api/enrollment/keys", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(enrollment.ListEnrollmentKeysHandler))).Methods("GET")
 		router.Handle("/api/enrollment/revoke", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(enrollment.RevokeEnrollmentKeyHandler))).Methods("POST")
 		router.Handle("/api/enrollment/status", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(enrollment.GetEnrollmentKeyStatusHandler))).Methods("POST")
+		router.Handle("/api/enrollment/approve", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(enrollment.ApproveEnrollmentHandler))).Methods("POST")
 
 		// Firebase Remote Config Routes
 		router.Handle("/api/config/firebase/status", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(auth.GetFirebaseStatusHandler))).Methods("GET")
@@ -376,6 +430,10 @@ func run() error {
 		router.Handle("/api/config/firebase/parameter", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(auth.UpdateFirebaseConfigHandler))).Methods("PUT")
 		router.Handle("/api/config/firebase/parameter", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(auth.DeleteFirebaseConfigHandler))).Methods("DELETE")
 		router.Handle("/api/config/firebase/publish", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(auth.PublishFirebaseConfigHandler))).Methods("POST")
+
+		// General Config Routes (Moved to end to allow dots in keys)
+		router.Handle("/api/config/{key:.+}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(config.UpdateConfigHandler))).Methods("PUT")
+		router.Handle("/api/config/key/{key:.+}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(config.GetConfigByKeyHandler))).Methods("GET")
 
 		// Notes & Todos API
 		router.Handle("/api/notes", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ListNotesHandler))).Methods("GET")
@@ -437,7 +495,7 @@ func run() error {
 	}
 
 	// Enrollment endpoints (public - enrollment key IS the auth)
-	router.HandleFunc("/api/enrollment/register", enrollment.RegisterSpawnerWithKeyHandler).Methods("POST")
+	router.HandleFunc("/api/enrollment/register", enrollment.RegisterNodeWithKeyHandler).Methods("POST")
 	router.HandleFunc("/api/enrollment/validate", enrollment.ValidateEnrollmentKeyHandler).Methods("POST")
 
 	// CLI-friendly status endpoint
@@ -447,20 +505,26 @@ func run() error {
 	// go ProactiveHealthCheck(healthCheckInterval)
 
 	// Start Stats Ticker (Memory & DB)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	go func() {
 		ticker := time.NewTicker(5 * time.Second)
 		defer ticker.Stop()
-		for range ticker.C {
-			registry.GlobalStats.UpdateMemoryStats()
-			if database.DBConn != nil {
-				registry.GlobalStats.UpdateDBStats(database.DBConn.Stats())
-				// Advanced Stats
-				advStats, err := database.GetAdvancedDBStats(database.DBConn)
-				if err == nil {
-					registry.GlobalStats.UpdateAdvancedDBStats(advStats)
-				} else {
-					log.Printf("Failed to get advanced DB stats: %v", err)
+		for {
+			select {
+			case <-ticker.C:
+				registry.GlobalStats.UpdateMemoryStats()
+				if database.DBConn != nil {
+					registry.GlobalStats.UpdateDBStats(database.DBConn.Stats())
+					// Advanced Stats
+					advStats, err := database.GetAdvancedDBStats(database.DBConn)
+					if err == nil {
+						registry.GlobalStats.UpdateAdvancedDBStats(advStats)
+					}
 				}
+			case <-ctx.Done():
+				return
 			}
 		}
 	}()
@@ -473,8 +537,11 @@ func run() error {
 	}
 
 	srv := &http.Server{
-		Addr:    fmt.Sprintf("%s:%s", serverHost, port),
-		Handler: middleware.SecurityHeadersMiddleware(redeye.RedEyeMiddleware(middleware.StatsMiddleware(router))),
+		Addr:         fmt.Sprintf("%s:%s", serverHost, port),
+		Handler:      middleware.SecurityHeadersMiddleware(GzipMiddleware(redeye.RedEyeMiddleware(middleware.StatsMiddleware(router)))),
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
 	}
 
 	go func() {

@@ -2,7 +2,7 @@ export interface SystemLog {
 	id: number;
 	timestamp: string;
 	level: 'INFO' | 'WARN' | 'ERROR' | 'FATAL';
-	category: 'Internal' | 'Spawner' | 'Security' | 'General';
+	category: 'Internal' | 'Node' | 'Security' | 'General';
 	source: string;
 	message: string;
 	details: string;

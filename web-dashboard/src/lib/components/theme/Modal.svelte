@@ -49,19 +49,23 @@
 		class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 {$siteSettings.aesthetic.glassmorphism ? 'backdrop-blur-sm' : ''}"
 		onclick={close}
 		transition:fade={{ duration: 200 }}
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="modal-title"
 	>
 		<div 
 			class="industrial-modal w-full {maxWidth} overflow-hidden shadow-2xl"
 			style="border-radius: var(--radius-lg); border: var(--card-border-width) solid var(--border-color);"
 			onclick={e => e.stopPropagation()}
 			transition:getTransition
+			role="document"
 		>
 			<!-- Header -->
 			<div class="flex items-center justify-between bg-black/40 backdrop-blur-md px-6 py-4 border-b border-stone-800">
-				<h3 class="font-heading text-xl text-rust-light tracking-widest uppercase">{title}</h3>
+				<h3 id="modal-title" class="font-heading text-xl text-rust-light tracking-widest uppercase">{title}</h3>
 				<button 
 					onclick={close}
-					class="text-stone-500 hover:text-white transition-colors p-1"
+					class="text-text-dim hover:text-white transition-colors p-1"
 					aria-label="Close"
 				>
 					<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>

@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { spawners, siteSettings } from '$lib/stores';
+	import { onMount, untrack } from 'svelte';
+	import { nodes, siteSettings } from '$lib/stores';
 	import { Server, Activity, Cpu, Skull, Database, User } from 'lucide-svelte';
 	import { fade, scale } from 'svelte/transition';
 
 	// Animation state
 	let center = $state({ x: 300, y: 300 }); // Master node position
-	let spawnerRadius = $state(250); // Radius for spawner placement around the master
+	let nodeRadius = $state(250); // Radius for node placement around the master
 
 	                              // RedEye and Database node positions (relative to master)
 
@@ -14,15 +14,24 @@
 
 	                              let databasePos = $derived({ x: center.x + 220, y: center.y + 160 });	// Track heartbeats for pulse animation
 	let lastHeartbeats: Record<number, number> = $state({});
-	let pulsingSpawners: Set<number> = $state(new Set());
+	let pulsingNodes: Set<number> = $state(new Set());
 	let masterReceiving = $state(false); // Track when master receives spark
 	let masterIgniteTimeout: ReturnType<typeof setTimeout> | null = null;
 
-	// Track spawner removal animations
-	let removingSpawners: Set<number> = $state(new Set());
-	let previousSpawners: Map<number, any> = new Map();
+	// Track node removal animations
+	let removingNodes: Set<number> = $state(new Set());
+	let previousNodes: Map<number, any> = new Map();
 
-	let hoveredSpawnerId: number | null = $state(null);
+	let hoveredNodeId: number | null = $state(null);
+	
+	// Performance: Limit active animations
+	let onlineNodeIds = $derived($nodes
+		.filter(s => s.status === 'online' || s.status === 'Online')
+		.map(s => s.id)
+		.slice(0, 10) // Only animate first 10 for performance
+	);
+	let animationLimitSet = $derived(new Set(onlineNodeIds));
+
 	let containerElement: HTMLDivElement;
 	let svgDimensions = $state({ width: 600, height: 600 });
 
@@ -61,7 +70,7 @@
 				const rect = containerElement.getBoundingClientRect();
 				svgDimensions = { width: rect.width, height: rect.height };
 				center = { x: rect.width / 2, y: rect.height / 2 };
-				spawnerRadius = Math.min(rect.width, rect.height) * 0.35;
+				nodeRadius = Math.min(rect.width, rect.height) * 0.35;
 			};
 
 			updateDimensions();
@@ -140,48 +149,51 @@
 		}
 	});
 
-	// Watch for spawner removal
+	// Watch for node removal
 	$effect(() => {
-		const currentIds = new Set($spawners.map((s) => s.id));
+		const currentIds = new Set($nodes.map((s) => s.id));
 
-		// Check for removed spawners
-		previousSpawners.forEach((spawner, id) => {
-			if (!currentIds.has(id) && !removingSpawners.has(id)) {
-				// Spawner was removed, trigger shatter animation
-				removingSpawners.add(id);
-				removingSpawners = new Set(removingSpawners);
+		// Check for removed nodes
+		previousNodes.forEach((node, id) => {
+			if (!currentIds.has(id) && !removingNodes.has(id)) {
+				// Node was removed, trigger shatter animation
+				removingNodes.add(id);
+				removingNodes = new Set(removingNodes);
 
 				// Clean up after animation completes
 				setTimeout(() => {
-					removingSpawners.delete(id);
-					removingSpawners = new Set(removingSpawners);
-					previousSpawners.delete(id);
+					removingNodes.delete(id);
+					removingNodes = new Set(removingNodes);
+					previousNodes.delete(id);
 				}, 1500);
 			}
 		});
 
-		// Update previous spawners map
-		$spawners.forEach((s) => {
-			previousSpawners.set(s.id, { ...s });
+		// Update previous nodes map
+		$nodes.forEach((s) => {
+			previousNodes.set(s.id, { ...s });
 		});
 	});
 
 	// Watch for heartbeat changes
 	$effect(() => {
-		$spawners.forEach((s) => {
-			const lastTime = new Date(s.last_seen || 0).getTime();
-			if (lastHeartbeats[s.id] && lastTime > lastHeartbeats[s.id]) {
-				// New heartbeat detected
-				triggerPulse(s.id);
-			}
-			lastHeartbeats[s.id] = lastTime;
+		const currentNodes = $nodes;
+		untrack(() => {
+			currentNodes.forEach((s) => {
+				const lastTime = new Date(s.last_seen || 0).getTime();
+				if (lastHeartbeats[s.id] && lastTime > lastHeartbeats[s.id]) {
+					// New heartbeat detected
+					triggerPulse(s.id);
+				}
+				lastHeartbeats[s.id] = lastTime;
+			});
 		});
 	});
 
 	function triggerPulse(id: number) {
 		if ($siteSettings.aesthetic.reduced_motion) return;
-		pulsingSpawners.add(id);
-		pulsingSpawners = new Set(pulsingSpawners);
+		pulsingNodes.add(id);
+		pulsingNodes = new Set(pulsingNodes);
 
 		// Trigger master ignition after spark travel time (2.5s)
 		setTimeout(() => {
@@ -189,8 +201,8 @@
 		}, 2500);
 
 		setTimeout(() => {
-			pulsingSpawners.delete(id);
-			pulsingSpawners = new Set(pulsingSpawners);
+			pulsingNodes.delete(id);
+			pulsingNodes = new Set(pulsingNodes);
 		}, 1000);
 	}
 
@@ -209,19 +221,22 @@
 	}
 
 	function getPosition(index: number, total: number) {
-		if (total === 0) return { x: center.x + spawnerRadius, y: center.y };
+		if (total === 0) return { x: center.x + nodeRadius, y: center.y };
 
-		// Arrange spawners in a circle around the master
+		// Arrange nodes in a circle around the master
 		// Offset by -Math.PI / 2 to start at the top
 		const angle = (index / total) * 2 * Math.PI - Math.PI / 2;
 
 		return {
-			x: center.x + spawnerRadius * Math.cos(angle),
-			y: center.y + spawnerRadius * Math.sin(angle)
+			x: center.x + nodeRadius * Math.cos(angle),
+			y: center.y + nodeRadius * Math.sin(angle)
 		};
 	}
 
 	function getConnectionPath(startX: number, startY: number, endX: number, endY: number) {
+		if (!$siteSettings.aesthetic.animations_enabled || $siteSettings.aesthetic.reduced_motion) {
+			return `M${startX},${startY} L${endX},${endY}`;
+		}
 		// Calculate control point for a slight curve
 		const midX = (startX + endX) / 2;
 		const midY = (startY + endY) / 2;
@@ -250,16 +265,16 @@
 		return `M${startX},${startY} L${startX},${midY} L${endX},${midY} L${endX},${endY}`;
 	}
 
-	function getStatusColor(spawner: any, isHovered: boolean) {
-		const isActive = spawner.status === 'online' || spawner.status === 'Online';
+	function getStatusColor(node: any, isHovered: boolean) {
+		const isActive = node.status === 'online' || node.status === 'Online';
 
 		if (!isActive) return { stroke: 'var(--color-red-500)', glow: 'rgba(239, 68, 68, 0.3)' };
 		if (isHovered) return { stroke: 'var(--color-rust-light)', glow: 'rgba(249, 115, 22, 0.5)' };
 		return { stroke: 'var(--color-rust)', glow: 'rgba(120, 53, 15, 0.2)' };
 	}
 
-	// Generate random shatter pieces for a spawner
-	function generateShatterPieces(spawnerIndex: number) {
+	// Generate random shatter pieces for a node
+	function generateShatterPieces(nodeIndex: number) {
 		const pieceCount = 12;
 		return Array.from({ length: pieceCount }, (_, i) => {
 			const angle = (i / pieceCount) * Math.PI * 2;
@@ -332,7 +347,7 @@
 			linear-gradient(rgba(249, 115, 22, 0.03) 1px, transparent 1px),
 			linear-gradient(90deg, rgba(249, 115, 22, 0.03) 1px, transparent 1px);
 			background-size: 50px 50px;
-			animation: gridMove 5s linear infinite; "
+			animation: {$siteSettings.aesthetic.animations_enabled && !$siteSettings.aesthetic.reduced_motion ? 'gridMove 5s linear infinite' : 'none'}; "
 	></div>
 
 	<!-- Radial gradient overlay for depth -->
@@ -353,6 +368,7 @@
 			<svg
 				class="w-full h-full pointer-events-none absolute inset-0"
 				viewBox="0 0 {svgDimensions.width} {svgDimensions.height}"
+				style="isolation: isolate; contain: content;"
 			>
 				<defs>
 					<!-- Enhanced glow filter -->
@@ -424,52 +440,34 @@
 					</filter>
 				</defs>
 
-				                                                                                                      <!-- Master Connection to Spawners -->
+				                                                                                                      <!-- Master Connection to Nodes -->
 
-				                                                                                                      {#each $spawners as spawner, i (spawner.id)}
-					{@const pos = getPosition(i, $spawners.length)}
-					{@const isActive = spawner.status === 'online' || spawner.status === 'Online'}
+				                                                                                                      {#each $nodes as node, i (node.id)}
+					{@const pos = getPosition(i, $nodes.length)}
+					{@const isActive = node.status === 'online' || node.status === 'Online'}
 					{@const connectionPathD = getConnectionPath(pos.x, pos.y, center.x, center.y)}
-					{@const colors = getStatusColor(spawner, hoveredSpawnerId === spawner.id)}
+					{@const colors = getStatusColor(node, hoveredNodeId === node.id)}
 
 					<!-- Connection Line with curve -->
 					<path
-						id={`connection-${spawner.id}`}
+						id={`connection-${node.id}`}
 						d={connectionPathD}
 						stroke={colors.stroke}
-						stroke-width={hoveredSpawnerId === spawner.id ? 3 : 2}
+						stroke-width={hoveredNodeId === node.id ? 3 : 2}
 						stroke-dasharray={isActive ? '25, 5' : '40, 5'}
-						opacity={hoveredSpawnerId === spawner.id ? 0.8 : 0.5}
+						opacity={hoveredNodeId === node.id ? 0.8 : 0.5}
 						fill="none"
-						filter={(hoveredSpawnerId === spawner.id && $siteSettings.aesthetic.glow_effects) ? 'url(#glow)' : ''}
-						style="transition: all 0.1s ease;"
-					>
-						{#if isActive && $siteSettings.aesthetic.animations_enabled}
-							<animate
-								attributeName="stroke-dashoffset"
-								from="0"
-								to="-15"
-								dur="2.5s"
-								repeatCount="indefinite"
-							/>
-						{:else if !isActive && $siteSettings.aesthetic.animations_enabled}
-							<animate
-								attributeName="stroke-dashoffset"
-								from="0"
-								to="-10"
-								dur="2s"
-								repeatCount="indefinite"
-							/>
-						{/if}
-					</path>
+						filter={(hoveredNodeId === node.id && $siteSettings.aesthetic.glow_effects) ? 'url(#glow)' : ''}
+						class={isActive && $siteSettings.aesthetic.animations_enabled ? 'animate-dash-flow' : !isActive && $siteSettings.aesthetic.animations_enabled ? 'animate-dash-static' : ''}
+						style="transition: all 0.1s ease; transform: translate3d(0,0,0);"
+					/>
 
 					<!-- Pulse Packet (Enhanced Spark) -->
-					{#if pulsingSpawners.has(spawner.id) && isActive && $siteSettings.aesthetic.animations_enabled}
-						<g filter={$siteSettings.aesthetic.glow_effects ? "url(#strongGlow)" : ""}>
+					{#if pulsingNodes.has(node.id) && isActive && $siteSettings.aesthetic.animations_enabled && animationLimitSet.has(node.id)}
+						<g filter={$siteSettings.aesthetic.glow_effects ? "url(#strongGlow)" : ""} style="transform: translate3d(0,0,0);">
 							<!-- Main spark -->
 							<circle r="4" fill="#10b971">
 								<animateMotion dur="1s" repeatCount="1" path={connectionPathD} fill="freeze" />
-								<animate attributeName="r" values="4;5;4" dur="0.3s" repeatCount="3" />
 							</circle>
 							<!-- Trail Effect -->
 							<circle r="6" fill="#34d399" opacity="1.7">
@@ -481,117 +479,24 @@
 									begin="0.05s"
 								/>
 							</circle>
-							<circle r="2" fill="#6ee7b7" opacity="0.5">
-								<animateMotion
-									dur="0.5s"
-									repeatCount="1"
-									path={connectionPathD}
-									fill="freeze"
-									begin="0.1s"
-								/>
-							</circle>
 						</g>
 					{/if}
 
 					<!-- Fire spark with trails -->
-					{#if isActive && $siteSettings.aesthetic.animations_enabled}
-						<g filter={$siteSettings.aesthetic.glow_effects ? "url(#strongGlow)" : ""}>
-							<!-- Main fire spark (orange-yellow core) -->
+					{#if isActive && $siteSettings.aesthetic.animations_enabled && animationLimitSet.has(node.id)}
+						<g filter={$siteSettings.aesthetic.glow_effects ? "url(#strongGlow)" : ""} style="transform: translate3d(0,0,0);">
+							<!-- Main fire spark -->
 							<circle r="3" fill="#ff6b35">
 								<animateMotion dur="2.5s" repeatCount="indefinite" path={connectionPathD} />
-								<animate
-									attributeName="fill"
-									values="#ff6b35;#ffd93d;#ff6b35"
-									dur="8.4s"
-									repeatCount="indefinite"
-								/>
-								<animate attributeName="r" values="3;3.5;3" dur="0.3s" repeatCount="indefinite" />
 							</circle>
 
-							<!-- Inner glow (bright yellow) -->
-							<circle r="2" fill="#ffeb3b">
-								<animateMotion dur="2.7s" repeatCount="indefinite" path={connectionPathD} />
-								<animate
-									attributeName="opacity"
-									values="0.9;1;0.9"
-									dur="8.2s"
-									repeatCount="indefinite"
-								/>
-							</circle>
-
-							<!-- Trail particles (orange to red gradient) -->
+							<!-- Trail particles -->
 							<circle r="2.5" fill="#ff8c42" opacity="0.8">
 								<animateMotion
 									dur="2.5s"
 									repeatCount="indefinite"
 									path={connectionPathD}
 									begin="0.1s"
-								/>
-								<animate
-									attributeName="r"
-									values="2.5;1.5;0.5"
-									dur="0.8s"
-									repeatCount="indefinite"
-								/>
-								<animate
-									attributeName="opacity"
-									values="0.8;0.4;0"
-									dur="0.8s"
-									repeatCount="indefinite"
-								/>
-							</circle>
-
-							<circle r="2" fill="#ff6b35" opacity="0.7">
-								<animateMotion
-									dur="2.5s"
-									repeatCount="indefinite"
-									path={connectionPathD}
-									begin="0.2s"
-								/>
-								<animate attributeName="r" values="2;1.2;0.3" dur="0.7s" repeatCount="indefinite" />
-								<animate
-									attributeName="opacity"
-									values="0.7;0.3;0"
-									dur="0.7s"
-									repeatCount="indefinite"
-								/>
-							</circle>
-
-							<circle r="1.5" fill="#d64933" opacity="0.6">
-								<animateMotion
-									dur="2.5s"
-									repeatCount="indefinite"
-									path={connectionPathD}
-									begin="0.3s"
-								/>
-								<animate
-									attributeName="r"
-									values="1.5;0.8;0.2"
-									dur="0.6s"
-									repeatCount="indefinite"
-								/>
-								<animate
-									attributeName="opacity"
-									values="0.6;0.2;0"
-									dur="0.6s"
-									repeatCount="indefinite"
-								/>
-							</circle>
-
-							<!-- Ember particles (small red dots) -->
-							<circle r="1" fill="#d64933" opacity="0.5">
-								<animateMotion
-									dur="2.5s"
-									repeatCount="indefinite"
-									path={connectionPathD}
-									begin="0.4s"
-								/>
-								<animate attributeName="r" values="1;0.5;0.1" dur="0.5s" repeatCount="indefinite" />
-								<animate
-									attributeName="opacity"
-									values="0.5;0.1;0"
-									dur="0.5s"
-									repeatCount="indefinite"
 								/>
 							</circle>
 						</g>
@@ -1169,19 +1074,19 @@
 			                                                    
 			                                                                                                                        </div>
 
-			<!-- Spawner Nodes -->
-			{#each $spawners as spawner, i (spawner.id)}
-				{@const pos = getPosition(i, $spawners.length)}
-				{@const isActive = spawner.status === 'online' || spawner.status === 'Online'}
+			<!-- Node Nodes -->
+			{#each $nodes as node, i (node.id)}
+				{@const pos = getPosition(i, $nodes.length)}
+				{@const isActive = node.status === 'online' || node.status === 'Online'}
 				{@const utilization =
-					spawner.max_instances > 0 ? (spawner.current_instances / spawner.max_instances) * 100 : 0}
+					node.max_instances > 0 ? (node.current_instances / node.max_instances) * 100 : 0}
 
 				<div
 					class="absolute z-10 flex flex-col items-center group cursor-pointer transition-all duration-300 hover:scale-110 hover:z-30"
 					style="top: {pos.y - 28}px; left: {pos.x - 28}px;"
 					in:scale={{ duration: $siteSettings.aesthetic.animations_enabled ? 400 : 0, delay: i * 100 }}
-					onmouseenter={() => (hoveredSpawnerId = spawner.id)}
-					onmouseleave={() => (hoveredSpawnerId = null)}
+					onmouseenter={() => (hoveredNodeId = node.id)}
+					onmouseleave={() => (hoveredNodeId = null)}
 					role="button"
 					tabindex="0"
 				>
@@ -1219,7 +1124,7 @@
 							class={`
 						relative w-12 h-12 rounded-full flex items-center justify-center border-2 shadow-lg ${$siteSettings.aesthetic.glassmorphism ? 'backdrop-blur-md' : ''}
 						${isActive ? 'bg-gradient-to-br from-stone-900 to-black border-rust-light shadow-rust-light/30' : 'bg-slate-900/95 border-red-500/70 shadow-red-500/40'}
-						${(pulsingSpawners.has(spawner.id) && $siteSettings.aesthetic.animations_enabled) ? 'node-pulse border-emerald-400 shadow-emerald-500/60' : ''}
+						${(pulsingNodes.has(node.id) && $siteSettings.aesthetic.animations_enabled) ? 'node-pulse border-emerald-400 shadow-emerald-500/60' : ''}
 						transition-all duration-300
 					`}
 						>
@@ -1248,39 +1153,39 @@
 						class="absolute top-16 flex flex-col items-center bg-[var(--card-bg)] ${$siteSettings.aesthetic.glassmorphism ? 'backdrop-blur-sm' : ''} px-4 py-2 rounded-xl border border-[var(--border-color)] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-40 pointer-events-none shadow-2xl"
 					>
 						<span class="text-sm font-bold text-slate-900 dark:text-white mb-1"
-							>Spawner #{spawner.id}</span
+							>Node #{node.id}</span
 						>
 						<div
 							class="w-full h-px bg-gradient-to-r from-transparent via-rust-light to-transparent mb-1"
 						></div>
 						<div class="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300">
 							<Activity class="w-3 h-3" />
-							<span>{spawner.region}</span>
+							<span>{node.region}</span>
 						</div>
 						<div class="text-xs text-slate-500 dark:text-slate-400 mt-1">
 							Instances: <span class="font-mono text-slate-800 dark:text-slate-200"
-								>{spawner.current_instances}</span
-							>/<span class="font-mono">{spawner.max_instances}</span>
+								>{node.current_instances}</span
+							>/<span class="font-mono">{node.max_instances}</span>
 							<span class="ml-2 text-[10px]">({utilization.toFixed(0)}%)</span>
 						</div>
 						<span
 							class={`text-xs font-mono mt-1 font-semibold ${isActive ? 'text-emerald-400' : 'text-red-400'}`}
 						>
-							● {spawner.status?.toUpperCase() || 'UNKNOWN'}
+							● {node.status?.toUpperCase() || 'UNKNOWN'}
 						</span>
 					</div>
 				</div>
 			{/each}
 
-			<!-- Shatter animations for removed spawners -->
-			{#each Array.from(removingSpawners) as removedId (removedId)}
-				{@const spawnerData = previousSpawners.get(removedId)}
-				{#if spawnerData}
-					{@const allSpawnerIds = Array.from(previousSpawners.keys())}
-					{@const spawnerIndex = allSpawnerIds.indexOf(removedId)}
-					{@const totalSpawners = Math.max(allSpawnerIds.length, 1)}
-					{@const pos = getPosition(spawnerIndex >= 0 ? spawnerIndex : 0, totalSpawners)}
-					{@const pieces = generateShatterPieces(spawnerIndex >= 0 ? spawnerIndex : 0)}
+			<!-- Shatter animations for removed nodes -->
+			{#each Array.from(removingNodes) as removedId (removedId)}
+				{@const nodeData = previousNodes.get(removedId)}
+				{#if nodeData}
+					{@const allNodeIds = Array.from(previousNodes.keys())}
+					{@const nodeIndex = allNodeIds.indexOf(removedId)}
+					{@const totalNodes = Math.max(allNodeIds.length, 1)}
+					{@const pos = getPosition(nodeIndex >= 0 ? nodeIndex : 0, totalNodes)}
+					{@const pieces = generateShatterPieces(nodeIndex >= 0 ? nodeIndex : 0)}
 
 					<!-- Shatter effect container -->
 					<div class="absolute z-50 pointer-events-none" style="top: {pos.y}px; left: {pos.x}px;">
@@ -1346,14 +1251,14 @@
 	<div class="bg-black/60 backdrop-blur-md px-3 py-2 border border-stone-800">
 		<span class="text-stone-500">Active_Nodes:</span>
 		<span class="text-rust-light ml-2 font-black">
-			{$spawners.filter((s) => s.status === 'online' || s.status === 'Online')
-				.length}/{$spawners.length}
+			{$nodes.filter((s) => s.status === 'online' || s.status === 'Online')
+				.length}/{$nodes.length}
 		</span>
 	</div>
 	<div class="bg-black/60 backdrop-blur-md px-3 py-2 border border-stone-800">
 		<span class="text-stone-500">Instance_Buffer:</span>
 		<span class="text-emerald-500 ml-2 font-black">
-			{$spawners.reduce((sum, s) => sum + s.current_instances, 0)}/{$spawners.reduce(
+			{$nodes.reduce((sum, s) => sum + s.current_instances, 0)}/{$nodes.reduce(
 				(sum, s) => sum + s.max_instances,
 				0
 			)}
@@ -2046,6 +1951,28 @@
 
 	.animate-scan-laser {
 		animation: scanLaser 2s ease-in-out infinite;
+	}
+
+	@keyframes dash-flow {
+		from { stroke-dashoffset: 0; }
+		to { stroke-dashoffset: -30; }
+	}
+	@keyframes dash-static {
+		from { stroke-dashoffset: 0; }
+		to { stroke-dashoffset: -45; }
+	}
+	@keyframes glow-slide {
+		0% { transform: translateX(-100%); }
+		100% { transform: translateX(100%); }
+	}
+	.animate-dash-flow {
+		animation: dash-flow 2.5s linear infinite;
+	}
+	.animate-dash-static {
+		animation: dash-static 5s linear infinite;
+	}
+	.animate-glow-slide {
+		animation: glow-slide 2s infinite linear;
 	}
 
 	@keyframes spin-slow {

@@ -8,8 +8,8 @@
 *.dylib
 server/server_bin
 server/server
-spawner/spawner_bin
-spawner/spawner
+node/spawner_bin
+node/spawner
 
 # Editor directories and files
 .vscode/
@@ -27,7 +27,7 @@ Thumbs.db
 
 # Environment and local data
 .env
-spawner/.env
+node/.env
 server/.env
 registry.db
 *.db
@@ -55,13 +55,15 @@ server/files/*.zip
 server/*.json
 !server/.env.example
 
-# Spawner specific
-spawner/lin/
-spawner/instances/
-spawner/game_server/
-spawner/instancesx/
-spawner/examples/
+# Node specific
+node/lin/
+node/instances/
+node/game_server/
+node/instancesx/
+node/examples/
 2fa generator/
 
 
 /exile-480006-firebase-adminsdk-fbsvc-69d03b675e.json
+web-dashboard/node_modules/
+web-dashboard/.svelte-kit/

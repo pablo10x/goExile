@@ -5,14 +5,14 @@
 This repository contains 3 interconnected projects:
 
 1. **Master Server** (`server/`) - Central registry and API server
-   - Manages spawner registration and tracking
+   - Manages node registration and tracking
    - Handles game instance spawning requests
    - Provides REST API and WebSocket endpoints
-   - Optional SQLite persistence for spawner state
+   - Optional SQLite persistence for node state
    - SSE (Server-Sent Events) for real-time dashboard updates
    - Authentication and session management
 
-2. **Spawner** (`spawner/`) - Unity game server spawner and real-time manager
+2. **Node** (`node/`) - Unity game server node and real-time manager
    - Spawns and manages multiple game server instances
    - Monitors resource usage (CPU, memory, disk)
    - Communicates with master server via WebSocket
@@ -23,22 +23,22 @@ This repository contains 3 interconnected projects:
 3. **Web Dashboard** (`web-dashboard/`) - SvelteKit-based web dashboard
    - Real-time monitoring and control interface
    - Communicates with master server via REST API and SSE
-   - Manages spawners, instances, and configurations
+   - Manages nodes, instances, and configurations
    - Performance metrics visualization
    - User authentication and session management
 
 ## Systems & Architecture
 
 ### Master Server Systems
-- **Registry System**: In-memory spawner registry with optional SQLite persistence
-- **WebSocket Manager**: Manages spawner connections, command routing, and responses
+- **Registry System**: In-memory node registry with optional SQLite persistence
+- **WebSocket Manager**: Manages node connections, command routing, and responses
 - **SSE Hub**: Real-time dashboard updates via Server-Sent Events
 - **Authentication**: Session-based auth with API key support
-- **Database**: Optional SQLite for spawner persistence and instance action logging
-- **REST API**: HTTP endpoints for spawner management, instance spawning, config management
+- **Database**: Optional SQLite for node persistence and instance action logging
+- **REST API**: HTTP endpoints for node management, instance spawning, config management
 - **File Upload**: Game server version management and distribution
 
-### Spawner Systems
+### Node Systems
 - **Game Manager**: Lifecycle management of game server instances (spawn, start, stop, remove)
 - **WebSocket Client**: Persistent connection to master server for registration, heartbeat, and commands
 - **Resource Monitoring**: CPU, memory, disk usage tracking per instance
@@ -47,7 +47,7 @@ This repository contains 3 interconnected projects:
 - **REST API**: Local HTTP API for instance management (protected by API key)
 
 ### Web Dashboard Systems
-- **Real-time Updates**: SSE connection for live spawner/instance status
+- **Real-time Updates**: SSE connection for live node/instance status
 - **State Management**: Svelte stores for global state
 - **Component Library**: Reusable UI components (charts, tables, modals, etc.)
 - **Routing**: SvelteKit file-based routing
@@ -62,8 +62,8 @@ This repository contains 3 interconnected projects:
 - `StatsCard.svelte` - Statistics display cards
 - `Terminal.svelte` - Terminal/console output viewer
 
-### Spawner Management
-- `SpawnerTable.svelte` - Main spawner listing table
+### Node Management
+- `NodeTable.svelte` - Main node listing table
 - `InstanceManagerModal.svelte` - Instance management modal
 - `InstanceRow.svelte` - Individual instance row component
 
@@ -85,7 +85,7 @@ This repository contains 3 interconnected projects:
 - `modernc.org/sqlite` - SQLite driver
 - `golang.org/x/crypto` - Password hashing (bcrypt)
 
-### Spawner (Go)
+### Node (Go)
 - `github.com/gin-gonic/gin` - HTTP web framework
 - `github.com/gorilla/websocket` - WebSocket client
 - `github.com/joho/godotenv` - Environment variable loading
@@ -107,8 +107,8 @@ This repository contains 3 interconnected projects:
 - `/` - Main dashboard page
 - `/login` - Authentication page
 - `/server` - Server management
-- `/spawners` - Spawner listing
-- `/spawners/[id]` - Individual spawner details
+- `/nodes` - Node listing
+- `/nodes/[id]` - Individual node details
 - `/config` - Configuration management
 - `/config/[category]` - Category-specific config
 - `/performance` - Performance metrics
@@ -120,9 +120,9 @@ This repository contains 3 interconnected projects:
 
 ## Completed
 
-- ✅ **WebSocket Migration** - Changed spawner communication with master server from HTTP to WebSocket
+- ✅ **WebSocket Migration** - Changed node communication with master server from HTTP to WebSocket
   - Master server now accepts full registration metadata via WebSocket
-  - Spawner registers with full metadata (region, host, port, max_instances, etc.)
+  - Node registers with full metadata (region, host, port, max_instances, etc.)
   - Removed HTTP registration loop and heartbeat functions
   - WebSocket handles registration, heartbeat, and command routing
   - **All instance management operations now use WebSocket:**
@@ -131,8 +131,8 @@ This repository contains 3 interconnected projects:
     - Instance updates, renaming
     - Backup operations (create, restore, list, delete)
     - Template updates
-    - Spawner logs (get/clear)
-  - All HTTP-based spawner communication has been migrated to WebSocket
+    - Node logs (get/clear)
+  - All HTTP-based node communication has been migrated to WebSocket
 
 - ✅ **Advanced UI Animations & Enhancements** - Comprehensive visual improvements across the dashboard
   - **Dashboard Page:**
@@ -141,7 +141,7 @@ This repository contains 3 interconnected projects:
     - Gradient backgrounds with smooth color transitions
     - Enhanced hover effects with scale, shadow, and lift animations
     - Pulsing status indicators and animated connection badges
-    - Glassmorphism effects on spawner section
+    - Glassmorphism effects on node section
   - **Sidebar Navigation:**
     - Animated gradient orbs with blob animations
     - Staggered navigation item loading with slide-in effects

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { isAuthenticated } from '$lib/stores';
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
@@ -43,6 +43,7 @@
 					await goto('/login/2fa');
 				} else {
 					isAuthenticated.set(true);
+					await invalidateAll();
 					await goto('/');
 				}
 			} else {
@@ -86,18 +87,18 @@
 			<div class="space-y-2">
 				<div class="flex items-center justify-center gap-3">
 					<div class="w-2 h-2 bg-rust animate-pulse shadow-[0_0_10px_var(--color-rust)]"></div>
-					<span class="text-[10px] font-black text-stone-500 uppercase tracking-[0.4em]">Secure_Uplink_v4.2</span>
+					<span class="text-[10px] font-black text-text-dim uppercase tracking-[0.4em]">Secure_Uplink_v4.2</span>
 				</div>
 				<h1 class="text-5xl font-heading font-black text-white uppercase tracking-tighter leading-none">
 					EXILE_<span class="text-rust">CORE</span>
 				</h1>
-				<p class="text-[10px] font-black text-stone-600 uppercase tracking-widest italic pt-2">Neural Identity Verification Required</p>
+				<p class="text-[10px] font-black text-text-dim uppercase tracking-widest italic pt-2">Neural Identity Verification Required</p>
 			</div>
 		</div>
 
 		<form onsubmit={handleLogin} class="space-y-8 relative z-10">
 			<div class="space-y-3">
-				<label for="email" class="text-[9px] font-black text-stone-500 uppercase tracking-[0.3em] ml-1">Identity_Signature</label>
+				<label for="email" class="text-[9px] font-black text-text-dim uppercase tracking-[0.3em] ml-1">Identity_Signature</label>
 				<div class="relative group">
 					<User class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-700 group-focus-within:text-rust transition-colors" />
 					<input
@@ -112,7 +113,7 @@
 			</div>
 
 			<div class="space-y-3">
-				<label for="password" class="text-[9px] font-black text-stone-500 uppercase tracking-[0.3em] ml-1">Access_Cipher</label>
+				<label for="password" class="text-[9px] font-black text-text-dim uppercase tracking-[0.3em] ml-1">Access_Cipher</label>
 				<div class="relative group">
 					<Lock class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-700 group-focus-within:text-rust transition-colors" />
 					<input
@@ -127,7 +128,7 @@
 			</div>
 
 			{#if error}
-			<div in:fade class="bg-red-950/20 border border-red-900/50 text-red-500 text-[10px] font-black p-4 flex items-center gap-4 uppercase tracking-widest shadow-inner industrial-frame">
+			<div in:fade class="bg-red-950/20 border border-red-900/50 text-danger text-[10px] font-black p-4 flex items-center gap-4 uppercase tracking-widest shadow-inner industrial-frame">
 				<Shield class="w-4 h-4 shrink-0" />
 				<span>{error}</span>
 			</div>

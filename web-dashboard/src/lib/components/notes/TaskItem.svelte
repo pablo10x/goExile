@@ -143,7 +143,7 @@
 		{#if todo.sub_tasks && todo.sub_tasks.length > 0}
 			<button
 				onclick={() => (expanded = !expanded)}
-				class="p-1 rounded hover:bg-slate-700 text-slate-500 transition-colors"
+				class="p-1 rounded hover:bg-slate-700 text-text-dim transition-colors"
 			>
 				{#if expanded}
 					<ChevronDown class="w-3 h-3" />
@@ -157,10 +157,10 @@
 
 		<button
 			onclick={() => onToggle(todo)}
-			class="text-slate-500 dark:text-slate-400 hover:text-emerald-400 transition-colors shrink-0"
+			class="text-text-dim dark:text-text-dim hover:text-success transition-colors shrink-0"
 		>
 			{#if todo.done}
-				<CheckSquare class="w-5 h-5 text-emerald-500" />
+				<CheckSquare class="w-5 h-5 text-success" />
 			{:else}
 				<Square class="w-5 h-5" />
 			{/if}
@@ -170,7 +170,7 @@
 			<div class="flex items-center gap-2">
 				<span
 					class="text-sm font-medium truncate {todo.done
-						? 'line-through text-slate-500'
+						? 'line-through text-text-dim'
 						: 'text-slate-800 dark:text-slate-200'}"
 				>
 					{todo.content}
@@ -184,7 +184,7 @@
 			</div>
 
 			<div class="flex items-center gap-3 mt-0.5">
-				<div class="flex items-center gap-1 text-[9px] text-slate-500">
+				<div class="flex items-center gap-1 text-[9px] text-text-dim">
 					<Clock class="w-2.5 h-2.5" />
 					<span>{formatTime(todo.created_at)}</span>
 				</div>
@@ -193,8 +193,8 @@
 					<div
 						class="flex items-center gap-1 text-[9px] {new Date(todo.deadline) < new Date() &&
 						!todo.done
-							? 'text-red-400'
-							: 'text-slate-500'}"
+							? 'text-danger'
+							: 'text-text-dim'}"
 					>
 						<Calendar class="w-2.5 h-2.5" />
 						<span>{formatTime(todo.deadline)}</span>
@@ -217,14 +217,14 @@
 			{#if !todo.done}
 				<button
 					onclick={() => (showAddSubTask = !showAddSubTask)}
-					class="p-1.5 rounded hover:bg-slate-700 text-slate-500 hover:text-emerald-400 transition-colors"
+					class="p-1.5 rounded hover:bg-slate-700 text-text-dim hover:text-success transition-colors"
 					title="Add sub-task"
 				>
 					<Plus class="w-3.5 h-3.5" />
 				</button>
 				<button
 					onclick={() => (showComments = !showComments)}
-					class="p-1.5 rounded hover:bg-slate-700 text-slate-500 hover:text-indigo-400 transition-colors"
+					class="p-1.5 rounded hover:bg-slate-700 text-text-dim hover:text-indigo-400 transition-colors"
 					title="Comments"
 				>
 					<MessageSquare class="w-3.5 h-3.5" />
@@ -232,8 +232,8 @@
 				<button
 					onclick={() => onToggleProgress(todo)}
 					class="p-1.5 rounded hover:bg-slate-700 transition-colors {todo.in_progress
-						? 'text-blue-400'
-						: 'text-slate-500'}"
+						? 'text-info'
+						: 'text-text-dim'}"
 					title={todo.in_progress ? 'Pause progress' : 'Start progress'}
 				>
 					<Clock class="w-3.5 h-3.5" />
@@ -241,7 +241,7 @@
 			{/if}
 			<button
 				onclick={() => onDelete(todo.id)}
-				class="text-slate-500 hover:text-red-400 p-1.5 rounded hover:bg-slate-700 transition-colors"
+				class="text-text-dim hover:text-danger p-1.5 rounded hover:bg-slate-700 transition-colors"
 			>
 				<Trash2 class="w-3.5 h-3.5" />
 			</button>
@@ -294,7 +294,7 @@
 							</div>
 							<button
 								onclick={() => deleteComment(comment.id)}
-								class="opacity-0 group-hover/comment:opacity-100 text-slate-600 hover:text-red-400 transition-all"
+								class="opacity-0 group-hover/comment:opacity-100 text-slate-600 hover:text-danger transition-all"
 							>
 								<Trash2 class="w-2.5 h-2.5" />
 							</button>

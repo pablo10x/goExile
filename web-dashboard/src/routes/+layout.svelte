@@ -1,24 +1,26 @@
 <script lang="ts">
 	import '../app.css';
 	import { onMount, onDestroy } from 'svelte';
+	import { get } from 'svelte/store';
 	import { fade, slide } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import {
-		isAuthenticated,
-		restartRequired,
 		stats,
-		spawners,
+		nodes,
+		notifications,
 		serverVersions,
 		isConnected,
 		connectionStatus,
-		notes,
-		showQuickActions,
-		notifications,
+		loadAllSettings,
 		theme,
-		backgroundConfig,
 		siteSettings,
-		loadAllSettings
+		showQuickActions,
+		backgroundConfig,
+		isAuthenticated,
+		notes,
+		restartRequired
 	} from '$lib/stores';
 	import type { Note } from '$lib/stores';
 	import {
@@ -39,6 +41,7 @@
 		Download,
 		Upload,
 		ShieldCheck,
+		ShieldAlert,
 		Plus,
 		Zap,
 		ZapOff,
@@ -55,7 +58,10 @@
 		Layers,
 		BarChart3,
 		ChevronRight,
-		X
+		X,
+		Gauge,
+		FileText,
+		Sliders
 	} from 'lucide-svelte';
 	import QuickActionsTooltip from '$lib/components/QuickActionsTooltip.svelte';
 	import NoteModal from '$lib/components/notes/NoteModal.svelte';
@@ -65,14 +71,57 @@
 	import SectionBackground from '$lib/components/theme/SectionBackground.svelte';
 	import ServerStatus from '$lib/components/theme/ServerStatus.svelte';
 	import Notifications from '$lib/components/theme/Notifications.svelte';
+	import Icon from '$lib/components/theme/Icon.svelte';
+	import CommandPalette from '$lib/components/CommandPalette.svelte';
 
-	let { children } = $props();
+	let { children, data } = $props();
 	let isChecking = $state(true);
 	let restarting = $state(false);
+	let isCommandPaletteOpen = $state(false);
 	let eventSource: EventSource | null = null;
 
 	let localBackgroundConfig = $derived($backgroundConfig);
 	let localSiteSettings = $derived($siteSettings);
+
+	// Keyboard shortcut orchestration
+	onMount(() => {
+		const handleGlobalKeydown = (e: KeyboardEvent) => {
+			// Ctrl+K or Cmd+K for Command Palette
+			if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+				e.preventDefault();
+				isCommandPaletteOpen = !isCommandPaletteOpen;
+			}
+
+			// Don't trigger shortcuts if user is typing in an input
+			if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+			// G + [key] navigation pattern
+			if (e.key === 'g') {
+				const nextKey = (ev: KeyboardEvent) => {
+					if (ev.key === 'd') goto('/dashboard');
+					if (ev.key === 'l') goto('/logs');
+					if (ev.key === 'p') goto('/performance');
+					if (ev.key === 't') goto('/config/theme');
+					if (ev.key === 'n') goto('/server');
+					window.removeEventListener('keydown', nextKey);
+				};
+				window.addEventListener('keydown', nextKey, { once: true });
+			}
+		};
+
+		window.addEventListener('keydown', handleGlobalKeydown);
+		return () => window.removeEventListener('keydown', handleGlobalKeydown);
+	});
+
+	// Sync isAuthenticated and stats store with server-side data on load
+	$effect.pre(() => {
+		if (data?.isAuthenticated !== undefined) {
+			isAuthenticated.set(data.isAuthenticated);
+		}
+		if (data?.stats) {
+			stats.set(data.stats);
+		}
+	});
 
 	// Theme handling
 	$effect(() => {
@@ -107,14 +156,28 @@
 				root.style.setProperty('--card-border-width', ($siteSettings.aesthetic.card_border_width ?? 1) + 'px');
 				root.style.setProperty('--card-shadow-size', ($siteSettings.aesthetic.card_shadow_size ?? 4) + 'px');
 				
-				// Granular Colors
-				root.style.setProperty('--primary-color', $siteSettings.aesthetic.primary_color || '#d97706');
-				root.style.setProperty('--secondary-color', $siteSettings.aesthetic.secondary_color || '#1e293b');
-				root.style.setProperty('--card-bg-color', $siteSettings.aesthetic.card_bg_color || '#0f172a');
+				                // Core Colors
+				                root.style.setProperty('--primary-color', $siteSettings.aesthetic.primary_color || '#f97316');
+				                root.style.setProperty('--color-rust', $siteSettings.aesthetic.primary_color || '#c2410c');
+				                root.style.setProperty('--secondary-color', $siteSettings.aesthetic.secondary_color || '#334155');				root.style.setProperty('--card-bg-color', $siteSettings.aesthetic.card_bg_color || '#0f172a');
 				root.style.setProperty('--hover-color', $siteSettings.aesthetic.hover_color || '#1e293b');
 				root.style.setProperty('--text-primary', $siteSettings.aesthetic.text_color_primary || '#e2e2e2');
 				root.style.setProperty('--text-secondary', $siteSettings.aesthetic.text_color_secondary || '#888888');
+				root.style.setProperty('--text-dim', $siteSettings.aesthetic.text_color_dim || '#666666');
 				root.style.setProperty('--border-color', $siteSettings.aesthetic.border_color || '#1e293b');
+
+				// Header & Sidebar & Scrollbars
+				root.style.setProperty('--header-bg', $siteSettings.aesthetic.header_bg_color || 'rgba(0, 0, 0, 0.8)');
+				root.style.setProperty('--sidebar-bg', $siteSettings.aesthetic.sidebar_bg_color || 'rgba(24, 24, 27, 0.9)');
+				root.style.setProperty('--scrollbar-thumb', $siteSettings.aesthetic.scrollbar_thumb_color || '#3f3f46');
+				root.style.setProperty('--scrollbar-track', $siteSettings.aesthetic.scrollbar_track_color || 'rgba(0, 0, 0, 0.2)');
+				root.style.setProperty('--terminal-bg', $siteSettings.aesthetic.terminal_bg_color || '#050505');
+
+				// Specialized Colors
+				root.style.setProperty('--color-success', $siteSettings.aesthetic.success_color || '#10b981');
+				root.style.setProperty('--color-warning', $siteSettings.aesthetic.warning_color || '#f59e0b');
+				root.style.setProperty('--color-danger', $siteSettings.aesthetic.danger_color || '#ef4444');
+				root.style.setProperty('--color-info', $siteSettings.aesthetic.info_color || '#06b6d4');
 
 				// New settings
 				root.style.setProperty('--scanline-speed', ($siteSettings.aesthetic.scanline_speed ?? 4) + 's');
@@ -152,8 +215,20 @@
 
 				// Kinetic Physics
 				root.style.setProperty('--global-transition', ($siteSettings.aesthetic.global_transition_speed ?? 300) + 'ms');
-				root.style.setProperty('--hover-scale', ($siteSettings.aesthetic.hover_scale_factor ?? 1.02).toString());
-				root.style.setProperty('--press-depth', ($siteSettings.aesthetic.button_press_depth ?? 2) + 'px');
+				root.style.setProperty('--press-depth', ($siteSettings.aesthetic.button_press_depth || 2) + 'px');
+				root.style.setProperty('--hover-scale', ($siteSettings.aesthetic.hover_scale_factor || 1.02).toString());
+				root.style.setProperty('--spin-speed', (3 / ($siteSettings.aesthetic.spin_velocity || 1)) + 's');
+				root.style.setProperty('--scanline-hz', (4 / ($siteSettings.aesthetic.scanline_speed_hz || 1)) + 's');
+				root.style.setProperty('--modal-speed', ($siteSettings.aesthetic.modal_entry_speed || 300) + 'ms');
+				root.style.setProperty('--glow-alpha', ($siteSettings.aesthetic.glow_pulse_depth || 0.5).toString());
+
+				// Signal Dynamics
+				root.style.setProperty('--typing-speed', (1 / ($siteSettings.aesthetic.typing_speed || 1)) + 's');
+				root.style.setProperty('--glitch-hz', (1 / ($siteSettings.aesthetic.glitch_frequency || 1)) + 's');
+				root.style.setProperty('--header-pulse', (2 / ($siteSettings.aesthetic.header_pulse_speed || 1)) + 's');
+				root.style.setProperty('--navbar-delay', ($siteSettings.aesthetic.navbar_entry_delay || 100) + 'ms');
+				root.style.setProperty('--progress-speed', (1 / ($siteSettings.aesthetic.progress_fill_speed || 1)) + 's');
+				root.style.setProperty('--anim-scale', ($siteSettings.aesthetic.global_animation_scale || 1).toString());
 
 				if ($siteSettings.aesthetic.reduced_motion) {
 					root.classList.add('reduced-motion');
@@ -217,12 +292,12 @@
 				const data = JSON.parse(event.data);
 				if (data.type === 'stats') {
 					stats.set(data.payload);
-				} else if (data.type === 'spawners') {
+				} else if (data.type === 'nodes') {
 					const list: any[] = Array.isArray(data.payload)
 						? data.payload
 						: Object.values(data.payload);
 					list.sort((a, b) => a.id - b.id);
-					spawners.set(list);
+					nodes.set(list);
 				}
 			} catch (e) {
 				console.error('SSE Parse Error', e);
@@ -260,14 +335,31 @@
 
 	async function initialFetch() {
 		try {
-			const [statsRes, spawnersRes, versionsRes] = await Promise.all([
-				fetch('/api/stats', { cache: 'no-store', credentials: 'include' }),
-				fetch('/api/spawners', { cache: 'no-store', credentials: 'include' }),
+			const promises: Promise<any>[] = [
+				fetch('/api/nodes', { cache: 'no-store', credentials: 'include' }),
 				fetch('/api/versions', { cache: 'no-store', credentials: 'include' })
-			]);
-			if (statsRes.ok) stats.set(await statsRes.json());
+			];
+
+			// Only fetch stats if not already provided by server load
+			const currentData = $state.snapshot(data);
+			if (!currentData?.stats) {
+				promises.push(fetch('/api/stats', { cache: 'no-store', credentials: 'include' }));
+			}
+
+			const results = await Promise.all(promises);
+			
+			const nodesRes = results[0];
+			const versionsRes = results[1];
+			
+			if (nodesRes.ok) nodes.set(await nodesRes.json());
 			if (versionsRes.ok) serverVersions.set(await versionsRes.json());
-			if (spawnersRes.ok) spawners.set(await spawnersRes.json());
+			
+			if (results.length > 2) {
+				const statsRes = results[2];
+				if (statsRes.ok) stats.set(await statsRes.json());
+			} else if (currentData?.stats) {
+				stats.set(currentData.stats);
+			}
 		} catch (e) {
 			console.error('Initial fetch failed', e);
 		}
@@ -294,26 +386,56 @@
 		}
 	}
 
-	onMount(async () => {
+	let auth = $derived(get(isAuthenticated));
+
+	onMount(() => {
 		const savedTheme = localStorage.getItem('theme');
 		if (savedTheme === 'light' || savedTheme === 'dark') {
 			theme.init(savedTheme);
 		}
 
+		// Visibility-aware background sync
+		const handleVisibilityChange = () => {
+			if (document.visibilityState === 'visible') {
+				if (get(isAuthenticated)) connectSSE();
+			} else {
+				if (eventSource) {
+					eventSource.close();
+					eventSource = null;
+					isConnected.set(false);
+					connectionStatus.set('Standby (Hidden)');
+				}
+			}
+		};
+		document.addEventListener('visibilitychange', handleVisibilityChange);
+
 		if (page.url.pathname === '/login' || page.url.pathname === '/login/2fa') {
 			isChecking = false;
 		} else {
-			await checkAuth();
-			
-			if ($isAuthenticated) {
-				await loadAllSettings();
-				initialFetch();
+			// If server-side load already determined we are authenticated,
+			// we can proceed to fetch data immediately.
+			if (data?.isAuthenticated) {
+				isAuthenticated.set(true);
+				isChecking = false;
+				connectSSE();
+				loadAllSettings(data.config || undefined).then(() => initialFetch());
+			} else {
+				// Otherwise, verify or redirect
+				checkAuth().then(() => {
+					if (get(isAuthenticated)) {
+						loadAllSettings().then(() => initialFetch());
+					}
+				});
 			}
 		}
 
 		setTimeout(() => {
 			sidebarLoaded = true;
 		}, 300);
+
+		return () => {
+			document.removeEventListener('visibilitychange', handleVisibilityChange);
+		};
 	});
 
 	onDestroy(() => {
@@ -390,7 +512,7 @@
 	function handleDownloadFiles() {
 		// Trigger download of game_server.zip
 		const link = document.createElement('a');
-		link.href = '/api/spawners/download';
+		link.href = '/api/nodes/download';
 		link.download = 'game_server.zip';
 		document.body.appendChild(link);
 		link.click();
@@ -411,11 +533,26 @@
 			notifications.add({ type: 'error', message: 'Backup request failed' });
 		}
 	}
+	onMount(() => {
+		let rafId: number;
+		const handleMouseMove = (e: MouseEvent) => {
+			if (rafId) cancelAnimationFrame(rafId);
+			rafId = requestAnimationFrame(() => {
+				document.documentElement.style.setProperty('--mouse-x-global', `${e.clientX}px`);
+				document.documentElement.style.setProperty('--mouse-y-global', `${e.clientY}px`);
+			});
+		};
+		window.addEventListener('mousemove', handleMouseMove, { passive: true });
+		return () => {
+			window.removeEventListener('mousemove', handleMouseMove);
+			if (rafId) cancelAnimationFrame(rafId);
+		};
+	});
 </script>
 
 {#if isChecking}
 	<div
-		class="flex items-center justify-center min-h-screen bg-stone-950"
+		class="flex items-center justify-center min-h-screen bg-terminal"
 	>
 		<div class="relative">
 			<div
@@ -427,10 +564,13 @@
 		</div>
 	</div>
 {:else}
-	{#if $isAuthenticated && page.url.pathname !== '/login'}
+	{#if auth && page.url.pathname !== '/login'}
 		<div class="relative min-h-screen {localSiteSettings?.aesthetic?.crt_effect ? 'crt-container' : ''} {localSiteSettings?.aesthetic?.crt_curve ? 'crt-curve' : ''} {localSiteSettings?.aesthetic?.panic_mode ? 'panic-mode' : ''}">
+			<!-- Solid Background Layer -->
+			<div class="fixed inset-0 z-[-100] bg-[var(--bg-color)]"></div>
+
 			<!-- System Ticker Header -->
-			<div class="fixed top-0 left-0 right-0 h-7 bg-black border-b border-stone-800 z-[120] flex items-center px-4 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.8)]">
+			<div class="fixed top-0 left-0 right-0 h-7 bg-[var(--header-bg)] border-b border-stone-800 z-[120] flex items-center px-4 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.8)]">
 				<div class="flex items-center gap-8 animate-text-reveal whitespace-nowrap w-full">
 					<div class="flex items-center gap-2 shrink-0">
 						<div class="w-1 h-1 rounded-full bg-rust animate-ping"></div>
@@ -438,7 +578,7 @@
 					</div>
 					<div class="flex items-center gap-6 text-stone-600">
 						<span class="tactical-code">NET_STATUS: <span class="text-stone-400">{$connectionStatus}</span></span>
-						<span class="tactical-code">NODES_ACTIVE: <span class="text-stone-400">{$stats.active_spawners}</span></span>
+						<span class="tactical-code">NODES_ACTIVE: <span class="text-stone-400">{$stats.active_nodes}</span></span>
 						<span class="tactical-code hidden sm:inline">ENTROPY: <span class="text-stone-400">0.0042</span></span>
 						<span class="tactical-code">TIMESTAMP: <span class="text-stone-400 font-mono tracking-tighter">{new Date().toISOString()}</span></span>
 					</div>
@@ -478,9 +618,11 @@
 				<div class="vignette z-[100]"></div>
 			{/if}
 
-			{#if localBackgroundConfig?.global_type && localBackgroundConfig.global_type !== 'none'}
-				<div class="fixed inset-0 z-0 pointer-events-none overflow-hidden opacity-50">
-					<SectionBackground type={localBackgroundConfig.global_type} />
+			{#if localBackgroundConfig?.show_global_background && localBackgroundConfig?.global_type && localBackgroundConfig.global_type !== 'none'}
+				<div class="fixed inset-0 z-[-50] pointer-events-none overflow-hidden">
+					{#key localBackgroundConfig.global_type}
+						<SectionBackground type={localBackgroundConfig.global_type} />
+					{/key}
 				</div>
 			{/if}
 
@@ -588,7 +730,7 @@
 
 				<div class="relative z-10 flex flex-col h-full">
 					<div
-						class="p-6 border-b-2 border-stone-800 bg-black/40 transform transition-all duration-700 {sidebarLoaded
+						class="p-6 border-b-2 border-stone-800 bg-[var(--terminal-bg)]/40 transform transition-all duration-700 {sidebarLoaded
 							? 'translate-y-0 opacity-100'
 							: '-translate-y-4 opacity-0'} flex items-center justify-between tactical-border"
 					>
@@ -607,11 +749,11 @@
 						{/if}
 						<button
 							onclick={toggleSidebar}
-							class="p-2 rounded-none text-stone-500 hover:text-white bg-stone-900/50 border border-stone-800 hover:border-rust transition-all duration-300 {isSidebarCollapsed
+							class="p-2 rounded-none text-stone-500 hover:text-white bg-surface/50 border border-stone-800 hover:border-rust transition-all duration-300 {isSidebarCollapsed
 								? 'mx-auto'
 								: ''}"
 						>
-							<Menu class="w-4 h-4" />
+							<Icon name="ph:list-bold" size="1.1rem" />
 						</button>
 					</div>
 
@@ -629,11 +771,11 @@
 							<div class="space-y-1">
 								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Core_Systems</span>{/if}
 								<a href="/dashboard" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/dashboard') || isRouteActive('/')}>
-									<div class="nav-icon-container"><LayoutDashboard class="w-4 h-4" /></div>
+									<div class="nav-icon-container"><Icon name="gauge" /></div>
 									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">CORE_DASH</span><span class="nav-subtext">Unified Interface</span></div>{/if}
 								</a>
 								<a href="/performance" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/performance')}>
-									<div class="nav-icon-container"><Activity class="w-4 h-4" /></div>
+									<div class="nav-icon-container"><Icon name="activity" /></div>
 									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">PERFORMANCE</span><span class="nav-subtext">RT_Telemetry</span></div>{/if}
 								</a>
 							</div>
@@ -642,11 +784,11 @@
 							<div class="space-y-1">
 								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Fleet_Ops</span>{/if}
 								<a href="/server" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/server')}>
-									<div class="nav-icon-container"><Server class="w-4 h-4" /></div>
-									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">NODE_FLEET</span><span class="nav-subtext">Spawner_Matrix</span></div>{/if}
+									<div class="nav-icon-container"><Icon name="cpu" /></div>
+									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">NODE_FLEET</span><span class="nav-subtext">Node_Matrix</span></div>{/if}
 								</a>
 								<a href="/users" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/users')}>
-									<div class="nav-icon-container"><Users class="w-4 h-4" /></div>
+									<div class="nav-icon-container"><Icon name="users" /></div>
 									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">IDENTITIES</span><span class="nav-subtext">Subject Registry</span></div>{/if}
 								</a>
 							</div>
@@ -655,11 +797,11 @@
 							<div class="space-y-1">
 								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Logistics</span>{/if}
 								<a href="/database" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/database')}>
-									<div class="nav-icon-container"><Database class="w-4 h-4" /></div>
+									<div class="nav-icon-container"><Icon name="database" /></div>
 									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">DATABASE</span><span class="nav-subtext">Data_Explorer</span></div>{/if}
 								</a>
 								<a href="/notes" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/notes')}>
-									<div class="nav-icon-container"><StickyNote class="w-4 h-4" /></div>
+									<div class="nav-icon-container"><Icon name="file-text" /></div>
 									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">JOURNAL</span><span class="nav-subtext">Task_Buffer</span></div>{/if}
 								</a>
 							</div>
@@ -668,15 +810,15 @@
 							<div class="space-y-1">
 								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Calibrations</span>{/if}
 								<a href="/config" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/config')}>
-									<div class="nav-icon-container"><SettingsIcon class="w-4 h-4" /></div>
+									<div class="nav-icon-container"><Icon name="sliders" /></div>
 									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">SYSTEM_CONFIG</span><span class="nav-subtext">Kernel_Params</span></div>{/if}
 								</a>
 								<a href="/config/theme" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/config/theme')}>
-									<div class="nav-icon-container"><Palette class="w-4 h-4" /></div>
+									<div class="nav-icon-container"><Icon name="palette" /></div>
 									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">THEME_LAB</span><span class="nav-subtext">Visual_Sync</span></div>{/if}
 								</a>
 								<a href="/redeye" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/redeye')}>
-									<div class="nav-icon-container"><ShieldCheck class="w-4 h-4" /></div>
+									<div class="nav-icon-container"><Icon name="shield" /></div>
 									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">SENTINEL</span><span class="nav-subtext">Security_Shield</span></div>{/if}
 								</a>
 							</div>
@@ -705,10 +847,10 @@
 						<div class="flex items-center gap-2 {isSidebarCollapsed ? 'flex-col' : ''}">
 							<button
 								onclick={toggleTheme}
-								class="p-2 border border-stone-800 bg-stone-950/50 text-stone-500 hover:text-white hover:border-rust transition-all flex-1 flex justify-center"
+								class="p-2 border border-stone-800 bg-terminal/50 text-stone-500 hover:text-white hover:border-rust transition-all flex-1 flex justify-center"
 								title="Toggle Theme"
 							>
-								{#if $theme === 'dark'}<Moon class="w-4 h-4"/>{:else}<Sun class="w-4 h-4"/>{/if}
+								{#if $theme === 'dark'}<Icon name="ph:moon-bold" size="1.1rem"/>{:else}<Icon name="ph:sun-bold" size="1.1rem"/>{/if}
 							</button>
 							<button
 								onclick={logout}
@@ -725,14 +867,14 @@
 			<div class="flex-1 flex flex-col h-full overflow-hidden relative">
 				<!-- Mobile Top Header -->
 				<header
-					class="md:hidden h-14 bg-black border-b border-stone-800 flex items-center justify-between px-4 z-[130] shrink-0 relative"
+					class="md:hidden h-14 bg-[var(--header-bg)] border-b border-stone-800 flex items-center justify-between px-4 z-[130] shrink-0 relative"
 				>
 					<div class="flex items-center gap-4">
 						<button 
 							onclick={() => isMobileMenuOpen = true}
 							class="p-2 -ml-2 text-stone-500 hover:text-white transition-colors border border-transparent hover:border-stone-800"
 						>
-							<Menu class="w-6 h-6" />
+							<Icon name="ph:list-bold" size="1.5rem" />
 						</button>
 						<div class="flex flex-col">
 							<div class="flex items-center gap-2">
@@ -751,9 +893,9 @@
 						</div>
 						<button
 							onclick={toggleTheme}
-							class="p-2 border border-stone-800 bg-stone-900/50 text-stone-500 hover:text-white transition-all"
+							class="p-2 border border-stone-800 bg-surface/50 text-stone-500 hover:text-white transition-all"
 						>
-							{#if $theme === 'dark'}<Moon class="w-4 h-4"/>{:else}<Sun class="w-4 h-4"/>{/if}
+							{#if $theme === 'dark'}<Icon name="ph:moon-bold" size="1.1rem"/>{:else}<Icon name="ph:sun-bold" size="1.1rem"/>{/if}
 						</button>
 					</div>
 				</header>
@@ -761,7 +903,7 @@
 				<!-- Mobile Sidebar Overlay -->
 				{#if isMobileMenuOpen}
 					<div 
-						class="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md md:hidden"
+						class="fixed inset-0 z-[200] bg-[var(--header-bg)] backdrop-blur-md md:hidden"
 						transition:fade={{ duration: 200 }}
 						onclick={() => isMobileMenuOpen = false}
 						onkeydown={(e) => e.key === 'Escape' && (isMobileMenuOpen = false)}
@@ -779,7 +921,7 @@
 							<div class="corner-tr opacity-20"></div>
 							<div class="corner-br opacity-20"></div>
 
-							<div class="p-8 border-b border-stone-800 bg-stone-950 flex items-center justify-between">
+							<div class="p-8 border-b border-stone-800 bg-terminal flex items-center justify-between">
 								<div class="flex flex-col">
 									<div class="flex items-center gap-3">
 										<div class="w-2 h-2 bg-rust shadow-[0_0_8px_var(--color-rust)]"></div>
@@ -793,7 +935,7 @@
 									onclick={() => isMobileMenuOpen = false}
 									class="p-2 text-stone-600 hover:text-white border border-stone-800 hover:border-rust transition-all"
 								>
-									<X class="w-6 h-6" />
+									<Icon name="ph:x-bold" size="1.5rem" />
 								</button>
 							</div>
 
@@ -801,11 +943,11 @@
 								<div class="space-y-1">
 									<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Command</span>
 									<a href="/dashboard" class="nav-link-industrial" class:active={isRouteActive('/dashboard') || isRouteActive('/')} onclick={() => isMobileMenuOpen = false}>
-										<div class="nav-icon-container"><LayoutDashboard class="w-4 h-4" /></div>
+										<div class="nav-icon-container"><Icon name="gauge" /></div>
 										<div class="flex flex-col"><span class="nav-text">INTERFACE</span><span class="nav-subtext">Core Dashboard</span></div>
 									</a>
 									<a href="/performance" class="nav-link-industrial" class:active={isRouteActive('/performance')} onclick={() => isMobileMenuOpen = false}>
-										<div class="nav-icon-container"><Activity class="w-4 h-4" /></div>
+										<div class="nav-icon-container"><Icon name="activity" /></div>
 										<div class="flex flex-col"><span class="nav-text">TELEMETRY</span><span class="nav-subtext">Real-time Stream</span></div>
 									</a>
 								</div>
@@ -813,15 +955,15 @@
 								<div class="space-y-1">
 									<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Assets</span>
 									<a href="/server" class="nav-link-industrial" class:active={isRouteActive('/server')} onclick={() => isMobileMenuOpen = false}>
-										<div class="nav-icon-container"><HardDrive class="w-4 h-4" /></div>
+										<div class="nav-icon-container"><Icon name="cpu" /></div>
 										<div class="flex flex-col"><span class="nav-text">FILE_SYS</span><span class="nav-subtext">Binary Storage</span></div>
 									</a>
 									<a href="/database" class="nav-link-industrial" class:active={isRouteActive('/database')} onclick={() => isMobileMenuOpen = false}>
-										<div class="nav-icon-container"><Database class="w-4 h-4" /></div>
+										<div class="nav-icon-container"><Icon name="database" /></div>
 										<div class="flex flex-col"><span class="nav-text">PERSISTENCE</span><span class="nav-subtext">Data Archive</span></div>
 									</a>
 									<a href="/users" class="nav-link-industrial" class:active={isRouteActive('/users')} onclick={() => isMobileMenuOpen = false}>
-										<div class="nav-icon-container"><Users class="w-4 h-4" /></div>
+										<div class="nav-icon-container"><Icon name="users" /></div>
 										<div class="flex flex-col"><span class="nav-text">SUBJECTS</span><span class="nav-subtext">User Registry</span></div>
 									</a>
 								</div>
@@ -829,13 +971,13 @@
 								<div class="space-y-1">
 									<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Security</span>
 									<a href="/redeye" class="nav-link-industrial" class:active={isRouteActive('/redeye')} onclick={() => isMobileMenuOpen = false}>
-										<div class="nav-icon-container"><ShieldCheck class="w-4 h-4" /></div>
+										<div class="nav-icon-container"><Icon name="shield" /></div>
 										<div class="flex flex-col"><span class="nav-text">SENTINEL</span><span class="nav-subtext">Network Shield</span></div>
 									</a>
 								</div>
 							</nav>
 
-							<div class="p-8 border-t border-stone-800 bg-stone-950 flex flex-col gap-4">
+							<div class="p-8 border-t border-stone-800 bg-terminal flex flex-col gap-4">
 								<div class="flex items-center justify-between mb-2">
 									<div class="flex flex-col">
 										<span class="text-[7px] text-stone-700 font-mono uppercase">Session_Token</span>
@@ -860,7 +1002,7 @@
 
 				<!-- Mobile Bottom Nav -->
 				<nav
-					class="md:hidden h-16 bg-black/90 backdrop-blur-xl border-t-2 border-stone-800 fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2 safe-area-pb"
+					class="md:hidden h-16 bg-[var(--header-bg)] backdrop-blur-xl border-t-2 border-stone-800 fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2 safe-area-pb"
 				>
 					<a
 						href="/dashboard"
@@ -870,7 +1012,7 @@
 							? 'text-rust-light'
 							: 'text-stone-600'} transition-colors"
 					>
-						<LayoutDashboard class="w-5 h-5" />
+						<Icon name="gauge" size="1.25rem" />
 						<span class="font-mono text-[8px] font-black uppercase">CORE</span>
 					</a>
 					<a
@@ -881,7 +1023,7 @@
 							? 'text-rust-light'
 							: 'text-stone-600'} transition-colors"
 					>
-						<Activity class="w-5 h-5" />
+						<Icon name="activity" size="1.25rem" />
 						<span class="font-mono text-[8px] font-black uppercase">PERF</span>
 					</a>
 					<a
@@ -892,7 +1034,7 @@
 							? 'text-rust-light'
 							: 'text-stone-600'} transition-colors"
 					>
-						<SettingsIcon class="w-5 h-5" />
+						<Icon name="sliders" size="1.25rem" />
 						<span class="font-mono text-[8px] font-black uppercase">CNFG</span>
 					</a>
 					<a
@@ -903,7 +1045,7 @@
 							? 'text-rust-light'
 							: 'text-stone-600'} transition-colors"
 					>
-						<ShieldCheck class="w-5 h-5" />
+						<Icon name="shield" size="1.25rem" />
 						<span class="font-mono text-[8px] font-black uppercase">SHLD</span>
 					</a>
 				</nav>
@@ -913,11 +1055,13 @@
 
 		<ServerStatus 
 			status={$isConnected ? 'ONLINE' : 'OFFLINE'} 
-			players={$stats.active_spawners * 10} 
-			servers={$stats.active_spawners} 
+			players={$stats.active_nodes * 10} 
+			servers={$stats.active_nodes} 
 		/>
 
 		<Notifications />
+		
+		<CommandPalette bind:isOpen={isCommandPaletteOpen} />
 	{:else}
 		{@render children()}
 	{/if}

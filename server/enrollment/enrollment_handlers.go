@@ -2,7 +2,6 @@ package enrollment
 
 import (
 	"net/http"
-	"os"
 	"time"
 
 	"exile/server/models"
@@ -52,7 +51,7 @@ func ListEnrollmentKeysHandler(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, keys)
 }
 
-// ValidateEnrollmentKeyHandler checks if a key is valid (used by spawner before full registration)
+// ValidateEnrollmentKeyHandler checks if a key is valid (used by node before full registration)
 func ValidateEnrollmentKeyHandler(w http.ResponseWriter, r *http.Request) {
 	if enrollmentManager == nil {
 		utils.WriteError(w, r, http.StatusInternalServerError, "enrollment manager not initialized")
@@ -98,7 +97,7 @@ func ValidateEnrollmentKeyHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetEnrollmentKeyStatusHandler returns the current status of an enrollment key
-// This is used by the dashboard to poll and check if a spawner has used the key
+// This is used by the dashboard to poll and check if a node has used the key
 func GetEnrollmentKeyStatusHandler(w http.ResponseWriter, r *http.Request) {
 	if enrollmentManager == nil {
 		utils.WriteError(w, r, http.StatusInternalServerError, "enrollment manager not initialized")
@@ -138,21 +137,23 @@ func GetEnrollmentKeyStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]interface{}{
-		"status":     "pending",
+		"status":     key.Status, // Use actual status (active, pending, approved)
 		"used":       key.Used,
 		"expired":    expired,
 		"expires_at": key.ExpiresAt,
 		"ttl":        ttl,
 	}
 
+	// Always include NodeInfo if available (crucial for "pending" state)
+	if key.NodeInfo != nil {
+		response["node_info"] = key.NodeInfo
+	}
+
 	if key.Used {
-		response["status"] = "used"
+		response["status"] = "used" // or "approved"
 		response["used_at"] = key.UsedAt
-		if key.SpawnerInfo != nil {
-			response["spawner_info"] = key.SpawnerInfo
-		}
 		if key.UsedBy != nil {
-			response["spawner_id"] = *key.UsedBy
+			response["node_id"] = *key.UsedBy
 		}
 	} else if expired {
 		response["status"] = "expired"
@@ -161,22 +162,18 @@ func GetEnrollmentKeyStatusHandler(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, response)
 }
 
-// RegisterSpawnerWithKeyHandler handles spawner registration using an enrollment key
-// This endpoint does NOT require API key auth - the enrollment key IS the auth
-func RegisterSpawnerWithKeyHandler(w http.ResponseWriter, r *http.Request) {
+// RegisterNodeWithKeyHandler handles node enrollment attempt
+// If key is valid, it marks it as "pending" and waits for admin approval
+func RegisterNodeWithKeyHandler(w http.ResponseWriter, r *http.Request) {
 	if enrollmentManager == nil {
 		utils.WriteError(w, r, http.StatusInternalServerError, "enrollment manager not initialized")
 		return
 	}
 
 	var req struct {
-		Key              string `json:"key"`
-		Region           string `json:"region"`
-		Host             string `json:"host"`
-		Port             int    `json:"port"`
-		MaxInstances     int    `json:"max_instances"`
-		CurrentInstances int    `json:"current_instances"`
-		Status           string `json:"status"`
+		Key  string `json:"key"`
+		Host string `json:"host"`
+		Port int    `json:"port"`
 	}
 
 	if err := utils.DecodeJSON(r, &req); err != nil {
@@ -189,73 +186,110 @@ func RegisterSpawnerWithKeyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Host == "" {
-		utils.WriteError(w, r, http.StatusBadRequest, "host is required")
+	// Check status
+	key, exists := enrollmentManager.GetKey(req.Key)
+	if !exists {
+		utils.WriteError(w, r, http.StatusNotFound, "invalid enrollment key")
 		return
 	}
 
-	if req.Port < 1 || req.Port > 65535 {
-		utils.WriteError(w, r, http.StatusBadRequest, "invalid port")
+	if key.Status == "approved" && key.NodeInfo != nil {
+		// Already approved, return config
+		utils.WriteJSON(w, http.StatusOK, map[string]interface{}{
+			"status":        "approved",
+			"id":            key.NodeInfo.ID,
+			"api_key":       key.NodeInfo.APIKey,
+			"region":        key.NodeInfo.Region,
+			"max_instances": key.NodeInfo.MaxInstances,
+			"message":       "Node enrolled successfully",
+		})
 		return
 	}
 
-	// Validate and consume the enrollment key
-	enrollmentKey, err := enrollmentManager.ValidateAndUseKey(req.Key)
+	// Claim/Update pending status
+	_, err := enrollmentManager.ClaimKey(req.Key, req.Host, req.Port)
 	if err != nil {
 		utils.WriteError(w, r, http.StatusUnauthorized, err.Error())
 		return
 	}
 
-	// Create the spawner object
-	s := models.Spawner{
-		Region:           req.Region,
-		Host:             req.Host,
-		Port:             req.Port,
-		MaxInstances:     req.MaxInstances,
-		CurrentInstances: req.CurrentInstances,
-		Status:           req.Status,
-		LastSeen:         time.Now(),
-	}
-
-	// Register the spawner
-	id, err := registry.GlobalRegistry.Register(&s)
-	if err != nil {
-		utils.WriteError(w, r, http.StatusInternalServerError, "failed to register spawner")
-		return
-	}
-
-	// Update the enrollment key with spawner info for dashboard tracking
-	enrollmentKey.UsedBy = &id
-	enrollmentKey.SpawnerInfo = &struct {
-		ID     int    `json:"id"`
-		Region string `json:"region"`
-		Host   string `json:"host"`
-		Port   int    `json:"port"`
-	}{
-		ID:     id,
-		Region: req.Region,
-		Host:   req.Host,
-		Port:   req.Port,
-	}
-
-	registry.GlobalStats.UpdateActiveServers(len(registry.GlobalRegistry.List()))
-
-	// Return the spawner ID and the API key for future communications
-	apiKey := getEnrollmentAPIKey()
-	utils.WriteJSON(w, http.StatusCreated, map[string]interface{}{
-		"id":      id,
-		"api_key": apiKey,
-		"message": "Spawner enrolled successfully",
+	utils.WriteJSON(w, http.StatusAccepted, map[string]interface{}{
+		"status":  "pending",
+		"message": "Waiting for admin approval in dashboard",
 	})
 }
 
-// getEnrollmentAPIKey retrieves the API key from environment
-func getEnrollmentAPIKey() string {
-	apiKey := os.Getenv("MASTER_API_KEY")
-	if apiKey == "" {
-		apiKey = "dev_master_key"
+// ApproveEnrollmentHandler completes the registration from the dashboard
+func ApproveEnrollmentHandler(w http.ResponseWriter, r *http.Request) {
+	if enrollmentManager == nil {
+		utils.WriteError(w, r, http.StatusInternalServerError, "enrollment manager not initialized")
+		return
 	}
-	return apiKey
+
+	var req struct {
+		Key          string `json:"key"`
+		Region       string `json:"region"`
+		MaxInstances int    `json:"max_instances"`
+		Port         int    `json:"port"` // Optional override
+	}
+
+	if err := utils.DecodeJSON(r, &req); err != nil {
+		utils.WriteError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	enrollKey, exists := enrollmentManager.GetKey(req.Key)
+	if !exists || enrollKey.Status != "pending" {
+		utils.WriteError(w, r, http.StatusBadRequest, "invalid or non-pending enrollment key")
+		return
+	}
+
+	// Final data
+	host := enrollKey.NodeInfo.Host
+	port := enrollKey.NodeInfo.Port
+	if req.Port > 0 {
+		port = req.Port
+	}
+
+	// Generate a unique API key for this node
+	apiKey, err := utils.GenerateRandomKey(32)
+	if err != nil {
+		utils.WriteError(w, r, http.StatusInternalServerError, "failed to generate api key")
+		return
+	}
+
+	// Create the node object
+	s := models.Node{
+		Region:           req.Region,
+		Host:             host,
+		Port:             port,
+		MaxInstances:     req.MaxInstances,
+		CurrentInstances: 0,
+		Status:           "Offline",
+		LastSeen:         time.Now(),
+		APIKey:           apiKey,
+	}
+
+	// Register the node in the global registry (persists to DB)
+	id, err := registry.GlobalRegistry.Register(&s)
+	if err != nil {
+		utils.WriteError(w, r, http.StatusInternalServerError, "failed to register node: "+err.Error())
+		return
+	}
+
+	// Approve the key so node can get the config on next poll
+	_, err = enrollmentManager.ApproveKey(req.Key, req.Region, req.MaxInstances, id, apiKey)
+	if err != nil {
+		utils.WriteError(w, r, http.StatusInternalServerError, "failed to approve key: "+err.Error())
+		return
+	}
+
+	registry.GlobalStats.UpdateActiveNodes(len(registry.GlobalRegistry.List()))
+
+	utils.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"id":      id,
+		"message": "Node approved and registered",
+	})
 }
 
 // RevokeEnrollmentKeyHandler revokes an active enrollment key

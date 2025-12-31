@@ -534,10 +534,10 @@
 	}
 </script>
 
-<div class="h-full flex flex-col bg-[#050505]">
+<div class="h-full flex flex-col bg-[var(--terminal-bg)]">
 	<!-- Toolbar -->
 	<div
-		class="p-4 border-b border-stone-800 flex justify-between items-center bg-[#0a0a0a]"
+		class="p-4 border-b border-stone-800 flex justify-between items-center bg-[var(--header-bg)]"
 	>
 		<div class="flex items-center gap-4">
 			<div class="p-2.5 bg-rust/10 border border-rust/20 rounded-none industrial-frame">
@@ -545,17 +545,17 @@
 			</div>
 			<div>
 				<h2 class="text-lg font-heading font-black text-slate-100 uppercase tracking-tighter">SQL_CONSOLE_CORE</h2>
-				<p class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest mt-1">Execute raw neural queries against the database</p>
+				<p class="font-jetbrains text-[10px] text-text-dim uppercase tracking-widest mt-1">Execute raw neural queries against the database</p>
 			</div>
 		</div>
 		<div class="flex gap-4 items-center">
 			{#if loadingMetadata}
-				<span class="font-jetbrains text-[10px] text-stone-600 flex items-center gap-2 uppercase tracking-widest">
+				<span class="font-jetbrains text-[10px] text-text-dim flex items-center gap-2 uppercase tracking-widest">
 					<RefreshCw class="w-3.5 h-3.5 animate-spin" />
 					Syncing_Schema...
 				</span>
 			{:else if tables.length > 0}
-				<span class="font-jetbrains text-[10px] text-stone-500 flex items-center gap-2 uppercase tracking-widest">
+				<span class="font-jetbrains text-[10px] text-text-dim flex items-center gap-2 uppercase tracking-widest">
 					<Database class="w-3.5 h-3.5 text-rust/60" />
 					{tables.length} Sectors_Mapped
 				</span>
@@ -578,7 +578,7 @@
 	<div class="flex-1 flex flex-col overflow-hidden">
 		<!-- Editor Area -->
 		<div
-			class="h-1/3 min-h-[200px] p-6 border-b border-stone-800 bg-[#050505] relative"
+			class="h-1/3 min-h-[200px] p-6 border-b border-stone-800 bg-[var(--terminal-bg)] relative"
 		>
 			<div class="relative w-full h-full">
 				<textarea
@@ -596,7 +596,7 @@
 				<!-- Autocomplete Dropdown -->
 				{#if showAutocomplete && suggestions.length > 0}
 					<div
-						class="absolute z-50 bg-[#0a0a0a] border border-stone-800 shadow-2xl overflow-hidden min-w-[240px] max-w-[350px] industrial-frame"
+						class="absolute z-50 bg-[var(--header-bg)] border border-stone-800 shadow-2xl overflow-hidden min-w-[240px] max-w-[350px] industrial-frame"
 						style="top: {autocompletePosition.top}px; left: {autocompletePosition.left}px;"
 						transition:slide={{ duration: 100 }}
 					>
@@ -606,14 +606,14 @@
 									class="w-full px-4 py-2.5 text-left font-jetbrains text-[10px] font-black uppercase tracking-widest flex items-center gap-3 transition-all {i ===
 									selectedIndex
 										? 'bg-rust text-white shadow-[0_0_15px_rgba(120,53,15,0.4)]'
-										: 'text-stone-500 hover:bg-stone-900 hover:text-stone-300'}"
+										: 'text-text-dim hover:bg-stone-900 hover:text-stone-300'}"
 									onmousedown={() => applySuggestion(suggestion)}
 									onmouseenter={() => (selectedIndex = i)}
 								>
 									{#if SQL_KEYWORDS.includes(suggestion.toUpperCase())}
 										<span class="w-1.5 h-1.5 bg-rust-light flex-shrink-0"></span>
 									{:else if suggestion.includes('.')}
-										<span class="w-1.5 h-1.5 bg-emerald-500 flex-shrink-0"></span>
+										<span class="w-1.5 h-1.5 bg-success flex-shrink-0"></span>
 									{:else if tables.some((t) => t.table === suggestion || `${t.schema}.${t.table}` === suggestion)}
 										<span class="w-1.5 h-1.5 bg-amber-500 flex-shrink-0"></span>
 									{:else}
@@ -624,55 +624,55 @@
 							{/each}
 						</div>
 						<div
-							class="px-4 py-2 bg-[#050505] border-t border-stone-800 font-jetbrains text-[8px] font-black text-stone-600 flex gap-4 uppercase tracking-[0.2em]"
+							class="px-4 py-2 bg-[var(--terminal-bg)] border-t border-stone-800 font-jetbrains text-[8px] font-black text-text-dim flex gap-4 uppercase tracking-[0.2em]"
 						>
 							<span
-								><kbd class="px-1 bg-stone-900 border border-stone-800 rounded-none text-stone-500"
+								><kbd class="px-1 bg-stone-900 border border-stone-800 rounded-none text-text-dim"
 									>↑↓</kbd
 								> NAV</span>
 							<span
-								><kbd class="px-1 bg-stone-900 border border-stone-800 rounded-none text-stone-500"
+								><kbd class="px-1 bg-stone-900 border border-stone-800 rounded-none text-text-dim"
 									>TAB</kbd
 								> SELECT</span>
 							<span
-								><kbd class="px-1 bg-stone-900 border border-stone-800 rounded-none text-stone-500"
+								><kbd class="px-1 bg-stone-900 border border-stone-800 rounded-none text-text-dim"
 									>ESC</kbd
 								> EXIT</span>
 						</div>
 					</div>
 				{/if}
 			</div>
-			<div class="font-jetbrains text-[9px] font-black text-stone-600 mt-3 flex justify-between uppercase tracking-widest">
+			<div class="font-jetbrains text-[9px] font-black text-text-dim mt-3 flex justify-between uppercase tracking-widest">
 				<div class="flex gap-6">
 					<span class="flex items-center gap-2"><div class="w-1 h-1 bg-stone-800"></div> Cmd/Ctrl + Enter to execute</span>
 					<span class="flex items-center gap-2"><div class="w-1 h-1 bg-stone-800"></div> Type to autocomplete</span>
 				</div>
 				{#if executionTime > 0}
-					<span class="text-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.2)]">Time: {executionTime.toFixed(2)}ms</span>
+					<span class="text-success shadow-[0_0_8px_rgba(16,185,129,0.2)]">Time: {executionTime.toFixed(2)}ms</span>
 				{/if}
 			</div>
 		</div>
 
 		<!-- Results Area -->
-		<div class="flex-1 flex flex-col overflow-hidden bg-[#050505] relative">
+		<div class="flex-1 flex flex-col overflow-hidden bg-[var(--terminal-bg)] relative">
 			{#if results.length > 0}
 				<div
-					class="p-3 border-b border-stone-800 bg-[#0a0a0a] flex justify-between items-center px-6"
+					class="p-3 border-b border-stone-800 bg-[var(--header-bg)] flex justify-between items-center px-6"
 				>
 					<span
-						class="font-jetbrains text-[10px] font-black text-stone-500 uppercase tracking-widest"
+						class="font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest"
 						>{results.length} Entities_Detected</span>
 					<div class="flex gap-3">
 						<button
 							onclick={copyToClipboard}
-							class="p-2 text-stone-600 hover:text-rust transition-all"
+							class="p-2 text-text-dim hover:text-rust transition-all"
 							title="Copy JSON"
 						>
 							<Copy class="w-4 h-4" />
 						</button>
 						<button
 							onclick={downloadCSV}
-							class="p-2 text-stone-600 hover:text-rust transition-all"
+							class="p-2 text-text-dim hover:text-rust transition-all"
 							title="Download CSV"
 						>
 							<Download class="w-4 h-4" />
@@ -682,7 +682,7 @@
 				<div class="flex-1 overflow-auto custom-scrollbar">
 					<table class="w-full text-left font-jetbrains text-[11px] border-collapse">
 						<thead
-							class="bg-[#0a0a0a] text-stone-500 sticky top-0 z-10 border-b border-stone-800"
+							class="bg-[var(--header-bg)] text-text-dim sticky top-0 z-10 border-b border-stone-800"
 						>
 							<tr>
 								{#each Object.keys(results[0]) as key}
@@ -712,11 +712,11 @@
 			{:else if error}
 				<div class="flex-1 flex items-center justify-center p-10">
 					<div class="bg-red-500/5 border border-red-500/20 p-8 max-w-3xl industrial-frame">
-						<div class="font-jetbrains text-xs text-red-500 uppercase tracking-widest font-black mb-4 flex items-center gap-3">
+						<div class="font-jetbrains text-xs text-danger uppercase tracking-widest font-black mb-4 flex items-center gap-3">
 							<div class="w-2 h-2 bg-red-500 animate-pulse"></div>
 							EXECUTION_FAULT_DETECTED
 						</div>
-						<div class="text-red-400/80 font-jetbrains text-[11px] whitespace-pre-wrap leading-relaxed">{error}</div>
+						<div class="text-danger/80 font-jetbrains text-[11px] whitespace-pre-wrap leading-relaxed">{error}</div>
 					</div>
 				</div>
 			{:else if !loading}
@@ -731,7 +731,7 @@
 
 			{#if loading}
 				<div
-					class="absolute inset-0 bg-[#050505]/80 backdrop-blur-sm flex items-center justify-center z-20"
+					class="absolute inset-0 bg-[var(--terminal-bg)]/80 backdrop-blur-sm flex items-center justify-center z-20"
 				>
 					<div class="flex flex-col items-center gap-4">
 						<div

@@ -21,9 +21,9 @@ func GetMasterMetricsHandler(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, allMetrics)
 }
 
-// GetSpawnerMetricsHandler returns aggregated spawner metrics
-func GetSpawnerMetricsHandler(w http.ResponseWriter, r *http.Request) {
-	allMetrics := metrics.GlobalMetrics.CollectSpawnerMetrics()
+// GetNodeMetricsHandler returns aggregated node metrics
+func GetNodeMetricsHandler(w http.ResponseWriter, r *http.Request) {
+	allMetrics := metrics.GlobalMetrics.CollectNodeMetrics()
 	utils.WriteJSON(w, http.StatusOK, allMetrics)
 }
 
@@ -176,9 +176,9 @@ func GetHealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Check spawner health
-	if allMetrics.Spawners.TotalSpawners > 0 && allMetrics.Spawners.OnlineSpawners == 0 {
-		issues = append(issues, "All spawners offline")
+	// Check node health
+	if allMetrics.Nodes.TotalNodes > 0 && allMetrics.Nodes.OnlineNodes == 0 {
+		issues = append(issues, "All nodes offline")
 		status = "critical"
 	}
 
@@ -190,8 +190,8 @@ func GetHealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 		"gc_cpu_fraction": allMetrics.Master.GCCPUFraction,
 		"db_connected":    allMetrics.Database.Connected,
 		"error_rate":      allMetrics.Network.ErrorRate,
-		"spawners_online": allMetrics.Spawners.OnlineSpawners,
-		"spawners_total":  allMetrics.Spawners.TotalSpawners,
+		"nodes_online": allMetrics.Nodes.OnlineNodes,
+		"nodes_total":  allMetrics.Nodes.TotalNodes,
 		"uptime_ms":       allMetrics.Master.Uptime,
 	})
 }

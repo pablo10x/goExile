@@ -35,7 +35,7 @@
 						class="w-1.5 h-1.5 rounded-full {n.type === 'success' ? 'bg-green-500' : n.type === 'error' ? 'bg-red-500' : 'bg-rust'} {($siteSettings.aesthetic.glow_effects && $siteSettings.aesthetic.animations_enabled) ? 'animate-pulse' : ''}"
 						style={$siteSettings.aesthetic.glow_effects ? `box-shadow: 0 0 8px ${n.type === 'success' ? '#22c55e' : n.type === 'error' ? '#ef4444' : '#92400e'}` : ''}
 					></div>
-					<span class="text-[8px] font-mono text-stone-500 uppercase tracking-widest">
+					<span class="text-[8px] font-mono text-text-dim uppercase tracking-widest">
 						SYS_{n.type === 'info' ? 'COMM' : n.type.toUpperCase()}_LOG
 					</span>
 				</div>
@@ -47,11 +47,11 @@
 				<div class="flex-1 min-w-0">
 					<div class="flex items-baseline gap-2 mb-1">
 						<span 
-							class="text-[9px] font-mono font-bold {n.type === 'success' ? 'text-green-500' : n.type === 'error' ? 'text-red-500' : 'text-rust'}"
+							class="text-[9px] font-mono font-bold {n.type === 'success' ? 'text-green-500' : n.type === 'error' ? 'text-danger' : 'text-rust'}"
 						>
 							[{n.type === 'success' ? 'OK' : n.type === 'error' ? 'FAIL' : 'INFO'}]
 						</span>
-						<span class="text-[7px] font-mono text-stone-600 uppercase">
+						<span class="text-[7px] font-mono text-text-dim uppercase">
 							{new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
 						</span>
 					</div>

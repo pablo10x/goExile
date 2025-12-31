@@ -1,257 +1,217 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
-	import { config, restartRequired } from '$lib/stores';
+	import { page } from '$app/state';
+	import { config, restartRequired, notifications, siteSettings } from '$lib/stores';
 	import type { ServerConfig } from '$lib/stores';
+	import { fade, slide, scale } from 'svelte/transition';
+	import { 
+		ChevronLeft, 
+		RefreshCw, 
+		Save, 
+		Lock, 
+		AlertTriangle, 
+		CheckCircle2, 
+		Info,
+		Settings as SettingsIcon,
+		Shield,
+		Cpu,
+		Terminal,
+		Search,
+		X,
+		Copy
+	} from 'lucide-svelte';
+	import Icon from '$lib/components/theme/Icon.svelte';
 
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 	let categoryConfigs = $state<ServerConfig[]>([]);
 	let saving = $state(false);
+	let searchQuery = $state('');
+	let pendingChanges = $state<Map<string, string>>(new Map());
 
-	let category = $derived($page.params.category || '');
+	let category = $derived(page.params.category || '');
 	const categoryTitles: Record<string, string> = {
 		system: 'System Configuration',
-		spawner: 'Spawner Configuration',
-		security: 'Security Configuration'
+		node: 'Node Configuration',
+		security: 'Security Configuration',
+		aesthetic: 'Visual Calibration'
 	};
 
+	let filteredConfigs = $derived.by(() => {
+		if (!searchQuery.trim()) return categoryConfigs;
+		const q = searchQuery.toLowerCase();
+		return categoryConfigs.filter(c => 
+			c.key.toLowerCase().includes(q) || 
+			c.description?.toLowerCase().includes(q) ||
+			c.value.toLowerCase().includes(q)
+		);
+	});
+
 	async function loadCategoryConfig() {
+		if (!category) return;
 		try {
 			loading = true;
 			error = null;
 
 			const response = await fetch(`/api/config/category/${category}`);
 			if (!response.ok) {
-				throw new Error(`Failed to load ${category} configuration: ${response.statusText}`);
+				throw new Error(`Failed to load ${category} configuration`);
 			}
 
 			const configData = await response.json();
 			categoryConfigs = configData;
-		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to load configuration';
-			console.error('Failed to load configuration:', e);
+		} catch (e: any) {
+			error = e.message;
+			notifications.add({ type: 'error', message: 'Uplink Failure', details: e.message });
 		} finally {
 			loading = false;
 		}
 	}
 
-	async function updateConfig(key: string, value: string) {
+	function handleValueChange(key: string, value: string, originalValue: string) {
+		if (value !== originalValue) {
+			pendingChanges.set(key, value);
+		} else {
+			pendingChanges.delete(key);
+		}
+		pendingChanges = new Map(pendingChanges);
+	}
+
+	async function saveChanges() {
+		if (pendingChanges.size === 0) return;
+		saving = true;
+		
 		try {
-			saving = true;
-
-			const response = await fetch(`/api/config/${key}`, {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({ value })
-			});
-
-			if (!response.ok) {
-				throw new Error(`Failed to update ${key}: ${response.statusText}`);
+			const promises = [];
+			for (const [key, value] of pendingChanges.entries()) {
+				promises.push(
+					fetch(`/api/config/${key}`, {
+						method: 'PUT',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ value })
+					})
+				);
 			}
 
-			// Update local state
-			const configIndex = categoryConfigs.findIndex((c) => c.key === key);
-			if (configIndex !== -1) {
-				const updatedConfig = { ...categoryConfigs[configIndex], value };
+			const results = await Promise.all(promises);
+			const failed = results.filter(r => !r.ok);
 
-				// Check if restart is required
-				if (updatedConfig.requires_restart) {
-					restartRequired.set(true);
-				}
+			if (failed.length > 0) throw new Error(`Failed to save ${failed.length} items`);
 
-				categoryConfigs = [
-					...categoryConfigs.slice(0, configIndex),
-					updatedConfig,
-					...categoryConfigs.slice(configIndex + 1)
-				];
-			}
-
-			// Also update global config store
-			if ($config) {
-				const globalIndex = $config.findIndex((c) => c.key === key);
-				if (globalIndex !== -1) {
-					const updatedGlobal = { ...$config[globalIndex], value };
-					config.set([
-						...$config.slice(0, globalIndex),
-						updatedGlobal,
-						...$config.slice(globalIndex + 1)
-					]);
-				}
-			}
-		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to update configuration';
-			console.error('Failed to update configuration:', e);
+			notifications.add({ type: 'success', message: 'PROTOCOL_UPDATE_COMMITTED' });
+			pendingChanges = new Map();
+			await loadCategoryConfig();
+		} catch (e: any) {
+			notifications.add({ type: 'error', message: 'Commit Failed', details: e.message });
 		} finally {
 			saving = false;
 		}
 	}
 
-	onMount(() => {
-		loadCategoryConfig();
+	function copyToClipboard(value: string) {
+		navigator.clipboard.writeText(value);
+		notifications.add({ type: 'success', message: 'Value copied to buffer' });
+	}
 
-		// Make updateConfig available globally for inline event handlers
-		(window as any).updateConfig = updateConfig;
+	onMount(() => {
+		if (category) loadCategoryConfig();
 	});
 </script>
 
-<div class="space-y-6">
+<div class="relative z-10 w-full space-y-10 pb-32 font-jetbrains">
 	<!-- Header -->
-	<div class="flex items-center justify-between">
-		<div>
-			<h1 class="text-3xl font-bold text-slate-100 mb-2">
-				{categoryTitles[category] || 'Configuration'}
-			</h1>
-			<p class="text-slate-500 dark:text-slate-400">Manage {category} settings and preferences</p>
-		</div>
-		<div class="flex items-center gap-3">
-			<a
-				href="/config"
-				class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-900 dark:text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
-			>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					class="w-4 h-4"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				>
-					<path d="M19 12H5M12 19l-7-7 7-7" />
-				</svg>
-				Back
+	<div class="flex flex-col xl:flex-row xl:items-center justify-between gap-8 border-l-4 border-rust pl-6 sm:pl-10 py-4 bg-[var(--header-bg)]/60 backdrop-blur-xl industrial-frame shadow-2xl">
+		<div class="flex items-center gap-6">
+			<a href="/config" class="p-3 bg-stone-900 border border-stone-800 hover:border-rust transition-all group">
+				<ChevronLeft class="w-6 h-6 text-stone-500 group-hover:text-white" />
 			</a>
-			<button
-				onclick={loadCategoryConfig}
-				disabled={saving}
-				class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-slate-900 dark:text-white rounded-lg transition-colors duration-200 flex items-center gap-2 disabled:opacity-50"
-			>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					class="w-4 h-4"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				>
-					<path d="M23 4v6h-6"></path>
-					<path d="M1 20v-6h6"></path>
-					<path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-				</svg>
-				Refresh
-			</button>
+			<div>
+				<div class="flex items-center gap-3 mb-1">
+					<span class="bg-rust text-white px-2 py-0.5 text-[8px] font-black uppercase tracking-widest">Category: {category}</span>
+					<div class="w-px h-3 bg-stone-800"></div>
+					<span class="text-text-dim text-[8px] font-black uppercase tracking-widest">Sector: Config_Node</span>
+				</div>
+				<h1 class="text-3xl sm:text-4xl font-heading font-black text-white uppercase tracking-tighter leading-none">
+					{categoryTitles[category] || category.toUpperCase() + '_PARAMS'}
+				</h1>
+			</div>
+		</div>
+
+		<div class="flex items-center gap-4">
+			{#if pendingChanges.size > 0}
+				<div class="flex items-center gap-4 px-5 py-3 bg-rust/10 border border-rust/30 industrial-frame" transition:scale>
+					<div class="w-2 h-2 bg-rust animate-pulse"></div>
+					<span class="font-black text-[10px] text-rust-light uppercase tracking-widest">{pendingChanges.size} PENDING</span>
+				</div>
+				<button onclick={saveChanges} disabled={saving} class="px-8 py-3 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-xl shadow-rust/20 transition-all active:translate-y-px">
+					{saving ? 'SYNCING...' : 'COMMIT CHANGES'}
+				</button>
+			{:else}
+				<button onclick={loadCategoryConfig} disabled={loading} class="px-8 py-3 bg-stone-950 hover:bg-white hover:text-black text-text-dim font-heading font-black text-[11px] uppercase tracking-widest transition-all border border-stone-800 active:translate-y-px">
+					<RefreshCw class="w-4 h-4 inline mr-3 {loading ? 'animate-spin' : ''}" />
+					Reload_Buffer
+				</button>
+			{/if}
 		</div>
 	</div>
 
-	<!-- Error State -->
-	{#if error}
-		<div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-300">
-			<div class="flex items-center gap-3">
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					class="w-5 h-5"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				>
-					<circle cx="12" cy="12" r="10"></circle>
-					<line x1="12" y1="8" x2="12" y2="12"></line>
-					<line x1="12" y1="16" x2="12.01" y2="16"></line>
-				</svg>
-				<span>{error}</span>
-			</div>
-		</div>
-	{/if}
+	<!-- Search & Filters -->
+	<div class="relative group">
+		<Search class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-text-dim group-focus-within:text-rust transition-colors" />
+		<input type="text" bind:value={searchQuery} placeholder="FILTER PARAMETERS..." class="w-full pl-14 pr-10 py-4 bg-stone-950 border border-stone-800 text-stone-200 font-jetbrains text-xs focus:border-rust outline-none transition-all uppercase tracking-widest shadow-inner" />
+	</div>
 
-	<!-- Loading State -->
 	{#if loading}
-		<div class="flex items-center justify-center py-12">
-			<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+		<div class="flex flex-col items-center justify-center py-32 gap-6" transition:fade>
+			<div class="w-16 h-16 border-2 border-rust border-t-transparent rounded-none animate-spin"></div>
+			<span class="text-text-dim font-black uppercase tracking-[0.4em] animate-pulse">Synchronizing_With_Mainframe...</span>
 		</div>
-	{:else if categoryConfigs.length === 0}
-		<div class="text-center py-12">
-			<div class="text-slate-500 dark:text-slate-400 mb-2">
-				No configuration settings found for {category}
-			</div>
-			<div class="text-slate-500 text-sm">
-				This category may not have any configurable options yet.
-			</div>
+	{:else if filteredConfigs.length === 0}
+		<div class="py-32 text-center modern-industrial-card glass-panel border-dashed border-stone-800 !bg-transparent opacity-40">
+			<Terminal class="w-12 h-12 text-stone-800 mx-auto mb-6" />
+			<p class="text-stone-600 font-black uppercase tracking-widest">No Parameters Located In Buffer</p>
 		</div>
 	{:else}
-		<!-- Configuration Settings -->
-		<div class="space-y-4">
-			{#each categoryConfigs as configItem (configItem.key)}
-				<div
-					class="bg-slate-800/50 backdrop-blur-sm border border-slate-300 dark:border-slate-700 rounded-xl p-6"
-				>
-					<div class="flex items-start justify-between mb-4">
-						<div class="flex-1">
-							<div class="flex items-center gap-3 mb-2">
-								<h3 class="text-lg font-semibold text-slate-100">{configItem.key}</h3>
-								{#if configItem.is_read_only}
-									<span
-										class="px-2 py-1 bg-slate-700 text-slate-700 dark:text-slate-300 text-xs rounded"
-										>Read-only</span
-									>
-								{/if}
-								{#if configItem.requires_restart}
-									<span class="px-2 py-1 bg-orange-500/20 text-orange-300 text-xs rounded"
-										>Restart Required</span
-									>
-								{/if}
-							</div>
-							<p class="text-slate-500 dark:text-slate-400 text-sm mb-3">
-								{configItem.description}
-							</p>
+		<div class="grid grid-cols-1 gap-4">
+			{#each filteredConfigs as item (item.key)}
+				{@const isPending = pendingChanges.has(item.key)}
+				<div class="modern-industrial-card glass-panel group !rounded-none border-stone-800 {isPending ? 'border-rust/40 bg-rust/5' : ''}">
+					<div class="p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-8">
+						<div class="flex-1 space-y-3">
 							<div class="flex items-center gap-4">
-								<div class="flex-1 max-w-md">
-									{#if configItem.type === 'bool'}
-										<label class="flex items-center cursor-pointer">
-											<input
-												type="checkbox"
-												class="sr-only peer"
-												checked={configItem.value === 'true'}
-												onchange={(e) =>
-													updateConfig(configItem.key, e.currentTarget.checked ? 'true' : 'false')}
-												disabled={configItem.is_read_only}
-											/>
-											<div
-												class="relative w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"
-											></div>
-										</label>
-									{:else if configItem.type === 'int'}
-										<input
-											type="number"
-											value={configItem.value}
-											onchange={(e) => updateConfig(configItem.key, e.currentTarget.value)}
-											disabled={configItem.is_read_only}
-											class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-										/>
-									{:else}
-										<input
-											type="text"
-											value={configItem.value}
-											onchange={(e) => updateConfig(configItem.key, e.currentTarget.value)}
-											disabled={configItem.is_read_only}
-											class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-										/>
-									{/if}
-								</div>
-								<div class="text-xs text-slate-500">
-									Type: {configItem.type}<br />
-									Updated: {new Date(configItem.updated_at).toLocaleString()}<br />
-									By: {configItem.updated_by}
+								<h3 class="text-lg font-black text-white uppercase tracking-tight">{item.key}</h3>
+								<div class="flex gap-1">
+									{#if item.is_read_only}<span class="px-2 py-0.5 bg-stone-800 text-text-dim text-[7px] font-black border border-stone-700 uppercase">ReadOnly</span>{/if}
+									{#if item.requires_restart}<span class="px-2 py-0.5 bg-warning/10 text-warning text-[7px] font-black border border-warning/30 uppercase">Restart Required</span>{/if}
 								</div>
 							</div>
+							<p class="text-[10px] text-text-dim font-bold uppercase leading-relaxed max-w-3xl">{item.description}</p>
+						</div>
+
+						<div class="w-full md:w-96 flex items-center gap-3">
+							{#if item.type === 'bool'}
+								<button 
+									onclick={() => handleValueChange(item.key, (pendingChanges.get(item.key) ?? item.value) === 'true' ? 'false' : 'true', item.value)}
+									disabled={item.is_read_only}
+									class="flex-1 flex items-center justify-between px-6 py-3 border-2 transition-all {(pendingChanges.get(item.key) ?? item.value) === 'true' ? 'bg-success/10 border-success text-success' : 'bg-stone-950 border-stone-800 text-text-dim'}"
+								>
+									<span class="font-black text-[10px] uppercase tracking-[0.2em]">{(pendingChanges.get(item.key) ?? item.value) === 'true' ? 'ACTIVE' : 'DISABLED'}</span>
+									<div class="w-2 h-2 {(pendingChanges.get(item.key) ?? item.value) === 'true' ? 'bg-success shadow-[0_0_10px_var(--color-success)] animate-pulse' : 'bg-stone-800'}"></div>
+								</button>
+							{:else}
+								<div class="relative flex-1 group/input">
+									<input 
+										type="text" 
+										value={pendingChanges.get(item.key) ?? item.value}
+										oninput={e => handleValueChange(item.key, e.currentTarget.value, item.value)}
+										disabled={item.is_read_only}
+										class="w-full bg-black border border-stone-800 focus:border-rust text-white font-mono text-xs px-4 py-3 transition-all disabled:opacity-30 shadow-inner"
+									/>
+									<button onclick={() => copyToClipboard(pendingChanges.get(item.key) ?? item.value)} class="absolute right-3 top-1/2 -translate-y-1/2 text-text-dim hover:text-rust opacity-0 group-hover/input:opacity-100 transition-all">
+										<Copy class="w-4 h-4" />
+									</button>
+								</div>
+							{/if}
 						</div>
 					</div>
 				</div>

@@ -4,23 +4,36 @@
 	import { cubicOut, backOut } from 'svelte/easing';
 	import DOMPurify from 'dompurify';
 	import { siteSettings } from '$lib/stores';
-	import { Terminal, ShieldAlert, AlertTriangle, RefreshCw, X, ChevronRight } from 'lucide-svelte';
+	import Icon from '$lib/components/theme/Icon.svelte';
 
-	export let isOpen: boolean = false;
-	export let title: string = 'Confirm Action';
-	export let message: string = 'Are you sure you want to proceed?';
-	export let confirmText: string = 'Confirm';
-	export let cancelText: string = 'Cancel';
-	export let isCritical: boolean = false; // If true, use red colors
-	export let progress: number | null = null; // 0-100, if set shows progress bar
-	export let statusMessage: string | null = null; // Message during loading/progress
-
-	export let onConfirm: () => Promise<void>;
+	let {
+		isOpen = $bindable(false),
+		title = 'Confirm Action',
+		message = 'Are you sure you want to proceed?',
+		confirmText = 'Confirm',
+		cancelText = 'Cancel',
+		isCritical = false,
+		progress = null,
+		statusMessage = null,
+		onConfirm,
+		children
+	}: {
+		isOpen: boolean;
+		title?: string;
+		message?: string;
+		confirmText?: string;
+		cancelText?: string;
+		isCritical?: boolean;
+		progress?: number | null;
+		statusMessage?: string | null;
+		onConfirm: () => Promise<void>;
+		children?: any;
+	} = $props();
 
 	const dispatch = createEventDispatcher();
 
-	let loading = false;
-	let error: string | null = null;
+	let loading = $state(false);
+	let error = $state<string | null>(null);
 
 	async function handleConfirm() {
 		loading = true;
@@ -81,7 +94,7 @@
 
 		<!-- Modal Container - Industrial Terminal Style -->
 		<div
-			class="relative w-full max-w-lg bg-[#050505] shadow-2xl glass-panel overflow-hidden z-[460]
+			class="relative w-full max-w-lg bg-[var(--terminal-bg)] shadow-2xl glass-panel overflow-hidden z-[460]
 			{isCritical && !$siteSettings.aesthetic.industrial_styling ? 'border-red-900/50' : ''}
 			{!isCritical && !$siteSettings.aesthetic.industrial_styling ? 'border-rust/30' : ''}"
 			class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
@@ -92,12 +105,12 @@
 			<div class={`h-1 w-full ${isCritical ? 'bg-red-600' : 'bg-rust'} opacity-40 ${$siteSettings.aesthetic.animations_enabled ? 'animate-pulse' : ''}`}></div>
 
 			<!-- Header -->
-			<div class="px-8 py-5 border-b border-stone-800 flex justify-between items-center bg-[#0a0a0a]">
+			<div class="px-8 py-5 border-b border-stone-800 flex justify-between items-center bg-[var(--header-bg)]">
 				<div class="flex items-center gap-4">
 					{#if isCritical}
-						<ShieldAlert class="w-5 h-5 text-red-500 {$siteSettings.aesthetic.animations_enabled ? 'animate-flicker' : ''}" />
+						<Icon name="shield" size="1.25rem" class="text-red-500 {$siteSettings.aesthetic.animations_enabled ? 'animate-flicker' : ''}" />
 					{:else}
-						<Terminal class="w-5 h-5 text-rust-light" />
+						<Icon name="file-text" size="1.25rem" class="text-rust-light" />
 					{/if}
 					<h3 class="text-xl font-heading font-black tracking-tighter text-white uppercase italic">
 						{title}
@@ -107,18 +120,18 @@
 					onclick={close}
 					class="text-stone-600 hover:text-white transition-all p-1"
 				>
-					<X class="w-5 h-5" />
+					<Icon name="ph:x-bold" size="1.25rem" />
 				</button>
 			</div>
 
 			<!-- Content -->
-			<div class="p-10 space-y-8 relative overflow-hidden bg-[#050505]">
+			<div class="p-10 space-y-8 relative overflow-hidden bg-[var(--terminal-bg)]">
 				<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
 				
 				<div class="flex items-start gap-6 relative z-10">
 					<div class="flex-1 space-y-6">
-						<div class="flex items-center gap-3 font-jetbrains text-[9px] font-black text-stone-600 tracking-[0.4em] uppercase italic">
-							<ChevronRight class="w-3.5 h-3.5 {isCritical ? 'text-red-600' : 'text-rust'}" />
+						<div class="flex items-center gap-3 font-jetbrains text-[9px] font-black tracking-[0.4em] uppercase italic" style="color: var(--text-dim)">
+							<Icon name="ph:caret-right-bold" size="0.875rem" class="{isCritical ? 'text-red-600' : 'text-rust'}" />
 							SYSTEM_PROMPT_BUFFER
 						</div>
 						<div class="text-stone-300 font-jetbrains font-bold uppercase tracking-tight leading-relaxed">
@@ -130,9 +143,9 @@
 								<p class="opacity-90">&gt;&gt; {message}</p>
 							{/if}
 						</div>
-						{#if $$slots.default}
+						{#if children}
 							<div class="pt-4 border-t border-stone-800/50">
-								<slot />
+								{@render children()}
 							</div>
 						{/if}
 					</div>
@@ -146,7 +159,7 @@
 						transition:scale={{ start: 0.98, duration: 200 }}
 					>
 						<div class="flex items-center gap-4">
-							<AlertTriangle class="w-5 h-5 shrink-0" />
+							<Icon name="alert" size="1.25rem" class="shrink-0" />
 							<span>OP_FAULT: {error}</span>
 						</div>
 					</div>
@@ -155,7 +168,7 @@
 				{#if loading && progress !== null}
 					<!-- Progress -->
 					<div class="space-y-4" transition:fade>
-						<div class="flex justify-between font-jetbrains text-[9px] font-black text-stone-500 uppercase tracking-widest italic">
+						<div class="flex justify-between font-jetbrains text-[9px] font-black uppercase tracking-widest italic" style="color: var(--text-dim)">
 							<span>STREAM_PROGRESS</span>
 							<span class="text-rust">{Math.round(progress)}%</span>
 						</div>
@@ -170,8 +183,8 @@
 			</div>
 
 			<!-- Commands -->
-			<div class="px-8 py-6 bg-[#0a0a0a] border-t border-stone-800 flex justify-between items-center">
-				<div class="font-jetbrains text-[8px] font-black text-stone-700 tracking-[0.5em] uppercase italic">
+			<div class="px-8 py-6 bg-[var(--header-bg)] border-t border-stone-800 flex justify-between items-center">
+				<div class="font-jetbrains text-[8px] font-black tracking-[0.5em] uppercase italic" style="color: var(--text-dim)">
 					AWAITING_INPUT
 				</div>
 				<div class="flex gap-6">
@@ -181,7 +194,7 @@
 						</div>
 					{:else if loading}
 						<div class="flex items-center gap-3 font-heading font-black text-[11px] text-rust uppercase italic animate-pulse tracking-widest">
-							<RefreshCw class="w-4 h-4 animate-spin" />
+							<Icon name="ph:arrows-clockwise-bold" size="1rem" class="animate-spin" />
 							EXECUTING...
 						</div>
 					{:else}

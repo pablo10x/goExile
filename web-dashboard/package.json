@@ -41,12 +41,14 @@
 		"vitest": "^4.0.15"
 	},
 	"dependencies": {
+		"@iconify/svelte": "^5.1.0",
 		"@supabase/ssr": "^0.8.0",
 		"@supabase/supabase-js": "^2.89.0",
 		"@tailwindcss/vite": "^4.1.18",
 		"@types/dompurify": "^3.2.0",
 		"@types/three": "^0.182.0",
 		"dompurify": "^3.3.1",
+		"jszip": "^3.10.1",
 		"lucide-svelte": "^0.560.0",
 		"prettier-plugin-tailwindcss": "^0.7.2",
 		"svelte-tiny-virtual-list": "^2.0.0",

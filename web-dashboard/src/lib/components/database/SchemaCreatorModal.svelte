@@ -59,7 +59,7 @@
 		transition:fade={{ duration: 200 }}
 	>
 		<div
-			class="bg-[#050505] border border-stone-800 rounded-none w-full max-w-md shadow-2xl flex flex-col overflow-hidden relative group industrial-frame"
+			class="bg-[var(--terminal-bg)] border border-stone-800 rounded-none w-full max-w-md shadow-2xl flex flex-col overflow-hidden relative group industrial-frame"
 			transition:scale={{ duration: 300, start: 0.95, easing: quintOut }}
 		>
 			<!-- Ambient Background Glow -->
@@ -69,7 +69,7 @@
 
 			<!-- Header -->
 			<div
-				class="p-6 border-b border-stone-800 relative z-10 flex justify-between items-start bg-[#0a0a0a]"
+				class="p-6 border-b border-stone-800 relative z-10 flex justify-between items-start bg-[var(--header-bg)]"
 			>
 				<div>
 					<h3
@@ -82,13 +82,13 @@
 						</div>
 						Initialize_Schema
 					</h3>
-					<p class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest mt-2">
+					<p class="font-jetbrains text-[10px] text-text-dim uppercase tracking-widest mt-2">
 						Define a new namespace for database objects.
 					</p>
 				</div>
 				<button
 					onclick={onClose}
-					class="text-stone-600 hover:text-white p-2 transition-all hover:rotate-90 duration-300"
+					class="text-text-dim hover:text-white p-2 transition-all hover:rotate-90 duration-300"
 				>
 					<X class="w-5 h-5" />
 				</button>
@@ -99,7 +99,7 @@
 				<!-- Schema Name Input -->
 				<div class="space-y-3">
 					<label
-						class="font-jetbrains text-[10px] font-black text-stone-500 uppercase tracking-widest flex items-center gap-2"
+						class="font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest flex items-center gap-2"
 					>
 						<Database class="w-3.5 h-3.5 text-rust" /> Schema_Identity
 					</label>
@@ -121,7 +121,7 @@
 				<!-- Owner Select -->
 				<div class="space-y-3">
 					<label
-						class="font-jetbrains text-[10px] font-black text-stone-500 uppercase tracking-widest flex items-center gap-2"
+						class="font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest flex items-center gap-2"
 					>
 						<User class="w-3.5 h-3.5 text-rust" /> Sector_Owner
 					</label>
@@ -154,17 +154,17 @@
 							>
 						</div>
 					</div>
-					<p class="font-jetbrains text-[9px] text-stone-600 uppercase tracking-widest pl-1">Authorized identity that will govern the schema sector.</p>
+					<p class="font-jetbrains text-[9px] text-text-dim uppercase tracking-widest pl-1">Authorized identity that will govern the schema sector.</p>
 				</div>
 			</div>
 
 			<!-- Footer -->
 			<div
-				class="p-6 border-t border-stone-800 bg-[#0a0a0a] flex justify-end gap-4 relative z-10"
+				class="p-6 border-t border-stone-800 bg-[var(--header-bg)] flex justify-end gap-4 relative z-10"
 			>
 				<button
 					onclick={onClose}
-					class="px-6 py-3 font-heading font-black text-[10px] text-stone-500 hover:text-white transition-all uppercase tracking-widest"
+					class="px-6 py-3 font-heading font-black text-[10px] text-text-dim hover:text-white transition-all uppercase tracking-widest"
 				>
 					Abort_Sequence
 				</button>

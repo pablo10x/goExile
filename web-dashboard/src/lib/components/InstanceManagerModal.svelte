@@ -7,11 +7,11 @@
 	import ResourceMetricsPanel from './ResourceMetricsPanel.svelte';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 	import LogViewer from './LogViewer.svelte';
-	import { X } from 'lucide-svelte';
+	import Icon from './theme/Icon.svelte';
 
 	interface Props {
 		isOpen: boolean;
-		spawnerId: number | null;
+		nodeId: number | null;
 		instanceId: string | null;
 		onClose: () => void;
 		memTotal?: number;
@@ -19,7 +19,7 @@
 
 	let {
 		isOpen = $bindable(false),
-		spawnerId = null,
+		nodeId = null,
 		instanceId = null,
 		onClose,
 		memTotal = 0
@@ -90,7 +90,7 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 
 	// Effects
 	$effect(() => {
-		if (isOpen && spawnerId !== null && instanceId) {
+		if (isOpen && nodeId !== null && instanceId) {
 			startPolling();
 		} else {
 			stopPolling();
@@ -116,19 +116,19 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 	});
 
 	$effect(() => {
-		if (isOpen && activeTab === 'backups' && spawnerId && instanceId) fetchBackups();
+		if (isOpen && activeTab === 'backups' && nodeId && instanceId) fetchBackups();
 	});
 
 	$effect(() => {
-		if (isOpen && activeTab === 'history' && spawnerId && instanceId) fetchHistoryLogs();
+		if (isOpen && activeTab === 'history' && nodeId && instanceId) fetchHistoryLogs();
 	});
 
 	// API Functions
 	async function fetchBackups() {
-		if (!spawnerId || !instanceId) return;
+		if (!nodeId || !instanceId) return;
 		isLoadingData = true;
 		try {
-			const res = await fetch(`/api/spawners/${spawnerId}/instances/${instanceId}/backups`);
+			const res = await fetch(`/api/nodes/${nodeId}/instances/${instanceId}/backups`);
 			if (res.ok) {
 				const data = await res.json();
 				backups = (data.backups || []).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -137,18 +137,18 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 	}
 
 	async function fetchHistoryLogs() {
-		if (!spawnerId || !instanceId) return;
+		if (!nodeId || !instanceId) return;
 		isLoadingData = true;
 		try {
-			const res = await fetch(`/api/spawners/${spawnerId}/instances/${instanceId}/history`);
+			const res = await fetch(`/api/nodes/${nodeId}/instances/${instanceId}/history`);
 			if (res.ok) historyLogs = await res.json();
 		} catch (e) { console.error(e); } finally { isLoadingData = false; }
 	}
 
 	async function fetchInstanceLogs() {
-		if (!spawnerId || !instanceId) return;
+		if (!nodeId || !instanceId) return;
 		try {
-			const res = await fetch(`/api/spawners/${spawnerId}/instances/${instanceId}/logs`);
+			const res = await fetch(`/api/nodes/${nodeId}/instances/${instanceId}/logs`);
 			if (res.ok) {
 				const data = await res.json();
 				if (data.logs) logs = data.logs.split('\n');
@@ -157,9 +157,9 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 	}
 
 	async function fetchStats() {
-		if (!spawnerId || !instanceId) return;
+		if (!nodeId || !instanceId) return;
 		try {
-			const res = await fetch(`/api/spawners/${spawnerId}/instances/${instanceId}/stats`);
+			const res = await fetch(`/api/nodes/${nodeId}/instances/${instanceId}/stats`);
 			if (res.ok) stats = { ...stats, ...(await res.json()) };
 		} catch (e) { console.error('Stats fetch error:', e); }
 	}
@@ -182,7 +182,7 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 
 	type BackupAction = 'create' | 'restore' | 'delete';
 	function handleBackupAction(action: BackupAction, filename: string | undefined = undefined) {
-		if (!spawnerId || !instanceId) return;
+		if (!nodeId || !instanceId) return;
 		confirmTitle = action === 'create' ? 'Create Backup' : action === 'restore' ? 'Restore Backup' : 'Delete Backup';
 		confirmMessage = action === 'create' 
 			? 'Create a new backup? Node must be stopped.' 
@@ -193,9 +193,9 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 		isCriticalAction = action !== 'create';
 
 		pendingBackupAction = async () => {
-			let url = `/api/spawners/${spawnerId}/instances/${instanceId}/backup`;
-			if (action === 'restore') url = `/api/spawners/${spawnerId}/instances/${instanceId}/restore`;
-			else if (action === 'delete') url = `/api/spawners/${spawnerId}/instances/${instanceId}/backup/delete`;
+			let url = `/api/nodes/${nodeId}/instances/${instanceId}/backup`;
+			if (action === 'restore') url = `/api/nodes/${nodeId}/instances/${instanceId}/restore`;
+			else if (action === 'delete') url = `/api/nodes/${nodeId}/instances/${instanceId}/backup/delete`;
 
 			const res = await fetch(url, {
 				method: 'POST',
@@ -219,7 +219,7 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 		confirmBtnText = action === 'delete' ? 'Terminate' : 'Confirm';
 		isCriticalAction = action === 'delete' || action === 'stop';
 		pendingBackupAction = async () => {
-			await fetch(`/api/spawners/${spawnerId}/instances/${instanceId}/${action}`, { method: 'POST' });
+			await fetch(`/api/nodes/${nodeId}/instances/${instanceId}/${action}`, { method: 'POST' });
 		};
 		isConfirmOpen = true;
 	}
@@ -247,11 +247,11 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 
 		<!-- Modal Window -->
 		<div 
-			class="relative w-full max-w-7xl h-full sm:h-[90vh] flex flex-col md:flex-row bg-[#050505] border border-stone-800 rounded-none shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden industrial-frame"
+			class="relative w-full max-w-7xl h-full sm:h-[90vh] flex flex-col md:flex-row bg-[var(--terminal-bg)] border border-stone-800 rounded-none shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden industrial-frame"
 			transition:scale={{ start: 0.98, duration: 200, easing: cubicOut }}
 		>
 			<!-- Tactical Sidebar -->
-			<div class="w-full md:w-72 bg-[#0a0a0a] border-b md:border-b-0 md:border-r border-stone-800 flex flex-col shrink-0 max-h-[40vh] md:max-h-full">
+			<div class="w-full md:w-72 bg-[var(--header-bg)] border-b md:border-b-0 md:border-r border-stone-800 flex flex-col shrink-0 max-h-[40vh] md:max-h-full">
 				<div class="p-4 sm:p-6 border-b border-stone-800 bg-stone-900/30 flex justify-between items-center md:block">
 					<h3 class="text-[10px] sm:text-xs font-heading font-black text-slate-200 truncate tracking-widest uppercase">{instanceId}</h3>
 					<div class="md:mt-4 flex items-center gap-2">
@@ -265,7 +265,7 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 				<div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 sm:space-y-10 custom-scrollbar hidden md:block">
 					<!-- Uptime Section -->
 					<div>
-						<div class="text-[10px] font-heading font-black text-stone-600 uppercase tracking-[0.2em] mb-2">SYSTEM_UPTIME</div>
+						<div class="text-[10px] font-heading font-black uppercase tracking-[0.2em] mb-2" style="color: var(--text-dim)">SYSTEM_UPTIME</div>
 						<div class="text-xl sm:text-2xl font-heading font-black text-rust drop-shadow-[0_0_15px_rgba(120,53,15,0.4)]">
 							{formatUptime((stats.uptime || 0) * 1000)}
 						</div>
@@ -275,7 +275,7 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 					<div class="space-y-8">
 						<div class="group">
 							<div class="flex justify-between text-[10px] font-jetbrains font-black uppercase mb-2 tracking-widest">
-								<span class="text-stone-500">Core_Load</span>
+								<span style="color: var(--text-dim)">Core_Load</span>
 								<span class="text-rust">{stats.cpu_percent?.toFixed(1)}%</span>
 							</div>
 							<div class="h-1.5 bg-stone-950 overflow-hidden border border-stone-800/50">
@@ -284,7 +284,7 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 						</div>
 						<div class="group">
 							<div class="flex justify-between text-[10px] font-jetbrains font-black uppercase mb-2 tracking-widest">
-								<span class="text-stone-500">Mem_Allocation</span>
+								<span style="color: var(--text-dim)">Mem_Allocation</span>
 								<span class="text-rust-light">{formatBytes(stats.memory_usage)}</span>
 							</div>
 							<div class="h-1.5 bg-stone-950 overflow-hidden border border-stone-800/50">
@@ -341,9 +341,9 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 			</div>
 
 			<!-- Main Terminal/Data Area -->
-			<div class="flex-1 flex flex-col min-w-0 bg-[#050505] overflow-hidden">
+			<div class="flex-1 flex flex-col min-w-0 bg-[var(--terminal-bg)] overflow-hidden">
 				<!-- Navigation Tabs -->
-				<div class="flex border-b border-stone-800 bg-[#0a0a0a] overflow-x-auto no-scrollbar shrink-0">
+				<div class="flex border-b border-stone-800 bg-[var(--header-bg)] overflow-x-auto no-scrollbar shrink-0">
 					{#each tabs as tab}
 						<button 
 							onclick={() => activeTab = tab.id}
@@ -364,14 +364,14 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 						</div>
 					{:else if activeTab === 'metrics'}
 						<div class="flex-1 p-4 sm:p-10 overflow-y-auto custom-scrollbar" in:fade={{ duration: 150 }}>
-							{#if spawnerId !== null && instanceId}
-								<ResourceMetricsPanel {spawnerId} {instanceId} {memTotal} height={450} />
+							{#if nodeId !== null && instanceId}
+								<ResourceMetricsPanel {nodeId} {instanceId} {memTotal} height={450} />
 							{/if}
 						</div>
 					{:else if activeTab === 'node_logs'}
 						<div class="flex-1 min-h-0" in:fade={{ duration: 150 }}>
-							{#if spawnerId !== null}
-								<LogViewer {spawnerId} isOpen={isOpen} embedded={true} />
+							{#if nodeId !== null}
+								<LogViewer {nodeId} isOpen={isOpen} embedded={true} />
 							{/if}
 						</div>
 					{:else if activeTab === 'backups'}
@@ -403,7 +403,7 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 										<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 bg-stone-900/40 border border-stone-800 hover:border-rust/40 transition-all group industrial-frame gap-4">
 											<div class="flex-1 min-w-0">
 												<div class="text-xs font-jetbrains font-black text-stone-300 truncate tracking-tighter">{backup.filename}</div>
-												<div class="text-[9px] sm:text-[10px] text-stone-600 mt-2 font-jetbrains font-bold uppercase tracking-widest flex flex-wrap items-center gap-2 sm:gap-4">
+												<div class="text-[9px] sm:text-[10px] mt-2 font-jetbrains font-bold uppercase tracking-widest flex flex-wrap items-center gap-2 sm:gap-4" style="color: var(--text-dim)">
 													<span>{new Date(backup.date).toLocaleString()}</span>
 													<span class="hidden sm:block w-1.5 h-1.5 bg-stone-800"></span>
 													<span class="text-rust/60">{formatBytes(backup.size)}</span>
@@ -424,7 +424,7 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 													class="p-2 text-stone-700 hover:text-red-500 transition-colors"
 													aria-label="Delete"
 												>
-													<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+													<Icon name="ph:trash-bold" size="1.25rem" />
 												</button>
 											</div>
 										</div>
@@ -435,7 +435,7 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 					{:else if activeTab === 'history'}
 						<div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar" in:fade={{ duration: 150 }}>
 							<table class="w-full text-left border-collapse font-jetbrains">
-								<thead class="sticky top-0 bg-[#0a0a0a] border-b border-stone-800 z-10">
+								<thead class="sticky top-0 bg-[var(--header-bg)] border-b border-stone-800 z-10">
 									<tr>
 										<th class="px-4 sm:px-8 py-3 sm:py-5 text-[8px] sm:text-[10px] font-black text-stone-600 uppercase tracking-widest">Protocol Action</th>
 										<th class="px-4 sm:px-8 py-3 sm:py-5 text-[8px] sm:text-[10px] font-black text-stone-600 uppercase tracking-widest text-center">Status</th>
@@ -475,7 +475,7 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 				class="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 text-stone-600 hover:text-rust hover:bg-rust/10 transition-all z-50 group"
 				aria-label="Exit Console"
 			>
-				<svg class="w-5 h-5 sm:w-6 sm:h-6 group-hover:rotate-90 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+				<Icon name="ph:x-bold" size="1.5rem" class="group-hover:rotate-90 transition-transform duration-500" />
 			</button>
 		</div>
 	</div>

@@ -54,7 +54,7 @@
 </script>
 
 <div
-	class="relative flex flex-col h-full bg-[#050505] rounded-none border border-stone-800 overflow-hidden font-jetbrains text-[11px] shadow-2xl group glass-panel industrial-frame"
+	class="relative flex flex-col h-full bg-[var(--terminal-bg)] rounded-none border border-stone-800 overflow-hidden font-jetbrains text-[11px] shadow-2xl group glass-panel industrial-frame"
 >
 	<!-- CRT Overlay Effects -->
 	<div class="absolute inset-0 pointer-events-none z-20 overflow-hidden">
@@ -64,7 +64,7 @@
 
 	<!-- Terminal Header -->
 	<div
-		class="relative z-30 px-5 py-3 bg-[#0a0a0a] border-b border-stone-800 flex justify-between items-center select-none"
+		class="relative z-30 px-5 py-3 bg-[var(--header-bg)] border-b border-stone-800 flex justify-between items-center select-none"
 	>
 		<div class="flex items-center gap-4">
 			<div class="flex gap-2 opacity-50">
@@ -111,7 +111,7 @@
 	<div
 		bind:this={container}
 		onscroll={handleScroll}
-		class="relative z-10 flex-1 overflow-y-auto p-6 space-y-1 custom-scrollbar bg-[#050505]"
+		class="relative z-10 flex-1 overflow-y-auto p-6 space-y-1 custom-scrollbar bg-[var(--terminal-bg)]"
 	>
 		<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.01] pointer-events-none"></div>
 		
@@ -143,13 +143,13 @@
 	}
 
 	.custom-scrollbar::-webkit-scrollbar-track {
-		background: #0a0a0a;
+		background: var(--header-bg);
 		border-left: 1px solid #1a1a1a;
 	}
 
 	.custom-scrollbar::-webkit-scrollbar-thumb {
 		background: #262626;
-		border: 2px solid #0a0a0a;
+		border: 2px solid var(--header-bg);
 		border-radius: 4px;
 	}
 

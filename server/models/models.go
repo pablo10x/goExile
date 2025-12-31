@@ -7,8 +7,8 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
-// Spawner instance registered by the Spawner service
-type Spawner struct {
+// Node instance registered by the Node service
+type Node struct {
 	ID               int       `json:"id"`
 	Name             string    `json:"name"`   // Giga Chad Name (Identity)
 	Region           string    `json:"region"` // Geographic region (e.g. US-East)
@@ -18,6 +18,8 @@ type Spawner struct {
 	CurrentInstances int       `json:"current_instances"`
 	Status           string    `json:"status"`
 	LastSeen         time.Time `json:"last_seen"`
+	APIKey           string    `json:"-" db:"api_key"`
+	IsDraining       bool      `json:"is_draining" db:"is_draining"` // New: Drain Mode
 	// System Metrics
 	CpuUsage    float64 `json:"cpu_usage"`  // Percent
 	MemUsed     uint64  `json:"mem_used"`   // Bytes
@@ -43,7 +45,7 @@ type ServerConfig struct {
 	Key             string    `json:"key" db:"key"`
 	Value           string    `json:"value" db:"value"`
 	Type            string    `json:"type" db:"type"`         // string, int, bool, duration
-	Category        string    `json:"category" db:"category"` // system, spawner, security
+	Category        string    `json:"category" db:"category"` // system, node, security
 	Description     string    `json:"description" db:"description"`
 	IsReadOnly      bool      `json:"is_read_only" db:"is_read_only"`
 	RequiresRestart bool      `json:"requires_restart" db:"requires_restart"`
@@ -54,7 +56,7 @@ type ServerConfig struct {
 // InstanceAction represents a recorded action performed on an instance.
 type InstanceAction struct {
 	ID         int       `json:"id" db:"id"`
-	SpawnerID  int       `json:"spawner_id" db:"spawner_id"`
+	NodeID     int       `json:"node_id" db:"node_id"`
 	InstanceID string    `json:"instance_id" db:"instance_id"`
 	Action     string    `json:"action" db:"action"`
 	Timestamp  time.Time `json:"timestamp" db:"timestamp"`
@@ -62,7 +64,7 @@ type InstanceAction struct {
 	Details    string    `json:"details" db:"details"`
 }
 
-// EnrollmentKey represents a temporary key used for spawner enrollment
+// EnrollmentKey represents a temporary key used for node enrollment
 type EnrollmentKey struct {
 	Key         string     `json:"key"`
 	ExpiresAt   time.Time  `json:"expires_at"`
@@ -70,13 +72,16 @@ type EnrollmentKey struct {
 	CreatedBy   string     `json:"created_by"`
 	Used        bool       `json:"used"`
 	UsedAt      *time.Time `json:"used_at,omitempty"`
-	UsedBy      *int       `json:"used_by,omitempty"` // Spawner ID that used the key
-	SpawnerInfo *struct {
-		ID     int    `json:"id"`
-		Region string `json:"region"`
-		Host   string `json:"host"`
-		Port   int    `json:"port"`
-	} `json:"spawner_info,omitempty"` // Info about the spawner that enrolled
+	UsedBy      *int       `json:"used_by,omitempty"` // Node ID that used the key
+	Status      string     `json:"status"`            // "active", "pending", "approved", "expired"
+	NodeInfo    *struct {
+		ID           int    `json:"id,omitempty"`
+		Region       string `json:"region"`
+		Host         string `json:"host"`
+		Port         int    `json:"port"`
+		MaxInstances int    `json:"max_instances"`
+		APIKey       string `json:"api_key,omitempty"`
+	} `json:"node_info,omitempty"` // Info about the node that enrolled
 }
 
 // Note represents a sticky note on the dashboard.
@@ -129,7 +134,7 @@ type SystemLog struct {
 	ID        int       `json:"id" db:"id"`
 	Timestamp time.Time `json:"timestamp" db:"timestamp"`
 	Level     string    `json:"level" db:"level"`       // INFO, WARN, ERROR, FATAL
-	Category  string    `json:"category" db:"category"` // INTERNAL, SPAWNER, SECURITY, GENERAL
+	Category  string    `json:"category" db:"category"` // INTERNAL, NODE, SECURITY, GENERAL
 	Source    string    `json:"source" db:"source"`     // e.g. "middleware", "auth_handler"
 	Message   string    `json:"message" db:"message"`
 	Details   string    `json:"details" db:"details"` // JSON or text details

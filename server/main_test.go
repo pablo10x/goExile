@@ -27,11 +27,11 @@ func TestMain(m *testing.M) {
 func resetRegistry() {
 	registry.GlobalRegistry.Reset()
 	if database.DBConn != nil {
-		_, _ = database.DBConn.Exec("DELETE FROM spawners")
+		_, _ = database.DBConn.Exec("DELETE FROM nodes")
 	}
 }
 
-func TestRegisterAndGetSpawner(t *testing.T) {
+func TestRegisterAndGetNode(t *testing.T) {
 	resetRegistry()
 	body := map[string]interface{}{
 		"region":        "room-1",
@@ -41,11 +41,11 @@ func TestRegisterAndGetSpawner(t *testing.T) {
 	}
 	b, _ := json.Marshal(body)
 
-	req := httptest.NewRequest("POST", "/api/spawners", bytes.NewReader(b))
+	req := httptest.NewRequest("POST", "/api/nodes", bytes.NewReader(b))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
-	handlers.RegisterSpawner(w, req)
+	handlers.RegisterNode(w, req)
 	if w.Code != http.StatusCreated {
 		t.Fatalf("expected 201 Created, got %d, body: %s", w.Code, w.Body.String())
 	}
@@ -60,25 +60,25 @@ func TestRegisterAndGetSpawner(t *testing.T) {
 	}
 
 	// fetch
-	req2 := httptest.NewRequest("GET", "/api/spawners/"+strconv.Itoa(id), nil)
+	req2 := httptest.NewRequest("GET", "/api/nodes/"+strconv.Itoa(id), nil)
 	req2 = mux.SetURLVars(req2, map[string]string{"id": strconv.Itoa(id)})
 	w2 := httptest.NewRecorder()
-	handlers.GetSpawner(w2, req2)
+	handlers.GetNode(w2, req2)
 	if w2.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK, got %d", w2.Code)
 	}
-	var s models.Spawner
+	var s models.Node
 	if err := json.NewDecoder(w2.Body).Decode(&s); err != nil {
-		t.Fatalf("decode spawner: %v", err)
+		t.Fatalf("decode node: %v", err)
 	}
 	if s.ID != id || s.Host != "127.0.0.1" || s.Port != 7777 {
-		t.Fatalf("unexpected spawner data: %+v", s)
+		t.Fatalf("unexpected node data: %+v", s)
 	}
 }
 
 func TestHeartbeatUpdatesLastSeen(t *testing.T) {
 	resetRegistry()
-	id, _ := registry.GlobalRegistry.Register(&models.Spawner{Region: "hb", Host: "127.0.0.1", Port: 7777, MaxInstances: 4, CurrentInstances: 0, Status: "active"})
+	id, _ := registry.GlobalRegistry.Register(&models.Node{Region: "hb", Host: "127.0.0.1", Port: 7777, MaxInstances: 4, CurrentInstances: 0, Status: "active"})
 
 	s, _ := registry.GlobalRegistry.Get(id)
 	old := s.LastSeen
@@ -93,12 +93,12 @@ func TestHeartbeatUpdatesLastSeen(t *testing.T) {
 	}
 	b, _ := json.Marshal(hbBody)
 
-	req := httptest.NewRequest("POST", "/api/spawners/"+strconv.Itoa(id)+"/heartbeat", bytes.NewReader(b))
+	req := httptest.NewRequest("POST", "/api/nodes/"+strconv.Itoa(id)+"/heartbeat", bytes.NewReader(b))
 	req.Header.Set("Content-Type", "application/json")
 	req = mux.SetURLVars(req, map[string]string{"id": strconv.Itoa(id)})
 	w := httptest.NewRecorder()
 
-	handlers.HeartbeatSpawner(w, req)
+	handlers.HeartbeatNode(w, req)
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK, got %d, body: %s", w.Code, w.Body.String())
 	}
@@ -109,45 +109,45 @@ func TestHeartbeatUpdatesLastSeen(t *testing.T) {
 	}
 }
 
-func TestListSpawners(t *testing.T) {
+func TestListNodes(t *testing.T) {
 	resetRegistry()
-	registry.GlobalRegistry.Register(&models.Spawner{Region: "a", Host: "1.1.1.1", Port: 1111, MaxInstances: 2})
-	registry.GlobalRegistry.Register(&models.Spawner{Region: "b", Host: "2.2.2.2", Port: 2222, MaxInstances: 4})
+	registry.GlobalRegistry.Register(&models.Node{Region: "a", Host: "1.1.1.1", Port: 1111, MaxInstances: 2})
+	registry.GlobalRegistry.Register(&models.Node{Region: "b", Host: "2.2.2.2", Port: 2222, MaxInstances: 4})
 
-	req := httptest.NewRequest("GET", "/api/spawners", nil)
+	req := httptest.NewRequest("GET", "/api/nodes", nil)
 	w := httptest.NewRecorder()
 
-	handlers.ListSpawners(w, req)
+	handlers.ListNodes(w, req)
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK, got %d", w.Code)
 	}
-	var list []models.Spawner
+	var list []models.Node
 	if err := json.NewDecoder(w.Body).Decode(&list); err != nil {
 		t.Fatalf("decode list: %v", err)
 	}
 	if len(list) != 2 {
-		t.Fatalf("expected 2 spawners, got %d", len(list))
+		t.Fatalf("expected 2 nodes, got %d", len(list))
 	}
 }
 
-func TestDeleteSpawner(t *testing.T) {
+func TestDeleteNode(t *testing.T) {
 	resetRegistry()
-	id, _ := registry.GlobalRegistry.Register(&models.Spawner{Region: "to-delete", Host: "3.3.3.3", Port: 3333, MaxInstances: 4})
+	id, _ := registry.GlobalRegistry.Register(&models.Node{Region: "to-delete", Host: "3.3.3.3", Port: 3333, MaxInstances: 4})
 
-	req := httptest.NewRequest("DELETE", "/api/spawners/"+strconv.Itoa(id), nil)
+	req := httptest.NewRequest("DELETE", "/api/nodes/"+strconv.Itoa(id), nil)
 	req = mux.SetURLVars(req, map[string]string{"id": strconv.Itoa(id)})
 	w := httptest.NewRecorder()
 
-	handlers.DeleteSpawner(w, req)
+	handlers.DeleteNode(w, req)
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK, got %d", w.Code)
 	}
 
-	// now GetSpawner should return 404
-	req2 := httptest.NewRequest("GET", "/api/spawners/"+strconv.Itoa(id), nil)
+	// now GetNode should return 404
+	req2 := httptest.NewRequest("GET", "/api/nodes/"+strconv.Itoa(id), nil)
 	req2 = mux.SetURLVars(req2, map[string]string{"id": strconv.Itoa(id)})
 	w2 := httptest.NewRecorder()
-	handlers.GetSpawner(w2, req2)
+	handlers.GetNode(w2, req2)
 	if w2.Code != http.StatusNotFound {
 		t.Fatalf("expected 404 Not Found after delete, got %d", w2.Code)
 	}

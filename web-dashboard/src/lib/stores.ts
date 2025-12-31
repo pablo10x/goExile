@@ -5,7 +5,7 @@ export const userEmail = writable('');
 
 export const stats = writable({
 	uptime: 0,
-	active_spawners: 0,
+	active_nodes: 0,
 	total_requests: 0,
 	total_errors: 0,
 	db_connected: false,
@@ -29,7 +29,7 @@ export const stats = writable({
 	db_tup_deleted: 0
 });
 
-export interface Spawner {
+export interface Node {
 	id: number;
 	name: string;
 	region: string;
@@ -47,7 +47,7 @@ export interface Spawner {
 	last_seen?: string;
 }
 
-export const spawners = writable<Spawner[]>([]);
+export const nodes = writable<Node[]>([]);
 
 export interface ServerVersion {
 	id: number;
@@ -126,6 +126,20 @@ export const notifications = createNotificationStore();
 export const isConnected = writable(false);
 export const connectionStatus = writable('Connecting...');
 
+// Helper for deep merging objects
+function deepMerge(target: any, source: any) {
+	if (!source) return target;
+	const result = { ...target };
+	for (const key in source) {
+		if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+			result[key] = deepMerge(target[key] || {}, source[key]);
+		} else {
+			result[key] = source[key];
+		}
+	}
+	return result;
+}
+
 // Helper for database-backed stores
 function createDatabaseStore<T>(key: string, initialValue: T) {
 	let storedValue;
@@ -133,7 +147,8 @@ function createDatabaseStore<T>(key: string, initialValue: T) {
 		const json = localStorage.getItem(key);
 		if (json) {
 			try {
-				storedValue = JSON.parse(json);
+				const parsed = JSON.parse(json);
+				storedValue = deepMerge(initialValue, parsed);
 			} catch (e) {
 				console.error(`Error parsing persistent store ${key}:`, e);
 			}
@@ -141,18 +156,24 @@ function createDatabaseStore<T>(key: string, initialValue: T) {
 	}
 
 	const { subscribe, set, update } = writable<T>(storedValue || initialValue);
+	let saveTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	async function saveToDB(value: T) {
-		try {
-			const response = await fetch(`/api/config/${key}`, {
-				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ value: JSON.stringify(value) })
-			});
-			if (response.status === 401) return; // Ignore unauthorized, expected during login
-		} catch (e) {
-			// Only log real network errors, not expected 401s
-		}
+		// Use debouncing to prevent spamming the server
+		if (saveTimeout) clearTimeout(saveTimeout);
+		
+		saveTimeout = setTimeout(async () => {
+			try {
+				const response = await fetch(`/api/config/${key}`, {
+					method: 'PUT',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ value: JSON.stringify(value) })
+				});
+				if (response.status === 401) return;
+			} catch (e) {
+				// Network error
+			}
+		}, 500); // 500ms debounce
 	}
 
 	return {
@@ -174,12 +195,13 @@ function createDatabaseStore<T>(key: string, initialValue: T) {
 				return newValue;
 			});
 		},
-		// Initialize from DB
+		// Initialize from DB (Immediate, no debounce needed)
 		init: (value: T) => {
+			const merged = deepMerge(initialValue, value);
 			if (typeof window !== 'undefined') {
-				localStorage.setItem(key, JSON.stringify(value));
+				localStorage.setItem(key, JSON.stringify(merged));
 			}
-			set(value);
+			set(merged);
 		}
 	};
 }
@@ -187,6 +209,7 @@ function createDatabaseStore<T>(key: string, initialValue: T) {
 export const theme = createDatabaseStore<'light' | 'dark'>('site.theme', 'dark');
 
 const defaultBackgroundConfig = {
+	show_global_background: true,
 	show_smoke: true,
 	show_rain: true,
 	show_clouds: true,
@@ -194,16 +217,16 @@ const defaultBackgroundConfig = {
 	show_navbar_particles: true,
 	rain_opacity: 0.2,
 	clouds_opacity: 0.3,
-	global_type: 'architecture' as 'architecture' | 'tactical_grid' | 'neural_network' | 'data_flow' | 'digital_horizon' | 'cyber_ocean' | 'static_void' | 'particle_network' | 'none',
+	global_type: 'digital_stream' as 'digital_stream' | 'circuit_grid' | 'neon_pulse' | 'noise_static' | 'glass_refraction' | 'cyber_scan' | 'vector_wave' | 'none',
+	card_hover_effect: true,
 	settings: {
-		architecture: { intensity: 0.5, speed: 1, density: 1, color: '#f97316' },
-		tactical_grid: { intensity: 0.5, speed: 1, density: 1, color: '#f97316' },
-		neural_network: { intensity: 0.5, speed: 1, density: 1, color: '#f97316' },
-		data_flow: { intensity: 0.5, speed: 1, density: 1, color: '#f97316' },
-		digital_horizon: { intensity: 0.5, speed: 1, density: 1, color: '#f97316' },
-		cyber_ocean: { intensity: 0.5, speed: 1, density: 1, color: '#f97316' },
-		static_void: { intensity: 0.5, speed: 1, density: 1, color: '#f97316' },
-		particle_network: { intensity: 0.5, speed: 1, density: 1, color: '#f97316', size: 1.0 }
+		digital_stream: { speed: 1, color: '#f97316', opacity: 0.5, scale: 1 },
+		circuit_grid: { speed: 1, color: '#f97316', opacity: 0.5, scale: 1 },
+		neon_pulse: { speed: 1, color: '#f97316', opacity: 0.5, scale: 1 },
+		noise_static: { speed: 1, color: '#f97316', opacity: 0.5, scale: 1 },
+		glass_refraction: { speed: 1, color: '#f97316', opacity: 0.5, scale: 1 },
+		cyber_scan: { speed: 1, color: '#f97316', opacity: 0.5, scale: 1 },
+		vector_wave: { speed: 1, color: '#f97316', opacity: 0.5, scale: 1 }
 	}
 };
 
@@ -226,14 +249,24 @@ export const siteSettings = createDatabaseStore('site.settings', {
 		accent_color: '#f59e0bff',
 		sidebar_alpha: 0.9,
 		bg_opacity: 1.0,
-		bg_color: '#0f172aff',
+		bg_color: '#18181bff', /* Lighter default (was #0f172a) */
 		primary_color: '#f59e0bff',
 		secondary_color: '#334155ff',
-		card_bg_color: '#1e293bff',
-		hover_color: '#334155ff',
+		card_bg_color: '#27272aff', /* Lighter default (was #1e293b) */
+		hover_color: '#3f3f46ff',
 		text_color_primary: '#f1f5f9ff',
 		text_color_secondary: '#888888',
-		border_color: '#1e293b',
+		text_color_dim: '#666666ff',
+		border_color: '#3f3f46',
+		header_bg_color: '#000000cc',
+		sidebar_bg_color: '#18181bcc',
+		scrollbar_thumb_color: '#3f3f46',
+		scrollbar_track_color: '#00000033',
+		success_color: '#10b981ff',
+		warning_color: '#f59e0bff',
+		danger_color: '#ef4444ff',
+		info_color: '#06b6d4ff',
+		terminal_bg_color: '#050505ff',
 		font_primary: 'Inter',
 		font_header: 'Kanit',
 		font_body: 'Inter',
@@ -261,6 +294,8 @@ export const siteSettings = createDatabaseStore('site.settings', {
 		card_glow_color: '#f59e0bff',
 		font_size_base: 14,
 		theme_preset: 'modern_industrial',
+		icon_pack: 'lucide' as 'lucide' | 'mdi' | 'ph' | 'ri' | 'tabler',
+		icon_stroke: 2,
 		// Advanced Atmospheric
 		glitch_intensity: 0.05,
 		chromatic_aberration: 0.02,
@@ -285,17 +320,37 @@ export const siteSettings = createDatabaseStore('site.settings', {
 		hover_scale_factor: 1.02,
 		button_press_depth: 2, // px
 		ui_animation_intensity: 1.0,
-		// Specialized Colors
-		success_color: '#10b981ff',
-		warning_color: '#f59e0bff',
-		danger_color: '#ef4444ff',
-		info_color: '#06b6d4ff'
+		spin_velocity: 1.0,
+		scanline_speed_hz: 1.0,
+		modal_entry_speed: 300, // ms
+		glow_pulse_depth: 0.5,
+		// Signal Dynamics (New Tab)
+		typing_speed: 1.0,
+		glitch_frequency: 1.0,
+		header_pulse_speed: 1.0,
+		navbar_entry_delay: 100, // ms
+		progress_fill_speed: 1.0,
+		global_animation_scale: 1.0,
+		// Background & Hover Dynamics
+		bg_anim_speed: 1.0,
+		bg_anim_opacity: 0.2,
+		card_hover_intensity: 0.5,
+		card_hover_data_speed: 1.0,
+		card_hover_spark_density: 8
 	},
 	performance: {
 		high_quality_smoke: false,
 		particle_density: 0.5,
 		low_power_mode: false,
 		disable_expensive_animations: false
+	},
+	dashboard: {
+		show_topology: true,
+		show_stats_cards: true,
+		show_traffic_card: true,
+		show_db_card: true,
+		show_nodes_table: true,
+		compact_mode: false
 	},
 	site_notice: {
 		enabled: false,
@@ -307,12 +362,18 @@ export const siteSettings = createDatabaseStore('site.settings', {
 /**
  * Load all settings from the database and initialize stores
  */
-export async function loadAllSettings() {
+export async function loadAllSettings(prefetchedConfigs?: ServerConfig[]) {
 	try {
-		const response = await fetch('/api/config');
-		if (response.status === 401) return; // Silent return if not logged in
-		if (!response.ok) return;
-		const configs: ServerConfig[] = await response.json();
+		let configs: ServerConfig[];
+		
+		if (prefetchedConfigs) {
+			configs = prefetchedConfigs;
+		} else {
+			const response = await fetch('/api/config');
+			if (response.status === 401) return; // Silent return if not logged in
+			if (!response.ok) return;
+			configs = await response.json();
+		}
 
 		configs.forEach((cfg) => {
 			try {
@@ -321,11 +382,7 @@ export async function loadAllSettings() {
 				} else if (cfg.key === 'site.settings') {
 					siteSettings.init(JSON.parse(cfg.value));
 				} else if (cfg.key === 'site.background_config') {
-					const loaded = JSON.parse(cfg.value);
-					// Deep merge settings to ensure new engines are present
-					const mergedSettings = { ...defaultBackgroundConfig.settings, ...(loaded.settings || {}) };
-					const merged = { ...defaultBackgroundConfig, ...loaded, settings: mergedSettings };
-					backgroundConfig.init(merged);
+					backgroundConfig.init(JSON.parse(cfg.value));
 				}
 			} catch (e) {
 				console.error(`Error parsing config ${cfg.key}:`, e);
@@ -363,6 +420,9 @@ function createNotificationStore() {
 			update((notifications) => notifications.filter((n) => n.id !== id));
 		},
 		clearHistory: () => {
+			update(() => []);
+		},
+		clearPermanentHistory: () => {
 			history.set([]);
 		}
 	};

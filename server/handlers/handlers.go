@@ -21,9 +21,9 @@ import (
 
 // ... (existing code remains until HandleLogin) ...
 
-// RegisterSpawner accepts registration from a models.Spawner service.
-func RegisterSpawner(w http.ResponseWriter, r *http.Request) {
-	var s models.Spawner
+// RegisterNode accepts registration from a models.Node service.
+func RegisterNode(w http.ResponseWriter, r *http.Request) {
+	var s models.Node
 	if err := utils.DecodeJSON(r, &s); err != nil {
 		utils.WriteError(w, r, http.StatusBadRequest, err.Error())
 		return
@@ -48,12 +48,12 @@ func RegisterSpawner(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	registry.GlobalStats.UpdateActiveServers(len(registry.GlobalRegistry.List()))
+	registry.GlobalStats.UpdateActiveNodes(len(registry.GlobalRegistry.List()))
 	utils.WriteJSON(w, http.StatusCreated, map[string]int{"id": id})
 }
 
-// HeartbeatSpawner refreshes the LastSeen timestamp and stats for the given spawner ID.
-func HeartbeatSpawner(w http.ResponseWriter, r *http.Request) {
+// HeartbeatNode refreshes the LastSeen timestamp and stats for the given node ID.
+func HeartbeatNode(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := utils.ParseID(vars["id"])
 	if err != nil {
@@ -71,28 +71,29 @@ func HeartbeatSpawner(w http.ResponseWriter, r *http.Request) {
 		DiskUsed         uint64  `json:"disk_used"`
 		DiskTotal        uint64  `json:"disk_total"`
 		GameVersion      string  `json:"game_version"`
+		IsDraining       bool    `json:"is_draining"`
 	}
 	if err := utils.DecodeJSON(r, &req); err != nil {
 		utils.WriteError(w, r, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	if err := registry.GlobalRegistry.UpdateHeartbeat(id, req.CurrentInstances, req.MaxInstances, req.Status, req.CpuUsage, req.MemUsed, req.MemTotal, req.DiskUsed, req.DiskTotal, req.GameVersion); err != nil {
+	if err := registry.GlobalRegistry.UpdateHeartbeat(id, req.CurrentInstances, req.MaxInstances, req.Status, req.CpuUsage, req.MemUsed, req.MemTotal, req.DiskUsed, req.DiskTotal, req.GameVersion, req.IsDraining); err != nil {
 		utils.WriteError(w, r, http.StatusNotFound, err.Error())
 		return
 	}
 	utils.WriteJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
-// ListSpawners returns a JSON array with all currently registered spawners.
-func ListSpawners(w http.ResponseWriter, r *http.Request) {
-	spawners := registry.GlobalRegistry.List()
-	registry.GlobalStats.UpdateActiveServers(len(spawners))
-	utils.WriteJSON(w, http.StatusOK, spawners)
+// ListNodes returns a JSON array with all currently registered nodes.
+func ListNodes(w http.ResponseWriter, r *http.Request) {
+	nodes := registry.GlobalRegistry.List()
+	registry.GlobalStats.UpdateActiveNodes(len(nodes))
+	utils.WriteJSON(w, http.StatusOK, nodes)
 }
 
-// GetSpawner returns a single spawner by numeric id.
-func GetSpawner(w http.ResponseWriter, r *http.Request) {
+// GetNode returns a single node by numeric id.
+func GetNode(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := utils.ParseID(vars["id"])
 	if err != nil {
@@ -101,14 +102,14 @@ func GetSpawner(w http.ResponseWriter, r *http.Request) {
 	}
 	s, ok := registry.GlobalRegistry.Get(id)
 	if !ok {
-		utils.WriteError(w, r, http.StatusNotFound, "spawner not found")
+		utils.WriteError(w, r, http.StatusNotFound, "node not found")
 		return
 	}
 	utils.WriteJSON(w, http.StatusOK, s)
 }
 
-// DeleteSpawner removes a spawner from the registry.
-func DeleteSpawner(w http.ResponseWriter, r *http.Request) {
+// DeleteNode removes a node from the registry.
+func DeleteNode(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := utils.ParseID(vars["id"])
 	if err != nil {
@@ -116,26 +117,98 @@ func DeleteSpawner(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !registry.GlobalRegistry.Delete(id) {
-		utils.WriteError(w, r, http.StatusNotFound, "spawner not found")
+		utils.WriteError(w, r, http.StatusNotFound, "node not found")
 		return
 	}
-	registry.GlobalStats.UpdateActiveServers(len(registry.GlobalRegistry.List()))
+	registry.GlobalStats.UpdateActiveNodes(len(registry.GlobalRegistry.List()))
 	utils.WriteJSON(w, http.StatusOK, map[string]string{"message": "deleted"})
 }
 
-// SpawnInstance triggers a new game instance on the specified spawner.
-func SpawnInstance(w http.ResponseWriter, r *http.Request) {
+// UpdateNodeSettings updates the configuration for a node (Region, MaxInstances, DrainMode).
+func UpdateNodeSettings(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := utils.ParseID(vars["id"])
+	if err != nil {
+		utils.WriteError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	var req struct {
+		Region       string `json:"region"`
+		MaxInstances int    `json:"max_instances"`
+		IsDraining   bool   `json:"is_draining"`
+	}
+	if err := utils.DecodeJSON(r, &req); err != nil {
+		utils.WriteError(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if req.MaxInstances < 0 {
+		utils.WriteError(w, r, http.StatusBadRequest, "invalid max_instances")
+		return
+	}
+
+	// Update in Registry/DB
+	s, ok := registry.GlobalRegistry.Get(id)
+	if !ok {
+		utils.WriteError(w, r, http.StatusNotFound, "node not found")
+		return
+	}
+
+	s.Region = req.Region
+	s.MaxInstances = req.MaxInstances
+	s.IsDraining = req.IsDraining
+
+	// Persist to DB
+	if database.DBConn != nil {
+		if _, err := database.SaveNode(database.DBConn, s); err != nil {
+			utils.WriteError(w, r, http.StatusInternalServerError, "failed to save node settings")
+			return
+		}
+	}
+
+	// Send update to Node via WS
+	err = ws.GlobalWSManager.SendCommand(id, "update_config", map[string]interface{}{
+		"region":        req.Region,
+		"max_instances": req.MaxInstances,
+		"is_draining":   req.IsDraining,
+	})
+
+	if err != nil {
+		// Log warning but don't fail the request as DB is updated
+		// The node will sync on next heartbeat/restart eventually if we implement polling,
+		// but for now, this is a "best effort" push.
+		log.Printf("Warning: Failed to push config update to node %d: %v", id, err)
+	}
+
+	utils.WriteJSON(w, http.StatusOK, map[string]string{"message": "settings updated"})
+}
+
+// SpawnNodeInstance triggers a new game instance on the specified node.
+func SpawnNodeInstance(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	rawID := vars["id"]
 	id, err := strconv.Atoi(rawID)
 	if err != nil {
-		utils.WriteError(w, r, http.StatusBadRequest, "Invalid spawner ID")
+		utils.WriteError(w, r, http.StatusBadRequest, "Invalid node ID")
+		return
+	}
+
+	// Check if node is draining
+	s, ok := registry.GlobalRegistry.Get(id)
+	if !ok {
+		utils.WriteError(w, r, http.StatusNotFound, "node not found")
+		return
+	}
+
+	if s.IsDraining {
+		utils.WriteError(w, r, http.StatusServiceUnavailable, "Node is in Drain Mode (Maintenance). No new instances allowed.")
 		return
 	}
 
 	resp, err := ws.GlobalWSManager.SendCommandSync(id, "spawn", nil, 30*time.Second)
 	if err != nil {
-		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
+		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact node via WS: %v", err))
 		return
 	}
 
@@ -150,7 +223,7 @@ func SpawnInstance(w http.ResponseWriter, r *http.Request) {
 		}
 		if json.Unmarshal(resp.Data, &resData) == nil && resData.ID != "" {
 			database.SaveInstanceAction(database.DBConn, &models.InstanceAction{
-				SpawnerID:  id,
+				NodeID:  id,
 				InstanceID: resData.ID,
 				Action:     "spawn",
 				Timestamp:  time.Now().UTC(),
@@ -164,8 +237,8 @@ func SpawnInstance(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(resp.Data)
 }
 
-// GetSpawnerLogs fetches and returns the log file content from a spawner.
-func GetSpawnerLogs(w http.ResponseWriter, r *http.Request) {
+// GetNodeLogs fetches and returns the log file content from a node.
+func GetNodeLogs(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := utils.ParseID(vars["id"])
 	if err != nil {
@@ -175,7 +248,7 @@ func GetSpawnerLogs(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := ws.GlobalWSManager.SendCommandSync(id, "get_logs", nil, 10*time.Second)
 	if err != nil {
-		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
+		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact node via WS: %v", err))
 		return
 	}
 
@@ -189,8 +262,8 @@ func GetSpawnerLogs(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp.Data)
 }
 
-// ClearSpawnerLogs truncates the log file on a spawner.
-func ClearSpawnerLogs(w http.ResponseWriter, r *http.Request) {
+// ClearNodeLogs truncates the log file on a node.
+func ClearNodeLogs(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := utils.ParseID(vars["id"])
 	if err != nil {
@@ -200,7 +273,7 @@ func ClearSpawnerLogs(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := ws.GlobalWSManager.SendCommandSync(id, "clear_logs", nil, 10*time.Second)
 	if err != nil {
-		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
+		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact node via WS: %v", err))
 		return
 	}
 
@@ -214,8 +287,8 @@ func ClearSpawnerLogs(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp.Data)
 }
 
-// ListSpawnerInstances fetches active game instances from a spawner.
-func ListSpawnerInstances(w http.ResponseWriter, r *http.Request) {
+// ListNodeInstances fetches active game instances from a node.
+func ListNodeInstances(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := utils.ParseID(vars["id"])
 	if err != nil {
@@ -225,7 +298,7 @@ func ListSpawnerInstances(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := ws.GlobalWSManager.SendCommandSync(id, "list_instances", nil, 10*time.Second)
 	if err != nil {
-		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
+		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact node via WS: %v", err))
 		return
 	}
 
@@ -239,8 +312,8 @@ func ListSpawnerInstances(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp.Data)
 }
 
-// UpdateSpawnerTemplate triggers the spawner to re-download the latest game server files from master.
-func UpdateSpawnerTemplate(w http.ResponseWriter, r *http.Request) {
+// UpdateNodeTemplate triggers the node to re-download the latest game server files from master.
+func UpdateNodeTemplate(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := utils.ParseID(vars["id"])
 	if err != nil {
@@ -250,7 +323,7 @@ func UpdateSpawnerTemplate(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := ws.GlobalWSManager.SendCommandSync(id, "update_template", nil, 300*time.Second)
 	if err != nil {
-		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
+		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact node via WS: %v", err))
 		return
 	}
 
@@ -264,8 +337,8 @@ func UpdateSpawnerTemplate(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp.Data)
 }
 
-// UpdateSpawnerInstance triggers an update (reinstall files) for a specific game instance.
-func UpdateSpawnerInstance(w http.ResponseWriter, r *http.Request) {
+// UpdateNodeInstance triggers an update (reinstall files) for a specific game instance.
+func UpdateNodeInstance(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := utils.ParseID(vars["id"])
 	if err != nil {
@@ -280,7 +353,7 @@ func UpdateSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := ws.GlobalWSManager.SendCommandSync(id, "update_instance", map[string]string{"instance_id": instanceID}, 300*time.Second)
 	if err != nil {
-		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
+		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact node via WS: %v", err))
 		return
 	}
 
@@ -291,7 +364,7 @@ func UpdateSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 
 	if database.DBConn != nil {
 		database.SaveInstanceAction(database.DBConn, &models.InstanceAction{
-			SpawnerID:  id,
+			NodeID:  id,
 			InstanceID: instanceID,
 			Action:     "update",
 			Timestamp:  time.Now().UTC(),
@@ -304,8 +377,8 @@ func UpdateSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp.Data)
 }
 
-// RenameSpawnerInstance renames a specific game instance on a spawner.
-func RenameSpawnerInstance(w http.ResponseWriter, r *http.Request) {
+// RenameNodeInstance renames a specific game instance on a node.
+func RenameNodeInstance(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := utils.ParseID(vars["id"])
 	if err != nil {
@@ -328,7 +401,7 @@ func RenameSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := ws.GlobalWSManager.SendCommandSync(id, "rename_instance", map[string]string{"instance_id": instanceID, "new_id": reqBody.NewID}, 10*time.Second)
 	if err != nil {
-		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
+		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact node via WS: %v", err))
 		return
 	}
 
@@ -339,7 +412,7 @@ func RenameSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 
 	if database.DBConn != nil {
 		database.SaveInstanceAction(database.DBConn, &models.InstanceAction{
-			SpawnerID:  id,
+			NodeID:  id,
 			InstanceID: instanceID,
 			Action:     "rename",
 			Timestamp:  time.Now().UTC(),
@@ -352,8 +425,8 @@ func RenameSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp.Data)
 }
 
-// RemoveSpawnerInstance removes a specific game instance on a spawner.
-func RemoveSpawnerInstance(w http.ResponseWriter, r *http.Request) {
+// RemoveNodeInstance removes a specific game instance on a node.
+func RemoveNodeInstance(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := utils.ParseID(vars["id"])
 	if err != nil {
@@ -368,7 +441,7 @@ func RemoveSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := ws.GlobalWSManager.SendCommandSync(id, "remove_instance", map[string]string{"instance_id": instanceID}, 10*time.Second)
 	if err != nil {
-		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
+		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact node via WS: %v", err))
 		return
 	}
 
@@ -379,7 +452,7 @@ func RemoveSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 
 	if database.DBConn != nil {
 		database.SaveInstanceAction(database.DBConn, &models.InstanceAction{
-			SpawnerID:  id,
+			NodeID:  id,
 			InstanceID: instanceID,
 			Action:     "delete",
 			Timestamp:  time.Now().UTC(),
@@ -392,8 +465,8 @@ func RemoveSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp.Data)
 }
 
-// StopSpawnerInstance stops a specific game instance on a spawner.
-func StopSpawnerInstance(w http.ResponseWriter, r *http.Request) {
+// StopNodeInstance stops a specific game instance on a node.
+func StopNodeInstance(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := utils.ParseID(vars["id"])
 	if err != nil {
@@ -408,7 +481,7 @@ func StopSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := ws.GlobalWSManager.SendCommandSync(id, "stop_instance", map[string]string{"instance_id": instanceID}, 10*time.Second)
 	if err != nil {
-		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
+		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact node via WS: %v", err))
 		return
 	}
 
@@ -419,7 +492,7 @@ func StopSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 
 	if database.DBConn != nil {
 		database.SaveInstanceAction(database.DBConn, &models.InstanceAction{
-			SpawnerID:  id,
+			NodeID:  id,
 			InstanceID: instanceID,
 			Action:     "stop",
 			Timestamp:  time.Now().UTC(),
@@ -430,8 +503,8 @@ func StopSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, map[string]string{"message": "instance stopped", "id": instanceID})
 }
 
-// StartSpawnerInstance starts a specific game instance on a spawner.
-func StartSpawnerInstance(w http.ResponseWriter, r *http.Request) {
+// StartNodeInstance starts a specific game instance on a node.
+func StartNodeInstance(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := utils.ParseID(vars["id"])
 	if err != nil {
@@ -447,7 +520,7 @@ func StartSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := ws.GlobalWSManager.SendCommandSync(id, "start_instance", map[string]string{"instance_id": instanceID}, 10*time.Second)
 	if err != nil {
-		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
+		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact node via WS: %v", err))
 		return
 	}
 
@@ -458,7 +531,7 @@ func StartSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 
 	if database.DBConn != nil {
 		database.SaveInstanceAction(database.DBConn, &models.InstanceAction{
-			SpawnerID:  id,
+			NodeID:  id,
 			InstanceID: instanceID,
 			Action:     "start",
 			Timestamp:  time.Now().UTC(),
@@ -469,8 +542,8 @@ func StartSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, map[string]string{"message": "instance started", "id": instanceID})
 }
 
-// RestartSpawnerInstance restarts a specific game instance on a spawner.
-func RestartSpawnerInstance(w http.ResponseWriter, r *http.Request) {
+// RestartNodeInstance restarts a specific game instance on a node.
+func RestartNodeInstance(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := utils.ParseID(vars["id"])
 	if err != nil {
@@ -485,7 +558,7 @@ func RestartSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := ws.GlobalWSManager.SendCommandSync(id, "restart_instance", map[string]string{"instance_id": instanceID}, 10*time.Second)
 	if err != nil {
-		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
+		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact node via WS: %v", err))
 		return
 	}
 
@@ -496,7 +569,7 @@ func RestartSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 
 	if database.DBConn != nil {
 		database.SaveInstanceAction(database.DBConn, &models.InstanceAction{
-			SpawnerID:  id,
+			NodeID:  id,
 			InstanceID: instanceID,
 			Action:     "restart",
 			Timestamp:  time.Now().UTC(),
@@ -526,7 +599,7 @@ func GetInstanceLogs(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := ws.GlobalWSManager.SendCommandSync(id, "get_instance_logs", map[string]string{"instance_id": instanceID}, 30*time.Second)
 	if err != nil {
-		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
+		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact node via WS: %v", err))
 		return
 	}
 
@@ -557,7 +630,7 @@ func ClearInstanceLogs(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := ws.GlobalWSManager.SendCommandSync(id, "clear_instance_logs", map[string]string{"instance_id": instanceID}, 10*time.Second)
 	if err != nil {
-		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
+		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact node via WS: %v", err))
 		return
 	}
 
@@ -587,7 +660,7 @@ func GetInstanceStats(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := ws.GlobalWSManager.SendCommandSync(id, "get_instance_stats", map[string]string{"instance_id": instanceID}, 10*time.Second)
 	if err != nil {
-		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
+		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact node via WS: %v", err))
 		return
 	}
 
@@ -617,7 +690,7 @@ func GetInstanceHistory(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := ws.GlobalWSManager.SendCommandSync(id, "get_instance_history", map[string]string{"instance_id": instanceID}, 10*time.Second)
 	if err != nil {
-		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
+		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact node via WS: %v", err))
 		return
 	}
 
@@ -658,8 +731,8 @@ func GetInstanceHistoryActions(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, actions)
 }
 
-// BackupSpawnerInstance creates a backup of a game instance on a spawner.
-func BackupSpawnerInstance(w http.ResponseWriter, r *http.Request) {
+// BackupNodeInstance creates a backup of a game instance on a node.
+func BackupNodeInstance(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := utils.ParseID(vars["id"])
 	if err != nil {
@@ -674,7 +747,7 @@ func BackupSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := ws.GlobalWSManager.SendCommandSync(id, "backup_instance", map[string]string{"instance_id": instanceID}, 300*time.Second)
 	if err != nil {
-		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
+		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact node via WS: %v", err))
 		return
 	}
 
@@ -688,8 +761,8 @@ func BackupSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp.Data)
 }
 
-// RestoreSpawnerInstance restores a backup of a game instance on a spawner.
-func RestoreSpawnerInstance(w http.ResponseWriter, r *http.Request) {
+// RestoreNodeInstance restores a backup of a game instance on a node.
+func RestoreNodeInstance(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := utils.ParseID(vars["id"])
 	if err != nil {
@@ -712,7 +785,7 @@ func RestoreSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := ws.GlobalWSManager.SendCommandSync(id, "restore_instance", map[string]string{"instance_id": instanceID, "filename": reqBody.Filename}, 300*time.Second)
 	if err != nil {
-		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
+		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact node via WS: %v", err))
 		return
 	}
 
@@ -726,8 +799,8 @@ func RestoreSpawnerInstance(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp.Data)
 }
 
-// ListSpawnerBackups lists backups of a game instance on a spawner.
-func ListSpawnerBackups(w http.ResponseWriter, r *http.Request) {
+// ListNodeBackups lists backups of a game instance on a node.
+func ListNodeBackups(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := utils.ParseID(vars["id"])
 	if err != nil {
@@ -742,7 +815,7 @@ func ListSpawnerBackups(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := ws.GlobalWSManager.SendCommandSync(id, "list_backups", map[string]string{"instance_id": instanceID}, 10*time.Second)
 	if err != nil {
-		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
+		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact node via WS: %v", err))
 		return
 	}
 
@@ -756,8 +829,8 @@ func ListSpawnerBackups(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp.Data)
 }
 
-// DeleteSpawnerBackup deletes a backup of a game instance on a spawner.
-func DeleteSpawnerBackup(w http.ResponseWriter, r *http.Request) {
+// DeleteNodeBackup deletes a backup of a game instance on a node.
+func DeleteNodeBackup(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := utils.ParseID(vars["id"])
 	if err != nil {
@@ -780,7 +853,7 @@ func DeleteSpawnerBackup(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := ws.GlobalWSManager.SendCommandSync(id, "delete_backup", map[string]string{"instance_id": instanceID, "filename": reqBody.Filename}, 10*time.Second)
 	if err != nil {
-		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact spawner via WS: %v", err))
+		utils.WriteError(w, r, http.StatusBadGateway, fmt.Sprintf("failed to contact node via WS: %v", err))
 		return
 	}
 

@@ -49,7 +49,7 @@ func (h *SSEHub) HandleSSE(w http.ResponseWriter, r *http.Request) {
 
 	// Send initial data
 	h.sendUpdate(clientChan, "stats")
-	h.sendUpdate(clientChan, "spawners")
+	h.sendUpdate(clientChan, "nodes")
 
 	// Loop to send data to the client
 	for {
@@ -95,18 +95,18 @@ func (h *SSEHub) Broadcast(msgType string, payload interface{}) {
 // Run starts the background ticker for updates.
 func (h *SSEHub) Run() {
 	statsTicker := time.NewTicker(1 * time.Second)
-	spawnersTicker := time.NewTicker(2 * time.Second)
+	nodesTicker := time.NewTicker(2 * time.Second)
 	defer statsTicker.Stop()
-	defer spawnersTicker.Stop()
+	defer nodesTicker.Stop()
 
 	for {
 		select {
 		case <-statsTicker.C:
 			h.Broadcast("stats", registry.GlobalStats.GetStatsMap())
 
-		case <-spawnersTicker.C:
-			spawners := registry.GlobalRegistry.List()
-			h.Broadcast("spawners", spawners)
+		case <-nodesTicker.C:
+			nodes := registry.GlobalRegistry.List()
+			h.Broadcast("nodes", nodes)
 		}
 	}
 }
@@ -116,7 +116,7 @@ func (h *SSEHub) sendUpdate(client chan string, msgType string) {
 	var payload interface{}
 	if msgType == "stats" {
 		payload = registry.GlobalStats.GetStatsMap()
-	} else if msgType == "spawners" {
+	} else if msgType == "nodes" {
 		payload = registry.GlobalRegistry.List()
 	}
 

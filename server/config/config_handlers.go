@@ -88,22 +88,6 @@ func UpdateConfigHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	existing, err := database.GetConfigByKey(database.DBConn, key)
-	if err != nil {
-		utils.WriteError(w, r, http.StatusInternalServerError, fmt.Sprintf("Failed to get existing configuration: %v", err))
-		return
-	}
-
-	if existing == nil {
-		utils.WriteError(w, r, http.StatusNotFound, "Configuration not found")
-		return
-	}
-
-	if existing.IsReadOnly {
-		utils.WriteError(w, r, http.StatusForbidden, "Cannot update read-only configuration")
-		return
-	}
-
 	updatedBy := "admin"
 	if err := database.UpdateConfig(database.DBConn, key, req.Value, updatedBy); err != nil {
 		utils.WriteError(w, r, http.StatusInternalServerError, fmt.Sprintf("Failed to update configuration: %v", err))

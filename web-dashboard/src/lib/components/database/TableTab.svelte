@@ -138,9 +138,9 @@
 	});
 </script>
 
-<div class="flex flex-col h-full bg-[#050505]">
+<div class="flex flex-col h-full bg-[var(--terminal-bg)]">
 	<!-- Header -->
-	<div class="border-b border-stone-800 bg-[#0a0a0a]">
+	<div class="border-b border-stone-800 bg-[var(--header-bg)]">
 		<!-- Table Info Bar -->
 		<div class="px-6 py-4 flex items-center justify-between">
 			<div class="flex items-center gap-4">
@@ -154,7 +154,7 @@
 							{schema}
 						</span>
 					</h2>
-					<div class="flex items-center gap-4 text-[10px] font-jetbrains font-bold text-stone-500 mt-1.5 uppercase tracking-widest">
+					<div class="flex items-center gap-4 text-[10px] font-jetbrains font-bold text-text-dim mt-1.5 uppercase tracking-widest">
 						<span class="flex items-center gap-1.5">
 							<Rows3 class="w-3.5 h-3.5" />
 							{totalCount} rows
@@ -170,7 +170,7 @@
 			<button
 				onclick={loadData}
 				disabled={loading}
-				class="p-2.5 text-stone-500 hover:text-rust hover:bg-rust/10 transition-all disabled:opacity-20"
+				class="p-2.5 text-text-dim hover:text-rust hover:bg-rust/10 transition-all disabled:opacity-20"
 				title="Refresh Data"
 			>
 				<RefreshCw class="w-5 h-5 {loading ? 'animate-spin' : ''}" />
@@ -184,7 +184,7 @@
 				class="px-6 py-3 text-[11px] font-heading font-black uppercase tracking-[0.2em] border-b-2 transition-all flex items-center gap-3 {view ===
 				'data'
 					? 'border-rust text-rust bg-rust/5'
-					: 'border-transparent text-stone-600 hover:text-stone-300 hover:bg-stone-900/50'}"
+					: 'border-transparent text-text-dim hover:text-stone-300 hover:bg-stone-900/50'}"
 			>
 				<Table class="w-4 h-4" />
 				Data
@@ -194,7 +194,7 @@
 				class="px-6 py-3 text-[11px] font-heading font-black uppercase tracking-[0.2em] border-b-2 transition-all flex items-center gap-3 {view ===
 				'structure'
 					? 'border-rust text-rust bg-rust/5'
-					: 'border-transparent text-stone-600 hover:text-stone-300 hover:bg-stone-900/50'}"
+					: 'border-transparent text-text-dim hover:text-stone-300 hover:bg-stone-900/50'}"
 			>
 				<Settings class="w-4 h-4" />
 				Structure

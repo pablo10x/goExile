@@ -47,9 +47,81 @@ func (em *EnrollmentManager) GenerateKey(createdBy string, duration time.Duratio
 		ExpiresAt: time.Now().Add(duration),
 		CreatedBy: createdBy,
 		Used:      false,
+		Status:    "active",
 	}
 
 	em.keys[key] = enrollmentKey
+
+	return enrollmentKey, nil
+}
+
+// ClaimKey marks a key as pending and associates it with initial node data
+func (em *EnrollmentManager) ClaimKey(key string, host string, port int) (*models.EnrollmentKey, error) {
+	em.mu.Lock()
+	defer em.mu.Unlock()
+
+	enrollmentKey, exists := em.keys[key]
+	if !exists {
+		return nil, fmt.Errorf("invalid enrollment key")
+	}
+
+	if time.Now().After(enrollmentKey.ExpiresAt) {
+		delete(em.keys, key)
+		return nil, fmt.Errorf("enrollment key has expired")
+	}
+
+	if enrollmentKey.Used {
+		return nil, fmt.Errorf("enrollment key has already been used")
+	}
+
+	if enrollmentKey.Status != "active" && enrollmentKey.Status != "pending" {
+		return nil, fmt.Errorf("enrollment key is in invalid status: %s", enrollmentKey.Status)
+	}
+
+	// Update status to pending and store initial info
+	enrollmentKey.Status = "pending"
+	enrollmentKey.NodeInfo = &struct {
+		ID           int    `json:"id,omitempty"`
+		Region       string `json:"region"`
+		Host         string `json:"host"`
+		Port         int    `json:"port"`
+		MaxInstances int    `json:"max_instances"`
+		APIKey       string `json:"api_key,omitempty"`
+	}{
+		Host: host,
+		Port: port,
+	}
+
+	return enrollmentKey, nil
+}
+
+// ApproveKey completes the registration with admin-provided config
+func (em *EnrollmentManager) ApproveKey(key string, region string, maxInstances int, nodeID int, apiKey string) (*models.EnrollmentKey, error) {
+	em.mu.Lock()
+	defer em.mu.Unlock()
+
+	enrollmentKey, exists := em.keys[key]
+	if !exists {
+		return nil, fmt.Errorf("invalid enrollment key")
+	}
+
+	if enrollmentKey.Status != "pending" {
+		return nil, fmt.Errorf("key is not in pending status")
+	}
+
+	// Mark as used/approved
+	now := time.Now()
+	enrollmentKey.Used = true
+	enrollmentKey.UsedAt = &now
+	enrollmentKey.Status = "approved"
+	enrollmentKey.UsedBy = &nodeID
+
+	if enrollmentKey.NodeInfo != nil {
+		enrollmentKey.NodeInfo.ID = nodeID
+		enrollmentKey.NodeInfo.Region = region
+		enrollmentKey.NodeInfo.MaxInstances = maxInstances
+		enrollmentKey.NodeInfo.APIKey = apiKey
+	}
 
 	return enrollmentKey, nil
 }

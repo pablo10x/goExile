@@ -14,7 +14,7 @@ type LogCategory string
 
 const (
 	LogCategoryInternal LogCategory = "Internal"
-	LogCategorySpawner  LogCategory = "Spawner"
+	LogCategoryNode  LogCategory = "Node"
 	LogCategorySecurity LogCategory = "Security"
 	LogCategoryGeneral  LogCategory = "General"
 )
@@ -63,8 +63,8 @@ func (s *LoggerService) Log(level LogLevel, category LogCategory, msg string, de
 }
 
 func DetermineCategory(path string) LogCategory {
-	if strings.HasPrefix(path, "/api/spawners") {
-		return LogCategorySpawner
+	if strings.HasPrefix(path, "/api/nodes") {
+		return LogCategoryNode
 	}
 	if strings.Contains(path, "login") || strings.Contains(path, "auth") || strings.Contains(path, "security") {
 		return LogCategorySecurity

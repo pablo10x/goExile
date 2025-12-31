@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { isAuthenticated } from '$lib/stores';
 	import { onMount } from 'svelte';
 	import { fade, slide } from 'svelte/transition';
@@ -60,7 +60,8 @@
 					code = '';
 				} else {
 					isAuthenticated.set(true);
-					goto('/');
+					await invalidateAll();
+					await goto('/');
 				}
 			} else {
 				triggerShake();
@@ -101,7 +102,8 @@
 
 			if (response.ok) {
 				isAuthenticated.set(true);
-				goto('/');
+				await invalidateAll();
+				await goto('/');
 			} else {
 				triggerShake();
 				emailCode = '';

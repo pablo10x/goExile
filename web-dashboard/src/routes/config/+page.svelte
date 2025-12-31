@@ -95,7 +95,7 @@
 	// State
 	let loading = $state(true);
 	let saving = $state(false);
-	let activeTab = $state<'master' | 'spawner' | 'firebase'>('master');
+	let activeTab = $state<'master' | 'nodes' | 'firebase'>('master');
 	let searchQuery = $state('');
 	let showSecrets = $state<Set<string>>(new Set());
 	let pendingChanges = $state<Map<string, string>>(new Map());
@@ -167,12 +167,12 @@
 		}
 	]);
 
-	// Spawner Configuration Sections
-	let spawnerSections = $state<ConfigSection[]>([
+	// Node Configuration Sections -> Node Configuration Sections
+	let nodeSections = $state<ConfigSection[]>([
 		{
 			id: 'defaults',
 			title: 'Default Settings',
-			description: 'Default values for new spawners',
+			description: 'Default values for new nodes',
 			icon: Cpu,
 			color: 'green',
 			gradient: 'from-stone-700 to-stone-800',
@@ -236,10 +236,10 @@
 			.filter((section) => section.items.length > 0);
 	});
 
-	let filteredSpawnerSections = $derived.by(() => {
-		if (!searchQuery.trim()) return spawnerSections;
+	let filteredNodeSections = $derived.by(() => {
+		if (!searchQuery.trim()) return nodeSections;
 		const query = searchQuery.toLowerCase();
-		return spawnerSections
+		return nodeSections
 			.map((section) => ({
 				...section,
 				items: section.items.filter(
@@ -282,7 +282,7 @@
 
 	function distributeConfigs(configs: ConfigItem[]) {
 		masterSections = masterSections.map((s) => ({ ...s, items: [] }));
-		spawnerSections = spawnerSections.map((s) => ({ ...s, items: [] }));
+		nodeSections = nodeSections.map((s) => ({ ...s, items: [] }));
 
 		for (const config of configs) {
 			if (config.category === 'system') {
@@ -315,25 +315,25 @@
 				} else {
 					masterSections.find((s) => s.id === 'general')?.items.push(config);
 				}
-			} else if (config.category === 'spawner') {
+			} else if (config.category === 'node') {
 				if (config.key.includes('port')) {
-					spawnerSections.find((s) => s.id === 'ports')?.items.push(config);
+					nodeSections.find((s) => s.id === 'ports')?.items.push(config);
 				} else if (
 					config.key.includes('max') ||
 					config.key.includes('limit') ||
 					config.key.includes('memory') ||
 					config.key.includes('cpu')
 				) {
-					spawnerSections.find((s) => s.id === 'limits')?.items.push(config);
+					nodeSections.find((s) => s.id === 'limits')?.items.push(config);
 				} else if (config.key.includes('update') || config.key.includes('auto')) {
-					spawnerSections.find((s) => s.id === 'updates')?.items.push(config);
+					nodeSections.find((s) => s.id === 'updates')?.items.push(config);
 				} else {
-					spawnerSections.find((s) => s.id === 'defaults')?.items.push(config);
+					nodeSections.find((s) => s.id === 'defaults')?.items.push(config);
 				}
 			}
 		}
 		masterSections = [...masterSections];
-		spawnerSections = [...spawnerSections];
+		nodeSections = [...nodeSections];
 	}
 
 	function loadFirebaseStatus() {
@@ -540,7 +540,7 @@
 <div class="relative z-10 w-full space-y-10 pb-32 md:pb-12">
 	<!-- Header -->
 	<div class="space-y-10">
-		<div class="flex flex-col xl:flex-row xl:items-center justify-between gap-8 mb-10 border-l-4 border-rust pl-6 sm:pl-10 py-2 bg-[#0a0a0a]/60 backdrop-blur-xl industrial-frame">
+		<div class="flex flex-col xl:flex-row xl:items-center justify-between gap-8 mb-10 border-l-4 border-rust pl-6 sm:pl-10 py-2 bg-[var(--header-bg)]/60 backdrop-blur-xl industrial-frame">
 			<div class="flex items-center gap-6">
 				<div
 					class="p-4 bg-rust/10 border border-rust/30 shadow-2xl industrial-frame"
@@ -551,7 +551,7 @@
 					<h1 class="text-4xl sm:text-5xl font-heading font-black text-white uppercase tracking-tighter leading-none">
 						CONFIGURATION
 					</h1>
-					<p class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-[0.3em] font-black mt-2">
+					<p class="font-jetbrains text-[10px] text-text-dim uppercase tracking-[0.3em] font-black mt-2">
 						System Parameters & Environment Control
 					</p>
 				</div>
@@ -584,7 +584,7 @@
 					<button
 						onclick={loadConfig}
 						disabled={loading}
-						class="px-8 py-3 bg-stone-950 hover:bg-white hover:text-black text-stone-500 font-heading font-black text-[11px] uppercase tracking-widest transition-all border border-stone-800 active:translate-y-px"
+						class="px-8 py-3 bg-stone-950 hover:bg-white hover:text-black text-text-dim font-heading font-black text-[11px] uppercase tracking-widest transition-all border border-stone-800 active:translate-y-px"
 					>
 						<RefreshCw class="w-4 h-4 inline mr-3 {loading ? 'animate-spin' : ''}" />
 						Reload
@@ -595,31 +595,37 @@
 
 		<!-- Tab Navigation -->
 		<div
-			class="flex items-center p-1.5 bg-[#0a0a0a]/80 border border-stone-800 backdrop-blur-xl overflow-x-auto no-scrollbar industrial-frame shadow-2xl"
+			class="flex items-center p-1.5 bg-[var(--header-bg)]/80 border border-stone-800 backdrop-blur-xl overflow-x-auto no-scrollbar industrial-frame shadow-2xl"
 		>
 			<button
 				onclick={() => (activeTab = 'master')}
 				class="flex-1 flex flex-col items-center gap-1.5 px-8 py-4 transition-all {activeTab === 'master'
 					? 'bg-rust text-white shadow-lg'
-					: 'text-stone-600 hover:text-white hover:bg-stone-900'}"
+					: 'text-text-dim hover:text-white hover:bg-stone-900'}"
 			>
 				<span class="font-heading font-black text-[12px] uppercase tracking-[0.2em]">MASTER SERVER</span>
 				<span class="font-jetbrains text-[8px] font-black opacity-40 uppercase tracking-widest">CORE CONFIG</span>
 			</button>
-			<button
-				onclick={() => (activeTab = 'spawner')}
-				class="flex-1 flex flex-col items-center gap-1.5 px-8 py-4 transition-all {activeTab === 'spawner'
-					? 'bg-rust text-white shadow-lg'
-					: 'text-stone-600 hover:text-white hover:bg-stone-900'}"
-			>
-				<span class="font-heading font-black text-[12px] uppercase tracking-[0.2em]">SPAWNER NODES</span>
-				<span class="font-jetbrains text-[8px] font-black opacity-40 uppercase tracking-widest">AGENT DEFAULTS</span>
-			</button>
+					<button
+						class="px-8 py-4 font-heading font-black text-xs uppercase tracking-widest transition-all relative {activeTab ===
+						'nodes'
+							? 'text-white bg-stone-900/50'
+							: 'text-stone-600 hover:text-stone-400'}"
+						onclick={() => (activeTab = 'nodes')}
+					>
+						Node_Fleet
+						{#if activeTab === 'nodes'}
+							<div
+								class="absolute bottom-0 left-0 w-full h-0.5 bg-rust shadow-[0_0_10px_var(--color-rust)]"
+								transition:scale={{ start: 0, duration: 200 }}
+							></div>
+						{/if}
+					</button>
 			<button
 				onclick={() => (activeTab = 'firebase')}
 				class="flex-1 flex flex-col items-center gap-1.5 px-8 py-4 transition-all {activeTab === 'firebase'
 					? 'bg-orange-600 text-white shadow-lg'
-					: 'text-stone-600 hover:text-white hover:bg-stone-900'}"
+					: 'text-text-dim hover:text-white hover:bg-stone-900'}"
 			>
 				<span class="font-heading font-black text-[12px] uppercase tracking-[0.2em]">REMOTE CONFIG</span>
 				<span class="font-jetbrains text-[8px] font-black opacity-40 uppercase tracking-widest">FIREBASE SYNC</span>
@@ -629,7 +635,7 @@
 		<!-- Search Bar -->
 		<div class="relative group">
 			<Search
-				class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-600 group-focus-within:text-rust transition-colors"
+				class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-text-dim group-focus-within:text-rust transition-colors"
 			/>
 			<input
 				type="text"
@@ -640,7 +646,7 @@
 			{#if searchQuery}
 				<button
 					onclick={() => (searchQuery = '')}
-					class="absolute right-5 top-1/2 -translate-y-1/2 text-stone-600 hover:text-white"
+					class="absolute right-5 top-1/2 -translate-y-1/2 text-text-dim hover:text-white"
 				>
 					<X class="w-5 h-5" />
 				</button>
@@ -655,14 +661,14 @@
 				<div
 					class="w-10 h-10 sm:w-12 sm:h-12 border-4 border-rust-light border-t-transparent rounded-full animate-spin"
 				></div>
-				<span class="text-slate-500 font-mono text-sm uppercase">Loading...</span>
+				<span class="text-text-dim font-mono text-sm uppercase">Loading...</span>
 			</div>
 		</div>
 	{:else}
 		<div class="space-y-6">
-			{#if activeTab === 'master' || activeTab === 'spawner'}
+			{#if activeTab === 'master' || activeTab === 'nodes'}
 				<div class="space-y-8" transition:fade={{ duration: 200 }}>
-					{#each activeTab === 'master' ? filteredMasterSections : filteredSpawnerSections as section (section.id)}
+					{#each activeTab === 'master' ? filteredMasterSections : filteredNodeSections as section (section.id)}
 						{@const isExpanded = expandedSections.has(section.id)}
 						{@const SectionIcon = section.icon}
 						<div
@@ -682,14 +688,14 @@
 										<h3 class="text-lg font-black military-label text-white uppercase tracking-widest">
 											{section.title}
 										</h3>
-										<p class="text-[9px] font-mono text-stone-500 uppercase tracking-widest mt-0.5">
+										<p class="text-[9px] font-mono text-text-dim uppercase tracking-widest mt-0.5">
 											{section.description}
 										</p>
 									</div>
 								</div>
 								<div class="flex items-center gap-4">
-									<span class="tactical-code text-stone-600 hidden sm:inline">{section.items.length} PARAMETERS</span>
-									<ChevronDown class="w-5 h-5 text-stone-600 transition-transform duration-300 {isExpanded ? 'rotate-180 text-rust' : ''}" />
+									<span class="tactical-code text-text-dim hidden sm:inline">{section.items.length} PARAMETERS</span>
+									<ChevronDown class="w-5 h-5 text-text-dim transition-transform duration-300 {isExpanded ? 'rotate-180 text-rust' : ''}" />
 								</div>
 							</button>
 
@@ -706,21 +712,21 @@
 														<span class="font-jetbrains text-xs font-black text-rust-light uppercase tracking-wider">{item.key}</span>
 														<div class="flex gap-1">
 															{#if item.is_read_only}
-																<span class="text-[7px] font-black bg-stone-800 text-stone-500 px-2 py-0.5 border border-stone-700 uppercase">ReadOnly</span>
+																<span class="text-[7px] font-black bg-stone-800 text-text-dim px-2 py-0.5 border border-stone-700 uppercase">ReadOnly</span>
 															{/if}
 															{#if item.requires_restart}
-																<span class="text-[7px] font-black bg-amber-950/30 text-amber-500 px-2 py-0.5 border border-amber-900/30 uppercase">Restart Required</span>
+																<span class="text-[7px] font-black bg-amber-950/30 text-warning px-2 py-0.5 border border-amber-900/30 uppercase">Restart Required</span>
 															{/if}
 														</div>
 													</div>
-													<p class="text-[10px] font-mono text-stone-500 uppercase tracking-tight leading-relaxed max-w-2xl">{item.description}</p>
+													<p class="text-[10px] font-mono text-text-dim uppercase tracking-tight leading-relaxed max-w-2xl">{item.description}</p>
 													
 													<div class="mt-4">
 														{#if item.type === 'bool'}
 															<button 
 																onclick={() => handleValueChange(item.key, (pendingChanges.get(item.key) ?? item.value) === 'true' ? 'false' : 'true', item.value)}
 																disabled={item.is_read_only}
-																class="flex items-center gap-3 px-4 py-2 rounded-none border-2 transition-all {(pendingChanges.get(item.key) ?? item.value) === 'true' ? 'bg-rust/20 border-rust text-white' : 'bg-stone-950 border-stone-800 text-stone-600'}"
+																class="flex items-center gap-3 px-4 py-2 rounded-none border-2 transition-all {(pendingChanges.get(item.key) ?? item.value) === 'true' ? 'bg-rust/20 border-rust text-white' : 'bg-stone-950 border-stone-800 text-text-dim'}"
 															>
 																<div class="w-2 h-2 {(pendingChanges.get(item.key) ?? item.value) === 'true' ? 'bg-rust shadow-[0_0_8px_var(--color-rust)]' : 'bg-stone-800'}"></div>
 																<span class="font-black text-[10px] uppercase tracking-[0.2em]">{(pendingChanges.get(item.key) ?? item.value) === 'true' ? 'ENABLED' : 'DISABLED'}</span>
@@ -738,7 +744,7 @@
 																	{#if isSecret}
 																		<button 
 																			onclick={() => toggleSecret(item.key)} 
-																			class="absolute right-3 top-1/2 -translate-y-1/2 text-stone-600 hover:text-rust transition-colors"
+																			class="absolute right-3 top-1/2 -translate-y-1/2 text-text-dim hover:text-rust transition-colors"
 																		>
 																			{#if showValue}<EyeOff class="w-4 h-4"/>{:else}<Eye class="w-4 h-4"/>{/if}
 																		</button>
@@ -746,7 +752,7 @@
 																</div>
 																<button 
 																	onclick={() => copyToClipboard(pendingChanges.get(item.key) ?? item.value)} 
-																	class="p-2.5 bg-stone-800 text-stone-500 hover:text-white hover:bg-rust transition-all border border-stone-700"
+																	class="p-2.5 bg-stone-800 text-text-dim hover:text-white hover:bg-rust transition-all border border-stone-700"
 																	title="Copy"
 																>
 																	<Copy class="w-4 h-4" />
@@ -776,18 +782,18 @@
 								</div>
 								<div>
 									<h3 class="text-xl font-bold text-slate-100 font-heading tracking-widest uppercase">Firebase Remote Config</h3>
-									<p class="text-xs text-slate-500 font-mono italic">Synchronize remote client parameters</p>
+									<p class="text-xs text-text-dim font-mono italic">Synchronize remote client parameters</p>
 								</div>
 							</div>
 							{#if firebaseConnected}
-								<div class="px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center gap-2">
-									<div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_#10b981]"></div>
-									<span class="text-emerald-400 font-black text-xs uppercase tracking-widest">CONNECTED</span>
+								<div class="px-4 py-2 bg-success/10 border border-emerald-500/30 rounded-xl flex items-center gap-2">
+									<div class="w-2 h-2 bg-success rounded-full animate-pulse shadow-[0_0_10px_#10b981]"></div>
+									<span class="text-success font-black text-xs uppercase tracking-widest">CONNECTED</span>
 								</div>
 							{:else}
 								<div class="px-4 py-2 bg-stone-800 border border-white/5 rounded-xl flex items-center gap-2">
 									<div class="w-2 h-2 bg-stone-600 rounded-full"></div>
-									<span class="text-stone-500 font-black text-xs uppercase tracking-widest">OFFLINE</span>
+									<span class="text-text-dim font-black text-xs uppercase tracking-widest">OFFLINE</span>
 								</div>
 							{/if}
 						</div>
@@ -812,16 +818,16 @@
 													<div class="min-w-0">
 														<div class="flex items-center gap-2 mb-1">
 															<span class="text-xs font-bold text-orange-500 font-mono uppercase">{config.key}</span>
-														<span class="text-[8px] bg-stone-800 text-stone-500 px-1 py-0.5 rounded">{config.valueType}</span>
+														<span class="text-[8px] bg-stone-800 text-text-dim px-1 py-0.5 rounded">{config.valueType}</span>
 													</div>
-													<p class="text-[10px] text-slate-500 italic mb-2 truncate uppercase tracking-tight">{config.description || 'NO_META_DATA'}</p>
+													<p class="text-[10px] text-text-dim italic mb-2 truncate uppercase tracking-tight">{config.description || 'NO_META_DATA'}</p>
 													<code class="text-[10px] text-stone-400 bg-stone-900/50 px-2 py-1 rounded block truncate font-mono">
 														{config.value}
 												</code>
 													</div>
 												<div class="flex gap-1">
-													<button onclick={() => openFirebaseModal('edit', config)} class="p-1.5 text-stone-600 hover:text-white transition-colors"><Edit3 class="w-3.5 h-3.5"/></button>
-													<button onclick={() => deleteFirebaseParameter(config.key)} class="p-1.5 text-stone-600 hover:text-red-500 transition-colors"><Trash2 class="w-3.5 h-3.5"/></button>
+													<button onclick={() => openFirebaseModal('edit', config)} class="p-1.5 text-text-dim hover:text-white transition-colors"><Edit3 class="w-3.5 h-3.5"/></button>
+													<button onclick={() => deleteFirebaseParameter(config.key)} class="p-1.5 text-text-dim hover:text-danger transition-colors"><Trash2 class="w-3.5 h-3.5"/></button>
 												</div>
 											</div>
 										</div>
@@ -866,16 +872,16 @@
 				</h3>
 				<button
 					onclick={closeFirebaseModal}
-					class="p-2 text-stone-600 hover:text-white transition-colors"
+					class="p-2 text-text-dim hover:text-white transition-colors"
 				>
 					<X class="w-5 h-5" />
 				</button>
 			</div>
 
 			<!-- Body -->
-			<div class="p-8 space-y-6 max-h-[70vh] overflow-y-auto bg-[#050505] font-mono">
+			<div class="p-8 space-y-6 max-h-[70vh] overflow-y-auto bg-[var(--terminal-bg)] font-mono">
 				<div>
-					<label for="fbKey" class="block text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-2">Identifier</label>
+					<label for="fbKey" class="block text-[10px] font-bold text-text-dim uppercase tracking-widest mb-2">Identifier</label>
 					<input
 						id="fbKey"
 						type="text"
@@ -887,7 +893,7 @@
 				</div>
 
 				<div>
-					<label for="fbType" class="block text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-2">Value Type</label>
+					<label for="fbType" class="block text-[10px] font-bold text-text-dim uppercase tracking-widest mb-2">Value Type</label>
 					<select
 						id="fbType"
 						bind:value={firebaseForm.valueType}
@@ -901,7 +907,7 @@
 				</div>
 
 				<div>
-					<label for="fbValue" class="block text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-2">Value</label>
+					<label for="fbValue" class="block text-[10px] font-bold text-text-dim uppercase tracking-widest mb-2">Value</label>
 					{#if firebaseForm.valueType === 'BOOLEAN'}
 						<select
 							id="fbValue"
@@ -930,7 +936,7 @@
 				</div>
 
 				<div>
-					<label for="fbDesc" class="block text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-2">Description</label>
+					<label for="fbDesc" class="block text-[10px] font-bold text-text-dim uppercase tracking-widest mb-2">Description</label>
 										<textarea
 											id="fbDesc"
 											bind:value={firebaseForm.description}
@@ -942,7 +948,7 @@
 
 			<!-- Footer -->
 			<div class="px-8 py-6 bg-black border-t border-white/5 flex items-center justify-end gap-4">
-				<button onclick={closeFirebaseModal} class="px-6 py-2 text-[11px] font-black text-stone-600 hover:text-white uppercase tracking-widest italic transition-all">
+				<button onclick={closeFirebaseModal} class="px-6 py-2 text-[11px] font-black text-text-dim hover:text-white uppercase tracking-widest italic transition-all">
 					Cancel
 				</button>
 				<button

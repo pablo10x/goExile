@@ -26,6 +26,7 @@
 		Menu
 	} from 'lucide-svelte';
 	import SchemaBrowser from '$lib/components/SchemaBrowser.svelte';
+	import Icon from '$lib/components/theme/Icon.svelte';
 	import QueryTabs from '$lib/components/database/QueryTabs.svelte';
 	import TableTab from '$lib/components/database/TableTab.svelte';
 	import DatabaseBrowserTab from '$lib/components/database/DatabaseBrowserTab.svelte';
@@ -73,9 +74,9 @@
 			items: [
 				{
 					id: 'overview',
-					label: 'Dashboard',
+					label: 'Telemetry',
 					type: 'info',
-					icon: LayoutDashboard,
+					iconName: 'ph:chart-line-up-bold',
 					color: 'blue',
 					description: 'Database overview & stats'
 				},
@@ -83,7 +84,7 @@
 					id: 'browser',
 					label: 'Browser',
 					type: 'browser',
-					icon: FolderTree,
+					iconName: 'ph:folder-open-bold',
 					color: 'indigo',
 					description: 'Browse schemas & tables'
 				}
@@ -96,7 +97,7 @@
 					id: 'sql',
 					label: 'SQL Editor',
 					type: 'sql',
-					icon: Terminal,
+					iconName: 'ph:terminal-window-bold',
 					color: 'amber',
 					description: 'Execute SQL queries'
 				},
@@ -104,7 +105,7 @@
 					id: 'functions',
 					label: 'Functions',
 					type: 'functions',
-					icon: Code2,
+					iconName: 'ph:code-bold',
 					color: 'violet',
 					description: 'Manage functions & procedures'
 				}
@@ -115,25 +116,25 @@
 			items: [
 				{
 					id: 'roles',
-					label: 'Roles',
+					label: 'Security',
 					type: 'roles',
-					icon: Users,
+					iconName: 'ph:shield-check-bold',
 					color: 'emerald',
 					description: 'User & role management'
 				},
 				{
 					id: 'backups',
-					label: 'Backups',
+					label: 'Archives',
 					type: 'backups',
-					icon: HardDrive,
+					iconName: 'ph:archive-bold',
 					color: 'orange',
 					description: 'Backup & restore'
 				},
 				{
 					id: 'config',
-					label: 'Config',
+					label: 'Tuning',
 					type: 'config',
-					icon: Settings,
+					iconName: 'ph:sliders-bold',
 					color: 'purple',
 					description: 'PostgreSQL settings'
 				}
@@ -189,19 +190,19 @@
 			},
 			amber: {
 				bg: 'bg-amber-500/10',
-				text: 'text-amber-400',
+				text: 'text-warning',
 				hover: 'hover:bg-amber-500/20 hover:text-amber-300',
 				active: 'bg-amber-500/20 text-amber-300 border-amber-500/50'
 			},
 			red: {
 				bg: 'bg-red-500/10',
-				text: 'text-red-400',
+				text: 'text-danger',
 				hover: 'hover:bg-red-500/20 hover:text-red-300',
 				active: 'bg-red-500/20 text-red-300 border-red-500/50'
 			},
 			slate: {
 				bg: 'bg-slate-500/10',
-				text: 'text-slate-400',
+				text: 'text-text-dim',
 				hover: 'hover:bg-slate-500/20 hover:text-slate-300',
 				active: 'bg-slate-500/20 text-slate-300 border-slate-500/50'
 			}
@@ -237,11 +238,11 @@
 </script>
 
 <div
-	class="flex flex-col lg:flex-row h-[calc(100vh-120px)] md:h-[calc(100vh-140px)] overflow-hidden bg-[#050505] text-slate-200 border border-stone-800 shadow-2xl"
+	class="flex flex-col lg:flex-row h-[calc(100vh-120px)] md:h-[calc(100vh-140px)] overflow-hidden bg-[var(--terminal-bg)] text-slate-200 border border-stone-800 shadow-2xl"
 >
 	<!-- Mobile Top Nav (Horizontal Scroll) -->
 	<div
-		class="lg:hidden border-b border-stone-800 bg-[#0a0a0a]/80 overflow-x-auto no-scrollbar backdrop-blur-md shrink-0"
+		class="lg:hidden border-b border-stone-800 bg-[var(--header-bg)]/80 overflow-x-auto no-scrollbar backdrop-blur-md shrink-0"
 	>
 		<div class="flex items-center gap-2 p-3 min-w-max">
 			{#each allMenuItems as item}
@@ -250,9 +251,9 @@
 				<button
 					onclick={() => openTab(item.id, item.label, item.type)}
 					class="flex items-center gap-2.5 px-4 py-2 rounded-none border border-transparent transition-all
-					{isActive ? colors.active + ' border-rust/50 shadow-lg shadow-rust/10' : 'text-stone-500 ' + colors.hover}"
+					{isActive ? colors.active + ' border-rust/50 shadow-lg shadow-rust/10' : 'text-text-dim ' + colors.hover}"
 				>
-					<item.icon class="w-4 h-4" />
+					<Icon name={item.iconName} size="1rem" />
 					<span class="text-[10px] font-heading font-black uppercase tracking-widest">{item.label}</span>
 				</button>
 			{/each}
@@ -261,7 +262,7 @@
 
 	<!-- Desktop Sidebar -->
 	<div
-		class="hidden lg:flex flex-col border-r border-stone-800 transition-all duration-500 bg-[#0a0a0a] {isSidebarOpen
+		class="hidden lg:flex flex-col border-r border-stone-800 transition-all duration-500 bg-[var(--header-bg)] {isSidebarOpen
 			? 'w-72'
 			: 'w-20'}"
 	>
@@ -282,7 +283,7 @@
 			{/if}
 			<button
 				onclick={() => (isSidebarOpen = !isSidebarOpen)}
-				class="p-2.5 rounded-none text-stone-600 hover:text-rust hover:bg-rust/5 border border-transparent hover:border-rust/20 transition-all {isSidebarOpen ? '' : 'mx-auto'}"
+				class="p-2.5 rounded-none text-text-dim hover:text-rust hover:bg-rust/5 border border-transparent hover:border-rust/20 transition-all {isSidebarOpen ? '' : 'mx-auto'}"
 			>
 				{#if isSidebarOpen}
 					<ChevronLeft class="w-5 h-5" />
@@ -298,7 +299,7 @@
 				<div class="space-y-3">
 					{#if isSidebarOpen}
 						<h3
-							class="px-3 text-[9px] font-black text-stone-600 uppercase tracking-[0.3em] flex items-center gap-2"
+							class="px-3 text-[9px] font-black text-text-dim uppercase tracking-[0.3em] flex items-center gap-2"
 							transition:fade={{ duration: 100 }}
 						>
 							<div class="w-1 h-1 bg-stone-800"></div>
@@ -313,13 +314,13 @@
 								class="w-full flex items-center gap-4 p-3.5 transition-all duration-300 group
 								{isActive
 									? 'bg-rust text-white shadow-xl shadow-rust/20 border-l-2 border-rust-light'
-									: 'text-stone-500 hover:bg-stone-900/50 hover:text-stone-200 border-l-2 border-transparent'}"
+									: 'text-text-dim hover:bg-stone-900/50 hover:text-stone-200 border-l-2 border-transparent'}"
 								title={item.description}
 							>
 								<div
 									class="transition-all duration-500 {isActive ? 'scale-110 shadow-rust/50' : 'group-hover:rotate-12 group-hover:scale-110 group-hover:text-rust'}"
 								>
-									<item.icon class="w-4.5 h-4.5" />
+									<Icon name={item.iconName} size="1.1rem" />
 								</div>
 								{#if isSidebarOpen}
 									<div class="flex-1 text-left" transition:fade={{ duration: 100 }}>
@@ -339,8 +340,8 @@
 				class="p-6 border-t border-stone-800 bg-stone-900/20"
 				transition:fade={{ duration: 150 }}
 			>
-				<div class="flex items-center gap-4 text-[9px] font-black uppercase tracking-[0.2em] text-stone-600">
-					<div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-emerald-500/50 shadow-lg"></div>
+				<div class="flex items-center gap-4 text-[9px] font-black uppercase tracking-[0.2em] text-text-dim">
+					<div class="w-2 h-2 rounded-full bg-success animate-pulse shadow-emerald-500/50 shadow-lg"></div>
 					<span class="font-jetbrains">CLUSTER_SYNC: ACTIVE</span>
 				</div>
 			</div>
@@ -348,13 +349,13 @@
 	</div>
 
 	<!-- Main Content Area -->
-	<div class="flex-1 flex flex-col min-w-0 bg-[#050505]">
+	<div class="flex-1 flex flex-col min-w-0 bg-[var(--terminal-bg)]">
 		<QueryTabs {tabs} {activeTabId} onSelect={(id) => (activeTabId = id)} onClose={closeTab} />
 
 		<div class="flex-1 overflow-hidden relative">
 			{#each tabs as tab (tab.id)}
 				<div
-					class="absolute inset-0 bg-[#050505] {activeTabId === tab.id
+					class="absolute inset-0 bg-[var(--terminal-bg)] {activeTabId === tab.id
 						? 'z-10 block'
 						: 'z-0 hidden'}"
 				>
@@ -365,25 +366,25 @@
 					{:else if tab.id === 'overview'}
 						<!-- Enhanced Overview Content -->
 						<div
-							class="h-full overflow-auto bg-[#050505] relative custom-scrollbar"
+							class="h-full overflow-auto bg-[var(--terminal-bg)] relative custom-scrollbar"
 						>
 							<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
 							
 							<!-- Header -->
 							<div
-								class="p-6 sm:p-12 border-b border-stone-800 bg-[#0a0a0a]"
+								class="p-6 sm:p-12 border-b border-stone-800 bg-[var(--header-bg)]"
 							>
 								<div class="flex flex-col sm:flex-row items-center gap-6 sm:gap-8 mb-2 text-center sm:text-left">
 									<div
 										class="p-4 sm:p-5 bg-rust/10 border border-rust/30 shadow-2xl shadow-rust/10 industrial-frame"
 									>
-										<Database class="w-8 h-8 sm:w-10 sm:h-10 text-rust-light" />
+										<Icon name="database" size="2.5rem" class="text-rust-light" />
 									</div>
 									<div>
 										<h1 class="text-2xl sm:text-4xl lg:text-5xl font-heading font-black tracking-tighter text-white uppercase">
 											DATABASE_OVERVIEW
 										</h1>
-										<div class="font-jetbrains text-[9px] sm:text-[11px] text-stone-500 mt-2 uppercase tracking-[0.3em] font-black flex items-center justify-center sm:justify-start gap-3">
+										<div class="font-jetbrains text-[9px] sm:text-[11px] text-text-dim mt-2 uppercase tracking-[0.3em] font-black flex items-center justify-center sm:justify-start gap-3">
 											<div class="w-1.5 h-1.5 bg-rust animate-pulse shadow-rust/50 shadow-lg"></div>
 											PostgreSQL System // Real-time
 										</div>
@@ -399,14 +400,14 @@
 										<div class="relative">
 											<div class="flex items-center justify-between mb-6 sm:mb-8">
 												<div class="p-2.5 sm:p-3 bg-rust/10 border border-rust/20 industrial-frame">
-													<HardDrive class="w-5 h-5 sm:w-7 sm:h-7 text-rust-light" />
+													<Icon name="hard-drive" size="1.5rem" class="text-rust-light" />
 												</div>
 												<span class="font-jetbrains text-[8px] sm:text-[10px] font-black text-rust-light bg-rust/10 px-2 sm:px-3 py-1 sm:py-1.5 uppercase tracking-[0.2em] border border-rust/30">Size</span>
 											</div>
 											<div class="text-3xl sm:text-4xl font-heading font-black text-white mb-2 tracking-tighter">
 												{formatBytes(dbStats.size_bytes)}
 											</div>
-											<div class="font-jetbrains text-[8px] sm:text-[10px] text-stone-500 uppercase tracking-widest font-bold">Total Storage Size</div>
+											<div class="font-jetbrains text-[8px] sm:text-[10px] text-text-dim uppercase tracking-widest font-bold">Total Storage Size</div>
 										</div>
 									</div>
 
@@ -414,15 +415,15 @@
 									<div class="modern-industrial-card glass-panel p-6 sm:p-8 !rounded-none">
 										<div class="relative">
 											<div class="flex items-center justify-between mb-6 sm:mb-8">
-												<div class="p-2.5 sm:p-3 bg-emerald-500/10 border border-emerald-500/20 industrial-frame">
-													<Activity class="w-5 h-5 sm:w-7 sm:h-7 text-emerald-400" />
+												<div class="p-2.5 sm:p-3 bg-success/10 border border-emerald-500/20 industrial-frame">
+													<Icon name="activity" size="1.5rem" class="text-success" />
 												</div>
-												<span class="font-jetbrains text-[8px] sm:text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-2 sm:px-3 py-1 sm:py-1.5 uppercase tracking-[0.2em] border border-emerald-500/30">Active</span>
+												<span class="font-jetbrains text-[8px] sm:text-[10px] font-black text-success bg-success/10 px-2 sm:px-3 py-1 sm:py-1.5 uppercase tracking-[0.2em] border border-emerald-500/30">Active</span>
 											</div>
 											<div class="text-3xl sm:text-4xl font-heading font-black text-white mb-2 tracking-tighter">
 												{dbStats.connections}
 											</div>
-											<div class="font-jetbrains text-[8px] sm:text-[10px] text-stone-500 uppercase tracking-widest font-bold">Active Connections</div>
+											<div class="font-jetbrains text-[8px] sm:text-[10px] text-text-dim uppercase tracking-widest font-bold">Active Connections</div>
 										</div>
 									</div>
 
@@ -431,14 +432,14 @@
 										<div class="relative">
 											<div class="flex items-center justify-between mb-6 sm:mb-8">
 												<div class="p-2.5 sm:p-3 bg-purple-500/10 border border-purple-500/20 industrial-frame">
-													<Clock class="w-5 h-5 sm:w-7 sm:h-7 text-purple-400" />
+													<Icon name="clock" size="1.5rem" class="text-purple-400" />
 												</div>
 												<span class="font-jetbrains text-[8px] sm:text-[10px] font-black text-purple-400 bg-purple-500/10 px-2 sm:px-3 py-1 sm:py-1.5 uppercase tracking-[0.2em] border border-purple-500/30">Uptime</span>
 											</div>
 											<div class="text-3xl sm:text-4xl font-heading font-black text-white mb-2 tracking-tighter">
 												{Math.floor(dbStats.uptime_seconds / 3600)}h
 											</div>
-											<div class="font-jetbrains text-[8px] sm:text-[10px] text-stone-500 uppercase tracking-widest font-bold">
+											<div class="font-jetbrains text-[8px] sm:text-[10px] text-text-dim uppercase tracking-widest font-bold">
 												{Math.floor((dbStats.uptime_seconds % 3600) / 60)}m Online Time
 											</div>
 										</div>
@@ -449,14 +450,14 @@
 										<div class="relative">
 											<div class="flex items-center justify-between mb-6 sm:mb-8">
 												<div class="p-2.5 sm:p-3 bg-amber-500/10 border border-amber-500/20 industrial-frame">
-													<Server class="w-5 h-5 sm:w-7 sm:h-7 text-amber-400" />
+													<Icon name="server" size="1.5rem" class="text-warning" />
 												</div>
-												<span class="font-jetbrains text-[8px] sm:text-[10px] font-black text-amber-400 bg-amber-500/10 px-2 sm:px-3 py-1 sm:py-1.5 uppercase tracking-[0.2em] border border-amber-500/30">Postgres</span>
+												<span class="font-jetbrains text-[8px] sm:text-[10px] font-black text-warning bg-amber-500/10 px-2 sm:px-3 py-1 sm:py-1.5 uppercase tracking-[0.2em] border border-amber-500/30">Postgres</span>
 											</div>
 											<div class="text-3xl sm:text-4xl font-heading font-black text-white mb-2 tracking-tighter truncate">
 												{dbStats.version.split(' ')[0] || 'PGSQL'}
 											</div>
-											<div class="font-jetbrains text-[8px] sm:text-[10px] text-stone-500 uppercase tracking-widest font-bold truncate">
+											<div class="font-jetbrains text-[8px] sm:text-[10px] text-text-dim uppercase tracking-widest font-bold truncate">
 												{dbStats.version.split(',')[0] || 'Build Information'}
 											</div>
 										</div>
@@ -465,8 +466,8 @@
 
 								                                <!-- Quick Actions -->
 								                                <div class="mb-12 sm:mb-16">
-								                                    <h2 class="font-heading font-black text-xs sm:text-sm tracking-[0.3em] text-stone-500 mb-6 sm:mb-8 flex items-center gap-4">
-								                                        <Zap class="w-4 h-4 sm:w-5 sm:h-5 text-rust animate-pulse" />
+								                                    <h2 class="font-heading font-black text-xs sm:text-sm tracking-[0.3em] text-text-dim mb-6 sm:mb-8 flex items-center gap-4">
+								                                        <Icon name="ph:zap-bold" size="1.25rem" class="text-rust animate-pulse" />
 								                                        DATABASE ACTIONS
 								                                    </h2>
 								                                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -475,9 +476,9 @@
 								                                            class="flex flex-col items-center gap-4 sm:gap-6 p-6 sm:p-10 bg-stone-900/40 border border-stone-800 hover:border-rust hover:bg-rust/5 transition-all duration-500 group industrial-frame"
 								                                        >
 								                                            <div class="p-3 sm:p-5 bg-stone-950 border border-stone-800 group-hover:border-rust/40 group-hover:text-rust transition-all group-hover:scale-110 shadow-lg">
-								                                                <Terminal class="w-6 h-6 sm:w-8 sm:h-8 text-stone-600 group-hover:text-rust" />
+								                                                <Icon name="ph:terminal-window-bold" size="2rem" class="text-text-dim group-hover:text-rust" />
 								                                            </div>
-								                                            <span class="font-heading text-[10px] sm:text-[12px] font-black tracking-[0.2em] text-stone-500 group-hover:text-white uppercase transition-colors">SQL Editor</span>
+								                                            <span class="font-heading text-[10px] sm:text-[12px] font-black tracking-[0.2em] text-text-dim group-hover:text-white uppercase transition-colors">SQL Editor</span>
 								                                        </button>
 								
 								                                        <button
@@ -485,9 +486,9 @@
 								                                            class="flex flex-col items-center gap-4 sm:gap-6 p-6 sm:p-10 bg-stone-900/40 border border-stone-800 hover:border-rust hover:bg-rust/5 transition-all duration-500 group industrial-frame"
 								                                        >
 								                                            <div class="p-3 sm:p-5 bg-stone-950 border border-stone-800 group-hover:border-rust/40 group-hover:text-rust transition-all group-hover:scale-110 shadow-lg">
-								                                                <Code2 class="w-6 h-6 sm:w-8 sm:h-8 text-stone-600 group-hover:text-rust" />
+								                                                <Icon name="ph:code-bold" size="2rem" class="text-text-dim group-hover:text-rust" />
 								                                            </div>
-								                                            <span class="font-heading text-[10px] sm:text-[12px] font-black tracking-[0.2em] text-stone-500 group-hover:text-white uppercase transition-colors">Functions</span>
+								                                            <span class="font-heading text-[10px] sm:text-[12px] font-black tracking-[0.2em] text-text-dim group-hover:text-white uppercase transition-colors">Functions</span>
 								                                        </button>
 								
 								                                        <button
@@ -495,9 +496,9 @@
 								                                            class="flex flex-col items-center gap-4 sm:gap-6 p-6 sm:p-10 bg-stone-900/40 border border-stone-800 hover:border-rust hover:bg-rust/5 transition-all duration-500 group industrial-frame"
 								                                        >
 								                                            <div class="p-3 sm:p-5 bg-stone-950 border border-stone-800 group-hover:border-rust/40 group-hover:text-rust transition-all group-hover:scale-110 shadow-lg">
-								                                                <HardDrive class="w-6 h-6 sm:w-8 sm:h-8 text-stone-600 group-hover:text-rust" />
+								                                                <Icon name="ph:archive-bold" size="2rem" class="text-text-dim group-hover:text-rust" />
 								                                            </div>
-								                                            <span class="font-heading text-[10px] sm:text-[12px] font-black tracking-[0.2em] text-stone-500 group-hover:text-white uppercase transition-colors">Backups</span>
+								                                            <span class="font-heading text-[10px] sm:text-[12px] font-black tracking-[0.2em] text-text-dim group-hover:text-white uppercase transition-colors">Backups</span>
 								                                        </button>
 								
 								                                        <button
@@ -505,9 +506,9 @@
 								                                            class="flex flex-col items-center gap-4 sm:gap-6 p-6 sm:p-10 bg-stone-900/40 border border-stone-800 hover:border-rust hover:bg-rust/5 transition-all duration-500 group industrial-frame"
 								                                        >
 								                                            <div class="p-3 sm:p-5 bg-stone-950 border border-stone-800 group-hover:border-rust/40 group-hover:text-rust transition-all group-hover:scale-110 shadow-lg">
-								                                                <Shield class="w-6 h-6 sm:w-8 sm:h-8 text-stone-600 group-hover:text-rust" />
+								                                                <Icon name="ph:shield-check-bold" size="2rem" class="text-text-dim group-hover:text-rust" />
 								                                            </div>
-								                                            <span class="font-heading text-[10px] sm:text-[12px] font-black tracking-[0.2em] text-stone-500 group-hover:text-white uppercase transition-colors">Security</span>
+								                                            <span class="font-heading text-[10px] sm:text-[12px] font-black tracking-[0.2em] text-text-dim group-hover:text-white uppercase transition-colors">Security</span>
 								                                        </button>
 								                                    </div>
 								                                </div>
@@ -515,8 +516,8 @@
 								                                <!-- Table Stats -->
 								                                {#if tableCounts.length > 0}
 								                                    <div class="w-full">
-								                                        <h2 class="font-heading font-black text-sm tracking-[0.3em] text-stone-500 mb-8 flex items-center gap-4">
-								                                            <BarChart3 class="w-5 h-5 text-rust animate-pulse" />
+								                                        <h2 class="font-heading font-black text-sm tracking-[0.3em] text-text-dim mb-8 flex items-center gap-4">
+								                                            <Icon name="ph:chart-bar-bold" size="1.25rem" class="text-rust animate-pulse" />
 								                                            TABLE STATISTICS
 								                                        </h2>
 								                                        <div
@@ -527,11 +528,11 @@
 								                                                    <thead class="bg-stone-950 border-b border-stone-800">
 								                                                        <tr>
 								                                                            <th
-								                                                                class="px-8 py-5 text-left text-[11px] font-black text-stone-500 uppercase tracking-[0.3em]"
+								                                                                class="px-8 py-5 text-left text-[11px] font-black text-text-dim uppercase tracking-[0.3em]"
 								                                                                >Table Name</th
 								                                                            >
 								                                                            <th
-								                                                                class="px-8 py-5 text-right text-[11px] font-black text-stone-500 uppercase tracking-[0.3em]"
+								                                                                class="px-8 py-5 text-right text-[11px] font-black text-text-dim uppercase tracking-[0.3em]"
 								                                                                >Row Count</th
 								                                                            >
 								                                                        </tr>
@@ -540,7 +541,7 @@
 															<tr class="hover:bg-rust/5 transition-all duration-300 group">
 																<td class="px-8 py-5">
 																	<div class="flex items-center gap-5">
-																		<Table class="w-4.5 h-4.5 text-stone-700 group-hover:text-rust transition-colors" />
+																		<Icon name="ph:table-bold" size="1.1rem" class="text-stone-700 group-hover:text-rust transition-colors" />
 																		<span class="font-jetbrains text-xs font-black text-stone-400 uppercase tracking-widest group-hover:text-stone-200"
 																			>{table.name}</span
 																		>

@@ -76,7 +76,7 @@
 </script>
 
 <div
-	class="bg-[#0a0a0a] border-r border-stone-800 flex flex-col h-full transition-all duration-300 ease-in-out {isSidebarOpen
+	class="bg-[var(--header-bg)] border-r border-stone-800 flex flex-col h-full transition-all duration-300 ease-in-out {isSidebarOpen
 		? 'w-full'
 		: 'w-16 bg-transparent border-none'}"
 >

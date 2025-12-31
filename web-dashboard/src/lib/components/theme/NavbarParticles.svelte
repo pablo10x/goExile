@@ -87,17 +87,25 @@
 		mesh = new THREE.InstancedMesh(geometry, material, count);
 		scene.add(mesh);
 
-		function animate() {
-			if ($siteSettings.performance?.low_power_mode || $siteSettings.aesthetic?.reduced_motion) {
-				if (renderer && scene && camera) renderer.render(scene, camera);
+		let lastTime = 0;
+		const targetFPS = 30; // Navbar particles can run at lower FPS
+		const frameInterval = 1000 / targetFPS;
+
+		function animate(time: number) {
+			if ($siteSettings.performance?.low_power_mode) {
+				cleanup();
 				return;
 			}
 			frameId = requestAnimationFrame(animate);
 
-			if (!$siteSettings.aesthetic.animations_enabled) {
+			if ($siteSettings.aesthetic?.reduced_motion || !$siteSettings.aesthetic.animations_enabled) {
 				if (renderer && scene && camera) renderer.render(scene, camera);
 				return;
 			}
+
+			const deltaTime = time - lastTime;
+			if (deltaTime < frameInterval) return;
+			lastTime = time - (deltaTime % frameInterval);
 
 			if (!mesh) return;
 
@@ -125,7 +133,7 @@
 			if (renderer && scene && camera) renderer.render(scene, camera);
 		}
 
-		animate();
+		frameId = requestAnimationFrame(animate);
 
 		resizeObserver = new ResizeObserver(() => {
 			if (!container || !camera || !renderer) return;

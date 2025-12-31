@@ -86,30 +86,30 @@ func splitAndTrim(s, sep string) []string {
 	return parts
 }
 
-// SpawnerConnection represents a connected Spawner.
-type SpawnerConnection struct {
+// NodeConnection represents a connected Node.
+type NodeConnection struct {
 	ID        int
 	Conn      *websocket.Conn
 	WriteChan chan []byte
 	Manager   *WSManager
 }
 
-// WSManager manages Spawner connections.
+// WSManager manages Node connections.
 type WSManager struct {
 	Mu              sync.RWMutex
-	Connections     map[int]*SpawnerConnection
+	Connections     map[int]*NodeConnection
 	Broadcast       chan []byte
-	Register        chan *SpawnerConnection
-	Unregister      chan *SpawnerConnection
+	Register        chan *NodeConnection
+	Unregister      chan *NodeConnection
 	pendingRequests map[string]chan WSResponse
 	pendingMu       sync.Mutex
 }
 
-// IsClientConnected checks if a spawner with the given ID is currently connected via WebSocket.
-func (manager *WSManager) IsClientConnected(spawnerID int) bool {
+// IsClientConnected checks if a node with the given ID is currently connected via WebSocket.
+func (manager *WSManager) IsClientConnected(nodeID int) bool {
 	manager.Mu.RLock()
 	defer manager.Mu.RUnlock()
-	_, ok := manager.Connections[spawnerID]
+	_, ok := manager.Connections[nodeID]
 	return ok
 }
 
@@ -130,10 +130,10 @@ var GlobalWSManager = NewWSManager()
 
 func NewWSManager() *WSManager {
 	return &WSManager{
-		Connections:     make(map[int]*SpawnerConnection),
+		Connections:     make(map[int]*NodeConnection),
 		Broadcast:       make(chan []byte),
-		Register:        make(chan *SpawnerConnection),
-		Unregister:      make(chan *SpawnerConnection),
+		Register:        make(chan *NodeConnection),
+		Unregister:      make(chan *NodeConnection),
 		pendingRequests: make(map[string]chan WSResponse),
 	}
 }
@@ -150,7 +150,7 @@ func (manager *WSManager) Run() {
 			}
 			manager.Connections[conn.ID] = conn
 			manager.Mu.Unlock()
-			registry.GlobalRegistry.UpdateSpawnerStatus(conn.ID, "Online")
+			registry.GlobalRegistry.UpdateNodeStatus(conn.ID, "Online")
 
 		case conn := <-manager.Unregister:
 			manager.Mu.Lock()
@@ -159,7 +159,7 @@ func (manager *WSManager) Run() {
 				close(conn.WriteChan)
 			}
 			manager.Mu.Unlock()
-			registry.GlobalRegistry.UpdateSpawnerStatus(conn.ID, "Offline")
+			registry.GlobalRegistry.UpdateNodeStatus(conn.ID, "Offline")
 
 		case message := <-manager.Broadcast:
 			manager.Mu.RLock()
@@ -177,20 +177,20 @@ func (manager *WSManager) Run() {
 }
 
 // SendCommandSync sends a command and waits for a response.
-func (manager *WSManager) SendCommandSync(spawnerID int, msgType string, payload interface{}, timeout time.Duration) (WSResponse, error) {
+func (manager *WSManager) SendCommandSync(nodeID int, msgType string, payload interface{}, timeout time.Duration) (WSResponse, error) {
 	// Check status first
-	if s, ok := registry.GlobalRegistry.Get(spawnerID); !ok {
-		return WSResponse{}, fmt.Errorf("spawner not found")
+	if s, ok := registry.GlobalRegistry.Get(nodeID); !ok {
+		return WSResponse{}, fmt.Errorf("node not found")
 	} else if s.Status != "Online" {
-		return WSResponse{Status: "error", Error: "spawner not online"}, nil
+		return WSResponse{Status: "error", Error: "node not online"}, nil
 	}
 
 	manager.Mu.RLock()
-	conn, ok := manager.Connections[spawnerID]
+	conn, ok := manager.Connections[nodeID]
 	manager.Mu.RUnlock()
 
 	if !ok {
-		return WSResponse{}, log.Output(2, "Spawner not connected")
+		return WSResponse{}, log.Output(2, "Node not connected")
 	}
 
 	reqID := strconv.FormatInt(time.Now().UnixNano(), 10) + strconv.Itoa(rand.Intn(1000))
@@ -236,21 +236,21 @@ func (manager *WSManager) SendCommandSync(spawnerID int, msgType string, payload
 	}
 }
 
-// SendCommand sends a command to a specific Spawner asynchronously.
-func (manager *WSManager) SendCommand(spawnerID int, msgType string, payload interface{}) error {
+// SendCommand sends a command to a specific Node asynchronously.
+func (manager *WSManager) SendCommand(nodeID int, msgType string, payload interface{}) error {
 	// Check status first
-	if s, ok := registry.GlobalRegistry.Get(spawnerID); !ok {
-		return fmt.Errorf("spawner not found")
+	if s, ok := registry.GlobalRegistry.Get(nodeID); !ok {
+		return fmt.Errorf("node not found")
 	} else if s.Status != "Online" {
-		return fmt.Errorf("spawner not online")
+		return fmt.Errorf("node not online")
 	}
 
 	manager.Mu.RLock()
-	conn, ok := manager.Connections[spawnerID]
+	conn, ok := manager.Connections[nodeID]
 	manager.Mu.RUnlock()
 
 	if !ok {
-		return log.Output(2, "Spawner not connected")
+		return log.Output(2, "Node not connected")
 	}
 
 	data, err := json.Marshal(payload)
@@ -272,7 +272,7 @@ func (manager *WSManager) SendCommand(spawnerID int, msgType string, payload int
 	return nil
 }
 
-// HandleWS handles WebSocket requests from Spawners.
+// HandleWS handles WebSocket requests from Nodes.
 func (manager *WSManager) HandleWS(w http.ResponseWriter, r *http.Request) {
 	// 1. Authenticate (Already checked by UnifiedAuthMiddleware if configured correctly)
 
@@ -283,7 +283,7 @@ func (manager *WSManager) HandleWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := &SpawnerConnection{
+	client := &NodeConnection{
 		Conn:      conn,
 		WriteChan: make(chan []byte, 256),
 		Manager:   manager,
@@ -293,7 +293,7 @@ func (manager *WSManager) HandleWS(w http.ResponseWriter, r *http.Request) {
 	go client.readPump()
 }
 
-func (c *SpawnerConnection) readPump() {
+func (c *NodeConnection) readPump() {
 	defer func() {
 		c.Manager.Unregister <- c
 		c.Conn.Close()
@@ -325,7 +325,7 @@ func (c *SpawnerConnection) readPump() {
 	}
 }
 
-func (c *SpawnerConnection) writePump() {
+func (c *NodeConnection) writePump() {
 	ticker := time.NewTicker(50 * time.Second)
 	defer func() {
 		ticker.Stop()
@@ -359,21 +359,21 @@ func (c *SpawnerConnection) writePump() {
 	}
 }
 
-func (c *SpawnerConnection) handleMessage(msg WSMessage) {
+func (c *NodeConnection) handleMessage(msg WSMessage) {
 	switch msg.Type {
 	case "REGISTER":
-		var s models.Spawner
+		var s models.Node
 		if err := json.Unmarshal(msg.Payload, &s); err == nil {
-			// Enforce Enrollment: Check if spawner exists
+			// Enforce Enrollment: Check if node exists
 			existing, found := registry.GlobalRegistry.Lookup(s.Host, s.Port)
 			if !found {
-				registry.GlobalStats.RecordSecurityEvent("Unauthorized Spawner Connection", fmt.Sprintf("Host: %s, Port: %d", s.Host, s.Port), c.Conn.RemoteAddr().String())
+				registry.GlobalStats.RecordSecurityEvent("Unauthorized Node Connection", fmt.Sprintf("Host: %s, Port: %d", s.Host, s.Port), c.Conn.RemoteAddr().String())
 				errorResp := WSMessage{
 					Type: "REGISTER_RESPONSE",
 					Payload: func() json.RawMessage {
 						data, _ := json.Marshal(map[string]interface{}{
 							"status": "error",
-							"error":  "Spawner not enrolled. Please use the dashboard to generate an enrollment key.",
+							"error":  "Node not enrolled. Please use the dashboard to generate an enrollment key.",
 						})
 						return data
 					}(),
@@ -396,11 +396,11 @@ func (c *SpawnerConnection) handleMessage(msg WSMessage) {
 			s.ID = existing.ID
 			s.Name = existing.Name
 
-			// Register spawner (Update)
+			// Register node (Update)
 			id, err := registry.GlobalRegistry.Register(&s)
 			if err != nil {
-				log.Printf("❌ Failed to register spawner via WS: %v", err)
-				// Send error response back to spawner
+				log.Printf("❌ Failed to register node via WS: %v", err)
+				// Send error response back to node
 				errorResp := WSMessage{
 					Type: "REGISTER_RESPONSE",
 					Payload: func() json.RawMessage {
@@ -455,9 +455,10 @@ func (c *SpawnerConnection) handleMessage(msg WSMessage) {
 			DiskUsed         uint64  `json:"disk_used"`
 			DiskTotal        uint64  `json:"disk_total"`
 			GameVersion      string  `json:"game_version"`
+			IsDraining       bool    `json:"is_draining"`
 		}
 		if err := json.Unmarshal(msg.Payload, &req); err == nil {
-			registry.GlobalRegistry.UpdateHeartbeat(c.ID, req.CurrentInstances, req.MaxInstances, req.Status, req.CpuUsage, req.MemUsed, req.MemTotal, req.DiskUsed, req.DiskTotal, req.GameVersion)
+			registry.GlobalRegistry.UpdateHeartbeat(c.ID, req.CurrentInstances, req.MaxInstances, req.Status, req.CpuUsage, req.MemUsed, req.MemTotal, req.DiskUsed, req.DiskTotal, req.GameVersion, req.IsDraining)
 		}
 	case "RESPONSE":
 		var resp WSResponse

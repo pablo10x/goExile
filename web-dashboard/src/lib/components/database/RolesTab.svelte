@@ -87,9 +87,9 @@
 	});
 </script>
 
-<div class="h-full flex flex-col bg-[#050505]">
+<div class="h-full flex flex-col bg-[var(--terminal-bg)]">
 	<div
-		class="p-6 border-b border-stone-800 bg-[#0a0a0a] flex justify-between items-center"
+		class="p-6 border-b border-stone-800 bg-[var(--header-bg)] flex justify-between items-center"
 	>
 		<div class="flex items-center gap-4">
 			<div class="p-2.5 bg-rust/10 border border-rust/20 rounded-none industrial-frame">
@@ -97,7 +97,7 @@
 			</div>
 			<div>
 				<h2 class="text-xl font-heading font-black text-slate-100 uppercase tracking-tighter">SEC_IDENTITY_MANAGER</h2>
-				<p class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest mt-1">Manage database users and privileges</p>
+				<p class="font-jetbrains text-[10px] text-text-dim uppercase tracking-widest mt-1">Manage database users and privileges</p>
 			</div>
 		</div>
 		<button
@@ -128,7 +128,7 @@
 						<div>
 							<label
 								for="newRoleName"
-								class="block font-jetbrains text-[10px] font-black text-stone-500 uppercase tracking-widest mb-2"
+								class="block font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest mb-2"
 								>Subject_ID</label
 							>
 							<input
@@ -142,7 +142,7 @@
 						<div>
 							<label
 								for="newRolePass"
-								class="block font-jetbrains text-[10px] font-black text-stone-500 uppercase tracking-widest mb-2"
+								class="block font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest mb-2"
 								>Access_Key</label
 							>
 							<input
@@ -156,7 +156,7 @@
 					</div>
 
 					<div class="space-y-4">
-						<div class="block font-jetbrains text-[10px] font-black text-stone-500 uppercase tracking-widest mb-2">
+						<div class="block font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest mb-2">
 							Auth_Permissions
 						</div>
 						<div class="grid grid-cols-2 gap-3">
@@ -196,9 +196,9 @@
 								<input
 									type="checkbox"
 									bind:checked={roleOptions.superuser}
-									class="w-4 h-4 bg-stone-900 border-stone-700 text-amber-500 focus:ring-amber-500"
+									class="w-4 h-4 bg-stone-900 border-stone-700 text-warning focus:ring-amber-500"
 								/>
-								<span class="font-heading text-[10px] font-bold text-amber-500 uppercase">Superuser</span>
+								<span class="font-heading text-[10px] font-bold text-warning uppercase">Superuser</span>
 							</label>
 						</div>
 					</div>
@@ -230,7 +230,7 @@
 							<div class="flex items-center gap-4">
 								<div
 									class="p-2.5 rounded-none {role.superuser
-										? 'bg-amber-500/10 text-amber-500 border border-amber-500/30'
+										? 'bg-amber-500/10 text-warning border border-amber-500/30'
 										: 'bg-stone-800 text-stone-400 border border-stone-700'}"
 								>
 									{#if role.superuser}
@@ -241,12 +241,12 @@
 								</div>
 								<div>
 									<h3 class="font-heading font-black text-stone-100 text-base tracking-tight uppercase">{role.name}</h3>
-									<div class="font-jetbrains text-[9px] text-stone-600 font-bold uppercase tracking-widest">ID: {role.oid || 'N/A'}</div>
+									<div class="font-jetbrains text-[9px] text-text-dim font-bold uppercase tracking-widest">ID: {role.oid || 'N/A'}</div>
 								</div>
 							</div>
 							<button
 								onclick={() => deleteRole(role.name)}
-								class="p-2 text-stone-700 hover:text-red-500 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
+								class="p-2 text-stone-700 hover:text-danger hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
 							>
 								<Trash2 class="w-4 h-4" />
 							</button>
@@ -255,13 +255,13 @@
 						<div class="flex flex-wrap gap-2 mt-6">
 							{#if role.superuser}
 								<span
-									class="px-2 py-1 bg-amber-500/10 text-amber-500 text-[9px] border border-amber-500/20 font-black font-jetbrains uppercase tracking-widest"
+									class="px-2 py-1 bg-amber-500/10 text-warning text-[9px] border border-amber-500/20 font-black font-jetbrains uppercase tracking-widest"
 									>Superuser</span
 								>
 							{/if}
 							{#if role.can_login}
 								<span
-									class="px-2 py-1 bg-emerald-500/10 text-emerald-500 text-[9px] border border-emerald-500/20 font-black font-jetbrains uppercase tracking-widest"
+									class="px-2 py-1 bg-success/10 text-success text-[9px] border border-emerald-500/20 font-black font-jetbrains uppercase tracking-widest"
 									>Login</span
 								>
 							{/if}

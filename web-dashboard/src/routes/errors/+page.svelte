@@ -69,7 +69,7 @@
 	}
 
 	function getStatusColor(status: number) {
-		if (status >= 500) return 'text-red-400 bg-red-400/10 border-red-400/20'; // Critical
+		if (status >= 500) return 'text-danger bg-red-400/10 border-red-400/20'; // Critical
 		if (status >= 400) return 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20'; // Warning
 		return 'text-slate-700 dark:text-slate-300 bg-slate-700/50 border-slate-600'; // Info/Default
 	}
@@ -89,7 +89,7 @@
 	<div class="flex justify-between items-center mb-6">
 		<div>
 			<h1 class="text-2xl font-bold text-slate-50">Error Logs</h1>
-			<p class="text-slate-500 dark:text-slate-400 text-sm mt-1">
+			<p class="text-text-dim dark:text-text-dim text-sm mt-1">
 				Recent application errors and warnings
 			</p>
 		</div>
@@ -104,7 +104,7 @@
 			<button
 				onclick={requestClearErrors}
 				disabled={clearing || errors.length === 0}
-				class="px-4 py-2 bg-red-600 text-slate-900 dark:text-white hover:bg-red-500 rounded font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-900/20"
+				class="px-4 py-2 bg-danger text-slate-900 dark:text-white hover:bg-red-500 rounded font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-900/20"
 			>
 				{clearing ? 'Clearing...' : 'Clear All Errors'}
 			</button>
@@ -115,11 +115,11 @@
 		class="card bg-slate-900/50 border border-slate-300/50 dark:border-slate-700/50 shadow-xl overflow-hidden"
 	>
 		{#if loading}
-			<div class="p-12 text-center text-slate-500 animate-pulse">Loading error logs...</div>
+			<div class="p-12 text-center text-text-dim animate-pulse">Loading error logs...</div>
 		{:else if errors.length === 0}
-			<div class="p-16 text-center text-slate-500 flex flex-col items-center gap-4">
+			<div class="p-16 text-center text-text-dim flex flex-col items-center gap-4">
 				<div
-					class="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center text-3xl"
+					class="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center text-3xl"
 				>
 					✓
 				</div>
@@ -133,7 +133,7 @@
 				<table class="w-full text-left border-collapse">
 					<thead>
 						<tr
-							class="border-b border-slate-300 dark:border-slate-700 bg-slate-800/50 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold"
+							class="border-b border-slate-300 dark:border-slate-700 bg-slate-800/50 text-xs uppercase tracking-wider text-text-dim dark:text-text-dim font-semibold"
 						>
 							<th class="px-6 py-4">Time</th>
 							<th class="px-6 py-4">Status</th>
@@ -146,7 +146,7 @@
 						{#each errors as error (error.timestamp + error.message)}
 							<tr transition:fade class="hover:bg-slate-800/30 transition-colors group">
 								<td
-									class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap"
+									class="px-6 py-4 text-sm text-text-dim dark:text-text-dim font-mono whitespace-nowrap"
 								>
 									{formatDate(error.timestamp)}
 								</td>
@@ -160,10 +160,10 @@
 								<td class="px-6 py-4 text-sm text-slate-800 dark:text-slate-200 font-medium">
 									{error.message}
 								</td>
-								<td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400 font-mono">
+								<td class="px-6 py-4 text-sm text-text-dim dark:text-text-dim font-mono">
 									{error.path}
 								</td>
-								<td class="px-6 py-4 text-sm text-slate-500 font-mono">
+								<td class="px-6 py-4 text-sm text-text-dim font-mono">
 									{error.client_ip}
 								</td>
 							</tr>

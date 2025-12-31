@@ -121,18 +121,24 @@ func StatsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// APIKeyMiddleware secures Spawner-Master communication.
+// APIKeyMiddleware secures Node-Master communication.
 func APIKeyMiddleware(apiKey string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if apiKey != "" {
-				clientKey := r.Header.Get("X-API-Key")
-				if clientKey != apiKey {
-					utils.WriteError(w, r, http.StatusUnauthorized, "invalid api key")
+			clientKey := r.Header.Get("X-API-Key")
+			if clientKey != "" {
+				// Check Master Key
+				if apiKey != "" && clientKey == apiKey {
+					next.ServeHTTP(w, r)
+					return
+				}
+				// Check Node Keys
+				if _, valid := registry.GlobalRegistry.ValidateNodeKey(clientKey); valid {
+					next.ServeHTTP(w, r)
 					return
 				}
 			}
-			next.ServeHTTP(w, r)
+			utils.WriteError(w, r, http.StatusUnauthorized, "invalid api key")
 		})
 	}
 }
@@ -142,9 +148,15 @@ func UnifiedAuthMiddleware(apiKey string, authConfig auth.AuthConfig, sessionSto
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// 1. Check API Key (Service-to-Service)
-			if apiKey != "" {
-				clientKey := r.Header.Get("X-API-Key")
-				if clientKey == apiKey {
+			clientKey := r.Header.Get("X-API-Key")
+			if clientKey != "" {
+				// Check Master Key
+				if apiKey != "" && clientKey == apiKey {
+					next.ServeHTTP(w, r)
+					return
+				}
+				// Check Node Keys
+				if _, valid := registry.GlobalRegistry.ValidateNodeKey(clientKey); valid {
 					next.ServeHTTP(w, r)
 					return
 				}

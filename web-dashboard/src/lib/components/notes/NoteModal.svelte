@@ -246,15 +246,15 @@
 								onclick={() => (currentNote.status = status)}
 								class="w-8 h-8 flex items-center justify-center border transition-all {currentNote.status === status
 									? 'bg-rust/20 border-rust text-white shadow-lg shadow-rust/20'
-									: 'border-white/5 text-stone-600 hover:text-stone-400 hover:border-white/20'}"
+									: 'border-white/5 text-text-dim hover:text-text-dim hover:border-white/20'}"
 								title={status.toUpperCase()}
 							>
 								{#if status === 'normal'}
 									<Bell class="w-4 h-4" />
 								{:else if status === 'warn'}
-									<TriangleAlert class="w-4 h-4 text-amber-500" />
+									<TriangleAlert class="w-4 h-4 text-warning" />
 								{:else if status === 'critical'}
-									<ShieldAlert class="w-4 h-4 text-red-500" />
+									<ShieldAlert class="w-4 h-4 text-danger" />
 								{/if}
 							</button>
 						{/each}

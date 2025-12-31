@@ -6,7 +6,7 @@ import type {
 	ResourceMetricsState
 } from '$lib/types/resource-metrics';
 
-export function useResourceMetrics(spawnerId: number, instanceId: number | string) {
+export function useResourceMetrics(nodeId: number, instanceId: number | string) {
 	const stats = writable<ResourceStats | null>(null);
 	const history = writable<ResourceHistory[]>([]);
 	const peakStats = writable<PeakResourceStats>({ peakCpu: 0, peakMemory: 0, peakDisk: 0 });
@@ -20,7 +20,7 @@ export function useResourceMetrics(spawnerId: number, instanceId: number | strin
 
 	async function fetchStats() {
 		try {
-			const response = await fetch(`/api/spawners/${spawnerId}/instances/${instanceId}/stats`);
+			const response = await fetch(`/api/nodes/${nodeId}/instances/${instanceId}/stats`);
 			if (!response.ok) {
 				const err = await response.json().catch(() => ({}));
 				throw new Error(err.error || `Failed to fetch stats: ${response.statusText}`);
@@ -65,7 +65,7 @@ export function useResourceMetrics(spawnerId: number, instanceId: number | strin
 		try {
 			loading.set(true);
 			const response = await fetch(
-				`/api/spawners/${spawnerId}/instances/${instanceId}/stats/history`
+				`/api/nodes/${nodeId}/instances/${instanceId}/stats/history`
 			);
 			if (!response.ok) {
 				const err = await response.json().catch(() => ({}));
@@ -143,25 +143,25 @@ export async function getTopResourceConsumers(
 ): Promise<any[]> {
 	try {
 		// This would need a new API endpoint for system-wide resource consumption
-		// For now, we'll use existing spawner data and sort by resource usage
-		const response = await fetch('/api/spawners');
-		if (!response.ok) throw new Error('Failed to fetch spawners');
+		// For now, we'll use existing node data and sort by resource usage
+		const response = await fetch('/api/nodes');
+		if (!response.ok) throw new Error('Failed to fetch nodes');
 
-		const spawnersData = await response.json();
-		const spawners = Array.isArray(spawnersData) ? spawnersData : Object.values(spawnersData);
+		const nodesData = await response.json();
+		const nodes = Array.isArray(nodesData) ? nodesData : Object.values(nodesData);
 		const allInstances: any[] = [];
 
-		// Collect all instances from all spawners
-		for (const spawner of spawners) {
-			const instancesResponse = await fetch(`/api/spawners/${spawner.id}/instances`);
+		// Collect all instances from all nodes
+		for (const node of nodes) {
+			const instancesResponse = await fetch(`/api/nodes/${node.id}/instances`);
 			if (instancesResponse.ok) {
 				const instances = await instancesResponse.json();
 				for (const instance of instances) {
 					allInstances.push({
 						...instance,
-						spawnerId: spawner.id,
-						region: spawner.region,
-						host: spawner.host
+						nodeId: node.id,
+						region: node.region,
+						host: node.host
 					});
 				}
 			}

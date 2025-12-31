@@ -18,7 +18,7 @@
 	} from 'lucide-svelte';
 
 	let {
-		spawnerId,
+		nodeId,
 		instanceId,
 		memTotal = 0,
 		diskTotal = 0,
@@ -29,7 +29,7 @@
 	}: ResourceMetricsPanelProps = $props();
 
 	// Reactivity fix: Re-initialize metrics when IDs change
-	let metrics = $derived(useResourceMetrics(spawnerId, instanceId));
+	let metrics = $derived(useResourceMetrics(nodeId, instanceId));
 	
 	let stats = $derived(metrics.stats);
 	let history = $derived(metrics.history);
@@ -141,7 +141,7 @@
 						<div class="flex items-center gap-3 mt-1.5">
 							<ChevronRight class="w-3 h-3 text-rust" />
 							<span class="text-[9px] font-black text-stone-500 uppercase tracking-[0.3em]">
-								VECTOR: NODE_{spawnerId} // INSTANCE_{instanceId}
+								VECTOR: NODE_{nodeId} // INSTANCE_{instanceId}
 							</span>
 						</div>
 					</div>

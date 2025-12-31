@@ -22,7 +22,7 @@ export interface PeakResourceStats {
 
 export interface ResourceConsumer {
 	id: number;
-	spawnerId: number;
+	nodeId: number;
 	instanceId: string;
 	port: number;
 	cpu_percent: number;
@@ -68,7 +68,7 @@ export interface ResourceProgressBarProps {
 }
 
 export interface ResourceMetricsPanelProps {
-	spawnerId: number;
+	nodeId: number;
 	instanceId: number | string;
 	memTotal?: number;
 	diskTotal?: number;

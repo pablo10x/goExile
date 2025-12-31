@@ -251,18 +251,18 @@
 	}
 
 	function getCellStyle(value: any, isModified: boolean): string {
-		if (isModified) return 'text-amber-400 font-bold';
-		if (value === null || value === undefined) return 'text-stone-600 italic';
+		if (isModified) return 'text-warning font-bold';
+		if (value === null || value === undefined) return 'text-text-dim italic';
 		if (typeof value === 'number') return 'text-rust-light font-jetbrains';
-		if (typeof value === 'boolean') return value ? 'text-emerald-500' : 'text-red-500';
+		if (typeof value === 'boolean') return value ? 'text-success' : 'text-danger';
 		return 'text-stone-300';
 	}
 </script>
 
-<div class="flex flex-col h-full bg-[#050505]">
+<div class="flex flex-col h-full bg-[var(--terminal-bg)]">
 		<!-- Enhanced Toolbar -->
 		<div
-			class="border-b border-stone-800 bg-[#0a0a0a] sticky top-0 z-20"
+			class="border-b border-stone-800 bg-[var(--header-bg)] sticky top-0 z-20"
 		>
 			<div class="px-4 py-3 flex items-center justify-between gap-4">
 				<!-- Left Actions -->
@@ -270,16 +270,16 @@
 					<!-- Pending Changes Indicator -->
 					{#if pendingChangeCount > 0}
 						<div
-							class="flex items-center gap-3 px-3 py-2 bg-amber-500/10 border border-amber-500/30"
+							class="flex items-center gap-3 px-3 py-2 bg-warning/10 border border-warning/30"
 							transition:slide={{ axis: 'x', duration: 150 }}
 						>
-							<div class="w-2 h-2 rounded-none bg-amber-500 animate-pulse"></div>
-							<span class="font-jetbrains text-[10px] font-black text-amber-400 uppercase tracking-widest">
+							<div class="w-2 h-2 rounded-none bg-warning animate-pulse"></div>
+							<span class="font-jetbrains text-[10px] font-black text-warning uppercase tracking-widest">
 								{pendingChangeCount} UNSAVED_MODS
 							</span>
 							<button
 								onclick={discardChanges}
-								class="p-0.5 hover:bg-amber-500/20 text-amber-400 transition-colors"
+								class="p-0.5 hover:bg-warning/20 text-warning transition-colors"
 								title="Discard all changes"
 							>
 								<X class="w-3.5 h-3.5" />
@@ -328,8 +328,8 @@
 						onclick={requestDelete}
 						class="flex items-center gap-2 px-3 py-2 transition-all {selectedIds.size >
 						0
-							? 'bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20'
-							: 'text-stone-600 cursor-not-allowed bg-stone-900/50 border border-stone-800'}"
+							? 'bg-danger/10 text-danger hover:bg-danger/20 border border-danger/20'
+							: 'text-text-dim cursor-not-allowed bg-stone-900/50 border border-stone-800'}"
 					>
 						<Trash2 class="w-4 h-4" />
 						<span class="font-heading text-[10px] font-black uppercase tracking-widest hidden sm:inline">Terminate</span>
@@ -345,14 +345,14 @@
 						}}
 						class="p-2 transition-colors {showSearch
 							? 'bg-rust/10 text-rust'
-							: 'text-stone-500 hover:text-stone-300 hover:bg-stone-900/50'}"
+							: 'text-text-dim hover:text-stone-300 hover:bg-stone-900/50'}"
 					>
 						<Search class="w-4 h-4" />
 					</button>
 	
 					<!-- Filter Button (placeholder) -->
 					<button
-						class="p-2 text-stone-500 hover:text-stone-300 hover:bg-stone-900/50 transition-colors"
+						class="p-2 text-text-dim hover:text-stone-300 hover:bg-stone-900/50 transition-colors"
 					>
 						<Filter class="w-4 h-4" />
 					</button>
@@ -364,7 +364,7 @@
 						<button
 							onclick={onRefresh}
 							disabled={isLoading}
-							class="p-2 text-stone-500 hover:text-stone-300 hover:bg-stone-900/50 transition-colors disabled:opacity-20"
+							class="p-2 text-text-dim hover:text-stone-300 hover:bg-stone-900/50 transition-colors disabled:opacity-20"
 							title="Refresh"
 						>
 							<RefreshCw class="w-4 h-4 {isLoading ? 'animate-spin' : ''}" />
@@ -386,7 +386,7 @@
 			<div class="px-4 pb-4" transition:slide={{ duration: 150 }}>
 				<div class="relative">
 					<Search
-						class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-stone-600 pointer-events-none"
+						class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-text-dim pointer-events-none"
 					/>
 					<input
 						type="text"
@@ -397,14 +397,14 @@
 					{#if searchQuery}
 						<button
 							onclick={() => (searchQuery = '')}
-							class="absolute right-4 top-1/2 -translate-y-1/2 text-stone-600 hover:text-white"
+							class="absolute right-4 top-1/2 -translate-y-1/2 text-text-dim hover:text-white"
 						>
 							<X class="w-4 h-4" />
 						</button>
 					{/if}
 				</div>
 				{#if searchQuery && filteredData.length !== data.length}
-					<p class="font-jetbrains text-[9px] text-stone-600 mt-2 px-1 uppercase tracking-widest">
+					<p class="font-jetbrains text-[9px] text-text-dim mt-2 px-1 uppercase tracking-widest">
 						Filtering: {filteredData.length} // TOTAL: {data.length} Subjects
 					</p>
 				{/if}
@@ -416,21 +416,21 @@
 	<div class="flex-1 overflow-auto relative custom-scrollbar">
 		{#if isLoading}
 			<div
-				class="absolute inset-0 bg-[#050505]/80 backdrop-blur-sm z-30 flex items-center justify-center"
+				class="absolute inset-0 bg-[var(--terminal-bg)]/80 backdrop-blur-sm z-30 flex items-center justify-center"
 				transition:fade={{ duration: 150 }}
 			>
 				<div class="flex flex-col items-center gap-4">
 					<div
 						class="w-10 h-10 border-4 border-rust border-t-transparent rounded-none animate-spin"
 					></div>
-					<span class="font-heading text-[11px] font-black text-stone-500 uppercase tracking-[0.2em]">Synchronizing_Data...</span>
+					<span class="font-heading text-[11px] font-black text-text-dim uppercase tracking-[0.2em]">Synchronizing_Data...</span>
 				</div>
 			</div>
 		{/if}
 
 		<table class="w-full text-left text-[11px] border-collapse font-jetbrains">
 			<thead
-				class="bg-[#0a0a0a] text-stone-500 sticky top-0 z-10 border-b border-stone-800"
+				class="bg-[var(--header-bg)] text-text-dim sticky top-0 z-10 border-b border-stone-800"
 			>
 				<tr>
 					<!-- Checkbox Column -->
@@ -486,7 +486,7 @@
 							</div>
 
 							<!-- Column Type -->
-							<div class="text-[9px] text-stone-600 font-bold mt-1 uppercase tracking-tighter">
+							<div class="text-[9px] text-text-dim font-bold mt-1 uppercase tracking-tighter">
 								{col.type || 'PROTOCOL_UNKNOWN'}
 							</div>
 						</th>
@@ -503,7 +503,7 @@
 					{@const rowHasChanges = pendingChanges.has(rowKey)}
 					<tr
 						class="group transition-colors {rowHasChanges
-							? 'bg-amber-500/5'
+							? 'bg-warning/5'
 							: selectedIds.has(rowKey)
 								? 'bg-rust/5'
 								: 'hover:bg-stone-900/30'}"
@@ -529,7 +529,7 @@
 							{@const isPkCol = col.name === primaryKeyColumn || col.isPk}
 							<td
 								class="px-5 py-3 max-w-xs relative border-r border-stone-800/20 {isModified
-									? 'bg-amber-500/10 border-l-2 border-amber-500'
+									? 'bg-warning/10 border-l-2 border-warning'
 									: ''}"
 								onclick={() => !isPkCol && startEdit(row, col.name)}
 							>
@@ -562,7 +562,7 @@
 										<!-- Modified indicator -->
 										{#if isModified}
 											<span
-												class="px-1.5 py-0.5 text-[8px] font-black bg-amber-500 text-stone-950 rounded-none shrink-0 tracking-widest"
+												class="px-1.5 py-0.5 text-[8px] font-black bg-warning text-stone-950 rounded-none shrink-0 tracking-widest"
 											>
 												MOD
 											</span>
@@ -575,7 +575,7 @@
 													e.stopPropagation();
 													copyValue(cellValue);
 												}}
-												class="opacity-0 group-hover/cell:opacity-100 p-1 hover:bg-stone-800 text-stone-600 hover:text-rust transition-all shrink-0"
+												class="opacity-0 group-hover/cell:opacity-100 p-1 hover:bg-stone-800 text-text-dim hover:text-rust transition-all shrink-0"
 												title="Copy value"
 											>
 												<Copy class="w-3 h-3" />
@@ -596,7 +596,7 @@
 								{#if rowHasChanges}
 									<button
 										onclick={() => discardRowChanges(rowKey)}
-										class="p-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 transition-colors"
+										class="p-1.5 text-warning hover:text-warning hover:bg-warning/10 transition-colors"
 										title="Discard row changes"
 									>
 										<Undo2 class="w-4 h-4" />
@@ -607,7 +607,7 @@
 										pendingDeleteIds = [rowKey];
 										showDeleteConfirm = true;
 									}}
-									class="p-1.5 text-stone-600 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+									class="p-1.5 text-text-dim hover:text-danger hover:bg-danger/10 transition-colors"
 									title="Delete row"
 								>
 									<Trash2 class="w-4 h-4" />
@@ -621,7 +621,7 @@
 				{#if filteredData.length === 0 && !isLoading}
 					<tr>
 						<td colspan={columns.length + 2} class="py-24">
-							<div class="flex flex-col items-center justify-center text-stone-600">
+							<div class="flex flex-col items-center justify-center text-text-dim">
 								{#if searchQuery}
 									<Search class="w-16 h-16 mb-6 opacity-10" />
 									<p class="font-heading font-black text-xs tracking-[0.2em] uppercase">No matching Subjects found</p>
@@ -657,11 +657,11 @@
 
 	<!-- Enhanced Footer -->
 	<div
-		class="px-6 py-4 bg-[#0a0a0a] border-t border-stone-800 flex items-center justify-between"
+		class="px-6 py-4 bg-[var(--header-bg)] border-t border-stone-800 flex items-center justify-between"
 	>
 		<div class="flex items-center gap-6 text-[10px] font-jetbrains font-bold uppercase tracking-widest">
 			<span class="flex items-center gap-2">
-				<div class="w-2 h-2 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"></div>
+				<div class="w-2 h-2 bg-success shadow-[0_0_8px_rgba(16,185,129,0.4)]"></div>
 				<span class="text-stone-400">{filteredData.length} Subjects_Detected</span>
 				{#if searchQuery}
 					<span class="text-rust/60 ml-2">Filtered_View</span>
@@ -675,14 +675,14 @@
 			{/if}
 
 			{#if pendingChangeCount > 0}
-				<span class="text-amber-500 flex items-center gap-2">
-					<div class="w-2 h-2 bg-amber-500 animate-pulse"></div>
+				<span class="text-warning flex items-center gap-2">
+					<div class="w-2 h-2 bg-warning animate-pulse"></div>
 					{pendingChangeCount} PENDING_MODS
 				</span>
 			{/if}
 		</div>
 
-		<div class="flex items-center gap-4 text-[9px] font-jetbrains font-bold text-stone-600 uppercase tracking-widest hidden lg:flex">
+		<div class="flex items-center gap-4 text-[9px] font-jetbrains font-bold text-text-dim uppercase tracking-widest hidden lg:flex">
 			<span>Click_Cell_To_Edit</span>
 			<span class="w-1 h-1 bg-stone-800"></span>
 			<span>Enter_To_Commit</span>
@@ -690,7 +690,7 @@
 			<span>Esc_To_Abort</span>
 			{#if pendingChangeCount > 0}
 				<span class="w-1 h-1 bg-stone-800"></span>
-				<span class="text-amber-500/60 animate-pulse">Execute_Apply_To_Save</span>
+				<span class="text-warning/60 animate-pulse">Execute_Apply_To_Save</span>
 			{/if}
 		</div>
 	</div>

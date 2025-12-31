@@ -12,7 +12,7 @@ describe('LogViewer Component', () => {
 
 	it('displays loading state initially', async () => {
 		(global.fetch as any).mockReturnValue(new Promise(() => {})); // Never resolve
-		render(LogViewer, { spawnerId: 1 });
+		render(LogViewer, { nodeId: 1 });
 		await tick(); // Force Svelte to flush updates
 		expect(screen.getByText('Loading...')).toBeInTheDocument();
 	});
@@ -23,7 +23,7 @@ describe('LogViewer Component', () => {
 			json: () => Promise.resolve({ logs: 'Server started successfully.' })
 		});
 
-		render(LogViewer, { spawnerId: 1 });
+		render(LogViewer, { nodeId: 1 });
 		await tick(); // Force Svelte to flush updates
 
 		await waitFor(() => {
@@ -37,7 +37,7 @@ describe('LogViewer Component', () => {
 			statusText: 'Internal Server Error'
 		});
 
-		render(LogViewer, { spawnerId: 1 });
+		render(LogViewer, { nodeId: 1 });
 		await tick(); // Force Svelte to flush updates
 
 		await waitFor(() => {

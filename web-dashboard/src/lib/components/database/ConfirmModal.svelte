@@ -30,14 +30,14 @@
 	const variantConfig = {
 		danger: {
 			iconBg: 'bg-red-500/10',
-			iconColor: 'text-red-500',
-			buttonBg: 'bg-red-600 hover:bg-red-500',
+			iconColor: 'text-danger',
+			buttonBg: 'bg-danger hover:bg-red-500',
 			buttonShadow: 'shadow-red-900/20'
 		},
 		warning: {
 			iconBg: 'bg-amber-500/10',
-			iconColor: 'text-amber-500',
-			buttonBg: 'bg-amber-600 hover:bg-amber-500',
+			iconColor: 'text-warning',
+			buttonBg: 'bg-warning hover:bg-amber-500',
 			buttonShadow: 'shadow-amber-900/20'
 		},
 		info: {
@@ -101,7 +101,7 @@
 
 		<!-- Modal -->
 		<div
-			class="bg-[#050505] border border-stone-800 rounded-none w-full max-w-md shadow-2xl relative z-10 overflow-hidden industrial-frame"
+			class="bg-[var(--terminal-bg)] border border-stone-800 rounded-none w-full max-w-md shadow-2xl relative z-10 overflow-hidden industrial-frame"
 			transition:scale={{ duration: 200, start: 0.95, easing: quintOut }}
 		>
 			<!-- Header -->
@@ -126,7 +126,7 @@
 						<h3 id="confirm-modal-title" class="text-xl font-heading font-black text-slate-100 uppercase tracking-tighter mb-2">
 							{title}
 						</h3>
-						<p class="font-jetbrains text-[11px] text-stone-500 uppercase tracking-widest leading-relaxed">
+						<p class="font-jetbrains text-[11px] text-text-dim uppercase tracking-widest leading-relaxed">
 							{message}
 						</p>
 					</div>
@@ -135,7 +135,7 @@
 					<button
 						onclick={handleCancel}
 						disabled={loading}
-						class="shrink-0 p-1.5 text-stone-600 hover:text-white transition-all disabled:opacity-20"
+						class="shrink-0 p-1.5 text-text-dim hover:text-white transition-all disabled:opacity-20"
 					>
 						<X class="w-5 h-5" />
 					</button>
@@ -143,11 +143,11 @@
 			</div>
 
 			<!-- Actions -->
-			<div class="p-8 flex items-center justify-end gap-4 bg-[#0a0a0a]/50">
+			<div class="p-8 flex items-center justify-end gap-4 bg-[var(--header-bg)]/50">
 				<button
 					onclick={handleCancel}
 					disabled={loading}
-					class="px-6 py-3 font-heading font-black text-[10px] text-stone-500 hover:text-white transition-all uppercase tracking-widest disabled:opacity-20"
+					class="px-6 py-3 font-heading font-black text-[10px] text-text-dim hover:text-white transition-all uppercase tracking-widest disabled:opacity-20"
 				>
 					{cancelText}_OP
 				</button>

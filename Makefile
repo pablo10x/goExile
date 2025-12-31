@@ -2,7 +2,7 @@
 
 # --- Configuration ---
 BINARY_SERVER := server-bin
-BINARY_SPAWNER := spawner-bin
+BINARY_SPAWNER := node-bin
 GOLINT := $(shell which golangci-lint 2>/dev/null || echo $(shell go env GOPATH)/bin/golangci-lint)
 NODE_BIN := npm
 
@@ -22,7 +22,7 @@ help: ## Display this help message
 	@echo "$(BLUE)Exile Project - available commands:$(RESET)"
 	@echo "  $(CYAN)install$(RESET)          - Install all dependencies"
 	@echo "  $(CYAN)dev-server$(RESET)       - Run master server in development mode"
-	@echo "  $(CYAN)dev-spawner$(RESET)      - Run spawner in development mode"
+	@echo "  $(CYAN)dev-node$(RESET)      - Run node in development mode"
 	@echo "  $(CYAN)dev-frontend$(RESET)     - Run web dashboard in development mode"
 	@echo "  $(CYAN)build$(RESET)            - Build all components"
 	@echo "  $(CYAN)format$(RESET)           - Format all source code"
@@ -39,7 +39,7 @@ install: install-backend install-frontend ## Install all dependencies
 install-backend: ## Install Go dependencies
 	@echo "$(YELLOW)📦 Installing Backend dependencies...$(RESET)"
 	@cd server && go mod tidy
-	@cd spawner && go mod tidy
+	@cd node && go mod tidy
 
 .PHONY: install-frontend
 install-frontend: ## Install Node.js dependencies
@@ -52,10 +52,10 @@ dev-server: ## Run master server in development mode
 	@echo "$(GREEN)🚀 Starting Master Server...$(RESET)"
 	@cd server && go run .
 
-.PHONY: dev-spawner
-dev-spawner: ## Run spawner in development mode
+.PHONY: dev-node
+dev-node: ## Run node in development mode
 	@echo "$(GREEN)🚀 Starting Spawner...$(RESET)"
-	@cd spawner && go run .
+	@cd node && go run .
 
 .PHONY: dev-frontend
 dev-frontend: ## Run web dashboard in development mode
@@ -64,17 +64,17 @@ dev-frontend: ## Run web dashboard in development mode
 
 # --- Build ---
 .PHONY: build
-build: build-server build-spawner build-frontend ## Build all components
+build: build-server build-node build-frontend ## Build all components
 
 .PHONY: build-server
 build-server: ## Build Master Server binary
 	@echo "$(YELLOW)🏗️  Building Master Server...$(RESET)"
 	@cd server && go build -o ../$(BINARY_SERVER) .
 
-.PHONY: build-spawner
-build-spawner: ## Build Spawner binary
+.PHONY: build-node
+build-node: ## Build Spawner binary
 	@echo "$(YELLOW)🏗️  Building Spawner...$(RESET)"
-	@cd spawner && go build -o ../$(BINARY_SPAWNER) .
+	@cd node && go build -o ../$(BINARY_SPAWNER) .
 
 .PHONY: build-frontend
 build-frontend: ## Build Web Dashboard for production
@@ -86,7 +86,7 @@ build-frontend: ## Build Web Dashboard for production
 format: ## Format all source code
 	@echo "$(CYAN)💅 Formatting code...$(RESET)"
 	@cd server && go fmt ./...
-	@cd spawner && go fmt ./...
+	@cd node && go fmt ./...
 	@cd web-dashboard && $(NODE_BIN) run format
 
 .PHONY: lint
@@ -97,7 +97,7 @@ lint-backend: ## Run golangci-lint on Go components
 	@echo "$(CYAN)🔍 Linting Server...$(RESET)"
 	@cd server && $(GOLINT) run ./...
 	@echo "$(CYAN)🔍 Linting Spawner...$(RESET)"
-	@cd spawner && $(GOLINT) run ./...
+	@cd node && $(GOLINT) run ./...
 
 .PHONY: lint-frontend
 lint-frontend: ## Run linter on web dashboard
@@ -117,7 +117,7 @@ test: test-backend test-frontend ## Run all tests
 test-backend: ## Run Go tests
 	@echo "$(GREEN)🧪 Running Backend tests...$(RESET)"
 	@cd server && go test -v ./...
-	@cd spawner && go test -v ./...
+	@cd node && go test -v ./...
 
 .PHONY: test-frontend
 test-frontend: ## Run frontend tests

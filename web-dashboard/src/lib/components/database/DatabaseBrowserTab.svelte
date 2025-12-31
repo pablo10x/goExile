@@ -238,9 +238,9 @@
 	});
 </script>
 
-<div class="h-full flex flex-col bg-[#050505]">
+<div class="h-full flex flex-col bg-[var(--terminal-bg)]">
 	<!-- Header -->
-	<div class="shrink-0 border-b border-stone-800 bg-[#0a0a0a]">
+	<div class="shrink-0 border-b border-stone-800 bg-[var(--header-bg)]">
 		<!-- Title Bar -->
 		<div class="px-6 py-4 flex items-center justify-between">
 			<div class="flex items-center gap-4">
@@ -249,14 +249,14 @@
 				</div>
 				<div>
 					<h2 class="text-base font-heading font-black text-slate-100 uppercase tracking-tighter">SCHEMA_BROWSER</h2>
-					<p class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest mt-1">Explore and manage database topology</p>
+					<p class="font-jetbrains text-[10px] text-text-dim uppercase tracking-widest mt-1">Explore and manage database topology</p>
 				</div>
 			</div>
 
 			<button
 				onclick={refresh}
 				disabled={isRefreshing}
-				class="p-2.5 text-stone-500 hover:text-rust hover:bg-rust/10 transition-all disabled:opacity-20"
+				class="p-2.5 text-text-dim hover:text-rust hover:bg-rust/10 transition-all disabled:opacity-20"
 				title="Refresh"
 			>
 				<RefreshCw class="w-5 h-5 {isRefreshing ? 'animate-spin' : ''}" />

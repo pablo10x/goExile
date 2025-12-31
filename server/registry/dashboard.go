@@ -36,7 +36,7 @@ type DashboardStats struct {
 	Mu              sync.RWMutex
 	TotalRequests   int64
 	TotalErrors     int64
-	ActiveSpawners  int
+	ActiveNodes  int
 	BytesSent       int64
 	BytesReceived   int64
 	MemUsage        uint64
@@ -197,7 +197,7 @@ func (ds *DashboardStats) GetStats() (totalReq int64, totalErr int64, active int
 	defer ds.Mu.RUnlock()
 	totalReq = ds.TotalRequests
 	totalErr = ds.TotalErrors
-	active = ds.ActiveSpawners
+	active = ds.ActiveNodes
 	dbOK = ds.DBConnected
 	uptime = time.Since(ds.StartTime)
 	mem = ds.MemUsage
@@ -213,7 +213,7 @@ func (ds *DashboardStats) GetStatsMap() map[string]interface{} {
 	uptime := time.Since(ds.StartTime)
 	return map[string]interface{}{
 		"uptime":                 uptime.Milliseconds(),
-		"active_spawners":        ds.ActiveSpawners,
+		"active_nodes":        ds.ActiveNodes,
 		"total_requests":         ds.TotalRequests,
 		"total_errors":           ds.TotalErrors,
 		"db_connected":           ds.DBConnected,
@@ -256,11 +256,11 @@ func (ds *DashboardStats) ClearErrors() {
 	ds.TotalErrors = 0 // Reset the error counter
 }
 
-// UpdateActiveServers updates the active server count.
-func (ds *DashboardStats) UpdateActiveServers(count int) {
+// UpdateActiveNodes updates the active server count.
+func (ds *DashboardStats) UpdateActiveNodes(count int) {
 	ds.Mu.Lock()
 	defer ds.Mu.Unlock()
-	ds.ActiveSpawners = count
+	ds.ActiveNodes = count
 }
 
 // SetDBConnected updates DB connection status.
