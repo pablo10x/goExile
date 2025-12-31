@@ -33,7 +33,6 @@ registry.db
 *.db
 *.sqlite
 server/registry.db
-server/database/
 
 # Dependency directories
 Godeps/
