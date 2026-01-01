@@ -615,7 +615,7 @@
 			{/if}
 
 			{#if localBackgroundConfig?.show_vignette}
-				<div class="vignette z-[100]"></div>
+				<div class="vignette z-[5]"></div>
 			{/if}
 
 			{#if localBackgroundConfig?.show_global_background && localBackgroundConfig?.global_type && localBackgroundConfig.global_type !== 'none'}

@@ -109,7 +109,7 @@
 	<div class={`absolute top-0 left-0 w-full h-0.5 ${colors.accent} opacity-30 group-hover:opacity-100 transition-opacity duration-500`}></div>
 
 	<!-- Glass Overlay -->
-	<div class="absolute inset-0 bg-black/40 backdrop-blur-sm opacity-50"></div>
+	<div class="absolute inset-0 backdrop-blur-sm" style="background-color: rgba(0, 0, 0, var(--card-alpha));"></div>
 
 	<!-- Tactical Background Pattern -->
 	<div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(circle at 2px 2px, var(--color-rust) 1px, transparent 0); background-size: 24px 24px;"></div>

@@ -76,7 +76,8 @@
 </script>
 
 <div
-	class={`border border-stone-800 ${$siteSettings.aesthetic.industrial_styling ? 'rounded-none' : 'rounded-xl'} bg-stone-950/40 glass-panel overflow-hidden mb-2 hover:border-rust/40 transition-all duration-500 shadow-lg group/row relative`}
+	class={`border border-stone-800 ${$siteSettings.aesthetic.industrial_styling ? 'rounded-none' : 'rounded-xl'} glass-panel overflow-hidden mb-2 hover:border-rust/40 transition-all duration-500 shadow-lg group/row relative`}
+	style="background-color: rgba(12, 10, 9, var(--card-alpha));"
 	class:heartbeat-pulse={instance.status === 'Running' && !$siteSettings.aesthetic.reduced_motion}
 	onmouseenter={() => isHovered = true}
 	onmouseleave={() => isHovered = false}

@@ -153,7 +153,10 @@
 			<CardHoverOverlay active={hoveredRows[node.id]} />
 
 			<!-- Header / Identity -->
-			<div class="p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-8 bg-stone-950/40 relative">
+			<div 
+				class="p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-8 relative"
+				style="background-color: rgba(12, 10, 9, var(--card-alpha));"
+			>
 				<div class="flex items-center gap-6 flex-1 min-w-0">
 					<div 
 						class="w-16 h-16 bg-stone-950 border border-stone-800 flex items-center justify-center group-hover:border-rust transition-all duration-500 industrial-frame shadow-xl shrink-0"
