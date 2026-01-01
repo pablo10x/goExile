@@ -45,71 +45,70 @@
 	<!-- Notification Dropdown -->
 	{#if isNotificationPanelOpen}
 		<div
-			class="absolute right-0 top-14 w-96 bg-black/90 backdrop-blur-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] z-50 overflow-hidden"
+			class="absolute right-0 top-14 w-96 bg-stone-950/95 backdrop-blur-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] z-50 overflow-hidden border border-stone-800"
 			class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
 			class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
+			class:rounded-xl={!$siteSettings.aesthetic.industrial_styling}
 			transition:slide={{ duration: 200 }}
 		>
 			<div
-				class="px-5 py-4 border-b border-zinc-800 flex justify-between items-center bg-[var(--header-bg)]"
+				class="px-5 py-4 border-b border-stone-800 flex justify-between items-center bg-black/40"
 			>
 				<span class="font-heading font-black text-white text-[10px] uppercase tracking-[0.2em]">Recent_Activity_Buffer</span>
 				<button
 					onclick={requestPurge}
-					class="text-[9px] font-black uppercase tracking-widest text-rust hover:text-rust-light transition-all italic px-4 py-2"
-					class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
-					class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
-				>PURGE</button
+					class="text-[9px] font-black uppercase tracking-widest text-rust hover:text-white transition-all bg-rust/10 hover:bg-rust px-3 py-1 border border-rust/30"
+					class:rounded-md={!$siteSettings.aesthetic.industrial_styling}
+				>PURGE_LOGS</button
 				>
 			</div>
-			<div class="max-h-80 overflow-y-auto p-3 space-y-3 no-scrollbar bg-[var(--terminal-bg)] relative">
-				<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
+			<div class="max-h-80 overflow-y-auto p-3 space-y-2 custom-scrollbar bg-[var(--terminal-bg)] relative">
+				<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.03] pointer-events-none"></div>
 				
 				{#if $history && $history.length > 0}
 					{#each $history as note (note.id)}
 						<div
-							class="flex gap-4 p-4 bg-stone-900/40 hover:border-rust/30 transition-all group relative overflow-hidden"
-							class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
-							class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
+							class="flex gap-4 p-4 bg-stone-900/30 border border-stone-800 hover:border-stone-700 transition-all group relative overflow-hidden"
+							class:rounded-lg={!$siteSettings.aesthetic.industrial_styling}
 						>
 							<div class="mt-0.5 shrink-0">
 								{#if note.type === 'success'}
-									<div class="p-1.5 bg-success/10" class:industrial-frame={!$siteSettings.aesthetic.industrial_styling} class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}>
-										<CheckCircle class="w-3.5 h-3.5 text-success" />
+									<div class="p-1.5 bg-emerald-500/10 border border-emerald-500/20" class:rounded-md={!$siteSettings.aesthetic.industrial_styling}>
+										<CheckCircle class="w-3.5 h-3.5 text-emerald-500" />
 									</div>
 								{:else if note.type === 'error'}
-									<div class="p-1.5 bg-danger/10" class:industrial-frame={!$siteSettings.aesthetic.industrial_styling} class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}>
-										<XCircle class="w-3.5 h-3.5 text-danger" />
+									<div class="p-1.5 bg-red-500/10 border border-red-500/20" class:rounded-md={!$siteSettings.aesthetic.industrial_styling}>
+										<XCircle class="w-3.5 h-3.5 text-red-500" />
 									</div>
 								{:else if note.type === 'warning'}
-									<div class="p-1.5 bg-rust/10" class:industrial-frame={!$siteSettings.aesthetic.industrial_styling} class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}>
-										<AlertCircle class="w-3.5 h-3.5 text-rust" />
+									<div class="p-1.5 bg-amber-500/10 border border-amber-500/20" class:rounded-md={!$siteSettings.aesthetic.industrial_styling}>
+										<AlertCircle class="w-3.5 h-3.5 text-amber-500" />
 									</div>
 								{:else}
-									<div class="p-1.5 bg-stone-800" class:industrial-frame={!$siteSettings.aesthetic.industrial_styling} class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}>
-										<Info class="w-3.5 h-3.5 text-text-dim" />
+									<div class="p-1.5 bg-blue-500/10 border border-blue-500/20" class:rounded-md={!$siteSettings.aesthetic.industrial_styling}>
+										<Info class="w-3.5 h-3.5 text-blue-500" />
 									</div>
 								{/if}
 							</div>
 							<div class="flex-1 min-w-0">
-								<p class="text-[11px] font-black text-stone-200 leading-tight uppercase tracking-tight">
+								<p class="text-[10px] font-bold text-stone-300 leading-tight uppercase tracking-tight group-hover:text-white transition-colors">
 									{note.message}
 								</p>
 								{#if note.details}
-									<p class="text-[9px] text-text-dim mt-2 font-jetbrains font-bold leading-relaxed uppercase opacity-60 italic border-l-2 border-zinc-800 pl-3">{note.details}</p>
+									<p class="text-[9px] text-stone-500 mt-1.5 font-jetbrains font-medium leading-relaxed opacity-70 break-all">{note.details}</p>
 								{/if}
-								<span class="text-[8px] font-jetbrains font-black text-text-dim mt-3 block uppercase tracking-widest">
-									Captured: {new Date(note.timestamp || Date.now()).toLocaleTimeString([], { hour12: false })}
+								<span class="text-[8px] font-mono text-stone-600 mt-2 block uppercase tracking-wider">
+									{new Date(note.timestamp || Date.now()).toLocaleTimeString([], { hour12: false })}
 								</span>
 							</div>
 						</div>
 					{/each}
 				{:else}
-					<div class="text-center py-16 opacity-40">
-						<div class="inline-block p-5 bg-stone-900/40" class:industrial-frame={!$siteSettings.aesthetic.industrial_styling} class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}>
-							<Bell class="w-8 h-8 text-text-dim" />
+					<div class="text-center py-16 opacity-40 flex flex-col items-center">
+						<div class="p-4 bg-stone-900/50 border border-stone-800 mb-3" class:rounded-full={!$siteSettings.aesthetic.industrial_styling}>
+							<Bell class="w-6 h-6 text-stone-600" />
 						</div>
-						<p class="text-text-dim text-[10px] font-jetbrains font-black uppercase tracking-[0.3em]">No_Signals_Detected</p>
+						<p class="text-stone-500 text-[9px] font-jetbrains font-bold uppercase tracking-[0.2em]">Buffer Empty</p>
 					</div>
 				{/if}
 			</div>

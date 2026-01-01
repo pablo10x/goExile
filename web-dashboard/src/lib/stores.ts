@@ -117,9 +117,11 @@ export interface Notification {
 	type: 'success' | 'error' | 'info' | 'warning';
 	message: string;
 	details?: string;
-	timeout?: number;
+	timeout: number;
 	timestamp?: number;
 }
+
+export type NotificationInput = Omit<Notification, 'id' | 'timeout' | 'timestamp'> & { timeout?: number };
 
 export const notifications = createNotificationStore();
 
@@ -400,7 +402,7 @@ function createNotificationStore() {
 	return {
 		subscribe,
 		history: { subscribe: history.subscribe },
-		add: (n: Omit<Notification, 'id'>) => {
+		add: (n: NotificationInput) => {
 			const id = crypto.randomUUID();
 			const notification = { ...n, id, timestamp: Date.now(), timeout: n.timeout ?? 5000 };
 
