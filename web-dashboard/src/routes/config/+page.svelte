@@ -818,27 +818,27 @@
 													<div class="min-w-0">
 														<div class="flex items-center gap-2 mb-1">
 															<span class="text-xs font-bold text-orange-500 font-mono uppercase">{config.key}</span>
-														<span class="text-[8px] bg-stone-800 text-text-dim px-1 py-0.5 rounded">{config.valueType}</span>
+															<span class="text-[8px] bg-stone-800 text-text-dim px-1 py-0.5 rounded">{config.valueType}</span>
+														</div>
+														<p class="text-[10px] text-text-dim italic mb-2 truncate uppercase tracking-tight">{config.description || 'NO_META_DATA'}</p>
+														<code class="text-[10px] text-stone-400 bg-stone-900/50 px-2 py-1 rounded block truncate font-mono">
+															{config.value}
+														</code>
 													</div>
-													<p class="text-[10px] text-text-dim italic mb-2 truncate uppercase tracking-tight">{config.description || 'NO_META_DATA'}</p>
-													<code class="text-[10px] text-stone-400 bg-stone-900/50 px-2 py-1 rounded block truncate font-mono">
-														{config.value}
-												</code>
+													<div class="flex gap-1">
+														<button onclick={() => openFirebaseModal('edit', config)} class="p-1.5 text-text-dim hover:text-white transition-colors"><Edit3 class="w-3.5 h-3.5"/></button>
+														<button onclick={() => deleteFirebaseParameter(config.key)} class="p-1.5 text-text-dim hover:text-danger transition-colors"><Trash2 class="w-3.5 h-3.5"/></button>
 													</div>
-												<div class="flex gap-1">
-													<button onclick={() => openFirebaseModal('edit', config)} class="p-1.5 text-text-dim hover:text-white transition-colors"><Edit3 class="w-3.5 h-3.5"/></button>
-													<button onclick={() => deleteFirebaseParameter(config.key)} class="p-1.5 text-text-dim hover:text-danger transition-colors"><Trash2 class="w-3.5 h-3.5"/></button>
 												</div>
 											</div>
-										</div>
-									{/each}
+										{/each}
 									</div>
-																</div>
-															</div>
-														{/if}
-													</div>
-												</div>
-											{/if}
+								</div>
+							</div>
+						{/if}
+					</div>
+				</div>
+			{/if}
 		</div>
 	{/if}
 </div>

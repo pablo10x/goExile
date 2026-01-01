@@ -81,10 +81,10 @@
 		class="fixed inset-0 z-[500] flex items-start justify-center pt-[15vh] px-4 bg-black/80 backdrop-blur-md font-jetbrains"
 		transition:fade={{ duration: 150 }}
 		onclick={close}
-		onkeydown={handleKeydown}
-		role="dialog"
-		aria-modal="true"
-		aria-labelledby="command-palette-title"
+		onkeydown={(e) => e.key === 'Escape' && close()}
+		role="button"
+		tabindex="0"
+		aria-label="Close command palette"
 	>
 		<div 
 			class="w-full max-w-2xl bg-stone-950 border border-stone-800 shadow-[0_0_100px_rgba(0,0,0,1)] overflow-hidden industrial-frame"

@@ -95,6 +95,9 @@
 	class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
 	onmouseenter={() => isHovered = true}
 	onmouseleave={() => isHovered = false}
+	role="button"
+	tabindex="0"
+	onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && (isHovered = !isHovered)}
 >
 	<!-- Tactical Corners -->
 	<div class="corner-tl"></div>

@@ -36,6 +36,11 @@ type LoggerService struct {
 var Logger = &LoggerService{}
 
 func (s *LoggerService) Log(level LogLevel, category LogCategory, msg string, details string, rPath, rMethod, clientIP string, statusCode int) {
+	// Re-determine category based on status code if it's an error
+	if statusCode >= 400 {
+		category = DetermineCategory(rPath, statusCode)
+	}
+
 	l := &models.SystemLog{
 		Timestamp: time.Now().UTC(),
 		Level:     string(level),
@@ -62,7 +67,16 @@ func (s *LoggerService) Log(level LogLevel, category LogCategory, msg string, de
 	}
 }
 
-func DetermineCategory(path string) LogCategory {
+func DetermineCategory(path string, statusCode int) LogCategory {
+	// Priority 1: Status Code Categorization
+	if statusCode >= 500 {
+		return LogCategoryInternal
+	}
+	if statusCode >= 400 {
+		return LogCategorySecurity
+	}
+
+	// Priority 2: Path based
 	if strings.HasPrefix(path, "/api/nodes") {
 		return LogCategoryNode
 	}

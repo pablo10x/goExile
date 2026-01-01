@@ -27,6 +27,12 @@ type Config struct {
 	InstancesDir      string // Directory where game server instances are spawned
 	EnrollmentKey     string // One-time enrollment key for initial registration
 	IsDraining        bool   // Drain mode status
+	
+	// New Settings
+	Tags              string // CSV tags
+	MaintenanceWindow string // Maintenance window string
+	ResourceLimits    string // JSON resource limits
+	PublicIP          string // Public IP override
 }
 
 // Package-level flag variables
@@ -77,6 +83,10 @@ func Load() (*Config, error) {
 		InstancesDir:      getEnv("INSTANCES_DIR", *instancesDirFlag),
 		GameDownloadToken: getEnv("GAME_DOWNLOAD_TOKEN", *gameDownloadTokenFlag),
 		IsDraining:        getEnv("IS_DRAINING", "false") == "true",
+		Tags:              getEnv("TAGS", ""),
+		MaintenanceWindow: getEnv("MAINTENANCE_WINDOW", ""),
+		ResourceLimits:    getEnv("RESOURCE_LIMITS", ""),
+		PublicIP:          getEnv("PUBLIC_IP", ""),
 	}
 
 	// Set defaults if not provided

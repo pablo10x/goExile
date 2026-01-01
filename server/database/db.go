@@ -40,9 +40,14 @@ func InitDB(dsn string) error {
 		}
 	}
 
-	DBConn.SetMaxOpenConns(25)
-	DBConn.SetMaxIdleConns(25)
-	DBConn.SetConnMaxLifetime(5 * time.Minute)
+	// Configurable pool settings
+	maxOpen := utils.GetEnvInt("DB_MAX_OPEN_CONNS", 25)
+	maxIdle := utils.GetEnvInt("DB_MAX_IDLE_CONNS", 25)
+	maxLifetime := utils.GetEnvDuration("DB_CONN_MAX_LIFETIME", 5*time.Minute)
+
+	DBConn.SetMaxOpenConns(maxOpen)
+	DBConn.SetMaxIdleConns(maxIdle)
+	DBConn.SetConnMaxLifetime(maxLifetime)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -161,6 +166,10 @@ func MigrateDB(db *sqlx.DB) error {
                 game_version TEXT,
                 api_key TEXT,
                 is_draining INTEGER DEFAULT 0,
+                tags TEXT,
+                maintenance_window TEXT,
+                resource_limits TEXT,
+                public_ip TEXT,
                 UNIQUE(host, port)
         )`, pkType),
 		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS server_versions (
@@ -252,6 +261,7 @@ func MigrateDB(db *sqlx.DB) error {
                 dest_port INTEGER NOT NULL,
                 protocol TEXT NOT NULL,
                 action TEXT NOT NULL,
+                details TEXT,
                 timestamp INTEGER NOT NULL,
                 FOREIGN KEY(rule_id) REFERENCES redeye_rules(id) ON DELETE SET NULL
         )`, pkType),
@@ -291,6 +301,7 @@ func MigrateDB(db *sqlx.DB) error {
 		"CREATE INDEX IF NOT EXISTS idx_instance_actions_node_instance ON instance_actions(node_id, instance_id, timestamp DESC)",
 		"CREATE INDEX IF NOT EXISTS idx_redeye_logs_timestamp ON redeye_logs(timestamp DESC)",
 		"CREATE INDEX IF NOT EXISTS idx_redeye_anticheat_timestamp ON redeye_anticheat_events(timestamp DESC)",
+		"CREATE INDEX IF NOT EXISTS idx_redeye_rules_active ON redeye_rules(enabled, action)",
 		"CREATE INDEX IF NOT EXISTS idx_todos_parent ON todos(parent_id)",
 		"CREATE INDEX IF NOT EXISTS idx_todo_comments_todo ON todo_comments(todo_id)",
 	}
@@ -315,6 +326,14 @@ func MigrateDB(db *sqlx.DB) error {
     
 	// Add is_draining to nodes if missing
 	_, _ = db.Exec("ALTER TABLE nodes ADD COLUMN is_draining INTEGER DEFAULT 0")
+	// Add new node settings if missing
+	_, _ = db.Exec("ALTER TABLE nodes ADD COLUMN tags TEXT")
+	_, _ = db.Exec("ALTER TABLE nodes ADD COLUMN maintenance_window TEXT")
+	_, _ = db.Exec("ALTER TABLE nodes ADD COLUMN resource_limits TEXT")
+	_, _ = db.Exec("ALTER TABLE nodes ADD COLUMN public_ip TEXT")
+
+	// Add details to redeye_logs if missing
+	_, _ = db.Exec("ALTER TABLE redeye_logs ADD COLUMN details TEXT")
     
 	return nil
 }
@@ -798,8 +817,8 @@ func SaveNode(db *sqlx.DB, s *models.Node) (int, error) {
 		defer func() { _ = tx.Rollback() }()
 
 		if s.ID == 0 {
-			query := `INSERT INTO nodes (name, region, host, port, max_instances, current_instances, status, last_seen, game_version, api_key)
-                                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+			query := `INSERT INTO nodes (name, region, host, port, max_instances, current_instances, status, last_seen, game_version, api_key, is_draining, tags, maintenance_window, resource_limits, public_ip)
+                                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
                                 ON CONFLICT(host, port) DO UPDATE SET
                                 name=excluded.name,
                                 region=excluded.region,
@@ -808,11 +827,16 @@ func SaveNode(db *sqlx.DB, s *models.Node) (int, error) {
                                 status=excluded.status,
                                 last_seen=excluded.last_seen,
                                 game_version=excluded.game_version,
-                                api_key=COALESCE(excluded.api_key, nodes.api_key)
+                                api_key=COALESCE(excluded.api_key, nodes.api_key),
+                                is_draining=excluded.is_draining,
+                                tags=excluded.tags,
+                                maintenance_window=excluded.maintenance_window,
+                                resource_limits=excluded.resource_limits,
+                                public_ip=excluded.public_ip
                                 RETURNING id`
 
 			var id int64
-			err = tx.QueryRow(query, s.Name, s.Region, s.Host, s.Port, s.MaxInstances, s.CurrentInstances, s.Status, s.LastSeen.Unix(), s.GameVersion, s.APIKey).Scan(&id)
+			err = tx.QueryRow(query, s.Name, s.Region, s.Host, s.Port, s.MaxInstances, s.CurrentInstances, s.Status, s.LastSeen.Unix(), s.GameVersion, s.APIKey, boolToInt(s.IsDraining), s.Tags, s.MaintenanceWindow, s.ResourceLimits, s.PublicIP).Scan(&id)
 			if err != nil {
 				return fmt.Errorf("upsert node: %w", err)
 			}
@@ -823,8 +847,8 @@ func SaveNode(db *sqlx.DB, s *models.Node) (int, error) {
 			return nil
 		}
 
-		query := `INSERT INTO nodes (id, name, region, host, port, max_instances, current_instances, status, last_seen, game_version, api_key)
-                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		query := `INSERT INTO nodes (id, name, region, host, port, max_instances, current_instances, status, last_seen, game_version, api_key, is_draining, tags, maintenance_window, resource_limits, public_ip)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
                         ON CONFLICT(id) DO UPDATE SET
                         name=excluded.name,
                         region=excluded.region,
@@ -835,10 +859,15 @@ func SaveNode(db *sqlx.DB, s *models.Node) (int, error) {
                         status=excluded.status,
                         last_seen=excluded.last_seen,
                         game_version=excluded.game_version,
-                        api_key=COALESCE(excluded.api_key, nodes.api_key)`
+                        api_key=COALESCE(excluded.api_key, nodes.api_key),
+                        is_draining=excluded.is_draining,
+                        tags=excluded.tags,
+                        maintenance_window=excluded.maintenance_window,
+                        resource_limits=excluded.resource_limits,
+                        public_ip=excluded.public_ip`
 
 		_, err = tx.Exec(query,
-			s.ID, s.Name, s.Region, s.Host, s.Port, s.MaxInstances, s.CurrentInstances, s.Status, s.LastSeen.Unix(), s.GameVersion, s.APIKey)
+			s.ID, s.Name, s.Region, s.Host, s.Port, s.MaxInstances, s.CurrentInstances, s.Status, s.LastSeen.Unix(), s.GameVersion, s.APIKey, boolToInt(s.IsDraining), s.Tags, s.MaintenanceWindow, s.ResourceLimits, s.PublicIP)
 		if err != nil {
 			return fmt.Errorf("upsert node (id): %w", err)
 		}
@@ -858,7 +887,7 @@ func SaveNode(db *sqlx.DB, s *models.Node) (int, error) {
 
 // LoadNodes returns all nodes from DB.
 func LoadNodes(db *sqlx.DB) ([]models.Node, error) {
-	rows, err := db.Queryx(`SELECT id, name, region, host, port, max_instances, current_instances, status, last_seen, game_version, api_key FROM nodes`)
+	rows, err := db.Queryx(`SELECT id, name, region, host, port, max_instances, current_instances, status, last_seen, game_version, api_key, is_draining, tags, maintenance_window, resource_limits, public_ip FROM nodes`)
 	if err != nil {
 		return nil, fmt.Errorf("query nodes: %w", err)
 	}
@@ -872,10 +901,14 @@ func LoadNodes(db *sqlx.DB) ([]models.Node, error) {
 		var gameVersion sql.NullString
 		var name sql.NullString
 		var apiKey sql.NullString
-		if err := rows.Scan(&s.ID, &name, &s.Region, &s.Host, &s.Port, &s.MaxInstances, &s.CurrentInstances, &s.Status, &lastSeenUnix, &gameVersion, &apiKey); err != nil {
+		var isDrainingInt int
+		var tags, maintenanceWindow, resourceLimits, publicIP sql.NullString
+
+		if err := rows.Scan(&s.ID, &name, &s.Region, &s.Host, &s.Port, &s.MaxInstances, &s.CurrentInstances, &s.Status, &lastSeenUnix, &gameVersion, &apiKey, &isDrainingInt, &tags, &maintenanceWindow, &resourceLimits, &publicIP); err != nil {
 			return nil, fmt.Errorf("scan: %w", err)
 		}
 		s.LastSeen = time.Unix(lastSeenUnix, 0).UTC()
+		s.IsDraining = isDrainingInt == 1
 		if gameVersion.Valid {
 			s.GameVersion = gameVersion.String
 		}
@@ -884,6 +917,18 @@ func LoadNodes(db *sqlx.DB) ([]models.Node, error) {
 		}
 		if apiKey.Valid {
 			s.APIKey = apiKey.String
+		}
+		if tags.Valid {
+			s.Tags = tags.String
+		}
+		if maintenanceWindow.Valid {
+			s.MaintenanceWindow = maintenanceWindow.String
+		}
+		if resourceLimits.Valid {
+			s.ResourceLimits = resourceLimits.String
+		}
+		if publicIP.Valid {
+			s.PublicIP = publicIP.String
 		}
 		out = append(out, s)
 	}
@@ -951,19 +996,23 @@ func GetInstanceActions(db *sqlx.DB, nodeID int, instanceID string) ([]models.In
 func GetNodeByID(db *sqlx.DB, id int) (*models.Node, error) {
 	var out *models.Node
 	do := func() error {
-		row := db.QueryRowx(`SELECT id, name, region, host, port, max_instances, current_instances, status, last_seen, game_version, api_key FROM nodes WHERE id = $1`, id)
+		row := db.QueryRowx(`SELECT id, name, region, host, port, max_instances, current_instances, status, last_seen, game_version, api_key, is_draining, tags, maintenance_window, resource_limits, public_ip FROM nodes WHERE id = $1`, id)
 		var s models.Node
 		var lastSeenUnix int64
 		var gameVersion sql.NullString
 		var name sql.NullString
 		var apiKey sql.NullString
-		if err := row.Scan(&s.ID, &name, &s.Region, &s.Host, &s.Port, &s.MaxInstances, &s.CurrentInstances, &s.Status, &lastSeenUnix, &gameVersion, &apiKey); err != nil {
+		var isDrainingInt int
+		var tags, maintenanceWindow, resourceLimits, publicIP sql.NullString
+
+		if err := row.Scan(&s.ID, &name, &s.Region, &s.Host, &s.Port, &s.MaxInstances, &s.CurrentInstances, &s.Status, &lastSeenUnix, &gameVersion, &apiKey, &isDrainingInt, &tags, &maintenanceWindow, &resourceLimits, &publicIP); err != nil {
 			if err == sql.ErrNoRows {
 				return nil // Return nil if not found, handled by caller
 			}
 			return fmt.Errorf("scan node: %w", err)
 		}
 		s.LastSeen = time.Unix(lastSeenUnix, 0).UTC()
+		s.IsDraining = isDrainingInt == 1
 		if gameVersion.Valid {
 			s.GameVersion = gameVersion.String
 		}
@@ -972,6 +1021,18 @@ func GetNodeByID(db *sqlx.DB, id int) (*models.Node, error) {
 		}
 		if apiKey.Valid {
 			s.APIKey = apiKey.String
+		}
+		if tags.Valid {
+			s.Tags = tags.String
+		}
+		if maintenanceWindow.Valid {
+			s.MaintenanceWindow = maintenanceWindow.String
+		}
+		if resourceLimits.Valid {
+			s.ResourceLimits = resourceLimits.String
+		}
+		if publicIP.Valid {
+			s.PublicIP = publicIP.String
 		}
 		out = &s
 		return nil
@@ -985,19 +1046,23 @@ func GetNodeByID(db *sqlx.DB, id int) (*models.Node, error) {
 func GetNodeByHostPort(db *sqlx.DB, host string, port int) (*models.Node, error) {
 	var out *models.Node
 	do := func() error {
-		row := db.QueryRowx(`SELECT id, name, region, host, port, max_instances, current_instances, status, last_seen, game_version, api_key FROM nodes WHERE host = $1 AND port = $2`, host, port)
+		row := db.QueryRowx(`SELECT id, name, region, host, port, max_instances, current_instances, status, last_seen, game_version, api_key, is_draining, tags, maintenance_window, resource_limits, public_ip FROM nodes WHERE host = $1 AND port = $2`, host, port)
 		var s models.Node
 		var lastSeenUnix int64
 		var gameVersion sql.NullString
 		var name sql.NullString
 		var apiKey sql.NullString
-		if err := row.Scan(&s.ID, &name, &s.Region, &s.Host, &s.Port, &s.MaxInstances, &s.CurrentInstances, &s.Status, &lastSeenUnix, &gameVersion, &apiKey); err != nil {
+		var isDrainingInt int
+		var tags, maintenanceWindow, resourceLimits, publicIP sql.NullString
+
+		if err := row.Scan(&s.ID, &name, &s.Region, &s.Host, &s.Port, &s.MaxInstances, &s.CurrentInstances, &s.Status, &lastSeenUnix, &gameVersion, &apiKey, &isDrainingInt, &tags, &maintenanceWindow, &resourceLimits, &publicIP); err != nil {
 			if err == sql.ErrNoRows {
 				return nil
 			}
 			return fmt.Errorf("scan node: %w", err)
 		}
 		s.LastSeen = time.Unix(lastSeenUnix, 0).UTC()
+		s.IsDraining = isDrainingInt == 1
 		if gameVersion.Valid {
 			s.GameVersion = gameVersion.String
 		}
@@ -1006,6 +1071,18 @@ func GetNodeByHostPort(db *sqlx.DB, host string, port int) (*models.Node, error)
 		}
 		if apiKey.Valid {
 			s.APIKey = apiKey.String
+		}
+		if tags.Valid {
+			s.Tags = tags.String
+		}
+		if maintenanceWindow.Valid {
+			s.MaintenanceWindow = maintenanceWindow.String
+		}
+		if resourceLimits.Valid {
+			s.ResourceLimits = resourceLimits.String
+		}
+		if publicIP.Valid {
+			s.PublicIP = publicIP.String
 		}
 		out = &s
 		return nil
@@ -1671,6 +1748,29 @@ func ExecuteSQL(db *sqlx.DB, query string) ([]map[string]interface{}, error) {
 }
 
 func GetTableCounts(db *sqlx.DB) (map[string]int, error) {
+	// Optimization: Use Postgres statistics if available for instant results
+	if db.DriverName() == "pgx" {
+		query := `
+			SELECT relname as table_name, n_live_tup as row_count
+			FROM pg_stat_user_tables
+			WHERE schemaname = 'public'
+		`
+		rows, err := db.Queryx(query)
+		if err == nil {
+			defer rows.Close()
+			counts := make(map[string]int)
+			for rows.Next() {
+				var name string
+				var count int
+				if err := rows.Scan(&name, &count); err == nil {
+					counts[name] = count
+				}
+			}
+			return counts, nil
+		}
+		// Fallback if stats query fails
+	}
+
 	tables, err := ListTables(db)
 	if err != nil {
 		return nil, err
@@ -1998,9 +2098,9 @@ func DeleteRedEyeRule(db *sqlx.DB, id int) error {
 // -- RedEye Logs --
 
 func SaveRedEyeLog(db *sqlx.DB, l *models.RedEyeLog) error {
-	query := `INSERT INTO redeye_logs (rule_id, source_ip, dest_port, protocol, action, timestamp) 
-              VALUES ($1, $2, $3, $4, $5, $6)`
-	_, err := db.Exec(query, l.RuleID, l.SourceIP, l.DestPort, l.Protocol, l.Action, l.Timestamp.Unix())
+	query := `INSERT INTO redeye_logs (rule_id, source_ip, dest_port, protocol, action, details, timestamp) 
+              VALUES ($1, $2, $3, $4, $5, $6, $7)`
+	_, err := db.Exec(query, l.RuleID, l.SourceIP, l.DestPort, l.Protocol, l.Action, l.Details, l.Timestamp.Unix())
 	return err
 }
 
@@ -2012,7 +2112,7 @@ func GetRedEyeLogs(db *sqlx.DB, limit, offset int) ([]models.RedEyeLog, int64, e
 		return nil, 0, err
 	}
 
-	query := fmt.Sprintf(`SELECT id, rule_id, source_ip, dest_port, protocol, action, timestamp 
+	query := fmt.Sprintf(`SELECT id, rule_id, source_ip, dest_port, protocol, action, details, timestamp 
                           FROM redeye_logs ORDER BY timestamp DESC LIMIT $%d OFFSET $%d`, 1, 2)
 
 	rows, err := db.Queryx(query, limit, offset)
@@ -2024,10 +2124,14 @@ func GetRedEyeLogs(db *sqlx.DB, limit, offset int) ([]models.RedEyeLog, int64, e
 	for rows.Next() {
 		var l models.RedEyeLog
 		var tsUnix int64
-		if err := rows.Scan(&l.ID, &l.RuleID, &l.SourceIP, &l.DestPort, &l.Protocol, &l.Action, &tsUnix); err != nil {
+		var details sql.NullString
+		if err := rows.Scan(&l.ID, &l.RuleID, &l.SourceIP, &l.DestPort, &l.Protocol, &l.Action, &details, &tsUnix); err != nil {
 			return nil, 0, err
 		}
 		l.Timestamp = time.Unix(tsUnix, 0).UTC()
+		if details.Valid {
+			l.Details = details.String
+		}
 		logs = append(logs, l)
 	}
 

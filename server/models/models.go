@@ -20,6 +20,13 @@ type Node struct {
 	LastSeen         time.Time `json:"last_seen"`
 	APIKey           string    `json:"-" db:"api_key"`
 	IsDraining       bool      `json:"is_draining" db:"is_draining"` // New: Drain Mode
+	
+	// Advanced Settings
+	Tags              string `json:"tags" db:"tags"`                           // CSV or JSON tags
+	MaintenanceWindow string `json:"maintenance_window" db:"maintenance_window"` // e.g. "02:00-04:00"
+	ResourceLimits    string `json:"resource_limits" db:"resource_limits"`     // JSON blob for limits
+	PublicIP          string `json:"public_ip" db:"public_ip"`                 // Public IP override
+
 	// System Metrics
 	CpuUsage    float64 `json:"cpu_usage"`  // Percent
 	MemUsed     uint64  `json:"mem_used"`   // Bytes
@@ -66,15 +73,23 @@ type InstanceAction struct {
 
 // EnrollmentKey represents a temporary key used for node enrollment
 type EnrollmentKey struct {
-	Key         string     `json:"key"`
-	ExpiresAt   time.Time  `json:"expires_at"`
-	CreatedAt   time.Time  `json:"created_at"`
-	CreatedBy   string     `json:"created_by"`
-	Used        bool       `json:"used"`
-	UsedAt      *time.Time `json:"used_at,omitempty"`
-	UsedBy      *int       `json:"used_by,omitempty"` // Node ID that used the key
-	Status      string     `json:"status"`            // "active", "pending", "approved", "expired"
-	NodeInfo    *struct {
+	Key            string     `json:"key"`
+	ExpiresAt      time.Time  `json:"expires_at"`
+	CreatedAt      time.Time  `json:"created_at"`
+	CreatedBy      string     `json:"created_by"`
+	Used           bool       `json:"used"`
+	UsedAt         *time.Time `json:"used_at,omitempty"`
+	UsedBy         *int       `json:"used_by,omitempty"` // Node ID that used the key
+	Status         string     `json:"status"`            // "active", "pending", "approved", "expired"
+	
+	// Advanced Enrollment Settings
+	AutoApprove    bool       `json:"auto_approve"`
+	AllowedRegions string     `json:"allowed_regions"` // CSV of allowed regions
+	Tags           string     `json:"tags"`            // Tags to apply to the node
+	MaxUsages      int        `json:"max_usages"`      // Default 1
+	UsageCount     int        `json:"usage_count"`     // Track usages
+
+	NodeInfo       *struct {
 		ID           int    `json:"id,omitempty"`
 		Region       string `json:"region"`
 		Host         string `json:"host"`
@@ -166,6 +181,7 @@ type RedEyeLog struct {
 	DestPort  int       `json:"dest_port" db:"dest_port"`
 	Protocol  string    `json:"protocol" db:"protocol"`
 	Action    string    `json:"action" db:"action"`
+	Details   string    `json:"details" db:"details"`
 	Timestamp time.Time `json:"timestamp" db:"timestamp"`
 }
 

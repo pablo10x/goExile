@@ -27,10 +27,12 @@ func GetRedEyeStatsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	engineStats := GetEngineStats()
+
 	// Add dynamic system info
 	response := map[string]interface{}{
 		"total_rules":      stats.TotalRules,
-		"active_bans":      stats.ActiveBans,
+		"active_bans":      stats.ActiveBans, // DB persisted bans
 		"events_24h":       stats.Events24h,
 		"logs_24h":         stats.Logs24h,
 		"reputation_count": stats.ReputationCount,
@@ -41,6 +43,10 @@ func GetRedEyeStatsHandler(w http.ResponseWriter, r *http.Request) {
 		"system_error":     RedEyeError,
 		"node_id":          "MASTER_RE_01",
 		"crc":              "0x8F2A11",
+		// Real-time Engine Metrics
+		"rt_active_trackers": engineStats["active_trackers"],
+		"rt_queue_depth":     engineStats["queue_depth"],
+		"rt_cached_bans":     engineStats["cached_bans"],
 	}
 
 	utils.WriteJSON(w, http.StatusOK, response)
@@ -212,40 +218,18 @@ func ReportAnticheatEventHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	event.Timestamp = time.Now()
 
+	// 1. Persist detailed evidence to permanent record
 	if err := database.SaveAnticheatEvent(database.DBConn, &event); err != nil {
 		utils.WriteError(w, r, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	// Logic for auto-banning based on reputation
-	if event.Severity >= 5 {
-		rep, _ := database.GetIPReputation(database.DBConn, event.ClientIP)
-		if rep == nil {
-			rep = &models.RedEyeIPReputation{
-				IP:              event.ClientIP,
-				ReputationScore: 0,
-				IsBanned:        false,
-				LastSeen:        time.Now(),
-				TotalEvents:     0,
-			}
-		}
+	// 2. Feed the Real-time Engine
+	// Severity 1-100. We multiply by 2 for reputation impact (e.g. 50 severity = 100 score = instant ban).
+	details := fmt.Sprintf("[%s] Player: %s - %s", event.EventType, event.PlayerID, event.Details)
+	IngestSignal(event.ClientIP, SignalTypeReport, event.Severity * 2, details)
 
-		rep.ReputationScore += event.Severity * 2
-		rep.TotalEvents++
-		rep.LastSeen = time.Now()
-
-		if rep.ReputationScore >= 100 && !rep.IsBanned {
-			rep.IsBanned = true
-			rep.BanReason = fmt.Sprintf("Auto-banned due to high severity anticheat event: %s", event.EventType)
-			// System call to block IP
-			utils.BlockIPSystem(event.ClientIP)
-			defer RefreshBanCache(database.DBConn)
-		}
-
-		database.UpdateIPReputation(database.DBConn, rep)
-	}
-
-	utils.WriteJSON(w, http.StatusOK, map[string]string{"status": "reported"})
+	utils.WriteJSON(w, http.StatusOK, map[string]string{"status": "reported", "action": "processed_by_engine"})
 }
 
 func GetAnticheatEventsHandler(w http.ResponseWriter, r *http.Request) {

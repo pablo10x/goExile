@@ -80,6 +80,8 @@
 	class:heartbeat-pulse={instance.status === 'Running' && !$siteSettings.aesthetic.reduced_motion}
 	onmouseenter={() => isHovered = true}
 	onmouseleave={() => isHovered = false}
+	role="region"
+	aria-label={`Instance ${instance.id}`}
 >
 	<!-- Binary Animation Overlays -->
 	{#if instance.status === 'Running' && !$siteSettings.aesthetic.reduced_motion && isHovered}

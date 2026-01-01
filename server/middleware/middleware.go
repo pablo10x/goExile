@@ -7,6 +7,8 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"sync"
+	"time"
 
 	"exile/server/auth"
 	"exile/server/logging"
@@ -113,7 +115,7 @@ func StatsMiddleware(next http.Handler) http.Handler {
 			}
 
 			clientIP := utils.GetClientIP(r)
-			category := logging.DetermineCategory(r.URL.Path)
+			category := logging.DetermineCategory(r.URL.Path, sw.statusCode)
 
 			// Log to persistent storage and update stats
 			logging.Logger.Log(logging.LogLevelError, category, message, details, r.URL.Path, r.Method, clientIP, sw.statusCode)
@@ -198,6 +200,85 @@ func Auth_GameMiddleware(gameAPIKey string) func(http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+// GlobalRateLimitMiddleware applies a blanket rate limit to all API requests.
+func GlobalRateLimitMiddleware(next http.Handler) http.Handler {
+	// Simple in-memory token bucket
+	type clientLimiter struct {
+		tokens     float64
+		lastUpdate time.Time
+		mu         sync.Mutex
+	}
+	
+	var (
+		limiters = make(map[string]*clientLimiter)
+		mu       sync.RWMutex
+	)
+
+	// Settings: 100 requests per minute, burst of 20
+	const (
+		rate  = 100.0 / 60.0 // tokens per second
+		burst = 20.0
+	)
+
+	go func() {
+		// Cleanup routine
+		for {
+			time.Sleep(10 * time.Minute)
+			mu.Lock()
+			for ip, lim := range limiters {
+				if time.Since(lim.lastUpdate) > 10*time.Minute {
+					delete(limiters, ip)
+				}
+			}
+			mu.Unlock()
+		}
+	}()
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Skip rate limiting for static assets or non-API routes if applied globally
+		if !strings.HasPrefix(r.URL.Path, "/api") {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		ip := utils.GetClientIP(r)
+
+		mu.RLock()
+		lim, exists := limiters[ip]
+		mu.RUnlock()
+
+		if !exists {
+			mu.Lock()
+			if lim, exists = limiters[ip]; !exists {
+				lim = &clientLimiter{
+					tokens:     burst,
+					lastUpdate: time.Now(),
+				}
+				limiters[ip] = lim
+			}
+			mu.Unlock()
+		}
+
+		lim.mu.Lock()
+		now := time.Now()
+		elapsed := now.Sub(lim.lastUpdate).Seconds()
+		lim.tokens += elapsed * rate
+		if lim.tokens > burst {
+			lim.tokens = burst
+		}
+		lim.lastUpdate = now
+
+		if lim.tokens >= 1 {
+			lim.tokens--
+			lim.mu.Unlock()
+			next.ServeHTTP(w, r)
+		} else {
+			lim.mu.Unlock()
+			utils.WriteError(w, r, http.StatusTooManyRequests, "global rate limit exceeded")
+		}
+	})
 }
 
 // SecurityHeadersMiddleware adds security-related headers to responses.

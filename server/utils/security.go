@@ -234,6 +234,26 @@ func SanitizeDBError(err error) string {
 	return "database error"
 }
 
+// Basic regex for column definition: "name TYPE [constraints]"
+// Allow alphanumeric, spaces, and some special chars for types like VARCHAR(255)
+var validColumnDefRegex = regexp.MustCompile(`^[a-zA-Z0-9_]+(\s+[a-zA-Z0-9_()\[\]]+)+(\s+(NOT NULL|NULL|DEFAULT|PRIMARY KEY|UNIQUE|REFERENCES|CHECK|AUTOINCREMENT))*$`)
+
 func ValidateColumnDefinition(def string) error {
+	// Simple validation to prevent obvious injection
+	// This is not a full SQL parser, but it blocks dangerous characters
+	if strings.ContainsAny(def, ";--") {
+		return fmt.Errorf("invalid characters in column definition")
+	}
+	
+	// Ensure it starts with a valid identifier
+	parts := strings.Fields(def)
+	if len(parts) < 2 {
+		return fmt.Errorf("invalid column definition format")
+	}
+	
+	if err := ValidateIdentifier(parts[0]); err != nil {
+		return fmt.Errorf("invalid column name: %w", err)
+	}
+
 	return nil
 }

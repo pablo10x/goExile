@@ -124,7 +124,7 @@ func DeleteNode(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, map[string]string{"message": "deleted"})
 }
 
-// UpdateNodeSettings updates the configuration for a node (Region, MaxInstances, DrainMode).
+// UpdateNodeSettings updates the configuration for a node.
 func UpdateNodeSettings(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := utils.ParseID(vars["id"])
@@ -134,9 +134,13 @@ func UpdateNodeSettings(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		Region       string `json:"region"`
-		MaxInstances int    `json:"max_instances"`
-		IsDraining   bool   `json:"is_draining"`
+		Region            string `json:"region"`
+		MaxInstances      int    `json:"max_instances"`
+		IsDraining        bool   `json:"is_draining"`
+		Tags              string `json:"tags"`
+		MaintenanceWindow string `json:"maintenance_window"`
+		ResourceLimits    string `json:"resource_limits"`
+		PublicIP          string `json:"public_ip"`
 	}
 	if err := utils.DecodeJSON(r, &req); err != nil {
 		utils.WriteError(w, r, http.StatusBadRequest, err.Error())
@@ -158,6 +162,10 @@ func UpdateNodeSettings(w http.ResponseWriter, r *http.Request) {
 	s.Region = req.Region
 	s.MaxInstances = req.MaxInstances
 	s.IsDraining = req.IsDraining
+	s.Tags = req.Tags
+	s.MaintenanceWindow = req.MaintenanceWindow
+	s.ResourceLimits = req.ResourceLimits
+	s.PublicIP = req.PublicIP
 
 	// Persist to DB
 	if database.DBConn != nil {
@@ -168,20 +176,25 @@ func UpdateNodeSettings(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Send update to Node via WS
+	// The Node agent needs to support these new fields in the update_config payload
 	err = ws.GlobalWSManager.SendCommand(id, "update_config", map[string]interface{}{
-		"region":        req.Region,
-		"max_instances": req.MaxInstances,
-		"is_draining":   req.IsDraining,
+		"region":             req.Region,
+		"max_instances":      req.MaxInstances,
+		"is_draining":        req.IsDraining,
+		"tags":               req.Tags,
+		"maintenance_window": req.MaintenanceWindow,
+		"resource_limits":    req.ResourceLimits,
+		"public_ip":          req.PublicIP,
 	})
 
+	response := map[string]string{"message": "settings updated"}
 	if err != nil {
-		// Log warning but don't fail the request as DB is updated
-		// The node will sync on next heartbeat/restart eventually if we implement polling,
-		// but for now, this is a "best effort" push.
+		// Log warning and return it to the client so they know the node might not be updated yet
 		log.Printf("Warning: Failed to push config update to node %d: %v", id, err)
+		response["warning"] = "Database updated, but failed to push real-time update to node. Changes will apply on next restart/heartbeat."
 	}
 
-	utils.WriteJSON(w, http.StatusOK, map[string]string{"message": "settings updated"})
+	utils.WriteJSON(w, http.StatusOK, response)
 }
 
 // SpawnNodeInstance triggers a new game instance on the specified node.

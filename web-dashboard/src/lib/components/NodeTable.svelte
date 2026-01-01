@@ -167,16 +167,15 @@
 					</div>
 
 					<div class="min-w-0 flex-1">
-						<div class="flex items-center gap-4 flex-wrap mb-2">
-							<h3 
-								class="text-2xl md:text-3xl font-heading font-black italic uppercase text-white tracking-tighter group-hover:text-rust transition-colors cursor-pointer"
-								onclick={() => toggleRow(node.id)}
-								role="button"
-								tabindex="0"
-								onkeydown={(e) => e.key === 'Enter' && toggleRow(node.id)}
-							>
-								{node.name || node.region}
-							</h3>
+							<div class="flex items-center gap-4 flex-wrap mb-2">
+								<h3>
+									<button 
+										class="text-2xl md:text-3xl font-heading font-black italic uppercase text-white tracking-tighter group-hover:text-rust transition-colors cursor-pointer bg-transparent border-none p-0 text-left"
+										onclick={() => toggleRow(node.id)}
+									>
+										{node.name || node.region}
+									</button>
+								</h3>
 							<span class="text-[9px] bg-stone-900 border border-stone-800 text-stone-500 px-3 py-1 font-black uppercase tracking-widest">Node {node.id.toString().padStart(3, '0')}</span>
 							<div
 								class={`px-3 py-1 font-jetbrains font-bold text-[9px] uppercase flex items-center gap-2 border ${getStatusClass(node.status)}`}

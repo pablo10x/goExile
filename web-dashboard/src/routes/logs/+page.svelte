@@ -399,6 +399,9 @@
 			<div
 				class="bg-[var(--terminal-bg)] border border-stone-800 rounded-none shadow-[0_0_100px_rgba(0,0,0,0.8)] w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden industrial-frame"
 				onclick={(e) => e.stopPropagation()}
+				onkeydown={(e) => e.stopPropagation()}
+				role="document"
+				tabindex="0"
 			>
 				<div
 					class="p-8 border-b border-stone-800 bg-[var(--header-bg)] flex justify-between items-start"

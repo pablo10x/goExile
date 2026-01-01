@@ -29,7 +29,7 @@ func NewEnrollmentManager() *EnrollmentManager {
 }
 
 // GenerateKey creates a new enrollment key that expires in the given duration
-func (em *EnrollmentManager) GenerateKey(createdBy string, duration time.Duration) (*models.EnrollmentKey, error) {
+func (em *EnrollmentManager) GenerateKey(createdBy string, duration time.Duration, autoApprove bool, allowedRegions string, tags string, maxUsages int) (*models.EnrollmentKey, error) {
 	em.mu.Lock()
 	defer em.mu.Unlock()
 
@@ -41,13 +41,22 @@ func (em *EnrollmentManager) GenerateKey(createdBy string, duration time.Duratio
 
 	key := hex.EncodeToString(bytes)
 
+	if maxUsages <= 0 {
+		maxUsages = 1
+	}
+
 	enrollmentKey := &models.EnrollmentKey{
-		Key:       key,
-		CreatedAt: time.Now(),
-		ExpiresAt: time.Now().Add(duration),
-		CreatedBy: createdBy,
-		Used:      false,
-		Status:    "active",
+		Key:            key,
+		CreatedAt:      time.Now(),
+		ExpiresAt:      time.Now().Add(duration),
+		CreatedBy:      createdBy,
+		Used:           false,
+		Status:         "active",
+		AutoApprove:    autoApprove,
+		AllowedRegions: allowedRegions,
+		Tags:           tags,
+		MaxUsages:      maxUsages,
+		UsageCount:     0,
 	}
 
 	em.keys[key] = enrollmentKey
@@ -70,12 +79,26 @@ func (em *EnrollmentManager) ClaimKey(key string, host string, port int) (*model
 		return nil, fmt.Errorf("enrollment key has expired")
 	}
 
-	if enrollmentKey.Used {
-		return nil, fmt.Errorf("enrollment key has already been used")
+	if enrollmentKey.UsageCount >= enrollmentKey.MaxUsages {
+		return nil, fmt.Errorf("enrollment key has been fully consumed")
 	}
 
-	if enrollmentKey.Status != "active" && enrollmentKey.Status != "pending" {
-		return nil, fmt.Errorf("enrollment key is in invalid status: %s", enrollmentKey.Status)
+	// For multi-use keys, we don't block concurrent pending states easily unless we track per-request
+	// But standard flow: 1 key = 1 node attempt at a time usually?
+	// Actually, if MaxUsages > 1, multiple nodes might claim it.
+	// We'll allow it to stay "active" until fully used?
+	// Current logic sets status to "pending". This effectively locks the key for ONE node.
+	// To support multi-use properly, we'd need a list of Pending nodes per key.
+	// For now, let's keep it simple: If Status is Pending, it's busy.
+	// UNLESS MaxUsages > 1, then maybe we clone the key state?
+	
+	// Simplification: Multi-use keys just remain "active" and we spawn a transient "pending" record?
+	// That requires architectural change.
+	// Let's stick to: ClaimKey locks it for this specific request.
+	
+	if enrollmentKey.Status != "active" {
+		// If it's pending/approved, it's busy.
+		return nil, fmt.Errorf("enrollment key is currently in use (status: %s)", enrollmentKey.Status)
 	}
 
 	// Update status to pending and store initial info
@@ -109,18 +132,31 @@ func (em *EnrollmentManager) ApproveKey(key string, region string, maxInstances 
 		return nil, fmt.Errorf("key is not in pending status")
 	}
 
-	// Mark as used/approved
+	// Update usage
+	enrollmentKey.UsageCount++
+	
+	// Mark as used for this instance
 	now := time.Now()
-	enrollmentKey.Used = true
 	enrollmentKey.UsedAt = &now
-	enrollmentKey.Status = "approved"
-	enrollmentKey.UsedBy = &nodeID
+	enrollmentKey.UsedBy = &nodeID // Last used by
 
 	if enrollmentKey.NodeInfo != nil {
 		enrollmentKey.NodeInfo.ID = nodeID
 		enrollmentKey.NodeInfo.Region = region
 		enrollmentKey.NodeInfo.MaxInstances = maxInstances
 		enrollmentKey.NodeInfo.APIKey = apiKey
+	}
+
+	// If key allows more usages, reset to active
+	if enrollmentKey.UsageCount < enrollmentKey.MaxUsages {
+		enrollmentKey.Status = "active"
+		enrollmentKey.Used = false // Not fully used yet
+		// Clear NodeInfo for next user?
+		// Yes, otherwise next ClaimKey sees old data
+		enrollmentKey.NodeInfo = nil
+	} else {
+		enrollmentKey.Status = "approved"
+		enrollmentKey.Used = true
 	}
 
 	return enrollmentKey, nil

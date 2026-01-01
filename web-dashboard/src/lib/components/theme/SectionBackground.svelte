@@ -10,7 +10,7 @@
 		mixBlend?: string;
 	}>();
 
-	let currentSettings = $derived(($backgroundConfig.settings as any)[type] || { speed: 1, color: '#f97316', opacity: 0.5, scale: 1 });
+	let currentSettings = $derived($backgroundConfig.settings[type as keyof typeof $backgroundConfig.settings] || { speed: 1, color: '#f97316', opacity: 0.5, scale: 1 });
 	let activeSpeed = $derived(currentSettings.speed ?? 1);
 	let activeColor = $derived(currentSettings.color ?? '#f97316');
 	let activeOpacity = $derived(currentSettings.opacity ?? 0.5);

@@ -538,7 +538,7 @@ func run() error {
 
 	srv := &http.Server{
 		Addr:         fmt.Sprintf("%s:%s", serverHost, port),
-		Handler:      middleware.SecurityHeadersMiddleware(GzipMiddleware(redeye.RedEyeMiddleware(middleware.StatsMiddleware(router)))),
+		Handler:      middleware.SecurityHeadersMiddleware(GzipMiddleware(redeye.RedEyeMiddleware(middleware.GlobalRateLimitMiddleware(middleware.StatsMiddleware(router))))),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
@@ -567,6 +567,9 @@ func run() error {
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer shutdownCancel()
+
+	// Stop RedEye Engine
+	redeye.StopRedEye()
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		log.Printf("error during server shutdown: %v", err)

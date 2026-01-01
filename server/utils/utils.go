@@ -78,9 +78,27 @@ func DecodeJSON(r *http.Request, v interface{}) error {
 
 // GetEnv retrieves the value of the environment variable named by the key.
 // If the variable is present, the value is returned. Otherwise, defaultVal is returned.
-func GetEnv(key, defaultVal string) string {
+func GetEnv(key, fallback string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
 	}
-	return defaultVal
+	return fallback
+}
+
+func GetEnvInt(key string, fallback int) int {
+	if value, exists := os.LookupEnv(key); exists {
+		if i, err := strconv.Atoi(value); err == nil {
+			return i
+		}
+	}
+	return fallback
+}
+
+func GetEnvDuration(key string, fallback time.Duration) time.Duration {
+	if value, exists := os.LookupEnv(key); exists {
+		if d, err := time.ParseDuration(value); err == nil {
+			return d
+		}
+	}
+	return fallback
 }

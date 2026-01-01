@@ -417,14 +417,13 @@
 
 											<div class="min-w-0 flex-1">
 												<div class="flex items-center gap-3 flex-wrap">
-													<h3 
-														class="text-2xl sm:text-3xl font-heading font-black tracking-tighter text-white uppercase leading-none group-hover:text-rust transition-all duration-500 truncate cursor-pointer"
-														onclick={() => toggleExpand(player.id)}
-														role="button"
-														tabindex="0"
-														onkeydown={(e) => e.key === 'Enter' && toggleExpand(player.id)}
-													>
-														{player.name}
+													<h3>
+														<button 
+															class="text-2xl sm:text-3xl font-heading font-black tracking-tighter text-white uppercase leading-none group-hover:text-rust transition-all duration-500 truncate cursor-pointer bg-transparent border-none p-0 text-left"
+															onclick={() => toggleExpand(player.id)}
+														>
+															{player.name}
+														</button>
 													</h3>
 													{#if player.banned}
 														<div class="bg-danger text-white text-[7px] font-black px-2 py-0.5 tracking-[0.2em] flex items-center gap-1 shadow-lg shadow-red-900/40 border border-red-400/30">

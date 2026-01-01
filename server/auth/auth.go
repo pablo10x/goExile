@@ -37,15 +37,17 @@ type AuthConfig struct {
 }
 
 type SessionData struct {
-	Expiry    time.Time
-	AuthStep  string
-	EmailCode string
+	Expiry     time.Time
+	LastActive time.Time
+	AuthStep   string
+	EmailCode  string
 }
 
 type SessionStore struct {
-	mu          sync.RWMutex
-	sessions    map[string]SessionData
-	maxSessions int
+	mu               sync.RWMutex
+	sessions         map[string]SessionData
+	maxSessions      int
+	inactivityTimeout time.Duration
 }
 
 func NewSessionStore(isProduction bool) *SessionStore {
@@ -54,8 +56,9 @@ func NewSessionStore(isProduction bool) *SessionStore {
 		max = 1
 	}
 	return &SessionStore{
-		sessions:    make(map[string]SessionData),
-		maxSessions: max,
+		sessions:          make(map[string]SessionData),
+		maxSessions:       max,
+		inactivityTimeout: 1 * time.Hour,
 	}
 }
 
@@ -69,19 +72,31 @@ func (ss *SessionStore) CreateSession(initialStep string) (string, error) {
 	ss.mu.Lock()
 	defer ss.mu.Unlock()
 	ss.sessions[sessionID] = SessionData{
-		Expiry:   time.Now().Add(24 * time.Hour),
-		AuthStep: initialStep,
+		Expiry:     time.Now().Add(24 * time.Hour),
+		LastActive: time.Now(),
+		AuthStep:   initialStep,
 	}
 	return sessionID, nil
 }
 
 func (ss *SessionStore) ValidateSession(sessionID string) (bool, string) {
-	ss.mu.RLock()
-	defer ss.mu.RUnlock()
+	ss.mu.Lock()
+	defer ss.mu.Unlock()
 	data, exists := ss.sessions[sessionID]
 	if !exists || time.Now().After(data.Expiry) {
 		return false, ""
 	}
+
+	// Check inactivity timeout
+	if time.Since(data.LastActive) > ss.inactivityTimeout {
+		delete(ss.sessions, sessionID)
+		return false, ""
+	}
+
+	// Update last active time
+	data.LastActive = time.Now()
+	ss.sessions[sessionID] = data
+
 	return true, data.AuthStep
 }
 
@@ -166,7 +181,14 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, cfg AuthConfig, ss *Ses
 			step = AuthStepTOTP
 		}
 		sid, _ := ss.CreateSession(step)
-		http.SetCookie(w, &http.Cookie{Name: "session", Value: sid, Path: "/", HttpOnly: true})
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session",
+			Value:    sid,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   cfg.IsProduction,
+			SameSite: http.SameSiteStrictMode,
+		})
 
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]string{

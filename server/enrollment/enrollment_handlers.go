@@ -24,11 +24,29 @@ func GenerateEnrollmentKeyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var req struct {
+		Duration       string `json:"duration"` // e.g. "2m", "24h"
+		AutoApprove    bool   `json:"auto_approve"`
+		AllowedRegions string `json:"allowed_regions"`
+		Tags           string `json:"tags"`
+		MaxUsages      int    `json:"max_usages"`
+	}
+
+	// Try to decode JSON, ignore error if body is empty (use defaults)
+	_ = utils.DecodeJSON(r, &req)
+
+	// Default duration 24h if not specified or invalid
+	duration := 24 * time.Hour
+	if req.Duration != "" {
+		if d, err := time.ParseDuration(req.Duration); err == nil {
+			duration = d
+		}
+	}
+
 	// Get the user from the session (could be enhanced to get from context)
 	createdBy := "admin"
 
-	// Generate a key that expires in 2 minutes
-	key, err := enrollmentManager.GenerateKey(createdBy, 2*time.Minute)
+	key, err := enrollmentManager.GenerateKey(createdBy, duration, req.AutoApprove, req.AllowedRegions, req.Tags, req.MaxUsages)
 	if err != nil {
 		utils.WriteError(w, r, http.StatusInternalServerError, "failed to generate enrollment key")
 		return
@@ -206,6 +224,54 @@ func RegisterNodeWithKeyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Auto-Approve Logic
+	if key.AutoApprove {
+		// Generate API Key
+		apiKey, err := utils.GenerateRandomKey(32)
+		if err != nil {
+			utils.WriteError(w, r, http.StatusInternalServerError, "failed to generate api key")
+			return
+		}
+
+		// Register Node
+		s := models.Node{
+			Region:           "Auto-Enrolled", // Default region
+			Host:             req.Host,
+			Port:             req.Port,
+			MaxInstances:     10, // Default safe limit
+			CurrentInstances: 0,
+			Status:           "Online", // Mark online immediately
+			LastSeen:         time.Now(),
+			APIKey:           apiKey,
+			Tags:             key.Tags,
+		}
+
+		id, err := registry.GlobalRegistry.Register(&s)
+		if err != nil {
+			utils.WriteError(w, r, http.StatusInternalServerError, "failed to auto-register node: "+err.Error())
+			return
+		}
+
+		// Mark key as used/approved
+		_, err = enrollmentManager.ApproveKey(req.Key, s.Region, s.MaxInstances, id, apiKey)
+		if err != nil {
+			utils.WriteError(w, r, http.StatusInternalServerError, "failed to approve key: "+err.Error())
+			return
+		}
+
+		registry.GlobalStats.UpdateActiveNodes(len(registry.GlobalRegistry.List()))
+
+		utils.WriteJSON(w, http.StatusOK, map[string]interface{}{
+			"status":        "approved",
+			"id":            id,
+			"api_key":       apiKey,
+			"region":        s.Region,
+			"max_instances": s.MaxInstances,
+			"message":       "Node auto-approved and registered",
+		})
+		return
+	}
+
 	// Claim/Update pending status
 	_, err := enrollmentManager.ClaimKey(req.Key, req.Host, req.Port)
 	if err != nil {
@@ -268,6 +334,7 @@ func ApproveEnrollmentHandler(w http.ResponseWriter, r *http.Request) {
 		Status:           "Offline",
 		LastSeen:         time.Now(),
 		APIKey:           apiKey,
+		Tags:             enrollKey.Tags, // Inherit tags from enrollment key
 	}
 
 	// Register the node in the global registry (persists to DB)

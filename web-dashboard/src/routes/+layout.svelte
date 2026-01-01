@@ -386,7 +386,7 @@
 		}
 	}
 
-	let auth = $derived(get(isAuthenticated));
+
 
 	onMount(() => {
 		const savedTheme = localStorage.getItem('theme');
@@ -564,7 +564,7 @@
 		</div>
 	</div>
 {:else}
-	{#if auth && page.url.pathname !== '/login'}
+	{#if $isAuthenticated && page.url.pathname !== '/login'}
 		<div class="relative min-h-screen {localSiteSettings?.aesthetic?.crt_effect ? 'crt-container' : ''} {localSiteSettings?.aesthetic?.crt_curve ? 'crt-curve' : ''} {localSiteSettings?.aesthetic?.panic_mode ? 'panic-mode' : ''}">
 			<!-- Solid Background Layer -->
 			<div class="fixed inset-0 z-[-100] bg-[var(--bg-color)]"></div>

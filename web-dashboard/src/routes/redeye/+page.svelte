@@ -955,14 +955,13 @@
 <!-- Modal -->
 {#if showModal}
 	<div
-		class="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
+		class="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
 		transition:fade={{ duration: 150 }}
 		onclick={() => (showModal = false)}
+		onkeydown={(e) => e.key === 'Escape' && (showModal = false)}
 		role="button"
 		tabindex="0"
-		onkeydown={(e) => {
-			if (e.key === 'Escape') showModal = false;
-		}}
+		aria-label="Close modal"
 	>
 		<div
 			class="bg-[var(--terminal-bg)] border border-danger/30 rounded-none shadow-[0_0_100px_rgba(0,0,0,0.8)] w-full max-w-lg overflow-hidden relative industrial-frame"
@@ -1053,9 +1052,9 @@
 					/>
 				</div>
 
-				<div class="space-y-3">
-					<label class="text-[10px] font-black text-text-dim uppercase tracking-widest ml-1"
-						>Action Protocol</label
+				<div class="space-y-3" role="group" aria-labelledby="action-protocol-label">
+					<span id="action-protocol-label" class="text-[10px] font-black text-text-dim uppercase tracking-widest ml-1 block"
+						>Action Protocol</span
 					>
 					<div class="grid grid-cols-3 gap-2">
 						{#each ['ALLOW', 'DENY', 'RATE_LIMIT'] as action}

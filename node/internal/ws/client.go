@@ -457,9 +457,13 @@ func (c *Client) handleMessage(msg Message) {
 
 	case "update_config":
 		var req struct {
-			Region       string `json:"region"`
-			MaxInstances int    `json:"max_instances"`
-			IsDraining   bool   `json:"is_draining"`
+			Region            string `json:"region"`
+			MaxInstances      int    `json:"max_instances"`
+			IsDraining        bool   `json:"is_draining"`
+			Tags              string `json:"tags"`
+			MaintenanceWindow string `json:"maintenance_window"`
+			ResourceLimits    string `json:"resource_limits"`
+			PublicIP          string `json:"public_ip"`
 		}
 		if err := json.Unmarshal(msg.Payload, &req); err != nil {
 			c.logger.Error("Failed to unmarshal update_config payload", "error", err)
@@ -476,6 +480,10 @@ func (c *Client) handleMessage(msg Message) {
 			c.config.MaxInstances = req.MaxInstances
 		}
 		c.config.IsDraining = req.IsDraining
+		c.config.Tags = req.Tags
+		c.config.MaintenanceWindow = req.MaintenanceWindow
+		c.config.ResourceLimits = req.ResourceLimits
+		c.config.PublicIP = req.PublicIP
 
 		// Persist to .env
 		updates := map[string]string{}
@@ -486,6 +494,18 @@ func (c *Client) handleMessage(msg Message) {
 			updates["MAX_INSTANCES"] = strconv.Itoa(req.MaxInstances)
 		}
 		updates["IS_DRAINING"] = strconv.FormatBool(req.IsDraining)
+		if req.Tags != "" {
+			updates["TAGS"] = req.Tags
+		}
+		if req.MaintenanceWindow != "" {
+			updates["MAINTENANCE_WINDOW"] = req.MaintenanceWindow
+		}
+		if req.ResourceLimits != "" {
+			updates["RESOURCE_LIMITS"] = req.ResourceLimits
+		}
+		if req.PublicIP != "" {
+			updates["PUBLIC_IP"] = req.PublicIP
+		}
 
 		if err := config.SaveConfigToEnv(updates); err != nil {
 			c.logger.Error("Failed to save updated config to .env", "error", err)
