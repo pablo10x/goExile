@@ -438,10 +438,9 @@
 		</div>
 	</div>
 {:else}
-			{#if $isAuthenticated && page.url.pathname !== '/login'}
-				<div class="relative min-h-screen crt-container">
-					<!-- Solid Background Layer -->
-					<div class="fixed inset-0 z-[-100] bg-[#18181b]"></div>
+				{#if $isAuthenticated && page.url.pathname !== '/login'}
+					<div class="relative min-h-screen">
+						<!-- Solid Background Layer -->					<div class="fixed inset-0 z-[-100] bg-[#18181b]"></div>
 		
 					<!-- System Ticker Header -->
 					<div class="fixed top-0 left-0 right-0 h-7 bg-black/80 border-b border-stone-800 z-[120] flex items-center px-4 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.8)]">
@@ -466,14 +465,10 @@
 						</div>
 					</div>
 		
-					<!-- Background/Atmospheric Overlays (Lower Z-Index) -->
-					<div class="fixed inset-0 z-[10] pointer-events-none overflow-hidden">
-						<div class="absolute inset-0 bg-[linear-gradient(rgba(18, 16, 16, 0)_50%,rgba(0, 0, 0, 0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%] opacity-10"></div>
-						<div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/asfalt-dark.png')] opacity-20 mix-blend-overlay"></div>
-					</div>
-		
-					<div class="fixed inset-0 z-[5] clouds-overlay opacity-30"></div>
-		
+								<!-- Background/Atmospheric Overlays (Lower Z-Index) -->
+								<!-- Removed Scanlines and Noise Overlay -->
+					
+								<div class="fixed inset-0 z-[5] clouds-overlay opacity-30"></div>		
 					<div class="fixed inset-0 z-[5] rain-container">
 						<div class="rain-layer rain-layer-back"></div>
 						<div class="rain-layer rain-layer-mid"></div>

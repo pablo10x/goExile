@@ -351,6 +351,7 @@ The following security improvements have been implemented:
 - Completely removed the dynamic theme system and "Theme Lab". Unified the UI with a hardcoded, high-fidelity "Military Industrial" aesthetic (Dark theme, Phosphor icons, sharp corners).
 - Simplified CSS architecture by hardcoding variables in `app.css` and removing all dynamic syncing logic.
 - Cleaned up all components to remove `siteSettings.aesthetic` dependencies, ensuring consistent styling and better performance.
+- Fixed a runtime error in `SystemTopology.svelte` by removing the `topology_blobs` reference, which was causing a crash after the theme system removal.
 - Fixed several TypeScript and accessibility issues during the UI refactor.
 
 ### 📦 Game Server Management
