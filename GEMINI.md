@@ -354,6 +354,7 @@ The following security improvements have been implemented:
     - Background: New `MotherboardBackground` component with circuit path animations.
 - Cleaned up all components to remove `siteSettings.aesthetic` dependencies, ensuring consistent styling and better performance.
 - Removed "hover card animation" (CardHoverOverlay) and CRT scanline/noise effects for a cleaner, static industrial look.
+- Fixed a major issue where full-screen atmospheric overlays (clouds, rain) were blocking clicks on interactive elements by adding `pointer-events-none`.
 - Fixed a runtime error in `SystemTopology.svelte` by removing the `topology_blobs` reference, which was causing a crash after the theme system removal.
 - Fixed several TypeScript and accessibility issues during the UI refactor.
 
