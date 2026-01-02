@@ -465,26 +465,22 @@
 						</div>
 					</div>
 		
-								<!-- Background/Atmospheric Overlays (Lower Z-Index) -->
-								<!-- Removed Scanlines and Noise Overlay -->
-					
-								<div class="fixed inset-0 z-[5] clouds-overlay opacity-30"></div>		
-					<div class="fixed inset-0 z-[5] rain-container">
-						<div class="rain-layer rain-layer-back"></div>
-						<div class="rain-layer rain-layer-mid"></div>
-						<div class="rain-layer rain-layer-front opacity-10"></div>
-					</div>
-		
-								<div class="fixed inset-0 z-[5] pointer-events-none"><GlobalSmoke /></div>
-		
-					
-		
-								<div class="fixed inset-0 z-[-50] pointer-events-none overflow-hidden">
-		
-									<MotherboardBackground />
-		
-								</div>
-		
+											<!-- Background/Atmospheric Overlays (Lower Z-Index) -->
+											<!-- Removed Scanlines and Noise Overlay -->
+								
+											<div class="fixed inset-0 z-[5] clouds-overlay opacity-30 pointer-events-none"></div>
+								
+											<div class="fixed inset-0 z-[5] rain-container pointer-events-none">
+												<div class="rain-layer rain-layer-back"></div>
+												<div class="rain-layer rain-layer-mid"></div>
+												<div class="rain-layer rain-layer-front opacity-10"></div>
+											</div>
+								
+											<div class="fixed inset-0 z-[5] pointer-events-none"><GlobalSmoke /></div>
+								
+											<div class="fixed inset-0 z-[-50] pointer-events-none overflow-hidden">
+												<MotherboardBackground />
+											</div>		
 					
 		
 								<div
