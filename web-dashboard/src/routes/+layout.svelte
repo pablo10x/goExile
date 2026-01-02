@@ -68,7 +68,7 @@
 
 	import NavbarParticles from '$lib/components/theme/NavbarParticles.svelte';
 	import GlobalSmoke from '$lib/components/theme/GlobalSmoke.svelte';
-	import SectionBackground from '$lib/components/theme/SectionBackground.svelte';
+	import MotherboardBackground from '$lib/components/theme/MotherboardBackground.svelte';
 	import ServerStatus from '$lib/components/theme/ServerStatus.svelte';
 	import Notifications from '$lib/components/theme/Notifications.svelte';
 	import Icon from '$lib/components/theme/Icon.svelte';
@@ -475,17 +475,23 @@
 						<div class="rain-layer rain-layer-front opacity-10"></div>
 					</div>
 		
-					<div class="fixed inset-0 z-[5] pointer-events-none"><GlobalSmoke /></div>
+								<div class="fixed inset-0 z-[5] pointer-events-none"><GlobalSmoke /></div>
 		
-					<div class="vignette z-[5]"></div>
+					
 		
-					<div class="fixed inset-0 z-[-50] pointer-events-none overflow-hidden">
-						<SectionBackground type="digital_stream" />
-					</div>
+								<div class="fixed inset-0 z-[-50] pointer-events-none overflow-hidden">
 		
-					<div
-						class="flex h-screen text-stone-400 overflow-hidden relative bg-transparent transition-colors duration-300 pt-7"
-					>			<!-- Global Restart Banner -->
+									<MotherboardBackground />
+		
+								</div>
+		
+					
+		
+								<div
+		
+									class="flex h-screen text-slate-400 overflow-hidden relative bg-transparent transition-colors duration-300 pt-7"
+		
+								>			<!-- Global Restart Banner -->
 			{#if $restartRequired}
 				<div
 					class="absolute top-0 md:left-64 left-0 right-0 z-50 bg-gradient-to-r from-orange-600/95 via-amber-600/95 to-orange-600/95 backdrop-blur-md text-white px-4 py-2.5 flex justify-between items-center shadow-2xl border-b-2 border-orange-400/50 animate-slide-fade text-xs md:text-sm"

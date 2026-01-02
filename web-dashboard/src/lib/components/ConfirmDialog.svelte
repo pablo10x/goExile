@@ -87,14 +87,14 @@
 
 		<!-- Modal Container -->
 		<div
-			class="relative w-full max-w-lg bg-[#050505] shadow-2xl overflow-hidden z-[460] border border-stone-800 rounded-none"
+			class="relative w-full max-w-lg bg-slate-900 shadow-2xl overflow-hidden z-[460] border border-slate-700 rounded-xl"
 			transition:modalScale
 		>
 			<!-- Status Bar -->
 			<div class={`h-1 w-full ${isCritical ? 'bg-red-600' : 'bg-rust'} opacity-40 animate-pulse`}></div>
 
 			<!-- Header -->
-			<div class="px-8 py-5 border-b border-stone-800 flex justify-between items-center bg-black/40">
+			<div class="px-8 py-5 border-b border-slate-700 flex justify-between items-center bg-slate-800/50">
 				<div class="flex items-center gap-4">
 					{#if isCritical}
 						<Icon name="shield" size="1.25rem" class="text-red-500 animate-flicker" />
@@ -114,7 +114,7 @@
 			</div>
 
 			<!-- Content -->
-			<div class="p-10 space-y-8 relative overflow-hidden bg-[#050505]">
+			<div class="p-10 space-y-8 relative overflow-hidden bg-slate-900">
 				<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
 				
 				<div class="flex items-start gap-6 relative z-10">
@@ -170,8 +170,8 @@
 			</div>
 
 			<!-- Commands -->
-			<div class="px-8 py-6 bg-black/40 border-t border-stone-800 flex justify-between items-center">
-				<div class="font-jetbrains text-[10px] font-black tracking-[0.5em] uppercase italic text-stone-500">
+			<div class="px-8 py-6 bg-slate-800/50 border-t border-slate-700 flex justify-between items-center">
+				<div class="font-jetbrains text-[10px] font-black tracking-[0.5em] uppercase italic text-slate-500">
 					AWAITING_INPUT
 				</div>
 				<div class="flex gap-4">

@@ -80,7 +80,7 @@
 	<a
 		{href}
 		{title}
-		class="{baseClasses} {sizeClasses[size]} {className} {defaultColors[variant]} industrial-sharp"
+		class="{baseClasses} {sizeClasses[size]} {className} {defaultColors[variant]} rounded-lg"
 		onclick={handleClick}
 	>
 		{#if icon}
@@ -93,7 +93,7 @@
 	<button
 		{type}
 		{title}
-		class="{baseClasses} {sizeClasses[size]} {className} {defaultColors[variant]} industrial-sharp"
+		class="{baseClasses} {sizeClasses[size]} {className} {defaultColors[variant]} rounded-lg"
 		{disabled}
 		aria-disabled={disabled || loading}
 		onclick={handleClick}
@@ -109,9 +109,4 @@
 {/if}
 
 <style>
-	.industrial-sharp {
-		border-radius: 0px !important;
-		font-weight: 900;
-		text-transform: uppercase;
-	}
 </style>

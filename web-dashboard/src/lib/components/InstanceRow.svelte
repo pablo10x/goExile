@@ -63,7 +63,7 @@
 </script>
 
 <div
-	class="border border-stone-800 rounded-none glass-panel overflow-hidden mb-2 hover:border-rust/40 transition-all duration-500 shadow-lg group/row relative bg-black/40"
+	class="border border-slate-700 rounded-xl glass-panel overflow-hidden mb-2 hover:border-blue-500/40 transition-all duration-500 shadow-lg group/row relative bg-slate-800/40"
 	class:heartbeat-pulse={instance.status === 'Running'}
 	onmouseenter={() => isHovered = true}
 	onmouseleave={() => isHovered = false}
@@ -212,7 +212,7 @@
 	{#if expanded}
 		<div
 			transition:slide={{ duration: 300 }}
-			class="bg-black/60 border-t border-stone-800 p-8 space-y-8 relative z-10"
+			class="bg-slate-900/60 border-t border-slate-700 p-8 space-y-8 relative z-10"
 		>
 			<div class="grid grid-cols-1 xl:grid-cols-12 gap-10">
 				<!-- Left: Technical Readouts -->

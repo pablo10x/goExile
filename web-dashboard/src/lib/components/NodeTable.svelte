@@ -117,24 +117,19 @@
 	{#each nodes as node (node.id)}
 		{@const isExpanded = expandedRows.has(node.id)}
 		<div
-			class="modern-industrial-card glass-panel tactical-border !rounded-none transition-all duration-500 group {node.id ===
+			class="modern-card glass-panel transition-all duration-500 group {node.id ===
 			highlightNewNodeId
-				? 'animate-highlight-new-node border-rust'
-				: 'hover:border-rust/30'} shadow-2xl overflow-hidden"
+				? 'animate-highlight-new-node border-blue-500'
+				: 'hover:border-blue-500/30'} shadow-2xl overflow-hidden rounded-xl"
 			onmouseenter={() => hoveredRows[node.id] = true}
 			onmouseleave={() => hoveredRows[node.id] = false}
 		>
-			<!-- Tactical Corners -->
-			<div class="corner-tl"></div>
-			<div class="corner-tr"></div>
-			<div class="corner-bl"></div>
-			<div class="corner-br"></div>
 			<!-- Hover Intelligence Overlay -->
 			<CardHoverOverlay active={hoveredRows[node.id]} />
 
 			<!-- Header / Identity -->
 			<div 
-				class="p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-8 relative bg-black/40"
+				class="p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-8 relative bg-slate-800/40"
 			>
 				<div class="flex items-center gap-6 flex-1 min-w-0">
 					<div 
@@ -233,7 +228,7 @@
 			</div>
 
 			<!-- Quick Telemetry Row -->
-			<div class="px-8 py-4 bg-stone-900/20 border-t border-stone-800/50 grid grid-cols-1 md:grid-cols-4 gap-8">
+			<div class="px-8 py-4 bg-slate-900/20 border-t border-slate-700/50 grid grid-cols-1 md:grid-cols-4 gap-8">
 				<div class="flex flex-col justify-center">
 					<div class="flex justify-between items-center mb-2">
 						<span class="text-[9px] font-black uppercase tracking-widest italic text-stone-500">Capacity</span>
@@ -294,7 +289,7 @@
 			<!-- Expanded Section -->
 			{#if isExpanded}
 				<div 
-					class="border-t border-stone-800 bg-black/60 p-8 space-y-10"
+					class="border-t border-slate-700 bg-slate-900/60 p-8 space-y-10"
 					transition:slide={{ duration: 300 }}
 				>
 					<!-- Metrics Grid -->

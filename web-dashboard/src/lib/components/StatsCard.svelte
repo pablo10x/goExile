@@ -91,7 +91,7 @@
 </script>
 
 <div
-	class="group modern-industrial-card tactical-border industrial-sharp cursor-pointer font-primary"
+	class="group modern-card cursor-pointer font-primary relative transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
 	onmouseenter={() => isHovered = true}
 	onmouseleave={() => isHovered = false}
 	role="button"
@@ -127,7 +127,7 @@
 
 			{#if iconName || Icon}
 				<div
-					class={`p-2.5 bg-opacity-20 backdrop-blur-xl transition-all duration-500 group-hover:bg-opacity-100 group-hover:scale-110 shadow-lg ${colors.iconBg} industrial-sharp`}
+					class={`p-2.5 bg-opacity-20 backdrop-blur-xl transition-all duration-500 group-hover:bg-opacity-100 group-hover:scale-110 shadow-lg ${colors.iconBg} rounded-lg`}
 				>
 					{#if iconName}
 						<IconComponent name={iconName} size="1rem" class="text-white drop-shadow-md" />
@@ -144,7 +144,7 @@
 				{value}
 			</div>
 			{#if subValue}
-				<div class={`text-[10px] font-jetbrains font-bold leading-relaxed uppercase tracking-wider ${subValueClass} bg-black/30 p-2 backdrop-blur-md industrial-sharp`}
+				<div class={`text-[10px] font-jetbrains font-bold leading-relaxed uppercase tracking-wider ${subValueClass} bg-black/30 p-2 backdrop-blur-md rounded-md`}
 				>
 					{@html sanitizedSubValue}
 				</div>
