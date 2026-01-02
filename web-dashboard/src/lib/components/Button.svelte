@@ -13,6 +13,7 @@
 		type?: 'button' | 'submit' | 'reset';
 		href?: string;
 		class?: string;
+		title?: string;
 		children?: any;
 		onclick?: (e: MouseEvent) => void;
 	}
@@ -27,6 +28,7 @@
 		type = 'button',
 		href = '',
 		class: className = '',
+		title = '',
 		children,
 		onclick
 	}: Props = $props();
@@ -101,6 +103,7 @@
 {#if href}
 	<a
 		{href}
+		{title}
 		class="{baseClasses} {sizeClasses[size]} {className} {buttonStyle ? 'custom-btn' : defaultColors[variant]}"
 		style={buttonStyle}
 		onclick={handleClick}
@@ -114,6 +117,7 @@
 {:else}
 	<button
 		{type}
+		{title}
 		class="{baseClasses} {sizeClasses[size]} {className} {buttonStyle ? 'custom-btn' : defaultColors[variant]}"
 		style={buttonStyle}
 		{disabled}

@@ -254,7 +254,7 @@
 							<sub.icon class="w-5 h-5 {activeSubsystem === sub.id ? 'text-white' : 'text-stone-700 group-hover:text-rust'}" />
 							<div class="w-1.5 h-1.5 rounded-full {activeSubsystem === sub.id ? 'bg-white animate-pulse' : 'bg-stone-900'}"></div>
 						</div>
-						<span class="text-[9px] font-black uppercase tracking-widest mb-1">{sub.label}</span>
+						<span class="text-[10px] font-black uppercase tracking-widest mb-1">{sub.label}</span>
 						
 						{#if activeSubsystem === sub.id}
 							<div class="absolute bottom-0 left-0 w-full h-0.5 bg-white"></div>
@@ -303,7 +303,7 @@
 										<div class="flex justify-between items-start">
 											<div class="space-y-1">
 												<h4 class="font-black text-white uppercase text-[10px] tracking-widest">{color.label}</h4>
-												<p class="text-[8px] text-stone-600 uppercase tracking-tight">{color.desc}</p>
+												<p class="text-[10px] text-stone-400 uppercase tracking-tight font-bold">{color.desc}</p>
 											</div>
 											<span class="text-[9px] font-mono text-stone-700 uppercase">{currentVal}</span>
 										</div>
@@ -320,13 +320,13 @@
 													<div class="absolute inset-0 bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAAXNSR0IArs4c6QAAACBJREFUGFdjZEADJEYGhj9MDIyMDAwMDAwMDAwMDAwMDAwMABYDAwMAAAAASUVORK5CYII=')] opacity-20"></div>
 													<div class="absolute inset-0" style="background-color: {currentVal}"></div>
 												</div>
-												<span class="text-[10px] font-mono text-stone-500 uppercase tracking-tighter">HEX_VAL: {getHex(currentVal)}</span>
+												<span class="text-[11px] font-mono text-stone-300 uppercase tracking-tighter font-bold">HEX_VAL: {getHex(currentVal)}</span>
 											</div>
 										</div>
 
 										<div class="space-y-2 px-1">
 											<div class="flex justify-between items-center">
-												<span class="text-[8px] font-mono text-stone-700 uppercase tracking-widest">Opacity_Calibration</span>
+												<span class="text-[10px] font-mono text-stone-400 uppercase tracking-widest font-bold">Opacity_Calibration</span>
 												<span class="text-[9px] font-mono text-rust-light">{(getAlpha(currentVal) * 100).toFixed(0)}%</span>
 											</div>
 											<div class="relative flex items-center h-1 bg-stone-900">
@@ -354,7 +354,7 @@
 									
 									<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 										<div class="space-y-3">
-											<span class="text-[9px] font-black text-stone-600 uppercase tracking-widest block ml-1">Header_Typeface</span>
+											<span class="text-[10px] font-black text-stone-400 uppercase tracking-widest block ml-1">Header_Typeface</span>
 											<select 
 												bind:value={$siteSettings.aesthetic.font_header}
 												class="w-full bg-stone-950 border border-stone-800 px-4 py-3 font-jetbrains text-[10px] text-stone-300 focus:border-rust outline-none uppercase tracking-widest appearance-none cursor-pointer"
@@ -365,7 +365,7 @@
 											</select>
 										</div>
 										<div class="space-y-3">
-											<span class="text-[9px] font-black text-stone-600 uppercase tracking-widest block ml-1">Body_Typeface</span>
+											<span class="text-[10px] font-black text-stone-400 uppercase tracking-widest block ml-1">Body_Typeface</span>
 											<select 
 												bind:value={$siteSettings.aesthetic.font_body}
 												class="w-full bg-stone-950 border border-stone-800 px-4 py-3 font-jetbrains text-[10px] text-stone-300 focus:border-rust outline-none uppercase tracking-widest appearance-none cursor-pointer"
@@ -376,7 +376,7 @@
 											</select>
 										</div>
 										<div class="space-y-3">
-											<span class="text-[9px] font-black text-stone-600 uppercase tracking-widest block ml-1">Terminal_Typeface</span>
+											<span class="text-[10px] font-black text-stone-400 uppercase tracking-widest block ml-1">Terminal_Typeface</span>
 											<select 
 												bind:value={$siteSettings.aesthetic.font_mono}
 												class="w-full bg-stone-950 border border-stone-800 px-4 py-3 font-jetbrains text-[10px] text-stone-300 focus:border-rust outline-none uppercase tracking-widest appearance-none cursor-pointer"
@@ -506,7 +506,7 @@
 											<div class="space-y-4">
 												<div class="flex justify-between items-center">
 													<span class="text-[10px] font-black text-stone-400 uppercase tracking-widest">{slider.label}</span>
-													<span class="text-[10px] font-mono text-rust-light">{$siteSettings.aesthetic.buttons[slider.key]}{slider.unit}</span>
+													<span class="text-[10px] font-mono text-rust-light">{($siteSettings.aesthetic.buttons as any)[slider.key]}{slider.unit}</span>
 												</div>
 												<div class="relative flex items-center h-1.5 bg-stone-950 border border-stone-800">
 													<input 
@@ -514,7 +514,7 @@
 														min={slider.min} 
 														max={slider.max} 
 														step={slider.step} 
-														value={$siteSettings.aesthetic.buttons[slider.key]} 
+														value={($siteSettings.aesthetic.buttons as any)[slider.key]} 
 														oninput={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, buttons: { ...s.aesthetic.buttons, [slider.key]: parseFloat(e.currentTarget.value) } } }))} 
 														class="w-full h-full appearance-none cursor-pointer bg-transparent accent-rust z-10" 
 													/>
@@ -553,51 +553,50 @@
 									
 									<div class="space-y-10">
 										{#each ['primary', 'secondary', 'danger', 'ghost'] as variant}
-											<div class="space-y-6 p-6 bg-stone-900/30 border border-stone-800 industrial-frame">
-												<h5 class="text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-3">
-													<div class="w-1.5 h-1.5 rounded-full" style="background-color: {$siteSettings.aesthetic.buttons[variant].bg_color}"></div>
-													{variant.toUpperCase()} STYLE
-												</h5>
-												
-												<div class="grid grid-cols-2 gap-6">
-													{#each [
-														{ key: 'bg_color', label: 'Background' },
-														{ key: 'text_color', label: 'Text' },
-														{ key: 'border_color', label: 'Border' },
-														{ key: 'hover_bg', label: 'Hover BG' }
-													] as color}
-														{@const currentVal = ($siteSettings.aesthetic.buttons as any)[variant][color.key]}
-														<div class="space-y-3">
-															<span class="text-[8px] font-black text-stone-600 uppercase tracking-widest block ml-1">{color.label}</span>
-															<div class="relative h-10 group p-1 bg-stone-950 border border-stone-800">
-																<input 
-																	type="color" 
-																	value={getHex(currentVal)} 
-																	oninput={e => {
-																		const hex = e.currentTarget.value;
-																		const alpha = getAlpha(currentVal);
-																		const alphaHex = Math.round(alpha * 255).toString(16).padStart(2, '0');
-																		siteSettings.update(s => ({
-																			...s,
-																			aesthetic: {
-																				...s.aesthetic,
-																				buttons: {
-																					...s.aesthetic.buttons,
-																					[variant]: {
-																						...s.aesthetic.buttons[variant],
-																						[color.key]: hex + alphaHex
-																					}
-																				}
-																			}
-																		}));
-																	}} 
-																	class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+																							<div class="space-y-6 p-6 bg-stone-900/30 border border-stone-800 industrial-frame">
+																								<h5 class="text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-3">
+																									<div class="w-1.5 h-1.5 rounded-full" style="background-color: {($siteSettings.aesthetic.buttons as any)[variant].bg_color}"></div>
+																									{variant.toUpperCase()} STYLE
+																								</h5>
+																								
+																								<div class="grid grid-cols-2 gap-6">
+																									{#each [
+																										{ key: 'bg_color', label: 'Background' },
+																										{ key: 'text_color', label: 'Text' },
+																										{ key: 'border_color', label: 'Border' },
+																										{ key: 'hover_bg', label: 'Hover BG' }
+																									] as color}
+																										{@const currentVal = ($siteSettings.aesthetic.buttons as any)[variant][color.key]}
+																										<div class="space-y-3">
+																											<span class="text-[10px] font-black text-stone-400 uppercase tracking-widest block ml-1">{color.label}</span>
+																											<div class="relative h-10 group p-1 bg-stone-950 border border-stone-800">
+																												<input 
+																													type="color" 
+																													value={getHex(currentVal)} 
+																													oninput={e => {
+																														const hex = e.currentTarget.value;
+																														const alpha = getAlpha(currentVal);
+																														const alphaHex = Math.round(alpha * 255).toString(16).padStart(2, '0');
+																														siteSettings.update(s => ({
+																															...s,
+																															aesthetic: {
+																																...s.aesthetic,
+																																buttons: {
+																																	...s.aesthetic.buttons,
+																																	[variant]: {
+																																		...(s.aesthetic.buttons as any)[variant],
+																																		[color.key]: hex + alphaHex
+																																	}
+																																}
+																															}
+																														}));
+																													}}  																	class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
 																/>
 																<div class="absolute inset-1 flex items-center px-3 gap-3 bg-stone-900 overflow-hidden industrial-frame">
 																	<div class="w-4 h-4 border border-white/5 relative shrink-0">
 																		<div class="absolute inset-0" style="background-color: {currentVal}"></div>
 																	</div>
-																	<span class="text-[9px] font-mono text-stone-500 uppercase">{getHex(currentVal)}</span>
+																	<span class="text-[10px] font-mono text-stone-400 font-bold uppercase">{getHex(currentVal)}</span>
 																</div>
 															</div>
 														</div>
@@ -979,7 +978,7 @@
 											<div class="space-y-10">
 												<!-- Global Overrides -->
 												<div class="space-y-6">
-													<span class="text-[9px] font-black text-stone-600 uppercase tracking-widest block ml-1 italic">Global_Directives</span>
+													<span class="text-[10px] font-black text-stone-400 uppercase tracking-widest block ml-1 italic">Global_Directives</span>
 													{#each [
 														{ key: 'bg_anim_speed', label: 'Master Animation Velocity', min: 0.1, max: 5, step: 0.1, unit: 'x' },
 														{ key: 'bg_anim_opacity', label: 'Master Background Density', min: 0, max: 1, step: 0.01, unit: 'α' }
@@ -1007,11 +1006,11 @@
 
 												<!-- Atmospheric Overlays -->
 												<div class="space-y-6 pt-6 border-t border-stone-800/50">
-													<span class="text-[9px] font-black text-stone-600 uppercase tracking-widest block ml-1 italic">Atmospheric_Layers</span>
+													<span class="text-[10px] font-black text-stone-400 uppercase tracking-widest block ml-1 italic">Atmospheric_Layers</span>
 													<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 														<div class="flex items-center justify-between p-4 bg-rust/5 border border-rust/30 col-span-full">
 															<div class="flex flex-col">
-																<span class="text-[9px] font-black text-white uppercase tracking-widest">Master Background Display</span>
+																<span class="text-[10px] font-black text-white uppercase tracking-widest">Master Background Display</span>
 																<span class="text-[7px] text-stone-500 uppercase">Enable or disable all engine-driven backgrounds</span>
 															</div>
 															<label class="relative inline-flex items-center cursor-pointer">
@@ -1042,14 +1041,14 @@
 													{@const type = $backgroundConfig.global_type}
 													{@const engineSettings = ($backgroundConfig.settings as any)[type]}
 													<div class="space-y-6 pt-6 border-t border-stone-800/50" in:slide>
-														<span class="text-[9px] font-black text-rust uppercase tracking-widest block ml-1 italic">Engine_Tuning: {type.toUpperCase()}</span>
+														<span class="text-[10px] font-black text-rust uppercase tracking-widest block ml-1 italic">Engine_Tuning: {type.toUpperCase()}</span>
 														
 														<div class="space-y-6">
 															<!-- Color Tuning -->
 															<div class="flex justify-between items-center">
 																<span class="text-[10px] font-black text-stone-400 uppercase tracking-widest">Active_Chrome</span>
 																<div class="flex items-center gap-3">
-																	<span class="text-[10px] font-mono text-stone-600 uppercase">{engineSettings.color}</span>
+																	<span class="text-[10px] font-mono text-stone-400 font-bold uppercase">{engineSettings.color}</span>
 																	<input 
 																		type="color" 
 																		value={engineSettings.color} 

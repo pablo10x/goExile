@@ -559,7 +559,7 @@
 		style="animation-delay: 0.7s; contain: paint layout;"
 	>
 		<div
-			class="border-b border-stone-800 px-4 sm:px-6 py-4 sm:py-5 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-stone-950/60 backdrop-blur-xl gap-4"
+			class="border-b border-stone-800 px-4 sm:px-6 py-4 sm:py-5 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[var(--card-bg-color)] backdrop-blur-xl gap-4"
 			class:!py-3={$siteSettings.dashboard.compact_mode}
 		>
 			<div class="flex items-center gap-4">
@@ -585,7 +585,7 @@
 					>Real-time</span>
 			</div>
 		</div>
-		<div class="p-0 bg-black/40 backdrop-blur-md relative">
+		<div class="p-0 bg-[var(--card-bg-color)] backdrop-blur-md relative">
 			<div class="absolute inset-0 bg-gradient-to-b from-transparent via-rust/5 to-transparent pointer-events-none opacity-20"></div>
 			<NodeTable
 				bind:this={nodeTableComponent}
