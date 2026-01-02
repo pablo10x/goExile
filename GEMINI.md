@@ -348,9 +348,10 @@ The following security improvements have been implemented:
 *   **Keyboard-First Navigation**: Added global shortcut listeners for "Quick Jump" navigation (`G+D` for Dashboard, `G+L` for Logs, etc.) and full keyboard support for all interactive dialogs.
 *   **A11y Hardening**: Performed a comprehensive accessibility pass. All custom industrial modals and components now include standard ARIA roles, high-contrast focus indicators, and semantic labels for screen-reader compatibility.
 - Renamed "Spawner" to "Node" across the project and implemented "Drain Mode" for maintenance. Updated the frontend to Svelte 5 Runes and fixed multiple stability issues.
-- Fixed dashboard card colors: Replaced hardcoded black backgrounds with theme-aware `bg-[var(--card-bg-color)]` in `dashboard/+page.svelte` and `StatsCard.svelte`.
-- Improved Theme Editor readability: Increased font sizes (from 8px/9px to 10px/11px) and improved text contrast for labels, hex values, and settings in `config/theme/+page.svelte`.
-- Fixed TypeScript errors in `config/theme/+page.svelte` and added missing `title` prop to `Button` component.
+- Completely removed the dynamic theme system and "Theme Lab". Unified the UI with a hardcoded, high-fidelity "Military Industrial" aesthetic (Dark theme, Phosphor icons, sharp corners).
+- Simplified CSS architecture by hardcoding variables in `app.css` and removing all dynamic syncing logic.
+- Cleaned up all components to remove `siteSettings.aesthetic` dependencies, ensuring consistent styling and better performance.
+- Fixed several TypeScript and accessibility issues during the UI refactor.
 
 ### 📦 Game Server Management
 *   **Smart Uploads**: Integrated `JSZip` into the dashboard to automatically extract version metadata from `game_server.zip` uploads (via `manifest.json`), streamlining the release process.
