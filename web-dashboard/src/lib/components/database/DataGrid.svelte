@@ -251,18 +251,18 @@
 	}
 
 	function getCellStyle(value: any, isModified: boolean): string {
-		if (isModified) return 'text-warning font-bold';
-		if (value === null || value === undefined) return 'text-text-dim italic';
-		if (typeof value === 'number') return 'text-rust-light font-jetbrains';
-		if (typeof value === 'boolean') return value ? 'text-success' : 'text-danger';
-		return 'text-stone-300';
+		if (isModified) return 'text-amber-400 font-bold';
+		if (value === null || value === undefined) return 'text-slate-600 italic';
+		if (typeof value === 'number') return 'text-blue-400 font-mono';
+		if (typeof value === 'boolean') return value ? 'text-emerald-400' : 'text-red-400';
+		return 'text-slate-300';
 	}
 </script>
 
-<div class="flex flex-col h-full bg-[var(--terminal-bg)]">
+<div class="flex flex-col h-full bg-slate-900/30">
 		<!-- Enhanced Toolbar -->
 		<div
-			class="border-b border-stone-800 bg-[var(--header-bg)] sticky top-0 z-20"
+			class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-sm sticky top-0 z-20"
 		>
 			<div class="px-4 py-3 flex items-center justify-between gap-4">
 				<!-- Left Actions -->
@@ -270,16 +270,16 @@
 					<!-- Pending Changes Indicator -->
 					{#if pendingChangeCount > 0}
 						<div
-							class="flex items-center gap-3 px-3 py-2 bg-warning/10 border border-warning/30"
+							class="flex items-center gap-3 px-3 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg"
 							transition:slide={{ axis: 'x', duration: 150 }}
 						>
-							<div class="w-2 h-2 rounded-none bg-warning animate-pulse"></div>
-							<span class="font-jetbrains text-[10px] font-black text-warning uppercase tracking-widest">
-								{pendingChangeCount} UNSAVED_MODS
+							<div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
+							<span class="text-xs font-bold text-amber-400 uppercase tracking-wide">
+								{pendingChangeCount} Unsaved
 							</span>
 							<button
 								onclick={discardChanges}
-								class="p-0.5 hover:bg-warning/20 text-warning transition-colors"
+								class="p-0.5 hover:bg-amber-500/20 text-amber-400 transition-colors rounded"
 								title="Discard all changes"
 							>
 								<X class="w-3.5 h-3.5" />
@@ -290,32 +290,32 @@
 						<button
 							onclick={applyChanges}
 							disabled={applyingChanges}
-							class="flex items-center gap-2 px-4 py-2 bg-rust hover:bg-rust-light text-white font-heading font-black text-[10px] uppercase tracking-widest shadow-lg shadow-rust/20 transition-all disabled:opacity-20"
+							class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wide shadow-lg shadow-blue-500/20 transition-all disabled:opacity-50 rounded-lg"
 						>
 							{#if applyingChanges}
 								<RefreshCw class="w-3.5 h-3.5 animate-spin" />
-								<span>Processing...</span>
+								<span>Saving...</span>
 							{:else}
 								<Save class="w-3.5 h-3.5" />
-								<span>Commit_Changes</span>
+								<span>Save Changes</span>
 							{/if}
 						</button>
 	
-						<div class="h-6 w-px bg-stone-800 mx-1"></div>
+						<div class="h-6 w-px bg-slate-800 mx-1"></div>
 					{/if}
 	
 					<!-- Selection Info -->
 					{#if selectedIds.size > 0}
 						<div
-							class="flex items-center gap-3 px-3 py-2 bg-rust/10 border border-rust/20"
+							class="flex items-center gap-3 px-3 py-2 bg-blue-500/10 border border-blue-500/20 rounded-lg"
 							transition:slide={{ axis: 'x', duration: 150 }}
 						>
-							<span class="font-jetbrains text-[10px] font-black text-rust uppercase tracking-widest">
-								{selectedIds.size} TARGETS
+							<span class="text-xs font-bold text-blue-400 uppercase tracking-wide">
+								{selectedIds.size} Selected
 							</span>
 							<button
 								onclick={() => (selectedIds = new Set())}
-								class="p-0.5 hover:bg-rust/20 text-rust transition-colors"
+								class="p-0.5 hover:bg-blue-500/20 text-blue-400 transition-colors rounded"
 							>
 								<X class="w-3.5 h-3.5" />
 							</button>
@@ -326,16 +326,16 @@
 					<button
 						disabled={selectedIds.size === 0}
 						onclick={requestDelete}
-						class="flex items-center gap-2 px-3 py-2 transition-all {selectedIds.size >
+						class="flex items-center gap-2 px-3 py-2 transition-all rounded-lg {selectedIds.size >
 						0
-							? 'bg-danger/10 text-danger hover:bg-danger/20 border border-danger/20'
-							: 'text-text-dim cursor-not-allowed bg-stone-900/50 border border-stone-800'}"
+							? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20'
+							: 'text-slate-500 cursor-not-allowed border border-transparent'}"
 					>
 						<Trash2 class="w-4 h-4" />
-						<span class="font-heading text-[10px] font-black uppercase tracking-widest hidden sm:inline">Terminate</span>
+						<span class="text-xs font-bold uppercase tracking-wide hidden sm:inline">Delete</span>
 					</button>
 	
-					<div class="h-6 w-px bg-stone-800 mx-1 hidden sm:block"></div>
+					<div class="h-6 w-px bg-slate-800 mx-1 hidden sm:block"></div>
 	
 					<!-- Search Toggle -->
 					<button
@@ -343,16 +343,16 @@
 							showSearch = !showSearch;
 							if (!showSearch) searchQuery = '';
 						}}
-						class="p-2 transition-colors {showSearch
-							? 'bg-rust/10 text-rust'
-							: 'text-text-dim hover:text-stone-300 hover:bg-stone-900/50'}"
+						class="p-2 transition-colors rounded-lg {showSearch
+							? 'bg-blue-500/10 text-blue-400'
+							: 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}"
 					>
 						<Search class="w-4 h-4" />
 					</button>
 	
 					<!-- Filter Button (placeholder) -->
 					<button
-						class="p-2 text-text-dim hover:text-stone-300 hover:bg-stone-900/50 transition-colors"
+						class="p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors rounded-lg"
 					>
 						<Filter class="w-4 h-4" />
 					</button>
@@ -364,7 +364,7 @@
 						<button
 							onclick={onRefresh}
 							disabled={isLoading}
-							class="p-2 text-text-dim hover:text-stone-300 hover:bg-stone-900/50 transition-colors disabled:opacity-20"
+							class="p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors disabled:opacity-20 rounded-lg"
 							title="Refresh"
 						>
 							<RefreshCw class="w-4 h-4 {isLoading ? 'animate-spin' : ''}" />
@@ -373,10 +373,10 @@
 	
 					<button
 						onclick={onAddRow}
-						class="flex items-center gap-2 px-4 py-2 bg-stone-100 text-stone-950 hover:bg-white font-heading font-black text-[10px] uppercase tracking-widest shadow-lg transition-all active:translate-y-px"
+						class="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-900 hover:bg-white font-bold text-xs uppercase tracking-wide shadow-lg transition-all active:translate-y-px rounded-lg"
 					>
 						<Plus class="w-4 h-4" />
-						<span>Insert_Row</span>
+						<span>Insert Row</span>
 					</button>
 				</div>
 			</div>
@@ -386,26 +386,26 @@
 			<div class="px-4 pb-4" transition:slide={{ duration: 150 }}>
 				<div class="relative">
 					<Search
-						class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-text-dim pointer-events-none"
+						class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
 					/>
 					<input
 						type="text"
 						bind:value={searchQuery}
-						placeholder="FILTER_SUBJECTS_IN_ALL_CHANNELS..."
-						class="w-full bg-stone-950 border border-stone-800 py-3 pl-12 pr-12 font-jetbrains text-[11px] text-stone-200 placeholder:text-stone-700 focus:border-rust outline-none transition-all uppercase tracking-widest"
+						placeholder="Search in all columns..."
+						class="w-full bg-slate-900/50 border border-slate-700 py-2.5 pl-10 pr-10 text-xs font-medium text-slate-200 placeholder:text-slate-600 focus:border-blue-500 outline-none transition-all rounded-lg"
 					/>
 					{#if searchQuery}
 						<button
 							onclick={() => (searchQuery = '')}
-							class="absolute right-4 top-1/2 -translate-y-1/2 text-text-dim hover:text-white"
+							class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
 						>
 							<X class="w-4 h-4" />
 						</button>
 					{/if}
 				</div>
 				{#if searchQuery && filteredData.length !== data.length}
-					<p class="font-jetbrains text-[9px] text-text-dim mt-2 px-1 uppercase tracking-widest">
-						Filtering: {filteredData.length} // TOTAL: {data.length} Subjects
+					<p class="text-xs text-slate-500 mt-2 px-1 font-medium">
+						Showing {filteredData.length} of {data.length} rows
 					</p>
 				{/if}
 			</div>
@@ -413,40 +413,40 @@
 	</div>
 
 	<!-- Grid Container -->
-	<div class="flex-1 overflow-auto relative custom-scrollbar">
+	<div class="flex-1 overflow-auto relative custom-scrollbar bg-slate-900/30">
 		{#if isLoading}
 			<div
-				class="absolute inset-0 bg-[var(--terminal-bg)]/80 backdrop-blur-sm z-30 flex items-center justify-center"
+				class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-30 flex items-center justify-center"
 				transition:fade={{ duration: 150 }}
 			>
 				<div class="flex flex-col items-center gap-4">
 					<div
-						class="w-10 h-10 border-4 border-rust border-t-transparent rounded-none animate-spin"
+						class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"
 					></div>
-					<span class="font-heading text-[11px] font-black text-text-dim uppercase tracking-[0.2em]">Synchronizing_Data...</span>
+					<span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Loading Data...</span>
 				</div>
 			</div>
 		{/if}
 
-		<table class="w-full text-left text-[11px] border-collapse font-jetbrains">
+		<table class="w-full text-left text-xs border-collapse">
 			<thead
-				class="bg-[var(--header-bg)] text-text-dim sticky top-0 z-10 border-b border-stone-800"
+				class="bg-slate-900/90 text-slate-400 sticky top-0 z-10 border-b border-slate-800 backdrop-blur-md"
 			>
 				<tr>
 					<!-- Checkbox Column -->
-					<th class="px-5 py-4 w-14">
+					<th class="px-4 py-3 w-12 text-center">
 						<button
 							onclick={toggleSelectAll}
-							class="flex items-center justify-center w-5 h-5 hover:text-rust transition-colors"
+							class="flex items-center justify-center w-4 h-4 hover:text-blue-400 transition-colors mx-auto"
 						>
 							{#if selectedIds.size > 0 && selectedIds.size === filteredData.length}
-								<CheckSquare class="w-5 h-5 text-rust" />
+								<CheckSquare class="w-4 h-4 text-blue-400" />
 							{:else if selectedIds.size > 0}
-								<div class="w-5 h-5 bg-rust rounded-none flex items-center justify-center shadow-[0_0_10px_rgba(120,53,15,0.4)]">
-									<div class="w-2.5 h-0.5 bg-white"></div>
+								<div class="w-4 h-4 bg-blue-400 rounded flex items-center justify-center">
+									<div class="w-2 h-0.5 bg-white"></div>
 								</div>
 							{:else}
-								<Square class="w-5 h-5 text-stone-700" />
+								<Square class="w-4 h-4 text-slate-600" />
 							{/if}
 						</button>
 					</th>
@@ -454,70 +454,70 @@
 					<!-- Data Columns -->
 					{#each columns as col (col.name)}
 						<th
-							class="px-5 py-4 font-black uppercase tracking-widest whitespace-nowrap cursor-pointer hover:bg-stone-900/50 transition-colors group border-r border-stone-800/30"
+							class="px-4 py-3 font-bold uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-slate-800 transition-colors group border-r border-slate-800/50"
 							onclick={() => handleSort(col.name)}
 						>
-							<div class="flex items-center gap-3">
+							<div class="flex items-center gap-2">
 								<!-- Primary Key Badge -->
 								{#if col.name === primaryKeyColumn || col.isPk}
 									<span
-										class="px-1.5 py-0.5 text-[9px] font-black bg-rust/10 text-rust border border-rust/30"
+										class="px-1.5 py-0.5 text-[9px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded"
 									>
 										PK
 									</span>
 								{/if}
 
-								<span class="text-stone-400 group-hover:text-white transition-colors">{col.name}</span>
+								<span class="text-slate-300 group-hover:text-white transition-colors">{col.name}</span>
 
 								<!-- Sort Indicator -->
 								<div class="flex items-center">
 									{#if sortCol === col.name}
 										{#if sortDir === 'asc'}
-											<ArrowUp class="w-3.5 h-3.5 text-rust" />
+											<ArrowUp class="w-3 h-3 text-blue-400" />
 										{:else}
-											<ArrowDown class="w-3.5 h-3.5 text-rust" />
+											<ArrowDown class="w-3 h-3 text-blue-400" />
 										{/if}
 									{:else}
 										<ArrowUp
-											class="w-3.5 h-3.5 opacity-0 group-hover:opacity-30 transition-opacity"
+											class="w-3 h-3 opacity-0 group-hover:opacity-30 transition-opacity"
 										/>
 									{/if}
 								</div>
 							</div>
 
 							<!-- Column Type -->
-							<div class="text-[9px] text-text-dim font-bold mt-1 uppercase tracking-tighter">
-								{col.type || 'PROTOCOL_UNKNOWN'}
+							<div class="text-[9px] text-slate-500 font-medium mt-0.5 uppercase tracking-wide">
+								{col.type || 'UNKNOWN'}
 							</div>
 						</th>
 					{/each}
 
 					<!-- Actions Column -->
-					<th class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 w-16"></th>
+					<th class="px-4 py-3 border-b border-slate-800 w-16"></th>
 				</tr>
 			</thead>
 
-			<tbody class="divide-y divide-stone-900">
+			<tbody class="divide-y divide-slate-800/50">
 				{#each filteredData as row (getRowKey(row))}
 					{@const rowKey = getRowKey(row)}
 					{@const rowHasChanges = pendingChanges.has(rowKey)}
 					<tr
 						class="group transition-colors {rowHasChanges
-							? 'bg-warning/5'
+							? 'bg-amber-500/5'
 							: selectedIds.has(rowKey)
-								? 'bg-rust/5'
-								: 'hover:bg-stone-900/30'}"
+								? 'bg-blue-500/5'
+								: 'hover:bg-slate-800/30'}"
 					>
 						<!-- Checkbox -->
-						<td class="px-5 py-3">
+						<td class="px-4 py-2.5 text-center">
 							<button
 								onclick={() => toggleSelect(rowKey)}
-								class="flex items-center justify-center w-5 h-5 text-stone-700 hover:text-rust transition-colors"
+								class="flex items-center justify-center w-4 h-4 text-slate-600 hover:text-blue-400 transition-colors mx-auto"
 							>
 								{#if selectedIds.has(rowKey)}
-									<CheckSquare class="w-5 h-5 text-rust" />
+									<CheckSquare class="w-4 h-4 text-blue-400" />
 								{:else}
-									<Square class="w-5 h-5" />
+									<Square class="w-4 h-4" />
 								{/if}
 							</button>
 						</td>
@@ -528,14 +528,14 @@
 							{@const cellValue = getCellValue(row, col.name)}
 							{@const isPkCol = col.name === primaryKeyColumn || col.isPk}
 							<td
-								class="px-5 py-3 max-w-xs relative border-r border-stone-800/20 {isModified
-									? 'bg-warning/10 border-l-2 border-warning'
+								class="px-4 py-2.5 max-w-xs relative border-r border-slate-800/30 {isModified
+									? 'bg-amber-500/10 border-l-2 border-l-amber-500'
 									: ''}"
 								onclick={() => !isPkCol && startEdit(row, col.name)}
 							>
 								{#if editingCell?.rowKey === rowKey && editingCell?.col === col.name}
 									<!-- Edit Mode -->
-									<div class="absolute inset-0 z-20 flex items-center px-2 bg-stone-900">
+									<div class="absolute inset-0 z-20 flex items-center px-2 bg-slate-800">
 										<input
 											type="text"
 											bind:value={editValue}
@@ -544,13 +544,14 @@
 												if (e.key === 'Enter') saveEdit();
 												if (e.key === 'Escape') cancelEdit();
 											}}
-											class="w-full h-8 bg-stone-950 text-white px-3 outline-none border border-rust font-jetbrains text-[11px]"
+											class="w-full h-8 bg-slate-900 text-white px-3 outline-none border border-blue-500 rounded font-mono text-xs"
+											autoFocus
 										/>
 									</div>
 								{:else}
 									<!-- Display Mode -->
 									<div
-										class="flex items-center gap-3 group/cell {isPkCol
+										class="flex items-center gap-2 group/cell {isPkCol
 											? 'cursor-default'
 											: 'cursor-text'}"
 										title={getDisplayValue(cellValue)}
@@ -562,7 +563,7 @@
 										<!-- Modified indicator -->
 										{#if isModified}
 											<span
-												class="px-1.5 py-0.5 text-[8px] font-black bg-warning text-stone-950 rounded-none shrink-0 tracking-widest"
+												class="px-1 py-0.5 text-[8px] font-bold bg-amber-500/20 text-amber-400 rounded shrink-0 tracking-wide"
 											>
 												MOD
 											</span>
@@ -575,7 +576,7 @@
 													e.stopPropagation();
 													copyValue(cellValue);
 												}}
-												class="opacity-0 group-hover/cell:opacity-100 p-1 hover:bg-stone-800 text-text-dim hover:text-rust transition-all shrink-0"
+												class="opacity-0 group-hover/cell:opacity-100 p-1 hover:bg-slate-700 text-slate-500 hover:text-blue-400 transition-all shrink-0 rounded"
 												title="Copy value"
 											>
 												<Copy class="w-3 h-3" />
@@ -587,19 +588,19 @@
 						{/each}
 
 						<!-- Row Actions -->
-						<td class="px-5 py-3">
+						<td class="px-4 py-2.5 text-right">
 							<div
-								class="flex items-center gap-2 {rowHasChanges
+								class="flex items-center gap-1 {rowHasChanges
 									? 'opacity-100'
 									: 'opacity-0 group-hover:opacity-100'} transition-opacity justify-end"
 							>
 								{#if rowHasChanges}
 									<button
 										onclick={() => discardRowChanges(rowKey)}
-										class="p-1.5 text-warning hover:text-warning hover:bg-warning/10 transition-colors"
+										class="p-1.5 text-amber-400 hover:bg-amber-500/10 transition-colors rounded"
 										title="Discard row changes"
 									>
-										<Undo2 class="w-4 h-4" />
+										<Undo2 class="w-3.5 h-3.5" />
 									</button>
 								{/if}
 								<button
@@ -607,10 +608,10 @@
 										pendingDeleteIds = [rowKey];
 										showDeleteConfirm = true;
 									}}
-									class="p-1.5 text-text-dim hover:text-danger hover:bg-danger/10 transition-colors"
+									class="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors rounded"
 									title="Delete row"
 								>
-									<Trash2 class="w-4 h-4" />
+									<Trash2 class="w-3.5 h-3.5" />
 								</button>
 							</div>
 						</td>
@@ -621,30 +622,30 @@
 				{#if filteredData.length === 0 && !isLoading}
 					<tr>
 						<td colspan={columns.length + 2} class="py-24">
-							<div class="flex flex-col items-center justify-center text-text-dim">
+							<div class="flex flex-col items-center justify-center text-slate-500">
 								{#if searchQuery}
-									<Search class="w-16 h-16 mb-6 opacity-10" />
-									<p class="font-heading font-black text-xs tracking-[0.2em] uppercase">No matching Subjects found</p>
-									<p class="font-jetbrains text-[9px] mt-2 uppercase">Neural filters returned zero results</p>
+									<Search class="w-16 h-16 mb-4 opacity-20" />
+									<p class="font-bold text-sm">No matching records found</p>
+									<p class="text-xs mt-1">Try adjusting your filters</p>
 									<button
 										onclick={() => (searchQuery = '')}
-										class="mt-8 px-6 py-3 bg-stone-900 border border-stone-800 hover:border-rust hover:text-rust text-[10px] font-heading font-black uppercase tracking-widest transition-all"
+										class="mt-6 px-5 py-2 bg-slate-800 border border-slate-700 hover:border-blue-500 hover:text-blue-400 text-xs font-bold uppercase tracking-wide transition-all rounded-lg"
 									>
-										Reset_Filters
+										Reset Filters
 									</button>
 								{:else}
 									<div
-										class="w-20 h-20 mb-6 border border-dashed border-stone-800 flex items-center justify-center industrial-frame"
+										class="w-16 h-16 mb-4 border-2 border-dashed border-slate-700 rounded-2xl flex items-center justify-center"
 									>
-										<Plus class="w-8 h-8 opacity-20" />
+										<Plus class="w-8 h-8 opacity-30" />
 									</div>
-									<p class="font-heading font-black text-xs tracking-[0.2em] uppercase">Database_Empty</p>
-									<p class="font-jetbrains text-[9px] mt-2 uppercase">No data entities exist in this sector</p>
+									<p class="font-bold text-sm">Table is empty</p>
+									<p class="text-xs mt-1">No records found in this table</p>
 									<button
 										onclick={onAddRow}
-										class="mt-8 px-8 py-3 bg-rust hover:bg-rust-light text-white text-[10px] font-heading font-black uppercase tracking-widest transition-all shadow-lg shadow-rust/20"
+										class="mt-6 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold uppercase tracking-wide transition-all shadow-lg shadow-blue-500/20 rounded-lg"
 									>
-										Initialize_First_Row
+										Add First Row
 									</button>
 								{/if}
 							</div>
@@ -657,53 +658,49 @@
 
 	<!-- Enhanced Footer -->
 	<div
-		class="px-6 py-4 bg-[var(--header-bg)] border-t border-stone-800 flex items-center justify-between"
+		class="px-6 py-3 bg-[var(--header-bg)] border-t border-slate-800 flex items-center justify-between"
 	>
-		<div class="flex items-center gap-6 text-[10px] font-jetbrains font-bold uppercase tracking-widest">
+		<div class="flex items-center gap-6 text-[10px] font-bold uppercase tracking-wide">
 			<span class="flex items-center gap-2">
-				<div class="w-2 h-2 bg-success shadow-[0_0_8px_rgba(16,185,129,0.4)]"></div>
-				<span class="text-stone-400">{filteredData.length} Subjects_Detected</span>
+				<div class="w-1.5 h-1.5 bg-emerald-500 rounded-full shadow-[0_0_8px_#10b981]"></div>
+				<span class="text-slate-400">{filteredData.length} Records</span>
 				{#if searchQuery}
-					<span class="text-rust/60 ml-2">Filtered_View</span>
+					<span class="text-blue-400 ml-1">(Filtered)</span>
 				{/if}
 			</span>
 
 			{#if selectedIds.size > 0}
-				<span class="text-rust">
-					{selectedIds.size} TARGETS_LOCKED
+				<span class="text-blue-400">
+					{selectedIds.size} Selected
 				</span>
 			{/if}
 
 			{#if pendingChangeCount > 0}
-				<span class="text-warning flex items-center gap-2">
-					<div class="w-2 h-2 bg-warning animate-pulse"></div>
-					{pendingChangeCount} PENDING_MODS
+				<span class="text-amber-400 flex items-center gap-2">
+					<div class="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></div>
+					{pendingChangeCount} Pending Edits
 				</span>
 			{/if}
 		</div>
 
-		<div class="flex items-center gap-4 text-[9px] font-jetbrains font-bold text-text-dim uppercase tracking-widest hidden lg:flex">
-			<span>Click_Cell_To_Edit</span>
-			<span class="w-1 h-1 bg-stone-800"></span>
-			<span>Enter_To_Commit</span>
-			<span class="w-1 h-1 bg-stone-800"></span>
-			<span>Esc_To_Abort</span>
-			{#if pendingChangeCount > 0}
-				<span class="w-1 h-1 bg-stone-800"></span>
-				<span class="text-warning/60 animate-pulse">Execute_Apply_To_Save</span>
-			{/if}
+		<div class="flex items-center gap-4 text-[9px] font-bold text-slate-500 uppercase tracking-wide hidden lg:flex">
+			<span>Click to edit</span>
+			<span class="w-1 h-1 bg-slate-700 rounded-full"></span>
+			<span>Enter to save</span>
+			<span class="w-1 h-1 bg-slate-700 rounded-full"></span>
+			<span>Esc to cancel</span>
 		</div>
 	</div>
 </div>
 
 <ConfirmModal
 	bind:isOpen={showDeleteConfirm}
-	title={pendingDeleteIds.length === 1 ? 'Terminate_Subject' : `Purge_${pendingDeleteIds.length}_Subjects`}
+	title={pendingDeleteIds.length === 1 ? 'Delete Record' : `Delete ${pendingDeleteIds.length} Records`}
 	message={pendingDeleteIds.length === 1
-		? 'Are you certain you wish to terminate this data subject? This operation is irreversible.'
-		: `Are you certain you wish to purge these ${pendingDeleteIds.length} data subjects? This operation is irreversible.`}
-	confirmText="Purge_Data"
-	cancelText="Abort"
+		? 'Are you sure you want to delete this record? This action cannot be undone.'
+		: `Are you sure you want to delete these ${pendingDeleteIds.length} records? This action cannot be undone.`}
+	confirmText="Delete"
+	cancelText="Cancel"
 	variant="danger"
 	loading={deleteLoading}
 	onConfirm={confirmDelete}

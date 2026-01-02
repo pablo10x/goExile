@@ -77,7 +77,6 @@
 					label: 'Telemetry',
 					type: 'info',
 					iconName: 'ph:chart-line-up-bold',
-					color: 'blue',
 					description: 'Database overview & stats'
 				},
 				{
@@ -85,7 +84,6 @@
 					label: 'Browser',
 					type: 'browser',
 					iconName: 'ph:folder-open-bold',
-					color: 'indigo',
 					description: 'Browse schemas & tables'
 				}
 			]
@@ -98,7 +96,6 @@
 					label: 'SQL Editor',
 					type: 'sql',
 					iconName: 'ph:terminal-window-bold',
-					color: 'amber',
 					description: 'Execute SQL queries'
 				},
 				{
@@ -106,7 +103,6 @@
 					label: 'Functions',
 					type: 'functions',
 					iconName: 'ph:code-bold',
-					color: 'violet',
 					description: 'Manage functions & procedures'
 				}
 			]
@@ -119,7 +115,6 @@
 					label: 'Security',
 					type: 'roles',
 					iconName: 'ph:shield-check-bold',
-					color: 'emerald',
 					description: 'User & role management'
 				},
 				{
@@ -127,7 +122,6 @@
 					label: 'Archives',
 					type: 'backups',
 					iconName: 'ph:archive-bold',
-					color: 'orange',
 					description: 'Backup & restore'
 				},
 				{
@@ -135,7 +129,6 @@
 					label: 'Tuning',
 					type: 'config',
 					iconName: 'ph:sliders-bold',
-					color: 'purple',
 					description: 'PostgreSQL settings'
 				}
 			]
@@ -180,36 +173,6 @@
 		openTab(`table:${schema}.${table}`, `${table}`, 'table', { schema, table });
 	}
 
-	function getColorClasses(color: string, isActive: boolean = false) {
-		const colors: Record<string, { bg: string; text: string; hover: string; active: string }> = {
-			rust: {
-				bg: 'bg-rust/10',
-				text: 'text-rust-light',
-				hover: 'hover:bg-rust/20 hover:text-rust',
-				active: 'bg-rust/20 text-rust border-rust/50'
-			},
-			amber: {
-				bg: 'bg-amber-500/10',
-				text: 'text-warning',
-				hover: 'hover:bg-amber-500/20 hover:text-amber-300',
-				active: 'bg-amber-500/20 text-amber-300 border-amber-500/50'
-			},
-			red: {
-				bg: 'bg-red-500/10',
-				text: 'text-danger',
-				hover: 'hover:bg-red-500/20 hover:text-red-300',
-				active: 'bg-red-500/20 text-red-300 border-red-500/50'
-			},
-			slate: {
-				bg: 'bg-slate-500/10',
-				text: 'text-text-dim',
-				hover: 'hover:bg-slate-500/20 hover:text-slate-300',
-				active: 'bg-slate-500/20 text-slate-300 border-slate-500/50'
-			}
-		};
-		return colors[color] || colors.rust;
-	}
-
 	// --- Initialization ---
 	async function loadOverviewData() {
 		try {
@@ -238,23 +201,22 @@
 </script>
 
 <div
-	class="flex flex-col lg:flex-row h-[calc(100vh-120px)] md:h-[calc(100vh-140px)] overflow-hidden bg-[var(--terminal-bg)] text-slate-200 border border-stone-800 shadow-2xl"
+	class="flex flex-col lg:flex-row h-[calc(100vh-120px)] md:h-[calc(100vh-140px)] overflow-hidden bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-xl shadow-2xl"
 >
 	<!-- Mobile Top Nav (Horizontal Scroll) -->
 	<div
-		class="lg:hidden border-b border-stone-800 bg-[var(--header-bg)]/80 overflow-x-auto no-scrollbar backdrop-blur-md shrink-0"
+		class="lg:hidden border-b border-slate-800 bg-slate-900/80 overflow-x-auto no-scrollbar backdrop-blur-md shrink-0"
 	>
 		<div class="flex items-center gap-2 p-3 min-w-max">
 			{#each allMenuItems as item}
 				{@const isActive = activeTabId === item.id}
-				{@const colors = getColorClasses(isActive ? 'rust' : 'slate')}
 				<button
 					onclick={() => openTab(item.id, item.label, item.type)}
-					class="flex items-center gap-2.5 px-4 py-2 rounded-none border border-transparent transition-all
-					{isActive ? colors.active + ' border-rust/50 shadow-lg shadow-rust/10' : 'text-text-dim ' + colors.hover}"
+					class="flex items-center gap-2.5 px-4 py-2 rounded-lg border border-transparent transition-all
+					{isActive ? 'bg-blue-600/20 text-blue-400 border-blue-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}"
 				>
 					<Icon name={item.iconName} size="1rem" />
-					<span class="text-[10px] font-heading font-black uppercase tracking-widest">{item.label}</span>
+					<span class="text-xs font-bold uppercase tracking-wide">{item.label}</span>
 				</button>
 			{/each}
 		</div>
@@ -262,69 +224,68 @@
 
 	<!-- Desktop Sidebar -->
 	<div
-		class="hidden lg:flex flex-col border-r border-stone-800 transition-all duration-500 bg-[var(--header-bg)] {isSidebarOpen
-			? 'w-72'
+		class="hidden lg:flex flex-col border-r border-slate-800 transition-all duration-500 bg-slate-900/50 {isSidebarOpen
+			? 'w-64'
 			: 'w-20'}"
 	>
 		<!-- Sidebar Header -->
 		<div
-			class="p-6 border-b border-stone-800 bg-stone-900/30 flex items-center justify-between"
+			class="p-5 border-b border-slate-800 flex items-center justify-between"
 		>
 			{#if isSidebarOpen}
-				<div class="flex items-center gap-4" transition:fade={{ duration: 150 }}>
-					<div class="p-2.5 bg-rust/10 border border-rust/20 rounded-none industrial-frame shadow-lg">
-						<Database class="w-6 h-6 text-rust-light" />
+				<div class="flex items-center gap-3" transition:fade={{ duration: 150 }}>
+					<div class="p-2 bg-blue-500/10 border border-blue-500/20 rounded-lg shadow-lg">
+						<Database class="w-5 h-5 text-blue-400" />
 					</div>
 					<div>
-						<h2 class="font-heading font-black text-sm tracking-tighter text-slate-100">DATABASE</h2>
-						<p class="font-jetbrains text-[9px] text-rust/60 uppercase tracking-widest font-black mt-0.5">MANAGER V1</p>
+						<h2 class="font-heading font-bold text-sm text-slate-100">DATABASE</h2>
+						<p class="font-mono text-[10px] text-slate-500 mt-0.5">MANAGER V1</p>
 					</div>
 				</div>
 			{/if}
 			<button
 				onclick={() => (isSidebarOpen = !isSidebarOpen)}
-				class="p-2.5 rounded-none text-text-dim hover:text-rust hover:bg-rust/5 border border-transparent hover:border-rust/20 transition-all {isSidebarOpen ? '' : 'mx-auto'}"
+				class="p-2 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-all {isSidebarOpen ? '' : 'mx-auto'}"
 			>
 				{#if isSidebarOpen}
-					<ChevronLeft class="w-5 h-5" />
+					<ChevronLeft class="w-4 h-4" />
 				{:else}
-					<ChevronRight class="w-5 h-5" />
+					<ChevronRight class="w-4 h-4" />
 				{/if}
 			</button>
 		</div>
 
 		<!-- Sidebar Menu -->
-		<div class="flex-1 overflow-y-auto py-8 px-4 space-y-10 custom-scrollbar">
+		<div class="flex-1 overflow-y-auto py-6 px-3 space-y-8 custom-scrollbar">
 			{#each menuCategories as category}
-				<div class="space-y-3">
+				<div class="space-y-2">
 					{#if isSidebarOpen}
 						<h3
-							class="px-3 text-[9px] font-black text-text-dim uppercase tracking-[0.3em] flex items-center gap-2"
+							class="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2"
 							transition:fade={{ duration: 100 }}
 						>
-							<div class="w-1 h-1 bg-stone-800"></div>
 							{category.name}
 						</h3>
 					{/if}
-					<div class="space-y-1.5">
+					<div class="space-y-1">
 						{#each category.items as item}
 							{@const isActive = activeTabId === item.id}
 							<button
 								onclick={() => openTab(item.id, item.label, item.type)}
-								class="w-full flex items-center gap-4 p-3.5 transition-all duration-300 group
+								class="w-full flex items-center gap-3 p-2.5 rounded-lg transition-all duration-200 group
 								{isActive
-									? 'bg-rust text-white shadow-xl shadow-rust/20 border-l-2 border-rust-light'
-									: 'text-text-dim hover:bg-stone-900/50 hover:text-stone-200 border-l-2 border-transparent'}"
+									? 'bg-blue-600/10 text-blue-400 border border-blue-500/20 shadow-sm'
+									: 'text-slate-400 hover:bg-slate-800 hover:text-slate-200 border border-transparent'}"
 								title={item.description}
 							>
 								<div
-									class="transition-all duration-500 {isActive ? 'scale-110 shadow-rust/50' : 'group-hover:rotate-12 group-hover:scale-110 group-hover:text-rust'}"
+									class="{isSidebarOpen ? '' : 'mx-auto'} transition-colors {isActive ? 'text-blue-400' : 'text-slate-500 group-hover:text-slate-300'}"
 								>
-									<Icon name={item.iconName} size="1.1rem" />
+									<Icon name={item.iconName} size="1.2rem" />
 								</div>
 								{#if isSidebarOpen}
 									<div class="flex-1 text-left" transition:fade={{ duration: 100 }}>
-										<span class="font-heading text-[11px] font-black tracking-[0.1em] uppercase">{item.label}</span>
+										<span class="font-medium text-sm">{item.label}</span>
 									</div>
 								{/if}
 							</button>
@@ -337,25 +298,26 @@
 		<!-- Sidebar Footer -->
 		{#if isSidebarOpen}
 			<div
-				class="p-6 border-t border-stone-800 bg-stone-900/20"
+				class="p-4 border-t border-slate-800 bg-slate-900/30"
 				transition:fade={{ duration: 150 }}
 			>
-				<div class="flex items-center gap-4 text-[9px] font-black uppercase tracking-[0.2em] text-text-dim">
-					<div class="w-2 h-2 rounded-full bg-success animate-pulse shadow-emerald-500/50 shadow-lg"></div>
-					<span class="font-jetbrains">CLUSTER_SYNC: ACTIVE</span>
+				<div class="flex items-center gap-3 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+					<div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]"></div>
+					<span class="font-mono">CLUSTER SYNC: ACTIVE</span>
 				</div>
 			</div>
 		{/if}
 	</div>
 
 	<!-- Main Content Area -->
-	<div class="flex-1 flex flex-col min-w-0 bg-[var(--terminal-bg)]">
+	<div class="flex-1 flex flex-col min-w-0 bg-slate-950/30 relative">
+		<!-- Tab Bar -->
 		<QueryTabs {tabs} {activeTabId} onSelect={(id) => (activeTabId = id)} onClose={closeTab} />
 
 		<div class="flex-1 overflow-hidden relative">
 			{#each tabs as tab (tab.id)}
 				<div
-					class="absolute inset-0 bg-[var(--terminal-bg)] {activeTabId === tab.id
+					class="absolute inset-0 {activeTabId === tab.id
 						? 'z-10 block'
 						: 'z-0 hidden'}"
 				>
@@ -364,203 +326,207 @@
 					{:else if tab.type === 'browser'}
 						<DatabaseBrowserTab onSelectTable={handleSelectTable} />
 					{:else if tab.id === 'overview'}
-						<!-- Enhanced Overview Content -->
+						<!-- Modern Overview Content -->
 						<div
-							class="h-full overflow-auto bg-[var(--terminal-bg)] relative custom-scrollbar"
+							class="h-full overflow-auto custom-scrollbar p-6 sm:p-8 space-y-8"
 						>
-							<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
 							
-							<!-- Header -->
-							<div
-								class="p-6 sm:p-12 border-b border-stone-800 bg-[var(--header-bg)]"
-							>
-								<div class="flex flex-col sm:flex-row items-center gap-6 sm:gap-8 mb-2 text-center sm:text-left">
+							<!-- Header Section -->
+							<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+								<div class="flex items-center gap-5">
 									<div
-										class="p-4 sm:p-5 bg-rust/10 border border-rust/30 shadow-2xl shadow-rust/10 industrial-frame"
+										class="p-4 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl shadow-xl shadow-blue-900/20"
 									>
-										<Icon name="database" size="2.5rem" class="text-rust-light" />
+										<Icon name="database" size="2rem" class="text-white" />
 									</div>
 									<div>
-										<h1 class="text-2xl sm:text-4xl lg:text-5xl font-heading font-black tracking-tighter text-white uppercase">
-											DATABASE_OVERVIEW
+										<h1 class="text-2xl sm:text-3xl font-heading font-bold text-white tracking-tight">
+											Database Overview
 										</h1>
-										<div class="font-jetbrains text-[9px] sm:text-[11px] text-text-dim mt-2 uppercase tracking-[0.3em] font-black flex items-center justify-center sm:justify-start gap-3">
-											<div class="w-1.5 h-1.5 bg-rust animate-pulse shadow-rust/50 shadow-lg"></div>
-											PostgreSQL System // Real-time
-										</div>
+										<p class="text-sm text-slate-400 font-medium mt-1">
+											System Status & Performance Metrics
+										</p>
 									</div>
+								</div>
+								
+								<div class="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+									<div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+									<span class="text-xs font-bold text-emerald-400 uppercase tracking-wide">Operational</span>
 								</div>
 							</div>
 
 							<!-- Stats Grid -->
-							<div class="p-6 sm:p-12">
-								<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-8 mb-12">
-									<!-- Database Size Card -->
-									<div class="modern-industrial-card glass-panel p-6 sm:p-8 !rounded-none">
-										<div class="relative">
-											<div class="flex items-center justify-between mb-6 sm:mb-8">
-												<div class="p-2.5 sm:p-3 bg-rust/10 border border-rust/20 industrial-frame">
-													<Icon name="hard-drive" size="1.5rem" class="text-rust-light" />
-												</div>
-												<span class="font-jetbrains text-[8px] sm:text-[10px] font-black text-rust-light bg-rust/10 px-2 sm:px-3 py-1 sm:py-1.5 uppercase tracking-[0.2em] border border-rust/30">Size</span>
-											</div>
-											<div class="text-3xl sm:text-4xl font-heading font-black text-white mb-2 tracking-tighter">
-												{formatBytes(dbStats.size_bytes)}
-											</div>
-											<div class="font-jetbrains text-[8px] sm:text-[10px] text-text-dim uppercase tracking-widest font-bold">Total Storage Size</div>
+							<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+								<!-- Size -->
+								<div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-6 hover:border-blue-500/30 transition-all group">
+									<div class="flex justify-between items-start mb-4">
+										<div class="p-2.5 bg-blue-500/10 rounded-xl text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+											<HardDrive class="w-6 h-6" />
 										</div>
+										<span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Storage</span>
 									</div>
-
-									<!-- Connections Card -->
-									<div class="modern-industrial-card glass-panel p-6 sm:p-8 !rounded-none">
-										<div class="relative">
-											<div class="flex items-center justify-between mb-6 sm:mb-8">
-												<div class="p-2.5 sm:p-3 bg-success/10 border border-emerald-500/20 industrial-frame">
-													<Icon name="activity" size="1.5rem" class="text-success" />
-												</div>
-												<span class="font-jetbrains text-[8px] sm:text-[10px] font-black text-success bg-success/10 px-2 sm:px-3 py-1 sm:py-1.5 uppercase tracking-[0.2em] border border-emerald-500/30">Active</span>
-											</div>
-											<div class="text-3xl sm:text-4xl font-heading font-black text-white mb-2 tracking-tighter">
-												{dbStats.connections}
-											</div>
-											<div class="font-jetbrains text-[8px] sm:text-[10px] text-text-dim uppercase tracking-widest font-bold">Active Connections</div>
-										</div>
+									<div class="text-3xl font-heading font-bold text-white mb-1">
+										{formatBytes(dbStats.size_bytes)}
 									</div>
+									<div class="text-xs text-slate-400 font-medium">Total Volume Size</div>
+								</div>
 
-									<!-- Uptime Card -->
-									<div class="modern-industrial-card glass-panel p-6 sm:p-8 !rounded-none">
-										<div class="relative">
-											<div class="flex items-center justify-between mb-6 sm:mb-8">
-												<div class="p-2.5 sm:p-3 bg-purple-500/10 border border-purple-500/20 industrial-frame">
-													<Icon name="clock" size="1.5rem" class="text-purple-400" />
-												</div>
-												<span class="font-jetbrains text-[8px] sm:text-[10px] font-black text-purple-400 bg-purple-500/10 px-2 sm:px-3 py-1 sm:py-1.5 uppercase tracking-[0.2em] border border-purple-500/30">Uptime</span>
-											</div>
-											<div class="text-3xl sm:text-4xl font-heading font-black text-white mb-2 tracking-tighter">
-												{Math.floor(dbStats.uptime_seconds / 3600)}h
-											</div>
-											<div class="font-jetbrains text-[8px] sm:text-[10px] text-text-dim uppercase tracking-widest font-bold">
-												{Math.floor((dbStats.uptime_seconds % 3600) / 60)}m Online Time
-											</div>
+								<!-- Connections -->
+								<div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-6 hover:border-emerald-500/30 transition-all group">
+									<div class="flex justify-between items-start mb-4">
+										<div class="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+											<Activity class="w-6 h-6" />
 										</div>
+										<span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Active</span>
 									</div>
+									<div class="text-3xl font-heading font-bold text-white mb-1">
+										{dbStats.connections}
+									</div>
+									<div class="text-xs text-slate-400 font-medium">Open Connections</div>
+								</div>
 
-									<!-- Version Card -->
-									<div class="modern-industrial-card glass-panel p-6 sm:p-8 !rounded-none">
-										<div class="relative">
-											<div class="flex items-center justify-between mb-6 sm:mb-8">
-												<div class="p-2.5 sm:p-3 bg-amber-500/10 border border-amber-500/20 industrial-frame">
-													<Icon name="server" size="1.5rem" class="text-warning" />
-												</div>
-												<span class="font-jetbrains text-[8px] sm:text-[10px] font-black text-warning bg-amber-500/10 px-2 sm:px-3 py-1 sm:py-1.5 uppercase tracking-[0.2em] border border-amber-500/30">Postgres</span>
-											</div>
-											<div class="text-3xl sm:text-4xl font-heading font-black text-white mb-2 tracking-tighter truncate">
-												{dbStats.version.split(' ')[0] || 'PGSQL'}
-											</div>
-											<div class="font-jetbrains text-[8px] sm:text-[10px] text-text-dim uppercase tracking-widest font-bold truncate">
-												{dbStats.version.split(',')[0] || 'Build Information'}
-											</div>
+								<!-- Uptime -->
+								<div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-6 hover:border-purple-500/30 transition-all group">
+									<div class="flex justify-between items-start mb-4">
+										<div class="p-2.5 bg-purple-500/10 rounded-xl text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors">
+											<Clock class="w-6 h-6" />
 										</div>
+										<span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Uptime</span>
+									</div>
+									<div class="text-3xl font-heading font-bold text-white mb-1">
+										{Math.floor(dbStats.uptime_seconds / 3600)}h
+									</div>
+									<div class="text-xs text-slate-400 font-medium">
+										{Math.floor((dbStats.uptime_seconds % 3600) / 60)}m Since Last Restart
 									</div>
 								</div>
 
-								                                <!-- Quick Actions -->
-								                                <div class="mb-12 sm:mb-16">
-								                                    <h2 class="font-heading font-black text-xs sm:text-sm tracking-[0.3em] text-text-dim mb-6 sm:mb-8 flex items-center gap-4">
-								                                        <Icon name="ph:zap-bold" size="1.25rem" class="text-rust animate-pulse" />
-								                                        DATABASE ACTIONS
-								                                    </h2>
-								                                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-								                                        <button
-								                                            onclick={() => openTab('sql', 'SQL Editor', 'sql')}
-								                                            class="flex flex-col items-center gap-4 sm:gap-6 p-6 sm:p-10 bg-stone-900/40 border border-stone-800 hover:border-rust hover:bg-rust/5 transition-all duration-500 group industrial-frame"
-								                                        >
-								                                            <div class="p-3 sm:p-5 bg-stone-950 border border-stone-800 group-hover:border-rust/40 group-hover:text-rust transition-all group-hover:scale-110 shadow-lg">
-								                                                <Icon name="ph:terminal-window-bold" size="2rem" class="text-text-dim group-hover:text-rust" />
-								                                            </div>
-								                                            <span class="font-heading text-[10px] sm:text-[12px] font-black tracking-[0.2em] text-text-dim group-hover:text-white uppercase transition-colors">SQL Editor</span>
-								                                        </button>
-								
-								                                        <button
-								                                            onclick={() => openTab('functions', 'Functions', 'functions')}
-								                                            class="flex flex-col items-center gap-4 sm:gap-6 p-6 sm:p-10 bg-stone-900/40 border border-stone-800 hover:border-rust hover:bg-rust/5 transition-all duration-500 group industrial-frame"
-								                                        >
-								                                            <div class="p-3 sm:p-5 bg-stone-950 border border-stone-800 group-hover:border-rust/40 group-hover:text-rust transition-all group-hover:scale-110 shadow-lg">
-								                                                <Icon name="ph:code-bold" size="2rem" class="text-text-dim group-hover:text-rust" />
-								                                            </div>
-								                                            <span class="font-heading text-[10px] sm:text-[12px] font-black tracking-[0.2em] text-text-dim group-hover:text-white uppercase transition-colors">Functions</span>
-								                                        </button>
-								
-								                                        <button
-								                                            onclick={() => openTab('backups', 'Backups', 'backups')}
-								                                            class="flex flex-col items-center gap-4 sm:gap-6 p-6 sm:p-10 bg-stone-900/40 border border-stone-800 hover:border-rust hover:bg-rust/5 transition-all duration-500 group industrial-frame"
-								                                        >
-								                                            <div class="p-3 sm:p-5 bg-stone-950 border border-stone-800 group-hover:border-rust/40 group-hover:text-rust transition-all group-hover:scale-110 shadow-lg">
-								                                                <Icon name="ph:archive-bold" size="2rem" class="text-text-dim group-hover:text-rust" />
-								                                            </div>
-								                                            <span class="font-heading text-[10px] sm:text-[12px] font-black tracking-[0.2em] text-text-dim group-hover:text-white uppercase transition-colors">Backups</span>
-								                                        </button>
-								
-								                                        <button
-								                                            onclick={() => openTab('roles', 'Roles', 'roles')}
-								                                            class="flex flex-col items-center gap-4 sm:gap-6 p-6 sm:p-10 bg-stone-900/40 border border-stone-800 hover:border-rust hover:bg-rust/5 transition-all duration-500 group industrial-frame"
-								                                        >
-								                                            <div class="p-3 sm:p-5 bg-stone-950 border border-stone-800 group-hover:border-rust/40 group-hover:text-rust transition-all group-hover:scale-110 shadow-lg">
-								                                                <Icon name="ph:shield-check-bold" size="2rem" class="text-text-dim group-hover:text-rust" />
-								                                            </div>
-								                                            <span class="font-heading text-[10px] sm:text-[12px] font-black tracking-[0.2em] text-text-dim group-hover:text-white uppercase transition-colors">Security</span>
-								                                        </button>
-								                                    </div>
-								                                </div>
-								
-								                                <!-- Table Stats -->
-								                                {#if tableCounts.length > 0}
-								                                    <div class="w-full">
-								                                        <h2 class="font-heading font-black text-sm tracking-[0.3em] text-text-dim mb-8 flex items-center gap-4">
-								                                            <Icon name="ph:chart-bar-bold" size="1.25rem" class="text-rust animate-pulse" />
-								                                            TABLE STATISTICS
-								                                        </h2>
-								                                        <div
-								                                            class="bg-stone-900/30 border border-stone-800 overflow-hidden industrial-frame"
-								                                        >
-								                                            <div class="overflow-x-auto custom-scrollbar">
-								                                                <table class="w-full">
-								                                                    <thead class="bg-stone-950 border-b border-stone-800">
-								                                                        <tr>
-								                                                            <th
-								                                                                class="px-8 py-5 text-left text-[11px] font-black text-text-dim uppercase tracking-[0.3em]"
-								                                                                >Table Name</th
-								                                                            >
-								                                                            <th
-								                                                                class="px-8 py-5 text-right text-[11px] font-black text-text-dim uppercase tracking-[0.3em]"
-								                                                                >Row Count</th
-								                                                            >
-								                                                        </tr>
-								                                                    </thead>													<tbody class="divide-y divide-stone-800/50">
-														{#each tableCounts as table}
-															<tr class="hover:bg-rust/5 transition-all duration-300 group">
-																<td class="px-8 py-5">
-																	<div class="flex items-center gap-5">
-																		<Icon name="ph:table-bold" size="1.1rem" class="text-stone-700 group-hover:text-rust transition-colors" />
-																		<span class="font-jetbrains text-xs font-black text-stone-400 uppercase tracking-widest group-hover:text-stone-200"
-																			>{table.name}</span
-																		>
-																	</div>
-																</td>
-																<td class="px-8 py-5 text-right">
-																	<span class="font-jetbrains text-xs text-rust font-black tracking-widest shadow-rust/20"
-																		>{table.count?.toLocaleString() ?? '0'}</span
+								<!-- Version -->
+								<div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-6 hover:border-amber-500/30 transition-all group">
+									<div class="flex justify-between items-start mb-4">
+										<div class="p-2.5 bg-amber-500/10 rounded-xl text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition-colors">
+											<Server class="w-6 h-6" />
+										</div>
+										<span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Engine</span>
+									</div>
+									<div class="text-3xl font-heading font-bold text-white mb-1 truncate">
+										{dbStats.version.split(' ')[0] || 'PGSQL'}
+									</div>
+									<div class="text-xs text-slate-400 font-medium truncate">
+										{dbStats.version.split(',')[0] || 'Build Information'}
+									</div>
+								</div>
+							</div>
+
+							<!-- Quick Actions -->
+							<div class="space-y-6">
+								<h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-3">
+									<Zap class="w-4 h-4 text-blue-400" />
+									Quick Actions
+								</h2>
+								<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+									<button
+										onclick={() => openTab('sql', 'SQL Editor', 'sql')}
+										class="flex items-center gap-4 p-5 bg-slate-800/30 border border-slate-700/50 rounded-xl hover:bg-slate-800 hover:border-blue-500/30 transition-all group text-left"
+									>
+										<div class="p-3 bg-stone-900 rounded-lg text-slate-400 group-hover:text-blue-400 group-hover:bg-blue-500/10 transition-colors">
+											<Terminal class="w-6 h-6" />
+										</div>
+										<div>
+											<div class="font-bold text-slate-200 group-hover:text-white">SQL Editor</div>
+											<div class="text-xs text-slate-500">Run queries</div>
+										</div>
+									</button>
+
+									<button
+										onclick={() => openTab('functions', 'Functions', 'functions')}
+										class="flex items-center gap-4 p-5 bg-slate-800/30 border border-slate-700/50 rounded-xl hover:bg-slate-800 hover:border-purple-500/30 transition-all group text-left"
+									>
+										<div class="p-3 bg-stone-900 rounded-lg text-slate-400 group-hover:text-purple-400 group-hover:bg-purple-500/10 transition-colors">
+											<Code2 class="w-6 h-6" />
+										</div>
+										<div>
+											<div class="font-bold text-slate-200 group-hover:text-white">Functions</div>
+											<div class="text-xs text-slate-500">Procedures</div>
+										</div>
+									</button>
+
+									<button
+										onclick={() => openTab('backups', 'Backups', 'backups')}
+										class="flex items-center gap-4 p-5 bg-slate-800/30 border border-slate-700/50 rounded-xl hover:bg-slate-800 hover:border-orange-500/30 transition-all group text-left"
+									>
+										<div class="p-3 bg-stone-900 rounded-lg text-slate-400 group-hover:text-orange-400 group-hover:bg-orange-500/10 transition-colors">
+											<HardDrive class="w-6 h-6" />
+										</div>
+										<div>
+											<div class="font-bold text-slate-200 group-hover:text-white">Backups</div>
+											<div class="text-xs text-slate-500">Archives</div>
+										</div>
+									</button>
+
+									<button
+										onclick={() => openTab('roles', 'Roles', 'roles')}
+										class="flex items-center gap-4 p-5 bg-slate-800/30 border border-slate-700/50 rounded-xl hover:bg-slate-800 hover:border-emerald-500/30 transition-all group text-left"
+									>
+										<div class="p-3 bg-stone-900 rounded-lg text-slate-400 group-hover:text-emerald-400 group-hover:bg-emerald-500/10 transition-colors">
+											<Shield class="w-6 h-6" />
+										</div>
+										<div>
+											<div class="font-bold text-slate-200 group-hover:text-white">Security</div>
+											<div class="text-xs text-slate-500">Roles & Users</div>
+										</div>
+									</button>
+								</div>
+							</div>
+
+							<!-- Table Stats -->
+							{#if tableCounts.length > 0}
+								<div class="space-y-6">
+									<h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-3">
+										<BarChart3 class="w-4 h-4 text-blue-400" />
+										Table Statistics
+									</h2>
+									<div
+										class="bg-slate-800/30 border border-slate-700/50 rounded-2xl overflow-hidden"
+									>
+										<div class="overflow-x-auto custom-scrollbar">
+											<table class="w-full text-left">
+												<thead class="bg-slate-900/50 border-b border-slate-700/50">
+													<tr>
+														<th
+															class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider"
+															>Table Name</th
+														>
+														<th
+															class="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-wider"
+															>Row Count</th
+														>
+													</tr>
+												</thead>
+												<tbody class="divide-y divide-slate-700/30">
+													{#each tableCounts as table}
+														<tr class="hover:bg-slate-800/50 transition-colors group">
+															<td class="px-6 py-4">
+																<div class="flex items-center gap-3">
+																	<Table class="w-4 h-4 text-slate-500 group-hover:text-blue-400 transition-colors" />
+																	<span class="font-mono text-sm font-medium text-slate-300 group-hover:text-white"
+																		>{table.name}</span
 																	>
-																</td>
-															</tr>
-														{/each}
-													</tbody>
-												</table>
-											</div>
+																</div>
+															</td>
+															<td class="px-6 py-4 text-right">
+																<span class="font-mono text-sm font-bold text-slate-400 group-hover:text-white"
+																	>{table.count?.toLocaleString() ?? '0'}</span
+																>
+															</td>
+														</tr>
+													{/each}
+												</tbody>
+											</table>
 										</div>
 									</div>
-								{/if}
-							</div>
+								</div>
+							{/if}
 						</div>
 					{:else if tab.type === 'sql'}
 						<SQLEditorTab />
@@ -573,11 +539,11 @@
 					{:else if tab.type === 'functions'}
 						<FunctionsTab />
 					{:else}
-						<div class="p-12 text-stone-700 flex flex-col items-center justify-center h-full gap-6">
-							<div class="p-8 bg-stone-900/20 border border-stone-800 industrial-frame">
-								<FileText class="w-20 h-20 opacity-10" />
+						<div class="p-12 text-slate-500 flex flex-col items-center justify-center h-full gap-4">
+							<div class="p-6 bg-slate-800/50 rounded-full">
+								<FileText class="w-12 h-12 opacity-50" />
 							</div>
-							<p class="font-heading font-black text-sm tracking-[0.4em] uppercase animate-pulse">Neural_Buffer_Upgrading</p>
+							<p class="font-medium">Loading Module...</p>
 						</div>
 					{/if}
 				</div>
@@ -587,9 +553,10 @@
 </div>
 
 <style>
-	/* Custom scrollbar for sidebar */
+	/* Custom scrollbar */
 	.custom-scrollbar::-webkit-scrollbar {
-		width: 4px;
+		width: 6px;
+		height: 6px;
 	}
 
 	.custom-scrollbar::-webkit-scrollbar-track {
@@ -597,14 +564,14 @@
 	}
 
 	.custom-scrollbar::-webkit-scrollbar-thumb {
-		background: #2a2a2a;
+		background: #334155;
+		border-radius: 3px;
 	}
 
 	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-		background: var(--color-rust);
+		background: #475569;
 	}
 
-	/* Hide scrollbar for mobile horizontal nav */
 	.no-scrollbar::-webkit-scrollbar {
 		display: none;
 	}

@@ -6,7 +6,7 @@
 	import ConfirmModal from '$lib/components/database/ConfirmModal.svelte';
 	import { onMount } from 'svelte';
 	import { notifications } from '$lib/stores';
-	import { Database, RefreshCw, FolderTree, Table, Layers } from 'lucide-svelte';
+	import { Database, RefreshCw, FolderTree, Table, Layers, Plus } from 'lucide-svelte';
 
 	let { onSelectTable } = $props<{
 		onSelectTable: (schema: string, table: string) => void;
@@ -238,40 +238,50 @@
 	});
 </script>
 
-<div class="h-full flex flex-col bg-[var(--terminal-bg)]">
+<div class="h-full flex flex-col bg-slate-900/30">
 	<!-- Header -->
-	<div class="shrink-0 border-b border-stone-800 bg-[var(--header-bg)]">
+	<div class="shrink-0 border-b border-slate-800/50 bg-slate-900/50 backdrop-blur-sm">
 		<!-- Title Bar -->
 		<div class="px-6 py-4 flex items-center justify-between">
 			<div class="flex items-center gap-4">
-				<div class="p-2.5 bg-rust/10 border border-rust/20 rounded-none industrial-frame">
-					<FolderTree class="w-5 h-5 text-rust-light" />
+				<div class="p-2.5 bg-indigo-500/10 border border-indigo-500/20 rounded-lg shadow-sm">
+					<FolderTree class="w-5 h-5 text-indigo-400" />
 				</div>
 				<div>
-					<h2 class="text-base font-heading font-black text-slate-100 uppercase tracking-tighter">SCHEMA_BROWSER</h2>
-					<p class="font-jetbrains text-[10px] text-text-dim uppercase tracking-widest mt-1">Explore and manage database topology</p>
+					<h2 class="text-sm font-heading font-bold text-white tracking-tight">Schema Browser</h2>
+					<p class="text-xs text-slate-400 mt-0.5">Explore database topology</p>
 				</div>
 			</div>
 
-			<button
-				onclick={refresh}
-				disabled={isRefreshing}
-				class="p-2.5 text-text-dim hover:text-rust hover:bg-rust/10 transition-all disabled:opacity-20"
-				title="Refresh"
-			>
-				<RefreshCw class="w-5 h-5 {isRefreshing ? 'animate-spin' : ''}" />
-			</button>
+			<div class="flex items-center gap-2">
+				<button
+					onclick={() => (isSchemaCreatorOpen = true)}
+					class="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 transition-all rounded-lg"
+					title="New Schema"
+				>
+					<Plus class="w-5 h-5" />
+				</button>
+				<div class="w-px h-6 bg-slate-800 mx-1"></div>
+				<button
+					onclick={refresh}
+					disabled={isRefreshing}
+					class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 transition-all rounded-lg disabled:opacity-50"
+					title="Refresh"
+				>
+					<RefreshCw class="w-5 h-5 {isRefreshing ? 'animate-spin' : ''}" />
+				</button>
+			</div>
 		</div>
 
 		<!-- Stats Bar -->
-		<div class="px-6 pb-4 flex items-center gap-4">
-			<div class="flex items-center gap-3 px-3 py-1.5 bg-stone-900 border border-stone-800">
-				<Layers class="w-3.5 h-3.5 text-rust" />
-				<span class="font-jetbrains text-[11px] font-black text-stone-200 uppercase tracking-widest">{totalSchemas} SCHEMAS</span>
+		<div class="px-6 pb-4 flex items-center gap-3">
+			<div class="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 border border-slate-700/50 rounded-full">
+				<Layers class="w-3.5 h-3.5 text-indigo-400" />
+				<span class="text-[10px] font-bold text-slate-300 uppercase tracking-wider">{totalSchemas} Schemas</span>
 			</div>
-			<div class="flex items-center gap-3 px-3 py-1.5 bg-stone-900 border border-stone-800">
-				<Table class="w-3.5 h-3.5 text-rust-light" />
-				<span class="font-jetbrains text-[11px] font-black text-stone-200 uppercase tracking-widest">{totalTables} TABLES</span>
+			<div class="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 border border-slate-700/50 rounded-full">
+				<Table class="w-3.5 h-3.5 text-blue-400" />
+				<span class="text-[10px] font-bold text-slate-300 uppercase tracking-wider">{totalTables} Tables</span>
 			</div>
 		</div>
 	</div>

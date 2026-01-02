@@ -138,23 +138,23 @@
 	});
 </script>
 
-<div class="flex flex-col h-full bg-[var(--terminal-bg)]">
+<div class="flex flex-col h-full bg-slate-900/30">
 	<!-- Header -->
-	<div class="border-b border-stone-800 bg-[var(--header-bg)]">
+	<div class="border-b border-slate-800/50 bg-slate-900/50 backdrop-blur-sm">
 		<!-- Table Info Bar -->
 		<div class="px-6 py-4 flex items-center justify-between">
 			<div class="flex items-center gap-4">
-				<div class="p-2.5 bg-rust/10 border border-rust/20 rounded-none industrial-frame">
-					<Database class="w-5 h-5 text-rust-light" />
+				<div class="p-2.5 bg-blue-500/10 border border-blue-500/20 rounded-lg shadow-sm">
+					<Database class="w-5 h-5 text-blue-400" />
 				</div>
 				<div>
-					<h2 class="text-base font-heading font-black text-slate-100 flex items-center gap-3 uppercase tracking-tighter">
+					<h2 class="text-base font-heading font-bold text-white flex items-center gap-3 tracking-tight">
 						{table}
-						<span class="font-jetbrains text-[9px] font-black text-rust bg-rust/10 px-2 py-0.5 border border-rust/20 tracking-widest uppercase">
+						<span class="font-mono text-[10px] font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20 uppercase">
 							{schema}
 						</span>
 					</h2>
-					<div class="flex items-center gap-4 text-[10px] font-jetbrains font-bold text-text-dim mt-1.5 uppercase tracking-widest">
+					<div class="flex items-center gap-4 text-xs font-medium text-slate-400 mt-1">
 						<span class="flex items-center gap-1.5">
 							<Rows3 class="w-3.5 h-3.5" />
 							{totalCount} rows
@@ -170,7 +170,7 @@
 			<button
 				onclick={loadData}
 				disabled={loading}
-				class="p-2.5 text-text-dim hover:text-rust hover:bg-rust/10 transition-all disabled:opacity-20"
+				class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 transition-all rounded-lg disabled:opacity-50"
 				title="Refresh Data"
 			>
 				<RefreshCw class="w-5 h-5 {loading ? 'animate-spin' : ''}" />
@@ -181,20 +181,20 @@
 		<div class="flex items-center gap-1 px-6">
 			<button
 				onclick={() => (view = 'data')}
-				class="px-6 py-3 text-[11px] font-heading font-black uppercase tracking-[0.2em] border-b-2 transition-all flex items-center gap-3 {view ===
+				class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider border-b-2 transition-all flex items-center gap-2 {view ===
 				'data'
-					? 'border-rust text-rust bg-rust/5'
-					: 'border-transparent text-text-dim hover:text-stone-300 hover:bg-stone-900/50'}"
+					? 'border-blue-500 text-blue-400 bg-blue-500/5'
+					: 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'}"
 			>
 				<Table class="w-4 h-4" />
 				Data
 			</button>
 			<button
 				onclick={() => (view = 'structure')}
-				class="px-6 py-3 text-[11px] font-heading font-black uppercase tracking-[0.2em] border-b-2 transition-all flex items-center gap-3 {view ===
+				class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider border-b-2 transition-all flex items-center gap-2 {view ===
 				'structure'
-					? 'border-rust text-rust bg-rust/5'
-					: 'border-transparent text-text-dim hover:text-stone-300 hover:bg-stone-900/50'}"
+					? 'border-purple-500 text-purple-400 bg-purple-500/5'
+					: 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'}"
 			>
 				<Settings class="w-4 h-4" />
 				Structure
