@@ -3,24 +3,21 @@
 		Save,
 		X,
 		RotateCw,
-		Palette,
 		Bell,
 		TriangleAlert,
 		ShieldAlert,
-		Check,
 		ChevronRight
 	} from 'lucide-svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import type { Note } from '$lib/stores';
-	import { siteSettings } from '$lib/stores';
-	import { autofocus } from '$lib/actions'; // Reusing the autofocus action
+	import { autofocus } from '$lib/actions';
 
 	let {
 		isOpen = $bindable(false),
-		note: initialNote = null, // Note object for editing, or null for creation
-		onSave, // (note: Note) => Promise<void>
-		onClose // () => void
+		note: initialNote = null,
+		onSave,
+		onClose
 	} = $props<{
 		isOpen: boolean;
 		note?: Note | null;
@@ -29,11 +26,11 @@
 	}>();
 
 	let currentNote = $state<Note>({
-		id: initialNote?.id || 0, // id is 0 for new notes
+		id: initialNote?.id || 0,
 		title: initialNote?.title || '',
 		content: initialNote?.content || '',
-		color: initialNote?.color || 'yellow', // Default color
-		status: initialNote?.status || 'normal', // Default status
+		color: initialNote?.color || 'yellow',
+		status: initialNote?.status || 'normal',
 		rotation: initialNote?.rotation || 0,
 		created_at: initialNote?.created_at || new Date().toISOString(),
 		updated_at: initialNote?.updated_at || new Date().toISOString()
@@ -42,10 +39,9 @@
 	let loading = $state(false);
 	let isEditing = $derived(initialNote !== null && initialNote.id !== 0);
 
-	const noteColors = ['yellow', 'blue', 'green', 'purple', 'orange', 'pink', 'cyan']; // Extended colors
+	const noteColors = ['yellow', 'blue', 'green', 'purple', 'orange', 'pink', 'cyan'];
 	const noteStatuses: Array<Note['status']> = ['normal', 'warn', 'critical'];
 
-	// Reset form when modal opens or initialNote changes (for editing)
 	$effect(() => {
 		if (isOpen) {
 			currentNote = {
@@ -54,7 +50,7 @@
 				content: initialNote?.content || '',
 				color: initialNote?.color || 'yellow',
 				status: initialNote?.status || 'normal',
-				rotation: initialNote?.rotation || Math.floor(Math.random() * 6) - 3, // Small random rotation for new notes
+				rotation: initialNote?.rotation || Math.floor(Math.random() * 6) - 3,
 				created_at: initialNote?.created_at || new Date().toISOString(),
 				updated_at: initialNote?.updated_at || new Date().toISOString()
 			};
@@ -63,17 +59,15 @@
 
 	async function handleSave() {
 		if (!currentNote.title.trim() && !currentNote.content.trim()) {
-			// Optionally show a notification
 			return;
 		}
 		loading = true;
 		try {
-			// Ensure currentNote has required fields for the backend if it's a new note
 			const noteToSave: Note = {
 				...currentNote,
 				created_at: currentNote.created_at || new Date().toISOString(),
 				updated_at: new Date().toISOString(),
-				id: currentNote.id || 0 // Ensure ID is set for type compliance, 0 for new
+				id: currentNote.id || 0
 			};
 
 			await onSave(noteToSave);
@@ -93,7 +87,6 @@
 		let colorClass = '';
 		let statusClass = '';
 
-		// Base colors
 		switch (color) {
 			case 'yellow':
 				colorClass = 'bg-yellow-100 text-yellow-900 border-yellow-200';
@@ -118,10 +111,9 @@
 				break;
 			default:
 				colorClass = 'bg-slate-100 text-slate-900 border-slate-200';
-				break; // Default to a neutral color
+				break;
 		}
 
-		// Status overlays
 		switch (status) {
 			case 'warn':
 				statusClass = 'border-amber-400 ring-2 ring-amber-300/50';
@@ -129,7 +121,7 @@
 			case 'critical':
 				statusClass = 'border-red-500 ring-2 ring-red-400/50';
 				break;
-			case 'normal': // no additional class for normal
+			case 'normal':
 			default:
 				break;
 		}
@@ -166,11 +158,8 @@
 				class="relative w-full min-h-[350px] flex flex-col p-8 rounded-none border-2 shadow-2xl {getNoteCardClasses(
 					currentNote.color,
 					currentNote.status
-				)}"
-				class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
-				class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
+				)} industrial-sharp"
 			>
-				<!-- Paper texture overlay -->
 				<div class="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/pinstriped-suit.png')]"></div>
 
 				<div class="relative z-10 flex flex-col h-full flex-1">
@@ -193,7 +182,6 @@
 					></textarea>
 				</div>
 
-				<!-- Close Button -->
 				<button
 					onclick={onClose}
 					class="absolute top-4 right-4 p-1.5 text-black/40 hover:text-black hover:bg-black/5 transition-all rounded-none"
@@ -209,7 +197,7 @@
 				<div class="flex flex-wrap gap-4 justify-center">
 					<!-- Color Palette -->
 					<div
-						class="p-2 bg-black/60 backdrop-blur-md border border-stone-800 flex gap-2 shadow-2xl industrial-frame"
+						class="p-2 bg-black/60 backdrop-blur-md border border-stone-800 flex gap-2 shadow-2xl industrial-sharp"
 					>
 						{#each noteColors as color}
 							<button
@@ -239,14 +227,14 @@
 
 					<!-- Status Selector -->
 					<div
-						class="p-2 bg-black/60 backdrop-blur-md border border-stone-800 flex gap-2 shadow-2xl industrial-frame"
+						class="p-2 bg-black/60 backdrop-blur-md border border-stone-800 flex gap-2 shadow-2xl industrial-sharp"
 					>
 						{#each noteStatuses as status}
 							<button
 								onclick={() => (currentNote.status = status)}
 								class="w-8 h-8 flex items-center justify-center border transition-all {currentNote.status === status
 									? 'bg-rust/20 border-rust text-white shadow-lg shadow-rust/20'
-									: 'border-white/5 text-text-dim hover:text-text-dim hover:border-white/20'}"
+									: 'border-white/5 text-stone-500 hover:text-stone-300 hover:border-white/20'}"
 								title={status.toUpperCase()}
 							>
 								{#if status === 'normal'}
@@ -265,7 +253,7 @@
 				<button
 					onclick={handleSave}
 					disabled={loading || (!currentNote.title.trim() && !currentNote.content.trim())}
-					class="w-full py-4 bg-rust hover:bg-rust-light text-white font-heading font-black text-xs uppercase tracking-[0.3em] shadow-2xl transition-all flex items-center justify-center gap-4 disabled:opacity-30 industrial-frame"
+					class="w-full py-4 bg-rust hover:bg-rust-light text-white font-heading font-black text-xs uppercase tracking-[0.3em] shadow-2xl transition-all flex items-center justify-center gap-4 disabled:opacity-30 industrial-sharp"
 				>
 					{#if loading}
 						<RotateCw class="w-5 h-5 animate-spin" />

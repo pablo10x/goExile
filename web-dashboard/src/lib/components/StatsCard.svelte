@@ -45,28 +45,28 @@
 			accent: 'bg-rust'
 		},
 		emerald: {
-			border: 'border-[var(--color-success)]/20',
-			text: 'text-[var(--color-success)]',
-			bg: 'bg-[var(--color-success)]/5',
-			iconBg: 'bg-[var(--color-success)]',
-			glow: 'shadow-[var(--color-success)]/10',
-			accent: 'bg-[var(--color-success)]'
+			border: 'border-emerald-500/20',
+			text: 'text-emerald-400',
+			bg: 'bg-emerald-500/5',
+			iconBg: 'bg-emerald-500',
+			glow: 'shadow-emerald-500/10',
+			accent: 'bg-emerald-500'
 		},
 		orange: {
-			border: 'border-[var(--color-warning)]/20',
-			text: 'text-[var(--color-warning)]',
-			bg: 'bg-[var(--color-warning)]/5',
-			iconBg: 'bg-[var(--color-warning)]',
-			glow: 'shadow-[var(--color-warning)]/10',
-			accent: 'bg-[var(--color-warning)]'
+			border: 'border-orange-500/20',
+			text: 'text-orange-400',
+			bg: 'bg-orange-500/5',
+			iconBg: 'bg-orange-500',
+			glow: 'shadow-orange-500/10',
+			accent: 'bg-orange-500'
 		},
 		red: {
-			border: 'border-[var(--color-danger)]/20',
-			text: 'text-[var(--color-danger)]',
-			bg: 'bg-[var(--color-danger)]/5',
-			iconBg: 'bg-[var(--color-danger)]',
-			glow: 'shadow-[var(--color-danger)]/10',
-			accent: 'bg-[var(--color-danger)]'
+			border: 'border-red-500/20',
+			text: 'text-red-400',
+			bg: 'bg-red-500/5',
+			iconBg: 'bg-red-500',
+			glow: 'shadow-red-500/10',
+			accent: 'bg-red-500'
 		},
 		purple: {
 			border: 'border-purple-500/20',
@@ -77,12 +77,12 @@
 			accent: 'bg-purple-500'
 		},
 		cyan: {
-			border: 'border-[var(--color-info)]/20',
-			text: 'text-[var(--color-info)]',
-			bg: 'bg-[var(--color-info)]/5',
-			iconBg: 'bg-[var(--color-info)]',
-			glow: 'shadow-[var(--color-info)]/10',
-			accent: 'bg-[var(--color-info)]'
+			border: 'border-cyan-500/20',
+			text: 'text-cyan-400',
+			bg: 'bg-cyan-500/5',
+			iconBg: 'bg-cyan-500',
+			glow: 'shadow-cyan-500/10',
+			accent: 'bg-cyan-500'
 		}
 	};
 
@@ -91,8 +91,7 @@
 </script>
 
 <div
-	class={`group modern-industrial-card tactical-border ${!$siteSettings.aesthetic.industrial_styling ? 'rounded-2xl' : ''} cursor-pointer font-primary`}
-	class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
+	class="group modern-industrial-card tactical-border industrial-sharp cursor-pointer font-primary"
 	onmouseenter={() => isHovered = true}
 	onmouseleave={() => isHovered = false}
 	role="button"
@@ -109,10 +108,7 @@
 	<div class={`absolute top-0 left-0 w-full h-0.5 ${colors.accent} opacity-30 group-hover:opacity-100 transition-opacity duration-500`}></div>
 
 	<!-- Glass Overlay -->
-	<div class="absolute inset-0 backdrop-blur-sm" style="background-color: var(--card-bg-color);"></div>
-
-	<!-- Tactical Background Pattern -->
-	<div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(circle at 2px 2px, var(--color-rust) 1px, transparent 0); background-size: 24px 24px;"></div>
+	<div class="absolute inset-0 backdrop-blur-sm bg-black/40"></div>
 
 	<!-- Hover Intelligence Overlay -->
 	<CardHoverOverlay active={isHovered} />
@@ -122,7 +118,7 @@
 			<div class="flex flex-col gap-1">
 				<div class="flex items-center gap-2">
 					<div class={`w-1 h-1 rounded-full ${colors.accent} animate-pulse`}></div>
-					<span class="text-[9px] font-jetbrains font-black uppercase tracking-[0.2em]" style="color: var(--text-dim)">SIGNAL_STREAM</span>
+					<span class="text-[9px] font-jetbrains font-black uppercase tracking-[0.2em] text-stone-500">SIGNAL_STREAM</span>
 				</div>
 				<span class="text-[11px] font-heading font-black uppercase tracking-widest text-stone-300"
 					>{title}</span
@@ -131,10 +127,7 @@
 
 			{#if iconName || Icon}
 				<div
-					class={`p-2.5 bg-opacity-20 backdrop-blur-xl transition-all duration-500 group-hover:bg-opacity-100 group-hover:scale-110 shadow-lg ${colors.iconBg}`}
-					class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
-					class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
-					class:!p-1.5={$siteSettings.dashboard.compact_mode}
+					class={`p-2.5 bg-opacity-20 backdrop-blur-xl transition-all duration-500 group-hover:bg-opacity-100 group-hover:scale-110 shadow-lg ${colors.iconBg} industrial-sharp`}
 				>
 					{#if iconName}
 						<IconComponent name={iconName} size="1rem" class="text-white drop-shadow-md" />
@@ -147,15 +140,11 @@
 		</div>
 
 		<div class="space-y-3">
-			<div class={`text-4xl font-heading font-black text-white tabular-nums tracking-tighter drop-shadow-sm`} class:!text-2xl={$siteSettings.dashboard.compact_mode}>
+			<div class={`text-4xl font-heading font-black text-white tabular-nums tracking-tighter drop-shadow-sm`}>
 				{value}
 			</div>
 			{#if subValue}
-				<div class={`text-[10px] font-jetbrains font-bold leading-relaxed uppercase tracking-wider ${subValueClass} bg-black/30 p-2 backdrop-blur-md`}
-					 class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
-					 class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
-					 class:!text-[8px]={$siteSettings.dashboard.compact_mode}
-					 class:!p-1={$siteSettings.dashboard.compact_mode}
+				<div class={`text-[10px] font-jetbrains font-bold leading-relaxed uppercase tracking-wider ${subValueClass} bg-black/30 p-2 backdrop-blur-md industrial-sharp`}
 				>
 					{@html sanitizedSubValue}
 				</div>

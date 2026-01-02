@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import * as THREE from 'three';
-	import { siteSettings } from '$lib/stores';
 
 	let container: HTMLDivElement;
 	let renderer: THREE.WebGLRenderer | null = null;
@@ -61,7 +60,7 @@
 	}
 
 	function init() {
-		if (!container || $siteSettings.performance?.low_power_mode) return;
+		if (!container) return;
 
 		const width = container.clientWidth;
 		const height = container.clientHeight;
@@ -92,16 +91,7 @@
 		const frameInterval = 1000 / targetFPS;
 
 		function animate(time: number) {
-			if ($siteSettings.performance?.low_power_mode) {
-				cleanup();
-				return;
-			}
 			frameId = requestAnimationFrame(animate);
-
-			if ($siteSettings.aesthetic?.reduced_motion || !$siteSettings.aesthetic.animations_enabled) {
-				if (renderer && scene && camera) renderer.render(scene, camera);
-				return;
-			}
 
 			const deltaTime = time - lastTime;
 			if (deltaTime < frameInterval) return;
@@ -149,14 +139,6 @@
 	onMount(() => {
 		init();
 		return () => cleanup();
-	});
-
-	$effect(() => {
-		if ($siteSettings.performance?.low_power_mode) {
-			cleanup();
-		} else if (!frameId) {
-			init();
-		}
 	});
 </script>
 

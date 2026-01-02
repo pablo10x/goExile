@@ -74,38 +74,13 @@
 		md: "1rem",
 		lg: "1.25rem"
 	};
-
-	// Dynamic Style Generation
-	// We use a derived state to construct the style string
-	let buttonStyle = $derived.by(() => {
-		const btnConfig = $siteSettings.aesthetic.buttons;
-		if (!btnConfig) return ''; // Fallback to classes
-
-		// Only apply dynamic styles for variants that are configured
-		const vConfig = (btnConfig as any)[variant];
-		if (!vConfig) return '';
-
-		return `
-			border-radius: ${btnConfig.border_radius}px;
-			font-weight: ${btnConfig.font_weight};
-			text-transform: ${btnConfig.text_transform};
-			background-color: ${vConfig.bg_color};
-			color: ${vConfig.text_color};
-			border-color: ${vConfig.border_color};
-			--hover-bg: ${vConfig.hover_bg};
-		`;
-	});
-
-	// We need to handle hover state manually if we use inline styles for background
-	// Or we can use CSS variables. Let's use CSS variables for cleanliness.
 </script>
 
 {#if href}
 	<a
 		{href}
 		{title}
-		class="{baseClasses} {sizeClasses[size]} {className} {buttonStyle ? 'custom-btn' : defaultColors[variant]}"
-		style={buttonStyle}
+		class="{baseClasses} {sizeClasses[size]} {className} {defaultColors[variant]} industrial-sharp"
 		onclick={handleClick}
 	>
 		{#if icon}
@@ -118,8 +93,7 @@
 	<button
 		{type}
 		{title}
-		class="{baseClasses} {sizeClasses[size]} {className} {buttonStyle ? 'custom-btn' : defaultColors[variant]}"
-		style={buttonStyle}
+		class="{baseClasses} {sizeClasses[size]} {className} {defaultColors[variant]} industrial-sharp"
 		{disabled}
 		aria-disabled={disabled || loading}
 		onclick={handleClick}
@@ -135,12 +109,9 @@
 {/if}
 
 <style>
-	.custom-btn {
-		/* Use CSS variables set in style attribute */
-		border-width: 1px;
-		border-style: solid;
-	}
-	.custom-btn:hover:not(:disabled) {
-		background-color: var(--hover-bg) !important;
+	.industrial-sharp {
+		border-radius: 0px !important;
+		font-weight: 900;
+		text-transform: uppercase;
 	}
 </style>

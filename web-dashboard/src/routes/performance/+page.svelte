@@ -362,9 +362,7 @@
 					{ label: 'Error Flux', val: `${metrics.network.error_rate?.toFixed(2)}%`, iconName: 'ph:warning-bold', color: metrics.network.error_rate > 5 ? 'text-danger' : 'text-stone-400', detail: `${metrics.network.total_errors} Faults` }
 				] as block}
 					<div 
-						class="modern-industrial-card glass-panel group p-4 sm:p-6 shadow-2xl flex flex-col justify-between min-h-[120px] sm:min-h-[140px] relative"
-						class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
-						class:rounded-2xl={!$siteSettings.aesthetic.industrial_styling}
+						class="modern-industrial-card glass-panel group p-4 sm:p-6 shadow-2xl flex flex-col justify-between min-h-[120px] sm:min-h-[140px] relative industrial-sharp"
 					>
 						<!-- Tactical Corners -->
 						<div class="corner-tl"></div>
@@ -398,9 +396,7 @@
 				<!-- Memory Matrix -->
 				<div class="xl:col-span-8 flex flex-col gap-6">
 					<div 
-						class="modern-industrial-card glass-panel flex-1 flex flex-col relative"
-						class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
-						class:rounded-2xl={!$siteSettings.aesthetic.industrial_styling}
+						class="modern-industrial-card glass-panel flex-1 flex flex-col relative industrial-sharp"
 					>
 						<!-- Tactical Corners -->
 						<div class="corner-tl"></div>
@@ -463,9 +459,7 @@
 				<!-- Network Operations -->
 				<div class="xl:col-span-4 flex flex-col gap-6">
 					<div 
-						class="modern-industrial-card glass-panel flex-1 flex flex-col border-stone-800 relative"
-						class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
-						class:rounded-2xl={!$siteSettings.aesthetic.industrial_styling}
+						class="modern-industrial-card glass-panel flex-1 flex flex-col border-stone-800 relative industrial-sharp"
 					>
 						<!-- Tactical Corners -->
 						<div class="corner-tl"></div>

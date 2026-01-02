@@ -390,7 +390,7 @@
 	</div>
 {/snippet}
 
-<div class="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-8 sm:mb-12 relative gap-6 sm:gap-8" class:!mb-6={$siteSettings.dashboard.compact_mode}>
+<div class="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-8 sm:mb-12 relative gap-6 sm:gap-8">
 	<div
 		class="transform transition-all duration-700 {isLoaded
 			? 'translate-x-0 opacity-100'
@@ -398,11 +398,10 @@
 	>
 		<div class="flex items-center gap-4 mb-2">
 			<div class="h-0.5 w-6 sm:w-10 bg-rust"></div>
-			<span class="font-jetbrains text-[8px] sm:text-[10px] font-black text-rust uppercase tracking-[0.3em]">System Overview // Controller</span>
+			<span class="font-jetbrains text-[10px] font-black text-rust uppercase tracking-[0.3em]">System Overview // Controller</span>
 		</div>
 		<h1
 			class="text-3xl sm:text-5xl lg:text-6xl font-heading font-black text-white tracking-tighter uppercase leading-none"
-			class:!text-2xl={$siteSettings.dashboard.compact_mode}
 		>
 			<span class="text-rust">EXILE</span>_CONTROLLER
 		</h1>
@@ -426,7 +425,6 @@
 			class="group relative flex items-center justify-center gap-3 sm:gap-4 px-4 sm:px-8 py-3 sm:py-4 bg-white text-black font-black font-heading text-[10px] sm:text-xs rounded-none border-2 border-white hover:bg-rust hover:text-white hover:border-rust transition-all duration-500 shadow-2xl active:translate-y-px flex-1 sm:flex-initial {isLoaded
 				? 'translate-y-0 opacity-100'
 				: 'translate-y-4 opacity-0'}"
-			class:!py-2={$siteSettings.dashboard.compact_mode}
 		>
 			<Icon name="ph:plus-bold" size="1.1rem" />
 			<span class="uppercase tracking-[0.2em]">Add Node</span>
@@ -449,7 +447,7 @@
 {:else}
 	<!-- Stats Grid -->
 	{#if $siteSettings.dashboard.show_stats_cards}
-	<div class="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-10" class:!mb-6={$siteSettings.dashboard.compact_mode}>
+	<div class="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-10">
 		<div
 			class="transform transition-all duration-700 {animateStats
 				? 'translate-y-0 opacity-100'
@@ -497,7 +495,7 @@
 	{/if}
 
 	<!-- Secondary Stats & Resources -->
-	<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-10" class:!mb-6={$siteSettings.dashboard.compact_mode}>
+	<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-10">
 		{#if $siteSettings.dashboard.show_traffic_card}
 		<div
 			class="transform transition-all duration-700 hover:scale-[1.01] {animateStats
@@ -546,7 +544,6 @@
 			? 'translate-y-0 opacity-100'
 			: 'translate-y-12 opacity-0'}"
 		style="animation-delay: 0.65s;"
-		class:!h-[300px]={$siteSettings.dashboard.compact_mode}
 	>
 		<SystemTopology />
 	</div>
@@ -555,12 +552,11 @@
 	<!-- Nodes Section -->
 	{#if $siteSettings.dashboard.show_nodes_table}
 	<div
-		class="modern-industrial-card border-stone-800 rounded-none overflow-hidden transform transition-all duration-700 hover:border-rust/30 shadow-2xl contain-paint"
+		class="modern-industrial-card border-stone-800 rounded-none overflow-hidden transform transition-all duration-700 hover:border-rust/30 shadow-2xl contain-paint industrial-sharp"
 		style="animation-delay: 0.7s; contain: paint layout;"
 	>
 		<div
 			class="border-b border-stone-800 px-4 sm:px-6 py-4 sm:py-5 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[var(--card-bg-color)] backdrop-blur-xl gap-4"
-			class:!py-3={$siteSettings.dashboard.compact_mode}
 		>
 			<div class="flex items-center gap-4">
 				<div class="p-2 bg-rust/10 border border-rust/30 rounded-none industrial-frame">

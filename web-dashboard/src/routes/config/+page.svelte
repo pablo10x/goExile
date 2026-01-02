@@ -672,7 +672,7 @@
 						{@const isExpanded = expandedSections.has(section.id)}
 						{@const SectionIcon = section.icon}
 						<div
-							class="brutalist-card {$siteSettings.aesthetic.industrial_styling ? 'rounded-none border-2' : 'rounded-2xl'} overflow-hidden shadow-2xl transition-all duration-300"
+							class="brutalist-card rounded-none border-2 overflow-hidden shadow-2xl transition-all duration-300"
 						>
 							<button
 								onclick={() => toggleSection(section.id)}

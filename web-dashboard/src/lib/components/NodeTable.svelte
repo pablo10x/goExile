@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Node } from '$lib/stores';
-	import { serverVersions, siteSettings } from '$lib/stores';
+	import { serverVersions } from '$lib/stores';
 	import { createEventDispatcher } from 'svelte';
 	import { formatBytes } from '$lib/utils';
 	import InstanceRow from './InstanceRow.svelte';
@@ -9,27 +9,7 @@
 	import Button from './Button.svelte';
 	import CardHoverOverlay from './theme/CardHoverOverlay.svelte';
 	import { compareVersions } from '$lib/semver';
-	import {
-		Trash2,
-		Server,
-		Activity,
-		HardDrive,
-		Cpu,
-		Zap,
-		Box,
-		Terminal,
-		Settings,
-		ChevronRight,
-		ChevronDown,
-		RefreshCw,
-		Network,
-		Radio,
-		List,
-		Plus,
-		Globe,
-		ArrowDownToLine
-	} from 'lucide-svelte';
-	import { slide, fade } from 'svelte/transition';
+	import { slide } from 'svelte/transition';
 
 	let { nodes = [], highlightNewNodeId = null }: { nodes?: Node[], highlightNewNodeId?: number | null } = $props();
 
@@ -109,11 +89,10 @@
 	function getStatusClass(status: string) {
 		switch (status) {
 			case 'Online':
-				return 'bg-success/10 text-success border-success/30';
+				return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30';
 			case 'Degraded':
-				return 'bg-warning/10 text-warning border-warning/30';
 			case 'Unresponsive':
-				return 'bg-warning/10 text-warning border-warning/30';
+				return 'bg-amber-500/10 text-amber-500 border-amber-500/30';
 			case 'Offline':
 				return 'bg-stone-900/40 text-stone-600 border-stone-800';
 			default:
@@ -139,7 +118,7 @@
 		{@const isExpanded = expandedRows.has(node.id)}
 		<div
 			class="modern-industrial-card glass-panel tactical-border !rounded-none transition-all duration-500 group {node.id ===
-			highlightNewNodeId && $siteSettings.aesthetic.animations_enabled
+			highlightNewNodeId
 				? 'animate-highlight-new-node border-rust'
 				: 'hover:border-rust/30'} shadow-2xl overflow-hidden"
 			onmouseenter={() => hoveredRows[node.id] = true}
@@ -155,12 +134,11 @@
 
 			<!-- Header / Identity -->
 			<div 
-				class="p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-8 relative"
-				style="background-color: rgba(12, 10, 9, var(--card-alpha));"
+				class="p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-8 relative bg-black/40"
 			>
 				<div class="flex items-center gap-6 flex-1 min-w-0">
 					<div 
-						class="w-16 h-16 bg-stone-950 border border-stone-800 flex items-center justify-center group-hover:border-rust transition-all duration-500 industrial-frame shadow-xl shrink-0"
+						class="w-16 h-16 bg-stone-950 border border-stone-800 flex items-center justify-center group-hover:border-rust transition-all duration-500 industrial-sharp shadow-xl shrink-0"
 						onclick={() => toggleRow(node.id)}
 						role="button"
 						tabindex="0"
@@ -184,31 +162,31 @@
 							<div
 								class={`px-3 py-1 font-jetbrains font-bold text-[9px] uppercase flex items-center gap-2 border ${getStatusClass(node.status)}`}
 							>
-								<div class={`w-1.5 h-1.5 rounded-full ${node.status === 'Online' ? 'bg-success animate-pulse' : 'bg-stone-600'}`}></div>
+								<div class={`w-1.5 h-1.5 rounded-full ${node.status === 'Online' ? 'bg-emerald-500 animate-pulse' : 'bg-stone-600'}`}></div>
 								{node.status}
 							</div>
 						</div>
 						<div class="flex flex-wrap items-center gap-6 font-jetbrains text-[10px] font-bold text-stone-600 uppercase tracking-widest italic">
-							<span class="flex items-center gap-2"><Icon name="globe" size="0.875rem" /> {node.region}</span>
-							<span class="flex items-center gap-2"><Icon name="network" size="0.875rem" /> {node.host}:{node.port}</span>
-							<span class="flex items-center gap-2 text-rust-light opacity-60"><Icon name="cpu" size="0.875rem" /> v{node.game_version || '0.0.0'}</span>
+							<span class="flex items-center gap-2"><Icon name="ph:globe-bold" size="0.875rem" /> {node.region}</span>
+							<span class="flex items-center gap-2"><Icon name="ph:network-bold" size="0.875rem" /> {node.host}:{node.port}</span>
+							<span class="flex items-center gap-2 text-rust-light opacity-60"><Icon name="ph:cpu-bold" size="0.875rem" /> v{node.game_version || '0.0.0'}</span>
 						</div>
 					</div>
 				</div>
 
-				<!-- Quick Actions - ALWAYS ON TOP/RIGHT -->
+				<!-- Quick Actions -->
 				<div class="flex items-center gap-3 shrink-0">
 					{#if node.status !== 'Offline'}
 						<div class="flex items-center gap-1 bg-black/20 p-1 border border-stone-800 mr-2">
 							<button 
 								onclick={() => dispatch('updateNodeBuild', node.id)}
-								class="p-2 text-emerald-500 hover:bg-emerald-500/10 transition-all title='Update Game Build'"
+								class="p-2 text-emerald-500 hover:bg-emerald-500/10 transition-all"
+								title="Update Game Build"
 							>
 								<Icon name="ph:arrow-down-to-line-bold" size="1rem" />
 							</button>
 							<button 
-								onclick={() => dispatch('updateNodeBuild', node.id)}
-								class="p-2 text-stone-500 hover:bg-stone-500/10 transition-all"
+								class="p-2 text-stone-500 hover:bg-stone-500/10 transition-all opacity-30"
 								title="Downgrade Build (N/A)"
 								disabled
 							>
@@ -219,7 +197,7 @@
 							href={`/nodes/${node.id}`}
 							variant="secondary"
 							size="sm"
-							icon="settings"
+							icon="ph:gear-bold"
 						>
 							Manage
 						</Button>
@@ -258,7 +236,7 @@
 			<div class="px-8 py-4 bg-stone-900/20 border-t border-stone-800/50 grid grid-cols-1 md:grid-cols-4 gap-8">
 				<div class="flex flex-col justify-center">
 					<div class="flex justify-between items-center mb-2">
-						<span class="text-[9px] font-black uppercase tracking-widest italic" style="color: var(--text-dim)">Capacity</span>
+						<span class="text-[9px] font-black uppercase tracking-widest italic text-stone-500">Capacity</span>
 						<span class="text-[10px] font-black text-rust-light tabular-nums">{node.current_instances} / {node.max_instances}</span>
 					</div>
 					<div class="h-1.5 bg-stone-950 border border-stone-800 p-0 overflow-hidden shadow-inner">
@@ -268,8 +246,8 @@
 
 				<div class="hidden md:flex flex-col justify-center">
 					<div class="flex justify-between items-center mb-2">
-						<span class="text-[9px] font-black uppercase tracking-widest italic flex items-center gap-2" style="color: var(--text-dim)">
-							<Icon name="cpu" size="0.75rem" class="text-stone-700" />
+						<span class="text-[9px] font-black uppercase tracking-widest italic flex items-center gap-2 text-stone-500">
+							<Icon name="ph:cpu-bold" size="0.75rem" class="text-stone-700" />
 							CPU Usage
 						</span>
 						<span class="text-[10px] font-black text-stone-400 tabular-nums">{node.cpu_usage?.toFixed(1)}%</span>
@@ -281,8 +259,8 @@
 
 				<div class="hidden md:flex flex-col justify-center">
 					<div class="flex justify-between items-center mb-2">
-						<span class="text-[9px] font-black uppercase tracking-widest italic flex items-center gap-2" style="color: var(--text-dim)">
-							<Icon name="activity" size="0.75rem" class="text-stone-700" />
+						<span class="text-[9px] font-black uppercase tracking-widest italic flex items-center gap-2 text-stone-500">
+							<Icon name="ph:activity-bold" size="0.75rem" class="text-stone-700" />
 							RAM Usage
 						</span>
 						<span class="text-[10px] font-black text-stone-400 tabular-nums">{node.mem_total ? ((node.mem_used / node.mem_total) * 100).toFixed(1) : 0}%</span>
@@ -294,8 +272,8 @@
 
 				<div class="hidden md:flex flex-col justify-center">
 					<div class="flex justify-between items-center mb-2">
-						<span class="text-[9px] font-black uppercase tracking-widest italic flex items-center gap-2" style="color: var(--text-dim)">
-							<Icon name="hard-drive" size="0.75rem" class="text-stone-700" />
+						<span class="text-[9px] font-black uppercase tracking-widest italic flex items-center gap-2 text-stone-500">
+							<Icon name="ph:hard-drive-bold" size="0.75rem" class="text-stone-700" />
 							Disk IO
 						</span>
 						<span class="text-[10px] font-black text-stone-400 tabular-nums">{node.disk_total ? ((node.disk_used / node.disk_total) * 100).toFixed(1) : 0}%</span>
@@ -316,15 +294,15 @@
 			<!-- Expanded Section -->
 			{#if isExpanded}
 				<div 
-					class="border-t border-stone-800 bg-[var(--terminal-bg)]/60 p-8 space-y-10"
+					class="border-t border-stone-800 bg-black/60 p-8 space-y-10"
 					transition:slide={{ duration: 300 }}
 				>
 					<!-- Metrics Grid -->
 					<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-						<div class="bg-stone-900/40 border border-stone-800 p-6 industrial-frame shadow-xl group/m hover:border-rust/30 transition-all">
+						<div class="bg-stone-900/40 border border-stone-800 p-6 industrial-sharp shadow-xl group/m hover:border-rust/30 transition-all">
 							<div class="flex justify-between items-center mb-4">
 								<span class="text-[10px] font-black text-stone-500 uppercase tracking-widest italic group-hover/m:text-rust transition-colors">CPU LOAD</span>
-								<Icon name="cpu" size="1rem" class="text-stone-700" />
+								<Icon name="ph:cpu-bold" size="1rem" class="text-stone-700" />
 							</div>
 							<div class="text-4xl font-heading font-black text-white tracking-tighter tabular-nums mb-4">{node.cpu_usage ? node.cpu_usage?.toFixed(1) : 0}%</div>
 							<div class="h-1.5 bg-stone-950 border border-stone-800 shadow-inner overflow-hidden">
@@ -332,10 +310,10 @@
 							</div>
 						</div>
 
-						<div class="bg-stone-900/40 border border-stone-800 p-6 industrial-frame shadow-xl group/m hover:border-rust/30 transition-all">
+						<div class="bg-stone-900/40 border border-stone-800 p-6 industrial-sharp shadow-xl group/m hover:border-rust/30 transition-all">
 							<div class="flex justify-between items-center mb-4">
 								<span class="text-[10px] font-black text-stone-500 uppercase tracking-widest italic group-hover/m:text-rust transition-colors">RAM USAGE</span>
-								<Icon name="activity" size="1rem" class="text-stone-700" />
+								<Icon name="ph:activity-bold" size="1rem" class="text-stone-700" />
 							</div>
 							<div class="text-2xl font-heading font-black text-white tracking-tighter mb-2 tabular-nums">
 								{formatBytes(node.mem_used || 0)} 
@@ -346,10 +324,10 @@
 							</div>
 						</div>
 
-						<div class="bg-stone-900/40 border border-stone-800 p-6 industrial-frame shadow-xl group/m hover:border-rust/30 transition-all">
+						<div class="bg-stone-900/40 border border-stone-800 p-6 industrial-sharp shadow-xl group/m hover:border-rust/30 transition-all">
 							<div class="flex justify-between items-center mb-4">
 								<span class="text-[10px] font-black text-stone-500 uppercase tracking-widest italic group-hover/m:text-rust transition-colors">DISK USAGE</span>
-								<Icon name="hard-drive" size="1rem" class="text-stone-700" />
+								<Icon name="ph:hard-drive-bold" size="1rem" class="text-stone-700" />
 							</div>
 							<div class="text-2xl font-heading font-black text-white tracking-tighter mb-2 tabular-nums">
 								{formatBytes(node.disk_used || 0)} 
@@ -365,7 +343,7 @@
 					<div class="space-y-6">
 						<div class="flex justify-between items-center px-2 border-b border-stone-800 pb-4">
 							<div class="flex items-center gap-4">
-								<div class="p-2 bg-rust/5 industrial-frame">
+								<div class="p-2 bg-rust/5 industrial-sharp border border-rust/20">
 									<Icon name="ph:list-bullets-bold" size="1.25rem" class="text-rust-light" />
 								</div>
 								<h4 class="text-sm font-heading font-black text-white uppercase tracking-widest">Active Instances</h4>
@@ -399,7 +377,7 @@
 								<p class="font-heading font-black text-[10px] text-stone-600 uppercase tracking-widest animate-pulse">Synchronizing Instances...</p>
 							</div>
 						{:else if !activeInstances[node.id] || activeInstances[node.id].length === 0}
-							<div class="py-20 text-center opacity-30 border-2 border-stone-800 border-dashed industrial-frame bg-stone-900/20">
+							<div class="py-20 text-center opacity-30 border-2 border-stone-800 border-dashed industrial-sharp bg-stone-900/20">
 								<Icon name="ph:cube-bold" size="3rem" class="text-stone-800 mx-auto mb-4" />
 								<p class="text-stone-600 font-jetbrains font-black text-[10px] uppercase tracking-widest">No Active Nodes Mapped</p>
 							</div>
@@ -426,8 +404,8 @@
 		</div>
 	{:else}
 		<div class="py-40 text-center opacity-40">
-			<div class="inline-block p-8 bg-stone-900/40 border border-dashed border-stone-800 industrial-frame mb-8">
-				<Icon name="server" size="4rem" class="text-stone-800" />
+			<div class="inline-block p-8 bg-stone-900/40 border border-dashed border-stone-800 industrial-sharp mb-8">
+				<Icon name="ph:server-bold" size="4rem" class="text-stone-800" />
 			</div>
 			<h3 class="font-heading font-black text-2xl text-stone-700 uppercase tracking-[0.4em] mb-3">No Nodes Active</h3>
 			<p class="font-jetbrains text-[11px] font-bold text-stone-600 uppercase tracking-widest">Waiting for nodes to synchronize with controller.</p>
@@ -438,10 +416,10 @@
 <style lang="ts">
 	@keyframes highlight-new-node {
 		0% {
-			background-color: var(--color-rust);
+			background-color: #c2410c;
 		}
 		50% {
-			background-color: var(--color-rust);
+			background-color: #c2410c;
 		}
 		100% {
 			background-color: transparent;
@@ -462,6 +440,6 @@
 		background: #1a1a1a;
 	}
 	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-		background: var(--color-rust);
+		background: #c2410c;
 	}
 </style>

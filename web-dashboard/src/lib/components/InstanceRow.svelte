@@ -1,23 +1,11 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { slide } from 'svelte/transition';
-	import { serverVersions, siteSettings } from '$lib/stores';
+	import { serverVersions } from '$lib/stores';
 	import { compareVersions } from '$lib/semver';
 	import PlayersChart from './PlayersChart.svelte';
 	import Icon from './theme/Icon.svelte';
 	import Button from './Button.svelte';
-	import {
-		ChevronRight,
-		Play,
-		Square,
-		RotateCw,
-		ArrowDownToLine,
-		ArrowUpToLine,
-		Trash2,
-		TerminalSquare,
-		Activity,
-		Clock
-	} from 'lucide-svelte';
 
 	let { nodeId, instance }: { nodeId: number; instance: any } = $props();
 
@@ -26,7 +14,6 @@
 	let renameValue = $state(instance.id);
 	let chartData = $state<any[]>([]);
 
-    // Static binary content for visual effect (no GC overhead)
     const binaryLines = Array.from({ length: 8 }, () => 
         Array.from({ length: 16 }, () => Math.random() > 0.5 ? '1' : '0').join('')
     );
@@ -37,7 +24,6 @@
 
 	const dispatch = createEventDispatcher();
 
-	// Derived state for version checking
 	let activeVersion = $derived($serverVersions.find((v) => v.is_active));
 	let versionDiff = $derived(
 		activeVersion && instance.version ? compareVersions(activeVersion.version, instance.version) : 0
@@ -77,16 +63,15 @@
 </script>
 
 <div
-	class={`border border-stone-800 ${$siteSettings.aesthetic.industrial_styling ? 'rounded-none' : 'rounded-xl'} glass-panel overflow-hidden mb-2 hover:border-rust/40 transition-all duration-500 shadow-lg group/row relative`}
-	style="background-color: rgba(12, 10, 9, var(--card-alpha));"
-	class:heartbeat-pulse={instance.status === 'Running' && !$siteSettings.aesthetic.reduced_motion}
+	class="border border-stone-800 rounded-none glass-panel overflow-hidden mb-2 hover:border-rust/40 transition-all duration-500 shadow-lg group/row relative bg-black/40"
+	class:heartbeat-pulse={instance.status === 'Running'}
 	onmouseenter={() => isHovered = true}
 	onmouseleave={() => isHovered = false}
 	role="region"
 	aria-label={`Instance ${instance.id}`}
 >
 	<!-- Binary Animation Overlays -->
-	{#if instance.status === 'Running' && !$siteSettings.aesthetic.reduced_motion && isHovered}
+	{#if instance.status === 'Running' && isHovered}
 		<div class="absolute left-0 top-0 bottom-0 flex flex-col justify-center px-2 pointer-events-none overflow-hidden opacity-20">
             <div class="animate-binary-slide flex flex-col gap-0.5 will-change-transform">
                 {#each [...binaryLines, ...binaryLines] as line}
@@ -118,7 +103,8 @@
 		<!-- Name & Identity -->
 		<div class="flex flex-col min-w-[160px] ml-4 sm:ml-8">
 			<div class="flex items-center gap-2">
-				                <span class="text-[9px] font-jetbrains font-black uppercase tracking-tighter" style="color: var(--text-dim)">INSTANCE</span>				<span class="font-heading font-black text-sm text-white tracking-widest uppercase">{instance.id.split('-').pop() || instance.port}</span>
+				<span class="text-[9px] font-jetbrains font-black uppercase tracking-tighter text-stone-500">INSTANCE</span>
+				<span class="font-heading font-black text-sm text-white tracking-widest uppercase">{instance.id.split('-').pop() || instance.port}</span>
 			</div>
 			<div class="flex items-center gap-2 mt-1">
 				<span class="text-[8px] font-jetbrains font-bold text-stone-700 uppercase">Port:</span>
@@ -226,7 +212,7 @@
 	{#if expanded}
 		<div
 			transition:slide={{ duration: 300 }}
-			class="bg-[var(--terminal-bg)]/60 border-t border-stone-800 p-8 space-y-8 relative z-10"
+			class="bg-black/60 border-t border-stone-800 p-8 space-y-8 relative z-10"
 		>
 			<div class="grid grid-cols-1 xl:grid-cols-12 gap-10">
 				<!-- Left: Technical Readouts -->
@@ -288,15 +274,15 @@
 								Status: {instance.player_count || 0} Online
 							</div>
 						</div>
-						<div class="bg-stone-950/60 border border-stone-800 p-6 industrial-frame shadow-inner">
-							<PlayersChart data={chartData} height={160} color="var(--color-rust)" />
+						<div class="bg-stone-950/60 border border-stone-800 p-6 industrial-sharp shadow-inner">
+							<PlayersChart data={chartData} height={160} color="#c2410c" />
 						</div>
 					</div>
 				</div>
 
 				<!-- Right: Node Configuration -->
 				<div class="xl:col-span-5 space-y-6">
-					<div class="bg-stone-900/40 border border-stone-800 p-6 space-y-6 industrial-frame">
+					<div class="bg-stone-900/40 border border-stone-800 p-6 space-y-6 industrial-sharp">
 						<div class="space-y-3">
 							<label for={'name-' + instance.id} class="text-[10px] font-jetbrains font-black text-stone-500 uppercase tracking-[0.2em] block">Label</label>
 							<div class="flex gap-3">
@@ -330,7 +316,7 @@
 						</div>
 					</div>
 
-					<div class="bg-amber-500/5 border border-amber-500/20 p-5 flex gap-5 items-start industrial-frame">
+					<div class="bg-amber-500/5 border border-amber-500/20 p-5 flex gap-5 items-start industrial-sharp">
 						<div class="p-2.5 bg-amber-500/10 text-amber-500 border border-amber-500/20">
 							<Icon name="activity" size="1rem" />
 						</div>

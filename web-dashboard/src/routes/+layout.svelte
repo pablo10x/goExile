@@ -133,135 +133,13 @@
 				document.documentElement.classList.remove('dark');
 			}
 			localStorage.setItem('theme', $theme);
-
-			// Sync aesthetic variables
-			const root = document.documentElement;
-			if ($siteSettings.aesthetic) {
-				root.style.setProperty('--card-alpha', ($siteSettings.aesthetic.glass_strength ?? $siteSettings.aesthetic.card_alpha ?? 0.6).toString());
-				root.style.setProperty('--backdrop-blur', ($siteSettings.aesthetic.backdrop_blur ?? 16) + 'px');
-				root.style.setProperty('--sidebar-alpha', ($siteSettings.aesthetic.sidebar_alpha ?? 0.7).toString());
-				root.style.setProperty('--bg-opacity', ($siteSettings.aesthetic.bg_opacity ?? 1.0).toString());
-				root.style.setProperty('--bg-color', $siteSettings.aesthetic.bg_color || '#050505');
-				
-				// Fonts
-				root.style.setProperty('--font-primary', ($siteSettings.aesthetic.font_body || 'Inter') + ', sans-serif');
-				root.style.setProperty('--font-header', ($siteSettings.aesthetic.font_header || 'Kanit') + ', sans-serif');
-				root.style.setProperty('--font-body', ($siteSettings.aesthetic.font_body || 'Inter') + ', sans-serif');
-				root.style.setProperty('--font-mono', ($siteSettings.aesthetic.font_mono || 'JetBrains Mono') + ', monospace');
-
-				// Geometry
-				root.style.setProperty('--radius-sm', ($siteSettings.aesthetic.border_radius_sm ?? 2) + 'px');
-				root.style.setProperty('--radius-md', ($siteSettings.aesthetic.border_radius_md ?? 4) + 'px');
-				root.style.setProperty('--radius-lg', ($siteSettings.aesthetic.border_radius_lg ?? 8) + 'px');
-
-				root.style.setProperty('--card-border-width', ($siteSettings.aesthetic.card_border_width ?? 1) + 'px');
-				root.style.setProperty('--card-shadow-size', ($siteSettings.aesthetic.card_shadow_size ?? 4) + 'px');
-				
-				                // Core Colors
-				                root.style.setProperty('--primary-color', $siteSettings.aesthetic.primary_color || '#f97316');
-				                root.style.setProperty('--color-rust', $siteSettings.aesthetic.primary_color || '#c2410c');
-				                root.style.setProperty('--secondary-color', $siteSettings.aesthetic.secondary_color || '#334155');				root.style.setProperty('--card-bg-color', $siteSettings.aesthetic.card_bg_color || '#0f172a');
-				root.style.setProperty('--hover-color', $siteSettings.aesthetic.hover_color || '#1e293b');
-				root.style.setProperty('--text-primary', $siteSettings.aesthetic.text_color_primary || '#e2e2e2');
-				root.style.setProperty('--text-secondary', $siteSettings.aesthetic.text_color_secondary || '#888888');
-				root.style.setProperty('--text-dim', $siteSettings.aesthetic.text_color_dim || '#666666');
-				root.style.setProperty('--border-color', $siteSettings.aesthetic.border_color || '#1e293b');
-
-				// Header & Sidebar & Scrollbars
-				root.style.setProperty('--header-bg', $siteSettings.aesthetic.header_bg_color || 'rgba(0, 0, 0, 0.8)');
-				root.style.setProperty('--sidebar-bg', $siteSettings.aesthetic.sidebar_bg_color || 'rgba(24, 24, 27, 0.9)');
-				root.style.setProperty('--scrollbar-thumb', $siteSettings.aesthetic.scrollbar_thumb_color || '#3f3f46');
-				root.style.setProperty('--scrollbar-track', $siteSettings.aesthetic.scrollbar_track_color || 'rgba(0, 0, 0, 0.2)');
-				root.style.setProperty('--terminal-bg', $siteSettings.aesthetic.terminal_bg_color || '#050505');
-
-				// Specialized Colors
-				root.style.setProperty('--color-success', $siteSettings.aesthetic.success_color || '#10b981');
-				root.style.setProperty('--color-warning', $siteSettings.aesthetic.warning_color || '#f59e0b');
-				root.style.setProperty('--color-danger', $siteSettings.aesthetic.danger_color || '#ef4444');
-				root.style.setProperty('--color-info', $siteSettings.aesthetic.info_color || '#06b6d4');
-
-				// New settings
-				root.style.setProperty('--scanline-speed', ($siteSettings.aesthetic.scanline_speed ?? 4) + 's');
-				root.style.setProperty('--scanline-density', ($siteSettings.aesthetic.scanline_density ?? 3) + 'px');
-				root.style.setProperty('--vignette-intensity', ($siteSettings.aesthetic.vignette_intensity ?? 0.5).toString());
-				root.style.setProperty('--glow-intensity', ($siteSettings.aesthetic.border_glow_intensity ?? 0.4).toString());
-				root.style.setProperty('--sidebar-width', ($siteSettings.aesthetic.sidebar_width ?? 280) + 'px');
-				root.style.setProperty('--font-size-base', ($siteSettings.aesthetic.font_size_base ?? 14) + 'px');
-				root.style.setProperty('--glow-color', $siteSettings.aesthetic.card_glow_color || '#d97706');
-				
-				// Advanced Atmospheric
-				root.style.setProperty('--glitch-intensity', ($siteSettings.aesthetic.glitch_intensity ?? 0.05).toString());
-				root.style.setProperty('--chromatic-aberration', ($siteSettings.aesthetic.chromatic_aberration ?? 0.02).toString());
-				root.style.setProperty('--flicker-intensity', ($siteSettings.aesthetic.flicker_intensity ?? 0.01).toString());
-				
-				// Specialized Colors
-				root.style.setProperty('--color-success', $siteSettings.aesthetic.success_color || '#10b981');
-				root.style.setProperty('--color-warning', $siteSettings.aesthetic.warning_color || '#f59e0b');
-				root.style.setProperty('--color-danger', $siteSettings.aesthetic.danger_color || '#ef4444');
-				root.style.setProperty('--color-info', $siteSettings.aesthetic.info_color || '#06b6d4');
-
-				// Geometry & Grid
-				root.style.setProperty('--grid-opacity', ($siteSettings.aesthetic.grid_opacity ?? 0.05).toString());
-				root.style.setProperty('--border-opacity', ($siteSettings.aesthetic.border_opacity ?? 0.3).toString());
-
-				// Micro-Typography
-				root.style.setProperty('--text-letter-spacing', ($siteSettings.aesthetic.letter_spacing ?? 0.05) + 'em');
-				root.style.setProperty('--text-line-height', ($siteSettings.aesthetic.line_height ?? 1.5).toString());
-				root.style.setProperty('--text-transform', $siteSettings.aesthetic.text_transform || 'uppercase');
-				root.style.setProperty('--heading-weight', $siteSettings.aesthetic.heading_weight || '900');
-				root.style.setProperty('--base-weight', $siteSettings.aesthetic.font_weight_base || '400');
-				root.style.setProperty('--mono-weight', $siteSettings.aesthetic.font_weight_mono || '400');
-				root.style.setProperty('--paragraph-spacing', ($siteSettings.aesthetic.paragraph_spacing ?? 1.0) + 'em');
-				root.style.setProperty('--text-glow-intensity', ($siteSettings.aesthetic.text_glow_intensity ?? 0.5).toString());
-
-				// Kinetic Physics
-				root.style.setProperty('--global-transition', ($siteSettings.aesthetic.global_transition_speed ?? 300) + 'ms');
-				root.style.setProperty('--press-depth', ($siteSettings.aesthetic.button_press_depth || 2) + 'px');
-				root.style.setProperty('--hover-scale', ($siteSettings.aesthetic.hover_scale_factor || 1.02).toString());
-				root.style.setProperty('--spin-speed', (3 / ($siteSettings.aesthetic.spin_velocity || 1)) + 's');
-				root.style.setProperty('--scanline-hz', (4 / ($siteSettings.aesthetic.scanline_speed_hz || 1)) + 's');
-				root.style.setProperty('--modal-speed', ($siteSettings.aesthetic.modal_entry_speed || 300) + 'ms');
-				root.style.setProperty('--glow-alpha', ($siteSettings.aesthetic.glow_pulse_depth || 0.5).toString());
-
-				// Signal Dynamics
-				root.style.setProperty('--typing-speed', (1 / ($siteSettings.aesthetic.typing_speed || 1)) + 's');
-				root.style.setProperty('--glitch-hz', (1 / ($siteSettings.aesthetic.glitch_frequency || 1)) + 's');
-				root.style.setProperty('--header-pulse', (2 / ($siteSettings.aesthetic.header_pulse_speed || 1)) + 's');
-				root.style.setProperty('--navbar-delay', ($siteSettings.aesthetic.navbar_entry_delay || 100) + 'ms');
-				root.style.setProperty('--progress-speed', (1 / ($siteSettings.aesthetic.progress_fill_speed || 1)) + 's');
-				root.style.setProperty('--anim-scale', ($siteSettings.aesthetic.global_animation_scale || 1).toString());
-
-				if ($siteSettings.aesthetic.reduced_motion) {
-					root.classList.add('reduced-motion');
-				} else {
-					root.classList.remove('reduced-motion');
-				}
-
-				if ($siteSettings.aesthetic.text_glow) {
-					root.classList.add('text-glow-enabled');
-				} else {
-					root.classList.remove('text-glow-enabled');
-				}
-
-				let accent = $siteSettings.aesthetic.primary_color || '#d97706';
-				
-				// RED ALERT / PANIC MODE
-				if ($siteSettings.aesthetic.panic_mode) {
-					accent = '#dc2626'; // Pure red
-					root.style.setProperty('--border-color', '#991b1b');
-					root.style.setProperty('--card-bg-hex', '#450a0a');
-				} else {
-					root.style.setProperty('--card-bg-hex', $siteSettings.aesthetic.card_bg_color || '#0f172a');
-				}
-
-				root.style.setProperty('--accent-color', accent);
-				root.style.setProperty('--accent-color-light', accent + 'dd');
-			}
 		}
 	});
 
 	function toggleTheme() {
-		theme.update((t) => (t === 'dark' ? 'light' : 'dark'));
+		// Theme is now hardcoded to dark, this function might be redundant or can be kept for future expansion
+		// For now, we'll keep it simple
+		// theme.update((t) => (t === 'dark' ? 'light' : 'dark'));
 	}
 
 	// Animation states
@@ -390,11 +268,6 @@
 
 
 	onMount(() => {
-		const savedTheme = localStorage.getItem('theme');
-		if (savedTheme === 'light' || savedTheme === 'dark') {
-			theme.init(savedTheme);
-		}
-
 		// Visibility-aware background sync
 		const handleVisibilityChange = () => {
 			if (document.visibilityState === 'visible') {
@@ -419,7 +292,7 @@
 				isAuthenticated.set(true);
 				isChecking = false;
 				connectSSE();
-				loadAllSettings(data.config || undefined).then(() => initialFetch());
+				loadAllSettings().then(() => initialFetch());
 			} else {
 				// Otherwise, verify or redirect
 				checkAuth().then(() => {
@@ -565,72 +438,59 @@
 		</div>
 	</div>
 {:else}
-	{#if $isAuthenticated && page.url.pathname !== '/login'}
-		<div class="relative min-h-screen {localSiteSettings?.aesthetic?.crt_effect ? 'crt-container' : ''} {localSiteSettings?.aesthetic?.crt_curve ? 'crt-curve' : ''} {localSiteSettings?.aesthetic?.panic_mode ? 'panic-mode' : ''}">
-			<!-- Solid Background Layer -->
-			<div class="fixed inset-0 z-[-100] bg-[var(--bg-color)]"></div>
-
-			<!-- System Ticker Header -->
-			<div class="fixed top-0 left-0 right-0 h-7 bg-[var(--header-bg)] border-b border-stone-800 z-[120] flex items-center px-4 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.8)]">
-				<div class="flex items-center gap-8 animate-text-reveal whitespace-nowrap w-full">
-					<div class="flex items-center gap-2 shrink-0">
-						<div class="w-1 h-1 rounded-full bg-rust animate-ping"></div>
-						<span class="tactical-code text-rust font-black">[SYSTEM_UPLINK_ESTABLISHED]</span>
-					</div>
-					<div class="flex items-center gap-6 text-stone-600">
-						<span class="tactical-code">NET_STATUS: <span class="text-stone-400">{$connectionStatus}</span></span>
-						<span class="tactical-code">NODES_ACTIVE: <span class="text-stone-400">{$stats.active_nodes}</span></span>
-						<span class="tactical-code hidden sm:inline">ENTROPY: <span class="text-stone-400">0.0042</span></span>
-						<span class="tactical-code">TIMESTAMP: <span class="text-stone-400 font-mono tracking-tighter">{new Date().toISOString()}</span></span>
-					</div>
-					<div class="ml-auto flex items-center gap-4 shrink-0">
-						<span class="tactical-code text-rust-light italic hidden md:inline">SECURITY_LEVEL: 4_OMNI</span>
-						<div class="w-[2px] h-3 bg-stone-800"></div>
-						<div class="flex gap-1">
-							{#each [1,2,3] as i}<div class="w-1 h-1 bg-stone-800 rounded-full"></div>{/each}
+			{#if $isAuthenticated && page.url.pathname !== '/login'}
+				<div class="relative min-h-screen crt-container">
+					<!-- Solid Background Layer -->
+					<div class="fixed inset-0 z-[-100] bg-[#18181b]"></div>
+		
+					<!-- System Ticker Header -->
+					<div class="fixed top-0 left-0 right-0 h-7 bg-black/80 border-b border-stone-800 z-[120] flex items-center px-4 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.8)]">
+						<div class="flex items-center gap-8 animate-text-reveal whitespace-nowrap w-full">
+							<div class="flex items-center gap-2 shrink-0">
+								<div class="w-1 h-1 rounded-full bg-rust animate-ping"></div>
+								<span class="tactical-code text-rust font-black">[SYSTEM_UPLINK_ESTABLISHED]</span>
+							</div>
+							<div class="flex items-center gap-6 text-stone-600">
+								<span class="tactical-code">NET_STATUS: <span class="text-stone-400">{$connectionStatus}</span></span>
+								<span class="tactical-code">NODES_ACTIVE: <span class="text-stone-400">{$stats.active_nodes}</span></span>
+								<span class="tactical-code hidden sm:inline">ENTROPY: <span class="text-stone-400">0.0042</span></span>
+								<span class="tactical-code">TIMESTAMP: <span class="text-stone-400 font-mono tracking-tighter">{new Date().toISOString()}</span></span>
+							</div>
+							<div class="ml-auto flex items-center gap-4 shrink-0">
+								<span class="tactical-code text-rust-light italic hidden md:inline">SECURITY_LEVEL: 4_OMNI</span>
+								<div class="w-[2px] h-3 bg-stone-800"></div>
+								<div class="flex gap-1">
+									{#each [1,2,3] as i}<div class="w-1 h-1 bg-stone-800 rounded-full"></div>{/each}
+								</div>
+							</div>
 						</div>
 					</div>
-				</div>
-			</div>
-
-			<!-- Background/Atmospheric Overlays (Lower Z-Index) -->
-			<div class="fixed inset-0 z-[10] pointer-events-none overflow-hidden">
-				<div class="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" style="opacity: {localSiteSettings?.aesthetic?.scanlines_opacity || 0.05}"></div>
-				<div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/asfalt-dark.png')] opacity-20 mix-blend-overlay" style="opacity: {localSiteSettings?.aesthetic?.noise_opacity || 0.03}"></div>
-			</div>
-
-			{#if localBackgroundConfig?.show_clouds}
-				<div class="fixed inset-0 z-[5] clouds-overlay" style="opacity: {localBackgroundConfig.clouds_opacity}"></div>
-			{/if}
-
-			{#if localBackgroundConfig?.show_rain}
-				<div class="fixed inset-0 z-[5] rain-container">
-					<div class="rain-layer rain-layer-back"></div>
-					<div class="rain-layer rain-layer-mid"></div>
-					<div class="rain-layer rain-layer-front" style="opacity: {localBackgroundConfig.rain_opacity * 0.5}"></div>
-				</div>
-			{/if}
-
-			{#if localBackgroundConfig?.show_smoke}
-				<div class="fixed inset-0 z-[5] pointer-events-none"><GlobalSmoke /></div>
-			{/if}
-
-			{#if localBackgroundConfig?.show_vignette}
-				<div class="vignette z-[5]"></div>
-			{/if}
-
-			{#if localBackgroundConfig?.show_global_background && localBackgroundConfig?.global_type && localBackgroundConfig.global_type !== 'none'}
-				<div class="fixed inset-0 z-[-50] pointer-events-none overflow-hidden">
-					{#key localBackgroundConfig.global_type}
-						<SectionBackground type={localBackgroundConfig.global_type} />
-					{/key}
-				</div>
-			{/if}
-
-			<div
-				class="flex h-screen text-stone-400 overflow-hidden relative bg-transparent transition-colors duration-300 pt-7"
-			>
-			<!-- Global Restart Banner -->
+		
+					<!-- Background/Atmospheric Overlays (Lower Z-Index) -->
+					<div class="fixed inset-0 z-[10] pointer-events-none overflow-hidden">
+						<div class="absolute inset-0 bg-[linear-gradient(rgba(18, 16, 16, 0)_50%,rgba(0, 0, 0, 0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%] opacity-10"></div>
+						<div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/asfalt-dark.png')] opacity-20 mix-blend-overlay"></div>
+					</div>
+		
+					<div class="fixed inset-0 z-[5] clouds-overlay opacity-30"></div>
+		
+					<div class="fixed inset-0 z-[5] rain-container">
+						<div class="rain-layer rain-layer-back"></div>
+						<div class="rain-layer rain-layer-mid"></div>
+						<div class="rain-layer rain-layer-front opacity-10"></div>
+					</div>
+		
+					<div class="fixed inset-0 z-[5] pointer-events-none"><GlobalSmoke /></div>
+		
+					<div class="vignette z-[5]"></div>
+		
+					<div class="fixed inset-0 z-[-50] pointer-events-none overflow-hidden">
+						<SectionBackground type="digital_stream" />
+					</div>
+		
+					<div
+						class="flex h-screen text-stone-400 overflow-hidden relative bg-transparent transition-colors duration-300 pt-7"
+					>			<!-- Global Restart Banner -->
 			{#if $restartRequired}
 				<div
 					class="absolute top-0 md:left-64 left-0 right-0 z-50 bg-gradient-to-r from-orange-600/95 via-amber-600/95 to-orange-600/95 backdrop-blur-md text-white px-4 py-2.5 flex justify-between items-center shadow-2xl border-b-2 border-orange-400/50 animate-slide-fade text-xs md:text-sm"
@@ -715,23 +575,21 @@
 			<aside
 				class="hidden md:flex relative transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] bg-[var(--sidebar-bg)] backdrop-blur-xl border-r-2 border-stone-800 flex-col shrink-0 overflow-hidden z-20 {isSidebarCollapsed
 					? 'w-20'
-					: 'w-[var(--sidebar-width)]'} {$siteSettings.aesthetic.panic_mode ? 'border-red-600 shadow-[0_0_30px_rgba(220,38,38,0.2)]' : 'shadow-2xl'}"
+					: 'w-64'} shadow-2xl"
 			>
-				{#if localBackgroundConfig?.show_navbar_particles}
+				{#if true}
 					<NavbarParticles />
 				{/if}
 				
 				<!-- Tactical Overlays -->
 				<div class="absolute inset-0 pointer-events-none opacity-20">
 					<div class="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_2px_2px,rgba(255,255,255,0.05)_1px,transparent_0)] bg-[size:24px_24px]"></div>
-					{#if $siteSettings.aesthetic.crt_effect}
-						<div class="absolute top-0 left-0 w-full h-full animate-scanline_sweep bg-gradient-to-b from-transparent via-white/5 to-transparent"></div>
-					{/if}
+					<div class="absolute top-0 left-0 w-full h-full animate-scanline_sweep bg-gradient-to-b from-transparent via-white/5 to-transparent"></div>
 				</div>
 
 				<div class="relative z-10 flex flex-col h-full">
 					<div
-						class="p-6 border-b-2 border-stone-800 bg-[var(--terminal-bg)]/40 transform transition-all duration-700 {sidebarLoaded
+						class="p-6 border-b-2 border-stone-800 bg-[#050505]/40 transform transition-all duration-700 {sidebarLoaded
 							? 'translate-y-0 opacity-100'
 							: '-translate-y-4 opacity-0'} flex items-center justify-between tactical-border"
 					>
@@ -814,10 +672,6 @@
 									<div class="nav-icon-container"><Icon name="sliders" /></div>
 									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">SYSTEM_CONFIG</span><span class="nav-subtext">Kernel_Params</span></div>{/if}
 								</a>
-								<a href="/config/theme" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/config/theme')}>
-									<div class="nav-icon-container"><Icon name="palette" /></div>
-									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">THEME_LAB</span><span class="nav-subtext">Visual_Sync</span></div>{/if}
-								</a>
 								<a href="/redeye" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/redeye')}>
 									<div class="nav-icon-container"><Icon name="shield" /></div>
 									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">SENTINEL</span><span class="nav-subtext">Security_Shield</span></div>{/if}
@@ -847,13 +701,6 @@
 
 						<div class="flex items-center gap-2 {isSidebarCollapsed ? 'flex-col' : ''}">
 							<button
-								onclick={toggleTheme}
-								class="p-2 border border-stone-800 bg-terminal/50 text-stone-500 hover:text-white hover:border-rust transition-all flex-1 flex justify-center"
-								title="Toggle Theme"
-							>
-								{#if $theme === 'dark'}<Icon name="ph:moon-bold" size="1.1rem"/>{:else}<Icon name="ph:sun-bold" size="1.1rem"/>{/if}
-							</button>
-							<button
 								onclick={logout}
 								class="p-2 border border-red-900/30 bg-red-950/10 text-red-600 hover:bg-red-600 hover:text-black transition-all flex-1 flex justify-center group"
 								title="Logout"
@@ -868,7 +715,7 @@
 			<div class="flex-1 flex flex-col h-full overflow-hidden relative">
 				<!-- Mobile Top Header -->
 				<header
-					class="md:hidden h-14 bg-[var(--header-bg)] border-b border-stone-800 flex items-center justify-between px-4 z-[130] shrink-0 relative"
+					class="md:hidden h-14 bg-black/80 border-b border-stone-800 flex items-center justify-between px-4 z-[130] shrink-0 relative"
 				>
 					<div class="flex items-center gap-4">
 						<button 
@@ -892,19 +739,13 @@
 							<span class="text-[6px] text-stone-700 uppercase font-mono">Status</span>
 							<span class="text-[8px] text-emerald-500 font-mono font-bold uppercase">Linked</span>
 						</div>
-						<button
-							onclick={toggleTheme}
-							class="p-2 border border-stone-800 bg-surface/50 text-stone-500 hover:text-white transition-all"
-						>
-							{#if $theme === 'dark'}<Icon name="ph:moon-bold" size="1.1rem"/>{:else}<Icon name="ph:sun-bold" size="1.1rem"/>{/if}
-						</button>
 					</div>
 				</header>
 
 				<!-- Mobile Sidebar Overlay -->
 				{#if isMobileMenuOpen}
 					<div 
-						class="fixed inset-0 z-[200] bg-[var(--header-bg)] backdrop-blur-md md:hidden"
+						class="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md md:hidden"
 						transition:fade={{ duration: 200 }}
 						onclick={() => isMobileMenuOpen = false}
 						onkeydown={(e) => e.key === 'Escape' && (isMobileMenuOpen = false)}
@@ -922,7 +763,7 @@
 							<div class="corner-tr opacity-20"></div>
 							<div class="corner-br opacity-20"></div>
 
-							<div class="p-8 border-b border-stone-800 bg-terminal flex items-center justify-between">
+							<div class="p-8 border-b border-stone-800 bg-[#050505] flex items-center justify-between">
 								<div class="flex flex-col">
 									<div class="flex items-center gap-3">
 										<div class="w-2 h-2 bg-rust shadow-[0_0_8px_var(--color-rust)]"></div>
@@ -978,7 +819,7 @@
 								</div>
 							</nav>
 
-							<div class="p-8 border-t border-stone-800 bg-terminal flex flex-col gap-4">
+							<div class="p-8 border-t border-stone-800 bg-[#050505] flex flex-col gap-4">
 								<div class="flex items-center justify-between mb-2">
 									<div class="flex flex-col">
 										<span class="text-[7px] text-stone-700 font-mono uppercase">Session_Token</span>

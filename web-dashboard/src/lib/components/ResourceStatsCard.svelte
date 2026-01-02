@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { ResourceStatsCardProps } from '$lib/types/resource-metrics';
-	import { siteSettings } from '$lib/stores';
 
 	let {
 		title,
@@ -59,9 +58,7 @@
 </script>
 
 <div
-	class="modern-industrial-card glass-panel p-6 relative overflow-hidden group hover:border-rust/40 transition-all duration-500 shadow-xl"
-	class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
-	class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
+	class="modern-industrial-card glass-panel p-6 relative overflow-hidden group hover:border-rust/40 transition-all duration-500 shadow-xl industrial-sharp"
 >
 	<div class="flex justify-between items-start mb-5 relative z-10">
 		<div>
@@ -76,9 +73,7 @@
 			</div>
 		</div>
 		<div
-			class="p-2.5 rounded-none border border-stone-800 bg-stone-950 text-[10px] font-black font-jetbrains text-stone-500 group-hover:scale-110 group-hover:text-rust transition-all shadow-inner"
-			class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
-			class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
+			class="p-2.5 rounded-none border border-stone-800 bg-stone-950 text-[10px] font-black font-jetbrains text-stone-500 group-hover:scale-110 group-hover:text-rust transition-all shadow-inner industrial-sharp"
 		>
 			{icon}
 		</div>

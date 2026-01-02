@@ -1,9 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { fade, scale } from 'svelte/transition';
-	import { cubicOut, backOut } from 'svelte/easing';
-	import DOMPurify from 'dompurify';
-	import { siteSettings } from '$lib/stores';
+	import { cubicOut } from 'svelte/easing';
 	import Icon from '$lib/components/theme/Icon.svelte';
 	import Button from './Button.svelte';
 
@@ -57,7 +55,6 @@
 		dispatch('close');
 	}
 
-	// Industrial entrance
 	function modalScale(node: HTMLElement, params: { duration?: number } = {}) {
 		const { duration = 300 } = params;
 		return {
@@ -75,17 +72,12 @@
 
 {#if isOpen}
 	<div
-		class="fixed inset-0 z-[400] flex items-center justify-center p-4 sm:p-6 font-['JetBrains_Mono',monospace]"
+		class="fixed inset-0 z-[400] flex items-center justify-center p-4 sm:p-6 font-mono"
 		transition:fade={{ duration: 200 }}
 	>
-		<!-- CRT Overlay Effect (Dialog Scope) -->
-		{#if $siteSettings.aesthetic.crt_effect}
-			<div class="fixed inset-0 pointer-events-none z-[450] opacity-[0.03] bg-amber-scanlines"></div>
-		{/if}
-
 		<!-- Backdrop -->
 		<div
-			class="absolute inset-0 bg-black/90 {$siteSettings.aesthetic.glassmorphism ? 'backdrop-blur-sm' : ''}"
+			class="absolute inset-0 bg-black/90 backdrop-blur-sm"
 			onclick={!loading ? close : undefined}
 			onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && !loading && close()}
 			role="button"
@@ -93,23 +85,19 @@
 			aria-label="Close dialog"
 		></div>
 
-		<!-- Modal Container - Industrial Terminal Style -->
+		<!-- Modal Container -->
 		<div
-			class="relative w-full max-w-lg bg-[var(--terminal-bg)] shadow-2xl glass-panel overflow-hidden z-[460]
-			{isCritical && !$siteSettings.aesthetic.industrial_styling ? 'border-red-900/50' : ''}
-			{!isCritical && !$siteSettings.aesthetic.industrial_styling ? 'border-rust/30' : ''}"
-			class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
-			class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
+			class="relative w-full max-w-lg bg-[#050505] shadow-2xl overflow-hidden z-[460] border border-stone-800 rounded-none"
 			transition:modalScale
 		>
 			<!-- Status Bar -->
-			<div class={`h-1 w-full ${isCritical ? 'bg-red-600' : 'bg-rust'} opacity-40 ${$siteSettings.aesthetic.animations_enabled ? 'animate-pulse' : ''}`}></div>
+			<div class={`h-1 w-full ${isCritical ? 'bg-red-600' : 'bg-rust'} opacity-40 animate-pulse`}></div>
 
 			<!-- Header -->
-			<div class="px-8 py-5 border-b border-stone-800 flex justify-between items-center bg-[var(--header-bg)]">
+			<div class="px-8 py-5 border-b border-stone-800 flex justify-between items-center bg-black/40">
 				<div class="flex items-center gap-4">
 					{#if isCritical}
-						<Icon name="shield" size="1.25rem" class="text-red-500 {$siteSettings.aesthetic.animations_enabled ? 'animate-flicker' : ''}" />
+						<Icon name="shield" size="1.25rem" class="text-red-500 animate-flicker" />
 					{:else}
 						<Icon name="file-text" size="1.25rem" class="text-rust-light" />
 					{/if}
@@ -126,18 +114,18 @@
 			</div>
 
 			<!-- Content -->
-			<div class="p-10 space-y-8 relative overflow-hidden bg-[var(--terminal-bg)]">
+			<div class="p-10 space-y-8 relative overflow-hidden bg-[#050505]">
 				<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
 				
 				<div class="flex items-start gap-6 relative z-10">
 					<div class="flex-1 space-y-6">
-						<div class="flex items-center gap-3 font-jetbrains text-[9px] font-black tracking-[0.4em] uppercase italic" style="color: var(--text-dim)">
+						<div class="flex items-center gap-3 font-jetbrains text-[10px] font-black tracking-[0.4em] uppercase italic text-stone-500">
 							<Icon name="ph:caret-right-bold" size="0.875rem" class="{isCritical ? 'text-red-600' : 'text-rust'}" />
 							SYSTEM_PROMPT_BUFFER
 						</div>
 						<div class="text-stone-300 font-jetbrains font-bold uppercase tracking-tight leading-relaxed">
 							{#if loading && statusMessage}
-								<p class="{$siteSettings.aesthetic.animations_enabled ? 'animate-pulse' : ''} text-rust">
+								<p class="animate-pulse text-rust">
 									>> {statusMessage}
 								</p>
 							{:else}
@@ -154,9 +142,7 @@
 
 				{#if error}
 					<div
-						class="p-5 bg-red-950/20 text-red-500 font-jetbrains text-[10px] font-black uppercase tracking-widest"
-						class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
-						class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
+						class="p-5 bg-red-950/20 text-red-500 font-jetbrains text-[10px] font-black uppercase tracking-widest border border-red-900/30"
 						transition:scale={{ start: 0.98, duration: 200 }}
 					>
 						<div class="flex items-center gap-4">
@@ -169,7 +155,7 @@
 				{#if loading && progress !== null}
 					<!-- Progress -->
 					<div class="space-y-4" transition:fade>
-						<div class="flex justify-between font-jetbrains text-[9px] font-black uppercase tracking-widest italic" style="color: var(--text-dim)">
+						<div class="flex justify-between font-jetbrains text-[9px] font-black uppercase tracking-widest italic text-stone-500">
 							<span>STREAM_PROGRESS</span>
 							<span class="text-rust">{Math.round(progress)}%</span>
 						</div>
@@ -184,8 +170,8 @@
 			</div>
 
 			<!-- Commands -->
-			<div class="px-8 py-6 bg-[var(--header-bg)] border-t border-stone-800 flex justify-between items-center">
-				<div class="font-jetbrains text-[8px] font-black tracking-[0.5em] uppercase italic" style="color: var(--text-dim)">
+			<div class="px-8 py-6 bg-black/40 border-t border-stone-800 flex justify-between items-center">
+				<div class="font-jetbrains text-[10px] font-black tracking-[0.5em] uppercase italic text-stone-500">
 					AWAITING_INPUT
 				</div>
 				<div class="flex gap-4">
@@ -221,20 +207,6 @@
 {/if}
 
 <style>
-	.bg-amber-scanlines {
-		background: linear-gradient(
-			rgba(18, 16, 16, 0) 50%,
-			rgba(0, 0, 0, 0.25) 50%
-		),
-		linear-gradient(
-			90deg,
-			rgba(255, 0, 0, 0.03),
-			rgba(0, 255, 0, 0.01),
-			rgba(0, 0, 255, 0.03)
-		);
-		background-size: 100% 4px, 4px 100%;
-	}
-
 	@keyframes flicker {
 		0%, 100% { opacity: 1; }
 		50% { opacity: 0.8; }

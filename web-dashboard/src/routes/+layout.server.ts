@@ -13,21 +13,13 @@ export const load: LayoutServerLoad = async ({ fetch, cookies, url }) => {
 	}
 
 	try {
-		// Use the proxied fetch which will include cookies
-		const [statsRes, configRes] = await Promise.all([
-			fetch('/api/stats'),
-			fetch('/api/config')
-		]);
+		const statsRes = await fetch('/api/stats');
 		
 		const isValid = statsRes.ok;
 		let stats = null;
-		let config = null;
 
 		if (isValid) {
 			stats = await statsRes.json();
-			if (configRes.ok) {
-				config = await configRes.json();
-			}
 		}
 		
 		if (!isValid && !isLoginPath) {
@@ -36,8 +28,7 @@ export const load: LayoutServerLoad = async ({ fetch, cookies, url }) => {
 
 		return {
 			isAuthenticated: isValid,
-			stats: stats,
-			config: config
+			stats: stats
 		};
 	} catch (e) {
 		if (!isLoginPath) {

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { notifications, siteSettings } from '$lib/stores';
+	import { notifications } from '$lib/stores';
 	import { flip } from 'svelte/animate';
 	import { fly } from 'svelte/transition';
 	import { CheckCircle2, AlertTriangle, XCircle, Info, X } from 'lucide-svelte';
@@ -66,20 +66,17 @@
 		
 		<div 
 			animate:flip={{ duration: 300 }}
-			in:terminalTransition={{ duration: $siteSettings.aesthetic.animations_enabled ? 300 : 0 }}
-			out:fly={{ x: 100, duration: $siteSettings.aesthetic.animations_enabled ? 300 : 0 }}
-			class="pointer-events-auto relative overflow-hidden backdrop-blur-xl bg-[#0a0a0a]/90 border {borderClass} {$siteSettings.aesthetic.industrial_styling ? 'rounded-none' : 'rounded-lg'} shadow-2xl group"
+			in:terminalTransition={{ duration: 300 }}
+			out:fly={{ x: 100, duration: 300 }}
+			class="pointer-events-auto relative overflow-hidden backdrop-blur-xl bg-[#0a0a0a]/90 border {borderClass} rounded-none shadow-2xl group"
 		>
-			<!-- Status Bar -->
 			<div class="absolute left-0 top-0 bottom-0 w-1 {bgClass.replace('/10', '')}"></div>
 
 			<div class="p-4 pl-5 flex items-start gap-4">
-				<!-- Icon -->
 				<div class="mt-0.5 shrink-0 {colorClass} drop-shadow-md">
 					<Icon size="18" strokeWidth={2.5} />
 				</div>
 
-				<!-- Content -->
 				<div class="flex-1 min-w-0">
 					<div class="flex items-center justify-between gap-2 mb-1">
 						<span class="text-[10px] font-black font-jetbrains uppercase tracking-widest {colorClass}">
@@ -99,7 +96,6 @@
 					{/if}
 				</div>
 
-				<!-- Close Button -->
 				<button 
 					onclick={() => notifications.remove(n.id)}
 					class="shrink-0 p-1 text-stone-600 hover:text-white transition-colors"
@@ -109,7 +105,6 @@
 				</button>
 			</div>
 
-			<!-- Progress Bar -->
 			{#if n.timeout > 0}
 				<div class="absolute bottom-0 left-1 right-0 h-[2px] bg-stone-900">
 					<div 
@@ -117,11 +112,6 @@
 						style="animation: shrink {n.timeout}ms linear forwards; width: 100%;"
 					></div>
 				</div>
-			{/if}
-
-			<!-- Scanline overlay (optional aesthetic) -->
-			{#if $siteSettings.aesthetic.scanline_type !== 'none'}
-				<div class="absolute inset-0 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-10 mix-blend-overlay"></div>
 			{/if}
 		</div>
 	{/each}

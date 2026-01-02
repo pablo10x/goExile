@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { backgroundConfig, siteSettings } from '$lib/stores';
 	import { onMount } from 'svelte';
 
 	let { active = false } = $props<{ active?: boolean }>();
@@ -9,15 +8,13 @@
 
 	function updateData() {
 		if (!active) return;
-		// Drastically reduce count for performance, keep it visual
 		randomHex = Array.from({ length: 6 }, () => 
 			`0x${Math.random().toString(16).slice(2, 10).toUpperCase()}::OK`
 		);
 	}
 
 	function initSparks() {
-		const density = $siteSettings.aesthetic.card_hover_spark_density || 8;
-		sparks = Array.from({ length: Math.min(density, 6) }, (_, i) => ({
+		sparks = Array.from({ length: 6 }, (_, i) => ({
 			top: Math.random() * 100,
 			left: Math.random() * 100,
 			delay: i * 0.5
@@ -26,7 +23,6 @@
 
 	onMount(() => {
 		initSparks();
-		// Don't update immediately, wait for hover
 		const interval = setInterval(() => {
 			if (active) updateData();
 		}, 5000);
@@ -40,19 +36,19 @@
 	});
 </script>
 
-{#if $backgroundConfig.card_hover_effect && active}
+{#if active}
 	<div 
 		class="absolute inset-0 pointer-events-none overflow-hidden z-[1]"
-		style="--hover-intensity: {$siteSettings.aesthetic.card_hover_intensity ?? 0.5}"
+		style="--hover-intensity: 0.5"
 	>
 		<!-- Terminal Data Stream -->
 		<div 
 			class="absolute inset-0 p-4 font-mono text-[7px] uppercase tracking-tighter select-none overflow-hidden mix-blend-screen"
-			style="color: var(--primary-color); opacity: calc(var(--hover-intensity) * 0.6);"
+			style="color: #f97316; opacity: calc(var(--hover-intensity) * 0.6);"
 		>
 			<div 
 				class="animate-terminal-scroll space-y-2 will-change-transform"
-				style="animation-duration: {20 / ($siteSettings.aesthetic.card_hover_data_speed || 1)}s"
+				style="animation-duration: 20s"
 			>
 				{#each randomHex as line}
 					<div class="flex flex-col gap-0.5">
@@ -67,14 +63,14 @@
 		<div class="absolute inset-0 overflow-hidden">
 			{#each sparks as spark}
 				<div 
-					class="absolute w-[1.5px] h-[1.5px] bg-white shadow-[0_0_10px_var(--primary-color)] opacity-0 animate-glitch-spark will-change-[opacity,transform]" 
+					class="absolute w-[1.5px] h-[1.5px] bg-white shadow-[0_0_10px_#f97316] opacity-0 animate-glitch-spark will-change-[opacity,transform]" 
 					style="top: {spark.top}%; left: {spark.left}%; --delay: {spark.delay}s"
 				></div>
 			{/each}
 		</div>
 
 		<!-- Horizontal Scanning Beam -->
-		<div class="absolute w-full h-[1.5px] bg-[var(--primary-color)] shadow-[0_0_10px_var(--primary-color)] animate-scan-line opacity-30 will-change-[top,opacity]"></div>
+		<div class="absolute w-full h-[1.5px] bg-[#f97316] shadow-[0_0_10px_#f97316] animate-scan-line opacity-30 will-change-[top,opacity]"></div>
 	</div>
 {/if}
 

@@ -4,12 +4,11 @@
 	import { cubicOut } from 'svelte/easing';
 	import { goto } from '$app/navigation';
 	import { 
-		Search, Command, Terminal, Gauge, Activity, 
-		Shield, Settings, FileText, Database, Users, 
-		RefreshCw, Trash2, Cpu, Moon, Sun, X
+		Search, Terminal, Gauge, Activity, 
+		Shield, FileText, Database, 
+		RefreshCw, Cpu, X
 	} from 'lucide-svelte';
-	import { theme, notifications, isAuthenticated } from '$lib/stores';
-	import Icon from './theme/Icon.svelte';
+	import { notifications } from '$lib/stores';
 
 	let { isOpen = $bindable(false) } = $props<{ isOpen: boolean }>();
 
@@ -23,10 +22,8 @@
 		{ id: 'logs', label: 'Kernel Logs', icon: FileText, category: 'Navigation', shortcut: 'G L', action: () => goto('/logs') },
 		{ id: 'nodes', label: 'Node Management', icon: Cpu, category: 'Navigation', shortcut: 'G N', action: () => goto('/server') },
 		{ id: 'db', label: 'Database Explorer', icon: Database, category: 'Navigation', shortcut: 'G B', action: () => goto('/database') },
-		{ id: 'theme', label: 'Theme Calibration', icon: Settings, category: 'Navigation', shortcut: 'G T', action: () => goto('/config/theme') },
 		
 		{ id: 'restart', label: 'Restart Master Server', icon: RefreshCw, category: 'System', shortcut: 'S R', action: () => triggerRestart() },
-		{ id: 'theme_toggle', label: 'Toggle Dark/Light Mode', icon: Moon, category: 'System', shortcut: 'T M', action: () => theme.update(t => t === 'dark' ? 'light' : 'dark') },
 		
 		{ id: 'help', label: 'Documentation', icon: Shield, category: 'Support', shortcut: '?', action: () => window.open('https://github.com', '_blank') }
 	];
@@ -87,7 +84,7 @@
 		aria-label="Close command palette"
 	>
 		<div 
-			class="w-full max-w-2xl bg-stone-950 border border-stone-800 shadow-[0_0_100px_rgba(0,0,0,1)] overflow-hidden industrial-frame"
+			class="w-full max-w-2xl bg-stone-950 border border-stone-800 shadow-[0_0_100px_rgba(0,0,0,1)] overflow-hidden industrial-sharp"
 			transition:scale={{ start: 0.98, duration: 200, easing: cubicOut }}
 			onclick={e => e.stopPropagation()}
 			role="document"
@@ -112,9 +109,10 @@
 				<input
 					bind:this={inputElement}
 					bind:value={query}
+					onkeydown={handleKeydown}
 					type="text"
 					placeholder="INITIATE_COMMAND_QUERY..."
-					class="w-full bg-stone-900/50 border border-stone-800 pl-14 pr-6 py-5 text-lg font-black text-white placeholder:text-stone-800 outline-none focus:border-rust transition-all industrial-frame"
+					class="w-full bg-stone-900/50 border border-stone-800 pl-14 pr-6 py-5 text-lg font-black text-white placeholder:text-stone-800 outline-none focus:border-rust transition-all industrial-sharp"
 				/>
 			</div>
 
@@ -183,6 +181,6 @@
 		background: #1a1a1a;
 	}
 	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-		background: var(--color-rust);
+		background: #c2410c;
 	}
 </style>

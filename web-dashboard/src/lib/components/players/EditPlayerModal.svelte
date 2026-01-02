@@ -63,17 +63,11 @@
 		tabindex="0"
 		onkeydown={(e) => e.key === 'Escape' && onClose()}
 	>
-		<div
-			class="relative w-full max-w-xl bg-black border border-stone-800 shadow-2xl overflow-hidden"
-			class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
-			class:rounded-2xl={!$siteSettings.aesthetic.industrial_styling}
-			onclick={(e) => e.stopPropagation()}
-			transition:scale={{ duration: 300, easing: cubicOut, start: 0.98 }}
-			role="button"
-			tabindex="0"
-			onkeydown={(e) => e.stopPropagation()}
-		>
-			<!-- Tactical Corners -->
+		        <div
+		            class="w-full max-w-lg bg-black border border-stone-800 rounded-none shadow-2xl overflow-hidden relative industrial-sharp"
+		            onclick={(e) => e.stopPropagation()}
+		            transition:scale={{ duration: 200, start: 0.95 }}
+		        >			<!-- Tactical Corners -->
 			<div class="corner-tl"></div>
 			<div class="corner-tr"></div>
 			<div class="corner-bl"></div>

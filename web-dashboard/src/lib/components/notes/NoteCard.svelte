@@ -3,14 +3,12 @@
 	import { scale, fade } from 'svelte/transition';
 	import { cubicOut, cubicIn } from 'svelte/easing';
 	import type { Note } from '$lib/stores';
-	import { siteSettings } from '$lib/stores';
 
 	// Explosive shatter animation - creates multiple pieces flying away
 	function shatter(
 		node: Element,
 		{ duration = 1000, delay = 0 }: { duration?: number; delay?: number }
 	) {
-		// Create multiple fragment elements
 		const fragments = 12;
 		const rect = node.getBoundingClientRect();
 
@@ -21,7 +19,6 @@
 			css: (t: number) => {
 				const progress = 1 - t;
 
-				// Progressive destruction
 				const explosionRadius = progress * 400;
 				const rotation = progress * 720;
 				const scale = 1 - progress * 0.8;
@@ -35,7 +32,6 @@
 			tick: (t: number) => {
 				const progress = 1 - t;
 				if (progress > 0.1 && progress < 0.9) {
-					// Create visual fragments during animation
 					if (Math.random() > 0.85) {
 						createFragment(node, progress);
 					}
@@ -116,7 +112,6 @@
 		if (isShredding) return;
 		isShredding = true;
 
-		// Create immediate explosion effect
 		const card = document.querySelector(`[data-note-id="${note.id}"]`);
 		if (card) {
 			for (let i = 0; i < 20; i++) {
@@ -224,7 +219,7 @@
 	data-note-id={note.id}
 	class="note-card relative group w-full h-full min-h-[220px] p-6 border-2 transition-all duration-300 hover:scale-[1.03] hover:z-10 flex flex-col font-jetbrains {getStatusRing(
 		note.status
-	)} {!$siteSettings.aesthetic.industrial_styling ? 'rounded-2xl' : 'rounded-none'}"
+	)} rounded-none"
 	style="{rotationStyle}
            background: {noteStyles.background};
            box-shadow: {noteStyles.boxShadow};
@@ -325,8 +320,7 @@
 		}}
 	>
 		<div
-			class="modal-content font-jetbrains"
-			class:rounded-none={$siteSettings.aesthetic.industrial_styling}
+			class="modal-content font-jetbrains rounded-none"
 			onclick={(e) => e.stopPropagation()}
 			transition:scale={{ duration: 300, easing: cubicOut, start: 0.9 }}
 		>
@@ -362,9 +356,6 @@
 			<!-- Modal Body -->
 			<div class="modal-body">
 				<div class="modal-paper">
-					<!-- Paper texture -->
-					<div class="modal-paper-grain"></div>
-
 					<!-- Content -->
 					<div class="modal-text">
 						{note.content}
@@ -408,7 +399,6 @@
 			inset -2px 0 3px rgba(0, 0, 0, 0.03) !important;
 	}
 
-	/* Realistic paper grain texture */
 	.paper-grain {
 		position: absolute;
 		inset: 0;
@@ -419,7 +409,6 @@
 		mix-blend-mode: overlay;
 	}
 
-	/* Torn edge effect */
 	.torn-edge {
 		position: absolute;
 		top: 0;
@@ -448,7 +437,6 @@
 		);
 	}
 
-	/* Dog-ear corner fold */
 	.dog-ear {
 		position: absolute;
 		top: 0;
@@ -475,7 +463,6 @@
 		border-color: transparent rgba(255, 255, 255, 0.6) transparent transparent;
 	}
 
-	/* Ruled lines like notebook paper */
 	.ruled-lines {
 		position: absolute;
 		inset: 50px 20px 20px 20px;
@@ -496,7 +483,6 @@
 		);
 	}
 
-	/* Red margin line */
 	.ruled-lines::after {
 		content: '';
 		position: absolute;
@@ -605,7 +591,7 @@
 
 	.modal-content {
 		background: linear-gradient(135deg, #fefce8 0%, #fef9c3 50%, #fef08a 100%);
-		border-radius: 8px;
+		border-radius: 0;
 		box-shadow:
 			0 25px 50px -12px rgba(0, 0, 0, 0.4),
 			0 10px 25px rgba(0, 0, 0, 0.2),
@@ -623,7 +609,6 @@
 		border: 2px solid rgba(234, 179, 8, 0.3);
 	}
 
-	/* Paper texture overlay */
 	.modal-content::before {
 		content: '';
 		position: absolute;
@@ -635,7 +620,6 @@
 		z-index: 1;
 	}
 
-	/* Top torn edge */
 	.modal-content::after {
 		content: '';
 		position: absolute;
@@ -724,7 +708,7 @@
 	}
 
 	.modal-body::-webkit-scrollbar {
-		width: 10px;
+		width: 100px;
 	}
 
 	.modal-body::-webkit-scrollbar-track {
@@ -755,7 +739,6 @@
 		border: none;
 	}
 
-	/* Ruled lines like notebook paper */
 	.modal-paper::before {
 		content: '';
 		position: absolute;
@@ -771,7 +754,6 @@
 		opacity: 0.5;
 	}
 
-	/* Red margin line */
 	.modal-paper::after {
 		content: '';
 		position: absolute;
@@ -782,10 +764,6 @@
 		background: rgba(220, 38, 38, 0.2);
 		pointer-events: none;
 		z-index: 0;
-	}
-
-	.modal-paper-grain {
-		display: none;
 	}
 
 	.modal-text {

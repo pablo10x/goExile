@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Bell, CheckCircle, Info, XCircle, AlertCircle } from 'lucide-svelte';
 	import { slide } from 'svelte/transition';
-	import { notifications, siteSettings } from '$lib/stores';
+	import { notifications } from '$lib/stores';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 
 	const history = notifications.history;
@@ -26,10 +26,7 @@
 <div class="relative">
 	<button
 		onclick={toggleNotificationPanel}
-		class="p-2 text-text-dim hover:text-white bg-stone-900/50 hover:bg-rust/10 transition-all active:translate-y-px"
-		class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
-		class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
-		class:tactical-glow={$notifications.length > 0}
+		class="p-2 text-stone-500 hover:text-white bg-stone-900/50 hover:bg-rust/10 transition-all active:translate-y-px industrial-sharp border border-stone-800"
 	>
 		<Bell class="w-5 h-5 transition-transform group-hover:scale-110" />
 		{#if $notifications.length > 0}
@@ -45,10 +42,7 @@
 	<!-- Notification Dropdown -->
 	{#if isNotificationPanelOpen}
 		<div
-			class="absolute right-0 top-14 w-96 bg-stone-950/95 backdrop-blur-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] z-50 overflow-hidden border border-stone-800"
-			class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
-			class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
-			class:rounded-xl={!$siteSettings.aesthetic.industrial_styling}
+			class="absolute right-0 top-14 w-96 bg-stone-950/95 backdrop-blur-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] z-50 overflow-hidden border border-stone-800 rounded-none"
 			transition:slide={{ duration: 200 }}
 		>
 			<div
@@ -57,35 +51,33 @@
 				<span class="font-heading font-black text-white text-[10px] uppercase tracking-[0.2em]">Recent_Activity_Buffer</span>
 				<button
 					onclick={requestPurge}
-					class="text-[9px] font-black uppercase tracking-widest text-rust hover:text-white transition-all bg-rust/10 hover:bg-rust px-3 py-1 border border-rust/30"
-					class:rounded-md={!$siteSettings.aesthetic.industrial_styling}
+					class="text-[9px] font-black uppercase tracking-widest text-rust hover:text-white transition-all bg-rust/10 hover:bg-rust px-3 py-1 border border-rust/30 rounded-none"
 				>PURGE_LOGS</button
 				>
 			</div>
-			<div class="max-h-80 overflow-y-auto p-3 space-y-2 custom-scrollbar bg-[var(--terminal-bg)] relative">
+			<div class="max-h-80 overflow-y-auto p-3 space-y-2 custom-scrollbar bg-[#050505] relative">
 				<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.03] pointer-events-none"></div>
 				
 				{#if $history && $history.length > 0}
 					{#each $history as note (note.id)}
 						<div
-							class="flex gap-4 p-4 bg-stone-900/30 border border-stone-800 hover:border-stone-700 transition-all group relative overflow-hidden"
-							class:rounded-lg={!$siteSettings.aesthetic.industrial_styling}
+							class="flex gap-4 p-4 bg-stone-900/30 border border-stone-800 hover:border-stone-700 transition-all group relative overflow-hidden rounded-none"
 						>
 							<div class="mt-0.5 shrink-0">
 								{#if note.type === 'success'}
-									<div class="p-1.5 bg-emerald-500/10 border border-emerald-500/20" class:rounded-md={!$siteSettings.aesthetic.industrial_styling}>
+									<div class="p-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-none">
 										<CheckCircle class="w-3.5 h-3.5 text-emerald-500" />
 									</div>
 								{:else if note.type === 'error'}
-									<div class="p-1.5 bg-red-500/10 border border-red-500/20" class:rounded-md={!$siteSettings.aesthetic.industrial_styling}>
+									<div class="p-1.5 bg-red-500/10 border border-red-500/20 rounded-none">
 										<XCircle class="w-3.5 h-3.5 text-red-500" />
 									</div>
 								{:else if note.type === 'warning'}
-									<div class="p-1.5 bg-amber-500/10 border border-amber-500/20" class:rounded-md={!$siteSettings.aesthetic.industrial_styling}>
+									<div class="p-1.5 bg-amber-500/10 border border-amber-500/20 rounded-none">
 										<AlertCircle class="w-3.5 h-3.5 text-amber-500" />
 									</div>
 								{:else}
-									<div class="p-1.5 bg-blue-500/10 border border-blue-500/20" class:rounded-md={!$siteSettings.aesthetic.industrial_styling}>
+									<div class="p-1.5 bg-blue-500/10 border border-blue-500/20 rounded-none">
 										<Info class="w-3.5 h-3.5 text-blue-500" />
 									</div>
 								{/if}
@@ -105,7 +97,7 @@
 					{/each}
 				{:else}
 					<div class="text-center py-16 opacity-40 flex flex-col items-center">
-						<div class="p-4 bg-stone-900/50 border border-stone-800 mb-3" class:rounded-full={!$siteSettings.aesthetic.industrial_styling}>
+						<div class="p-4 bg-stone-900/50 border border-stone-800 mb-3 rounded-none">
 							<Bell class="w-6 h-6 text-stone-600" />
 						</div>
 						<p class="text-stone-500 text-[9px] font-jetbrains font-bold uppercase tracking-[0.2em]">Buffer Empty</p>

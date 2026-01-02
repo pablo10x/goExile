@@ -388,8 +388,7 @@
 						{#each filteredPlayers as player (player.id)}
 							{@const isExpanded = expandedPlayerId === player.id}
 							<div 
-								class="modern-industrial-card glass-panel group relative flex flex-col overflow-hidden shadow-2xl transition-all duration-500 {isExpanded ? 'border-rust shadow-rust/20 ring-1 ring-rust/30' : 'hover:border-rust/40'}"
-								class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
+								class="modern-industrial-card glass-panel group relative flex flex-col overflow-hidden shadow-2xl transition-all duration-500 industrial-sharp {isExpanded ? 'border-rust shadow-rust/20 ring-1 ring-rust/30' : 'hover:border-rust/40'}"
 								in:fade={{ duration: 200 }}
 							>
 								<!-- Top Status Indicator -->
@@ -606,9 +605,7 @@
 					<div class="grid grid-cols-1 gap-4">
 						{#each filteredReports as report (report.id)}
 							<div 
-								class="modern-industrial-card glass-panel group relative flex flex-col xl:flex-row items-stretch overflow-hidden shadow-2xl"
-								class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
-								class:rounded-2xl={!$siteSettings.aesthetic.industrial_styling}
+								class="modern-industrial-card glass-panel group relative flex flex-col xl:flex-row items-stretch overflow-hidden shadow-2xl industrial-sharp"
 								in:fade={{ duration: 200 }}
 							>
 								<!-- Tactical Corners -->

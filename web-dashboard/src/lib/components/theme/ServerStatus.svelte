@@ -5,7 +5,6 @@
 	export let players = 0;
 	export let servers = 0;
 
-	// Format numbers (e.g., 1,234)
 	const fmt = (n: number) => n.toLocaleString();
 
 	let visibleText = "";
@@ -15,7 +14,7 @@
 	onMount(() => {
 		fullText = `SYSTEM: ${status} -- ONLINE: ${fmt(players)} -- SERVERS: ${fmt(servers)}`;
 		let i = 0;
-		const speed = 30; // ms per char
+		const speed = 30;
 
 		const typeInterval = setInterval(() => {
 			if (i < fullText.length) {
@@ -31,23 +30,22 @@
 	});
 </script>
 
-<div class="w-full bg-[var(--bg-color)] border-b border-[var(--border-color)] relative z-40 overflow-hidden font-mono text-[8px] md:text-[10px] tracking-tight">
-	<div class="max-w-7xl mx-auto px-2 md:px-4 py-1 flex flex-wrap items-center justify-between gap-2 text-[var(--text-secondary)] h-6 md:h-auto">
+<div class="w-full bg-[#18181b] border-b border-[#1e293b] relative z-40 overflow-hidden font-mono text-[8px] md:text-[10px] tracking-tight">
+	<div class="max-w-7xl mx-auto px-2 md:px-4 py-1 flex flex-wrap items-center justify-between gap-2 text-[#888888] h-6 md:h-auto">
 		
 		<div class="flex items-center gap-2 md:gap-4 whitespace-nowrap">
-			<span class="text-[var(--text-secondary)] opacity-80">
-				> {visibleText}<span class="{isTyping ? 'animate-pulse' : 'opacity-0'} inline-block w-1.5 h-3 bg-[var(--color-rust-light)] align-middle ml-1"></span>
+			<span class="text-[#888888] opacity-80">
+				> {visibleText}<span class="{isTyping ? 'animate-pulse' : 'opacity-0'} inline-block w-1.5 h-3 bg-[#f59e0b] align-middle ml-1"></span>
 			</span>
 		</div>
 
-		<!-- Scrolling ticker for "Live" feel -->
 		<div class="hidden sm:block flex-1 mx-4 overflow-hidden relative h-3 opacity-30">
-			<div class="absolute whitespace-nowrap animate-marquee text-[var(--text-secondary)]">
+			<div class="absolute whitespace-nowrap animate-marquee text-[#888888]">
 				/// SYSTEM UPDATE: SECTOR 7 PACIFIED /// WEATHER WARNING: ACID RAIN IN ZONE 4 /// NEW FACTION DETECTED /// SYSTEM UPDATE: SECTOR 7 PACIFIED ///
 			</div>
 		</div>
 
-		<div class="hidden md:flex items-center gap-2 text-[var(--text-secondary)] opacity-40">
+		<div class="hidden md:flex items-center gap-2 text-[#888888] opacity-40">
 			<span>v0.9.4b</span>
 		</div>
 	</div>

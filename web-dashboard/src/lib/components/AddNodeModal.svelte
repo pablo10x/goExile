@@ -352,9 +352,7 @@
 
 		<!-- Modal Container -->
 		<div
-			class="modal-container relative w-full max-w-xl bg-[var(--terminal-bg)] border border-stone-800 rounded-none shadow-2xl overflow-hidden backdrop-blur-xl"
-			class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
-			class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
+			class="modal-container relative w-full max-w-xl bg-[var(--terminal-bg)] border border-stone-800 rounded-none shadow-2xl overflow-hidden backdrop-blur-xl industrial-sharp"
 			transition:modalScale
 		>
 			<!-- Animated gradient backgrounds -->
@@ -409,9 +407,7 @@
 				<!-- Header -->
 				<div class="flex items-center gap-5 mb-8">
 					<div
-						class="icon-wrapper flex-shrink-0 p-4 rounded-none bg-rust/10 border border-rust/30 shadow-lg"
-						class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
-						class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
+						class="icon-wrapper flex-shrink-0 p-4 rounded-none bg-rust/10 border border-rust/30 shadow-lg industrial-sharp"
 					>
 						<div class="animate-icon-pop">
 							<Icon name="cpu" size="2rem" class="text-rust-light" />
@@ -421,7 +417,7 @@
 						<h2 class="text-3xl font-heading font-black text-white tracking-tighter uppercase slide-in-text">
 							Register_Node
 						</h2>
-						<p class="font-jetbrains text-[10px] uppercase tracking-widest mt-1 slide-in-text-delayed" style="color: var(--text-dim)">
+						<p class="font-jetbrains text-[10px] uppercase tracking-widest mt-1 slide-in-text-delayed text-stone-500">
 							Authorize new node cluster integration
 						</p>
 					</div>
@@ -441,7 +437,7 @@
 								<Icon name="ph:key-bold" size="2.5rem" class="text-rust animate-pulse shadow-rust/50 shadow-lg" />
 							</div>
 						</div>
-						<p class="mt-8 font-heading font-black text-[11px] uppercase tracking-[0.2em]" style="color: var(--text-dim)">
+						<p class="mt-8 font-heading font-black text-[11px] uppercase tracking-[0.2em] text-stone-500">
 							AUTHORIZING_ENROLLMENT...
 						</p>
 					</div>
@@ -451,14 +447,11 @@
 						class="flex flex-col items-center justify-center py-10 error-bounce"
 						transition:scale={{ start: 0.95, duration: 300, easing: cubicOut }}
 					>
-						<div class="p-6 rounded-none bg-red-500/5 border border-red-500/20 mb-6 shadow-2xl"
-							 class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
-							 class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
-						>
+						<div class="p-6 rounded-none bg-red-500/5 border border-red-500/20 mb-6 shadow-2xl industrial-sharp">
 							<Icon name="alert" size="3.5rem" class="text-red-500 animate-shake-error" />
 						</div>
 						<h3 class="text-xl font-heading font-black text-red-500 mb-2 uppercase tracking-tighter">PROTO_FAULT_0x04</h3>
-						<p class="font-jetbrains text-[11px] text-center max-w-sm mb-8 uppercase leading-relaxed font-bold" style="color: var(--text-dim)">
+						<p class="font-jetbrains text-[11px] text-center max-w-sm mb-8 uppercase leading-relaxed font-bold text-stone-500">
 							{error}
 						</p>
 						<Button
@@ -488,9 +481,7 @@
 
 								<!-- Success circle -->
 								<div
-									class="relative w-28 h-28 rounded-none bg-rust/10 border-2 border-rust/40 flex items-center justify-center success-circle shadow-rust/20 shadow-2xl"
-									class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
-									class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
+									class="relative w-28 h-28 rounded-none bg-rust/10 border-2 border-rust/40 flex items-center justify-center success-circle shadow-rust/20 shadow-2xl industrial-sharp"
 								>
 									<Icon name="ph:check-circle-bold" size="3.5rem" class="text-rust animate-check-pop" />
 								</div>
@@ -504,7 +495,7 @@
 							<h3 class="mt-8 text-2xl font-heading font-black text-white uppercase tracking-tighter animate-text-slide">
 								NODE_AUTHORIZED
 							</h3>
-							<p class="font-jetbrains text-[10px] uppercase tracking-widest mt-2 animate-text-slide-delayed" style="color: var(--text-dim)">
+							<p class="font-jetbrains text-[10px] uppercase tracking-widest mt-2 animate-text-slide-delayed text-stone-500">
 								Sector registry updated // Handshake complete
 							</p>
 						</div>
@@ -514,9 +505,7 @@
 							class="node-card modern-industrial-card glass-panel p-6"
 						>
 							<div class="relative flex items-center gap-6">
-								<div class="p-4 rounded-none bg-rust/10 border border-rust/30"
-									 class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
-									 class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
+								<div class="p-4 rounded-none bg-rust/10 border border-rust/30 industrial-sharp"
 								>
 									<Icon name="cpu" size="2.5rem" class="text-rust-light" />
 								</div>
@@ -531,7 +520,7 @@
 											ID_{enrolledNode.id}
 										</span>
 									</div>
-									<div class="font-jetbrains text-[11px] font-bold tracking-tight" style="color: var(--text-dim)">
+									<div class="font-jetbrains text-[11px] font-bold tracking-tight text-stone-500">
 										INTERFACE: {enrolledNode.host}:{enrolledNode.port}
 									</div>
 								</div>
@@ -627,7 +616,7 @@
 								class="flex items-center gap-3 px-5 py-2.5 bg-stone-900/50 border border-stone-800 shadow-inner"
 							>
 								<div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse shadow-amber-500/50 shadow-lg"></div>
-								<span class="font-jetbrains text-[10px] font-black uppercase tracking-widest" style="color: var(--text-dim)"
+								<span class="font-jetbrains text-[10px] font-black uppercase tracking-widest text-stone-500"
 									>AWAITING_EXTERNAL_HANDSHAKE...</span
 								>
 							</div>
@@ -690,9 +679,7 @@
 								class="absolute inset-0 bg-rust/5 rounded-none blur-xl"
 							></div>
 							<div
-								class="relative bg-stone-950 border border-stone-800 p-6 shadow-inner"
-								class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
-								class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
+								class="relative bg-stone-950 border border-stone-800 p-6 shadow-inner industrial-sharp"
 							>
 								<div class="flex items-center gap-3 mb-3">
 									<Icon name="ph:key-bold" size="1rem" class="text-rust" />
@@ -748,9 +735,7 @@
 
 						<!-- Instructions -->
 						<div
-							class="bg-stone-900/40 border border-stone-800 p-5"
-							class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
-							class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
+							class="bg-stone-900/40 border border-stone-800 p-5 industrial-sharp"
 						>
 							<h4 class="font-heading font-black text-[10px] text-stone-400 uppercase tracking-[0.2em] mb-3">
 								OPERATIONAL_STEPS

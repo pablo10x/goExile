@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import * as THREE from 'three';
-	import { siteSettings } from '$lib/stores';
 
 	let container: HTMLDivElement;
 	let renderer: THREE.WebGLRenderer | null = null;
@@ -33,14 +32,13 @@
 	}
 
 	function init() {
-		if (!container || $siteSettings.performance?.low_power_mode) return;
+		if (!container) return;
 
 		const width = window.innerWidth;
 		const height = window.innerHeight;
 		const isMobile = width < 768;
 
 		scene = new THREE.Scene();
-		// Subtle blue-ish fog for depth
 		scene.fog = new THREE.FogExp2(0x000000, 0.001);
 
 		camera = new THREE.PerspectiveCamera(75, width / height, 1, 1000);
@@ -62,7 +60,7 @@
 		const context = canvas.getContext('2d');
 		if (context) {
 			const gradient = context.createRadialGradient(16, 16, 0, 16, 16, 16);
-			gradient.addColorStop(0, 'rgba(200,200,210,0.15)'); // Lighter center
+			gradient.addColorStop(0, 'rgba(200,200,210,0.15)');
 			gradient.addColorStop(1, 'rgba(0,0,0,0)');
 			context.fillStyle = gradient;
 			context.fillRect(0, 0, 32, 32);
@@ -81,7 +79,6 @@
 		const geometry = new THREE.PlaneGeometry(15, 15);
 		smokeParticles = new THREE.Group();
 
-		// Reduced count for mobile
 		const particleCount = isMobile ? 20 : 80;
 
 		for (let i = 0; i < particleCount; i++) {
@@ -101,7 +98,6 @@
 
 		scene.add(smokeParticles);
 
-		// Scroll interaction
 		let targetScrollY = 0;
 		const updateScroll = () => {
 			targetScrollY = window.scrollY * 0.01;
@@ -113,17 +109,7 @@
 		const frameInterval = 1000 / targetFPS;
 
 		function animate(time: number) {
-			if ($siteSettings.performance?.low_power_mode) {
-				cleanup();
-				return;
-			}
-
 			frameId = requestAnimationFrame(animate);
-
-			if ($siteSettings.aesthetic?.reduced_motion || !$siteSettings.aesthetic.animations_enabled) {
-				if (renderer && scene && camera) renderer.render(scene, camera);
-				return;
-			}
 
 			const deltaTime = time - lastTime;
 			if (deltaTime < frameInterval) return;
@@ -133,16 +119,12 @@
 				smokeParticles.children.forEach(p => {
 					p.rotation.z += (p.userData.velocity || 0);
 					p.position.x += (p.userData.drift || 0);
-					
-					// Reset position if too far
 					if (p.position.x > 20) p.position.x = -20;
 					if (p.position.x < -20) p.position.x = 20;
 				});
 			}
 
-			// Gentle camera movement based on scroll
 			if (camera) camera.position.y = THREE.MathUtils.lerp(camera.position.y, -targetScrollY, 0.05);
-
 			if (renderer && scene && camera) renderer.render(scene, camera);
 		}
 		frameId = requestAnimationFrame(animate);
@@ -169,14 +151,6 @@
 			if (typeof unsub === 'function') unsub();
 			cleanup();
 		};
-	});
-
-	$effect(() => {
-		if ($siteSettings.performance?.low_power_mode) {
-			cleanup();
-		} else if (!frameId) {
-			init();
-		}
 	});
 </script>
 

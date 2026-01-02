@@ -191,7 +191,6 @@
 	});
 
 	function triggerPulse(id: number) {
-		if ($siteSettings.aesthetic.reduced_motion) return;
 		pulsingNodes.add(id);
 		pulsingNodes = new Set(pulsingNodes);
 
@@ -234,9 +233,6 @@
 	}
 
 	function getConnectionPath(startX: number, startY: number, endX: number, endY: number) {
-		if (!$siteSettings.aesthetic.animations_enabled || $siteSettings.aesthetic.reduced_motion) {
-			return `M${startX},${startY} L${endX},${endY}`;
-		}
 		// Calculate control point for a slight curve
 		const midX = (startX + endX) / 2;
 		const midY = (startY + endY) / 2;
@@ -340,14 +336,13 @@
 		{/each}
 	</div>
 
-	<!-- Animated Grid Background -->
 	<div
 		class="absolute inset-0 opacity-80"
 		style="background-image:
 			linear-gradient(rgba(249, 115, 22, 0.03) 1px, transparent 1px),
 			linear-gradient(90deg, rgba(249, 115, 22, 0.03) 1px, transparent 1px);
 			background-size: 50px 50px;
-			animation: {$siteSettings.aesthetic.animations_enabled && !$siteSettings.aesthetic.reduced_motion ? 'gridMove 5s linear infinite' : 'none'}; "
+			animation: gridMove 5s linear infinite; "
 	></div>
 
 	<!-- Radial gradient overlay for depth -->
@@ -448,7 +443,6 @@
 					{@const connectionPathD = getConnectionPath(pos.x, pos.y, center.x, center.y)}
 					{@const colors = getStatusColor(node, hoveredNodeId === node.id)}
 
-					<!-- Connection Line with curve -->
 					<path
 						id={`connection-${node.id}`}
 						d={connectionPathD}
@@ -457,14 +451,14 @@
 						stroke-dasharray={isActive ? '25, 5' : '40, 5'}
 						opacity={hoveredNodeId === node.id ? 0.8 : 0.5}
 						fill="none"
-						filter={(hoveredNodeId === node.id && $siteSettings.aesthetic.glow_effects) ? 'url(#glow)' : ''}
-						class={isActive && $siteSettings.aesthetic.animations_enabled ? 'animate-dash-flow' : !isActive && $siteSettings.aesthetic.animations_enabled ? 'animate-dash-static' : ''}
+						filter={(hoveredNodeId === node.id) ? 'url(#glow)' : ''}
+						class={isActive ? 'animate-dash-flow' : 'animate-dash-static'}
 						style="transition: all 0.1s ease; transform: translate3d(0,0,0);"
 					/>
 
 					<!-- Pulse Packet (Enhanced Spark) -->
-					{#if pulsingNodes.has(node.id) && isActive && $siteSettings.aesthetic.animations_enabled && animationLimitSet.has(node.id)}
-						<g filter={$siteSettings.aesthetic.glow_effects ? "url(#strongGlow)" : ""} style="transform: translate3d(0,0,0);">
+					{#if pulsingNodes.has(node.id) && isActive && animationLimitSet.has(node.id)}
+						<g filter="url(#strongGlow)" style="transform: translate3d(0,0,0);">
 							<!-- Main spark -->
 							<circle r="4" fill="#10b971">
 								<animateMotion dur="1s" repeatCount="1" path={connectionPathD} fill="freeze" />
@@ -483,8 +477,8 @@
 					{/if}
 
 					<!-- Fire spark with trails -->
-					{#if isActive && $siteSettings.aesthetic.animations_enabled && animationLimitSet.has(node.id)}
-						<g filter={$siteSettings.aesthetic.glow_effects ? "url(#strongGlow)" : ""} style="transform: translate3d(0,0,0);">
+					{#if isActive && animationLimitSet.has(node.id)}
+						<g filter="url(#strongGlow)" style="transform: translate3d(0,0,0);">
 							<!-- Main fire spark -->
 							<circle r="3" fill="#ff6b35">
 								<animateMotion dur="2.5s" repeatCount="indefinite" path={connectionPathD} />
@@ -524,10 +518,10 @@
 							fill="none"
 							stroke="url(#masterBorderGradient)"
 							class={`transition-all duration-500 master-shield ${
-								(masterReceiving && $siteSettings.aesthetic.animations_enabled) ? 'master-shield-ignite' : ''
+								masterReceiving ? 'master-shield-ignite' : ''
 							}`}
 							stroke-width="2.5"
-							filter={$siteSettings.aesthetic.glow_effects ? "url(#masterGlow)" : ""}
+							filter="url(#masterGlow)"
 						/>
 
 						<!-- Inner accent lines -->
@@ -568,9 +562,9 @@
 							<!-- Main server rack icon only -->
 							<Server
 								class={`w-9 h-9 transition-all duration-500 ${
-									(masterReceiving && $siteSettings.aesthetic.animations_enabled) ? 'text-emerald-400 master-icon-ignite' : (masterReceiving ? 'text-emerald-400' : 'text-rust-light')
+									masterReceiving ? 'text-emerald-400 master-icon-ignite' : 'text-rust-light'
 								}`}
-								style={$siteSettings.aesthetic.glow_effects ? "filter: drop-shadow(0 0 8px currentColor);" : ""}
+								style="filter: drop-shadow(0 0 8px currentColor);"
 							/>
 						</div>
 
@@ -584,7 +578,7 @@
 							<div class="flex items-center gap-1">
 								<div
 									class={`w-1.5 h-1.5 rounded-full transition-colors duration-800  ${
-										(masterReceiving && $siteSettings.aesthetic.animations_enabled) ? 'bg-emerald-400 animate-pulse' : 'bg-emerald-200'
+										masterReceiving ? 'bg-emerald-400 animate-pulse' : 'bg-emerald-200'
 									}`}
 								></div>
 								<!--<span class="text-[6px] text-emerald-400 font-mono font-semibold">ONLINE</span>-->
@@ -593,7 +587,7 @@
 					</div>
 
 					<!-- Green particles flying in when receiving data -->
-					{#if masterReceiving && $siteSettings.aesthetic.animations_enabled}
+					{#if masterReceiving}
 						<!-- Particles from top -->
 						<div
 							class="absolute -top-16 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-emerald-400 animate-particle-fly-top shadow-[0_0_10px_rgba(52,211,153,0.8)]"
@@ -699,7 +693,7 @@
 
 			                                                                                                              stroke-width="2.5"
 
-			                                                                                                              class={$siteSettings.aesthetic.animations_enabled ? "animate-pulse" : ""}
+			                                                                                                              class="animate-pulse"
 
 			                                                                                                      />
 
@@ -713,7 +707,7 @@
 
 			                                                                                                              stroke-width="2.5"
 
-			                                                                                                              class={$siteSettings.aesthetic.animations_enabled ? "animate-pulse" : ""}
+			                                                                                                              class="animate-pulse"
 
 			                                                                                                      />
 
@@ -727,7 +721,7 @@
 
 			                                                                                                              stroke-width="2.5"
 
-			                                                                                                              class={$siteSettings.aesthetic.animations_enabled ? "animate-pulse" : ""}
+			                                                                                                              class="animate-pulse"
 
 			                                                                                                      />
 
@@ -741,7 +735,7 @@
 
 			                                                                                                              stroke-width="2.5"
 
-			                                                                                                              class={$siteSettings.aesthetic.animations_enabled ? "animate-pulse" : ""}
+			                                                                                                              class="animate-pulse"
 
 			                                                                                                      />
 
@@ -775,7 +769,7 @@
 
 			                                                                                              <!-- Rotating Outer Ring -->
 
-			                                                                                              <svg class="absolute inset-0 w-full h-full {$siteSettings.aesthetic.animations_enabled ? 'animate-spin-slow' : ''} opacity-40">
+			                                                                                              <svg class="absolute inset-0 w-full h-full animate-spin-slow opacity-40">
 
 			                                                                                                      <circle
 
@@ -803,7 +797,7 @@
 
 			                                                                                              <div
 
-			                                                                                                      class="relative z-10 w-10 h-10 flex items-center justify-center filter {$siteSettings.aesthetic.glow_effects ? 'drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]' : ''}"
+			                                                                                                      class="relative z-10 w-10 h-10 flex items-center justify-center filter drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]"
 
 			                                                                                              >
 
@@ -825,7 +819,7 @@
 
 			                                                                                                                      stroke-width="1"
 
-			                                                                                                                      class={$siteSettings.aesthetic.animations_enabled ? "animate-scan-laser" : ""}
+			                                                                                                                      class="animate-scan-laser"
 
 			                                                                                                              />
 
@@ -948,7 +942,7 @@
 			                                                                                                              stroke="#10b981"
 			                                                                                                              stroke-width="1.5"
 			                                                                                                              stroke-opacity="0.4"
-			                                                                                                              class={$siteSettings.aesthetic.glassmorphism ? "backdrop-blur-xl" : ""}
+			                                                                                                              class="backdrop-blur-xl"
 			                                                                                                      />
 			                                                                                                      <!-- Corner Brackets -->
 			                                                                                                      <path
@@ -956,28 +950,28 @@
 			                                                                                                              fill="none"
 			                                                                                                              stroke="#10b981"
 			                                                                                                              stroke-width="2.5"
-			                                                                                                              class={$siteSettings.aesthetic.animations_enabled ? "animate-pulse" : ""}
+			                                                                                                              class="animate-pulse"
 			                                                                                                      />
 			                                                                                                      <path
 			                                                                                                              d="M 75 5 L 90 5 L 95 20"
 			                                                                                                              fill="none"
 			                                                                                                              stroke="#10b981"
 			                                                                                                              stroke-width="2.5"
-			                                                                                                              class={$siteSettings.aesthetic.animations_enabled ? "animate-pulse" : ""}
+			                                                                                                              class="animate-pulse"
 			                                                                                                      />
 			                                                                                                      <path
 			                                                                                                              d="M 5 80 L 10 95 L 25 95"
 			                                                                                                              fill="none"
 			                                                                                                              stroke="#10b981"
 			                                                                                                              stroke-width="2.5"
-			                                                                                                              class={$siteSettings.aesthetic.animations_enabled ? "animate-pulse" : ""}
+			                                                                                                              class="animate-pulse"
 			                                                                                                      />
 			                                                                                                      <path
 			                                                                                                              d="M 95 80 L 90 95 L 75 95"
 			                                                                                                              fill="none"
 			                                                                                                              stroke="#10b981"
 			                                                                                                              stroke-width="2.5"
-			                                                                                                              class={$siteSettings.aesthetic.animations_enabled ? "animate-pulse" : ""}
+			                                                                                                              class="animate-pulse"
 			                                                                                                      />
 			                                                    
 			                                                                                                      <!-- Data stream ring -->
@@ -991,7 +985,6 @@
 			                                                                                                              stroke-dasharray="10 5"
 			                                                                                                              opacity="0.2"
 			                                                                                                      >
-																													{#if $siteSettings.aesthetic.animations_enabled}
 																														<animateTransform
 																															attributeName="transform"
 																															type="rotate"
@@ -1000,13 +993,12 @@
 																															dur="20s"
 																															repeatCount="indefinite"
 																														/>
-																													{/if}
 			                                                                                                      </circle>
 			                                                                                              </svg>
 			                                                    
 			                                                                                              <!-- Quantum Storage Cylinder Stack -->
 			                                                                                              <div
-			                                                                                                      class="relative z-10 w-10 h-10 flex items-center justify-center filter {$siteSettings.aesthetic.glow_effects ? 'drop-shadow-[0_0_15px_rgba(16,185,129,0.8)]' : ''}"
+			                                                                                                      class="relative z-10 w-10 h-10 flex items-center justify-center filter drop-shadow-[0_0_15px_rgba(16,185,129,0.8)]"
 			                                                                                              >
 			                                                                                                      <svg viewBox="0 0 100 100" class="w-full h-full">
 			                                                                                                              <!-- Bottom Plate -->
@@ -1020,7 +1012,7 @@
 			                                                                                                                      ry="10"
 			                                                                                                                      fill="#065f46"
 			                                                                                                                      stroke="#10b981"
-			                                                                                                                      class={$siteSettings.aesthetic.animations_enabled ? "animate-pulse" : ""}
+			                                                                                                                      class="animate-pulse"
 			                                                                                                              />
 			                                                    
 			                                                                                                              <!-- Middle Plate 2 -->
@@ -1032,7 +1024,7 @@
 			                                                                                                                      fill="#065f46"
 			                                                                                                                      stroke="#10b981"
 			                                                                                                                      style="animation-delay: 0.5s"
-			                                                                                                                      class={$siteSettings.aesthetic.animations_enabled ? "animate-pulse" : ""}
+			                                                                                                                      class="animate-pulse"
 			                                                                                                              />
 			                                                    
 			                                                                                                              <!-- Top Plate -->
@@ -1044,18 +1036,16 @@
 			                                                    
 			                                                                                                              <!-- Central Data Stream -->
 			                                                                                                              <rect x="48" y="20" width="4" height="60" fill="url(#dataStreamGradient)" rx="2">
-																													{#if $siteSettings.aesthetic.animations_enabled}
 																														<animate
 																															attributeName="opacity"
 																															values="0.3;1;0.3"
 																															dur="2s"
 																															repeatCount="indefinite"
 																														/>
-																													{/if}
 			                                                                                                              </rect>
 			                                                    
 			                                                                                                              <!-- Orbital Read/Write Heads -->
-			                                                                                                              <g class={$siteSettings.aesthetic.animations_enabled ? "animate-spin" : ""} style="animation-duration: 4s">
+			                                                                                                              <g class="animate-spin" style="animation-duration: 4s">
 			                                                                                                                      <circle cx="85" cy="50" r="3" fill="#6ee7b7" />
 			                                                                                                                      <circle cx="15" cy="50" r="3" fill="#6ee7b7" />
 			                                                                                                              </g>
@@ -1066,7 +1056,7 @@
 			                                                    
 			                                                                                                                                        <div
 			                                                    
-			                                                                                                                                                class="absolute inset-0 border border-emerald-500/20 scale-150 {$siteSettings.aesthetic.animations_enabled ? 'animate-ping-slower' : ''} opacity-10"
+			                                                                                                                                                class="absolute inset-0 border border-emerald-500/20 scale-150 animate-ping-slower opacity-10"
 			                                                    
 			                                                                                                                                        ></div>
 			                                                    
@@ -1084,7 +1074,7 @@
 				<div
 					class="absolute z-10 flex flex-col items-center group cursor-pointer transition-all duration-300 hover:scale-110 hover:z-30"
 					style="top: {pos.y - 28}px; left: {pos.x - 28}px;"
-					in:scale={{ duration: $siteSettings.aesthetic.animations_enabled ? 400 : 0, delay: i * 100 }}
+					in:scale={{ duration: 400, delay: i * 100 }}
 					onmouseenter={() => (hoveredNodeId = node.id)}
 					onmouseleave={() => (hoveredNodeId = null)}
 					role="button"
@@ -1095,7 +1085,7 @@
 						<!-- Utilization ring background -->
 						<svg
 							class="absolute -inset-2 w-16 h-16 -rotate-90"
-							style={$siteSettings.aesthetic.glow_effects ? "filter: drop-shadow(0 0 8px rgba(100, 116, 139, 0.3));" : ""}
+							style="filter: drop-shadow(0 0 8px rgba(100, 116, 139, 0.3));"
 						>
 							<circle
 								cx="32"
@@ -1122,9 +1112,9 @@
 						<!-- Main node -->
 						<div
 							class={`
-						relative w-12 h-12 rounded-full flex items-center justify-center border-2 shadow-lg ${$siteSettings.aesthetic.glassmorphism ? 'backdrop-blur-md' : ''}
+						relative w-12 h-12 rounded-full flex items-center justify-center border-2 shadow-lg backdrop-blur-md
 						${isActive ? 'bg-gradient-to-br from-stone-900 to-black border-rust-light shadow-rust-light/30' : 'bg-slate-900/95 border-red-500/70 shadow-red-500/40'}
-						${(pulsingNodes.has(node.id) && $siteSettings.aesthetic.animations_enabled) ? 'node-pulse border-emerald-400 shadow-emerald-500/60' : ''}
+						${(pulsingNodes.has(node.id)) ? 'node-pulse border-emerald-400 shadow-emerald-500/60' : ''}
 						transition-all duration-300
 					`}
 						>
@@ -1134,7 +1124,7 @@
 								/>
 							{:else}
 								<Skull
-									class={`w-6 h-6 text-red-400 ${$siteSettings.aesthetic.animations_enabled ? 'animate-pulse-slow' : ''} transition-colors duration-800`}
+									class={`w-6 h-6 text-red-400 animate-pulse-slow transition-colors duration-800`}
 								/>
 							{/if}
 
@@ -1142,7 +1132,7 @@
 							{#if isActive}
 								<div
 									class={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-slate-900
-								bg-emerald-500 ${$siteSettings.aesthetic.animations_enabled ? 'status-pulse' : ''}`}
+								bg-emerald-500 status-pulse`}
 								></div>
 							{/if}
 						</div>
@@ -1150,7 +1140,7 @@
 
 					<!-- Enhanced tooltip -->
 					<div
-						class="absolute top-16 flex flex-col items-center bg-[var(--card-bg)] ${$siteSettings.aesthetic.glassmorphism ? 'backdrop-blur-sm' : ''} px-4 py-2 rounded-xl border border-[var(--border-color)] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-40 pointer-events-none shadow-2xl"
+						class="absolute top-16 flex flex-col items-center bg-stone-900 backdrop-blur-sm px-4 py-2 rounded-xl border border-stone-800 opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-40 pointer-events-none shadow-2xl"
 					>
 						<span class="text-sm font-bold text-slate-900 dark:text-white mb-1"
 							>Node #{node.id}</span
