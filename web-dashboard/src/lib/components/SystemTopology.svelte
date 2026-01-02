@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
-	import { nodes, siteSettings } from '$lib/stores';
+	import { nodes } from '$lib/stores';
 	import { Server, Activity, Cpu, Skull, Database, User } from 'lucide-svelte';
 	import { fade, scale } from 'svelte/transition';
 
@@ -295,12 +295,11 @@
 	class="flex absolute w-full h-full bg-stone-950 border-2 border-stone-800 rounded-none overflow-hidden items-center justify-center shadow-2xl transition-colors duration-300 font-mono"
 >
 	<!-- Animated gradient blobs in background -->
-	{#if $siteSettings.aesthetic.topology_blobs}
-		<div class="absolute inset-0 overflow-hidden pointer-events-none">
-			<!-- Primary gradient blob -->
-			<div
-				class="gradient-blob blob-1 bg-gradient-to-br from-rust/10 via-rust-light/5 to-transparent"
-			></div>
+	<div class="absolute inset-0 overflow-hidden pointer-events-none">
+		<!-- Primary gradient blob -->
+		<div
+			class="gradient-blob blob-1 bg-gradient-to-br from-rust/10 via-rust-light/5 to-transparent"
+		></div>
 
 			<!-- Secondary gradient blob -->
 			<div
@@ -317,7 +316,6 @@
 				class="gradient-blob blob-4 bg-gradient-to-bl from-rust/10 via-rust-light/5 to-transparent"
 			></div>
 		</div>
-	{/if}
 
 	<!-- Background particles -->
 	<div class="absolute inset-0 pointer-events-none overflow-hidden">
