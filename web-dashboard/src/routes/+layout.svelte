@@ -626,11 +626,11 @@
 							<!-- CATEGORY: CORE -->
 							<div class="space-y-1">
 								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Core_Systems</span>{/if}
-								<a href="/dashboard" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/dashboard') || isRouteActive('/')}>
+								<a href="/dashboard" class="nav-link {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/dashboard') || isRouteActive('/')}>
 									<div class="nav-icon-container"><Icon name="gauge" /></div>
 									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">CORE_DASH</span><span class="nav-subtext">Unified Interface</span></div>{/if}
 								</a>
-								<a href="/performance" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/performance')}>
+								<a href="/performance" class="nav-link {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/performance')}>
 									<div class="nav-icon-container"><Icon name="activity" /></div>
 									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">PERFORMANCE</span><span class="nav-subtext">RT_Telemetry</span></div>{/if}
 								</a>
@@ -639,11 +639,11 @@
 							<!-- CATEGORY: FLEET -->
 							<div class="space-y-1">
 								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Fleet_Ops</span>{/if}
-								<a href="/server" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/server')}>
+								<a href="/server" class="nav-link {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/server')}>
 									<div class="nav-icon-container"><Icon name="cpu" /></div>
 									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">NODE_FLEET</span><span class="nav-subtext">Node_Matrix</span></div>{/if}
 								</a>
-								<a href="/users" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/users')}>
+								<a href="/users" class="nav-link {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/users')}>
 									<div class="nav-icon-container"><Icon name="users" /></div>
 									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">IDENTITIES</span><span class="nav-subtext">Subject Registry</span></div>{/if}
 								</a>
@@ -652,11 +652,11 @@
 							<!-- CATEGORY: LOGISTICS -->
 							<div class="space-y-1">
 								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Logistics</span>{/if}
-								<a href="/database" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/database')}>
+								<a href="/database" class="nav-link {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/database')}>
 									<div class="nav-icon-container"><Icon name="database" /></div>
 									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">DATABASE</span><span class="nav-subtext">Data_Explorer</span></div>{/if}
 								</a>
-								<a href="/notes" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/notes')}>
+								<a href="/notes" class="nav-link {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/notes')}>
 									<div class="nav-icon-container"><Icon name="file-text" /></div>
 									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">JOURNAL</span><span class="nav-subtext">Task_Buffer</span></div>{/if}
 								</a>
@@ -665,11 +665,11 @@
 							<!-- CATEGORY: CONFIGURATION -->
 							<div class="space-y-1">
 								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Calibrations</span>{/if}
-								<a href="/config" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/config')}>
+								<a href="/config" class="nav-link {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/config')}>
 									<div class="nav-icon-container"><Icon name="sliders" /></div>
 									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">SYSTEM_CONFIG</span><span class="nav-subtext">Kernel_Params</span></div>{/if}
 								</a>
-								<a href="/redeye" class="nav-link-industrial {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/redeye')}>
+								<a href="/redeye" class="nav-link {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/redeye')}>
 									<div class="nav-icon-container"><Icon name="shield" /></div>
 									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">SENTINEL</span><span class="nav-subtext">Security_Shield</span></div>{/if}
 								</a>
@@ -781,11 +781,11 @@
 							<nav class="flex-1 p-4 space-y-6 overflow-y-auto custom-scrollbar">
 								<div class="space-y-1">
 									<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Command</span>
-									<a href="/dashboard" class="nav-link-industrial" class:active={isRouteActive('/dashboard') || isRouteActive('/')} onclick={() => isMobileMenuOpen = false}>
+									<a href="/dashboard" class="nav-link" class:active={isRouteActive('/dashboard') || isRouteActive('/')} onclick={() => isMobileMenuOpen = false}>
 										<div class="nav-icon-container"><Icon name="gauge" /></div>
 										<div class="flex flex-col"><span class="nav-text">INTERFACE</span><span class="nav-subtext">Core Dashboard</span></div>
 									</a>
-									<a href="/performance" class="nav-link-industrial" class:active={isRouteActive('/performance')} onclick={() => isMobileMenuOpen = false}>
+									<a href="/performance" class="nav-link" class:active={isRouteActive('/performance')} onclick={() => isMobileMenuOpen = false}>
 										<div class="nav-icon-container"><Icon name="activity" /></div>
 										<div class="flex flex-col"><span class="nav-text">TELEMETRY</span><span class="nav-subtext">Real-time Stream</span></div>
 									</a>
@@ -793,15 +793,15 @@
 
 								<div class="space-y-1">
 									<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Assets</span>
-									<a href="/server" class="nav-link-industrial" class:active={isRouteActive('/server')} onclick={() => isMobileMenuOpen = false}>
+									<a href="/server" class="nav-link" class:active={isRouteActive('/server')} onclick={() => isMobileMenuOpen = false}>
 										<div class="nav-icon-container"><Icon name="cpu" /></div>
 										<div class="flex flex-col"><span class="nav-text">FILE_SYS</span><span class="nav-subtext">Binary Storage</span></div>
 									</a>
-									<a href="/database" class="nav-link-industrial" class:active={isRouteActive('/database')} onclick={() => isMobileMenuOpen = false}>
+									<a href="/database" class="nav-link" class:active={isRouteActive('/database')} onclick={() => isMobileMenuOpen = false}>
 										<div class="nav-icon-container"><Icon name="database" /></div>
 										<div class="flex flex-col"><span class="nav-text">PERSISTENCE</span><span class="nav-subtext">Data Archive</span></div>
 									</a>
-									<a href="/users" class="nav-link-industrial" class:active={isRouteActive('/users')} onclick={() => isMobileMenuOpen = false}>
+									<a href="/users" class="nav-link" class:active={isRouteActive('/users')} onclick={() => isMobileMenuOpen = false}>
 										<div class="nav-icon-container"><Icon name="users" /></div>
 										<div class="flex flex-col"><span class="nav-text">SUBJECTS</span><span class="nav-subtext">User Registry</span></div>
 									</a>
@@ -809,7 +809,7 @@
 
 								<div class="space-y-1">
 									<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Security</span>
-									<a href="/redeye" class="nav-link-industrial" class:active={isRouteActive('/redeye')} onclick={() => isMobileMenuOpen = false}>
+									<a href="/redeye" class="nav-link" class:active={isRouteActive('/redeye')} onclick={() => isMobileMenuOpen = false}>
 										<div class="nav-icon-container"><Icon name="shield" /></div>
 										<div class="flex flex-col"><span class="nav-text">SENTINEL</span><span class="nav-subtext">Network Shield</span></div>
 									</a>
