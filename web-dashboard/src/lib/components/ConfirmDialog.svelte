@@ -5,6 +5,7 @@
 	import DOMPurify from 'dompurify';
 	import { siteSettings } from '$lib/stores';
 	import Icon from '$lib/components/theme/Icon.svelte';
+	import Button from './Button.svelte';
 
 	let {
 		isOpen = $bindable(false),
@@ -187,7 +188,7 @@
 				<div class="font-jetbrains text-[8px] font-black tracking-[0.5em] uppercase italic" style="color: var(--text-dim)">
 					AWAITING_INPUT
 				</div>
-				<div class="flex gap-6">
+				<div class="flex gap-4">
 					{#if loading && progress !== null}
 						<div class="font-heading font-black text-[11px] text-stone-600 uppercase italic animate-pulse tracking-widest">
 							[BUSY]
@@ -198,20 +199,20 @@
 							EXECUTING...
 						</div>
 					{:else}
-						<button
+						<Button
 							onclick={close}
-							class="px-6 py-2 font-heading font-black text-[11px] text-stone-600 hover:text-white uppercase tracking-widest italic transition-all"
+							variant="ghost"
+							size="sm"
 						>
-							[Cancel]
-						</button>
-						<button
+							{cancelText}
+						</Button>
+						<Button
 							onclick={handleConfirm}
-							class="px-8 py-3 font-heading font-black text-[11px] uppercase tracking-[0.2em] italic transition-all {isCritical ? 'bg-red-700 text-white hover:bg-red-600' : 'bg-rust text-white hover:bg-rust-light'} shadow-lg active:translate-y-px active:shadow-none"
-							class:industrial-frame={!$siteSettings.aesthetic.industrial_styling}
-							class:industrial-sharp={$siteSettings.aesthetic.industrial_styling}
+							variant={isCritical ? 'danger' : 'primary'}
+							size="md"
 						>
-							{confirmText.toUpperCase()}
-						</button>
+							{confirmText}
+						</Button>
 					{/if}
 				</div>
 			</div>

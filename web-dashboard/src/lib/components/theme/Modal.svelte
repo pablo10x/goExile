@@ -4,6 +4,7 @@
 	import { siteSettings } from '$lib/stores';
 	import { fade, scale, slide } from 'svelte/transition';
 	import { backOut, cubicOut } from 'svelte/easing';
+	import Button from '../Button.svelte';
 
 	let { 
         show = $bindable(), 
@@ -89,12 +90,13 @@
 					{#if footer}
 						{@render footer()}
 					{:else}
-						<button 
+						<Button 
 							onclick={close} 
-							class="px-6 py-2 bg-rust hover:bg-rust-light text-white font-heading font-black text-[10px] uppercase tracking-widest transition-all"
+							variant="primary"
+							size="sm"
 						>
 							ACKNOWLEDGE
-						</button>
+						</Button>
 					{/if}
 				</div>
 			{/if}

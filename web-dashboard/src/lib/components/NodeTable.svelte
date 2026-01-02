@@ -6,6 +6,7 @@
 	import InstanceRow from './InstanceRow.svelte';
 	import Dropdown from './Dropdown.svelte';
 	import Icon from './theme/Icon.svelte';
+	import Button from './Button.svelte';
 	import CardHoverOverlay from './theme/CardHoverOverlay.svelte';
 	import { compareVersions } from '$lib/semver';
 	import {
@@ -214,29 +215,32 @@
 								<Icon name="ph:arrow-counter-clockwise-bold" size="1rem" />
 							</button>
 						</div>
-						<a 
+						<Button 
 							href={`/nodes/${node.id}`}
-							class="px-6 py-2.5 bg-stone-900 text-stone-400 border border-stone-800 font-heading font-black text-[10px] uppercase tracking-widest hover:bg-white hover:text-black transition-all active:scale-95 shadow-lg flex items-center gap-2"
+							variant="secondary"
+							size="sm"
+							icon="settings"
 						>
-							<Icon name="settings" size="0.875rem" />
 							Manage
-						</a>
-						<button 
+						</Button>
+						<Button 
 							onclick={() => dispatch('spawn', node.id)} 
 							disabled={node.status !== 'Online'} 
-							class="px-6 py-2.5 bg-rust text-white border border-rust-light font-heading font-black text-[10px] uppercase tracking-widest hover:bg-rust-light transition-all shadow-lg shadow-rust/30 disabled:opacity-20 disabled:grayscale active:scale-95 flex items-center gap-2"
+							variant="primary"
+							size="sm"
+							icon="ph:plus-bold"
 						>
-							<Icon name="ph:plus-bold" size="0.875rem" />
 							Spawn
-						</button>
+						</Button>
 					{:else}
-						<button 
+						<Button 
 							onclick={() => deleteNode(node.id)} 
-							class="px-6 py-2.5 bg-red-950/20 text-red-500 border border-red-900/40 font-heading font-black text-[10px] uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all shadow-lg shadow-red-900/10 flex items-center gap-2"
+							variant="danger"
+							size="sm"
+							icon="ph:trash-bold"
 						>
-							<Icon name="ph:trash-bold" size="0.875rem" />
 							Delete
-						</button>
+						</Button>
 					{/if}
 					
 					<div class="w-[1px] h-10 bg-stone-800 mx-2 hidden md:block"></div>

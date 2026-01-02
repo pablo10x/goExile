@@ -8,6 +8,7 @@
 	import ConfirmDialog from './ConfirmDialog.svelte';
 	import LogViewer from './LogViewer.svelte';
 	import Icon from './theme/Icon.svelte';
+	import Button from './Button.svelte';
 
 	interface Props {
 		isOpen: boolean;
@@ -315,27 +316,33 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 				<!-- Quick Controls -->
 				<div class="p-3 sm:p-4 border-t border-stone-800 bg-black/60 shrink-0">
 					<div class="grid grid-cols-2 gap-2">
-						<button 
-							onclick={() => triggerAction('start')} 
-							disabled={stats.status === 'Running' || isProvisioning} 
-							class="col-span-2 py-2 sm:py-3 bg-rust text-white disabled:opacity-20 font-heading font-black text-[9px] sm:text-[11px] uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-rust/20 hover:bg-rust-light"
-						>
-							EXECUTE_INIT
-						</button>
-						<button 
+						<div class="col-span-2">
+							<Button 
+								onclick={() => triggerAction('start')} 
+								disabled={stats.status === 'Running' || isProvisioning} 
+								variant="primary"
+								size="md"
+								block={true}
+							>
+								EXECUTE_INIT
+							</Button>
+						</div>
+						<Button 
 							onclick={() => triggerAction('restart')} 
 							disabled={stats.status !== 'Running'} 
-							class="py-2 sm:py-2.5 bg-stone-900 border border-stone-800 hover:border-rust/50 hover:text-rust disabled:opacity-20 text-stone-400 font-heading font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all"
+							variant="secondary"
+							size="md"
 						>
 							REBOOT
-						</button>
-						<button 
+						</Button>
+						<Button 
 							onclick={() => triggerAction('stop')} 
 							disabled={stats.status !== 'Running'} 
-							class="py-2 sm:py-2.5 bg-stone-900 border border-stone-800 hover:border-red-500/50 hover:text-red-500 disabled:opacity-20 text-stone-400 font-heading font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all"
+							variant="danger"
+							size="md"
 						>
 							ABORT
-						</button>
+						</Button>
 					</div>
 				</div>
 			</div>
@@ -381,12 +388,14 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 									<h4 class="text-sm font-heading font-black text-slate-200 uppercase tracking-[0.3em]">Storage_Archives</h4>
 									<p class="font-jetbrains text-[10px] text-stone-600 mt-2 uppercase tracking-widest">Node Snapshot Management Protocol</p>
 								</div>
-								<button 
+								<Button 
 									onclick={() => handleBackupAction('create')} 
-									class="w-full sm:w-auto px-6 py-3 bg-rust text-white font-heading font-black text-[11px] uppercase tracking-widest hover:bg-rust-light transition-all shadow-lg shadow-rust/20"
+									variant="primary"
+									size="md"
+									class="w-full sm:w-auto"
 								>
 									GENERATE_SNAPSHOT
-								</button>
+								</Button>
 							</div>
 							
 							{#if isLoadingData}
@@ -413,12 +422,14 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 												</div>
 											</div>
 											<div class="flex gap-4 w-full sm:w-auto">
-												<button 
+												<Button 
 													onclick={() => handleBackupAction('restore', backup.filename)} 
-													class="flex-1 sm:flex-initial px-5 py-2.5 bg-stone-950 border border-stone-800 text-stone-500 hover:text-rust hover:border-rust/50 font-heading font-black text-[10px] uppercase tracking-widest transition-all"
+													variant="secondary"
+													size="sm"
+													class="flex-1 sm:flex-initial"
 												>
-												RESTORE
-												</button>
+													RESTORE
+												</Button>
 												<button 
 													onclick={() => handleBackupAction('delete', backup.filename)} 
 													class="p-2 text-stone-700 hover:text-red-500 transition-colors"

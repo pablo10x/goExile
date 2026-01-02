@@ -59,3 +59,5 @@
 
 1. ✅ **Standardize Tab Styling** - Unified tabs in Config and Theme pages to use the consistent "Filled Pill" style (`bg-rust` active state), matching the established design pattern in Users and LogViewer pages.
 2. ✅ **Fix Inconsistent UI Elements** - Resolved style discrepancies in the 'Nodes' tab and sub-tabs in the Theme Editor.
+3. ✅ **Modernize UI Buttons** - Created a reusable `Button.svelte` component and refactored core modals (Instance Manager, Confirm Dialog, Node Table) to use it for consistent industrial styling.
+4. ✅ **Eliminate Blue Tint Inconsistencies** - Removed RGB overlays from the Terminal and replaced blue/indigo gradients in the Database Row Editor with theme-accurate rust and stone accents.

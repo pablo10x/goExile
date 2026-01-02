@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Plus, Trash2, X, Save } from 'lucide-svelte';
 	import { slide } from 'svelte/transition';
+	import Button from './Button.svelte';
 
 	let {
 		isOpen = $bindable(false),
@@ -108,12 +109,15 @@
 						>
 							COLUMN_DEFINITIONS
 						</h4>
-						<button
+						<Button
 							onclick={addColumn}
-							class="font-jetbrains text-[10px] font-black flex items-center gap-2 text-emerald-500 hover:text-emerald-400 uppercase tracking-widest transition-colors"
+							variant="ghost"
+							size="xs"
+							icon="ph:plus-bold"
+							class="text-emerald-500 hover:text-emerald-400"
 						>
-							<Plus class="w-3.5 h-3.5" /> Add_Field
-						</button>
+							Add_Field
+						</Button>
 					</div>
 
 					<div class="space-y-3">
@@ -180,27 +184,23 @@
 			<div
 				class="p-6 border-t border-stone-800 bg-[var(--header-bg)] flex justify-end gap-4"
 			>
-				<button
+				<Button
 					onclick={onClose}
-					class="px-6 py-3 font-heading font-black text-[10px] text-stone-500 hover:text-white transition-all uppercase tracking-widest"
+					variant="ghost"
+					size="md"
 				>
 					Abort_OP
-				</button>
-				<button
+				</Button>
+				<Button
 					onclick={handleSave}
 					disabled={loading || !tableName.trim()}
-					class="px-8 py-3 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rust/20 disabled:opacity-20 transition-all active:translate-y-px"
+					variant="primary"
+					size="md"
+					loading={loading}
+					icon="save"
 				>
-					{#if loading}
-						<div
-							class="w-4 h-4 border-2 border-white/30 border-t-white animate-spin"
-						></div>
-						SYNCING...
-					{:else}
-						<Save class="w-4 h-4" />
-						Authorize_Init
-					{/if}
-				</button>
+					Authorize_Init
+				</Button>
 			</div>
 		</div>
 	</div>

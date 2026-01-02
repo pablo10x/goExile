@@ -17,6 +17,7 @@
 	import { fade, fly, scale } from 'svelte/transition';
 	import { cubicOut, backOut, elasticOut } from 'svelte/easing';
 	import { untrack } from 'svelte';
+	import Button from '../Button.svelte';
 
 	let {
 		isOpen = $bindable(false),
@@ -107,10 +108,10 @@
 			t.includes('decimal') ||
 			t === 'real'
 		) {
-			return { bg: 'bg-blue-500/20', text: 'text-info', border: 'border-blue-500/30' };
+			return { bg: 'bg-rust/20', text: 'text-rust-light', border: 'border-rust/30' };
 		}
 		if (t.includes('bool')) {
-			return { bg: 'bg-purple-500/20', text: 'text-purple-400', border: 'border-purple-500/30' };
+			return { bg: 'bg-stone-800', text: 'text-stone-400', border: 'border-stone-700' };
 		}
 		if (t.includes('json')) {
 			return { bg: 'bg-amber-500/20', text: 'text-warning', border: 'border-amber-500/30' };
@@ -119,7 +120,7 @@
 			return { bg: 'bg-success/20', text: 'text-success', border: 'border-emerald-500/30' };
 		}
 		if (t.includes('text') || t.includes('char') || t === 'uuid') {
-			return { bg: 'bg-cyan-500/20', text: 'text-info', border: 'border-cyan-500/30' };
+			return { bg: 'bg-rust/10', text: 'text-rust-light', border: 'border-rust/20' };
 		}
 		return {
 			bg: 'bg-slate-500/20',
@@ -189,7 +190,7 @@
 
 	function getContainerClass(isSuccess: boolean, isFocused: boolean, isModified: boolean): string {
 		if (isSuccess) return 'border-emerald-500/50 bg-success/5';
-		if (isFocused) return 'border-blue-500/50 bg-blue-500/5';
+		if (isFocused) return 'border-rust/50 bg-rust/5';
 		if (isModified) return 'border-amber-500/30 bg-amber-500/5';
 		return 'border-slate-300/50 dark:border-slate-700/50 bg-slate-800/30 hover:border-slate-600/50';
 	}
@@ -229,7 +230,7 @@
 		<div class="absolute inset-0 overflow-hidden pointer-events-none">
 			{#each Array(15) as _, i}
 				<div
-					class="absolute w-1 h-1 bg-blue-400/30 rounded-full animate-float"
+					class="absolute w-1 h-1 bg-rust/30 rounded-full animate-float"
 					style="left: {Math.random() * 100}%; top: {Math.random() *
 						100}%; animation-delay: {Math.random() * 5}s; animation-duration: {3 +
 						Math.random() * 4}s;"
@@ -242,16 +243,16 @@
 			transition:fly={{ y: 30, duration: 400, easing: backOut }}
 		>
 			<div
-				class="absolute -inset-1 bg-gradient-to-r from-blue-600/20 via-indigo-600/20 to-purple-600/20 rounded-2xl blur-xl opacity-75"
+				class="absolute -inset-1 bg-gradient-to-r from-rust/20 via-stone-600/20 to-orange-600/20 rounded-2xl blur-xl opacity-75"
 				transition:scale={{ start: 0.8, duration: 500, easing: elasticOut }}
 			></div>
 
 			<div
-				class="relative bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-slate-300/50 dark:border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden"
+				class="relative bg-gradient-to-b from-stone-900 via-stone-900 to-stone-950 border border-stone-800 rounded-2xl shadow-2xl overflow-hidden"
 			>
 				<div class="relative overflow-hidden">
 					<div
-						class="absolute inset-0 bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-purple-600/10"
+						class="absolute inset-0 bg-gradient-to-r from-rust/10 via-stone-600/10 to-orange-600/10"
 					></div>
 					<div
 						class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-shimmer"
@@ -260,30 +261,30 @@
 					<div class="relative p-6 flex items-start justify-between gap-4">
 						<div class="flex items-start gap-4">
 							<div
-								class="relative p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/30"
+								class="relative p-3 rounded-xl bg-gradient-to-br from-stone-800 to-stone-900 border border-stone-700"
 								transition:scale={{ start: 0.5, duration: 400, delay: 100, easing: backOut }}
 							>
 								{#if isEditing}
-									<Database class="w-6 h-6 text-info" />
+									<Database class="w-6 h-6 text-rust-light" />
 								{:else}
-									<Plus class="w-6 h-6 text-success" />
+									<Plus class="w-6 h-6 text-rust" />
 								{/if}
 								<div
-									class="absolute inset-0 rounded-xl border-2 border-blue-400/50 animate-ping opacity-20"
+									class="absolute inset-0 rounded-xl border-2 border-rust animate-ping opacity-20"
 								></div>
 							</div>
 
 							<div>
 								<h2
 									id="modal-title"
-									class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2"
+									class="text-xl font-heading font-black text-white flex items-center gap-2 tracking-widest uppercase"
 								>
 									{#if isEditing}
 										Edit Row
 									{:else}
 										<span class="flex items-center gap-2">
 											Add New Row
-											<Sparkles class="w-4 h-4 text-warning animate-pulse" />
+											<Sparkles class="w-4 h-4 text-rust animate-pulse" />
 										</span>
 									{/if}
 								</h2>
@@ -295,7 +296,7 @@
 									<span>{editableColumns.length} fields</span>
 									{#if modifiedCount > 0}
 										<span
-											class="px-2 py-0.5 bg-blue-500/20 text-info rounded-full text-xs font-medium"
+											class="px-2 py-0.5 bg-rust/20 text-rust-light rounded-full text-[9px] font-black uppercase tracking-widest"
 											transition:scale={{ start: 0.8, duration: 200 }}
 										>
 											{modifiedCount} modified
@@ -435,7 +436,7 @@
 													oninput={() => handleFieldChange(col.name)}
 													onfocus={() => (focusedField = col.name)}
 													onblur={() => (focusedField = null)}
-													class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300/50 dark:border-slate-700/50 rounded-lg px-4 py-3 text-slate-800 dark:text-slate-200 font-mono text-sm outline-none transition-all duration-200 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 resize-none"
+													class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300/50 dark:border-slate-700/50 rounded-lg px-4 py-3 text-slate-800 dark:text-slate-200 font-mono text-sm outline-none transition-all duration-200 focus:border-rust/50 focus:ring-2 focus:ring-rust/20 resize-none"
 													rows="4"
 													placeholder={'{ "key": "value" }'}
 													spellcheck="false"
@@ -448,7 +449,7 @@
 													oninput={() => handleFieldChange(col.name)}
 													onfocus={() => (focusedField = col.name)}
 													onblur={() => (focusedField = null)}
-													class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300/50 dark:border-slate-700/50 rounded-lg px-4 py-3 text-slate-800 dark:text-slate-200 outline-none transition-all duration-200 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
+													class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300/50 dark:border-slate-700/50 rounded-lg px-4 py-3 text-slate-800 dark:text-slate-200 outline-none transition-all duration-200 focus:border-rust/50 focus:ring-2 focus:ring-rust/20"
 												/>
 											{:else if col.type && (col.type.includes('int') || col.type.includes('float') || col.type.includes('numeric') || col.type.includes('decimal') || col.type === 'real')}
 												<input
@@ -458,7 +459,7 @@
 													oninput={() => handleFieldChange(col.name)}
 													onfocus={() => (focusedField = col.name)}
 													onblur={() => (focusedField = null)}
-													class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300/50 dark:border-slate-700/50 rounded-lg px-4 py-3 text-slate-800 dark:text-slate-200 outline-none transition-all duration-200 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
+													class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300/50 dark:border-slate-700/50 rounded-lg px-4 py-3 text-slate-800 dark:text-slate-200 outline-none transition-all duration-200 focus:border-rust/50 focus:ring-2 focus:ring-rust/20"
 													placeholder="Enter a number..."
 													step="any"
 												/>
@@ -469,7 +470,7 @@
 													oninput={() => handleFieldChange(col.name)}
 													onfocus={() => (focusedField = col.name)}
 													onblur={() => (focusedField = null)}
-													class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300/50 dark:border-slate-700/50 rounded-lg px-4 py-3 text-slate-800 dark:text-slate-200 outline-none transition-all duration-200 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 resize-none"
+													class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300/50 dark:border-slate-700/50 rounded-lg px-4 py-3 text-slate-800 dark:text-slate-200 outline-none transition-all duration-200 focus:border-rust/50 focus:ring-2 focus:ring-rust/20 resize-none"
 													rows="2"
 													placeholder="Enter text..."
 												></textarea>
@@ -481,7 +482,7 @@
 													oninput={() => handleFieldChange(col.name)}
 													onfocus={() => (focusedField = col.name)}
 													onblur={() => (focusedField = null)}
-													class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300/50 dark:border-slate-700/50 rounded-lg px-4 py-3 text-slate-800 dark:text-slate-200 outline-none transition-all duration-200 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
+													class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300/50 dark:border-slate-700/50 rounded-lg px-4 py-3 text-slate-800 dark:text-slate-200 outline-none transition-all duration-200 focus:border-rust/50 focus:ring-2 focus:ring-rust/20"
 													placeholder="Enter value..."
 												/>
 											{/if}
@@ -515,31 +516,25 @@
 						</div>
 
 						<div class="flex items-center gap-3 ml-auto">
-							<button
+							<Button
 								onclick={onClose}
 								disabled={loading}
-								class="px-5 py-2.5 text-text-dim dark:text-text-dim hover:text-slate-900 dark:text-white hover:bg-slate-800/80 rounded-xl font-medium transition-all duration-200 disabled:opacity-50"
+								variant="ghost"
+								size="md"
 							>
 								Cancel
-							</button>
+							</Button>
 
-							<button
+							<Button
 								onclick={handleSubmit}
 								disabled={loading || editableColumns.length === 0}
-								class="relative px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-slate-900 dark:text-white rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-blue-500/25 transition-all duration-200 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 overflow-hidden"
+								variant="primary"
+								size="md"
+								loading={loading}
+								icon={isEditing ? 'save' : 'plus'}
 							>
-								<div
-									class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shimmer"
-								></div>
-
-								{#if loading}
-									<Loader2 class="w-4 h-4 animate-spin" />
-									<span>Saving...</span>
-								{:else}
-									<Save class="w-4 h-4" />
-									<span>{isEditing ? 'Update Row' : 'Add Row'}</span>
-								{/if}
-							</button>
+								{isEditing ? 'Update Row' : 'Add Row'}
+							</Button>
 						</div>
 					</div>
 				</div>

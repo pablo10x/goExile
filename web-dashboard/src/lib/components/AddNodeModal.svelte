@@ -16,6 +16,7 @@
 	} from 'lucide-svelte';
 	import { siteSettings } from '$lib/stores';
 	import Icon from './theme/Icon.svelte';
+	import Button from './Button.svelte';
 
 	let {
 		isOpen = $bindable(false)
@@ -460,12 +461,13 @@
 						<p class="font-jetbrains text-[11px] text-center max-w-sm mb-8 uppercase leading-relaxed font-bold" style="color: var(--text-dim)">
 							{error}
 						</p>
-						<button
+						<Button
 							onclick={generateKey}
-							class="px-10 py-3 bg-red-600 hover:bg-red-500 text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-red-900/20 transition-all active:translate-y-px"
+							variant="danger"
+							size="md"
 						>
 							Retry_Sequence
-						</button>
+						</Button>
 					</div>
 				{:else if isEnrolled && enrolledNode}
 					<!-- Node Enrolled Success State -->
@@ -544,19 +546,21 @@
 
 						<!-- Action Buttons -->
 						<div class="flex justify-center gap-4 pt-4">
-							<button
+							<Button
 								onclick={generateKey}
-								class="px-6 py-3 font-heading font-black text-[10px] text-stone-400 hover:text-rust bg-stone-900 border border-stone-800 hover:border-rust/40 transition-all flex items-center gap-3 uppercase tracking-widest shadow-lg"
+								variant="secondary"
+								size="md"
+								icon="ph:key-bold"
 							>
-								<Icon name="ph:key-bold" size="1rem" />
 								Append_Node
-							</button>
-							<button
+							</Button>
+							<Button
 								onclick={close}
-								class="px-8 py-3 font-heading font-black text-[11px] text-white bg-rust hover:bg-rust-light shadow-lg shadow-rust/20 transition-all uppercase tracking-widest active:translate-y-px"
+								variant="primary"
+								size="md"
 							>
 								Finalize
-							</button>
+							</Button>
 						</div>
 					</div>
 				{:else if enrollmentStatus === 'pending' && enrolledNode}
@@ -601,19 +605,17 @@
 						</div>
 
 						<div class="pt-4">
-							<button
+							<Button
 								onclick={registerNode}
 								disabled={!region || registrationLoading}
-								class="w-full py-4 bg-rust hover:bg-rust-light disabled:opacity-50 disabled:hover:bg-rust text-white font-heading font-black text-[12px] uppercase tracking-[0.2em] shadow-lg shadow-rust/20 transition-all flex items-center justify-center gap-3"
+								loading={registrationLoading}
+								variant="primary"
+								size="lg"
+								block={true}
+								icon="ph:check-bold"
 							>
-								{#if registrationLoading}
-									<Icon name="ph:spinner-bold" size="1.25rem" class="animate-spin" />
-									PROCESSING_REGISTRATION...
-								{:else}
-									<Icon name="ph:check-bold" size="1.25rem" />
-									Complete_Registration
-								{/if}
-							</button>
+								Complete_Registration
+							</Button>
 						</div>
 					</div>
 				{:else if enrollmentKey}

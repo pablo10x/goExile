@@ -7,6 +7,7 @@
 		backgroundConfig,
 		theme
 	} from '$lib/stores';
+	import Button from '$lib/components/Button.svelte';
 	import {
 		Server,
 		Cpu,
@@ -567,28 +568,33 @@
 						<div class="w-2.5 h-2.5 bg-rust animate-pulse shadow-rust/50 shadow-lg"></div>
 						<span class="font-jetbrains text-[11px] font-black text-rust-light uppercase tracking-[0.2em]" >{pendingChangeCount} PENDING CHANGES</span>
 					</div>
-					<button
+					<Button
 						onclick={discardChanges}
-						class="px-8 py-3 bg-stone-900 hover:bg-stone-800 text-stone-400 font-heading font-black text-[11px] uppercase tracking-widest transition-all border border-stone-800"
+						variant="secondary"
+						size="md"
 					>
 						Discard
-					</button>
-					<button
+					</Button>
+					<Button
 						onclick={saveChanges}
 						disabled={saving}
-						class="px-10 py-3 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rust/20 transition-all disabled:opacity-20 active:translate-y-px"
+						variant="primary"
+						size="md"
+						loading={saving}
 					>
-						{saving ? 'SAVING...' : 'SAVE CHANGES'}
-					</button>
+						SAVE CHANGES
+					</Button>
 				{:else}
-					<button
+					<Button
 						onclick={loadConfig}
 						disabled={loading}
-						class="px-8 py-3 bg-stone-950 hover:bg-white hover:text-black text-text-dim font-heading font-black text-[11px] uppercase tracking-widest transition-all border border-stone-800 active:translate-y-px"
+						variant="secondary"
+						size="md"
+						loading={loading}
+						icon="ph:arrows-clockwise-bold"
 					>
-						<RefreshCw class="w-4 h-4 inline mr-3 {loading ? 'animate-spin' : ''}" />
 						Reload
-					</button>
+					</Button>
 				{/if}
 			</div>
 		</div>
@@ -942,16 +948,22 @@
 
 			<!-- Footer -->
 			<div class="px-8 py-6 bg-black border-t border-white/5 flex items-center justify-end gap-4">
-				<button onclick={closeFirebaseModal} class="px-6 py-2 text-[11px] font-black text-text-dim hover:text-white uppercase tracking-widest italic transition-all">
+				<Button 
+					onclick={closeFirebaseModal}
+					variant="ghost"
+					size="md"
+				>
 					Cancel
-				</button>
-				<button
+				</Button>
+				<Button
 					onclick={saveFirebaseParameter}
 					disabled={firebaseSaving || !firebaseForm.key.trim()}
-					class="px-8 py-3 bg-orange-600 hover:bg-white text-black text-[11px] font-black uppercase tracking-[0.3em] transition-all disabled:opacity-20 shadow-[6px_6px_0px_#000]"
+					variant="primary"
+					size="md"
+					loading={firebaseSaving}
 				>
-					{firebaseSaving ? 'SYNCING...' : 'SAVE PARAMETER'}
-				</button>
+					SAVE PARAMETER
+				</Button>
 			</div>
 		</div>
 	</div>
