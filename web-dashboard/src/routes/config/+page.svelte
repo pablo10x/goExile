@@ -606,25 +606,19 @@
 				<span class="font-heading font-black text-[12px] uppercase tracking-[0.2em]">MASTER SERVER</span>
 				<span class="font-jetbrains text-[8px] font-black opacity-40 uppercase tracking-widest">CORE CONFIG</span>
 			</button>
-					<button
-						class="px-8 py-4 font-heading font-black text-xs uppercase tracking-widest transition-all relative {activeTab ===
-						'nodes'
-							? 'text-white bg-stone-900/50'
-							: 'text-stone-600 hover:text-stone-400'}"
-						onclick={() => (activeTab = 'nodes')}
-					>
-						Node_Fleet
-						{#if activeTab === 'nodes'}
-							<div
-								class="absolute bottom-0 left-0 w-full h-0.5 bg-rust shadow-[0_0_10px_var(--color-rust)]"
-								transition:scale={{ start: 0, duration: 200 }}
-							></div>
-						{/if}
-					</button>
+			<button
+				onclick={() => (activeTab = 'nodes')}
+				class="flex-1 flex flex-col items-center gap-1.5 px-8 py-4 transition-all {activeTab === 'nodes'
+					? 'bg-rust text-white shadow-lg'
+					: 'text-text-dim hover:text-white hover:bg-stone-900'}"
+			>
+				<span class="font-heading font-black text-[12px] uppercase tracking-[0.2em]">Node_Fleet</span>
+				<span class="font-jetbrains text-[8px] font-black opacity-40 uppercase tracking-widest">DEFAULT SETTINGS</span>
+			</button>
 			<button
 				onclick={() => (activeTab = 'firebase')}
 				class="flex-1 flex flex-col items-center gap-1.5 px-8 py-4 transition-all {activeTab === 'firebase'
-					? 'bg-orange-600 text-white shadow-lg'
+					? 'bg-rust text-white shadow-lg'
 					: 'text-text-dim hover:text-white hover:bg-stone-900'}"
 			>
 				<span class="font-heading font-black text-[12px] uppercase tracking-[0.2em]">REMOTE CONFIG</span>

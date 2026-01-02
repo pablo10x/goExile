@@ -790,11 +790,11 @@
 							<div class="flex gap-4 border-b border-stone-800 pb-4">
 								<button 
 									onclick={() => bgSubTab = 'global'}
-									class="px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all {bgSubTab === 'global' ? 'text-rust border-b-2 border-rust bg-rust/5' : 'text-stone-600 hover:text-stone-400'}"
+									class="px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all {bgSubTab === 'global' ? 'bg-rust text-white shadow-lg shadow-rust/20' : 'bg-stone-900/50 text-stone-600 hover:text-stone-400 hover:bg-stone-900'}"
 								>Global Background</button>
 								<button 
 									onclick={() => bgSubTab = 'cards'}
-									class="px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all {bgSubTab === 'cards' ? 'text-rust border-b-2 border-rust bg-rust/5' : 'text-stone-600 hover:text-stone-400'}"
+									class="px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all {bgSubTab === 'cards' ? 'bg-rust text-white shadow-lg shadow-rust/20' : 'bg-stone-900/50 text-stone-600 hover:text-stone-400 hover:bg-stone-900'}"
 								>Card Hover Effects</button>
 							</div>
 
