@@ -54,3 +54,8 @@
 8. ✅ **Add tech-inspired backgrounds** - Created data grid patterns and animated gradient orbs
 9. ✅ **Fix PostCSS @apply errors** - Replaced @apply directives with pure Tailwind CSS classes
 10. ✅ **Optimize animation performance** - Used transform-gpu and proper z-index layering for smooth animations
+
+### Frontend Polish
+
+1. ✅ **Standardize Tab Styling** - Unified tabs in Config and Theme pages to use the consistent "Filled Pill" style (`bg-rust` active state), matching the established design pattern in Users and LogViewer pages.
+2. ✅ **Fix Inconsistent UI Elements** - Resolved style discrepancies in the 'Nodes' tab and sub-tabs in the Theme Editor.
