@@ -348,8 +348,10 @@ The following security improvements have been implemented:
 *   **Keyboard-First Navigation**: Added global shortcut listeners for "Quick Jump" navigation (`G+D` for Dashboard, `G+L` for Logs, etc.) and full keyboard support for all interactive dialogs.
 *   **A11y Hardening**: Performed a comprehensive accessibility pass. All custom industrial modals and components now include standard ARIA roles, high-contrast focus indicators, and semantic labels for screen-reader compatibility.
 - Renamed "Spawner" to "Node" across the project and implemented "Drain Mode" for maintenance. Updated the frontend to Svelte 5 Runes and fixed multiple stability issues.
-- Completely removed the dynamic theme system and "Theme Lab". Unified the UI with a hardcoded, high-fidelity "Military Industrial" aesthetic (Dark theme, Phosphor icons, sharp corners).
-- Simplified CSS architecture by hardcoding variables in `app.css` and removing all dynamic syncing logic.
+- Shifted aesthetic from "Military Industrial" to "Modern Tech".
+    - Palette: Slate 900/800 backgrounds, Blue 500 primary, Amber 500 accent.
+    - Style: Rounded corners (xl/lg), glassmorphism, softer borders.
+    - Background: New `MotherboardBackground` component with circuit path animations.
 - Cleaned up all components to remove `siteSettings.aesthetic` dependencies, ensuring consistent styling and better performance.
 - Removed "hover card animation" (CardHoverOverlay) and CRT scanline/noise effects for a cleaner, static industrial look.
 - Fixed a runtime error in `SystemTopology.svelte` by removing the `topology_blobs` reference, which was causing a crash after the theme system removal.
