@@ -5,6 +5,7 @@
 	import { compareVersions } from '$lib/semver';
 	import PlayersChart from './PlayersChart.svelte';
 	import Icon from './theme/Icon.svelte';
+	import Button from './Button.svelte';
 	import {
 		ChevronRight,
 		Play,
@@ -181,39 +182,42 @@
 			aria-label="Instance Actions"
 			tabindex="0"
 		>
-			<button
+			<Button
 				onclick={() => dispatch('tail', { nodeId, instanceId: instance.id })}
-				class="p-2.5 text-stone-600 hover:text-white hover:bg-stone-900 transition-all border border-transparent hover:shadow-lg"
+				variant="ghost"
+				size="xs"
+				icon="ph:terminal-window-bold"
 				title="Console"
-			>
-				<Icon name="ph:terminal-window-bold" size="1rem" />
-			</button>
+			/>
 
 			<div class="w-px h-5 bg-stone-800 mx-1"></div>
 
 			{#if instance.status !== 'Running'}
-				<button
+				<Button
 					onclick={() => dispatch('start', { nodeId, instanceId: instance.id })}
-					class="p-2.5 text-emerald-600 hover:text-success hover:bg-emerald-500/5 transition-all hover:shadow-emerald-500/10 hover:shadow-lg"
+					variant="ghost"
+					size="xs"
+					icon="ph:play-bold"
 					title="Start"
-				>
-					<Icon name="ph:play-bold" size="1rem" />
-				</button>
+					class="!text-emerald-600 hover:!text-success hover:bg-emerald-500/5"
+				/>
 			{:else}
-				<button
+				<Button
 					onclick={() => dispatch('stop', { nodeId, instanceId: instance.id })}
-					class="p-2.5 text-stone-600 hover:text-yellow-500 hover:bg-yellow-500/5 transition-all hover:shadow-yellow-500/10 hover:shadow-lg"
+					variant="ghost"
+					size="xs"
+					icon="ph:stop-bold"
 					title="Stop"
-				>
-					<Icon name="ph:stop-bold" size="1rem" />
-				</button>
-				<button
+					class="hover:!text-yellow-500 hover:bg-yellow-500/5"
+				/>
+				<Button
 					onclick={() => dispatch('restart', { nodeId, instanceId: instance.id })}
-					class="p-2.5 text-stone-600 hover:text-rust-light hover:bg-rust/5 transition-all hover:shadow-rust/10 hover:shadow-lg"
+					variant="ghost"
+					size="xs"
+					icon="ph:arrows-clockwise-bold"
 					title="Restart"
-				>
-					<Icon name="ph:arrows-clockwise-bold" size="1rem" />
-				</button>
+					class="hover:!text-rust-light hover:bg-rust/5"
+				/>
 			{/if}
 		</div>
 	</div>
@@ -229,43 +233,48 @@
 				<div class="xl:col-span-7 space-y-8">
 					<!-- Primary Toolbar -->
 					<div class="flex flex-wrap gap-3 pb-8 border-b border-stone-800">
-						<button
+						<Button
 							onclick={() => dispatch('tail', { nodeId, instanceId: instance.id })}
-							class="flex items-center gap-2 px-4 py-2 transition-all font-mono text-[9px] font-black uppercase bg-stone-950 text-stone-400 hover:text-white border border-stone-800 hover:border-rust/50 shadow-lg active:translate-y-px"
+							variant="secondary"
+							size="xs"
+							icon="ph:terminal-window-bold"
 						>
-							<Icon name="ph:terminal-window-bold" size="0.875rem" />
-							<span>Console</span>
-						</button>
+							Console
+						</Button>
 						
 						<!-- Version Controls -->
 						<div class="flex gap-1 bg-black/40 p-1 border border-stone-800">
-							<button
+							<Button
 								onclick={() => dispatch('update', { nodeId, instanceId: instance.id })}
 								disabled={!isOutdated}
-								class="flex items-center gap-2 px-4 py-2 transition-all font-mono text-[9px] font-black uppercase {isOutdated ? 'bg-emerald-600 text-white hover:bg-emerald-500' : 'text-stone-600 opacity-50 cursor-not-allowed'}"
+								variant={isOutdated ? 'success' : 'secondary'}
+								size="xs"
+								icon="ph:arrow-up-to-line-bold"
 								title="Upgrade to latest version"
 							>
-								<Icon name="ph:arrow-up-to-line-bold" size="0.875rem" />
-								<span>Upgrade</span>
-							</button>
-							<button
+								Upgrade
+							</Button>
+							<Button
 								onclick={() => dispatch('update', { nodeId, instanceId: instance.id })}
-								class="flex items-center gap-2 px-4 py-2 transition-all font-mono text-[9px] font-black uppercase text-stone-500 hover:bg-stone-800 hover:text-white"
+								variant="secondary"
+								size="xs"
+								icon="ph:arrow-down-to-line-bold"
 								title="Downgrade version (Select manually in node config)"
 							>
-								<Icon name="ph:arrow-down-to-line-bold" size="0.875rem" />
-								<span>Downgrade</span>
-							</button>
+								Downgrade
+							</Button>
 						</div>
 
-						<button
+						<Button
 							onclick={() => dispatch('delete', { nodeId, instanceId: instance.id })}
 							disabled={instance.status === 'Running'}
-							class="flex items-center gap-2 px-4 py-2 transition-all font-mono text-[9px] font-black uppercase bg-red-950/20 text-danger hover:bg-red-600 hover:text-white border border-red-900/30 ml-auto shadow-red-900/10"
+							variant="danger"
+							size="xs"
+							icon="ph:trash-bold"
+							class="ml-auto"
 						>
-							<Icon name="ph:trash-bold" size="0.875rem" />
-							<span>Delete</span>
-						</button>
+							Delete
+						</Button>
 					</div>
 
 					<!-- Load Chart -->
@@ -298,13 +307,14 @@
 									class="flex-1 bg-stone-950 border border-stone-800 px-4 py-2.5 text-xs font-jetbrains font-bold text-white focus:border-rust outline-none transition-all uppercase tracking-widest"
 									placeholder={instance.id}
 								/>
-								<button
+								<Button
 									onclick={handleRename}
 									disabled={renameValue === instance.id || !renameValue.trim()}
-									class="bg-stone-800 hover:bg-rust text-stone-400 hover:text-white px-5 py-2.5 text-[10px] font-heading font-black uppercase tracking-widest transition-all disabled:opacity-20 border border-stone-700 hover:border-rust-light shadow-lg"
+									variant="secondary"
+									size="xs"
 								>
 									Rename
-								</button>
+								</Button>
 							</div>
 						</div>
 

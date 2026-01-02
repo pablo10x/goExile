@@ -61,3 +61,5 @@
 2. ✅ **Fix Inconsistent UI Elements** - Resolved style discrepancies in the 'Nodes' tab and sub-tabs in the Theme Editor.
 3. ✅ **Modernize UI Buttons** - Created a reusable `Button.svelte` component and refactored core modals (Instance Manager, Confirm Dialog, Node Table) to use it for consistent industrial styling.
 4. ✅ **Eliminate Blue Tint Inconsistencies** - Removed RGB overlays from the Terminal and replaced blue/indigo gradients in the Database Row Editor with theme-accurate rust and stone accents.
+5. ✅ **Centralized Button Architecture** - Developed a fully configurable `Button.svelte` component and integrated its calibration into the Theme Lab, allowing global control over button geometry, typography, and variant-specific color palettes.
+6. ✅ **Global Button Migration** - Replaced standard HTML buttons with the new component across all major routes (Login, Dashboard, Config, Users) and components (Modals, Data Tables, Layout).

@@ -338,7 +338,37 @@ export const siteSettings = createDatabaseStore('site.settings', {
 		bg_anim_opacity: 0.2,
 		card_hover_intensity: 0.5,
 		card_hover_data_speed: 1.0,
-		card_hover_spark_density: 8
+		card_hover_spark_density: 8,
+		// Button Calibration
+		buttons: {
+			border_radius: 0,
+			font_weight: '900',
+			text_transform: 'uppercase',
+			primary: {
+				bg_color: '#f59e0bff',
+				text_color: '#ffffffff',
+				border_color: 'transparent',
+				hover_bg: '#fbbf24ff'
+			},
+			secondary: {
+				bg_color: '#1c1917ff',
+				text_color: '#a8a29eff',
+				border_color: '#292524ff',
+				hover_bg: '#292524ff'
+			},
+			danger: {
+				bg_color: '#450a0aff',
+				text_color: '#ef4444ff',
+				border_color: '#7f1d1dff',
+				hover_bg: '#ef4444ff'
+			},
+			ghost: {
+				bg_color: 'transparent',
+				text_color: '#a8a29eff',
+				border_color: 'transparent',
+				hover_bg: '#f59e0b1a'
+			}
+		}
 	},
 	performance: {
 		high_quality_smoke: false,

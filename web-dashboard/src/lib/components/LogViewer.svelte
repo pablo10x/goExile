@@ -4,6 +4,7 @@
 	import { cubicOut } from 'svelte/easing';
 	import { siteSettings } from '$lib/stores';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+	import Button from './Button.svelte';
 	import { formatBytes } from '$lib/utils';
 	import IconComponent from '$lib/components/theme/Icon.svelte';
 	import {
@@ -370,30 +371,32 @@
 				</label>
 			</div>
 
-			<button
-				class="p-2.5 bg-stone-900 border border-zinc-800 text-text-dim hover:text-rust hover:border-rust transition-all active:translate-y-px shadow-lg"
-				title="Manual_Refresh"
+			<Button
 				onclick={fetchLogs}
-			>
-				<IconComponent name="ph:arrows-clockwise-bold" size="1rem" class="{loading ? 'animate-spin' : ''}" />
-			</button>
+				variant="secondary"
+				size="xs"
+				icon="ph:arrows-clockwise-bold"
+				loading={loading}
+				title="Manual_Refresh"
+			/>
 
-			<button
-				class="p-2.5 bg-stone-900 border border-zinc-800 text-text-dim hover:text-red-500 hover:border-red-900/50 transition-all active:translate-y-px shadow-lg"
-				title="Clear_Registry"
+			<Button
 				onclick={() => (isConfirmOpen = true)}
-			>
-				<IconComponent name="ph:trash-bold" size="1rem" />
-			</button>
+				variant="secondary"
+				size="xs"
+				icon="ph:trash-bold"
+				title="Clear_Registry"
+				class="!text-text-dim hover:!text-red-500 hover:!border-red-900/50"
+			/>
 
 			{#if !embedded}
 				<div class="h-10 w-px bg-stone-800 mx-2"></div>
-				<button
+				<Button
 					onclick={onClose}
-					class="p-2.5 bg-red-950/20 border border-red-900/30 text-red-600 hover:bg-red-600 hover:text-white transition-all active:scale-95 shadow-lg"
-				>
-					<IconComponent name="ph:x-bold" size="1.25rem" />
-				</button>
+					variant="danger"
+					size="md"
+					icon="ph:x-bold"
+				/>
 			{/if}
 		</div>
 	</div>
@@ -410,17 +413,16 @@
 				{ id: 'warn', label: 'Warn', iconName: 'ph:warning-bold' },
 				{ id: 'error', label: 'Error', iconName: 'ph:x-circle-bold' }
 			] as tab}
-				<button
-					class="px-5 py-2.5 font-jetbrains text-[9px] font-black uppercase tracking-[0.2em] transition-all flex items-center gap-3
-					                        {selectedTab === tab.id
-						? 'bg-rust text-white shadow-lg shadow-rust/20'
-						: 'text-text-dim hover:text-stone-300 hover:bg-stone-900'}"
+				<Button
 					onclick={() => (selectedTab = tab.id as TabId)}
+					variant={selectedTab === tab.id ? 'primary' : 'ghost'}
+					size="xs"
+					icon={tab.iconName}
+					class="px-5"
 				>
-					<IconComponent name={tab.iconName} size="0.875rem" />
 					<span class="hidden sm:inline">{tab.label}</span>
 					<span class="ml-1 opacity-40">[{stats[tab.id as TabId]}]</span>
-				</button>
+				</Button>
 			{/each}
 		</div>
 
@@ -454,7 +456,14 @@
 					<span class="font-heading font-black text-lg uppercase tracking-[0.3em] block">FATAL_CONNECTION_FAULT</span>
 					<p class="font-jetbrains text-[11px] font-bold opacity-60 uppercase tracking-widest max-w-md mx-auto leading-relaxed">{error}</p>
 				</div>
-				<button class="px-12 py-4 bg-red-600 border border-red-400 text-white font-heading font-black text-[11px] uppercase tracking-widest hover:bg-red-500 transition-all shadow-lg active:translate-y-px shadow-red-900/30" onclick={fetchLogs}>Retry_Protocol</button>
+				<Button 
+					onclick={fetchLogs}
+					variant="danger"
+					size="lg"
+					icon="ph:arrows-clockwise-bold"
+				>
+					Retry_Protocol
+				</Button>
 			</div>
 		{:else if filteredLogs.length === 0}
 			<div class="absolute inset-0 flex flex-col items-center justify-center gap-6" style="color: var(--text-dim)">

@@ -36,6 +36,7 @@
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import StatsCard from '$lib/components/StatsCard.svelte';
 	import Icon from '$lib/components/theme/Icon.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import { notifications, siteSettings } from '$lib/stores';
 
 	interface Player {
@@ -249,35 +250,41 @@
 			<div class="flex flex-wrap items-center gap-4 sm:gap-8 p-4 relative z-10">
 				<!-- Tactical Tab Switcher -->
 				<div class="flex gap-2 bg-black/40 p-1 border border-stone-800 shadow-inner flex-1 sm:flex-initial">
-					<button
+					<Button
 						onclick={() => (activeTab = 'players')}
-						class="flex flex-col items-start px-4 sm:px-8 py-2 sm:py-4 transition-all duration-500 relative group flex-1 sm:flex-initial {activeTab === 'players' ? 'bg-rust text-white shadow-xl shadow-rust/30' : 'text-text-dim hover:text-stone-300 hover:bg-stone-900'}"
+						variant={activeTab === 'players' ? 'primary' : 'ghost'}
+						size="md"
+						class="flex-1 sm:flex-initial !flex-col !items-start px-4 sm:px-8 py-2 sm:py-4"
 					>
 						<span class="font-jetbrains text-[8px] font-black tracking-[0.3em] uppercase mb-1 opacity-50">Operational Base</span>
 						<span class="font-heading text-xs sm:text-base font-black tracking-widest uppercase">Subjects</span>
 						{#if activeTab === 'players'}
-							<div class="absolute -top-1 -right-1 w-2 h-2 bg-rust shadow-[0_0_10px_var(--color-rust)]"></div>
+							<div class="absolute -top-1 -right-1 w-2 h-2 bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]"></div>
 						{/if}
-					</button>
-					<button
+					</Button>
+					<Button
 						onclick={() => (activeTab = 'reports')}
-						class="flex flex-col items-start px-4 sm:px-8 py-2 sm:py-4 transition-all duration-500 relative group flex-1 sm:flex-initial {activeTab === 'reports' ? 'bg-danger text-white shadow-xl shadow-red-900/30' : 'text-text-dim hover:text-stone-300 hover:bg-stone-900'}"
+						variant={activeTab === 'reports' ? 'danger' : 'ghost'}
+						size="md"
+						class="flex-1 sm:flex-initial !flex-col !items-start px-4 sm:px-8 py-2 sm:py-4"
 					>
 						<span class="font-jetbrains text-[8px] font-black tracking-[0.3em] uppercase mb-1 opacity-50">Anomaly Logs</span>
 						<span class="font-heading text-xs sm:text-base font-black tracking-widest uppercase">Incidents</span>
 						{#if activeTab === 'reports'}
-							<div class="absolute -top-1 -right-1 w-2 h-2 bg-danger shadow-[0_0_100px_#ef4444]"></div>
+							<div class="absolute -top-1 -right-1 w-2 h-2 bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]"></div>
 						{/if}
-					</button>
+					</Button>
 				</div>
 
-				<button
+				<Button
 					onclick={refreshCurrentTab}
 					disabled={activeTab === 'players' ? playersLoading : reportsLoading}
-					class="p-3 sm:p-5 border border-stone-800 bg-stone-950/60 hover:bg-rust hover:text-white hover:border-rust transition-all shadow-xl active:translate-y-px disabled:opacity-20"
-				>
-					<Icon name="ph:arrows-clockwise-bold" size="1.25rem" class="{(activeTab === 'players' ? playersLoading : reportsLoading) ? 'animate-spin' : ''}" />
-				</button>
+					loading={activeTab === 'players' ? playersLoading : reportsLoading}
+					variant="secondary"
+					size="lg"
+					icon="ph:arrows-clockwise-bold"
+					class="!p-3 sm:!p-5"
+				/>
 			</div>
 		</div>
 
@@ -348,12 +355,14 @@
 						{ id: 'xp', label: 'Biomass' },
 						{ id: 'updated_at', label: 'Last_Seen' }
 					] as sort}
-						<button 
+						<Button 
 							onclick={() => playerSortBy = sort.id as any}
-							class="flex-1 py-3 text-[9px] font-black uppercase transition-all {playerSortBy === sort.id ? 'bg-rust text-white shadow-lg' : 'text-text-dim hover:text-stone-300 hover:bg-stone-900'}"
+							variant={playerSortBy === sort.id ? 'primary' : 'ghost'}
+							size="xs"
+							class="flex-1"
 						>
 							{sort.label}
-						</button>
+						</Button>
 					{/each}
 				</div>
 			</div>
@@ -448,19 +457,20 @@
 										</div>
 
 										<div class="flex flex-col gap-1">
-											<button 
+											<Button 
 												onclick={() => openEditModal(player)}
-												class="p-2.5 text-stone-600 hover:text-white hover:bg-rust/20 hover:border-rust/50 transition-all border border-stone-800/50 bg-stone-900/40"
+												variant="secondary"
+												size="xs"
+												icon="ph:pencil-bold"
 												title="Edit Dossier"
-											>
-												<Pencil class="w-4 h-4" />
-											</button>
-											<button 
+											/>
+											<Button 
 												onclick={() => toggleExpand(player.id)}
-												class="p-2.5 text-stone-600 hover:text-rust transition-all border border-stone-800/50 bg-stone-900/40"
-											>
-												<ChevronDown class="w-4 h-4 transition-transform duration-500 {isExpanded ? 'rotate-180' : ''}" />
-											</button>
+												variant="secondary"
+												size="xs"
+												icon="ph:chevron-down-bold"
+												class="{isExpanded ? 'rotate-180' : ''} transition-transform duration-500"
+											/>
 										</div>
 									</div>
 
@@ -548,18 +558,21 @@
 										</div>
 										
 										<div class="flex gap-2">
-											<button 
+											<Button 
 												onclick={() => toggleBan(player)}
-												class="px-4 py-1.5 text-[8px] font-black uppercase tracking-widest transition-all {player.banned ? 'bg-success text-white' : 'bg-red-950/20 text-danger border border-red-900/30 hover:bg-danger hover:text-white'}"
+												variant={player.banned ? 'success' : 'danger'}
+												size="xs"
 											>
 												{player.banned ? '[RESTORE_ACCESS]' : '[TERMINATE_UPLINK]'}
-											</button>
-											<button 
+											</Button>
+											<Button 
 												onclick={() => confirmDelete(player)}
-												class="px-4 py-1.5 text-[8px] font-black text-stone-700 hover:text-white hover:bg-red-600 border border-stone-800 uppercase tracking-widest transition-all"
+												variant="secondary"
+												size="xs"
+												class="!bg-red-950/10 hover:!bg-red-600 !text-stone-700 hover:!text-white"
 											>
 												[PURGE_FILE]
-											</button>
+											</Button>
 										</div>
 									</div>
 								</div>

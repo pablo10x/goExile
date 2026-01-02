@@ -72,6 +72,7 @@
 	import ServerStatus from '$lib/components/theme/ServerStatus.svelte';
 	import Notifications from '$lib/components/theme/Notifications.svelte';
 	import Icon from '$lib/components/theme/Icon.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import CommandPalette from '$lib/components/CommandPalette.svelte';
 
 	let { children, data } = $props();
@@ -985,10 +986,15 @@
 									</div>
 									<div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
 								</div>
-								<button onclick={logout} class="w-full py-4 bg-red-900/10 border border-red-900/30 text-red-600 font-heading font-black uppercase text-xs tracking-widest hover:bg-red-600 hover:text-white transition-all shadow-lg active:translate-y-px">
-									Deauthenticate_Session
-								</button>
-							</div>
+								                        <Button 
+															onclick={logout} 
+															variant="danger"
+															size="md"
+															block={true}
+															class="!py-4"
+														>
+															Terminate_Session
+														</Button>							</div>
 						</aside>
 					</div>
 				{/if}

@@ -4,6 +4,7 @@
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { Shield, Lock, User, ChevronRight, Activity, Cpu } from 'lucide-svelte';
+	import Button from '$lib/components/Button.svelte';
 
 	let email = $state('admin@example.com');
 	let password = $state('admin123');
@@ -134,20 +135,17 @@
 			</div>
 			{/if}
 
-			<button
+			<Button
 				type="submit"
 				disabled={loading || isSubmitting}
-				class="w-full py-5 bg-rust hover:bg-rust-light text-white font-heading font-black uppercase tracking-[0.2em] transition-all duration-500 shadow-2xl shadow-rust/20 active:translate-y-px disabled:opacity-20 flex items-center justify-center gap-4 group/btn overflow-hidden relative"
+				loading={loading}
+				variant="primary"
+				size="lg"
+				block={true}
+				class="!py-5"
 			>
-				<div class="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000"></div>
-				{#if loading}
-					<Activity class="w-5 h-5 animate-spin" />
-					<span class="text-xs">Authenticating...</span>
-				{:else}
-					<span class="text-sm">Authorize Access</span>
-					<ChevronRight class="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
-				{/if}
-			</button>
+				Authorize Access
+			</Button>
 		</form>
 
 		<div class="text-center mt-12 space-y-2 relative z-10">

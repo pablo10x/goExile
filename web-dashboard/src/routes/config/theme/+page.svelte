@@ -48,19 +48,21 @@
 		Check
 	} from 'lucide-svelte';
 	import StatsCard from '$lib/components/StatsCard.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import Icon from '$lib/components/theme/Icon.svelte';
 	import CardHoverOverlay from '$lib/components/theme/CardHoverOverlay.svelte';
 	import { fade, slide, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 
 	// Calibration Subsystems
-	let activeSubsystem = $state<'chromatic' | 'atmospheric' | 'geometric' | 'structural' | 'typography' | 'kinetic' | 'dynamics' | 'interface'>('chromatic');
+	let activeSubsystem = $state<'chromatic' | 'atmospheric' | 'geometric' | 'structural' | 'typography' | 'kinetic' | 'dynamics' | 'interface' | 'buttons'>('chromatic');
 	let bgSubTab = $state<'global' | 'cards'>('global');
 
 	const subsystems = [
 		{ id: 'chromatic', label: 'Colors', icon: Palette, desc: 'Color palette & brightness' },
 		{ id: 'atmospheric', label: 'Effects', icon: Cloud, desc: 'CRT, Scanlines & Overlays' },
 		{ id: 'geometric', label: 'Layout', icon: Box, desc: 'Borders, Corners & Sizing' },
+		{ id: 'buttons', label: 'Buttons', icon: Zap, desc: 'Action button aesthetics' },
 		{ id: 'typography', label: 'Fonts', icon: Type, desc: 'Text styles & spacing' },
 		{ id: 'interface', label: 'Interface', icon: LayoutDashboard, desc: 'Dashboard visibility' },
 		{ id: 'dynamics', label: 'Animations', icon: Zap, desc: 'Text & UI movement speed' },
@@ -486,6 +488,155 @@
 										<div class="space-y-2">
 											<span class="text-[8px] text-stone-700 uppercase font-mono">Telemetry_Data</span>
 											<div class="font-mono text-[10px] text-emerald-500">0xAF77 :: STATUS_OK :: 124.5Hz</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					{:else if activeSubsystem === 'buttons'}
+						<div in:fade={{ duration: 300 }} class="space-y-12">
+							<div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+								<div class="space-y-10">
+									<h4 class="text-[10px] font-black text-stone-500 uppercase tracking-[0.4em] border-b border-stone-800 pb-4">Global Button Geometry</h4>
+									
+									<div class="space-y-8">
+										{#each [
+											{ key: 'border_radius', label: 'Corner Rounding', min: 0, max: 24, step: 1, unit: 'px' }
+										] as slider}
+											<div class="space-y-4">
+												<div class="flex justify-between items-center">
+													<span class="text-[10px] font-black text-stone-400 uppercase tracking-widest">{slider.label}</span>
+													<span class="text-[10px] font-mono text-rust-light">{$siteSettings.aesthetic.buttons[slider.key]}{slider.unit}</span>
+												</div>
+												<div class="relative flex items-center h-1.5 bg-stone-950 border border-stone-800">
+													<input 
+														type="range" 
+														min={slider.min} 
+														max={slider.max} 
+														step={slider.step} 
+														value={$siteSettings.aesthetic.buttons[slider.key]} 
+														oninput={e => siteSettings.update(s => ({ ...s, aesthetic: { ...s.aesthetic, buttons: { ...s.aesthetic.buttons, [slider.key]: parseFloat(e.currentTarget.value) } } }))} 
+														class="w-full h-full appearance-none cursor-pointer bg-transparent accent-rust z-10" 
+													/>
+													<div class="absolute top-0 left-0 h-full bg-rust/30" style="width: {((($siteSettings.aesthetic.buttons as any)[slider.key] - slider.min) / (slider.max - slider.min)) * 100}%"></div>
+												</div>
+											</div>
+										{/each}
+
+										<div class="grid grid-cols-2 gap-6">
+											<div class="space-y-3">
+												<span class="text-[9px] font-black text-stone-600 uppercase tracking-widest block ml-1">Font_Weight</span>
+												<select 
+													bind:value={$siteSettings.aesthetic.buttons.font_weight}
+													class="w-full bg-stone-950 border border-stone-800 px-4 py-3 font-jetbrains text-[10px] text-stone-300 focus:border-rust outline-none uppercase tracking-widest appearance-none cursor-pointer"
+												>
+													{#each ['100', '300', '400', '500', '700', '900'] as weight}
+														<option value={weight}>{weight}</option>
+													{/each}
+												</select>
+											</div>
+											<div class="space-y-3">
+												<span class="text-[9px] font-black text-stone-600 uppercase tracking-widest block ml-1">Text_Transform</span>
+												<select 
+													bind:value={$siteSettings.aesthetic.buttons.text_transform}
+													class="w-full bg-stone-950 border border-stone-800 px-4 py-3 font-jetbrains text-[10px] text-stone-300 focus:border-rust outline-none uppercase tracking-widest appearance-none cursor-pointer"
+												>
+													<option value="uppercase">UPPERCASE</option>
+													<option value="none">NONE</option>
+													<option value="capitalize">Capitalize</option>
+												</select>
+											</div>
+										</div>
+									</div>
+
+									<h4 class="text-[10px] font-black text-stone-500 uppercase tracking-[0.4em] border-b border-stone-800 pb-4 mt-12">Variant Calibration</h4>
+									
+									<div class="space-y-10">
+										{#each ['primary', 'secondary', 'danger', 'ghost'] as variant}
+											<div class="space-y-6 p-6 bg-stone-900/30 border border-stone-800 industrial-frame">
+												<h5 class="text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-3">
+													<div class="w-1.5 h-1.5 rounded-full" style="background-color: {$siteSettings.aesthetic.buttons[variant].bg_color}"></div>
+													{variant.toUpperCase()} STYLE
+												</h5>
+												
+												<div class="grid grid-cols-2 gap-6">
+													{#each [
+														{ key: 'bg_color', label: 'Background' },
+														{ key: 'text_color', label: 'Text' },
+														{ key: 'border_color', label: 'Border' },
+														{ key: 'hover_bg', label: 'Hover BG' }
+													] as color}
+														{@const currentVal = ($siteSettings.aesthetic.buttons as any)[variant][color.key]}
+														<div class="space-y-3">
+															<span class="text-[8px] font-black text-stone-600 uppercase tracking-widest block ml-1">{color.label}</span>
+															<div class="relative h-10 group p-1 bg-stone-950 border border-stone-800">
+																<input 
+																	type="color" 
+																	value={getHex(currentVal)} 
+																	oninput={e => {
+																		const hex = e.currentTarget.value;
+																		const alpha = getAlpha(currentVal);
+																		const alphaHex = Math.round(alpha * 255).toString(16).padStart(2, '0');
+																		siteSettings.update(s => ({
+																			...s,
+																			aesthetic: {
+																				...s.aesthetic,
+																				buttons: {
+																					...s.aesthetic.buttons,
+																					[variant]: {
+																						...s.aesthetic.buttons[variant],
+																						[color.key]: hex + alphaHex
+																					}
+																				}
+																			}
+																		}));
+																	}} 
+																	class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+																/>
+																<div class="absolute inset-1 flex items-center px-3 gap-3 bg-stone-900 overflow-hidden industrial-frame">
+																	<div class="w-4 h-4 border border-white/5 relative shrink-0">
+																		<div class="absolute inset-0" style="background-color: {currentVal}"></div>
+																	</div>
+																	<span class="text-[9px] font-mono text-stone-500 uppercase">{getHex(currentVal)}</span>
+																</div>
+															</div>
+														</div>
+													{/each}
+												</div>
+											</div>
+										{/each}
+									</div>
+								</div>
+
+								<div class="space-y-8 bg-stone-950/30 p-8 border border-stone-800 industrial-frame">
+									<h4 class="text-[10px] font-black text-rust uppercase tracking-widest italic mb-4">Button_Stress_Test</h4>
+									<div class="space-y-10">
+										<div class="space-y-4">
+											<span class="text-[8px] text-stone-700 uppercase font-mono">Variant_Manifest</span>
+											<div class="grid grid-cols-1 gap-4">
+												<Button variant="primary">Primary_Action</Button>
+												<Button variant="secondary">Secondary_Action</Button>
+												<Button variant="danger">Danger_Protocol</Button>
+												<Button variant="ghost">Ghost_Interface</Button>
+											</div>
+										</div>
+
+										<div class="space-y-4">
+											<span class="text-[8px] text-stone-700 uppercase font-mono">Scale_Rule</span>
+											<div class="flex flex-wrap items-end gap-4">
+												<Button size="xs">Small</Button>
+												<Button size="sm">Medium</Button>
+												<Button size="md">Large</Button>
+												<Button size="lg">Extra</Button>
+											</div>
+										</div>
+
+										<div class="space-y-4">
+											<span class="text-[8px] text-stone-700 uppercase font-mono">State_Validation</span>
+											<div class="grid grid-cols-2 gap-4">
+												<Button disabled>Disabled_State</Button>
+												<Button loading>Processing...</Button>
+											</div>
 										</div>
 									</div>
 								</div>

@@ -806,8 +806,20 @@
 										<h3 class="text-lg font-bold text-slate-100 font-heading tracking-widest uppercase">Parameter Buffer</h3>
 									</div>
 									<div class="flex gap-2">
-										<button onclick={syncFirebaseConfig} class="px-4 py-2 bg-stone-800 hover:bg-stone-700 text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all">Sync</button>
-										<button onclick={() => openFirebaseModal('create')} class="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all">Add Node</button>
+										<Button
+											onclick={syncFirebaseConfig}
+											variant="secondary"
+											size="sm"
+										>
+											Sync
+										</Button>
+										<Button
+											onclick={() => openFirebaseModal('create')}
+											variant="primary"
+											size="sm"
+										>
+											Add Node
+										</Button>
 									</div>
 								</div>
 								<div class="p-6">
@@ -826,8 +838,19 @@
 														</code>
 													</div>
 													<div class="flex gap-1">
-														<button onclick={() => openFirebaseModal('edit', config)} class="p-1.5 text-text-dim hover:text-white transition-colors"><Edit3 class="w-3.5 h-3.5"/></button>
-														<button onclick={() => deleteFirebaseParameter(config.key)} class="p-1.5 text-text-dim hover:text-danger transition-colors"><Trash2 class="w-3.5 h-3.5"/></button>
+														<Button
+															onclick={() => openFirebaseModal('edit', config)}
+															variant="ghost"
+															size="xs"
+															icon="edit-3"
+														/>
+														<Button
+															onclick={() => deleteFirebaseParameter(config.key)}
+															variant="ghost"
+															size="xs"
+															icon="trash-2"
+															class="text-text-dim hover:text-danger"
+														/>
 													</div>
 												</div>
 											</div>
