@@ -112,13 +112,13 @@ export const sysState = new SystemState();
 
 // Backward compatibility wrappers for stores (bridging writable to runes)
 // This allows existing components to work while we transition
-function bridge<T>(runesValue: T, setter: (val: T) => void) {
-	const { subscribe, set, update } = writable<T>(runesValue);
+function bridge<T>(getter: () => T, setter: (val: T) => void) {
+	const { subscribe, set, update } = writable<T>(getter());
 	return {
 		subscribe,
 		set: (val: T) => { set(val); setter(val); },
 		update: (fn: (v: T) => T) => {
-			const current = runesValue;
+			const current = getter();
 			const next = fn(current);
 			set(next);
 			setter(next);
@@ -126,21 +126,21 @@ function bridge<T>(runesValue: T, setter: (val: T) => void) {
 	};
 }
 
-export const isAuthenticated = bridge(sysState.isAuthenticated, (v) => sysState.isAuthenticated = v);
-export const userEmail = bridge(sysState.userEmail, (v) => sysState.userEmail = v);
-export const isConnected = bridge(sysState.isConnected, (v) => sysState.isConnected = v);
-export const connectionStatus = bridge(sysState.connectionStatus, (v) => sysState.connectionStatus = v);
-export const restartRequired = bridge(sysState.restartRequired, (v) => sysState.restartRequired = v);
-export const showQuickActions = bridge(sysState.showQuickActions, (v) => sysState.showQuickActions = v);
-export const lowPowerMode = bridge(sysState.lowPowerMode, (v) => sysState.lowPowerMode = v);
-export const stats = bridge(sysState.stats, (v) => sysState.stats = v);
-export const nodes = bridge(sysState.nodes, (v) => sysState.nodes = v);
-export const serverVersions = bridge(sysState.serverVersions, (v) => sysState.serverVersions = v);
-export const config = bridge(sysState.config, (v) => sysState.config = v);
-export const notes = bridge(sysState.notes, (v) => sysState.notes = v);
-export const todos = bridge(sysState.todos, (v) => sysState.todos = v);
-export const siteSettings = bridge(sysState.siteSettings, (v) => sysState.siteSettings = v);
-export const backgroundConfig = bridge(sysState.backgroundConfig, (v) => sysState.backgroundConfig = v);
+export const isAuthenticated = bridge(() => sysState.isAuthenticated, (v) => sysState.isAuthenticated = v);
+export const userEmail = bridge(() => sysState.userEmail, (v) => sysState.userEmail = v);
+export const isConnected = bridge(() => sysState.isConnected, (v) => sysState.isConnected = v);
+export const connectionStatus = bridge(() => sysState.connectionStatus, (v) => sysState.connectionStatus = v);
+export const restartRequired = bridge(() => sysState.restartRequired, (v) => sysState.restartRequired = v);
+export const showQuickActions = bridge(() => sysState.showQuickActions, (v) => sysState.showQuickActions = v);
+export const lowPowerMode = bridge(() => sysState.lowPowerMode, (v) => sysState.lowPowerMode = v);
+export const stats = bridge(() => sysState.stats, (v) => sysState.stats = v);
+export const nodes = bridge(() => sysState.nodes, (v) => sysState.nodes = v);
+export const serverVersions = bridge(() => sysState.serverVersions, (v) => sysState.serverVersions = v);
+export const config = bridge(() => sysState.config, (v) => sysState.config = v);
+export const notes = bridge(() => sysState.notes, (v) => sysState.notes = v);
+export const todos = bridge(() => sysState.todos, (v) => sysState.todos = v);
+export const siteSettings = bridge(() => sysState.siteSettings, (v) => sysState.siteSettings = v);
+export const backgroundConfig = bridge(() => sysState.backgroundConfig, (v) => sysState.backgroundConfig = v);
 export const theme = writable<'light' | 'dark'>('dark');
 
 /**
