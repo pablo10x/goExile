@@ -1,6 +1,7 @@
-	<script lang="ts">
-		import { onMount, onDestroy } from 'svelte';
-		import { stats, nodes, notifications, isConnected, connectionStatus, siteSettings } from '$lib/stores';	import StatsCard from '$lib/components/StatsCard.svelte';
+<script lang="ts">
+	import { onMount, onDestroy } from 'svelte';
+	import { stats, nodes, notifications, isConnected, connectionStatus, siteSettings } from '$lib/stores.svelte';
+	import StatsCard from '$lib/components/StatsCard.svelte';
 	import NodeTable from '$lib/components/NodeTable.svelte';
 	import LogViewer from '$lib/components/LogViewer.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
@@ -13,6 +14,9 @@
 	import { formatBytes, formatUptime } from '$lib/utils';
 	import { Clock, Server, Activity, AlertCircle, Database, Network, Plus } from 'lucide-svelte';
 	import Icon from '$lib/components/theme/Icon.svelte';
+	import PageHeader from '$lib/components/theme/PageHeader.svelte';
+	import Button from '$lib/components/Button.svelte';
+	import Card from '$lib/components/theme/Card.svelte';
 
 	// Animation states
 	let isLoaded = $state(false);
@@ -381,7 +385,7 @@
 {#snippet statsSkeleton()}
 	<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
 		{#each Array(4) as _}
-			<div class="modern-industrial-card p-6 h-32 flex flex-col justify-between">
+			<div class="modern-card p-6 h-32 flex flex-col justify-between">
 				<Skeleton width="40%" height="0.5rem" />
 				<Skeleton width="70%" height="1.5rem" />
 				<Skeleton width="100%" height="0.5rem" />
@@ -390,52 +394,27 @@
 	</div>
 {/snippet}
 
-<div class="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-8 sm:mb-12 relative gap-6 sm:gap-8">
-	<div
-		class="transform transition-all duration-700 {isLoaded
-			? 'translate-x-0 opacity-100'
-			: '-translate-x-4 opacity-0'}"
-	>
-		<div class="flex items-center gap-4 mb-2">
-			<div class="h-0.5 w-6 sm:w-10 bg-rust"></div>
-			<span class="font-jetbrains text-[10px] font-black text-rust uppercase tracking-[0.3em]">System Overview // Controller</span>
-		</div>
-		<h1
-			class="text-3xl sm:text-5xl lg:text-6xl font-heading font-black text-white tracking-tighter uppercase leading-none"
-		>
-			<span class="text-rust">EXILE</span>_CONTROLLER
-		</h1>
-		<div class="flex flex-wrap items-center gap-3 sm:gap-4 mt-3">
-			<div
-				class={`px-2 sm:px-3 py-1 font-jetbrains font-bold text-[8px] sm:text-[10px] uppercase flex items-center gap-2.5 ${$isConnected ? 'bg-success/5 text-success border border-emerald-500/20' : 'bg-red-500/5 text-danger border border-red-500/20 shadow-red-900/10'}`}
-			>
-				<span class={`w-1.5 h-1.5 rounded-full ${$isConnected ? 'bg-success animate-pulse shadow-emerald-500/50 shadow-lg' : 'bg-danger'}`}></span>
-				<Icon name={$isConnected ? 'ph:check-circle-bold' : 'ph:warning-octagon-bold'} size="0.75rem" />
-				<span class="truncate max-w-[120px] sm:max-w-none">{$connectionStatus}</span>
-			</div>
-			<div class="w-px h-3 sm:h-4 bg-stone-800 hidden sm:block"></div>
-			<span class="text-[8px] sm:text-[10px] font-jetbrains font-bold text-text-dim uppercase tracking-widest">Version 0.9.4</span>
-		</div>
-	</div>
-
-	<div class="flex items-center justify-between sm:justify-end gap-3 sm:gap-6 w-full lg:w-auto">
-		<!-- Add Node Button -->
-		<button
-			onclick={() => (showAddNodeModal = true)}
-			class="group relative flex items-center justify-center gap-3 sm:gap-4 px-4 sm:px-8 py-3 sm:py-4 bg-white text-black font-black font-heading text-[10px] sm:text-xs rounded-none border-2 border-white hover:bg-rust hover:text-white hover:border-rust transition-all duration-500 shadow-2xl active:translate-y-px flex-1 sm:flex-initial {isLoaded
-				? 'translate-y-0 opacity-100'
-				: 'translate-y-4 opacity-0'}"
-		>
-			<Icon name="ph:plus-bold" size="1.1rem" />
-			<span class="uppercase tracking-[0.2em]">Add Node</span>
-			<div class="absolute -bottom-1 -right-1 w-full h-full border-r-2 border-b-2 border-rust/30 group-hover:border-white/30 transition-colors"></div>
-		</button>
-
-		<div class="relative group">
-			<NotificationBell />
-		</div>
-	</div>
-</div>
+<PageHeader 
+    title="Overview" 
+    subtitle="System Dashboard" 
+    icon="ph:gauge-bold"
+>
+    {#snippet actions()}
+        <div class="flex items-center gap-4">
+            <Button
+                variant="primary"
+                size="lg"
+                onclick={() => (showAddNodeModal = true)}
+                icon="ph:plus-bold"
+            >
+                ADD NODE
+            </Button>
+            <div class="relative group">
+                <NotificationBell />
+            </div>
+        </div>
+    {/snippet}
+</PageHeader>
 
 <!-- Optimized Data Fetching Render -->
 {#if !isLoaded}
@@ -454,7 +433,7 @@
 				: 'translate-y-8 opacity-0'}"
 			style="animation-delay: 0.1s;"
 		>
-			<StatsCard title="UPTIME" value={formatUptime($stats.uptime)} iconName="clock" color="cyan" />
+			<StatsCard title="UPTIME" value={formatUptime($stats.uptime)} iconName="ph:clock-bold" color="cyan" />
 		</div>
 		<div
 			class="transform transition-all duration-700 {animateStats
@@ -465,7 +444,7 @@
 			<StatsCard
 				title="ACTIVE NODES"
 				value={$stats.active_nodes}
-				iconName="server"
+				iconName="ph:server-bold"
 				color="emerald"
 			/>
 		</div>
@@ -478,7 +457,7 @@
 			<StatsCard
 				title="TOTAL REQUESTS"
 				value={$stats.total_requests}
-				iconName="activity"
+				iconName="ph:activity-bold"
 				color="purple"
 			/>
 		</div>
@@ -489,7 +468,7 @@
 				: 'translate-y-8 opacity-0'}"
 			style="animation-delay: 0.4s;"
 		>
-			<StatsCard title="SYSTEM ERRORS" value={$stats.total_errors} iconName="alert" color="red" />
+			<StatsCard title="SYSTEM ERRORS" value={$stats.total_errors} iconName="ph:warning-octagon-bold" color="red" />
 		</a>
 	</div>
 	{/if}
@@ -506,8 +485,8 @@
 			<StatsCard
 				title="TRAFFIC"
 				value=""
-				subValue={`<span class="text-warning">SENT: ${formatBytes($stats.bytes_sent)}</span> <span class="text-stone-700 mx-2">|</span> <span class="text-rust-light">RECEIVED: ${formatBytes($stats.bytes_received)}</span>`}
-				iconName="ri:wifi-line"
+				subValue={`<span class="text-indigo-400">SENT: ${formatBytes($stats.bytes_sent)}</span> <span class="text-slate-700 mx-2">|</span> <span class="text-indigo-400">RECEIVED: ${formatBytes($stats.bytes_received)}</span>`}
+				iconName="ph:wifi-high-bold"
 				color="orange"
 			/>
 		</div>
@@ -528,9 +507,9 @@
 				title="DATABASE"
 				value={$stats.db_connected ? 'CONNECTED' : 'OFFLINE'}
 				subValue={$stats.db_connected
-					? `<span class="text-success">CONNS: ${$stats.db_open_connections}</span> <span class="text-stone-700 mx-2">|</span> <span class="text-rust-light">IN USE: ${$stats.db_in_use}</span>`
+					? `<span class="text-emerald-400">CONNS: ${$stats.db_open_connections}</span> <span class="text-slate-700 mx-2">|</span> <span class="text-indigo-400">IN USE: ${$stats.db_in_use}</span>`
 					: 'RECONNECTING...'}
-				iconName="database"
+				iconName="ph:database-bold"
 				color={$stats.db_connected ? 'emerald' : 'red'}
 			/>
 		</div>
@@ -551,57 +530,45 @@
 
 	<!-- Nodes Section -->
 	{#if $siteSettings.dashboard.show_nodes_table}
-	<div
-		class="modern-industrial-card border-stone-800 rounded-none overflow-hidden transform transition-all duration-700 hover:border-rust/30 shadow-2xl contain-paint industrial-sharp"
-		style="animation-delay: 0.7s; contain: paint layout;"
-	>
-		<div
-			class="border-b border-stone-800 px-4 sm:px-6 py-4 sm:py-5 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[var(--card-bg-color)] backdrop-blur-xl gap-4"
-		>
-			<div class="flex items-center gap-4">
-				<div class="p-2 bg-rust/10 border border-rust/30 rounded-none industrial-frame">
-					<Icon name="server" size="1.1rem" class="text-rust-light" />
-				</div>
-				<div>
-					<h2 class="text-lg sm:text-xl font-heading font-black text-stone-100 tracking-tighter uppercase">Synchronized_Nodes</h2>
-					<div class="flex items-center gap-2 mt-0.5">
-						<span class="w-1.5 h-1.5 rounded-full bg-success animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.4)]"></span>
-						<span class="text-[8px] sm:text-[9px] font-jetbrains font-bold text-text-dim uppercase tracking-[0.2em]">Active_Registry_Stream</span>
-					</div>
-				</div>
-			</div>
-			<div class="flex items-center gap-4 sm:gap-6 w-full sm:w-auto justify-between sm:justify-end">
-				<div class="hidden xs:flex flex-col items-end">
-					<span class="font-jetbrains text-[8px] sm:text-[9px] font-black text-rust-light uppercase tracking-widest">System_Archive</span>
-					<span class="text-[9px] sm:text-[10px] font-heading font-black text-white uppercase tracking-widest mt-0.5">Buffer_Optimized</span>
-				</div>
-				<div class="h-8 sm:h-10 w-px bg-stone-800/50 hidden xs:block"></div>
-				<span
-					class="text-[9px] sm:text-[10px] font-heading font-black bg-rust/20 text-rust-light px-4 sm:px-5 py-1.5 sm:py-2 border border-rust/30 uppercase tracking-[0.2em] shadow-inner"
-					>Real-time</span>
-			</div>
-		</div>
-		<div class="p-0 bg-[var(--card-bg-color)] backdrop-blur-md relative">
-			<div class="absolute inset-0 bg-gradient-to-b from-transparent via-rust/5 to-transparent pointer-events-none opacity-20"></div>
-			<NodeTable
-				bind:this={nodeTableComponent}
-				nodes={$nodes}
-				on:spawn={openSpawnDialog}
-				on:viewLogs={handleViewLogs}
-				on:startInstanceRequest={openStartInstanceDialog}
-				on:stopInstanceRequest={openStopInstanceDialog}
-				on:restartInstanceRequest={openRestartInstanceDialog}
-				on:deleteInstanceRequest={openDeleteInstanceDialog}
-				on:updateInstanceRequest={openUpdateInstanceDialog}
-				on:renameInstanceRequest={openRenameInstanceDialog}
-				on:updateNodeBuild={openUpdateNodeBuildDialog}
-				on:bulkInstanceActionRequest={openBulkActionDialog}
-				on:deleteNodeRequest={openDeleteNodeDialog}
-				on:tail={handleTail}
-				highlightNewNodeId={highlightNewNodeId}
-			/>
-		</div>
-	</div>
+        <Card 
+            title="Node Infrastructure" 
+            subtitle="Active Node Stream"
+            icon="ph:server-bold"
+            class="transform transition-all duration-700 shadow-sm"
+        >
+            {#snippet actions()}
+                <div class="flex items-center gap-4 sm:gap-6 w-full sm:w-auto justify-between sm:justify-end">
+                    <div class="hidden xs:flex flex-col items-end text-right">
+                        <span class="text-[8px] sm:text-[9px] font-bold text-slate-500 uppercase tracking-widest italic">Inventory Status</span>
+                        <span class="text-[9px] sm:text-[10px] font-black text-white uppercase tracking-widest mt-0.5">Synced</span>
+                    </div>
+                    <div class="h-8 sm:h-10 w-px bg-slate-800 hidden xs:block"></div>
+                    <span
+                        class="text-[9px] sm:text-[10px] font-bold bg-indigo-500/10 text-indigo-400 px-4 sm:px-5 py-1.5 sm:py-2 border border-indigo-500/20 rounded-full uppercase tracking-widest shadow-sm"
+                        >Live Stream</span>
+                </div>
+            {/snippet}
+
+            <div class="p-0 bg-transparent relative">
+                <NodeTable
+                    bind:this={nodeTableComponent}
+                    nodes={$nodes}
+                    on:spawn={openSpawnDialog}
+                    on:viewLogs={handleViewLogs}
+                    on:startInstanceRequest={openStartInstanceDialog}
+                    on:stopInstanceRequest={openStopInstanceDialog}
+                    on:restartInstanceRequest={openRestartInstanceDialog}
+                    on:deleteInstanceRequest={openDeleteInstanceDialog}
+                    on:updateInstanceRequest={openUpdateInstanceDialog}
+                    on:renameInstanceRequest={openRenameInstanceDialog}
+                    on:updateNodeBuild={openUpdateNodeBuildDialog}
+                    on:bulkInstanceActionRequest={openBulkActionDialog}
+                    on:deleteNodeRequest={openDeleteNodeDialog}
+                    on:tail={handleTail}
+                    highlightNewNodeId={highlightNewNodeId}
+                />
+            </div>
+        </Card>
 	{/if}
 {/if}
 
@@ -659,113 +626,4 @@
 <AddNodeModal bind:isOpen={showAddNodeModal} />
 
 <style>
-	@keyframes float {
-		0%,
-		100% {
-			transform: translateY(0px) rotate(0deg);
-		}
-		25% {
-			transform: translateY(-20px) rotate(1deg);
-		}
-		50% {
-			transform: translateY(0px) rotate(0deg);
-		}
-		75% {
-			transform: translateY(-10px) rotate(-1deg);
-		}
-	}
-
-	@keyframes pulse-glow {
-		0%,
-		100% {
-			box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
-		}
-		50% {
-			box-shadow: 0 0 40px rgba(59, 130, 246, 0.6);
-		}
-	}
-
-	@keyframes slide-in-fade {
-		from {
-			opacity: 0;
-			transform: translateY(30px);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
-	}
-
-	@keyframes gradient-shift {
-		0%,
-		100% {
-			background-position: 0% 50%;
-		}
-		50% {
-			background-position: 100% 50%;
-		}
-	}
-
-	@keyframes blob {
-		0% {
-			transform: translate(0px, 0px) scale(1);
-		}
-		33% {
-			transform: translate(30px, -20px) scale(1.1);
-		}
-		66% {
-			transform: translate(-20px, 20px) scale(0.9);
-		}
-		100% {
-			transform: translate(0px, 0px) scale(1);
-		}
-	}
-
-	.animate-float {
-		animation: float 6s ease-in-out infinite;
-	}
-
-	.animate-pulse-glow {
-		animation: pulse-glow 2s ease-in-out infinite;
-	}
-
-	.animate-slide-fade {
-		animation: slide-in-fade 0.6s ease-out forwards;
-	}
-
-	.animate-gradient {
-		background-size: 200% 200%;
-		animation: gradient-shift 3s ease-in-out infinite;
-	}
-
-	.animate-gradient-shift {
-		background-size: 200% 200%;
-		animation: gradient-shift 8s ease infinite;
-	}
-
-	.animate-blob {
-		animation: blob 7s infinite;
-	}
-
-	/* Enhanced hover effects */
-	.hover-glow:hover {
-		box-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
-		transform: translateY(-2px) scale(1.02);
-		transition: all 0.3s ease;
-	}
-
-	/* Parallax effect on scroll */
-	.parallax-bg {
-		will-change: transform;
-		transform: translateZ(0);
-	}
-
-	.bg-radial-gradient {
-		background: radial-gradient(
-			circle at center,
-			transparent 0%,
-			rgba(0, 0, 0, 0.2) 50%,
-			rgba(0, 0, 0, 0.6) 100%
-		);
-	}
 </style>

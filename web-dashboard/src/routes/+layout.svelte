@@ -20,9 +20,10 @@
 		backgroundConfig,
 		isAuthenticated,
 		notes,
-		restartRequired
-	} from '$lib/stores';
-	import type { Note } from '$lib/stores';
+		restartRequired,
+		lowPowerMode
+	} from '$lib/stores.svelte';
+	import type { Note } from '$lib/stores.svelte';
 	import {
 		FolderTree,
 		Menu,
@@ -67,7 +68,6 @@
 	import NoteModal from '$lib/components/notes/NoteModal.svelte';
 
 	import NavbarParticles from '$lib/components/theme/NavbarParticles.svelte';
-	import GlobalSmoke from '$lib/components/theme/GlobalSmoke.svelte';
 	import MotherboardBackground from '$lib/components/theme/MotherboardBackground.svelte';
 	import ServerStatus from '$lib/components/theme/ServerStatus.svelte';
 	import Notifications from '$lib/components/theme/Notifications.svelte';
@@ -440,52 +440,40 @@
 {:else}
 				{#if $isAuthenticated && page.url.pathname !== '/login'}
 					<div class="relative min-h-screen">
-						<!-- Solid Background Layer -->					<div class="fixed inset-0 z-[-100] bg-[#18181b]"></div>
+						<!-- Solid Background Layer -->					<div class="fixed inset-0 z-[-100] bg-slate-950"></div>
 		
-					<!-- System Ticker Header -->
-					<div class="fixed top-0 left-0 right-0 h-7 bg-black/80 border-b border-stone-800 z-[120] flex items-center px-4 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.8)]">
-						<div class="flex items-center gap-8 animate-text-reveal whitespace-nowrap w-full">
+					<!-- System Status Bar -->
+					<div class="fixed top-0 left-0 right-0 h-6 bg-slate-900/90 border-b border-slate-800 z-[120] flex items-center px-4 overflow-hidden shadow-sm backdrop-blur-md">
+						<div class="flex items-center gap-8 whitespace-nowrap w-full">
 							<div class="flex items-center gap-2 shrink-0">
-								<div class="w-1 h-1 rounded-full bg-rust animate-ping"></div>
-								<span class="tactical-code text-rust font-black">[SYSTEM_UPLINK_ESTABLISHED]</span>
+								<div class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
+								<span class="font-bold text-[9px] text-indigo-400 uppercase tracking-widest">[SYSTEM_CONNECTED]</span>
 							</div>
-							<div class="flex items-center gap-6 text-stone-600">
-								<span class="tactical-code">NET_STATUS: <span class="text-stone-400">{$connectionStatus}</span></span>
-								<span class="tactical-code">NODES_ACTIVE: <span class="text-stone-400">{$stats.active_nodes}</span></span>
-								<span class="tactical-code hidden sm:inline">ENTROPY: <span class="text-stone-400">0.0042</span></span>
-								<span class="tactical-code">TIMESTAMP: <span class="text-stone-400 font-mono tracking-tighter">{new Date().toISOString()}</span></span>
+							<div class="flex items-center gap-6 text-slate-500 font-medium text-[8px] uppercase tracking-wider">
+								<span>Network: <span class="text-slate-400">{$connectionStatus}</span></span>
+								<span>Active Nodes: <span class="text-slate-400">{$stats.active_nodes}</span></span>
+								<span class="hidden sm:inline">Health: <span class="text-emerald-500 font-bold">Optimal</span></span>
+								<span>Local Time: <span class="text-slate-400 tracking-tighter">{new Date().toLocaleTimeString([], { hour12: false })}</span></span>
 							</div>
 							<div class="ml-auto flex items-center gap-4 shrink-0">
-								<span class="tactical-code text-rust-light italic hidden md:inline">SECURITY_LEVEL: 4_OMNI</span>
-								<div class="w-[2px] h-3 bg-stone-800"></div>
+								<span class="text-[8px] text-indigo-500/60 font-bold hidden md:inline">ENCRYPTION: AES_256</span>
+								<div class="w-[1px] h-3 bg-slate-800"></div>
 								<div class="flex gap-1">
-									{#each [1,2,3] as i}<div class="w-1 h-1 bg-stone-800 rounded-full"></div>{/each}
+									{#each [1,2,3] as i}<div class="w-1 h-1 bg-slate-800 rounded-full"></div>{/each}
 								</div>
 							</div>
 						</div>
 					</div>
 		
 											<!-- Background/Atmospheric Overlays (Lower Z-Index) -->
-											<!-- Removed Scanlines and Noise Overlay -->
-								
-											<div class="fixed inset-0 z-[5] clouds-overlay opacity-30 pointer-events-none"></div>
-								
-											<div class="fixed inset-0 z-[5] rain-container pointer-events-none">
-												<div class="rain-layer rain-layer-back"></div>
-												<div class="rain-layer rain-layer-mid"></div>
-												<div class="rain-layer rain-layer-front opacity-10"></div>
-											</div>
-								
-											<div class="fixed inset-0 z-[5] pointer-events-none"><GlobalSmoke /></div>
-								
-											<div class="fixed inset-0 z-[-50] pointer-events-none overflow-hidden">
+											<div class="fixed inset-0 z-[-50] pointer-events-none overflow-hidden opacity-30 grayscale mix-blend-screen">
 												<MotherboardBackground />
 											</div>		
 					
 		
 								<div
 		
-									class="flex h-screen text-slate-400 overflow-hidden relative bg-transparent transition-colors duration-300 pt-7"
+									class="flex h-screen text-slate-400 overflow-hidden relative bg-transparent transition-colors duration-300 pt-6"
 		
 								>			<!-- Global Restart Banner -->
 			{#if $restartRequired}
@@ -570,7 +558,7 @@
 
 			<!-- Desktop Sidebar -->
 			<aside
-				class="hidden md:flex relative transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] bg-[var(--sidebar-bg)] backdrop-blur-xl border-r-2 border-stone-800 flex-col shrink-0 overflow-hidden z-20 {isSidebarCollapsed
+				class="hidden md:flex relative transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] bg-slate-950/80 backdrop-blur-2xl border-r border-slate-800 flex-col shrink-0 overflow-hidden z-20 {isSidebarCollapsed
 					? 'w-20'
 					: 'w-64'} shadow-2xl"
 			>
@@ -578,131 +566,115 @@
 					<NavbarParticles />
 				{/if}
 				
-				<!-- Tactical Overlays -->
-				<div class="absolute inset-0 pointer-events-none opacity-20">
-					<div class="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_2px_2px,rgba(255,255,255,0.05)_1px,transparent_0)] bg-[size:24px_24px]"></div>
-					<div class="absolute top-0 left-0 w-full h-full animate-scanline_sweep bg-gradient-to-b from-transparent via-white/5 to-transparent"></div>
-				</div>
-
 				<div class="relative z-10 flex flex-col h-full">
 					<div
-						class="p-6 border-b-2 border-stone-800 bg-[#050505]/40 transform transition-all duration-700 {sidebarLoaded
+						class="p-5 border-b border-slate-800/50 bg-slate-900/20 transform transition-all duration-700 {sidebarLoaded
 							? 'translate-y-0 opacity-100'
-							: '-translate-y-4 opacity-0'} flex items-center justify-between tactical-border"
+							: '-translate-y-4 opacity-0'} flex items-center {isSidebarCollapsed ? 'justify-center' : 'justify-between'}"
 					>
 						{#if !isSidebarCollapsed}
-							<div class="corner-tl"></div>
-							<div class="corner-tr"></div>
 							<div class="flex flex-col animate-in fade-in zoom-in duration-500">
 								<div class="flex items-center gap-2">
-									<div class="w-2 h-2 bg-rust shadow-[0_0_8px_var(--color-rust)]"></div>
-									<h1 class="text-xl font-black military-label text-white tracking-tighter uppercase">
-										EXILE_<span class="text-rust-light">CONTROLLER</span>
+									<div class="w-2 h-2 bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)] rounded-full"></div>
+									<h1 class="text-lg font-bold text-white tracking-tight uppercase">
+										EXILE_<span class="text-blue-400">OS</span>
 									</h1>
 								</div>
-								<span class="text-[8px] font-mono text-stone-600 mt-1 tracking-[0.3em]">VERSION 0.9.4</span>
+								<span class="text-[9px] font-mono text-slate-500 mt-1 tracking-[0.2em] font-medium">VER_0.9.4</span>
 							</div>
 						{/if}
 						<button
 							onclick={toggleSidebar}
-							class="p-2 rounded-none text-stone-500 hover:text-white bg-surface/50 border border-stone-800 hover:border-rust transition-all duration-300 {isSidebarCollapsed
-								? 'mx-auto'
-								: ''}"
+							class="p-2 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800/50 transition-all duration-300"
 						>
-							<Icon name="ph:list-bold" size="1.1rem" />
+							<Icon name={isSidebarCollapsed ? 'ph:caret-double-right-bold' : 'ph:caret-double-left-bold'} size="1rem" />
 						</button>
 					</div>
 
 					<nav class="flex-1 p-3 space-y-6 overflow-y-auto overflow-x-hidden no-scrollbar">
-						<!-- Terminal Output Simulation -->
-						{#if !isSidebarCollapsed}
-							<div class="px-2 py-1 mb-4 border-l-2 border-rust/30 opacity-40">
-								<div class="tactical-code text-stone-500 animate-pulse">>> COMMAND_MODULE_ACTIVE</div>
-								<div class="tactical-code text-stone-600">>> HANDSHAKE_OK</div>
-							</div>
-						{/if}
-
-						<div class="space-y-6">
-							<!-- CATEGORY: CORE -->
+						<div class="space-y-6 pt-2">
+							<!-- CATEGORY: DASHBOARD -->
 							<div class="space-y-1">
-								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Core_Systems</span>{/if}
-								<a href="/dashboard" class="nav-link {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/dashboard') || isRouteActive('/')}>
-									<div class="nav-icon-container"><Icon name="gauge" /></div>
-									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">CORE_DASH</span><span class="nav-subtext">Unified Interface</span></div>{/if}
+								{#if !isSidebarCollapsed}<span class="text-[10px] font-bold text-slate-500/80 tracking-widest ml-3 mb-2 block uppercase">Dashboard</span>{/if}
+								<a href="/dashboard" class="nav-link-light {isSidebarCollapsed ? 'justify-center !px-0' : ''}" class:active={isRouteActive('/dashboard') || isRouteActive('/')} title={isSidebarCollapsed ? 'Overview' : ''}>
+									<div class="nav-icon-container-light"><Icon name="gauge" size="1.25rem" /></div>
+									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Overview</span><span class="nav-subtext-light">System Summary</span></div>{/if}
 								</a>
-								<a href="/performance" class="nav-link {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/performance')}>
-									<div class="nav-icon-container"><Icon name="activity" /></div>
-									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">PERFORMANCE</span><span class="nav-subtext">RT_Telemetry</span></div>{/if}
+								<a href="/performance" class="nav-link-light {isSidebarCollapsed ? 'justify-center !px-0' : ''}" class:active={isRouteActive('/performance')} title={isSidebarCollapsed ? 'Performance' : ''}>
+									<div class="nav-icon-container-light"><Icon name="activity" size="1.25rem" /></div>
+									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Analytics</span><span class="nav-subtext-light">Real-time Metrics</span></div>{/if}
 								</a>
 							</div>
 
-							<!-- CATEGORY: FLEET -->
+							<!-- CATEGORY: MANAGEMENT -->
 							<div class="space-y-1">
-								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Fleet_Ops</span>{/if}
-								<a href="/server" class="nav-link {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/server')}>
-									<div class="nav-icon-container"><Icon name="cpu" /></div>
-									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">NODE_FLEET</span><span class="nav-subtext">Node_Matrix</span></div>{/if}
+								{#if !isSidebarCollapsed}<span class="text-[10px] font-bold text-slate-500/80 tracking-widest ml-3 mb-2 block uppercase">Infrastructure</span>{/if}
+								{#each [
+									{ href: '/server', icon: 'cpu', label: 'Nodes', sub: 'Server Fleet' },
+									{ href: '/users', icon: 'users', label: 'Users', sub: 'Account Registry' }
+								] as link}
+									<a href={link.href} class="nav-link-light {isSidebarCollapsed ? 'justify-center !px-0' : ''}" class:active={isRouteActive(link.href)} title={isSidebarCollapsed ? link.label : ''}>
+										<div class="nav-icon-container-light"><Icon name={link.icon} size="1.25rem" /></div>
+										{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">{link.label}</span><span class="nav-subtext-light">{link.sub}</span></div>{/if}
+									</a>
+								{/each}
+							</div>
+
+							<!-- CATEGORY: RESOURCES -->
+							<div class="space-y-1">
+								{#if !isSidebarCollapsed}<span class="text-[10px] font-bold text-slate-500/80 tracking-widest ml-3 mb-2 block uppercase">Resources</span>{/if}
+								<a href="/database" class="nav-link-light {isSidebarCollapsed ? 'justify-center !px-0' : ''}" class:active={isRouteActive('/database')} title={isSidebarCollapsed ? 'Database' : ''}>
+									<div class="nav-icon-container-light"><Icon name="database" size="1.25rem" /></div>
+									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Database</span><span class="nav-subtext-light">Storage Engine</span></div>{/if}
 								</a>
-								<a href="/users" class="nav-link {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/users')}>
-									<div class="nav-icon-container"><Icon name="users" /></div>
-									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">IDENTITIES</span><span class="nav-subtext">Subject Registry</span></div>{/if}
+								<a href="/notes" class="nav-link-light {isSidebarCollapsed ? 'justify-center !px-0' : ''}" class:active={isRouteActive('/notes')} title={isSidebarCollapsed ? 'Operations' : ''}>
+									<div class="nav-icon-container-light"><Icon name="file-text" size="1.25rem" /></div>
+									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Worklog</span><span class="nav-subtext-light">Ops Journal</span></div>{/if}
 								</a>
 							</div>
 
-							<!-- CATEGORY: LOGISTICS -->
+							<!-- CATEGORY: SETTINGS -->
 							<div class="space-y-1">
-								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Logistics</span>{/if}
-								<a href="/database" class="nav-link {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/database')}>
-									<div class="nav-icon-container"><Icon name="database" /></div>
-									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">DATABASE</span><span class="nav-subtext">Data_Explorer</span></div>{/if}
+								{#if !isSidebarCollapsed}<span class="text-[10px] font-bold text-slate-500/80 tracking-widest ml-3 mb-2 block uppercase">Administration</span>{/if}
+								<a href="/config" class="nav-link-light {isSidebarCollapsed ? 'justify-center !px-0' : ''}" class:active={isRouteActive('/config')} title={isSidebarCollapsed ? 'Settings' : ''}>
+									<div class="nav-icon-container-light"><Icon name="sliders" size="1.25rem" /></div>
+									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Settings</span><span class="nav-subtext-light">Configuration</span></div>{/if}
 								</a>
-								<a href="/notes" class="nav-link {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/notes')}>
-									<div class="nav-icon-container"><Icon name="file-text" /></div>
-									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">JOURNAL</span><span class="nav-subtext">Task_Buffer</span></div>{/if}
-								</a>
-							</div>
-
-							<!-- CATEGORY: CONFIGURATION -->
-							<div class="space-y-1">
-								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Calibrations</span>{/if}
-								<a href="/config" class="nav-link {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/config')}>
-									<div class="nav-icon-container"><Icon name="sliders" /></div>
-									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">SYSTEM_CONFIG</span><span class="nav-subtext">Kernel_Params</span></div>{/if}
-								</a>
-								<a href="/redeye" class="nav-link {isSidebarCollapsed ? 'justify-center' : ''}" class:active={isRouteActive('/redeye')}>
-									<div class="nav-icon-container"><Icon name="shield" /></div>
-									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text">SENTINEL</span><span class="nav-subtext">Security_Shield</span></div>{/if}
+								<a href="/redeye" class="nav-link-light {isSidebarCollapsed ? 'justify-center !px-0' : ''}" class:active={isRouteActive('/redeye')} title={isSidebarCollapsed ? 'Security' : ''}>
+									<div class="nav-icon-container-light"><Icon name="shield" size="1.25rem" /></div>
+									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Security</span><span class="nav-subtext-light">Threat Shield</span></div>{/if}
 								</a>
 							</div>
 						</div>
 					</nav>
 
-					<!-- Sidebar Footer: Terminal Diagnostics -->
+					<!-- Sidebar Footer -->
 					<div
-						class="mt-auto p-4 border-t-2 border-stone-800 bg-black/60 flex flex-col gap-4 transform transition-all duration-700 {sidebarLoaded
+						class="mt-auto p-4 border-t border-slate-800/50 bg-slate-900/30 flex flex-col gap-3 transform transition-all duration-700 {sidebarLoaded
 							? 'translate-y-0 opacity-100'
 							: 'translate-y-8 opacity-0'}"
 					>
-						{#if !isSidebarCollapsed}
-							<div class="grid grid-cols-2 gap-2 mb-2">
-								<div class="flex flex-col">
-									<span class="text-[7px] text-stone-600 font-mono uppercase">Refresh Rate</span>
-									<span class="text-[9px] font-bold text-rust-light font-mono">124.5 Hz</span>
-								</div>
-								<div class="text-right flex flex-col">
-									<span class="text-[7px] text-stone-600 font-mono uppercase">Status</span>
-									<span class="text-[9px] font-bold text-emerald-500 font-mono">OK</span>
-								</div>
-							</div>
-						{/if}
-
 						<div class="flex items-center gap-2 {isSidebarCollapsed ? 'flex-col' : ''}">
 							<button
+								onclick={() => lowPowerMode.update(v => !v)}
+								class="p-2.5 border transition-all rounded-lg flex items-center justify-center gap-2 flex-1
+								{$lowPowerMode 
+									? 'bg-amber-500/10 border-amber-500/30 text-amber-500 hover:bg-amber-500/20' 
+									: 'bg-slate-800/30 border-slate-700/50 text-slate-500 hover:text-white hover:border-slate-600'}"
+								title={$lowPowerMode ? 'Disable Low Power Mode' : 'Enable Low Power Mode'}
+							>
+								<Zap class="w-4 h-4 {$lowPowerMode ? '' : 'opacity-60'}" />
+								{#if !isSidebarCollapsed}
+									<span class="text-[10px] font-bold tracking-widest uppercase">{$lowPowerMode ? 'ECO_MODE' : 'PERF_MODE'}</span>
+								{/if}
+							</button>
+
+							<button
 								onclick={logout}
-								class="p-2 border border-red-900/30 bg-red-950/10 text-red-600 hover:bg-red-600 hover:text-black transition-all flex-1 flex justify-center group"
+								class="p-2.5 border border-red-500/20 bg-red-500/5 text-red-400 hover:bg-red-500/10 hover:border-red-500/40 rounded-lg transition-all flex items-center justify-center group"
 								title="Logout"
 							>
-								<code class="text-[10px] font-black group-hover:animate-pulse">EXIT</code>
+								<Icon name="ph:power-bold" size="1.1rem" />
 							</button>
 						</div>
 					</div>
@@ -712,29 +684,27 @@
 			<div class="flex-1 flex flex-col h-full overflow-hidden relative">
 				<!-- Mobile Top Header -->
 				<header
-					class="md:hidden h-14 bg-black/80 border-b border-stone-800 flex items-center justify-between px-4 z-[130] shrink-0 relative"
+					class="md:hidden h-16 bg-slate-950/90 border-b border-slate-800 flex items-center justify-between px-4 z-[130] shrink-0 relative backdrop-blur-md"
 				>
 					<div class="flex items-center gap-4">
 						<button 
 							onclick={() => isMobileMenuOpen = true}
-							class="p-2 -ml-2 text-stone-500 hover:text-white transition-colors border border-transparent hover:border-stone-800"
+							class="p-2 -ml-2 text-slate-400 hover:text-white transition-colors"
 						>
 							<Icon name="ph:list-bold" size="1.5rem" />
 						</button>
 						<div class="flex flex-col">
 							<div class="flex items-center gap-2">
-								<div class="w-1.5 h-1.5 bg-rust shadow-[0_0_5px_var(--color-rust)] animate-pulse"></div>
-								<h1 class="text-sm font-black military-label text-white tracking-tighter uppercase">
-									EXILE_<span class="text-rust-light">OS</span>
+								<div class="w-1.5 h-1.5 bg-indigo-500 shadow-[0_0_8px_var(--color-brand)] animate-pulse"></div>
+								<h1 class="text-lg font-bold text-white tracking-tight uppercase">
+									EXILE_<span class="text-indigo-400">OS</span>
 								</h1>
 							</div>
-							<span class="text-[6px] font-mono text-stone-600 tracking-[0.3em]">NODE_MOBILE_V1</span>
 						</div>
 					</div>
 					<div class="flex items-center gap-2">
 						<div class="hidden sm:flex flex-col items-end mr-2">
-							<span class="text-[6px] text-stone-700 uppercase font-mono">Status</span>
-							<span class="text-[8px] text-emerald-500 font-mono font-bold uppercase">Linked</span>
+							<span class="text-[8px] text-emerald-500 font-bold uppercase tracking-widest">Connected</span>
 						</div>
 					</div>
 				</header>

@@ -347,6 +347,11 @@ The following security improvements have been implemented:
 *   **Tactical Command Palette**: Implemented a global **Smart-Uplink** hub accessible via `Ctrl+K` or `Cmd+K`. This enables instant fuzzy-search navigation across all system modules and the execution of high-level system commands (e.g., reboots, theme switching) without leaving the current view.
 *   **Keyboard-First Navigation**: Added global shortcut listeners for "Quick Jump" navigation (`G+D` for Dashboard, `G+L` for Logs, etc.) and full keyboard support for all interactive dialogs.
 *   **A11y Hardening**: Performed a comprehensive accessibility pass. All custom industrial modals and components now include standard ARIA roles, high-contrast focus indicators, and semantic labels for screen-reader compatibility.
+*   **UI Modernization & Performance**: 
+    *   Standardized the "Modern Tech" aesthetic across the dashboard, ensuring a consistent Deep Slate (#020617) theme.
+    *   Fixed dark mode conflicts in `StatsCard.svelte` (formerly light-themed) and `+layout.svelte` (fixed background layer).
+    *   Cleaned up the Sidebar by removing "Tactical/Military" noise (grid overlays, fake terminal outputs) for a sleeker, professional look.
+    *   Improved performance by removing unused CSS animations (`float`, `pulse-glow`, `blob`) and heavy DOM elements (rain layers).
 - Renamed "Spawner" to "Node" across the project and implemented "Drain Mode" for maintenance. Updated the frontend to Svelte 5 Runes and fixed multiple stability issues.
 - Shifted aesthetic from "Military Industrial" to "Modern Tech" (Darker "20% Industrial" Variant).
     - Palette: Deep Slate/Black (#020617) backgrounds, Blue 500 primary, Amber 500 accent.
