@@ -2,7 +2,7 @@
 	import { Trash2, Edit2, Clock, AlertTriangle, ShieldAlert, Eye } from 'lucide-svelte';
 	import { scale, fade } from 'svelte/transition';
 	import { cubicOut, cubicIn } from 'svelte/easing';
-	import type { Note } from '$lib/stores';
+	import type { Note } from '$lib/stores.svelte';
 
 	// Explosive shatter animation - creates multiple pieces flying away
 	function shatter(
@@ -99,12 +99,11 @@
 
 	const MAX_CONTENT_LENGTH = 80;
 
-	let truncatedContent = $derived(() => {
-		if (note.content.length > MAX_CONTENT_LENGTH) {
-			return note.content.substring(0, MAX_CONTENT_LENGTH) + '...';
-		}
-		return note.content;
-	});
+	let truncatedContent = $derived(
+		note.content.length > MAX_CONTENT_LENGTH
+			? note.content.substring(0, MAX_CONTENT_LENGTH) + '...'
+			: note.content
+	);
 
 	let isContentTruncated = $derived(note.content.length > MAX_CONTENT_LENGTH);
 
@@ -290,7 +289,7 @@
 			{#if note.title}
 				<h3 class="note-title">{note.title}</h3>
 			{/if}
-			<p class="note-content">{truncatedContent()}</p>
+			<p class="note-content">{truncatedContent}</p>
 		</div>
 
 		<div class="note-timestamp">
@@ -309,6 +308,7 @@
 
 <!-- Beautiful Modal for Full Note View -->
 {#if showModal}
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<div
 		class="modal-overlay"
 		onclick={closeModal}
@@ -319,6 +319,7 @@
 			if (e.key === 'Escape') showModal = false;
 		}}
 	>
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
 			class="modal-content font-jetbrains rounded-none"
 			onclick={(e) => e.stopPropagation()}

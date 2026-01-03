@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { config, restartRequired, notifications, siteSettings } from '$lib/stores';
-	import type { ServerConfig } from '$lib/stores';
+	import { config, restartRequired, notifications, siteSettings } from '$lib/stores.svelte';
+	import type { ServerConfig } from '$lib/stores.svelte';
 	import { fade, slide, scale } from 'svelte/transition';
 	import { 
 		ChevronLeft, 

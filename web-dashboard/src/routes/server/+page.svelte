@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import JSZip from 'jszip';
-	import { serverVersions, nodes, notifications, stats } from '$lib/stores';
+	import { serverVersions, nodes, notifications, stats } from '$lib/stores.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import NodeTable from '$lib/components/NodeTable.svelte';
 	import LogViewer from '$lib/components/LogViewer.svelte';

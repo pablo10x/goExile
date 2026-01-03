@@ -1,28 +1,28 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
+	import { lowPowerMode } from '$lib/stores.svelte';
 
 	let canvas: HTMLCanvasElement;
 	let context: CanvasRenderingContext2D | null;
 	let width = 0;
 	let height = 0;
 	let animationFrameId: number;
+	let isVisible = true;
 
-	interface Path {
-		points: { x: number; y: number }[];
-		length: number;
-	}
-
-	interface Electron {
-		pathIndex: number;
-		distance: number;
-		speed: number;
+	interface Particle {
+		x: number;
+		y: number;
 		size: number;
-		color: string;
+		vx: number;
+		vy: number;
+		opacity: number;
 	}
 
-	let paths: Path[] = [];
-	let electrons: Electron[] = [];
+	let particles: Particle[] = [];
+	const particleCount = 45;
+	const connectionDistance = 200;
+	const connectionDistanceSq = connectionDistance * connectionDistance;
 
 	function resize() {
 		if (canvas) {
@@ -30,156 +30,108 @@
 			height = window.innerHeight;
 			canvas.width = width;
 			canvas.height = height;
-			generatePaths();
+			initParticles();
 		}
 	}
 
-	function generatePaths() {
-		paths = [];
-		const gridSize = 60;
-		const cols = Math.ceil(width / gridSize);
-		const rows = Math.ceil(height / gridSize);
-
-		// Generate random circuit paths
-		for (let i = 0; i < 40; i++) {
-			let currentX = Math.floor(Math.random() * cols) * gridSize;
-			let currentY = Math.floor(Math.random() * rows) * gridSize;
-			const points = [{ x: currentX, y: currentY }];
-			let length = 0;
-
-			const segments = Math.floor(Math.random() * 5) + 3;
-			for (let j = 0; j < segments; j++) {
-				const direction = Math.floor(Math.random() * 4); // 0: right, 1: down, 2: left, 3: up
-				let nextX = currentX;
-				let nextY = currentY;
-
-				// Try to move in a cardinal direction
-				const moveDist = gridSize * (Math.floor(Math.random() * 3) + 1);
-
-				if (direction === 0) nextX += moveDist;
-				else if (direction === 1) nextY += moveDist;
-				else if (direction === 2) nextX -= moveDist;
-				else if (direction === 3) nextY -= moveDist;
-
-				// Keep within bounds
-				nextX = Math.max(0, Math.min(width, nextX));
-				nextY = Math.max(0, Math.min(height, nextY));
-
-				if (nextX !== currentX || nextY !== currentY) {
-					length += Math.hypot(nextX - currentX, nextY - currentY);
-					points.push({ x: nextX, y: nextY });
-					currentX = nextX;
-					currentY = nextY;
-				}
-			}
-			if (points.length > 1) {
-				paths.push({ points, length });
-			}
+	function initParticles() {
+		particles = [];
+		for (let i = 0; i < particleCount; i++) {
+			particles.push({
+				x: Math.random() * width,
+				y: Math.random() * height,
+				size: Math.random() * 1.5 + 0.5,
+				vx: (Math.random() - 0.5) * 0.25,
+				vy: (Math.random() - 0.5) * 0.25,
+				opacity: Math.random() * 0.5 + 0.2
+			});
 		}
 	}
 
-	function spawnElectron() {
-		if (paths.length === 0) return;
-		const pathIndex = Math.floor(Math.random() * paths.length);
-		electrons.push({
-			pathIndex,
-			distance: 0,
-			speed: 2 + Math.random() * 3,
-			size: 1.5 + Math.random() * 1.5,
-			color: Math.random() > 0.8 ? '#f59e0b' : '#3b82f6' // Blue dominant, occasional amber spark
-		});
-	}
+	let lastTime = 0;
+	const targetFPS = 30;
+	const frameInterval = 1000 / targetFPS;
 
-	function animate() {
+	function animate(time: number) {
+		animationFrameId = requestAnimationFrame(animate);
+
+		if (!isVisible || $lowPowerMode) return;
+
+		const deltaTime = time - lastTime;
+		if (deltaTime < frameInterval) return;
+		lastTime = time - (deltaTime % frameInterval);
+
 		if (!context) return;
 		context.clearRect(0, 0, width, height);
 
-		// Draw Paths (Subtle trace)
-		context.strokeStyle = 'rgba(59, 130, 246, 0.05)';
-		context.lineWidth = 1;
-		
-		paths.forEach(path => {
-			context!.beginPath();
-			context!.moveTo(path.points[0].x, path.points[0].y);
-			for (let i = 1; i < path.points.length; i++) {
-				context!.lineTo(path.points[i].x, path.points[i].y);
-			}
-			context!.stroke();
-			
-			// Draw nodes at junctions
-			path.points.forEach(p => {
-				context!.fillStyle = 'rgba(59, 130, 246, 0.1)';
-				context!.beginPath();
-				context!.arc(p.x, p.y, 2, 0, Math.PI * 2);
-				context!.fill();
-			});
-		});
+		context.fillStyle = 'rgba(99, 102, 241, 0.08)';
+		context.lineWidth = 0.5;
 
-		// Spawn new electrons randomly
-		if (Math.random() < 0.05) spawnElectron();
+		// Update and draw particles
+		for (let i = 0; i < particles.length; i++) {
+			const p = particles[i];
+			p.x += p.vx;
+			p.y += p.vy;
 
-		// Update and Draw Electrons
-		for (let i = electrons.length - 1; i >= 0; i--) {
-			const e = electrons[i];
-			e.distance += e.speed;
-			const path = paths[e.pathIndex];
+			// Wrap around edges
+			if (p.x < 0) p.x = width;
+			if (p.x > width) p.x = 0;
+			if (p.y < 0) p.y = height;
+			if (p.y > height) p.y = 0;
 
-			if (e.distance >= path.length) {
-				electrons.splice(i, 1);
-				continue;
-			}
-
-			// Calculate position along path
-			let currentDist = 0;
-			let pos = { x: 0, y: 0 };
-			
-			for (let j = 0; j < path.points.length - 1; j++) {
-				const p1 = path.points[j];
-				const p2 = path.points[j + 1];
-				const segLen = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-				
-				if (currentDist + segLen >= e.distance) {
-					const remaining = e.distance - currentDist;
-					const ratio = remaining / segLen;
-					pos.x = p1.x + (p2.x - p1.x) * ratio;
-					pos.y = p1.y + (p2.y - p1.y) * ratio;
-					break;
-				}
-				currentDist += segLen;
-			}
-
-			// Draw glow
-			context.shadowBlur = 10;
-			context.shadowColor = e.color;
-			context.fillStyle = e.color;
 			context.beginPath();
-			context.arc(pos.x, pos.y, e.size, 0, Math.PI * 2);
+			context.arc(p.x, p.y, p.size, 0, Math.PI * 2);
 			context.fill();
-			context.shadowBlur = 0;
-		}
 
-		animationFrameId = requestAnimationFrame(animate);
+			// Connections - capped per particle for performance
+			let connections = 0;
+			for (let j = i + 1; j < particles.length && connections < 5; j++) {
+				const p2 = particles[j];
+				const dx = p.x - p2.x;
+				const dy = p.y - p2.y;
+				const distSq = dx * dx + dy * dy;
+
+				if (distSq < connectionDistanceSq) {
+					const dist = Math.sqrt(distSq);
+					const opacity = (1 - dist / connectionDistance) * 0.1;
+					context.strokeStyle = `rgba(99, 102, 241, ${opacity})`;
+					context.beginPath();
+					context.moveTo(p.x, p.y);
+					context.lineTo(p2.x, p2.y);
+					context.stroke();
+					connections++;
+				}
+			}
+		}
 	}
 
 	onMount(() => {
-		context = canvas.getContext('2d');
+		context = canvas.getContext('2d', { alpha: true });
 		resize();
+		
+		const handleVisibility = () => {
+			isVisible = document.visibilityState === 'visible';
+		};
+		document.addEventListener('visibilitychange', handleVisibility);
 		window.addEventListener('resize', resize);
-		animate();
+		
+		animationFrameId = requestAnimationFrame(animate);
 
 		return () => {
+			document.removeEventListener('visibilitychange', handleVisibility);
 			window.removeEventListener('resize', resize);
 			cancelAnimationFrame(animationFrameId);
 		};
 	});
 </script>
 
-<div class="fixed inset-0 z-[-1] overflow-hidden pointer-events-none bg-[#0f172a]" in:fade={{ duration: 1000 }}>
+<div class="fixed inset-0 z-[-1] overflow-hidden pointer-events-none bg-[#020617]" in:fade={{ duration: 1000 }}>
+	<!-- Soft ambient glows -->
+	<div class="absolute top-[-10%] -left-[10%] w-[40%] h-[40%] bg-indigo-500/5 blur-[120px] rounded-full animate-pulse"></div>
+	<div class="absolute bottom-[-10%] -right-[10%] w-[40%] h-[40%] bg-blue-500/5 blur-[120px] rounded-full animate-pulse" style="animation-delay: 2s;"></div>
+	
 	<!-- Subtle grid overlay -->
 	<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.03]"></div>
 	
-	<!-- Vignette -->
-	<div class="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#0f172a_100%)] opacity-80"></div>
-
 	<canvas bind:this={canvas} class="absolute inset-0 block"></canvas>
 </div>

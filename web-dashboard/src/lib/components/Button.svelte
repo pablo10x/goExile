@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import Icon from './theme/Icon.svelte';
-	import { siteSettings } from '$lib/stores';
+	import { siteSettings } from '$lib/stores.svelte';
 
 	interface Props {
 		variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline' | 'success' | 'warning';
@@ -56,15 +56,15 @@
 		lg: "text-xs px-8 py-4 gap-3"
 	};
 
-	// Default fallback colors (industrial theme) if store is missing or during load
+	// Deep Slate tech palette
 	const defaultColors = {
-		primary: "bg-rust text-white hover:bg-rust-light shadow-lg shadow-rust/20 border border-transparent",
-		secondary: "bg-stone-900 text-stone-400 border border-stone-800 hover:text-white hover:border-rust/50 hover:bg-stone-800",
-		danger: "bg-red-950/20 text-red-500 border border-red-900/40 hover:bg-red-600 hover:text-white shadow-lg shadow-red-900/10",
-		success: "bg-emerald-950/20 text-emerald-500 border border-emerald-900/40 hover:bg-emerald-600 hover:text-white shadow-lg shadow-emerald-900/10",
-		warning: "bg-amber-950/20 text-amber-500 border border-amber-900/40 hover:bg-amber-600 hover:text-white shadow-lg shadow-amber-900/10",
-		ghost: "bg-transparent text-stone-500 hover:text-rust hover:bg-rust/5 border border-transparent",
-		outline: "bg-transparent text-stone-400 border border-stone-700 hover:border-rust hover:text-rust"
+		primary: "bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-500/20 border border-indigo-500/20",
+		secondary: "bg-slate-800/60 text-slate-300 border border-slate-700 hover:text-white hover:border-slate-600 hover:bg-slate-800",
+		danger: "bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-600 hover:text-white shadow-lg shadow-red-500/10",
+		success: "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 hover:bg-emerald-600 hover:text-white shadow-lg shadow-emerald-500/10",
+		warning: "bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-600 hover:text-white shadow-lg shadow-amber-500/10",
+		ghost: "bg-transparent text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/5 border border-transparent",
+		outline: "bg-transparent text-slate-300 border border-slate-700 hover:border-indigo-500/50 hover:text-indigo-400"
 	};
 
 	// Loading spinner size

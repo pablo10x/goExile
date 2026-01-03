@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { notifications } from '$lib/stores';
+	import { notifications } from '$lib/stores.svelte';
 	import { flip } from 'svelte/animate';
 	import { fly } from 'svelte/transition';
 	import { CheckCircle2, AlertTriangle, XCircle, Info, X } from 'lucide-svelte';

@@ -18,6 +18,9 @@
 	import type { SystemLog } from '$lib/types/logs';
 	import Icon from '$lib/components/theme/Icon.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+	import PageHeader from '$lib/components/theme/PageHeader.svelte';
+	import Card from '$lib/components/theme/Card.svelte';
+	import Button from '$lib/components/Button.svelte';
 
 	let logs = $state<SystemLog[]>([]);
 	let loading = $state(true);
@@ -65,7 +68,6 @@
 			const res = await fetch('/api/logs/counts');
 			if (res.ok) {
 				counts = await res.json();
-				// console.log("Log counts:", counts);
 			}
 		} catch (e) {
 			console.error('Failed to fetch counts:', e);
@@ -92,8 +94,8 @@
 	}
 
 	function requestDeleteSelected() {
-		confirmTitle = 'Purge Selected Signals';
-		confirmMessage = `Initiate localized wipe for ${selectedIds.size} encrypted signals? This action is irreversible.`;
+		confirmTitle = 'Purge Selected Logs';
+		confirmMessage = `Delete ${selectedIds.size} selected logs? This action is irreversible.`;
 		isCriticalAction = true;
 		pendingAction = async () => {
 			const idsToDelete = Array.from(selectedIds);
@@ -132,7 +134,7 @@
 	}
 
 	function requestClearLogs() {
-		confirmTitle = 'Global Buffer Wipe';
+		confirmTitle = 'Clear All Logs';
 		confirmMessage = 'Executing root-level protocol to clear ALL system logs. System history will be permanently erased.';
 		isCriticalAction = true;
 		pendingAction = async () => {
@@ -170,13 +172,13 @@
 	function getLevelColor(level: string) {
 		switch (level) {
 			case 'ERROR':
-				return 'text-danger';
+				return 'text-red-400';
 			case 'FATAL':
-				return 'text-danger font-bold';
+				return 'text-red-500 font-bold';
 			case 'WARN':
-				return 'text-warning';
+				return 'text-amber-400';
 			default:
-				return 'text-rust-light';
+				return 'text-indigo-400';
 		}
 	}
 
@@ -186,298 +188,256 @@
 	});
 </script>
 
-<div class="w-full h-[calc(100vh-140px)] md:h-[calc(100vh-160px)] flex flex-col overflow-hidden relative border border-stone-800 bg-[var(--terminal-bg)] shadow-2xl industrial-frame">
-	<!-- Header -->
-	<div class="flex flex-col md:flex-row justify-between items-start md:items-center p-8 border-b border-stone-800 bg-[var(--header-bg)] gap-6 shrink-0 relative z-10">
-		<div class="flex items-center gap-6">
-			<div class="p-4 bg-rust/10 border border-rust/30 industrial-frame shadow-lg">
-				<Icon name="activity" size="2rem" class="text-rust-light" />
-			</div>
-			<div>
-				<h1 class="text-3xl font-heading font-black text-white uppercase tracking-tighter">
-					SYSTEM_LOG_INTERCEPT
-				</h1>
-				<p class="font-jetbrains text-[10px] text-text-dim uppercase tracking-widest font-black mt-1">
-					Monitor system-wide anomalies and kernel events
-				</p>
-			</div>
-		</div>
-		<div class="flex flex-wrap gap-3 items-center w-full md:w-auto">
-			{#if selectedIds.size > 0}
-				<button
-					onclick={requestDeleteSelected}
-					transition:scale={{ duration: 200, start: 0.9 }}
-					class="flex-1 md:flex-none px-6 py-3 bg-danger hover:bg-red-500 text-white font-heading font-black text-[10px] uppercase tracking-widest shadow-lg shadow-red-900/20 active:translate-y-px transition-all"
-				>
-					<Icon name="ph:trash-bold" size="1rem" class="inline mr-2" />
-					Purge_Selected ({selectedIds.size})
-				</button>
-			{/if}
+<PageHeader 
+    title="System Logs" 
+    subtitle="Audit & Events" 
+    icon="ph:activity-bold"
+>
+    {#snippet actions()}
+        <div class="flex flex-wrap gap-3 items-center">
+            {#if selectedIds.size > 0}
+                <Button
+                    variant="danger"
+                    size="md"
+                    onclick={requestDeleteSelected}
+                    icon="ph:trash-bold"
+                >
+                    PURGE SELECTED ({selectedIds.size})
+                </Button>
+            {/if}
 
-			<button
-				onclick={requestClearLogs}
-				class="flex-1 md:flex-none px-6 py-3 bg-stone-900 border border-stone-800 text-text-dim hover:text-danger hover:border-red-500/30 font-heading font-black text-[10px] uppercase tracking-widest transition-all active:translate-y-px"
-			>
-				<Icon name="ph:trash-bold" size="1rem" class="inline mr-2" />
-				Global_Wipe
-			</button>
-			<button
-				onclick={() => {
-					fetchLogs();
-					fetchCounts();
-				}}
-				class="p-3 bg-stone-900 border border-stone-800 text-text-dim hover:text-rust transition-all shadow-xl active:translate-y-px"
-			>
-				<Icon name="ph:arrows-clockwise-bold" size="1.25rem" class="{loading ? 'animate-spin' : ''}" />
-			</button>
-		</div>
-	</div>
+            <Button
+                variant="secondary"
+                size="md"
+                onclick={requestClearLogs}
+                icon="ph:trash-bold"
+            >
+                CLEAR ALL
+            </Button>
+            
+            <Button
+                variant="secondary"
+                size="md"
+                onclick={() => {
+                    fetchLogs();
+                    fetchCounts();
+                }}
+                loading={loading}
+                icon="ph:arrows-clockwise-bold"
+            />
+        </div>
+    {/snippet}
+</PageHeader>
 
-	<!-- Filters -->
-	<div class="flex gap-2 p-6 bg-stone-950 border-b border-stone-800 overflow-x-auto shrink-0 no-scrollbar relative z-10 shadow-inner">
-		{#each categories as cat}
-			<button
-				onclick={() => changeCategory(cat)}
-				class="px-6 py-2.5 font-heading font-black text-[10px] uppercase tracking-widest transition-all border {category ===
-				cat
-					? 'bg-rust text-white border-rust shadow-lg shadow-rust/20'
-					: 'bg-stone-900 text-text-dim border-stone-800 hover:text-stone-300 hover:border-stone-700'}"
-			>
-				{cat} <span class="ml-2 opacity-40 font-jetbrains">[{counts[cat] || 0}]</span>
-			</button>
-		{/each}
-	</div>
+<div class="space-y-8">
+    <!-- Filters -->
+    <div class="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+        {#each categories as cat}
+            <Button
+                variant={category === cat ? 'primary' : 'secondary'}
+                size="sm"
+                onclick={() => changeCategory(cat)}
+                class="whitespace-nowrap"
+            >
+                {cat} <span class="ml-2 opacity-50 font-mono text-[9px]">[{counts[cat] || 0}]</span>
+            </Button>
+        {/each}
+    </div>
 
-	<!-- Table Area -->
-	<div class="flex-1 flex flex-col min-h-0 bg-black/20 relative">
-		<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.01] pointer-events-none"></div>
-		
-		<div class="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar relative z-10">
-			<table class="w-full text-left font-jetbrains text-[11px] border-collapse">
-				<thead class="bg-[var(--header-bg)] text-text-dim sticky top-0 z-10 border-b border-stone-800 shadow-md">
-					<tr class="uppercase font-black tracking-widest">
-						<th class="px-6 py-4 w-16 text-center border-r border-stone-800/30">
-							<button
-								onclick={toggleSelectAll}
-								class="w-5 h-5 mx-auto border-2 border-stone-800 flex items-center justify-center transition-all {selectedIds.size ===
-									logs.length && logs.length > 0
-																										? 'bg-rust border-rust shadow-[0_0_10px_rgba(249,115,22,0.3)]'
-																										: 'hover:border-stone-600'}"							>
-								{#if selectedIds.size === logs.length && logs.length > 0}
-									<Icon name="ph:check-bold" size="0.875rem" class="text-white" />
-								{/if}
-							</button>
-						</th>
-						<th class="px-6 py-4 border-r border-stone-800/30">Timestamp</th>
-						<th class="px-6 py-4 border-r border-stone-800/30">Integrity</th>
-						<th class="px-6 py-4 border-r border-stone-800/30">Sector</th>
-						<th class="px-6 py-4 border-r border-stone-800/30">Signal_Message</th>
-						<th class="px-6 py-4 border-r border-stone-800/30">Kernel_Path</th>
-						<th class="px-6 py-4 w-16"></th>
-					</tr>
-				</thead>
-				<tbody class="divide-y divide-stone-900">
-					{#if loading && logs.length === 0}
-						<tr>
-							<td colspan="7" class="py-32">
-								<div class="flex flex-col items-center justify-center gap-4">
-									<div class="w-10 h-10 border-2 border-rust border-t-transparent rounded-none animate-spin shadow-lg"></div>
-									<span class="font-heading font-black text-[11px] text-text-dim uppercase tracking-[0.4em] animate-pulse">Syncing_Active_Logs...</span>
-								</div>
-							</td>
-						</tr>
-					{:else if logs.length === 0}
-						<tr>
-							<td colspan="7" class="py-32">
-								<div class="flex flex-col items-center justify-center text-stone-800 gap-4">
-									<div class="p-6 border border-dashed border-stone-800 industrial-frame">
-										<Icon name="activity" size="3rem" class="opacity-10" />
-									</div>
-									<span class="font-jetbrains text-[10px] font-black uppercase tracking-[0.3em]">Null_Archive_Reported</span>
-								</div>
-							</td>
-						</tr>
-					{:else}
-						{#each logs as log (log.id)}
-							<tr
-								transition:fly={{ x: 20, duration: 300 }}
-								class="hover:bg-rust/5 transition-all cursor-pointer group {selectedIds.has(log.id) ? 'bg-rust/10' : ''}"								onclick={() => (selectedLog = log)}
-							>
-								<td class="px-6 py-4 text-center border-r border-stone-800/20" onclick={(e) => toggleSelection(e, log.id)}>
-									<div
-										class="w-5 h-5 mx-auto border border-stone-800 flex items-center justify-center transition-all relative overflow-hidden {selectedIds.has(
-											log.id
-										)
-																																		? 'bg-rust border-rust shadow-[0_0_8px_rgba(249,115,22,0.2)]'
-																																		: 'group-hover:border-stone-600 bg-stone-950 shadow-inner'}"									>
-										{#if selectedIds.has(log.id)}
-											<div transition:scale={{ duration: 200, start: 0.5 }}>
-												<Icon name="ph:check-bold" size="0.875rem" class="text-white" />
-											</div>
-										{/if}
-									</div>
-								</td>
-								<td class="px-6 py-4 whitespace-nowrap font-bold tabular-nums text-text-dim group-hover:text-stone-300 transition-colors border-r border-stone-800/20"
-									>{log.timestamp ? new Date(log.timestamp).toLocaleString([], { hour12: false }) : 'UNKNOWN_T'}</td
-								>
-								<td class="px-6 py-4 font-black tracking-tighter border-r border-stone-800/20 {getLevelColor(log.level)}">{log.level}</td>
-								<td class="px-6 py-4 border-r border-stone-800/20">
-									<span
-										class="px-2 py-0.5 font-black text-[9px] bg-stone-900 border border-stone-800 text-text-dim uppercase tracking-widest"
-									>
-										{log.category}
-									</span>
-								</td>
-								<td
-									class="px-6 py-4 text-stone-400 group-hover:text-white transition-colors max-w-xl truncate uppercase font-bold tracking-tight border-r border-stone-800/20"
-									title={log.message}>{log.message}</td
-								>
-								<td class="px-6 py-4 font-bold text-text-dim uppercase tracking-tighter border-r border-stone-800/20">{log.path || 'GLOBAL_CORE'}</td>
-								<td class="px-6 py-4 text-right">
-									<button
-										onclick={(e) => deleteLog(e, log.id)}
-										class="p-2 text-stone-700 hover:text-danger hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
-										title="Delete Log"
-									>
-										<Trash2 class="w-4 h-4" />
-									</button>
-								</td>
-							</tr>
-						{/each}
-					{/if}
-				</tbody>
-			</table>
-		</div>
+    <Card>
+        <div class="overflow-x-auto overflow-y-auto max-h-[65vh] custom-scrollbar">
+            <table class="w-full text-left font-jetbrains text-[11px] border-collapse">
+                <thead class="bg-slate-950/40 text-slate-500 sticky top-0 z-10 border-b border-slate-800 shadow-sm">
+                    <tr class="uppercase font-bold tracking-widest">
+                        <th class="px-6 py-5 w-16 text-center">
+                            <button
+                                onclick={toggleSelectAll}
+                                class="w-5 h-5 mx-auto border-2 border-slate-700 rounded-lg flex items-center justify-center transition-all {selectedIds.size === logs.length && logs.length > 0 ? 'bg-indigo-600 border-indigo-500 shadow-lg shadow-indigo-500/20' : 'hover:border-slate-500'}"
+                            >
+                                {#if selectedIds.size === logs.length && logs.length > 0}
+                                    <Check class="w-3.5 h-3.5 text-white" />
+                                {/if}
+                            </button>
+                        </th>
+                        <th class="px-6 py-5">Timestamp</th>
+                        <th class="px-6 py-5">Level</th>
+                        <th class="px-6 py-5">Category</th>
+                        <th class="px-6 py-5">Message</th>
+                        <th class="px-6 py-5">Path</th>
+                        <th class="px-6 py-5 w-16"></th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/50">
+                    {#if loading && logs.length === 0}
+                        <tr>
+                            <td colspan="7" class="py-32">
+                                <div class="flex flex-col items-center justify-center gap-4">
+                                    <div class="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest animate-pulse">Retrieving Logs...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    {:else if logs.length === 0}
+                        <tr>
+                            <td colspan="7" class="py-32">
+                                <div class="flex flex-col items-center justify-center text-slate-700 gap-4">
+                                    <div class="p-6 bg-slate-900/50 rounded-3xl border border-dashed border-slate-800">
+                                        <Info size={40} class="opacity-20 text-indigo-400" />
+                                    </div>
+                                    <span class="text-[10px] font-bold uppercase tracking-widest">No logs found</span>
+                                </div>
+                            </td>
+                        </tr>
+                    {:else}
+                        {#each logs as log (log.id)}
+                            <tr
+                                class="hover:bg-indigo-500/5 transition-all cursor-pointer group {selectedIds.has(log.id) ? 'bg-indigo-500/10' : ''}"
+                                onclick={() => (selectedLog = log)}
+                            >
+                                <td class="px-6 py-4 text-center" onclick={(e) => toggleSelection(e, log.id)}>
+                                    <div
+                                        class="w-5 h-5 mx-auto border-2 border-slate-800 rounded-lg flex items-center justify-center transition-all {selectedIds.has(log.id) ? 'bg-indigo-600 border-indigo-500 shadow-md shadow-indigo-500/20' : 'group-hover:border-slate-600 bg-slate-950/40'}"
+                                    >
+                                        {#if selectedIds.has(log.id)}
+                                            <Check class="w-3.5 h-3.5 text-white" />
+                                        {/if}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap font-medium tabular-nums text-slate-400 group-hover:text-slate-200 transition-colors">
+                                    {log.timestamp ? new Date(log.timestamp).toLocaleString([], { hour12: false }) : 'N/A'}
+                                </td>
+                                <td class="px-6 py-4 font-black tracking-tight {getLevelColor(log.level)}">{log.level}</td>
+                                <td class="px-6 py-4">
+                                    <span class="px-2 py-0.5 font-bold text-[9px] bg-slate-950/40 border border-slate-800 text-slate-500 rounded-md uppercase tracking-wider">
+                                        {log.category}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-slate-300 group-hover:text-white transition-colors max-w-xl truncate font-medium tracking-tight">
+                                    {log.message}
+                                </td>
+                                <td class="px-6 py-4 font-medium text-slate-500 uppercase tracking-tighter text-[10px]">{log.path || '/'}</td>
+                                <td class="px-6 py-4 text-right">
+                                    <button
+                                        onclick={(e) => deleteLog(e, log.id)}
+                                        class="p-2 text-slate-700 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100"
+                                    >
+                                        <Trash2 class="w-4 h-4" />
+                                    </button>
+                                </td>
+                            </tr>
+                        {/each}
+                    {/if}
+                </tbody>
+            </table>
+        </div>
 
-		<!-- Pagination Footer -->
-		<div
-			class="p-6 border-t border-stone-800 bg-[var(--header-bg)] flex flex-col sm:flex-row justify-between items-center gap-6 shrink-0 relative z-10"
-		>
-			<div class="flex items-center gap-6">
-				<span class="font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest">
-					Showing <span class="text-rust">{offset + 1}-{Math.min(offset + limit, total)}</span> // Total <span class="text-white">{total}</span> Signals_Mapped
-				</span>
-				{#if selectedIds.size > 0}
-					<div class="w-px h-4 bg-stone-800"></div>
-					<span class="font-jetbrains text-[10px] font-black text-danger uppercase tracking-widest animate-pulse">
-						{selectedIds.size} Targets_Locked
-					</span>
-				{/if}
-			</div>
-			
-			<div class="flex gap-2">
-				<button
-					onclick={prevPage}
-					disabled={offset === 0}
-					class="p-3 bg-stone-950 border border-stone-800 hover:border-rust hover:text-rust disabled:opacity-20 text-text-dim transition-all active:translate-x-px shadow-lg"
-				>
-					<Icon name="ph:caret-left-bold" size="1.25rem" />
-				</button>
-				<button
-					onclick={nextPage}
-					disabled={offset + limit >= total}
-					class="p-3 bg-stone-950 border border-stone-800 hover:border-rust hover:text-rust disabled:opacity-20 text-text-dim transition-all active:translate-x-px shadow-lg"
-				>
-					<Icon name="ph:caret-right-bold" size="1.25rem" />
-				</button>
-			</div>
-		</div>
-	</div>
-
-	<!-- Detail Modal -->
-	{#if selectedLog}
-		<div
-			class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl"
-			transition:fade={{ duration: 150 }}
-			onclick={() => (selectedLog = null)}
-			role="button"
-			tabindex="0"
-			onkeydown={(e) => {
-				if (e.key === 'Escape') selectedLog = null;
-			}}
-		>
-			<div
-				class="bg-[var(--terminal-bg)] border border-stone-800 rounded-none shadow-[0_0_100px_rgba(0,0,0,0.8)] w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden industrial-frame"
-				onclick={(e) => e.stopPropagation()}
-				onkeydown={(e) => e.stopPropagation()}
-				role="document"
-				tabindex="0"
-			>
-				<div
-					class="p-8 border-b border-stone-800 bg-[var(--header-bg)] flex justify-between items-start"
-				>
-					<div class="flex items-center gap-6">
-						<div class="p-3 bg-stone-950 border border-stone-800 industrial-frame">
-							<div class={`font-black text-2xl tracking-tighter ${getLevelColor(selectedLog.level)}`}>{selectedLog.level}</div>
-						</div>
-						<div>
-							<h3 class="text-xl font-heading font-black text-white uppercase tracking-tighter flex items-center gap-3">
-								INTERCEPT_DETAIL_READOUT
-							</h3>
-							<p class="font-jetbrains text-[10px] text-text-dim font-bold mt-1 uppercase tracking-widest">
-								Captured: {selectedLog.timestamp ? new Date(selectedLog.timestamp).toLocaleString([], { hour12: false }) : 'N/A'}
-							</p>
-						</div>
-					</div>
-					<button
-						onclick={() => (selectedLog = null)}
-						class="p-2 text-text-dim hover:text-white transition-all hover:rotate-90">
-						<Icon name="ph:x-bold" size="1.5rem" />
-					</button>
-				</div>
-				<div class="p-10 overflow-y-auto space-y-10 custom-scrollbar bg-[var(--terminal-bg)] relative">
-					<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
-					
-					<div class="grid grid-cols-2 md:grid-cols-3 gap-8 relative z-10">
-						{#each [
-							{ label: 'Signal_Category', val: selectedLog.category },
-							{ label: 'Origin_Source', val: selectedLog.source },
-							{ label: 'Kernel_Vector', val: selectedLog.path || 'SYSTEM_CORE' },
-							{ label: 'Access_Method', val: selectedLog.method || 'INTERNAL' },
-							{ label: 'Remote_Address', val: selectedLog.client_ip || 'DECENTRALIZED' },
-							{ label: 'LOG_UID', val: `#${selectedLog.id}` }
-						] as meta}
-							<div class="space-y-2 bg-stone-900/40 border border-stone-800 p-4 industrial-frame">
-								<span class="block font-jetbrains text-[9px] font-black text-text-dim uppercase tracking-widest">{meta.label}</span>
-								<span class="font-jetbrains text-[11px] font-black text-stone-200 uppercase tracking-tight break-all">{meta.val}</span>
-							</div>
-						{/each}
-					</div>
-
-					<div class="space-y-4 relative z-10">
-						<span class="block font-jetbrains text-[9px] font-black text-text-dim uppercase tracking-[0.3em]">SIGNAL_MESSAGE_RAW</span>
-						<div
-							class="bg-stone-950 p-6 border border-stone-800 text-stone-300 font-jetbrains text-xs whitespace-pre-wrap leading-relaxed uppercase tracking-wide shadow-inner"
-						>
-							{selectedLog.message}
-						</div>
-					</div>
-
-					{#if selectedLog.details}
-						<div class="space-y-4 relative z-10">
-							<span class="block font-jetbrains text-[9px] font-black text-text-dim uppercase tracking-[0.3em]">EXTENDED_TELEMETRY_DATA</span>
-							<div
-								class="bg-stone-950 p-6 border border-stone-800 text-stone-400 font-jetbrains text-[11px] whitespace-pre-wrap overflow-x-auto shadow-inner leading-relaxed"
-							>
-								{selectedLog.details}
-							</div>
-						</div>
-					{/if}
-				</div>
-				
-				<div class="p-8 bg-[var(--header-bg)] border-t border-stone-800 flex justify-end">
-					<button 
-						onclick={() => (selectedLog = null)}
-						class="px-10 py-3 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rust/20 transition-all active:translate-y-px flex items-center gap-3"
-					>
-						<Icon name="ph:check-bold" size="1rem" />
-						Acknowledge_Signal
-					</button>
-				</div>
-			</div>
-		</div>
-	{/if}
+        <div class="p-6 border-t border-slate-800 bg-slate-950/20 flex items-center justify-between">
+            <div class="flex items-center gap-6">
+                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                    Displaying <span class="text-indigo-400 font-black">{offset + 1}-{Math.min(offset + limit, total)}</span> of <span class="text-white font-black">{total}</span>
+                </span>
+            </div>
+            
+            <div class="flex gap-2">
+                <Button variant="secondary" size="sm" onclick={prevPage} disabled={offset === 0} icon="ph:caret-left-bold" />
+                <Button variant="secondary" size="sm" onclick={nextPage} disabled={offset + limit >= total} icon="ph:caret-right-bold" />
+            </div>
+        </div>
+    </Card>
 </div>
+
+<!-- Detail Modal -->
+{#if selectedLog}
+    <div
+        class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md"
+        transition:fade={{ duration: 150 }}
+        onclick={() => (selectedLog = null)}
+        role="button"
+        tabindex="0"
+        onkeydown={(e) => {
+            if (e.key === 'Escape') selectedLog = null;
+        }}
+    >
+        <div
+            class="bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden"
+            onclick={(e) => e.stopPropagation()}
+            onkeydown={(e) => e.stopPropagation()}
+            role="document"
+            tabindex="0"
+        >
+            <div
+                class="p-8 border-b border-slate-800 bg-slate-950/40 flex justify-between items-start"
+            >
+                <div class="flex items-center gap-6">
+                    <div class="p-4 bg-slate-950 border border-slate-800 rounded-2xl">
+                        <div class={`font-black text-2xl tracking-tighter ${getLevelColor(selectedLog.level)}`}>{selectedLog.level}</div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-heading font-black text-white uppercase tracking-tight">
+                            Log Detail Readout
+                        </h3>
+                        <p class="text-[10px] text-slate-500 font-bold mt-1 uppercase tracking-widest">
+                            Captured: {selectedLog.timestamp ? new Date(selectedLog.timestamp).toLocaleString([], { hour12: false }) : 'N/A'}
+                        </p>
+                    </div>
+                </div>
+                <button
+                    onclick={() => (selectedLog = null)}
+                    class="p-2 text-slate-500 hover:text-white transition-all hover:rotate-90">
+                    <X class="w-6 h-6" />
+                </button>
+            </div>
+            <div class="p-10 overflow-y-auto space-y-10 custom-scrollbar bg-slate-900 relative">
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-8 relative z-10">
+                    {#each [
+                        { label: 'Category', val: selectedLog.category },
+                        { label: 'Source', val: selectedLog.source },
+                        { label: 'Path', val: selectedLog.path || 'SYSTEM_CORE' },
+                        { label: 'Method', val: selectedLog.method || 'INTERNAL' },
+                        { label: 'Client IP', val: selectedLog.client_ip || 'INTERNAL' },
+                        { label: 'Log ID', val: `#${selectedLog.id}` }
+                    ] as meta}
+                        <div class="space-y-2 bg-slate-950/20 border border-slate-800 p-4 rounded-xl">
+                            <span class="block text-[9px] font-bold text-slate-500 uppercase tracking-widest">{meta.label}</span>
+                            <span class="text-[11px] font-bold text-slate-200 uppercase tracking-tight break-all">{meta.val}</span>
+                        </div>
+                    {/each}
+                </div>
+
+                <div class="space-y-4 relative z-10">
+                    <span class="block text-[9px] font-bold text-slate-500 uppercase tracking-widest">Raw Message</span>
+                    <div
+                        class="bg-slate-950 p-6 border border-slate-800 text-slate-300 font-mono text-xs whitespace-pre-wrap leading-relaxed rounded-2xl shadow-inner"
+                    >
+                        {selectedLog.message}
+                    </div>
+                </div>
+
+                {#if selectedLog.details}
+                    <div class="space-y-4 relative z-10">
+                        <span class="block text-[9px] font-bold text-slate-500 uppercase tracking-widest">Extended Data</span>
+                        <div
+                            class="bg-slate-950 p-6 border border-slate-800 text-slate-400 font-mono text-[11px] whitespace-pre-wrap overflow-x-auto shadow-inner leading-relaxed rounded-2xl"
+                        >
+                            {selectedLog.details}
+                        </div>
+                    </div>
+                {/if}
+            </div>
+            
+            <div class="p-8 bg-slate-950/40 border-t border-slate-800 flex justify-end">
+                <Button 
+                    onclick={() => (selectedLog = null)}
+                    variant="primary"
+                    size="md"
+                    icon="ph:check-bold"
+                >
+                    ACKNOWLEDGE
+                </Button>
+            </div>
+        </div>
+    </div>
+{/if}
 
 <ConfirmDialog
 	bind:isOpen={isConfirmOpen}

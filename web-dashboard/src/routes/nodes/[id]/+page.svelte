@@ -8,7 +8,7 @@
 	import InstanceManagerModal from '$lib/components/InstanceManagerModal.svelte';
 	import LogViewer from '$lib/components/LogViewer.svelte';
 	import Dropdown from '$lib/components/Dropdown.svelte';
-	import { serverVersions, notifications } from '$lib/stores';
+	import { serverVersions, notifications } from '$lib/stores.svelte';
 	import { compareVersions } from '$lib/semver';
 	import PlayersChart from '$lib/components/PlayersChart.svelte';
 	import { Server, Cpu, HardDrive, MemoryStick, List, Plus, ArrowLeft, AlertCircle, Activity, ShieldAlert, ShieldCheck } from 'lucide-svelte';

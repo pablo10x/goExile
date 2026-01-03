@@ -14,7 +14,7 @@
 		Sparkles,
 		RefreshCw
 	} from 'lucide-svelte';
-	import { siteSettings } from '$lib/stores';
+	import { siteSettings } from '$lib/stores.svelte';
 	import Icon from './theme/Icon.svelte';
 	import Button from './Button.svelte';
 
@@ -345,14 +345,14 @@
 	>
 		<!-- Backdrop with blur -->
 		<button
-			class="absolute inset-0 bg-white/70 dark:bg-slate-950/70 backdrop-blur-md cursor-default"
+			class="absolute inset-0 bg-slate-950/60 backdrop-blur-md cursor-default"
 			onclick={close}
 			aria-label="Close modal"
 		></button>
 
 		<!-- Modal Container -->
 		<div
-			class="modal-container relative w-full max-w-xl bg-[var(--terminal-bg)] border border-stone-800 rounded-none shadow-2xl overflow-hidden backdrop-blur-xl industrial-sharp"
+			class="modal-container relative w-full max-w-xl bg-slate-900/80 border border-stone-800 rounded-none shadow-2xl overflow-hidden backdrop-blur-2xl industrial-sharp"
 			transition:modalScale
 		>
 			<!-- Animated gradient backgrounds -->
@@ -502,7 +502,7 @@
 
 						<!-- Node Info Card -->
 						<div
-							class="node-card modern-industrial-card glass-panel p-6"
+							class="node-card modern-industrial-card bg-slate-950/40 backdrop-blur-md border border-slate-800 p-6"
 						>
 							<div class="relative flex items-center gap-6">
 								<div class="p-4 rounded-none bg-rust/10 border border-rust/30 industrial-sharp"

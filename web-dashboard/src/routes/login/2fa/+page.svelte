@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
-	import { isAuthenticated } from '$lib/stores';
+	import { isAuthenticated } from '$lib/stores.svelte';
 	import { onMount } from 'svelte';
 	import { fade, slide } from 'svelte/transition';
 

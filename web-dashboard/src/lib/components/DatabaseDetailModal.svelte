@@ -10,7 +10,7 @@
 
 {#if isOpen}
 	<div
-		class="fixed z-50 w-96 p-6 bg-black/90 backdrop-blur-md border border-stone-800 rounded-none shadow-[0_0_50px_rgba(0,0,0,0.8)] pointer-events-none industrial-frame"
+		class="fixed z-50 w-96 p-6 bg-slate-900/80 backdrop-blur-2xl border border-stone-800 rounded-none shadow-[0_0_50px_rgba(0,0,0,0.8)] pointer-events-none industrial-frame"
 		style="top: {y + 20}px; left: {x - 192}px;"
 		transition:scale={{ duration: 200, start: 0.95 }}
 	>

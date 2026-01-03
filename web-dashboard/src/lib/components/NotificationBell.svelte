@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Bell, CheckCircle, Info, XCircle, AlertCircle } from 'lucide-svelte';
 	import { slide } from 'svelte/transition';
-	import { notifications } from '$lib/stores';
+	import { notifications } from '$lib/stores.svelte';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 
 	const history = notifications.history;

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { slide } from 'svelte/transition';
-	import { serverVersions } from '$lib/stores';
+	import { serverVersions } from '$lib/stores.svelte';
 	import { compareVersions } from '$lib/semver';
 	import PlayersChart from './PlayersChart.svelte';
 	import Icon from './theme/Icon.svelte';
@@ -11,7 +11,7 @@
 
 	let expanded = $state(false);
 	let isHovered = $state(false);
-	let renameValue = $state(instance.id);
+	let renameValue = $state('');
 	let chartData = $state<any[]>([]);
 
     const binaryLines = Array.from({ length: 8 }, () => 
@@ -19,7 +19,7 @@
     );
 
 	$effect(() => {
-		renameValue = instance.id;
+		if (instance?.id) renameValue = instance.id;
 	});
 
 	const dispatch = createEventDispatcher();
@@ -84,89 +84,87 @@
 	{/if}
 
 	<!-- Header / Collapsed View -->
-	<div
-		class="flex flex-col sm:flex-row sm:items-center gap-4 px-6 py-4 cursor-pointer hover:bg-rust/5 transition-all relative z-10"
-		onclick={toggle}
-		role="button"
-		tabindex="0"
-		onkeydown={(e) => e.key === 'Enter' && toggle()}
-	>
-		<!-- Chevron -->
-		<div
-			class="text-stone-600 transform transition-transform duration-500 {expanded
-				? 'rotate-90 text-rust shadow-rust/20'
-				: ''}"
+	<div class="flex flex-col sm:flex-row sm:items-center gap-4 cursor-pointer hover:bg-rust/5 transition-all relative z-10">
+		<button
+			class="flex flex-1 items-center gap-4 px-6 py-4 border-none bg-transparent text-left cursor-pointer"
+			onclick={toggle}
+			aria-expanded={expanded}
+			aria-controls={`details-${instance.id}`}
 		>
-			<Icon name="ph:caret-right-bold" size="1rem" />
-		</div>
-
-		<!-- Name & Identity -->
-		<div class="flex flex-col min-w-[160px] ml-4 sm:ml-8">
-			<div class="flex items-center gap-2">
-				<span class="text-[9px] font-jetbrains font-black uppercase tracking-tighter text-stone-500">INSTANCE</span>
-				<span class="font-heading font-black text-sm text-white tracking-widest uppercase">{instance.id.split('-').pop() || instance.port}</span>
+			<!-- Chevron -->
+			<div
+				class="text-stone-600 transform transition-transform duration-500 {expanded
+					? 'rotate-90 text-rust shadow-rust/20'
+					: ''}"
+			>
+				<Icon name="ph:caret-right-bold" size="1rem" />
 			</div>
-			<div class="flex items-center gap-2 mt-1">
-				<span class="text-[8px] font-jetbrains font-bold text-stone-700 uppercase">Port:</span>
-				<span class="text-[9px] font-jetbrains font-black text-rust-light tracking-widest">{instance.port}</span>
+
+			<!-- Name & Identity -->
+			<div class="flex flex-col min-w-[160px] ml-4 sm:ml-8">
+				<div class="flex items-center gap-2">
+					<span class="text-[9px] font-jetbrains font-black uppercase tracking-tighter text-stone-500">INSTANCE</span>
+					<span class="font-heading font-black text-sm text-white tracking-widest uppercase">{instance.id.split('-').pop() || instance.port}</span>
+				</div>
+				<div class="flex items-center gap-2 mt-1">
+					<span class="text-[8px] font-jetbrains font-bold text-stone-700 uppercase">Port:</span>
+					<span class="text-[9px] font-jetbrains font-black text-rust-light tracking-widest">{instance.port}</span>
+				</div>
 			</div>
-		</div>
 
-		<!-- Status Badge -->
-		<div class="sm:w-36">
-			{#if instance.status === 'Running'}
-				<div class="flex items-center gap-2.5 text-success bg-success/5 px-3 py-1 border border-success/20 rounded-none w-fit shadow-[0_0_15px_rgba(16,185,129,0.05)]">
-					<div class="w-1.5 h-1.5 rounded-full bg-success animate-pulse shadow-emerald-500/50 shadow-lg"></div>
-					<span class="text-[9px] font-heading font-black uppercase tracking-[0.2em]">Running</span>
-				</div>
-			{:else if instance.status === 'Provisioning'}
-				<div class="flex items-center gap-2.5 text-rust-light bg-rust/5 px-3 py-1 border border-rust/20 rounded-none w-fit">
-					<div class="w-1.5 h-1.5 rounded-none bg-rust animate-spin shadow-rust/50 shadow-lg"></div>
-					<span class="text-[9px] font-heading font-black uppercase tracking-[0.2em]">Starting</span>
-				</div>
-			{:else if instance.status === 'Error'}
-				<div class="flex items-center gap-2.5 text-danger bg-danger/5 px-3 py-1 border border-danger/20 rounded-none w-fit">
-					<div class="w-1.5 h-1.5 rounded-full bg-danger animate-flicker shadow-red-500/50 shadow-lg"></div>
-					<span class="text-[9px] font-heading font-black uppercase tracking-[0.2em]">Error</span>
-				</div>
-			{:else}
-				<div class="flex items-center gap-2.5 text-stone-500 bg-stone-900/40 px-3 py-1 border border-stone-800 rounded-none w-fit">
-					<div class="w-1.5 h-1.5 rounded-full bg-stone-700"></div>
-					<span class="text-[9px] font-heading font-black uppercase tracking-[0.2em]">{instance.status || 'Offline'}</span>
-				</div>
-			{/if}
-		</div>
-
-		<!-- Version Info -->
-		<div class="flex flex-col hidden md:flex">
-			<span class="text-[8px] font-jetbrains font-black text-stone-700 uppercase tracking-widest">Version</span>
-			<div class="flex items-center gap-2">
-				<span class="text-[10px] font-jetbrains font-bold text-stone-400">{instance.version || '0.0.0'}</span>
-				{#if isOutdated}
-					<span class="text-[7px] font-black font-heading bg-rust/20 text-rust px-1.5 py-0.5 border border-rust/30 uppercase animate-pulse shadow-rust/10 shadow-lg">UPDATE</span>
+			<!-- Status Badge -->
+			<div class="sm:w-36">
+				{#if instance.status === 'Running'}
+					<div class="flex items-center gap-2.5 text-success bg-success/5 px-3 py-1 border border-success/20 rounded-none w-fit shadow-[0_0_15px_rgba(16,185,129,0.05)]">
+						<div class="w-1.5 h-1.5 rounded-full bg-success animate-pulse shadow-emerald-500/50 shadow-lg"></div>
+						<span class="text-[9px] font-heading font-black uppercase tracking-[0.2em]">Running</span>
+					</div>
+				{:else if instance.status === 'Provisioning'}
+					<div class="flex items-center gap-2.5 text-rust-light bg-rust/5 px-3 py-1 border border-rust/20 rounded-none w-fit">
+						<div class="w-1.5 h-1.5 rounded-none bg-rust animate-spin shadow-rust/50 shadow-lg"></div>
+						<span class="text-[9px] font-heading font-black uppercase tracking-[0.2em]">Starting</span>
+					</div>
+				{:else if instance.status === 'Error'}
+					<div class="flex items-center gap-2.5 text-danger bg-danger/5 px-3 py-1 border border-danger/20 rounded-none w-fit">
+						<div class="w-1.5 h-1.5 rounded-full bg-danger animate-flicker shadow-red-500/50 shadow-lg"></div>
+						<span class="text-[9px] font-heading font-black uppercase tracking-[0.2em]">Error</span>
+					</div>
+				{:else}
+					<div class="flex items-center gap-2.5 text-stone-500 bg-stone-900/40 px-3 py-1 border border-stone-800 rounded-none w-fit">
+						<div class="w-1.5 h-1.5 rounded-full bg-stone-700"></div>
+						<span class="text-[9px] font-heading font-black uppercase tracking-[0.2em]">{instance.status || 'Offline'}</span>
+					</div>
 				{/if}
 			</div>
-		</div>
 
-		<!-- Player Load -->
-		<div class="flex flex-col hidden lg:flex ml-6">
-			<span class="text-[8px] font-jetbrains font-black text-stone-700 uppercase tracking-widest">Players</span>
-			<div class="flex items-center gap-3">
-				<div class="w-20 h-1 bg-stone-950 border border-stone-800 rounded-none overflow-hidden relative p-0">
-					<div class="h-full bg-rust-light shadow-rust/40 shadow-lg transition-all duration-1000 ease-out" style="width: {Math.min(100, (instance.player_count / 100) * 100)}%"></div>
+			<!-- Version Info -->
+			<div class="flex flex-col hidden md:flex">
+				<span class="text-[8px] font-jetbrains font-black text-stone-700 uppercase tracking-widest">Version</span>
+				<div class="flex items-center gap-2">
+					<span class="text-[10px] font-jetbrains font-bold text-stone-400">{instance.version || '0.0.0'}</span>
+					{#if isOutdated}
+						<span class="text-[7px] font-black font-heading bg-rust/20 text-rust px-1.5 py-0.5 border border-rust/30 uppercase animate-pulse shadow-rust/10 shadow-lg">UPDATE</span>
+					{/if}
 				</div>
-				<span class="text-[10px] font-jetbrains font-black text-stone-400 tracking-tighter">{instance.player_count || 0}</span>
 			</div>
-		</div>
+
+			<!-- Player Load -->
+			<div class="flex flex-col hidden lg:flex ml-6">
+				<span class="text-[8px] font-jetbrains font-black text-stone-700 uppercase tracking-widest">Players</span>
+				<div class="flex items-center gap-3">
+					<div class="w-20 h-1 bg-stone-950 border border-stone-800 rounded-none overflow-hidden relative p-0">
+						<div class="h-full bg-rust-light shadow-rust/40 shadow-lg transition-all duration-1000 ease-out" style="width: {Math.min(100, (instance.player_count / 100) * 100)}%"></div>
+					</div>
+					<span class="text-[10px] font-jetbrains font-black text-stone-400 tracking-tighter">{instance.player_count || 0}</span>
+				</div>
+			</div>
+		</button>
 
 		<!-- Quick Actions -->
 		<div
-			class="flex items-center gap-2 ml-auto"
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
+			class="flex items-center gap-2 pr-6 ml-auto"
 			role="toolbar"
 			aria-label="Instance Actions"
-			tabindex="0"
 		>
 			<Button
 				onclick={() => dispatch('tail', { nodeId, instanceId: instance.id })}
@@ -211,6 +209,7 @@
 	<!-- Expanded Details -->
 	{#if expanded}
 		<div
+			id={`details-${instance.id}`}
 			transition:slide={{ duration: 300 }}
 			class="bg-slate-900/60 border-t border-slate-700 p-8 space-y-8 relative z-10"
 		>

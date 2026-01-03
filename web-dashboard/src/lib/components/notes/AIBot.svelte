@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Bot, X, Send, Sparkles, Loader2 } from 'lucide-svelte';
 	import { fade, slide, scale } from 'svelte/transition';
-	import { notes, todos } from '$lib/stores';
+	import { notes, todos } from '$lib/stores.svelte';
 
 	let isOpen = false;
 	let messages: { role: 'user' | 'ai'; text: string }[] = [];

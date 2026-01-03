@@ -8,13 +8,13 @@
 		Shield, FileText, Database, 
 		RefreshCw, Cpu, X
 	} from 'lucide-svelte';
-	import { notifications } from '$lib/stores';
+	import { notifications } from '$lib/stores.svelte';
 
 	let { isOpen = $bindable(false) } = $props<{ isOpen: boolean }>();
 
 	let query = $state('');
 	let selectedIndex = $state(0);
-	let inputElement: HTMLInputElement;
+	let inputElement = $state<HTMLInputElement>();
 
 	const actions = [
 		{ id: 'dash', label: 'Go to Dashboard', icon: Gauge, category: 'Navigation', shortcut: 'G D', action: () => goto('/dashboard') },
@@ -80,17 +80,20 @@
 		onclick={close}
 		onkeydown={(e) => e.key === 'Escape' && close()}
 		role="button"
-		tabindex="0"
+		tabindex="-1"
 		aria-label="Close command palette"
 	>
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 		<div 
-			class="w-full max-w-2xl bg-stone-950 border border-stone-800 shadow-[0_0_100px_rgba(0,0,0,1)] overflow-hidden industrial-sharp"
+			class="w-full max-w-2xl bg-slate-900/80 backdrop-blur-2xl border border-stone-800 shadow-[0_0_100px_rgba(0,0,0,1)] overflow-hidden industrial-sharp cursor-auto"
 			transition:scale={{ start: 0.98, duration: 200, easing: cubicOut }}
 			onclick={e => e.stopPropagation()}
+			onkeydown={e => e.stopPropagation()}
 			role="document"
 		>
 			<!-- Status Header -->
-			<div class="px-6 py-3 border-b border-stone-800 bg-stone-900/50 flex justify-between items-center">
+			<div class="px-6 py-3 border-b border-stone-800 bg-slate-950/40 flex justify-between items-center">
 				<div class="flex items-center gap-3">
 					<div class="w-1.5 h-1.5 rounded-full bg-rust animate-pulse"></div>
 					<span id="command-palette-title" class="text-[9px] font-black text-stone-500 uppercase tracking-[0.3em]">Smart_Uplink :: Command_Center</span>

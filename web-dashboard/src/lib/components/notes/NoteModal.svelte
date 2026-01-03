@@ -10,7 +10,7 @@
 	} from 'lucide-svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
-	import type { Note } from '$lib/stores';
+	import type { Note } from '$lib/stores.svelte';
 	import { autofocus } from '$lib/actions';
 
 	let {
@@ -26,33 +26,33 @@
 	}>();
 
 	let currentNote = $state<Note>({
-		id: initialNote?.id || 0,
-		title: initialNote?.title || '',
-		content: initialNote?.content || '',
-		color: initialNote?.color || 'yellow',
-		status: initialNote?.status || 'normal',
-		rotation: initialNote?.rotation || 0,
-		created_at: initialNote?.created_at || new Date().toISOString(),
-		updated_at: initialNote?.updated_at || new Date().toISOString()
+		id: 0,
+		title: '',
+		content: '',
+		color: 'yellow',
+		status: 'normal',
+		rotation: 0,
+		created_at: new Date().toISOString(),
+		updated_at: new Date().toISOString()
 	});
 
 	let loading = $state(false);
-	let isEditing = $derived(initialNote !== null && initialNote.id !== 0);
+	let isEditing = $derived(initialNote !== null && (initialNote.id !== 0 || initialNote.title !== '' || initialNote.content !== ''));
 
 	const noteColors = ['yellow', 'blue', 'green', 'purple', 'orange', 'pink', 'cyan'];
 	const noteStatuses: Array<Note['status']> = ['normal', 'warn', 'critical'];
 
 	$effect(() => {
-		if (isOpen) {
+		if (isOpen && initialNote) {
 			currentNote = {
-				id: initialNote?.id || 0,
-				title: initialNote?.title || '',
-				content: initialNote?.content || '',
-				color: initialNote?.color || 'yellow',
-				status: initialNote?.status || 'normal',
-				rotation: initialNote?.rotation || Math.floor(Math.random() * 6) - 3,
-				created_at: initialNote?.created_at || new Date().toISOString(),
-				updated_at: initialNote?.updated_at || new Date().toISOString()
+				id: initialNote.id || 0,
+				title: initialNote.title || '',
+				content: initialNote.content || '',
+				color: initialNote.color || 'yellow',
+				status: initialNote.status || 'normal',
+				rotation: initialNote.rotation || Math.floor(Math.random() * 6) - 3,
+				created_at: initialNote.created_at || new Date().toISOString(),
+				updated_at: initialNote.updated_at || new Date().toISOString()
 			};
 		}
 	});
@@ -89,28 +89,28 @@
 
 		switch (color) {
 			case 'yellow':
-				colorClass = 'bg-yellow-100 text-yellow-900 border-yellow-200';
+				colorClass = 'bg-yellow-100/80 text-yellow-900 border-yellow-200/50';
 				break;
 			case 'blue':
-				colorClass = 'bg-orange-100 text-orange-900 border-orange-200';
+				colorClass = 'bg-orange-100/80 text-orange-900 border-orange-200/50';
 				break;
 			case 'green':
-				colorClass = 'bg-green-100 text-green-900 border-green-200';
+				colorClass = 'bg-green-100/80 text-green-900 border-green-200/50';
 				break;
 			case 'purple':
-				colorClass = 'bg-purple-100 text-purple-900 border-purple-200';
+				colorClass = 'bg-purple-100/80 text-purple-900 border-purple-200/50';
 				break;
 			case 'orange':
-				colorClass = 'bg-orange-100 text-orange-900 border-orange-200';
+				colorClass = 'bg-orange-100/80 text-orange-900 border-orange-200/50';
 				break;
 			case 'pink':
-				colorClass = 'bg-pink-100 text-pink-900 border-pink-200';
+				colorClass = 'bg-pink-100/80 text-pink-900 border-pink-200/50';
 				break;
 			case 'cyan':
-				colorClass = 'bg-cyan-100 text-cyan-900 border-cyan-200';
+				colorClass = 'bg-cyan-100/80 text-cyan-900 border-cyan-200/50';
 				break;
 			default:
-				colorClass = 'bg-slate-100 text-slate-900 border-slate-200';
+				colorClass = 'bg-slate-100/80 text-slate-900 border-slate-200/50';
 				break;
 		}
 
@@ -148,6 +148,7 @@
 		aria-modal="true"
 		tabindex="-1"
 	>
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
 			class="relative w-full max-w-lg p-0 transition-all duration-300 flex flex-col items-center"
 			style="transform: rotate({currentNote.rotation}deg);"
@@ -158,7 +159,7 @@
 				class="relative w-full min-h-[350px] flex flex-col p-8 rounded-none border-2 shadow-2xl {getNoteCardClasses(
 					currentNote.color,
 					currentNote.status
-				)} industrial-sharp"
+				)} industrial-sharp backdrop-blur-md"
 			>
 				<div class="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/pinstriped-suit.png')]"></div>
 

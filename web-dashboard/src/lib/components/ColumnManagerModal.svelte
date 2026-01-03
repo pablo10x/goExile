@@ -38,14 +38,14 @@
 
 {#if isOpen}
 	<div
-		class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+		class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
 		transition:slide={{ duration: 100 }}
 	>
 		<div
-			class="bg-[var(--terminal-bg)] border border-stone-800 rounded-none w-full max-w-md shadow-2xl flex flex-col industrial-frame"
+			class="bg-slate-900/80 backdrop-blur-2xl border border-stone-800 rounded-none w-full max-w-md shadow-2xl flex flex-col industrial-frame"
 		>
 			<div
-				class="p-6 border-b border-stone-800 flex justify-between items-center bg-[var(--header-bg)]"
+				class="p-6 border-b border-stone-800 flex justify-between items-center bg-slate-950/40"
 			>
 				<h3 class="text-xl font-heading font-black text-slate-100 uppercase tracking-tighter">
 					Alter_Schema: <span class="text-rust font-jetbrains text-xs ml-3 uppercase tracking-widest">{table}</span>
@@ -92,7 +92,7 @@
 			</div>
 
 			<div
-				class="p-6 border-t border-stone-800 bg-[var(--header-bg)] flex justify-end gap-4"
+				class="p-6 border-t border-stone-800 bg-slate-950/40 flex justify-end gap-4"
 			>
 				<button
 					onclick={onClose}

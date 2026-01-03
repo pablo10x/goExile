@@ -66,14 +66,14 @@
 
 {#if isOpen}
 	<div
-		class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+		class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
 		transition:slide={{ duration: 100 }}
 	>
 		<div
-			class="bg-[var(--terminal-bg)] border border-stone-800 rounded-none w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh] industrial-frame"
+			class="bg-slate-900/80 backdrop-blur-2xl border border-stone-800 rounded-none w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh] industrial-frame"
 		>
 			<div
-				class="p-6 border-b border-stone-800 flex justify-between items-center bg-[var(--header-bg)]"
+				class="p-6 border-b border-stone-800 flex justify-between items-center bg-slate-950/40"
 			>
 				<h3 class="text-xl font-heading font-black text-slate-100 uppercase tracking-tighter">
 					Initialize_Sector in <span class="text-rust font-jetbrains text-xs ml-3 uppercase tracking-widest">{schema}</span>
@@ -123,7 +123,7 @@
 					<div class="space-y-3">
 						{#each columns as col, i}
 							<div
-								class="flex flex-col gap-4 p-5 bg-stone-900/40 border border-stone-800 rounded-none group industrial-frame"
+								class="flex flex-col gap-4 p-5 bg-slate-950/40 border border-stone-800 rounded-none group industrial-frame"
 							>
 								<div class="flex gap-4 items-start">
 									<div class="flex flex-col gap-2 w-full">
@@ -182,7 +182,7 @@
 			</div>
 
 			<div
-				class="p-6 border-t border-stone-800 bg-[var(--header-bg)] flex justify-end gap-4"
+				class="p-6 border-t border-stone-800 bg-slate-950/40 flex justify-end gap-4"
 			>
 				<Button
 					onclick={onClose}

@@ -6,7 +6,7 @@
 		siteSettings,
 		backgroundConfig,
 		theme
-	} from '$lib/stores';
+	} from '$lib/stores.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import {
 		Server,

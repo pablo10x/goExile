@@ -37,7 +37,7 @@
 	import StatsCard from '$lib/components/StatsCard.svelte';
 	import Icon from '$lib/components/theme/Icon.svelte';
 	import Button from '$lib/components/Button.svelte';
-	import { notifications, siteSettings } from '$lib/stores';
+	import { notifications, siteSettings } from '$lib/stores.svelte';
 
 	interface Player {
 		id: number;

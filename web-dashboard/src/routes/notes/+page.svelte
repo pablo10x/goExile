@@ -7,8 +7,8 @@
 	import TaskItem from '$lib/components/notes/TaskItem.svelte';
 	import NoteModal from '$lib/components/notes/NoteModal.svelte';
 	import AIBot from '$lib/components/notes/AIBot.svelte';
-	import { notes, todos } from '$lib/stores';
-	import type { Note, Todo } from '$lib/stores';
+	import { notes, todos } from '$lib/stores.svelte';
+	import type { Note, Todo } from '$lib/stores.svelte';
 
 	let loading = $state(true);
 	let newTodoContent = $state('');

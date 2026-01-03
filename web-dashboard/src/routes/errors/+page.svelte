@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
-	import { stats } from '$lib/stores';
+	import { stats } from '$lib/stores.svelte';
 
 	interface ErrorLog {
 		timestamp: string;

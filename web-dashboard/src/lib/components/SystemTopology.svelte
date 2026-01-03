@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
-	import { nodes } from '$lib/stores';
+	import { nodes } from '$lib/stores.svelte';
 	import { Server, Activity, Cpu, Skull, Database, User } from 'lucide-svelte';
 	import { fade, scale } from 'svelte/transition';
 

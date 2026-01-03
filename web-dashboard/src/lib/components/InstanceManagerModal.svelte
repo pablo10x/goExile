@@ -2,7 +2,7 @@
 	import { fade, scale, fly, slide } from 'svelte/transition';
 	import { cubicOut, elasticOut } from 'svelte/easing';
 	import { formatBytes, formatUptime } from '$lib/utils';
-	import { serverVersions } from '$lib/stores';
+	import { serverVersions } from '$lib/stores.svelte';
 	import Terminal from './Terminal.svelte';
 	import ResourceMetricsPanel from './ResourceMetricsPanel.svelte';
 	import ConfirmDialog from './ConfirmDialog.svelte';
@@ -248,16 +248,16 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 
 		<!-- Modal Window -->
 		<div 
-			class="relative w-full max-w-7xl h-full sm:h-[90vh] flex flex-col md:flex-row bg-[var(--terminal-bg)] border border-stone-800 rounded-none shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden industrial-frame"
+			class="relative w-full max-w-7xl h-full sm:h-[90vh] flex flex-col md:flex-row bg-slate-900/80 backdrop-blur-2xl border border-stone-800 rounded-none shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden industrial-frame"
 			transition:scale={{ start: 0.98, duration: 200, easing: cubicOut }}
 		>
 			<!-- Tactical Sidebar -->
-			<div class="w-full md:w-72 bg-[var(--header-bg)] border-b md:border-b-0 md:border-r border-stone-800 flex flex-col shrink-0 max-h-[40vh] md:max-h-full">
+			<div class="w-full md:w-72 bg-slate-950/40 border-b md:border-b-0 md:border-r border-stone-800 flex flex-col shrink-0 max-h-[40vh] md:max-h-full">
 				<div class="p-4 sm:p-6 border-b border-stone-800 bg-stone-900/30 flex justify-between items-center md:block">
 					<h3 class="text-[10px] sm:text-xs font-heading font-black text-slate-200 truncate tracking-widest uppercase">{instanceId}</h3>
 					<div class="md:mt-4 flex items-center gap-2">
-						<div class="flex items-center gap-2 px-3 py-1 bg-black border border-stone-800 text-[8px] sm:text-[10px] font-jetbrains font-black uppercase tracking-widest {stats.status === 'Running' ? 'text-emerald-500' : 'text-red-500'}">
-							<span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full {stats.status === 'Running' ? 'bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-red-500'}"></span>
+						<div class="flex items-center gap-2 px-3 py-1 bg-black/60 border border-stone-800 text-[8px] sm:text-[10px] font-jetbrains font-black uppercase tracking-widest {stats.status === 'Running' ? 'text-emerald-500' : 'text-red-500'}">
+							<span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full {stats.status === 'Running' ? 'bg-emerald-500 animate-pulse shadow-[0_0_100px_rgba(16,185,129,0.5)]' : 'bg-red-500'}"></span>
 							{stats.status}
 						</div>
 					</div>
@@ -304,7 +304,7 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 							<div class="space-y-4">
 								{#each provisioningSteps as step, i}
 									<div class="text-[11px] font-jetbrains font-bold flex items-center gap-4 transition-colors {i <= provisioningStep ? 'text-stone-300' : 'text-stone-700'}">
-										<div class="w-1.5 h-1.5 rounded-none {i < provisioningStep ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]' : i === provisioningStep ? 'bg-rust animate-pulse shadow-[0_0_10px_rgba(120,53,15,0.4)]' : 'bg-stone-800'}"></div>
+										<div class="w-1.5 h-1.5 rounded-none {i < provisioningStep ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]' : i === provisioningStep ? 'bg-rust animate-pulse shadow-[0_0_100px_rgba(120,53,15,0.4)]' : 'bg-stone-800'}"></div>
 										<span class={i < provisioningStep ? 'line-through opacity-40' : ''}>{step}</span>
 									</div>
 								{/each}
@@ -314,7 +314,7 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 				</div>
 
 				<!-- Quick Controls -->
-				<div class="p-3 sm:p-4 border-t border-stone-800 bg-black/60 shrink-0">
+				<div class="p-3 sm:p-4 border-t border-stone-800 bg-black/40 shrink-0">
 					<div class="grid grid-cols-2 gap-2">
 						<div class="col-span-2">
 							<Button 
@@ -348,9 +348,9 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 			</div>
 
 			<!-- Main Terminal/Data Area -->
-			<div class="flex-1 flex flex-col min-w-0 bg-[var(--terminal-bg)] overflow-hidden">
+			<div class="flex-1 flex flex-col min-w-0 bg-transparent overflow-hidden">
 				<!-- Navigation Tabs -->
-				<div class="flex border-b border-stone-800 bg-[var(--header-bg)] overflow-x-auto no-scrollbar shrink-0">
+				<div class="flex border-b border-stone-800 bg-slate-950/20 overflow-x-auto no-scrollbar shrink-0">
 					{#each tabs as tab}
 						<button 
 							onclick={() => activeTab = tab.id}
@@ -362,7 +362,7 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 				</div>
 
 				<!-- Content Viewport -->
-				<div class="flex-1 relative overflow-hidden flex flex-col">
+				<div class="flex-1 relative overflow-hidden flex flex-col bg-slate-900/40">
 					<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
 					
 					{#if activeTab === 'console'}

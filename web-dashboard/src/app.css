@@ -114,11 +114,15 @@ h1, h2, h3, h4, .font-heading {
 /* Modern Card Style */
 .modern-card {
   @apply rounded-2xl border border-slate-800 bg-slate-900/40 overflow-hidden shadow-lg;
+  transform: translateZ(0);
+  will-change: transform, opacity;
 }
 
 /* Navigation Links - Modern Tech */
 .nav-link-light {
-  @apply flex items-center gap-3 px-3 py-2 rounded-xl text-slate-400 transition-all duration-300;
+  @apply flex items-center gap-3 px-3 py-2 rounded-xl text-slate-400;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  will-change: background-color, color;
 }
 .nav-link-light:hover {
   @apply bg-slate-800/40 text-slate-100;
@@ -129,7 +133,9 @@ h1, h2, h3, h4, .font-heading {
 
 /* Navigation Icon Container */
 .nav-icon-container-light {
-  @apply w-9 h-9 flex items-center justify-center rounded-xl bg-slate-900/40 border border-slate-800/50 transition-all duration-300 shadow-sm;
+  @apply w-9 h-9 flex items-center justify-center rounded-xl bg-slate-900/40 border border-slate-800/50 shadow-sm;
+  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+  will-change: transform, border-color, background-color;
 }
 .nav-link-light:hover .nav-icon-container-light {
   @apply bg-slate-800 border-slate-700 text-white;
@@ -149,6 +155,10 @@ h1, h2, h3, h4, .font-heading {
 /* Button Resets & Base Styles */
 button, a {
   outline: none;
+  transition: transform 0.1s ease, opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+button:active {
+  transform: scale(0.98);
 }
 button:focus-visible, a:focus-visible {
   @apply ring-2 ring-indigo-500 ring-offset-2 ring-offset-slate-950;
@@ -156,10 +166,11 @@ button:focus-visible, a:focus-visible {
 
 /* Utility Animations */
 .animate-fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
+  animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: transform, opacity;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }

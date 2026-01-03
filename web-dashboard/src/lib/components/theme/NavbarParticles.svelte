@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import * as THREE from 'three';
+	import { lowPowerMode } from '$lib/stores.svelte';
 
 	let container: HTMLDivElement;
 	let renderer: THREE.WebGLRenderer | null = null;
@@ -9,8 +10,9 @@
 	let mesh: THREE.InstancedMesh | null = null;
 	let frameId: number | null = null;
 	let resizeObserver: ResizeObserver | null = null;
+	let isVisible = true;
 
-	const count = 300;
+	const count = 120;
 	const dummy = new THREE.Object3D();
 	
 	// Particle data
@@ -21,8 +23,8 @@
 			(Math.random() - 0.5) * 5   // Z: Depth
 		),
 		velocity: new THREE.Vector3(
-			(Math.random() - 0.5) * 0.05 + 0.05, // Drift Right
-			(Math.random() - 0.5) * 0.02,        // Slight vertical drift
+			(Math.random() - 0.5) * 0.04 + 0.04, // Drift Right
+			(Math.random() - 0.5) * 0.015,        // Slight vertical drift
 			0
 		),
 		rotation: new THREE.Vector3(
@@ -31,11 +33,11 @@
 			Math.random() * Math.PI
 		),
 		rotationSpeed: new THREE.Vector3(
-			(Math.random() - 0.5) * 0.02,
-			(Math.random() - 0.5) * 0.02,
-			(Math.random() - 0.5) * 0.02
+			(Math.random() - 0.5) * 0.015,
+			(Math.random() - 0.5) * 0.015,
+			(Math.random() - 0.5) * 0.015
 		),
-		scale: Math.random() * 0.15 + 0.05
+		scale: Math.random() * 0.12 + 0.04
 	}));
 
 	function cleanup() {
@@ -69,29 +71,32 @@
 		camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 100);
 		camera.position.z = 10;
 
-		renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+		renderer = new THREE.WebGLRenderer({ alpha: true, antialias: false, powerPreference: 'low-power' });
 		renderer.setSize(width, height);
-		renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+		renderer.setPixelRatio(1); // Force 1x resolution for performance
 		container.appendChild(renderer.domElement);
 
 		// Create irregular shard geometry
-		const geometry = new THREE.ConeGeometry(0.5, 1, 3); // Triangle shards
+		const geometry = new THREE.ConeGeometry(0.4, 0.8, 3); // Slightly smaller Triangle shards
 		const material = new THREE.MeshBasicMaterial({ 
-			color: 0x888888, 
+			color: 0x6366f1, // Tinted indigo
 			transparent: true, 
-			opacity: 0.8,
+			opacity: 0.4,
 			side: THREE.DoubleSide
 		});
 
 		mesh = new THREE.InstancedMesh(geometry, material, count);
+		mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
 		scene.add(mesh);
 
 		let lastTime = 0;
-		const targetFPS = 30; // Navbar particles can run at lower FPS
+		const targetFPS = 20; // Lower FPS for background decoration
 		const frameInterval = 1000 / targetFPS;
 
 		function animate(time: number) {
 			frameId = requestAnimationFrame(animate);
+
+			if (!isVisible || $lowPowerMode) return;
 
 			const deltaTime = time - lastTime;
 			if (deltaTime < frameInterval) return;
@@ -138,7 +143,16 @@
 
 	onMount(() => {
 		init();
-		return () => cleanup();
+		
+		const handleVisibility = () => {
+			isVisible = document.visibilityState === 'visible';
+		};
+		document.addEventListener('visibilitychange', handleVisibility);
+
+		return () => {
+			document.removeEventListener('visibilitychange', handleVisibility);
+			cleanup();
+		};
 	});
 </script>
 

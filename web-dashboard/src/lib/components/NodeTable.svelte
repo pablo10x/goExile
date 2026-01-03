@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { Node } from '$lib/stores';
-	import { serverVersions } from '$lib/stores';
+	import type { Node } from '$lib/stores.svelte';
+	import { serverVersions } from '$lib/stores.svelte';
 	import { createEventDispatcher } from 'svelte';
 	import { formatBytes } from '$lib/utils';
 	import InstanceRow from './InstanceRow.svelte';
@@ -123,6 +123,7 @@
 				: 'hover:border-blue-500/30'} shadow-2xl overflow-hidden rounded-xl"
 			onmouseenter={() => hoveredRows[node.id] = true}
 			onmouseleave={() => hoveredRows[node.id] = false}
+			role="article"
 		>
 			<!-- Hover Intelligence Overlay -->
 			<CardHoverOverlay active={hoveredRows[node.id]} />
@@ -132,16 +133,14 @@
 				class="p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-8 relative bg-slate-800/40"
 			>
 				<div class="flex items-center gap-6 flex-1 min-w-0">
-					<div 
-						class="w-16 h-16 bg-stone-950 border border-stone-800 flex items-center justify-center group-hover:border-rust transition-all duration-500 industrial-sharp shadow-xl shrink-0"
+					<button 
+						class="w-16 h-16 bg-stone-950 border border-stone-800 flex items-center justify-center group-hover:border-rust transition-all duration-500 industrial-sharp shadow-xl shrink-0 cursor-pointer"
 						onclick={() => toggleRow(node.id)}
-						role="button"
-						tabindex="0"
-						onkeydown={(e) => e.key === 'Enter' && toggleRow(node.id)}
+						aria-expanded={isExpanded}
 					>
-						<Icon name="radio" size="2rem" class="{node.status === 'Online' ? 'text-rust' : 'text-stone-700'}" />
+						<Icon name="radio" size="2rem" class={node.status === 'Online' ? 'text-rust' : 'text-stone-700'} />
 						<div class="absolute bottom-0 left-0 w-full h-1 {node.status === 'Online' ? 'bg-rust' : 'bg-stone-800'}"></div>
-					</div>
+					</button>
 
 					<div class="min-w-0 flex-1">
 							<div class="flex items-center gap-4 flex-wrap mb-2">

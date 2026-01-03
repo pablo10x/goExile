@@ -91,12 +91,13 @@
 </script>
 
 <div
-	class="group modern-card cursor-pointer font-primary relative transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1"
+	class="group modern-card cursor-pointer font-primary relative hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1"
 	onmouseenter={() => isHovered = true}
 	onmouseleave={() => isHovered = false}
 	role="button"
 	tabindex="0"
 	onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && (isHovered = !isHovered)}
+	style="transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease, border-color 0.2s ease; contain: content; will-change: transform;"
 >
 	<!-- Status Bar Accent -->
 	<div class={`absolute top-0 left-0 w-full h-1 ${colors.accent} opacity-40 group-hover:opacity-100 transition-opacity duration-500`}></div>

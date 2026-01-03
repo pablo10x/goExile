@@ -13,8 +13,8 @@
 		User
 	} from 'lucide-svelte';
 	import { slide, fade } from 'svelte/transition';
-	import type { Todo, TodoComment } from '$lib/stores';
-	import { todos } from '$lib/stores';
+	import type { Todo, TodoComment } from '$lib/stores.svelte';
+	import { todos } from '$lib/stores.svelte';
 	import TaskItem from './TaskItem.svelte';
 
 	let { todo, onToggle, onDelete, onToggleProgress } = $props<{
