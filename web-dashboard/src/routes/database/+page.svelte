@@ -201,7 +201,7 @@
 </script>
 
 <div
-	class="flex flex-col lg:flex-row h-[calc(100vh-120px)] md:h-[calc(100vh-140px)] overflow-hidden bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-xl shadow-2xl"
+	class="flex flex-col lg:flex-row h-[calc(100vh-120px)] md:h-[calc(100vh-140px)] overflow-hidden bg-slate-950/80 backdrop-blur-2xl border border-slate-800 rounded-xl shadow-2xl"
 >
 	<!-- Mobile Top Nav (Horizontal Scroll) -->
 	<div
@@ -224,7 +224,7 @@
 
 	<!-- Desktop Sidebar -->
 	<div
-		class="hidden lg:flex flex-col border-r border-slate-800 transition-all duration-500 bg-slate-900/50 {isSidebarOpen
+		class="hidden lg:flex flex-col border-r border-slate-800 transition-all duration-500 bg-slate-950/50 {isSidebarOpen
 			? 'w-64'
 			: 'w-20'}"
 	>
@@ -358,7 +358,7 @@
 							<!-- Stats Grid -->
 							<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
 								<!-- Size -->
-								<div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-6 hover:border-blue-500/30 transition-all group">
+								<div class="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-6 hover:border-blue-500/30 transition-all group shadow-lg shadow-black/20">
 									<div class="flex justify-between items-start mb-4">
 										<div class="p-2.5 bg-blue-500/10 rounded-xl text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
 											<HardDrive class="w-6 h-6" />
@@ -372,7 +372,7 @@
 								</div>
 
 								<!-- Connections -->
-								<div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-6 hover:border-emerald-500/30 transition-all group">
+								<div class="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-6 hover:border-emerald-500/30 transition-all group shadow-lg shadow-black/20">
 									<div class="flex justify-between items-start mb-4">
 										<div class="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
 											<Activity class="w-6 h-6" />
@@ -386,7 +386,7 @@
 								</div>
 
 								<!-- Uptime -->
-								<div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-6 hover:border-purple-500/30 transition-all group">
+								<div class="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-6 hover:border-purple-500/30 transition-all group shadow-lg shadow-black/20">
 									<div class="flex justify-between items-start mb-4">
 										<div class="p-2.5 bg-purple-500/10 rounded-xl text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors">
 											<Clock class="w-6 h-6" />
@@ -402,7 +402,7 @@
 								</div>
 
 								<!-- Version -->
-								<div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-6 hover:border-amber-500/30 transition-all group">
+								<div class="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-6 hover:border-amber-500/30 transition-all group shadow-lg shadow-black/20">
 									<div class="flex justify-between items-start mb-4">
 										<div class="p-2.5 bg-amber-500/10 rounded-xl text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition-colors">
 											<Server class="w-6 h-6" />
@@ -427,7 +427,7 @@
 								<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
 									<button
 										onclick={() => openTab('sql', 'SQL Editor', 'sql')}
-										class="flex items-center gap-4 p-5 bg-slate-800/30 border border-slate-700/50 rounded-xl hover:bg-slate-800 hover:border-blue-500/30 transition-all group text-left"
+										class="flex items-center gap-4 p-5 bg-slate-900/40 border border-slate-700/50 rounded-xl hover:bg-slate-800 hover:border-blue-500/30 transition-all group text-left shadow-lg shadow-black/10"
 									>
 										<div class="p-3 bg-stone-900 rounded-lg text-slate-400 group-hover:text-blue-400 group-hover:bg-blue-500/10 transition-colors">
 											<Terminal class="w-6 h-6" />
@@ -440,7 +440,7 @@
 
 									<button
 										onclick={() => openTab('functions', 'Functions', 'functions')}
-										class="flex items-center gap-4 p-5 bg-slate-800/30 border border-slate-700/50 rounded-xl hover:bg-slate-800 hover:border-purple-500/30 transition-all group text-left"
+										class="flex items-center gap-4 p-5 bg-slate-900/40 border border-slate-700/50 rounded-xl hover:bg-slate-800 hover:border-purple-500/30 transition-all group text-left shadow-lg shadow-black/10"
 									>
 										<div class="p-3 bg-stone-900 rounded-lg text-slate-400 group-hover:text-purple-400 group-hover:bg-purple-500/10 transition-colors">
 											<Code2 class="w-6 h-6" />
@@ -453,7 +453,7 @@
 
 									<button
 										onclick={() => openTab('backups', 'Backups', 'backups')}
-										class="flex items-center gap-4 p-5 bg-slate-800/30 border border-slate-700/50 rounded-xl hover:bg-slate-800 hover:border-orange-500/30 transition-all group text-left"
+										class="flex items-center gap-4 p-5 bg-slate-900/40 border border-slate-700/50 rounded-xl hover:bg-slate-800 hover:border-orange-500/30 transition-all group text-left shadow-lg shadow-black/10"
 									>
 										<div class="p-3 bg-stone-900 rounded-lg text-slate-400 group-hover:text-orange-400 group-hover:bg-orange-500/10 transition-colors">
 											<HardDrive class="w-6 h-6" />
@@ -466,7 +466,7 @@
 
 									<button
 										onclick={() => openTab('roles', 'Roles', 'roles')}
-										class="flex items-center gap-4 p-5 bg-slate-800/30 border border-slate-700/50 rounded-xl hover:bg-slate-800 hover:border-emerald-500/30 transition-all group text-left"
+										class="flex items-center gap-4 p-5 bg-slate-900/40 border border-slate-700/50 rounded-xl hover:bg-slate-800 hover:border-emerald-500/30 transition-all group text-left shadow-lg shadow-black/10"
 									>
 										<div class="p-3 bg-stone-900 rounded-lg text-slate-400 group-hover:text-emerald-400 group-hover:bg-emerald-500/10 transition-colors">
 											<Shield class="w-6 h-6" />
@@ -487,7 +487,7 @@
 										Table Statistics
 									</h2>
 									<div
-										class="bg-slate-800/30 border border-slate-700/50 rounded-2xl overflow-hidden"
+										class="bg-slate-900/40 border border-slate-700/50 rounded-2xl overflow-hidden shadow-lg shadow-black/10"
 									>
 										<div class="overflow-x-auto custom-scrollbar">
 											<table class="w-full text-left">
