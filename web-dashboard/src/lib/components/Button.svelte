@@ -46,25 +46,25 @@
 	}
 
 	// Base classes
-	const baseClasses = "inline-flex items-center justify-center transition-all focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed active:translate-y-px relative overflow-hidden group";
+	const baseClasses = "inline-flex items-center justify-center transition-all focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed active:translate-y-[2px] relative overflow-hidden group font-mono uppercase tracking-widest font-black";
 
 	// Size classes
 	const sizeClasses = {
-		xs: "text-[9px] px-3 py-1.5 gap-1.5",
-		sm: "text-[10px] px-4 py-2 gap-2",
-		md: "text-[11px] px-6 py-3 gap-2.5",
-		lg: "text-xs px-8 py-4 gap-3"
+		xs: "text-[8px] px-2.5 py-1.5 gap-1.5",
+		sm: "text-[9px] px-4 py-2 gap-2",
+		md: "text-[10px] px-6 py-3 gap-2.5",
+		lg: "text-[11px] px-8 py-4 gap-3"
 	};
 
-	// Deep Slate tech palette
+	// Industrial tech palette
 	const defaultColors = {
-		primary: "bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-500/20 border border-indigo-500/20",
-		secondary: "bg-slate-800/60 text-slate-300 border border-slate-700 hover:text-white hover:border-slate-600 hover:bg-slate-800",
-		danger: "bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-600 hover:text-white shadow-lg shadow-red-500/10",
-		success: "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 hover:bg-emerald-600 hover:text-white shadow-lg shadow-emerald-500/10",
-		warning: "bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-600 hover:text-white shadow-lg shadow-amber-500/10",
-		ghost: "bg-transparent text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/5 border border-transparent",
-		outline: "bg-transparent text-slate-300 border border-slate-700 hover:border-indigo-500/50 hover:text-indigo-400"
+		primary: "bg-rust text-white hover:bg-rust-light shadow-xl shadow-rust/20 border-2 border-rust/30",
+		secondary: "bg-slate-950 text-slate-400 border-2 border-slate-800 hover:text-white hover:border-slate-600 hover:bg-slate-900",
+		danger: "bg-red-600/10 text-red-500 border-2 border-red-600/30 hover:bg-red-600 hover:text-white shadow-xl shadow-red-600/10",
+		success: "bg-emerald-600/10 text-emerald-500 border-2 border-emerald-600/30 hover:bg-emerald-600 hover:text-white shadow-xl shadow-emerald-600/10",
+		warning: "bg-amber-600/10 text-amber-500 border-2 border-amber-600/30 hover:bg-amber-600 hover:text-white shadow-xl shadow-amber-600/10",
+		ghost: "bg-transparent text-slate-500 hover:text-rust-light hover:bg-rust/5 border-2 border-transparent",
+		outline: "bg-transparent text-slate-400 border-2 border-slate-800 hover:border-rust/50 hover:text-white"
 	};
 
 	// Loading spinner size
@@ -80,7 +80,7 @@
 	<a
 		{href}
 		{title}
-		class="{baseClasses} {sizeClasses[size]} {className} {defaultColors[variant]} rounded-lg"
+		class="{baseClasses} {sizeClasses[size]} {className} {defaultColors[variant]} rounded-sm"
 		onclick={handleClick}
 	>
 		{#if icon}
@@ -93,7 +93,7 @@
 	<button
 		{type}
 		{title}
-		class="{baseClasses} {sizeClasses[size]} {className} {defaultColors[variant]} rounded-lg"
+		class="{baseClasses} {sizeClasses[size]} {className} {defaultColors[variant]} rounded-sm"
 		{disabled}
 		aria-disabled={disabled || loading}
 		onclick={handleClick}

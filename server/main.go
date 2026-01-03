@@ -194,6 +194,9 @@ func run() error {
 			if err := database.InitPlayerSystem(database.DBConn); err != nil {
 				log.Printf("Failed to init player system: %v", err)
 			}
+
+			// Initialize GlobalStats from DB
+			registry.GlobalStats.InitializeStats(database.DBConn)
 		}
 
 		// Initialize Read-Only Database (Optional but recommended)
@@ -453,6 +456,9 @@ func run() error {
 		router.Handle("/api/logs/counts", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.GetSystemLogCountsHandler))).Methods("GET")
 		router.Handle("/api/logs", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ClearSystemLogsHandler))).Methods("DELETE")
 		router.Handle("/api/logs/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.DeleteSystemLogHandler))).Methods("DELETE")
+
+		// Fleet Management
+		router.Handle("/api/instances", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ListAllInstances))).Methods("GET")
 
 		// RedEye Security System
 		router.Handle("/api/redeye/stats", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.GetRedEyeStatsHandler))).Methods("GET")

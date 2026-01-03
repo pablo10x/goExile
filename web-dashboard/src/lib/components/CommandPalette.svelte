@@ -6,17 +6,43 @@
 	import { 
 		Search, Terminal, Gauge, Activity, 
 		Shield, FileText, Database, 
-		RefreshCw, Cpu, X
+		RefreshCw, Cpu, X, Box, Download
 	} from 'lucide-svelte';
-	import { notifications } from '$lib/stores.svelte';
+	import { notifications, sysState, lowPowerMode } from '$lib/stores.svelte';
 
 	let { isOpen = $bindable(false) } = $props<{ isOpen: boolean }>();
 
 	let query = $state('');
 	let selectedIndex = $state(0);
 	let inputElement = $state<HTMLInputElement>();
+	let instances = $state<any[]>([]);
 
-	const actions = [
+	async function fetchInstances() {
+		try {
+			const res = await fetch('/api/instances');
+			if (res.ok) {
+				const data = await res.json();
+				let flat: any[] = [];
+				data.forEach((node: any) => {
+					if (node.instances) {
+						node.instances.forEach((inst: any) => {
+							flat.push({
+								id: inst.id,
+								node_id: node.node_id,
+								node_name: node.node_name,
+								status: inst.status
+							});
+						});
+					}
+				});
+				instances = flat;
+			}
+		} catch (e) {
+			console.error(e);
+		}
+	}
+
+	const baseActions = [
 		{ id: 'dash', label: 'Go to Dashboard', icon: Gauge, category: 'Navigation', shortcut: 'G D', action: () => goto('/dashboard') },
 		{ id: 'perf', label: 'System Performance', icon: Activity, category: 'Navigation', shortcut: 'G P', action: () => goto('/performance') },
 		{ id: 'logs', label: 'Kernel Logs', icon: FileText, category: 'Navigation', shortcut: 'G L', action: () => goto('/logs') },
@@ -28,12 +54,41 @@
 		{ id: 'help', label: 'Documentation', icon: Shield, category: 'Support', shortcut: '?', action: () => window.open('https://github.com', '_blank') }
 	];
 
-	let filteredActions = $derived(
-		actions.filter(a => 
-			a.label.toLowerCase().includes(query.toLowerCase()) || 
-			a.category.toLowerCase().includes(query.toLowerCase())
-		)
-	);
+	const systemActions = [
+		{ id: 'gc', label: 'Trigger Garbage Collection', icon: RefreshCw, category: 'Action', shortcut: '', action: () => sysState.triggerGC() },
+		{ id: 'export-cfg', label: 'Export Server Configuration', icon: Download, category: 'Action', shortcut: '', action: () => sysState.exportConfig() },
+		{ id: 'backup-db', label: 'Backup Database (Snapshot)', icon: Database, category: 'Action', shortcut: '', action: () => sysState.backupDatabase() },
+		{ id: 'dl-binary', label: 'Download Game Server Binary', icon: Box, category: 'Action', shortcut: '', action: () => sysState.downloadGameServer() },
+		{ id: 'eco-toggle', label: 'Toggle Eco Mode (Low Power)', icon: Box, category: 'Action', shortcut: '', action: () => lowPowerMode.update(v => !v) }
+	];
+
+	let filteredActions = $derived.by(() => {
+		const q = query.toLowerCase();
+		
+		if (q.startsWith('>')) {
+			const subQ = q.slice(1).trim();
+			return systemActions.filter(a => 
+				a.label.toLowerCase().includes(subQ)
+			);
+		}
+
+		const instanceActions = instances.map(i => ({
+			id: `inst-${i.id}`,
+			label: `Open Console: ${i.id.split('-').pop()}`,
+			icon: Box,
+			category: 'Instances',
+			shortcut: '',
+			action: () => sysState.openConsole(i.node_id, i.id)
+		}));
+
+		const all = [...baseActions, ...instanceActions];
+		
+		return all.filter(a => 
+			a.label.toLowerCase().includes(q) || 
+			a.category.toLowerCase().includes(q) ||
+			(a.category === 'Instances' && q.length > 0)
+		).slice(0, 10);
+	});
 
 	function triggerRestart() {
 		if (confirm('Initiate system reboot sequence?')) {
@@ -68,6 +123,7 @@
 
 	$effect(() => {
 		if (isOpen) {
+			fetchInstances();
 			tick().then(() => inputElement?.focus());
 		}
 	});

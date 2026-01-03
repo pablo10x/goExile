@@ -1341,7 +1341,7 @@ func SeedDefaultConfig(db *sqlx.DB) error {
 		},
 		{
 			Key:             "site.settings",
-			Value:           `{"site_name":"EXILE","version_tag":"v0.9.4-PROTOTYPE","aesthetic":{"crt_effect":true,"scanlines_opacity":0.05,"noise_opacity":0.03,"industrial_styling":true,"glassmorphism":true,"glow_effects":true,"animations_enabled":true,"topology_blobs":true,"card_alpha":0.4,"backdrop_blur":16},"performance":{"high_quality_smoke":false,"particle_density":0.5,"low_power_mode":false},"site_notice":{"enabled":false,"message":"SYSTEM MAINTENANCE SCHEDULED FOR 0200 HOURS","type":"info"}}`,
+			Value:           `{"site_name":"EXILE","version_tag":"v0.9.4-PROTOTYPE","aesthetic":{"industrial_styling":true,"glassmorphism":true,"glow_effects":true,"animations_enabled":true,"card_alpha":0.4,"backdrop_blur":16},"performance":{"low_power_mode":false},"site_notice":{"enabled":false,"message":"SYSTEM MAINTENANCE SCHEDULED FOR 0200 HOURS","type":"info"}}`,
 			Type:            "json",
 			Category:        "aesthetic",
 			Description:     "Site-wide aesthetic and performance settings",
@@ -1351,7 +1351,7 @@ func SeedDefaultConfig(db *sqlx.DB) error {
 		},
 		{
 			Key:             "site.background_config",
-			Value:           `{"show_smoke":true,"show_rain":true,"show_clouds":true,"show_vignette":true,"show_navbar_particles":true,"rain_opacity":0.2,"clouds_opacity":0.3,"global_type":"digital_stream","card_hover_effect":true,"settings":{"digital_stream":{"speed":1,"color":"#f97316"},"circuit_grid":{"speed":1,"color":"#f97316"},"neon_pulse":{"speed":1,"color":"#f97316"},"noise_static":{"speed":1,"color":"#f97316"},"glass_refraction":{"speed":1,"color":"#f97316"},"cyber_scan":{"speed":1,"color":"#f97316"},"vector_wave":{"speed":1,"color":"#f97316"}}}`,
+			Value:           `{"global_type":"digital_stream","show_global_background":true,"show_navbar_particles":true}`,
 			Type:            "json",
 			Category:        "aesthetic",
 			Description:     "Site-wide background animation settings",

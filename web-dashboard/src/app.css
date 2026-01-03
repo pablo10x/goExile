@@ -12,6 +12,9 @@
   --color-brand-dark: #4338ca; /* Indigo 700 */
   
   --color-accent: #f59e0b; /* Amber 500 */
+  --color-rust: #c2410c; /* Orange 700 */
+  --color-rust-light: #f97316; /* Orange 500 */
+  --color-danger: #ef4444; /* Red 500 */
   
   /* Backgrounds */
   --color-bg-core: #020617; /* Slate 950 */
@@ -22,11 +25,13 @@
   --radius-lg: 0.5rem;
   --radius-xl: 0.75rem;
   --radius-2xl: 1rem;
+  --radius-industrial: 0.125rem;
 
   /* Animation Utilities */
   --animate-float: float 6s ease-in-out infinite;
   --animate-pulse-soft: pulse-soft 3s ease-in-out infinite;
   --animate-glow: glow 2s ease-in-out infinite alternate;
+  --animate-flicker: flicker 0.1s infinite;
 
   @keyframes float {
     0%, 100% { transform: translateY(0); }
@@ -41,6 +46,11 @@
   @keyframes glow {
     from { box-shadow: 0 0 5px currentColor; }
     to { box-shadow: 0 0 20px currentColor, 0 0 10px currentColor; }
+  }
+
+  @keyframes flicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
   }
 }
 
@@ -57,7 +67,7 @@
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #c2410c;
 }
 
 :root {
@@ -72,6 +82,9 @@
   
   --border-color: #1e293b; /* Slate 800 */
   --border-highlight: #334155; /* Slate 700 */
+  
+  --color-rust: #c2410c;
+  --color-rust-light: #f97316;
   
   /* Layout */
   --sidebar-width: 260px;
@@ -92,18 +105,51 @@ body {
   font-family: var(--font-body);
   color: var(--text-primary);
   line-height: 1.6;
-  @apply font-body selection:bg-indigo-500/30 selection:text-white antialiased;
+  @apply font-body selection:bg-rust selection:text-white antialiased;
   min-height: 100vh;
 }
 
 h1, h2, h3, h4, .font-heading {
   font-family: var(--font-heading);
   letter-spacing: -0.02em;
+  @apply font-bold;
 }
 
 /* Glassmorphism Utilities */
 .glass-panel {
   @apply bg-slate-900/60 backdrop-blur-md border border-slate-800 shadow-xl;
+}
+
+/* 30% Industrial Utilities */
+.industrial-sharp {
+  @apply rounded-sm;
+}
+
+.industrial-frame {
+  @apply border-2 border-slate-800 bg-slate-950/40;
+}
+
+.tactical-label {
+  @apply font-mono text-[10px] font-black uppercase tracking-widest text-slate-500;
+}
+
+.tactical-code {
+  @apply font-mono text-xs text-rust-light bg-black/40 px-1.5 py-0.5 border border-rust/20;
+}
+
+/* Corner Brackets for Industrial Feel */
+.corner-bracket-tl {
+  @apply absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-rust/40 pointer-events-none;
+}
+.corner-bracket-br {
+  @apply absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-rust/40 pointer-events-none;
+}
+
+/* Scanline Effect */
+.scanline-overlay {
+  @apply pointer-events-none fixed inset-0 z-[1000] opacity-[0.03];
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  background-size: 100% 4px, 3px 100%;
 }
 
 .glass-panel-hover:hover {
@@ -113,35 +159,33 @@ h1, h2, h3, h4, .font-heading {
 
 /* Modern Card Style */
 .modern-card {
-  @apply rounded-2xl border border-slate-800 bg-slate-900/40 overflow-hidden shadow-lg;
+  @apply rounded-xl border-2 border-slate-800/50 bg-slate-900/40 overflow-hidden shadow-lg;
   transform: translateZ(0);
   will-change: transform, opacity;
 }
 
-/* Navigation Links - Modern Tech */
+/* Navigation Links - Modern Tech with Industrial Touch */
 .nav-link-light {
-  @apply flex items-center gap-3 px-3 py-2 rounded-xl text-slate-400;
-  transition: background-color 0.2s ease, color 0.2s ease;
-  will-change: background-color, color;
+  @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 font-mono text-[11px] uppercase tracking-wider;
+  transition: all 0.2s ease;
 }
 .nav-link-light:hover {
-  @apply bg-slate-800/40 text-slate-100;
+  @apply bg-slate-800/40 text-slate-100 translate-x-1;
 }
 .nav-link-light.active {
-  @apply bg-indigo-500/10 text-indigo-400 font-bold;
+  @apply bg-rust/10 text-rust-light font-black border-l-2 border-rust;
 }
 
 /* Navigation Icon Container */
 .nav-icon-container-light {
-  @apply w-9 h-9 flex items-center justify-center rounded-xl bg-slate-900/40 border border-slate-800/50 shadow-sm;
-  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
-  will-change: transform, border-color, background-color;
+  @apply w-8 h-8 flex items-center justify-center rounded bg-slate-950 border border-slate-800 shadow-inner;
+  transition: all 0.2s ease;
 }
 .nav-link-light:hover .nav-icon-container-light {
-  @apply bg-slate-800 border-slate-700 text-white;
+  @apply bg-slate-900 border-rust/30 text-rust-light;
 }
 .nav-link-light.active .nav-icon-container-light {
-  @apply bg-indigo-500/20 border-indigo-500/30 text-indigo-400 shadow-sm;
+  @apply bg-rust/20 border-rust/40 text-rust shadow-[0_0_10px_rgba(194,65,12,0.2)];
 }
 
 /* Typography Helpers */

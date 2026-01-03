@@ -6,6 +6,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jmoiron/sqlx"
+
 	"exile/server/database"
 )
 
@@ -268,6 +270,27 @@ func (ds *DashboardStats) SetDBConnected(connected bool) {
 	ds.Mu.Lock()
 	defer ds.Mu.Unlock()
 	ds.DBConnected = connected
+}
+
+// InitializeStats loads persistent counts from the database.
+func (ds *DashboardStats) InitializeStats(db *sqlx.DB) {
+	if db == nil {
+		return
+	}
+
+	var count int64
+	// Only count 'Internal' errors as per existing logic
+	err := db.Get(&count, "SELECT COUNT(*) FROM system_logs WHERE category = 'Internal'")
+	if err == nil {
+		ds.Mu.Lock()
+		ds.TotalErrors = count
+		ds.Mu.Unlock()
+	}
+}
+
+// RecalculateErrorCount forces a recount of errors from the database.
+func (ds *DashboardStats) RecalculateErrorCount(db *sqlx.DB) {
+	ds.InitializeStats(db)
 }
 
 // ANSI color codes for terminal styling

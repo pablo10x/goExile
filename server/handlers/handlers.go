@@ -880,6 +880,69 @@ func DeleteNodeBackup(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp.Data)
 }
 
+// ListAllInstances fetches active game instances from all nodes concurrently.
+func ListAllInstances(w http.ResponseWriter, r *http.Request) {
+	nodes := registry.GlobalRegistry.All()
+	
+	type nodeResult struct {
+		NodeID    int           `json:"node_id"`
+		NodeName  string        `json:"node_name"`
+		Instances []interface{} `json:"instances"`
+		Error     string        `json:"error,omitempty"`
+	}
+
+	results := make([]nodeResult, len(nodes))
+	
+	// Use a WaitGroup to fetch from all nodes concurrently
+	type asyncResult struct {
+		index int
+		res   nodeResult
+	}
+	resultChan := make(chan asyncResult, len(nodes))
+
+	for i, node := range nodes {
+		go func(idx int, n *models.Node) {
+			res := nodeResult{
+				NodeID:   n.ID,
+				NodeName: n.Name,
+			}
+
+			if n.Status != "Online" {
+				res.Instances = []interface{}{}
+				resultChan <- asyncResult{idx, res}
+				return
+			}
+
+			resp, err := ws.GlobalWSManager.SendCommandSync(n.ID, "list_instances", nil, 5*time.Second)
+			if err != nil {
+				res.Error = fmt.Sprintf("failed to contact node: %v", err)
+				res.Instances = []interface{}{}
+			} else if resp.Status == "error" {
+				res.Error = resp.Error
+				res.Instances = []interface{}{}
+			} else {
+				var data struct {
+					Instances []interface{} `json:"instances"`
+				}
+				if err := json.Unmarshal(resp.Data, &data); err != nil {
+					res.Error = "failed to parse node response"
+					res.Instances = []interface{}{}
+				} else {
+					res.Instances = data.Instances
+				}
+			}
+			resultChan <- asyncResult{idx, res}
+		}(i, node)
+	}
+
+	for i := 0; i < len(nodes); i++ {
+		ar := <-resultChan
+		results[ar.index] = ar.res
+	}
+
+	utils.WriteJSON(w, http.StatusOK, results)
+}
+
 // Health is a lightweight liveness endpoint.
 func Health(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, map[string]string{"status": "healthy"})

@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"exile/server/database"
+	"exile/server/registry"
 	"exile/server/utils"
 
 	"github.com/gorilla/mux"
@@ -85,6 +86,9 @@ func DeleteSystemLogHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Sync dashboard counter
+	registry.GlobalStats.RecalculateErrorCount(database.DBConn)
+
 	utils.WriteJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
 }
 
@@ -99,6 +103,9 @@ func ClearSystemLogsHandler(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, r, http.StatusInternalServerError, err.Error())
 		return
 	}
+
+	// Also reset in-memory counters to keep dashboard in sync
+	registry.GlobalStats.ClearErrors()
 
 	utils.WriteJSON(w, http.StatusOK, map[string]string{"status": "cleared"})
 }

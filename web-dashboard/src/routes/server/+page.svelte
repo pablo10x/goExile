@@ -7,12 +7,14 @@
 	import LogViewer from '$lib/components/LogViewer.svelte';
 	import InstanceManagerModal from '$lib/components/InstanceManagerModal.svelte';
 	import AddNodeModal from '$lib/components/AddNodeModal.svelte';
+	import FleetCommander from '$lib/components/server/FleetCommander.svelte';
 	import { setContext } from 'svelte';
-	import { History, Package, Upload, Play, Trash2, CheckCircle, Clock, RefreshCw, ArrowDownToLine, ArrowDown, ArrowUp, AlertCircle, HardDrive, Activity, Search, Cpu, List, Plus, Server } from 'lucide-svelte';
+	import { History, Package, Upload, Play, Trash2, CheckCircle, Clock, RefreshCw, ArrowDownToLine, ArrowDown, ArrowUp, AlertCircle, HardDrive, Activity, Search, Cpu, List, Plus, Server, LayoutGrid, LayoutList } from 'lucide-svelte';
 	import Icon from '$lib/components/theme/Icon.svelte';
 	import { fade } from 'svelte/transition';
 
 	let activeTab = $state('fleet');
+	let viewMode = $state<'nodes' | 'fleet'>('fleet');
 	let isDragging = $state(false);
 	let dragCounter = 0;
 
@@ -526,55 +528,86 @@
 
 	{#if activeTab === 'fleet'}
 		<div in:fade={{ duration: 200 }} class="space-y-8">
-			<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-				<div class="bg-stone-900/40 border border-stone-800 p-6 industrial-frame shadow-xl">
-					<div class="flex justify-between items-center mb-4">
-						<span class="text-[10px] font-black text-text-dim uppercase tracking-widest">Nodes Active</span>
-						<Server class="w-4 h-4 text-rust" />
+			<div class="flex flex-col md:flex-row justify-between items-end gap-6">
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 w-full">
+					<div class="bg-stone-900/40 border border-stone-800 p-6 industrial-frame shadow-xl">
+						<div class="flex justify-between items-center mb-4">
+							<span class="text-[10px] font-black text-text-dim uppercase tracking-widest">Nodes Active</span>
+							<Server class="w-4 h-4 text-rust" />
+						</div>
+						<div class="text-4xl font-heading font-black text-white tracking-tighter">{$stats.active_nodes}</div>
 					</div>
-					<div class="text-4xl font-heading font-black text-white tracking-tighter">{$stats.active_nodes}</div>
+					<div class="bg-stone-900/40 border border-stone-800 p-6 industrial-frame shadow-xl">
+						<div class="flex justify-between items-center mb-4">
+							<span class="text-[10px] font-black text-text-dim uppercase tracking-widest">Total Instances</span>
+							<Activity class="w-4 h-4 text-success" />
+						</div>
+						<div class="text-4xl font-heading font-black text-white tracking-tighter">{$nodes.reduce((acc, s) => acc + s.current_instances, 0)}</div>
+					</div>
+					<div class="bg-stone-900/40 border border-stone-800 p-6 industrial-frame shadow-xl">
+						<div class="flex justify-between items-center mb-4">
+							<span class="text-[10px] font-black text-text-dim uppercase tracking-widest">Capacity Used</span>
+							<HardDrive class="w-4 h-4 text-warning" />
+						</div>
+						<div class="text-4xl font-heading font-black text-white tracking-tighter">
+							{Math.round(($nodes.reduce((acc, s) => acc + s.current_instances, 0) / ($nodes.reduce((acc, s) => acc + s.max_instances, 0) || 1)) * 100)}%
+						</div>
+					</div>
 				</div>
-				<div class="bg-stone-900/40 border border-stone-800 p-6 industrial-frame shadow-xl">
-					<div class="flex justify-between items-center mb-4">
-						<span class="text-[10px] font-black text-text-dim uppercase tracking-widest">Total Instances</span>
-						<Activity class="w-4 h-4 text-success" />
-					</div>
-					<div class="text-4xl font-heading font-black text-white tracking-tighter">{$nodes.reduce((acc, s) => acc + s.current_instances, 0)}</div>
-				</div>
-				<div class="bg-stone-900/40 border border-stone-800 p-6 industrial-frame shadow-xl">
-					<div class="flex justify-between items-center mb-4">
-						<span class="text-[10px] font-black text-text-dim uppercase tracking-widest">Capacity Used</span>
-						<HardDrive class="w-4 h-4 text-warning" />
-					</div>
-					<div class="text-4xl font-heading font-black text-white tracking-tighter">
-						{Math.round(($nodes.reduce((acc, s) => acc + s.current_instances, 0) / ($nodes.reduce((acc, s) => acc + s.max_instances, 0) || 1)) * 100)}%
-					</div>
+
+				<!-- View Switcher -->
+				<div class="flex bg-slate-950 border border-slate-800 p-1 rounded-xl shadow-inner">
+					<button 
+						onclick={() => viewMode = 'fleet'}
+						class="flex items-center gap-2 px-4 py-2 rounded-lg transition-all {viewMode === 'fleet' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}"
+					>
+						<LayoutList class="w-4 h-4" />
+						<span class="text-[10px] font-black uppercase tracking-widest">Tactical_Stream</span>
+					</button>
+					<button 
+						onclick={() => viewMode = 'nodes'}
+						class="flex items-center gap-2 px-4 py-2 rounded-lg transition-all {viewMode === 'nodes' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}"
+					>
+						<LayoutGrid class="w-4 h-4" />
+						<span class="text-[10px] font-black uppercase tracking-widest">Node_Clusters</span>
+					</button>
 				</div>
 			</div>
 
-			<div class="modern-industrial-card glass-panel !rounded-none overflow-hidden border-stone-800 shadow-2xl">
-				<NodeTable
-					bind:this={nodeTableComponent}
-					nodes={$nodes}
-					on:spawn={handleSpawn}
-					on:viewLogs={handleViewLogs}
-					on:tail={handleTail}
-					on:startInstanceRequest={(e) => openInstanceActionDialog('start', e.detail.nodeId, e.detail.instanceId, 'Start Instance', `Initialize execution of ${e.detail.instanceId}?`, 'Confirm Start')}
-					on:stopInstanceRequest={(e) => openInstanceActionDialog('stop', e.detail.nodeId, e.detail.instanceId, 'Stop Instance', `Terminate execution of ${e.detail.instanceId}?`, 'Confirm Stop')}
-					on:restartInstanceRequest={(e) => openInstanceActionDialog('restart', e.detail.nodeId, e.detail.instanceId, 'Restart Instance', `Reboot instance ${e.detail.instanceId}?`, 'Confirm Restart')}
-					on:deleteInstanceRequest={(e) => openInstanceActionDialog('delete', e.detail.nodeId, e.detail.instanceId, 'Delete Instance', `Permanently purge ${e.detail.instanceId}?`, 'Confirm Purge')}
-					on:updateInstanceRequest={(e) => openInstanceActionDialog('update', e.detail.nodeId, e.detail.instanceId, 'Update Instance', `Reinstall build for ${e.detail.instanceId}?`, 'Confirm Update')}
-					on:bulkInstanceActionRequest={(e) => {
-						instanceActionType = `bulk_${e.detail.action}`;
-						instanceActionNodeId = e.detail.nodeId;
-						instanceActionBulkIds = e.detail.instanceIds;
-						instanceActionDialogTitle = 'Bulk Operation';
-						instanceActionDialogMessage = `Execute ${e.detail.action} on ${e.detail.instanceIds.length} instances?`;
-						instanceActionConfirmText = 'Confirm Bulk';
-						isInstanceActionDialogOpen = true;
-					}}
-				/>
-			</div>
+			{#if viewMode === 'fleet'}
+				<div in:fade>
+					<FleetCommander 
+						on:tail={handleTail}
+						on:start={(e) => openInstanceActionDialog('start', e.detail.nodeId, e.detail.instanceId, 'Start Instance', `Initialize execution of ${e.detail.instanceId}?`, 'Confirm Start')}
+						on:stop={(e) => openInstanceActionDialog('stop', e.detail.nodeId, e.detail.instanceId, 'Stop Instance', `Terminate execution of ${e.detail.instanceId}?`, 'Confirm Stop')}
+						on:restart={(e) => openInstanceActionDialog('restart', e.detail.nodeId, e.detail.instanceId, 'Restart Instance', `Reboot instance ${e.detail.instanceId}?`, 'Confirm Restart')}
+					/>
+				</div>
+			{:else}
+				<div class="modern-industrial-card glass-panel !rounded-none overflow-hidden border-stone-800 shadow-2xl">
+					<NodeTable
+						bind:this={nodeTableComponent}
+						nodes={$nodes}
+						on:spawn={handleSpawn}
+						on:viewLogs={handleViewLogs}
+						on:tail={handleTail}
+						on:startInstanceRequest={(e) => openInstanceActionDialog('start', e.detail.nodeId, e.detail.instanceId, 'Start Instance', `Initialize execution of ${e.detail.instanceId}?`, 'Confirm Start')}
+						on:stopInstanceRequest={(e) => openInstanceActionDialog('stop', e.detail.nodeId, e.detail.instanceId, 'Stop Instance', `Terminate execution of ${e.detail.instanceId}?`, 'Confirm Stop')}
+						on:restartInstanceRequest={(e) => openInstanceActionDialog('restart', e.detail.nodeId, e.detail.instanceId, 'Restart Instance', `Reboot instance ${e.detail.instanceId}?`, 'Confirm Restart')}
+						on:deleteInstanceRequest={(e) => openInstanceActionDialog('delete', e.detail.nodeId, e.detail.instanceId, 'Delete Instance', `Permanently purge ${e.detail.instanceId}?`, 'Confirm Purge')}
+						on:updateInstanceRequest={(e) => openInstanceActionDialog('update', e.detail.nodeId, e.detail.instanceId, 'Update Instance', `Reinstall build for ${e.detail.instanceId}?`, 'Confirm Update')}
+						on:bulkInstanceActionRequest={(e) => {
+							instanceActionType = `bulk_${e.detail.action}`;
+							instanceActionNodeId = e.detail.nodeId;
+							instanceActionBulkIds = e.detail.instanceIds;
+							instanceActionDialogTitle = 'Bulk Operation';
+							instanceActionDialogMessage = `Execute ${e.detail.action} on ${e.detail.instanceIds.length} instances?`;
+							instanceActionConfirmText = 'Confirm Bulk';
+							isInstanceActionDialogOpen = true;
+						}}
+					/>
+				</div>
+			{/if}
 		</div>
 	{:else if activeTab === 'upload'}
 		<div class="grid xl:grid-cols-12 gap-8 items-start">

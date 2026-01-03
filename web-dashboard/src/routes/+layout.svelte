@@ -21,7 +21,8 @@
 		isAuthenticated,
 		notes,
 		restartRequired,
-		lowPowerMode
+		lowPowerMode,
+		sysState
 	} from '$lib/stores.svelte';
 	import type { Note } from '$lib/stores.svelte';
 	import {
@@ -74,11 +75,14 @@
 	import Icon from '$lib/components/theme/Icon.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import CommandPalette from '$lib/components/CommandPalette.svelte';
+	import InstanceManagerModal from '$lib/components/InstanceManagerModal.svelte';
+	import ShortcutHelpModal from '$lib/components/ShortcutHelpModal.svelte';
 
 	let { children, data } = $props();
 	let isChecking = $state(true);
 	let restarting = $state(false);
 	let isCommandPaletteOpen = $state(false);
+	let isShortcutHelpOpen = $state(false);
 	let eventSource: EventSource | null = null;
 
 	let localBackgroundConfig = $derived($backgroundConfig);
@@ -354,59 +358,6 @@
 		showQuickActions.update((v) => !v);
 	}
 
-	async function handleForceGC() {
-		try {
-			await fetch('/api/metrics/gc', { method: 'POST' });
-			notifications.add({ type: 'success', message: 'Garbage Collection triggered' });
-		} catch (e) {
-			console.error(e);
-		}
-	}
-
-	async function handleExportConfig() {
-		try {
-			const res = await fetch('/api/config');
-			const data = await res.json();
-			const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-			const url = window.URL.createObjectURL(blob);
-			const a = document.createElement('a');
-			a.href = url;
-			a.download = `server_config_${new Date().toISOString().split('T')[0]}.json`;
-			document.body.appendChild(a);
-			a.click();
-			document.body.removeChild(a);
-			window.URL.revokeObjectURL(url);
-			notifications.add({ type: 'success', message: 'Configuration exported' });
-		} catch (e) {
-			console.error(e);
-			notifications.add({ type: 'error', message: 'Failed to export configuration' });
-		}
-	}
-
-	function handleDownloadFiles() {
-		// Trigger download of game_server.zip
-		const link = document.createElement('a');
-		link.href = '/api/nodes/download';
-		link.download = 'game_server.zip';
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
-		notifications.add({ type: 'info', message: 'Download started' });
-	}
-
-	async function handleBackupDB() {
-		try {
-			const res = await fetch('/api/database/backup', { method: 'POST' });
-			if (res.ok) {
-				notifications.add({ type: 'success', message: 'Database backup started' });
-			} else {
-				notifications.add({ type: 'error', message: 'Failed to start backup' });
-			}
-		} catch (e) {
-			console.error(e);
-			notifications.add({ type: 'error', message: 'Backup request failed' });
-		}
-	}
 	onMount(() => {
 		let rafId: number;
 		const handleMouseMove = (e: MouseEvent) => {
@@ -426,47 +377,60 @@
 
 {#if isChecking}
 	<div
-		class="flex items-center justify-center min-h-screen bg-terminal"
+		class="flex items-center justify-center min-h-screen bg-slate-950"
 	>
 		<div class="relative">
 			<div
-				class="animate-spin rounded-full h-16 w-16 border-4 border-stone-800 border-t-rust shadow-2xl"
+				class="animate-spin h-16 w-16 border-4 border-slate-900 border-t-rust shadow-[0_0_20px_rgba(194,65,12,0.3)]"
 			></div>
 			<div
-				class="absolute inset-0 rounded-full bg-rust/20 blur-xl animate-pulse"
+				class="absolute inset-0 bg-rust/10 blur-2xl animate-pulse"
 			></div>
 		</div>
 	</div>
 {:else}
 				{#if $isAuthenticated && page.url.pathname !== '/login'}
-					<div class="relative min-h-screen">
-						<!-- Solid Background Layer -->					<div class="fixed inset-0 z-[-100] bg-slate-950"></div>
+					<div class="relative min-h-screen selection:bg-rust selection:text-white">
+						<!-- Global Scanline Overlay -->
+						<div class="scanline-overlay"></div>
+
+						<!-- Solid Background Layer -->
+						<div class="fixed inset-0 z-[-100] bg-slate-950"></div>
 		
 					<!-- System Status Bar -->
-					<div class="fixed top-0 left-0 right-0 h-6 bg-slate-900/90 border-b border-slate-800 z-[120] flex items-center px-4 overflow-hidden shadow-sm backdrop-blur-md">
+					<div class="fixed top-0 left-0 right-0 h-6 bg-slate-900 border-b-2 border-slate-800 z-[120] flex items-center px-4 overflow-hidden shadow-sm backdrop-blur-md">
 						<div class="flex items-center gap-8 whitespace-nowrap w-full">
 							<div class="flex items-center gap-2 shrink-0">
-								<div class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
-								<span class="font-bold text-[9px] text-indigo-400 uppercase tracking-widest">[SYSTEM_CONNECTED]</span>
+								<div class="w-1.5 h-1.5 bg-rust animate-pulse shadow-[0_0_8px_#c2410c]"></div>
+								<span class="font-mono font-black text-[9px] text-rust-light uppercase tracking-widest">[KERNEL_UPLINK_ESTABLISHED]</span>
 							</div>
-							<div class="flex items-center gap-6 text-slate-500 font-medium text-[8px] uppercase tracking-wider">
-								<span>Network: <span class="text-slate-400">{$connectionStatus}</span></span>
-								<span>Active Nodes: <span class="text-slate-400">{$stats.active_nodes}</span></span>
-								<span class="hidden sm:inline">Health: <span class="text-emerald-500 font-bold">Optimal</span></span>
-								<span>Local Time: <span class="text-slate-400 tracking-tighter">{new Date().toLocaleTimeString([], { hour12: false })}</span></span>
+							<div class="flex items-center gap-6 text-slate-500 font-mono font-black text-[8px] uppercase tracking-[0.2em]">
+								<span>Network: <span class="text-slate-300">{$connectionStatus}</span></span>
+								<span>Fleet: <span class="text-slate-300">{$stats.active_nodes}</span></span>
+								<span class="hidden sm:inline">Entropy: <span class="text-emerald-500">Optimal</span></span>
+								<span>Cycle: <span class="text-slate-300">{new Date().toLocaleTimeString([], { hour12: false })}</span></span>
 							</div>
 							<div class="ml-auto flex items-center gap-4 shrink-0">
-								<span class="text-[8px] text-indigo-500/60 font-bold hidden md:inline">ENCRYPTION: AES_256</span>
+								<button 
+									onclick={() => isShortcutHelpOpen = true}
+									class="flex items-center gap-1.5 text-[8px] font-black text-slate-500 hover:text-rust-light transition-colors uppercase tracking-widest font-mono"
+									title="Keyboard Shortcuts"
+								>
+									<Icon name="ph:question-bold" size="0.7rem" />
+									<span>Shortcuts</span>
+								</button>
+								<div class="w-[1px] h-3 bg-slate-800"></div>
+								<span class="text-[8px] text-rust/60 font-black hidden md:inline font-mono tracking-widest">AES_256_ACTIVE</span>
 								<div class="w-[1px] h-3 bg-slate-800"></div>
 								<div class="flex gap-1">
-									{#each [1,2,3] as i}<div class="w-1 h-1 bg-slate-800 rounded-full"></div>{/each}
+									{#each [1,2,3] as i}<div class="w-1 h-1 bg-slate-800"></div>{/each}
 								</div>
 							</div>
 						</div>
 					</div>
 		
 											<!-- Background/Atmospheric Overlays (Lower Z-Index) -->
-											<div class="fixed inset-0 z-[-50] pointer-events-none overflow-hidden opacity-30 grayscale mix-blend-screen">
+											<div class="fixed inset-0 z-[-50] pointer-events-none overflow-hidden opacity-20 grayscale">
 												<MotherboardBackground />
 											</div>		
 					
@@ -478,87 +442,25 @@
 								>			<!-- Global Restart Banner -->
 			{#if $restartRequired}
 				<div
-					class="absolute top-0 md:left-64 left-0 right-0 z-50 bg-gradient-to-r from-orange-600/95 via-amber-600/95 to-orange-600/95 backdrop-blur-md text-white px-4 py-2.5 flex justify-between items-center shadow-2xl border-b-2 border-orange-400/50 animate-slide-fade text-xs md:text-sm"
+					class="absolute top-0 md:left-64 left-0 right-0 z-50 bg-rust text-white px-4 py-3 flex justify-between items-center shadow-2xl border-b-2 border-rust-light/50 animate-slide-fade text-xs md:text-sm industrial-frame"
 				>
-					<div class="flex items-center gap-3">
-						<div class="relative">
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								class="w-5 h-5 shrink-0 animate-bounce"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							>
-								<path
-									d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
-								></path>
-								<line x1="12" y1="9" x2="12" y2="13"></line>
-								<line x1="12" y1="17" x2="12.01" y2="17"></line>
-							</svg>
-							<div
-								class="absolute inset-0 bg-yellow-300/30 rounded-full blur-md animate-pulse"
-							></div>
-						</div>
-						<span class="font-semibold truncate">⚡ Server restart required to apply changes</span>
+					<div class="flex items-center gap-4">
+						<AlertCircle class="w-5 h-5 shrink-0 animate-flicker" />
+						<span class="font-mono font-black uppercase tracking-widest truncate">Critical: Kernel reboot required to commit parameter delta</span>
 					</div>
 					<button
 						onclick={restartServer}
 						disabled={restarting}
-						class="relative px-4 py-1.5 bg-white text-orange-600 rounded-lg font-bold hover:bg-orange-50 active:scale-95 transition-all shadow-lg hover:shadow-xl text-xs disabled:opacity-50 whitespace-nowrap overflow-hidden group border border-orange-200"
+						class="px-6 py-2 bg-white text-rust font-mono font-black text-[10px] uppercase tracking-widest hover:bg-slate-100 active:scale-95 transition-all shadow-xl disabled:opacity-50"
 					>
-						<div
-							class="absolute inset-0 bg-gradient-to-r from-orange-100/0 via-orange-100/50 to-orange-100/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500"
-						></div>
-						<span class="relative z-10 flex items-center gap-1.5">
-							{#if restarting}
-								<svg
-									class="animate-spin w-3 h-3"
-									xmlns="http://www.w3.org/2000/svg"
-									fill="none"
-									viewBox="0 0 24 24"
-								>
-									<circle
-										class="opacity-25"
-										cx="12"
-										cy="12"
-										r="10"
-										stroke="currentColor"
-										stroke-width="4"
-									></circle>
-									<path
-										class="opacity-75"
-										fill="currentColor"
-										d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-									></path>
-								</svg>
-								Restarting...
-							{:else}
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									class="w-3 h-3"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-								>
-									<polyline points="23 4 23 10 17 10"></polyline>
-									<path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-								</svg>
-								Restart Now
-							{/if}
-						</span>
+						{restarting ? 'Executing...' : 'Commence_Reboot'}
 					</button>
 				</div>
 			{/if}
 
 			<!-- Desktop Sidebar -->
 			<aside
-				class="hidden md:flex relative transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] bg-slate-950/80 backdrop-blur-2xl border-r border-slate-800 flex-col shrink-0 overflow-hidden z-20 {isSidebarCollapsed
+				class="hidden md:flex relative transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] bg-slate-950/90 border-r-2 border-slate-800 flex-col shrink-0 overflow-hidden z-20 {isSidebarCollapsed
 					? 'w-20'
 					: 'w-64'} shadow-2xl"
 			>
@@ -568,81 +470,81 @@
 				
 				<div class="relative z-10 flex flex-col h-full">
 					<div
-						class="p-5 border-b border-slate-800/50 bg-slate-900/20 transform transition-all duration-700 {sidebarLoaded
+						class="p-6 border-b-2 border-slate-800/50 bg-slate-900/40 transform transition-all duration-700 {sidebarLoaded
 							? 'translate-y-0 opacity-100'
 							: '-translate-y-4 opacity-0'} flex items-center {isSidebarCollapsed ? 'justify-center' : 'justify-between'}"
 					>
 						{#if !isSidebarCollapsed}
 							<div class="flex flex-col animate-in fade-in zoom-in duration-500">
 								<div class="flex items-center gap-2">
-									<div class="w-2 h-2 bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)] rounded-full"></div>
-									<h1 class="text-lg font-bold text-white tracking-tight uppercase">
-										EXILE_<span class="text-blue-400">OS</span>
+									<div class="w-2 h-2 bg-rust shadow-[0_0_8px_rgba(194,65,12,0.5)]"></div>
+									<h1 class="text-xl font-black text-white tracking-tighter uppercase italic leading-none">
+										EXILE_<span class="text-rust-light">OS</span>
 									</h1>
 								</div>
-								<span class="text-[9px] font-mono text-slate-500 mt-1 tracking-[0.2em] font-medium">VER_0.9.4</span>
+								<span class="text-[8px] font-mono text-slate-600 mt-2 tracking-[0.4em] font-black">STATION_PRO_4.2</span>
 							</div>
 						{/if}
 						<button
 							onclick={toggleSidebar}
-							class="p-2 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800/50 transition-all duration-300"
+							class="p-2 border border-slate-800 bg-slate-950 text-slate-500 hover:text-rust-light hover:border-rust/30 transition-all duration-300"
 						>
-							<Icon name={isSidebarCollapsed ? 'ph:caret-double-right-bold' : 'ph:caret-double-left-bold'} size="1rem" />
+							<Icon name={isSidebarCollapsed ? 'ph:caret-double-right-bold' : 'ph:caret-double-left-bold'} size="0.9rem" />
 						</button>
 					</div>
 
-					<nav class="flex-1 p-3 space-y-6 overflow-y-auto overflow-x-hidden no-scrollbar">
-						<div class="space-y-6 pt-2">
+					<nav class="flex-1 p-3 space-y-8 overflow-y-auto overflow-x-hidden no-scrollbar py-8">
+						<div class="space-y-8">
 							<!-- CATEGORY: DASHBOARD -->
-							<div class="space-y-1">
-								{#if !isSidebarCollapsed}<span class="text-[10px] font-bold text-slate-500/80 tracking-widest ml-3 mb-2 block uppercase">Dashboard</span>{/if}
+							<div class="space-y-1.5">
+								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-slate-700 tracking-[0.4em] ml-3 mb-3 block uppercase italic">Core_Interface</span>{/if}
 								<a href="/dashboard" class="nav-link-light {isSidebarCollapsed ? 'justify-center !px-0' : ''}" class:active={isRouteActive('/dashboard') || isRouteActive('/')} title={isSidebarCollapsed ? 'Overview' : ''}>
-									<div class="nav-icon-container-light"><Icon name="gauge" size="1.25rem" /></div>
-									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Overview</span><span class="nav-subtext-light">System Summary</span></div>{/if}
+									<div class="nav-icon-container-light"><Icon name="gauge" size="1.1rem" /></div>
+									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Telemetry</span><span class="nav-subtext-light">System Dashboard</span></div>{/if}
 								</a>
 								<a href="/performance" class="nav-link-light {isSidebarCollapsed ? 'justify-center !px-0' : ''}" class:active={isRouteActive('/performance')} title={isSidebarCollapsed ? 'Performance' : ''}>
-									<div class="nav-icon-container-light"><Icon name="activity" size="1.25rem" /></div>
+									<div class="nav-icon-container-light"><Icon name="activity" size="1.1rem" /></div>
 									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Analytics</span><span class="nav-subtext-light">Real-time Metrics</span></div>{/if}
 								</a>
 							</div>
 
 							<!-- CATEGORY: MANAGEMENT -->
-							<div class="space-y-1">
-								{#if !isSidebarCollapsed}<span class="text-[10px] font-bold text-slate-500/80 tracking-widest ml-3 mb-2 block uppercase">Infrastructure</span>{/if}
+							<div class="space-y-1.5">
+								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-slate-700 tracking-[0.4em] ml-3 mb-3 block uppercase italic">Infrastructure</span>{/if}
 								{#each [
-									{ href: '/server', icon: 'cpu', label: 'Nodes', sub: 'Server Fleet' },
-									{ href: '/users', icon: 'users', label: 'Users', sub: 'Account Registry' }
+									{ href: '/server', icon: 'cpu', label: 'Fleet', sub: 'Server Operations' },
+									{ href: '/users', icon: 'users', label: 'Subjects', sub: 'Access Registry' }
 								] as link}
 									<a href={link.href} class="nav-link-light {isSidebarCollapsed ? 'justify-center !px-0' : ''}" class:active={isRouteActive(link.href)} title={isSidebarCollapsed ? link.label : ''}>
-										<div class="nav-icon-container-light"><Icon name={link.icon} size="1.25rem" /></div>
+										<div class="nav-icon-container-light"><Icon name={link.icon} size="1.1rem" /></div>
 										{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">{link.label}</span><span class="nav-subtext-light">{link.sub}</span></div>{/if}
 									</a>
 								{/each}
 							</div>
 
 							<!-- CATEGORY: RESOURCES -->
-							<div class="space-y-1">
-								{#if !isSidebarCollapsed}<span class="text-[10px] font-bold text-slate-500/80 tracking-widest ml-3 mb-2 block uppercase">Resources</span>{/if}
+							<div class="space-y-1.5">
+								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-slate-700 tracking-[0.4em] ml-3 mb-3 block uppercase italic">Persistence</span>{/if}
 								<a href="/database" class="nav-link-light {isSidebarCollapsed ? 'justify-center !px-0' : ''}" class:active={isRouteActive('/database')} title={isSidebarCollapsed ? 'Database' : ''}>
-									<div class="nav-icon-container-light"><Icon name="database" size="1.25rem" /></div>
-									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Database</span><span class="nav-subtext-light">Storage Engine</span></div>{/if}
+									<div class="nav-icon-container-light"><Icon name="database" size="1.1rem" /></div>
+									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Archives</span><span class="nav-subtext-light">Neural Storage</span></div>{/if}
 								</a>
 								<a href="/notes" class="nav-link-light {isSidebarCollapsed ? 'justify-center !px-0' : ''}" class:active={isRouteActive('/notes')} title={isSidebarCollapsed ? 'Operations' : ''}>
-									<div class="nav-icon-container-light"><Icon name="file-text" size="1.25rem" /></div>
-									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Worklog</span><span class="nav-subtext-light">Ops Journal</span></div>{/if}
+									<div class="nav-icon-container-light"><Icon name="file-text" size="1.1rem" /></div>
+									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Worklog</span><span class="nav-subtext-light">Tactical Journal</span></div>{/if}
 								</a>
 							</div>
 
 							<!-- CATEGORY: SETTINGS -->
-							<div class="space-y-1">
-								{#if !isSidebarCollapsed}<span class="text-[10px] font-bold text-slate-500/80 tracking-widest ml-3 mb-2 block uppercase">Administration</span>{/if}
+							<div class="space-y-1.5">
+								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-slate-700 tracking-[0.4em] ml-3 mb-3 block uppercase italic">Command</span>{/if}
 								<a href="/config" class="nav-link-light {isSidebarCollapsed ? 'justify-center !px-0' : ''}" class:active={isRouteActive('/config')} title={isSidebarCollapsed ? 'Settings' : ''}>
-									<div class="nav-icon-container-light"><Icon name="sliders" size="1.25rem" /></div>
-									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Settings</span><span class="nav-subtext-light">Configuration</span></div>{/if}
+									<div class="nav-icon-container-light"><Icon name="sliders" size="1.1rem" /></div>
+									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Parameters</span><span class="nav-subtext-light">Environment</span></div>{/if}
 								</a>
 								<a href="/redeye" class="nav-link-light {isSidebarCollapsed ? 'justify-center !px-0' : ''}" class:active={isRouteActive('/redeye')} title={isSidebarCollapsed ? 'Security' : ''}>
-									<div class="nav-icon-container-light"><Icon name="shield" size="1.25rem" /></div>
-									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Security</span><span class="nav-subtext-light">Threat Shield</span></div>{/if}
+									<div class="nav-icon-container-light"><Icon name="shield" size="1.1rem" /></div>
+									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Sentinel</span><span class="nav-subtext-light">Network Shield</span></div>{/if}
 								</a>
 							</div>
 						</div>
@@ -650,65 +552,64 @@
 
 					<!-- Sidebar Footer -->
 					<div
-						class="mt-auto p-4 border-t border-slate-800/50 bg-slate-900/30 flex flex-col gap-3 transform transition-all duration-700 {sidebarLoaded
+						class="mt-auto p-4 border-t-2 border-slate-800/50 bg-slate-900/20 flex flex-col gap-3 transform transition-all duration-700 {sidebarLoaded
 							? 'translate-y-0 opacity-100'
 							: 'translate-y-8 opacity-0'}"
 					>
 						<div class="flex items-center gap-2 {isSidebarCollapsed ? 'flex-col' : ''}">
 							<button
 								onclick={() => lowPowerMode.update(v => !v)}
-								class="p-2.5 border transition-all rounded-lg flex items-center justify-center gap-2 flex-1
+								class="p-2 border transition-all flex items-center justify-center gap-2 flex-1
 								{$lowPowerMode 
-									? 'bg-amber-500/10 border-amber-500/30 text-amber-500 hover:bg-amber-500/20' 
-									: 'bg-slate-800/30 border-slate-700/50 text-slate-500 hover:text-white hover:border-slate-600'}"
-								title={$lowPowerMode ? 'Disable Low Power Mode' : 'Enable Low Power Mode'}
+									? 'bg-amber-500/10 border-amber-500/30 text-amber-500' 
+									: 'bg-slate-950 border-slate-800 text-slate-600 hover:text-white hover:border-slate-600'}"
+								title={$lowPowerMode ? 'Disable Eco Mode' : 'Enable Eco Mode'}
 							>
-								<Zap class="w-4 h-4 {$lowPowerMode ? '' : 'opacity-60'}" />
+								<Zap class="w-3.5 h-3.5 {$lowPowerMode ? '' : 'opacity-40'}" />
 								{#if !isSidebarCollapsed}
-									<span class="text-[10px] font-bold tracking-widest uppercase">{$lowPowerMode ? 'ECO_MODE' : 'PERF_MODE'}</span>
+									<span class="text-[9px] font-black font-mono tracking-widest uppercase">{$lowPowerMode ? 'ECO_ON' : 'PERF_MAX'}</span>
 								{/if}
 							</button>
 
 							<button
 								onclick={logout}
-								class="p-2.5 border border-red-500/20 bg-red-500/5 text-red-400 hover:bg-red-500/10 hover:border-red-500/40 rounded-lg transition-all flex items-center justify-center group"
-								title="Logout"
+								class="p-2 border border-red-900/30 bg-red-950/10 text-red-600 hover:bg-red-600 hover:text-white transition-all flex items-center justify-center group shadow-lg"
+								title="Terminate Session"
 							>
-								<Icon name="ph:power-bold" size="1.1rem" />
+								<Icon name="ph:power-bold" size="1rem" />
 							</button>
 						</div>
 					</div>
 				</div>
 			</aside>
 
-			<div class="flex-1 flex flex-col h-full overflow-hidden relative">
+			<div class="flex-1 flex flex-col h-full overflow-hidden relative bg-transparent">
 				<!-- Mobile Top Header -->
 				<header
-					class="md:hidden h-16 bg-slate-950/90 border-b border-slate-800 flex items-center justify-between px-4 z-[130] shrink-0 relative backdrop-blur-md"
+					class="md:hidden h-16 bg-slate-950 border-b-2 border-slate-800 flex items-center justify-between px-4 z-[130] shrink-0 relative backdrop-blur-md"
 				>
 					<div class="flex items-center gap-4">
 						<button 
 							onclick={() => isMobileMenuOpen = true}
-							class="p-2 -ml-2 text-slate-400 hover:text-white transition-colors"
+							class="p-2 -ml-2 text-slate-400 hover:text-rust transition-colors"
 						>
 							<Icon name="ph:list-bold" size="1.5rem" />
 						</button>
 						<div class="flex flex-col">
 							<div class="flex items-center gap-2">
-								<div class="w-1.5 h-1.5 bg-indigo-500 shadow-[0_0_8px_var(--color-brand)] animate-pulse"></div>
-								<h1 class="text-lg font-bold text-white tracking-tight uppercase">
-									EXILE_<span class="text-indigo-400">OS</span>
+								<div class="w-1.5 h-1.5 bg-rust shadow-[0_0_8px_var(--color-rust)] animate-pulse"></div>
+								<h1 class="text-xl font-black text-white tracking-tighter uppercase italic italic">
+									EXILE_<span class="text-rust-light">OS</span>
 								</h1>
 							</div>
 						</div>
 					</div>
 					<div class="flex items-center gap-2">
 						<div class="hidden sm:flex flex-col items-end mr-2">
-							<span class="text-[8px] text-emerald-500 font-bold uppercase tracking-widest">Connected</span>
+							<span class="text-[8px] text-emerald-500 font-mono font-black uppercase tracking-widest">Connected</span>
 						</div>
 					</div>
 				</header>
-
 				<!-- Mobile Sidebar Overlay -->
 				{#if isMobileMenuOpen}
 					<div 
@@ -876,6 +777,15 @@
 		<Notifications />
 		
 		<CommandPalette bind:isOpen={isCommandPaletteOpen} />
+
+		<ShortcutHelpModal bind:isOpen={isShortcutHelpOpen} />
+
+		<InstanceManagerModal
+			bind:isOpen={sysState.console.isOpen}
+			nodeId={sysState.console.nodeId}
+			instanceId={sysState.console.instanceId}
+			onClose={() => (sysState.console.isOpen = false)}
+		/>
 	{:else}
 		{@render children()}
 	{/if}

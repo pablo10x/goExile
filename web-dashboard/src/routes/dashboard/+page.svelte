@@ -10,6 +10,7 @@
 	import NotificationBell from '$lib/components/NotificationBell.svelte';
 	import SystemTopology from '$lib/components/SystemTopology.svelte';
 	import AddNodeModal from '$lib/components/AddNodeModal.svelte';
+	import QuickActionHUD from '$lib/components/QuickActionHUD.svelte';
 	import Skeleton from '$lib/components/Skeleton.svelte';
 	import { formatBytes, formatUptime } from '$lib/utils';
 	import { Clock, Server, Activity, AlertCircle, Database, Network, Plus } from 'lucide-svelte';
@@ -514,6 +515,17 @@
 			/>
 		</div>
 		{/if}
+	</div>
+
+	<!-- Quick Action HUD -->
+	<div 
+		class="mb-10 transform transition-all duration-700 {animateStats ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}"
+		style="animation-delay: 0.62s;"
+	>
+		<QuickActionHUD 
+			on:tail={handleTail}
+			on:stop={(e) => openStopInstanceDialog({ detail: e.detail } as any)}
+		/>
 	</div>
 
 	<!-- System Topology -->

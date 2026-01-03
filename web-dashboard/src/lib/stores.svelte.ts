@@ -12,6 +12,13 @@ class SystemState {
 	showQuickActions = $state(true);
 	lowPowerMode = $state(false);
 
+	// Console / Instance Management State
+	console = $state({
+		isOpen: false,
+		nodeId: null as number | null,
+		instanceId: null as string | null
+	});
+
 	stats = $state({
 		uptime: 0,
 		active_nodes: 0,
@@ -65,10 +72,6 @@ class SystemState {
 	backgroundConfig = $state({
 		global_type: 'digital_stream',
 		show_global_background: true,
-		show_smoke: true,
-		show_rain: true,
-		show_clouds: true,
-		show_vignette: true,
 		show_navbar_particles: true
 	});
 
@@ -104,6 +107,63 @@ class SystemState {
 				body: JSON.stringify({ value: JSON.stringify(value) })
 			});
 		} catch (e) {}
+	}
+
+	openConsole(nodeId: number, instanceId: string) {
+		this.console.nodeId = nodeId;
+		this.console.instanceId = instanceId;
+		this.console.isOpen = true;
+	}
+
+	async triggerGC() {
+		try {
+			await fetch('/api/metrics/gc', { method: 'POST' });
+			notifications.add({ type: 'success', message: 'GARBAGE_COLLECTION_COMPLETE' });
+		} catch (e) {
+			notifications.add({ type: 'error', message: 'GC_FAULT' });
+		}
+	}
+
+	async exportConfig() {
+		try {
+			const res = await fetch('/api/config');
+			const data = await res.json();
+			const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+			const url = window.URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = `server_config_${new Date().toISOString().split('T')[0]}.json`;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			window.URL.revokeObjectURL(url);
+			notifications.add({ type: 'success', message: 'CONFIG_EXPORT_SUCCESS' });
+		} catch (e) {
+			notifications.add({ type: 'error', message: 'EXPORT_FAULT' });
+		}
+	}
+
+	async backupDatabase() {
+		try {
+			const res = await fetch('/api/database/backup', { method: 'POST' });
+			if (res.ok) {
+				notifications.add({ type: 'success', message: 'DATABASE_BACKUP_INITIATED' });
+			} else {
+				notifications.add({ type: 'error', message: 'BACKUP_FAULT' });
+			}
+		} catch (e) {
+			notifications.add({ type: 'error', message: 'BACKUP_SYNC_FAILED' });
+		}
+	}
+
+	downloadGameServer() {
+		const link = document.createElement('a');
+		link.href = '/api/nodes/download';
+		link.download = 'game_server.zip';
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		notifications.add({ type: 'info', message: 'BINARY_DOWNLOAD_STARTED' });
 	}
 }
 

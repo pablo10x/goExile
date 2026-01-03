@@ -112,12 +112,9 @@ WebSocket Security:
     - [ ] Resolve property access indexing issues in the "Aesthetics" tab.
 - [ ] **SystemTopology.svelte Import**:
     - [ ] Investigate why `dashboard/+page.svelte` fails to import `SystemTopology`. Ensure it has a `export default` if using standard Svelte 5 component syntax, or verify named exports.
-- [ ] **SectionBackground.svelte Indexing**:
-    - [ ] Fix TypeScript indexing error for `backgroundConfig.settings[type]` by ensuring `type` is cast to a valid key.
-
 ### 2. ⚡ Performance & Optimization
 - [ ] **Three.js Lifecycle Management**:
-    - [ ] Ensure "Minimal" core engine mode completely stops the `requestAnimationFrame` loop in `SectionBackground`, `GlobalSmoke`, and `NavbarParticles`.
+    - [ ] Ensure "Minimal" core engine mode completely stops the `requestAnimationFrame` loop in `NavbarParticles`.
     - [ ] Add a "Low Power Mode" toggle to `siteSettings` that forces "Minimal" background and disables all heavy animations (pulsing, flickering, floating).
     - [ ] Optimize particle counts based on the `particle_density` setting.
 

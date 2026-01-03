@@ -170,7 +170,7 @@ npm run dev   # Starts Vite dev server
     *   Implemented full `industrial_styling` support: all cards and modals now respect the sharp-corner/heavy-border toggle.
     *   Updated `NotificationBell` and `TaskItem` components to match the new industrial aesthetic.
     *   Fixed multiple Svelte 5 syntax errors and tag nesting issues in `config/+page.svelte`.
-    *   Optimized Three.js lifecycle management: `SectionBackground`, `NavbarParticles`, and `GlobalSmoke` now properly stop their animation loops when disabled or in Low Power Mode.
+    *   Optimized Three.js lifecycle management: `NavbarParticles` now properly stops its animation loop when disabled or in Low Power Mode.
     *   Implemented persistence for aesthetic settings: `theme`, `backgroundConfig`, and `siteSettings` now automatically sync with `localStorage`.
 *   **Performance:** Refactored Node metrics collection to be asynchronous, preventing I/O blocks from delaying heartbeats. Added a "Low Power Mode" toggle to disable resource-intensive background animations.
 
@@ -336,7 +336,7 @@ The following security improvements have been implemented:
 *   **Database Scanning**: Fixed `500 Internal Server Error` caused by `sql: Scan error on column ...: converting NULL to string is unsupported`. Implemented `sql.NullString` handling for nullable columns in `server_config`, `notes`, `instance_actions`, and `redeye_ip_reputation` tables.
 *   **Database Performance**: Optimized query speeds by implementing critical indexes on `system_logs`, `instance_actions`, `redeye_logs`, and `redeye_anticheat_events`.
 *   **RedEye Optimization**: Implemented an in-memory `RuleCache` for the RedEye security middleware, eliminating redundant database lookups for every incoming request and reducing overall system latency.
-*   **Three.js Lifecycle**: Optimized background animations (`GlobalSmoke`, `NavbarParticles`) with throttled 30FPS loops and immediate resource disposal when `Low Power Mode` is enabled, significantly reducing CPU/GPU overhead.
+*   **Three.js Lifecycle**: Optimized background animations (`NavbarParticles`) with throttled 30FPS loops and immediate resource disposal when `Low Power Mode` is enabled, significantly reducing CPU/GPU overhead.
 *   **Frontend Synchronization**: Upgraded persistent stores with a 500ms debounced save mechanism to prevent database write-spam during rapid UI interactions.
 *   **Backend Resilience**: Hardened the HTTP server with production-grade read/write timeouts and context-aware background goroutines for graceful shutdown.
 *   **Network Compression**: Implemented a native Gzip middleware in the Go backend. All JSON responses (logs, configs, stats) are now compressed during transit, reducing bandwidth usage by up to 80% and improving load times for remote operators.
@@ -427,3 +427,15 @@ Therefore, for the current architecture, RedEye is most appropriately managed as
 *   **UI Structure:** Horizontally aligned data cards resembling intelligence briefings or intercepted transmissions. Minimal 1px borders and low-opacity separators.
 *   **Atmosphere:** Subtle CRT scanlines (low opacity), soft radial vignette, and cinematic warm-up animations. No noise texture for maximum readability.
 *   **Feel:** Professional command-center, surveillance-driven, dystopian, and authoritative. AAA game cinematic intelligence interface.
+
+## 🚀 2026 UI Overhaul (Tactical Command HUD)
+The dashboard has been upgraded to a high-density "Tactical Command" architecture to eliminate navigation bottlenecks.
+
+### **Omni-Stream Fleet Management**
+*   **FleetCommander:** A flattened, high-performance view of all instances across the entire fleet.
+    *   **Unified API:** New `GET /api/instances` endpoint for concurrent cross-node instance fetching.
+    *   **One-Tap Actions:** Direct Stop/Start/Restart buttons on every instance in the tactical stream.
+    *   **Status Auras:** Real-time visual glowing borders indicating instance health.
+    *   **Tactical View Toggle:** Switch instantly between Node-Centric (Clusters) and Instance-Centric (Stream) views.
+*   **Keyboard-First Workflow:** Integrated global search and action triggers to reduce manual menu navigation.
+*   **Resource Visualization:** Miniature HUD-style bars for CPU/RAM metrics per instance.
