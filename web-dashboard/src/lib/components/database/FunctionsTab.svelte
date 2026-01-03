@@ -22,6 +22,7 @@
 	import { onMount } from 'svelte';
 	import { notifications } from '$lib/stores.svelte';
 	import { fade, slide } from 'svelte/transition';
+	import { portal } from '$lib/actions';
 
 	interface PGFunction {
 		oid: number;
@@ -602,6 +603,7 @@
 <!-- Create/Edit Modal -->
 {#if isCreating || isEditing}
 	<div
+		use:portal
 		class="fixed inset-0 z-50 flex items-center justify-center p-4"
 		transition:fade={{ duration: 150 }}
 	>
@@ -830,6 +832,7 @@
 <!-- Execute Function Modal -->
 {#if executeModalOpen && functionToExecute}
 	<div
+		use:portal
 		class="fixed inset-0 z-50 flex items-center justify-center p-4"
 		transition:fade={{ duration: 150 }}
 	>
