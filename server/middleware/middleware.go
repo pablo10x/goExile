@@ -216,10 +216,10 @@ func GlobalRateLimitMiddleware(next http.Handler) http.Handler {
 		mu       sync.RWMutex
 	)
 
-	// Settings: 100 requests per minute, burst of 20
+	// Settings: 300 requests per minute, burst of 50
 	const (
-		rate  = 100.0 / 60.0 // tokens per second
-		burst = 20.0
+		rate  = 300.0 / 60.0 // tokens per second
+		burst = 50.0
 	)
 
 	go func() {

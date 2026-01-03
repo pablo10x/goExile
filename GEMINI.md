@@ -352,6 +352,11 @@ The following security improvements have been implemented:
     *   Fixed dark mode conflicts in `StatsCard.svelte` (formerly light-themed) and `+layout.svelte` (fixed background layer).
     *   Cleaned up the Sidebar by removing "Tactical/Military" noise (grid overlays, fake terminal outputs) for a sleeker, professional look.
     *   Completely refactored the Database page (`/database`) and its sub-components (`QueryTabs`, `DataGrid`, `TableTab`, `DatabaseBrowserTab`, `SQLEditorTab`, `BackupsTab`, `ConfigTab`, `RolesTab`, `FunctionsTab`) to the "Deep Slate" aesthetic, replacing yellow accents with indigo for global consistency.
+    *   **Animation & Background Optimization**:
+        *   Achieved significant performance gains by reducing particle counts in `MotherboardBackground` (from 60 to 45) and `NavbarParticles` (from 300 to 120).
+        *   Refactored background connection logic to use squared distance checks and capped connections per particle, eliminating $O(N^2)$ rendering bottlenecks.
+        *   Migrated CSS animations to GPU-accelerated properties (`transform`, `opacity`) and added `will-change` hints to offload rendering to the compositor thread.
+        *   Hardened UI smoothness by replacing expensive `transition-all` rules with targeted property transitions and implementing `contain: content` on cards to isolate browser paint operations.
     *   Improved performance by removing unused CSS animations (`float`, `pulse-glow`, `blob`) and heavy DOM elements (rain layers).
 - Renamed "Spawner" to "Node" across the project and implemented "Drain Mode" for maintenance. Updated the frontend to Svelte 5 Runes and fixed multiple stability issues.
 - Shifted aesthetic from "Military Industrial" to "Modern Tech" (Darker "20% Industrial" Variant).
@@ -362,10 +367,11 @@ The following security improvements have been implemented:
 - Removed "hover card animation" (CardHoverOverlay) and CRT scanline/noise effects for a cleaner, static industrial look.
 - Fixed a major issue where full-screen atmospheric overlays (clouds, rain) were blocking clicks on interactive elements by adding `pointer-events-none`.
 - Fixed a runtime error in `SystemTopology.svelte` by removing the `topology_blobs` reference, which was causing a crash after the theme system removal.
-- **Database UI Overhaul:** Completely refactored the Database tab (`/database`) to a "Modern Tech" aesthetic (Slate/Blue, rounded corners).
+    *   **Database UI Overhaul:** Completely refactored the Database tab (`/database`) to a "Modern Tech" aesthetic (Slate/Blue, rounded corners).
     - Redesigned the Dashboard Overview with professional metric cards and quick actions.
     - Updated the Data Grid to be cleaner and more Airtable-like for editing.
     - Refined the Schema Browser and Query Tabs for better usability and visual consistency.
+    - Fixed z-index stacking issue on the "New Function" button in the Database Functions tab.
 - Fixed several TypeScript and accessibility issues during the UI refactor.
 
 ### 📦 Game Server Management

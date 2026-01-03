@@ -400,7 +400,7 @@
 			</div>
 			<button
 				onclick={openCreateModal}
-				class="px-6 py-3 bg-indigo-500 hover:bg-indigo-400 text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-indigo-900/20 transition-all active:translate-y-px rounded-xl"
+				class="relative z-10 px-6 py-3 bg-indigo-500 hover:bg-indigo-400 text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-indigo-900/20 transition-all active:translate-y-px rounded-xl"
 			>
 				<Plus class="w-5 h-5" />
 				New_Logic_Unit
