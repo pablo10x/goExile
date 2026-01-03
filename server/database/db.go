@@ -61,6 +61,12 @@ func InitDB(dsn string) error {
 		return fmt.Errorf("failed to run database migrations: %w", err)
 	}
 
+	// Seed default functions (Postgres only)
+	if err = SeedFunctions(DBConn); err != nil {
+		log.Printf("Warning: failed to seed default functions: %v", err)
+		// Don't fail startup for this
+	}
+
 	// Check if server_config table is empty, if so, populate initial config
 	var configCount int
 	err = DBConn.QueryRow(`SELECT COUNT(*) FROM server_config`).Scan(&configCount)
