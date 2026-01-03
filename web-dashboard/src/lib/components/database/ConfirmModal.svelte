@@ -101,7 +101,7 @@
 
 		<!-- Modal -->
 		<div
-			class="bg-[var(--terminal-bg)] border border-stone-800 rounded-none w-full max-w-md shadow-2xl relative z-10 overflow-hidden industrial-frame"
+			class="bg-slate-900/80 backdrop-blur-2xl border border-stone-800 rounded-none w-full max-w-md shadow-2xl relative z-10 overflow-hidden industrial-frame"
 			transition:scale={{ duration: 200, start: 0.95, easing: quintOut }}
 		>
 			<!-- Header -->
@@ -143,7 +143,7 @@
 			</div>
 
 			<!-- Actions -->
-			<div class="p-8 flex items-center justify-end gap-4 bg-[var(--header-bg)]/50">
+			<div class="p-8 flex items-center justify-end gap-4 bg-slate-950/40">
 				<button
 					onclick={handleCancel}
 					disabled={loading}

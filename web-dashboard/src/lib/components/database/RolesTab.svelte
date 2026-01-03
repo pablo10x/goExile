@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Users, UserPlus, Trash2, Key, Shield, Check, X } from 'lucide-svelte';
 	import { onMount } from 'svelte';
-	import { notifications } from '$lib/stores';
+	import { notifications } from '$lib/stores.svelte';
 	import { slide } from 'svelte/transition';
 
 	let roles = $state<any[]>([]);
@@ -87,22 +87,22 @@
 	});
 </script>
 
-<div class="h-full flex flex-col bg-[var(--terminal-bg)]">
+<div class="h-full flex flex-col bg-transparent">
 	<div
-		class="p-6 border-b border-stone-800 bg-[var(--header-bg)] flex justify-between items-center"
+		class="p-6 border-b border-slate-800 bg-slate-900/40 backdrop-blur-md flex justify-between items-center"
 	>
 		<div class="flex items-center gap-4">
-			<div class="p-2.5 bg-rust/10 border border-rust/20 rounded-none industrial-frame">
-				<Shield class="w-6 h-6 text-rust-light" />
+			<div class="p-2.5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+				<Shield class="w-6 h-6 text-indigo-400" />
 			</div>
 			<div>
-				<h2 class="text-xl font-heading font-black text-slate-100 uppercase tracking-tighter">SEC_IDENTITY_MANAGER</h2>
-				<p class="font-jetbrains text-[10px] text-text-dim uppercase tracking-widest mt-1">Manage database users and privileges</p>
+				<h2 class="text-xl font-heading font-black text-white uppercase tracking-tighter italic">SEC_IDENTITY_MANAGER</h2>
+				<p class="font-jetbrains text-[10px] text-slate-500 uppercase tracking-widest mt-1 italic font-bold">Manage database users and privileges</p>
 			</div>
 		</div>
 		<button
 			onclick={() => (isCreating = !isCreating)}
-			class="px-6 py-2.5 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rust/20 transition-all flex items-center gap-2"
+			class="px-6 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-indigo-900/20 transition-all flex items-center gap-2 rounded-xl"
 		>
 			{#if isCreating}
 				<X class="w-4 h-4" /> Cancel_Op
@@ -112,13 +112,13 @@
 		</button>
 	</div>
 
-	<div class="flex-1 overflow-auto p-8 relative custom-scrollbar">
+	<div class="flex-1 overflow-auto p-8 relative custom-scrollbar bg-transparent">
 		{#if isCreating}
 			<div
-				class="mb-10 bg-stone-900/40 border border-stone-800 p-8 shadow-2xl industrial-frame"
+				class="mb-10 bg-slate-900/60 border border-slate-800 p-8 shadow-2xl rounded-2xl backdrop-blur-md"
 			>
 				<h3
-					class="font-heading font-black text-xs text-rust-light mb-6 flex items-center gap-3 uppercase tracking-[0.2em]"
+					class="font-heading font-black text-xs text-indigo-400 mb-6 flex items-center gap-3 uppercase tracking-[0.2em]"
 				>
 					<UserPlus class="w-5 h-5" /> New_Identity_Definition
 				</h3>
@@ -128,86 +128,86 @@
 						<div>
 							<label
 								for="newRoleName"
-								class="block font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest mb-2"
+								class="block font-jetbrains text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2"
 								>Subject_ID</label
 							>
 							<input
 								id="newRoleName"
 								type="text"
 								bind:value={newRoleName}
-								class="w-full bg-stone-950 border border-stone-800 py-3 px-4 text-stone-200 font-jetbrains text-xs focus:border-rust outline-none uppercase tracking-widest"
+								class="w-full bg-slate-950/40 border border-slate-800 py-3 px-4 text-stone-200 font-jetbrains text-xs focus:border-indigo-500 outline-none uppercase tracking-widest transition-all rounded-lg"
 								placeholder="e.g. ALPHA_USER"
 							/>
 						</div>
 						<div>
 							<label
 								for="newRolePass"
-								class="block font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest mb-2"
+								class="block font-jetbrains text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2"
 								>Access_Key</label
 							>
 							<input
 								id="newRolePass"
 								type="password"
 								bind:value={newRolePass}
-								class="w-full bg-stone-950 border border-stone-800 py-3 px-4 text-stone-200 font-jetbrains text-xs focus:border-rust outline-none"
+								class="w-full bg-slate-950/40 border border-slate-800 py-3 px-4 text-stone-200 font-jetbrains text-xs focus:border-indigo-500 outline-none transition-all rounded-lg"
 								placeholder="••••••••"
 							/>
 						</div>
 					</div>
 
 					<div class="space-y-4">
-						<div class="block font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest mb-2">
+						<div class="block font-jetbrains text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 italic">
 							Auth_Permissions
 						</div>
 						<div class="grid grid-cols-2 gap-3">
 							<label
-								class="flex items-center gap-3 p-3 bg-stone-950 border border-stone-800 cursor-pointer hover:border-rust/40 transition-colors group"
+								class="flex items-center gap-3 p-3 bg-slate-950/40 border border-slate-800 cursor-pointer hover:border-indigo-500/40 transition-colors group rounded-xl"
 							>
 								<input
 									type="checkbox"
 									bind:checked={roleOptions.login}
-									class="w-4 h-4 bg-stone-900 border-stone-700 text-rust focus:ring-rust"
+									class="w-4 h-4 bg-slate-900 border-slate-700 text-indigo-500 focus:ring-indigo-500"
 								/>
-								<span class="font-heading text-[10px] font-bold text-stone-400 uppercase group-hover:text-stone-200">Can_Login</span>
+								<span class="font-heading text-[10px] font-bold text-slate-500 uppercase group-hover:text-slate-200 tracking-widest">Can_Login</span>
 							</label>
 							<label
-								class="flex items-center gap-3 p-3 bg-stone-950 border border-stone-800 cursor-pointer hover:border-rust/40 transition-colors group"
+								class="flex items-center gap-3 p-3 bg-slate-950/40 border border-slate-800 cursor-pointer hover:border-indigo-500/40 transition-colors group rounded-xl"
 							>
 								<input
 									type="checkbox"
 									bind:checked={roleOptions.createdb}
-									class="w-4 h-4 bg-stone-900 border-stone-700 text-rust focus:ring-rust"
+									class="w-4 h-4 bg-slate-900 border-slate-700 text-indigo-500 focus:ring-indigo-500"
 								/>
-								<span class="font-heading text-[10px] font-bold text-stone-400 uppercase group-hover:text-stone-200">Create_DB</span>
+								<span class="font-heading text-[10px] font-bold text-slate-500 uppercase group-hover:text-slate-200 tracking-widest">Create_DB</span>
 							</label>
 							<label
-								class="flex items-center gap-3 p-3 bg-stone-950 border border-stone-800 cursor-pointer hover:border-rust/40 transition-colors group"
+								class="flex items-center gap-3 p-3 bg-slate-950/40 border border-slate-800 cursor-pointer hover:border-indigo-500/40 transition-colors group rounded-xl"
 							>
 								<input
 									type="checkbox"
 									bind:checked={roleOptions.createrole}
-									class="w-4 h-4 bg-stone-900 border-stone-700 text-rust focus:ring-rust"
+									class="w-4 h-4 bg-slate-900 border-slate-700 text-indigo-500 focus:ring-indigo-500"
 								/>
-								<span class="font-heading text-[10px] font-bold text-stone-400 uppercase group-hover:text-stone-200">Create_Role</span>
+								<span class="font-heading text-[10px] font-bold text-slate-500 uppercase group-hover:text-slate-200 tracking-widest">Create_Role</span>
 							</label>
 							<label
-								class="flex items-center gap-3 p-3 bg-stone-950 border border-stone-800 cursor-pointer hover:border-amber-500/40 transition-colors group"
+								class="flex items-center gap-3 p-3 bg-slate-950/40 border border-slate-800 cursor-pointer hover:border-amber-500/40 transition-colors group rounded-xl"
 							>
 								<input
 									type="checkbox"
 									bind:checked={roleOptions.superuser}
-									class="w-4 h-4 bg-stone-900 border-stone-700 text-warning focus:ring-amber-500"
+									class="w-4 h-4 bg-slate-900 border-slate-700 text-amber-500 focus:ring-amber-500"
 								/>
-								<span class="font-heading text-[10px] font-bold text-warning uppercase">Superuser</span>
+								<span class="font-heading text-[10px] font-bold text-amber-500 uppercase tracking-widest">Superuser</span>
 							</label>
 						</div>
 					</div>
 				</div>
 
-				<div class="flex justify-end pt-6 border-t border-stone-800">
+				<div class="flex justify-end pt-6 border-t border-slate-800">
 					<button
 						onclick={createRole}
-						class="px-8 py-3 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rust/20 transition-all"
+						class="px-8 py-3 bg-indigo-500 hover:bg-indigo-400 text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-indigo-900/20 transition-all active:translate-y-px rounded-xl"
 						>Authorize_Identity</button
 					>
 				</div>
@@ -217,21 +217,21 @@
 		{#if loading}
 			<div class="flex justify-center p-20">
 				<div
-					class="w-10 h-10 border-2 border-rust border-t-transparent rounded-none animate-spin"
+					class="w-10 h-10 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin shadow-[0_0_15px_rgba(99,102,241,0.4)]"
 				></div>
 			</div>
 		{:else}
 			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 				{#each roles as role}
 					<div
-						class="bg-stone-900/40 border border-stone-800 p-6 hover:border-rust/40 transition-all group industrial-frame"
+						class="bg-slate-900/40 border border-slate-800 p-6 hover:border-indigo-500/40 transition-all group rounded-2xl backdrop-blur-sm shadow-lg"
 					>
 						<div class="flex justify-between items-start mb-6">
 							<div class="flex items-center gap-4">
 								<div
-									class="p-2.5 rounded-none {role.superuser
-										? 'bg-amber-500/10 text-warning border border-amber-500/30'
-										: 'bg-stone-800 text-stone-400 border border-stone-700'}"
+									class="p-2.5 rounded-xl {role.superuser
+										? 'bg-amber-500/10 text-amber-500 border border-amber-500/30'
+										: 'bg-slate-950 text-slate-600 border border-slate-800'}"
 								>
 									{#if role.superuser}
 										<Key class="w-5 h-5" />
@@ -240,13 +240,13 @@
 									{/if}
 								</div>
 								<div>
-									<h3 class="font-heading font-black text-stone-100 text-base tracking-tight uppercase">{role.name}</h3>
-									<div class="font-jetbrains text-[9px] text-text-dim font-bold uppercase tracking-widest">ID: {role.oid || 'N/A'}</div>
+									<h3 class="font-heading font-black text-white text-base tracking-tight uppercase italic">{role.name}</h3>
+									<div class="font-jetbrains text-[9px] text-slate-500 font-bold uppercase tracking-widest">ID: {role.oid || 'N/A'}</div>
 								</div>
 							</div>
 							<button
 								onclick={() => deleteRole(role.name)}
-								class="p-2 text-stone-700 hover:text-danger hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
+								class="p-2 text-slate-600 hover:text-red-400 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100 rounded-lg"
 							>
 								<Trash2 class="w-4 h-4" />
 							</button>
@@ -255,25 +255,25 @@
 						<div class="flex flex-wrap gap-2 mt-6">
 							{#if role.superuser}
 								<span
-									class="px-2 py-1 bg-amber-500/10 text-warning text-[9px] border border-amber-500/20 font-black font-jetbrains uppercase tracking-widest"
+									class="px-2 py-1 bg-amber-500/10 text-amber-500 text-[9px] border border-amber-500/20 font-bold font-jetbrains uppercase tracking-widest rounded"
 									>Superuser</span
 								>
 							{/if}
 							{#if role.can_login}
 								<span
-									class="px-2 py-1 bg-success/10 text-success text-[9px] border border-emerald-500/20 font-black font-jetbrains uppercase tracking-widest"
+									class="px-2 py-1 bg-emerald-500/10 text-emerald-400 text-[9px] border border-emerald-500/20 font-bold font-jetbrains uppercase tracking-widest rounded"
 									>Login</span
 								>
 							{/if}
 							{#if role.create_db}
 								<span
-									class="px-2 py-1 bg-rust/10 text-rust text-[9px] border border-rust/20 font-black font-jetbrains uppercase tracking-widest"
+									class="px-2 py-1 bg-indigo-500/10 text-indigo-400 text-[9px] border border-indigo-500/20 font-bold font-jetbrains uppercase tracking-widest rounded"
 									>Create DB</span
 								>
 							{/if}
 							{#if role.create_role}
 								<span
-									class="px-2 py-1 bg-purple-500/10 text-purple-500 text-[9px] border border-purple-500/20 font-black font-jetbrains uppercase tracking-widest"
+									class="px-2 py-1 bg-orange-500/10 text-orange-400 text-[9px] border border-orange-500/20 font-bold font-jetbrains uppercase tracking-widest rounded"
 									>Create Role</span
 								>
 							{/if}

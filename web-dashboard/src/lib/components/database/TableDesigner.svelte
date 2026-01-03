@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Plus, Trash2, Save, X, Key, Type, Settings } from 'lucide-svelte';
 	import { slide } from 'svelte/transition';
-	import { notifications } from '$lib/stores';
+	import { notifications } from '$lib/stores.svelte';
 	import { autofocus } from '$lib/actions';
 
 	let {
@@ -102,58 +102,58 @@
 	}
 </script>
 
-<div class="h-full flex flex-col bg-slate-900">
+<div class="h-full flex flex-col bg-black/20">
 	<div
-		class="p-4 border-b border-slate-300 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-950"
+		class="p-4 border-b border-stone-800 flex justify-between items-center bg-black/40 backdrop-blur-md"
 	>
-		<div class="flex items-center gap-3">
-			<div class="p-2 bg-blue-500/10 rounded-lg">
-				<Settings class="w-5 h-5 text-info" />
+		<div class="flex items-center gap-4">
+			<div class="p-2.5 bg-yellow-500/10 border border-yellow-500/20 rounded-none industrial-sharp">
+				<Settings class="w-5 h-5 text-yellow-400" />
 			</div>
 			<div>
-				<h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
-					Table Structure: <span class="font-mono text-info">{schema}.{table}</span>
+				<h2 class="text-base font-heading font-black text-slate-100 flex items-center gap-3 tracking-widest uppercase italic">
+					Logic_Schema: <span class="text-yellow-500 font-mono text-xs">{schema}.{table}</span>
 				</h2>
-				<p class="text-xs text-text-dim">Manage columns, types, and constraints</p>
+				<p class="text-[9px] text-stone-600 font-bold uppercase tracking-widest italic">Manage sectors, types, and primary constraints</p>
 			</div>
 		</div>
 		<button
 			onclick={onClose}
-			class="p-2 hover:bg-slate-800 rounded-lg text-text-dim dark:text-text-dim hover:text-slate-900 dark:text-white transition-colors"
+			class="p-2 hover:bg-stone-800 rounded-none text-stone-600 hover:text-white transition-all"
 		>
 			<X class="w-5 h-5" />
 		</button>
 	</div>
 
-	<div class="flex-1 overflow-auto p-6">
+	<div class="flex-1 overflow-auto p-8 bg-black/20">
 		<div
-			class="bg-white/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-lg"
+			class="bg-slate-900/40 border border-stone-800 rounded-none overflow-hidden shadow-2xl industrial-sharp backdrop-blur-sm"
 		>
-			<table class="w-full text-left text-sm">
+			<table class="w-full text-left font-jetbrains">
 				<thead
-					class="bg-slate-900 text-text-dim dark:text-text-dim uppercase text-xs font-bold tracking-wider"
+					class="bg-black text-stone-500 uppercase text-[9px] font-black tracking-[0.2em] italic"
 				>
 					<tr>
-						<th class="px-6 py-4 border-b border-slate-200 dark:border-slate-800">Name</th>
-						<th class="px-6 py-4 border-b border-slate-200 dark:border-slate-800">Type</th>
-						<th class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 text-center"
-							>Nullable</th
+						<th class="px-8 py-4 border-b border-stone-800">Field_Identity</th>
+						<th class="px-8 py-4 border-b border-stone-800">Type_Protocol</th>
+						<th class="px-8 py-4 border-b border-stone-800 text-center"
+							>Nullable_State</th
 						>
-						<th class="px-6 py-4 border-b border-slate-200 dark:border-slate-800">Default</th>
-						<th class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 text-right"
-							>Actions</th
+						<th class="px-8 py-4 border-b border-stone-800">Default_Buffer</th>
+						<th class="px-8 py-4 border-b border-stone-800 text-right"
+							>Purge_Op</th
 						>
 					</tr>
 				</thead>
-				<tbody class="divide-y divide-slate-800/50">
+				<tbody class="divide-y divide-stone-800/50">
 					{#each columns as col}
-						<tr class="hover:bg-slate-800/30 transition-colors group">
-							<td class="px-6 py-3 font-mono text-slate-800 dark:text-slate-200">
+						<tr class="hover:bg-yellow-500/5 transition-colors group">
+							<td class="px-8 py-4 font-black text-[11px] text-stone-300 tracking-widest">
 								{#if editingColName === col.name}
 									<input
 										type="text"
 										bind:value={newColNameVal}
-										class="bg-slate-900 border border-blue-500 rounded px-2 py-1 text-slate-900 dark:text-white w-full outline-none"
+										class="bg-black border border-yellow-500 rounded-none px-3 py-1 text-white w-full outline-none industrial-sharp"
 										onkeydown={(e) => e.key === 'Enter' && renameColumn(col.name)}
 										onblur={() => renameColumn(col.name)}
 										use:autofocus
@@ -161,24 +161,24 @@
 								{:else}
 									<button
 										onclick={() => startRename(col)}
-										class="hover:text-info hover:underline decoration-dashed underline-offset-4 decoration-slate-600"
+										class="hover:text-yellow-400 hover:underline decoration-dashed underline-offset-4 decoration-stone-700 uppercase"
 									>
 										{col.name}
 									</button>
 									{#if col.constraints?.includes('PRIMARY KEY') || col.name === 'id'}
-										<Key class="w-3 h-3 inline ml-2 text-warning" />
+										<Key class="w-3.5 h-3.5 inline ml-3 text-yellow-500 animate-pulse" />
 									{/if}
 								{/if}
 							</td>
-							<td class="px-6 py-3">
+							<td class="px-8 py-4">
 								<div class="relative group/type">
 									<select
 										value={col.type.toUpperCase()}
 										onchange={(e) => changeType(col.name, e.currentTarget.value)}
-										class="bg-transparent border-none text-success font-mono cursor-pointer outline-none appearance-none hover:text-emerald-300 w-full"
+										class="bg-transparent border-none text-emerald-500 font-black text-[10px] cursor-pointer outline-none appearance-none hover:text-emerald-300 w-full tracking-widest"
 									>
 										{#each dataTypes as t}
-											<option value={t} class="bg-slate-900 text-slate-700 dark:text-slate-300"
+											<option value={t} class="bg-stone-900 text-stone-300"
 												>{t}</option
 											>
 										{/each}
@@ -189,30 +189,30 @@
 									</select>
 								</div>
 							</td>
-							<td class="px-6 py-3 text-center">
+							<td class="px-8 py-4 text-center">
 								<button
 									onclick={() => toggleNullable(col.name, col.nullable)}
-									class="px-2 py-1 rounded text-xs font-bold border transition-all {col.nullable ===
+									class="px-3 py-1 rounded-none text-[9px] font-black border transition-all uppercase tracking-widest {col.nullable ===
 									'YES'
-										? 'border-slate-300 dark:border-slate-700 text-text-dim hover:border-slate-500'
-										: 'border-purple-500/30 bg-purple-500/10 text-purple-400'}"
+										? 'border-stone-800 text-stone-600 hover:border-stone-600'
+										: 'border-yellow-500/30 bg-yellow-500/10 text-yellow-400'}"
 								>
 									{col.nullable === 'YES' ? 'NULL' : 'NOT NULL'}
 								</button>
 							</td>
-							<td class="px-6 py-3 font-mono text-xs text-text-dim dark:text-text-dim">
+							<td class="px-8 py-4 font-black text-[10px] text-stone-600 tracking-widest">
 								<button
 									onclick={() => changeDefault(col.name, col.default)}
-									class="hover:text-slate-900 dark:text-white truncate max-w-[150px] block"
+									class="hover:text-white truncate max-w-[150px] block transition-colors italic"
 									title={col.default || 'No Default'}
 								>
-									{col.default || '-'}
+									{col.default || 'NULL_PTR'}
 								</button>
 							</td>
-							<td class="px-6 py-3 text-right">
+							<td class="px-8 py-4 text-right">
 								<button
 									onclick={() => dropColumn(col.name)}
-									class="p-2 text-text-dim hover:text-danger hover:bg-red-500/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+									class="p-2 text-stone-700 hover:text-red-500 hover:bg-red-500/10 rounded-none transition-colors opacity-0 group-hover:opacity-100"
 									title="Drop Column"
 								>
 									<Trash2 class="w-4 h-4" />
@@ -220,11 +220,10 @@
 							</td>
 						</tr>
 					{/each}
-					<tr class="bg-slate-900/30 border-t border-slate-200 dark:border-slate-800 border-dashed">
-						<td colspan="5" class="px-6 py-3 text-center">
-							<!-- Helper text or quick add -->
-							<span class="text-slate-600 text-xs"
-								>To add a column, use the 'Add Column' button (Coming soon to inline)</span
+					<tr class="bg-black/40 border-t border-stone-800 border-dashed">
+						<td colspan="5" class="px-8 py-4 text-center">
+							<span class="text-stone-700 text-[9px] font-black uppercase tracking-[0.3em] italic"
+								>Neural_Field_Modification_Buffer_v1.0</span
 							>
 						</td>
 					</tr>

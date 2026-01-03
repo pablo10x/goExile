@@ -3,7 +3,7 @@
 	import { fade, scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import { onMount } from 'svelte';
-	import { notifications } from '$lib/stores';
+	import { notifications } from '$lib/stores.svelte';
 
 	let {
 		isOpen = $bindable(false),
@@ -59,7 +59,7 @@
 		transition:fade={{ duration: 200 }}
 	>
 		<div
-			class="bg-[var(--terminal-bg)] border border-stone-800 rounded-none w-full max-w-md shadow-2xl flex flex-col overflow-hidden relative group industrial-frame"
+			class="bg-slate-900/80 backdrop-blur-2xl border border-stone-800 rounded-none w-full max-w-md shadow-2xl flex flex-col overflow-hidden relative group industrial-frame"
 			transition:scale={{ duration: 300, start: 0.95, easing: quintOut }}
 		>
 			<!-- Ambient Background Glow -->
@@ -69,7 +69,7 @@
 
 			<!-- Header -->
 			<div
-				class="p-6 border-b border-stone-800 relative z-10 flex justify-between items-start bg-[var(--header-bg)]"
+				class="p-6 border-b border-stone-800 relative z-10 flex justify-between items-start bg-slate-950/40"
 			>
 				<div>
 					<h3
@@ -160,7 +160,7 @@
 
 			<!-- Footer -->
 			<div
-				class="p-6 border-t border-stone-800 bg-[var(--header-bg)] flex justify-end gap-4 relative z-10"
+				class="p-6 border-t border-stone-800 bg-slate-950/40 flex justify-end gap-4 relative z-10"
 			>
 				<button
 					onclick={onClose}

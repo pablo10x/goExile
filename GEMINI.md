@@ -351,6 +351,7 @@ The following security improvements have been implemented:
     *   Standardized the "Modern Tech" aesthetic across the dashboard, ensuring a consistent Deep Slate (#020617) theme.
     *   Fixed dark mode conflicts in `StatsCard.svelte` (formerly light-themed) and `+layout.svelte` (fixed background layer).
     *   Cleaned up the Sidebar by removing "Tactical/Military" noise (grid overlays, fake terminal outputs) for a sleeker, professional look.
+    *   Completely refactored the Database page (`/database`) and its sub-components (`QueryTabs`, `DataGrid`, `TableTab`, `DatabaseBrowserTab`, `SQLEditorTab`, `BackupsTab`, `ConfigTab`, `RolesTab`, `FunctionsTab`) to the "Deep Slate" aesthetic, replacing yellow accents with indigo for global consistency.
     *   Improved performance by removing unused CSS animations (`float`, `pulse-glow`, `blob`) and heavy DOM elements (rain layers).
 - Renamed "Spawner" to "Node" across the project and implemented "Drain Mode" for maintenance. Updated the frontend to Svelte 5 Runes and fixed multiple stability issues.
 - Shifted aesthetic from "Military Industrial" to "Modern Tech" (Darker "20% Industrial" Variant).

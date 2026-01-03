@@ -192,7 +192,7 @@
 		if (isSuccess) return 'border-emerald-500/50 bg-success/5';
 		if (isFocused) return 'border-rust/50 bg-rust/5';
 		if (isModified) return 'border-amber-500/30 bg-amber-500/5';
-		return 'border-slate-300/50 dark:border-slate-700/50 bg-slate-800/30 hover:border-slate-600/50';
+		return 'border-slate-300/50 dark:border-slate-700/50 bg-slate-950/40 hover:border-slate-600/50';
 	}
 
 	function getBoolButtonClass(formValue: any, optionValue: any, optionColor: string): string {
@@ -248,7 +248,7 @@
 			></div>
 
 			<div
-				class="relative bg-gradient-to-b from-stone-900 via-stone-900 to-stone-950 border border-stone-800 rounded-2xl shadow-2xl overflow-hidden"
+				class="relative bg-slate-900/80 backdrop-blur-2xl border border-stone-800 rounded-2xl shadow-2xl overflow-hidden"
 			>
 				<div class="relative overflow-hidden">
 					<div

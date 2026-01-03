@@ -3,7 +3,7 @@
 	import DataGrid from './DataGrid.svelte';
 	import TableDesigner from './TableDesigner.svelte';
 	import RowEditorModal from './RowEditorModal.svelte';
-	import { notifications } from '$lib/stores';
+	import { notifications } from '$lib/stores.svelte';
 	import { Settings, Table, RefreshCw, Database, Rows3, Hash } from 'lucide-svelte';
 
 	let { schema, table } = $props<{ schema: string; table: string }>();
@@ -138,30 +138,30 @@
 	});
 </script>
 
-<div class="flex flex-col h-full bg-slate-900/30">
+<div class="flex flex-col h-full bg-transparent">
 	<!-- Header -->
-	<div class="border-b border-slate-800/50 bg-slate-900/50 backdrop-blur-sm">
+	<div class="border-b border-slate-800 bg-slate-900/40 backdrop-blur-md">
 		<!-- Table Info Bar -->
 		<div class="px-6 py-4 flex items-center justify-between">
 			<div class="flex items-center gap-4">
-				<div class="p-2.5 bg-blue-500/10 border border-blue-500/20 rounded-lg shadow-sm">
-					<Database class="w-5 h-5 text-blue-400" />
+				<div class="p-2.5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl shadow-sm">
+					<Database class="w-5 h-5 text-indigo-400" />
 				</div>
 				<div>
-					<h2 class="text-base font-heading font-bold text-white flex items-center gap-3 tracking-tight">
+					<h2 class="text-base font-heading font-black text-white flex items-center gap-4 tracking-widest uppercase italic">
 						{table}
-						<span class="font-mono text-[10px] font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20 uppercase">
+						<span class="font-mono text-[9px] font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md border border-indigo-500/20 uppercase tracking-widest">
 							{schema}
 						</span>
 					</h2>
-					<div class="flex items-center gap-4 text-xs font-medium text-slate-400 mt-1">
-						<span class="flex items-center gap-1.5">
-							<Rows3 class="w-3.5 h-3.5" />
+					<div class="flex items-center gap-4 text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-widest">
+						<span class="flex items-center gap-2">
+							<Rows3 class="w-3.5 h-3.5 text-slate-600" />
 							{totalCount} rows
 						</span>
-						<span class="flex items-center gap-1.5">
-							<Hash class="w-3.5 h-3.5" />
-							{columns.length} columns
+						<span class="flex items-center gap-2">
+							<Hash class="w-3.5 h-3.5 text-slate-600" />
+							{columns.length} fields
 						</span>
 					</div>
 				</div>
@@ -170,7 +170,7 @@
 			<button
 				onclick={loadData}
 				disabled={loading}
-				class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 transition-all rounded-lg disabled:opacity-50"
+				class="p-2 text-slate-500 hover:text-indigo-400 hover:bg-slate-800 transition-all rounded-xl disabled:opacity-50"
 				title="Refresh Data"
 			>
 				<RefreshCw class="w-5 h-5 {loading ? 'animate-spin' : ''}" />
@@ -181,23 +181,23 @@
 		<div class="flex items-center gap-1 px-6">
 			<button
 				onclick={() => (view = 'data')}
-				class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider border-b-2 transition-all flex items-center gap-2 {view ===
+				class="px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] border-b-2 transition-all flex items-center gap-3 {view ===
 				'data'
-					? 'border-blue-500 text-blue-400 bg-blue-500/5'
+					? 'border-indigo-500 text-indigo-400 bg-indigo-500/5'
 					: 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'}"
 			>
 				<Table class="w-4 h-4" />
-				Data
+				Data_Buffer
 			</button>
 			<button
 				onclick={() => (view = 'structure')}
-				class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider border-b-2 transition-all flex items-center gap-2 {view ===
+				class="px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] border-b-2 transition-all flex items-center gap-3 {view ===
 				'structure'
-					? 'border-purple-500 text-purple-400 bg-purple-500/5'
+					? 'border-indigo-500 text-indigo-400 bg-indigo-500/5'
 					: 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'}"
 			>
 				<Settings class="w-4 h-4" />
-				Structure
+				Core_Logic
 			</button>
 		</div>
 	</div>

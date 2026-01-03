@@ -37,7 +37,7 @@
 	import FunctionsTab from '$lib/components/database/FunctionsTab.svelte';
 	import TableCreatorModal from '$lib/components/TableCreatorModal.svelte';
 	import ColumnManagerModal from '$lib/components/ColumnManagerModal.svelte';
-	import { notifications } from '$lib/stores';
+	import { notifications } from '$lib/stores.svelte';
 	import StatsCard from '$lib/components/StatsCard.svelte';
 	import { formatBytes } from '$lib/utils';
 	import { onMount } from 'svelte';
@@ -201,51 +201,52 @@
 </script>
 
 <div
-	class="flex flex-col lg:flex-row h-[calc(100vh-120px)] md:h-[calc(100vh-140px)] overflow-hidden bg-slate-950/80 backdrop-blur-2xl border border-slate-800 rounded-xl shadow-2xl"
+	class="flex flex-col lg:flex-row h-[calc(100vh-6rem)] -mt-6 -mx-4 sm:-mx-6 md:-mx-10 overflow-hidden relative z-10"
 >
-	<!-- Mobile Top Nav (Horizontal Scroll) -->
+	<!-- Mobile Top Nav -->
 	<div
-		class="lg:hidden border-b border-slate-800 bg-slate-900/80 overflow-x-auto no-scrollbar backdrop-blur-md shrink-0"
+		class="lg:hidden border-b border-slate-800 bg-slate-900/90 overflow-x-auto no-scrollbar backdrop-blur-md shrink-0"
 	>
 		<div class="flex items-center gap-2 p-3 min-w-max">
 			{#each allMenuItems as item}
 				{@const isActive = activeTabId === item.id}
 				<button
 					onclick={() => openTab(item.id, item.label, item.type)}
-					class="flex items-center gap-2.5 px-4 py-2 rounded-lg border border-transparent transition-all
-					{isActive ? 'bg-blue-600/20 text-blue-400 border-blue-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}"
+					class="flex items-center gap-3 px-5 py-2 transition-all rounded-lg
+					{isActive ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-sm' : 'text-slate-500 hover:text-white hover:bg-slate-800'}"
 				>
 					<Icon name={item.iconName} size="1rem" />
-					<span class="text-xs font-bold uppercase tracking-wide">{item.label}</span>
+					<span class="text-[10px] font-bold uppercase tracking-widest">{item.label}</span>
 				</button>
 			{/each}
 		</div>
 	</div>
 
-	<!-- Desktop Sidebar -->
+	<!-- Desktop Workbench Sidebar -->
 	<div
-		class="hidden lg:flex flex-col border-r border-slate-800 transition-all duration-500 bg-slate-950/50 {isSidebarOpen
-			? 'w-64'
-			: 'w-20'}"
+		class="hidden lg:flex flex-col border-r border-slate-800/50 transition-[width] duration-500 bg-slate-900/40 backdrop-blur-xl will-change-[width] {isSidebarOpen
+			? 'w-72'
+			: 'w-20'} rounded-tr-2xl rounded-br-2xl my-4 ml-4 border-t border-b border-l shadow-2xl"
+		style="contain: layout paint;"
 	>
-		<!-- Sidebar Header -->
+		<!-- Sidebar Identity Area -->
 		<div
-			class="p-5 border-b border-slate-800 flex items-center justify-between"
+			class="p-6 border-b border-slate-800/50 flex items-center justify-between relative overflow-hidden"
 		>
 			{#if isSidebarOpen}
-				<div class="flex items-center gap-3" transition:fade={{ duration: 150 }}>
-					<div class="p-2 bg-blue-500/10 border border-blue-500/20 rounded-lg shadow-lg">
-						<Database class="w-5 h-5 text-blue-400" />
+				<div class="flex items-center gap-4 relative z-10" transition:fade={{ duration: 150 }}>
+					<div class="p-2.5 bg-indigo-500/10 rounded-xl border border-indigo-500/20 shadow-inner">
+						<Database class="w-5 h-5 text-indigo-400" />
 					</div>
-					<div>
-						<h2 class="font-heading font-bold text-sm text-slate-100">DATABASE</h2>
-						<p class="font-mono text-[10px] text-slate-500 mt-0.5">MANAGER V1</p>
+					<div class="flex flex-col">
+						<h2 class="font-heading font-black text-[11px] text-white tracking-[0.1em] uppercase">Data_Sector</h2>
+						<span class="font-mono text-[8px] text-indigo-400 mt-0.5 font-bold tracking-widest">STATION_PRO_4.2</span>
 					</div>
 				</div>
 			{/if}
 			<button
 				onclick={() => (isSidebarOpen = !isSidebarOpen)}
-				class="p-2 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-all {isSidebarOpen ? '' : 'mx-auto'}"
+				class="p-2 rounded-lg text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all relative z-10 {isSidebarOpen ? '' : 'mx-auto'}"
 			>
 				{#if isSidebarOpen}
 					<ChevronLeft class="w-4 h-4" />
@@ -255,37 +256,37 @@
 			</button>
 		</div>
 
-		<!-- Sidebar Menu -->
-		<div class="flex-1 overflow-y-auto py-6 px-3 space-y-8 custom-scrollbar">
+		<!-- Sidebar Navigation Hub -->
+		<div class="flex-1 overflow-y-auto py-6 px-4 space-y-8 custom-scrollbar" style="contain: content;">
 			{#each menuCategories as category}
-				<div class="space-y-2">
+				<div class="space-y-3">
 					{#if isSidebarOpen}
-						<h3
-							class="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2"
-							transition:fade={{ duration: 100 }}
-						>
-							{category.name}
-						</h3>
+						<div class="flex items-center gap-3 px-2" transition:fade={{ duration: 100 }}>
+							<span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">{category.name}</span>
+							<div class="h-px w-full bg-slate-800/50"></div>
+						</div>
 					{/if}
 					<div class="space-y-1">
 						{#each category.items as item}
 							{@const isActive = activeTabId === item.id}
 							<button
 								onclick={() => openTab(item.id, item.label, item.type)}
-								class="w-full flex items-center gap-3 p-2.5 rounded-lg transition-all duration-200 group
+								class="w-full flex items-center gap-4 p-3 transition-all duration-300 group rounded-xl relative
 								{isActive
-									? 'bg-blue-600/10 text-blue-400 border border-blue-500/20 shadow-sm'
-									: 'text-slate-400 hover:bg-slate-800 hover:text-slate-200 border border-transparent'}"
+									? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-sm'
+									: 'text-slate-500 hover:bg-slate-800/50 hover:text-white border border-transparent'}"
 								title={item.description}
+								style="transform: translateZ(0);"
 							>
 								<div
-									class="{isSidebarOpen ? '' : 'mx-auto'} transition-colors {isActive ? 'text-blue-400' : 'text-slate-500 group-hover:text-slate-300'}"
+									class="transition-transform duration-300 {isActive ? 'scale-110 text-indigo-400' : 'text-slate-500 group-hover:text-slate-300'}"
 								>
-									<Icon name={item.iconName} size="1.2rem" />
+									<Icon name={item.iconName} size="1.15rem" />
 								</div>
 								{#if isSidebarOpen}
-									<div class="flex-1 text-left" transition:fade={{ duration: 100 }}>
-										<span class="font-medium text-sm">{item.label}</span>
+									<div class="flex-1 text-left flex flex-col" transition:fade={{ duration: 100 }}>
+										<span class="font-bold text-[11px] uppercase tracking-wide leading-none mb-1">{item.label}</span>
+										<span class="text-[8px] text-slate-500 font-medium tracking-tight truncate group-hover:text-slate-400 transition-colors">{item.description}</span>
 									</div>
 								{/if}
 							</button>
@@ -295,229 +296,302 @@
 			{/each}
 		</div>
 
-		<!-- Sidebar Footer -->
+		<!-- Sidebar Status Terminal -->
 		{#if isSidebarOpen}
 			<div
-				class="p-4 border-t border-slate-800 bg-slate-900/30"
+				class="p-6 border-t border-slate-800/50 bg-slate-900/20"
 				transition:fade={{ duration: 150 }}
+				style="contain: content;"
 			>
-				<div class="flex items-center gap-3 text-[10px] font-bold uppercase tracking-wide text-slate-500">
-					<div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]"></div>
-					<span class="font-mono">CLUSTER SYNC: ACTIVE</span>
+				<div class="space-y-4">
+					<div class="flex justify-between items-center text-[8px] font-bold uppercase tracking-widest text-slate-500">
+						<span>Kernel_Sync</span>
+						<span class="text-indigo-400 font-black">ACTIVE</span>
+					</div>
+					<div class="h-1 bg-slate-800 rounded-full relative overflow-hidden">
+						<div class="h-full bg-indigo-500 w-[92%] shadow-[0_0_10px_rgba(99,102,241,0.2)]"></div>
+					</div>
+					<div class="flex items-center gap-3 text-[9px] font-bold uppercase tracking-widest text-slate-500 italic">
+						<div class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981] animate-pulse" style="transform: translateZ(0);"></div>
+						<span>Uplink Verified</span>
+					</div>
 				</div>
 			</div>
 		{/if}
 	</div>
 
-	<!-- Main Content Area -->
-	<div class="flex-1 flex flex-col min-w-0 bg-slate-950/30 relative">
-		<!-- Tab Bar -->
-		<QueryTabs {tabs} {activeTabId} onSelect={(id) => (activeTabId = id)} onClose={closeTab} />
+	<!-- Workbench Main Content Area -->
+	<div class="flex-1 flex flex-col min-w-0 bg-transparent relative">
+		<!-- Integrated Tab Bar -->
+		<div class="relative z-20 px-4 pt-4">
+			<QueryTabs {tabs} {activeTabId} onSelect={(id) => (activeTabId = id)} onClose={closeTab} />
+		</div>
 
 		<div class="flex-1 overflow-hidden relative">
 			{#each tabs as tab (tab.id)}
 				<div
 					class="absolute inset-0 {activeTabId === tab.id
 						? 'z-10 block'
-						: 'z-0 hidden'}"
+						: 'z-0 hidden'} transition-opacity duration-300"
 				>
 					{#if tab.type === 'table'}
 						<TableTab schema={tab.data.schema} table={tab.data.table} />
 					{:else if tab.type === 'browser'}
 						<DatabaseBrowserTab onSelectTable={handleSelectTable} />
-					{:else if tab.id === 'overview'}
-						<!-- Modern Overview Content -->
-						<div
-							class="h-full overflow-auto custom-scrollbar p-6 sm:p-8 space-y-8"
-						>
-							
-							<!-- Header Section -->
-							<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-								<div class="flex items-center gap-5">
-									<div
-										class="p-4 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl shadow-xl shadow-blue-900/20"
-									>
-										<Icon name="database" size="2rem" class="text-white" />
-									</div>
-									<div>
-										<h1 class="text-2xl sm:text-3xl font-heading font-bold text-white tracking-tight">
-											Database Overview
-										</h1>
-										<p class="text-sm text-slate-400 font-medium mt-1">
-											System Status & Performance Metrics
-										</p>
-									</div>
-								</div>
-								
-								<div class="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
-									<div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-									<span class="text-xs font-bold text-emerald-400 uppercase tracking-wide">Operational</span>
-								</div>
-							</div>
-
-							<!-- Stats Grid -->
+					                    {:else if tab.id === 'overview'}
+											<!-- Modern Overview Content -->
+											<div
+												class="h-full overflow-auto custom-scrollbar p-6 lg:p-10 space-y-8"
+												style="contain: content;"
+											>
+												
+												<!-- Workbench Header -->
+												<div class="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-10">
+													<div class="flex items-center gap-8">
+														<div
+															class="p-6 bg-slate-900/40 border border-slate-800 rounded-2xl shadow-xl relative group"
+															style="transform: translateZ(0);"
+														>
+															<Icon name="database" size="2rem" class="text-indigo-500 group-hover:scale-110 transition-transform duration-500" />
+															<div class="absolute -bottom-1 -right-1 p-1 bg-slate-900 border border-indigo-500/30 rounded-lg shadow-sm">
+																<Zap class="w-3.5 h-3.5 text-indigo-400" />
+															</div>
+														</div>
+														<div>
+															<div class="flex items-center gap-4 mb-2">
+																<span class="px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[9px] font-black uppercase tracking-widest italic rounded-lg shadow-sm">Operational</span>
+																<span class="text-slate-500 font-mono text-[10px]">// node_id: 0x4F2A</span>
+															</div>
+															<h1 class="text-4xl sm:text-5xl font-heading font-black text-white tracking-tighter uppercase leading-none">
+																Database Engine
+															</h1>
+															<div class="text-[11px] text-slate-500 font-bold mt-4 uppercase tracking-[0.4em] italic flex items-center gap-3">
+																<div class="w-8 h-px bg-slate-800"></div>
+																Database Management System
+															</div>
+														</div>
+													</div>
+													
+													<div class="grid grid-cols-2 gap-4 w-full xl:w-auto">
+														<div class="p-5 bg-slate-900/40 border border-slate-800 rounded-2xl flex flex-col gap-2 shadow-sm">
+															<span class="text-[8px] font-black text-slate-500 uppercase tracking-widest italic">Connection Status</span>
+															<div class="flex items-center gap-1.5">
+																{#each [1,2,3,4,5] as i}
+																	<div class="w-1.5 h-4 rounded-full {i < 5 ? 'bg-indigo-500 shadow-[0_0_8px_#6366f1]' : 'bg-slate-800'}" style="transform: translateZ(0);"></div>
+																{/each}
+															</div>
+														</div>
+														<div class="p-5 bg-slate-900/40 border border-slate-800 rounded-2xl flex flex-col gap-2 shadow-sm">
+															<span class="text-[8px] font-black text-slate-500 uppercase tracking-widest italic">System Health</span>
+															<span class="text-lg font-heading font-black text-emerald-500 tabular-nums">OPTIMAL</span>
+														</div>
+													</div>
+												</div>
+							<!-- Metrics Panel -->
 							<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
 								<!-- Size -->
-								<div class="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-6 hover:border-blue-500/30 transition-all group shadow-lg shadow-black/20">
-									<div class="flex justify-between items-start mb-4">
-										<div class="p-2.5 bg-blue-500/10 rounded-xl text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+								<div class="modern-card p-8 hover:border-indigo-500/40 transition-all group relative overflow-hidden flex flex-col" style="transform: translateZ(0); contain: content;">
+									<div class="absolute -top-10 -right-10 opacity-5 group-hover:scale-110 transition-transform duration-1000 will-change-transform">
+										<HardDrive class="w-40 h-40 text-indigo-500" />
+									</div>
+									<div class="flex justify-between items-start mb-10 relative z-10">
+										<div class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 border border-indigo-500/20 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-500 shadow-inner">
 											<HardDrive class="w-6 h-6" />
 										</div>
-										<span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Storage</span>
+										<div class="flex flex-col items-end">
+											<span class="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Storage Usage</span>
+											<span class="text-[8px] font-mono text-slate-600 mt-1">VOL_01_PRIMARY</span>
+										</div>
 									</div>
-									<div class="text-3xl font-heading font-bold text-white mb-1">
-										{formatBytes(dbStats.size_bytes)}
+									<div class="mt-auto relative z-10">
+										<div class="text-4xl font-heading font-black text-white mb-2 tabular-nums tracking-tighter">
+											{formatBytes(dbStats.size_bytes)}
+										</div>
+										<div class="text-[9px] text-slate-500 font-bold uppercase tracking-widest flex items-center gap-2">
+											<span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+											Segmented Data Matrix
+										</div>
 									</div>
-									<div class="text-xs text-slate-400 font-medium">Total Volume Size</div>
 								</div>
 
 								<!-- Connections -->
-								<div class="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-6 hover:border-emerald-500/30 transition-all group shadow-lg shadow-black/20">
-									<div class="flex justify-between items-start mb-4">
-										<div class="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+								<div class="modern-card p-8 hover:border-indigo-500/40 transition-all group relative overflow-hidden flex flex-col" style="transform: translateZ(0); contain: content;">
+									<div class="absolute -top-10 -right-10 opacity-5 group-hover:scale-110 transition-transform duration-1000 will-change-transform">
+										<Activity class="w-40 h-40 text-indigo-500" />
+									</div>
+									<div class="flex justify-between items-start mb-10 relative z-10">
+										<div class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 border border-indigo-500/20 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-500 shadow-inner">
 											<Activity class="w-6 h-6" />
 										</div>
-										<span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Active</span>
+										<div class="flex flex-col items-end">
+											<span class="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Active Connections</span>
+											<span class="text-[8px] font-mono text-slate-600 mt-1">STREAM_AUTH</span>
+										</div>
 									</div>
-									<div class="text-3xl font-heading font-bold text-white mb-1">
-										{dbStats.connections}
+									<div class="mt-auto relative z-10">
+										<div class="text-4xl font-heading font-black text-white mb-2 tabular-nums tracking-tighter">
+											{dbStats.connections}
+										</div>
+										<div class="text-[9px] text-slate-500 font-bold uppercase tracking-widest flex items-center gap-2">
+											<span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+											Verified Client Uplinks
+										</div>
 									</div>
-									<div class="text-xs text-slate-400 font-medium">Open Connections</div>
 								</div>
 
 								<!-- Uptime -->
-								<div class="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-6 hover:border-purple-500/30 transition-all group shadow-lg shadow-black/20">
-									<div class="flex justify-between items-start mb-4">
-										<div class="p-2.5 bg-purple-500/10 rounded-xl text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors">
+								<div class="modern-card p-8 hover:border-indigo-500/40 transition-all group relative overflow-hidden flex flex-col" style="transform: translateZ(0); contain: content;">
+									<div class="absolute -top-10 -right-10 opacity-5 group-hover:scale-110 transition-transform duration-1000 will-change-transform">
+										<Clock class="w-40 h-40 text-indigo-500" />
+									</div>
+									<div class="flex justify-between items-start mb-10 relative z-10">
+										<div class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 border border-indigo-500/20 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-500 shadow-inner">
 											<Clock class="w-6 h-6" />
 										</div>
-										<span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Uptime</span>
+										<div class="flex flex-col items-end">
+											<span class="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">System Uptime</span>
+											<span class="text-[8px] font-mono text-slate-600 mt-1">SESSION_PERSIST</span>
+										</div>
 									</div>
-									<div class="text-3xl font-heading font-bold text-white mb-1">
-										{Math.floor(dbStats.uptime_seconds / 3600)}h
-									</div>
-									<div class="text-xs text-slate-400 font-medium">
-										{Math.floor((dbStats.uptime_seconds % 3600) / 60)}m Since Last Restart
+									<div class="mt-auto relative z-10">
+										<div class="text-4xl font-heading font-black text-white mb-2 tabular-nums tracking-tighter">
+											{Math.floor(dbStats.uptime_seconds / 3600)}<span class="text-slate-600 text-2xl">H</span>
+										</div>
+										<div class="text-[9px] text-slate-500 font-bold uppercase tracking-widest flex items-center gap-2">
+											<span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+											Persistent System Uptime
+										</div>
 									</div>
 								</div>
 
 								<!-- Version -->
-								<div class="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-6 hover:border-amber-500/30 transition-all group shadow-lg shadow-black/20">
-									<div class="flex justify-between items-start mb-4">
-										<div class="p-2.5 bg-amber-500/10 rounded-xl text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition-colors">
+								<div class="modern-card p-8 hover:border-indigo-500/40 transition-all group relative overflow-hidden flex flex-col" style="transform: translateZ(0); contain: content;">
+									<div class="absolute -top-10 -right-10 opacity-5 group-hover:scale-110 transition-transform duration-1000 will-change-transform">
+										<Server class="w-40 h-40 text-indigo-500" />
+									</div>
+									<div class="flex justify-between items-start mb-10 relative z-10">
+										<div class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 border border-indigo-500/20 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-500 shadow-inner">
 											<Server class="w-6 h-6" />
 										</div>
-										<span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Engine</span>
+										<div class="flex flex-col items-end">
+											<span class="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Engine Version</span>
+											<span class="text-[8px] font-mono text-slate-600 mt-1">CORE_REVISION</span>
+										</div>
 									</div>
-									<div class="text-3xl font-heading font-bold text-white mb-1 truncate">
-										{dbStats.version.split(' ')[0] || 'PGSQL'}
-									</div>
-									<div class="text-xs text-slate-400 font-medium truncate">
-										{dbStats.version.split(',')[0] || 'Build Information'}
+									<div class="mt-auto relative z-10">
+										<div class="text-3xl font-heading font-black text-white mb-2 truncate uppercase tracking-tighter">
+											{dbStats.version.split(' ')[0] || 'PGSQL_PRO'}
+										</div>
+										<div class="text-[9px] text-slate-500 font-bold uppercase tracking-widest flex items-center gap-2">
+											<span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+											Kernel Engine Revision
+										</div>
 									</div>
 								</div>
 							</div>
 
-							<!-- Quick Actions -->
-							<div class="space-y-6">
-								<h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-3">
-									<Zap class="w-4 h-4 text-blue-400" />
-									Quick Actions
-								</h2>
-								<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-									<button
-										onclick={() => openTab('sql', 'SQL Editor', 'sql')}
-										class="flex items-center gap-4 p-5 bg-slate-900/40 border border-slate-700/50 rounded-xl hover:bg-slate-800 hover:border-blue-500/30 transition-all group text-left shadow-lg shadow-black/10"
-									>
-										<div class="p-3 bg-stone-900 rounded-lg text-slate-400 group-hover:text-blue-400 group-hover:bg-blue-500/10 transition-colors">
-											<Terminal class="w-6 h-6" />
-										</div>
-										<div>
-											<div class="font-bold text-slate-200 group-hover:text-white">SQL Editor</div>
-											<div class="text-xs text-slate-500">Run queries</div>
-										</div>
-									</button>
-
-									<button
-										onclick={() => openTab('functions', 'Functions', 'functions')}
-										class="flex items-center gap-4 p-5 bg-slate-900/40 border border-slate-700/50 rounded-xl hover:bg-slate-800 hover:border-purple-500/30 transition-all group text-left shadow-lg shadow-black/10"
-									>
-										<div class="p-3 bg-stone-900 rounded-lg text-slate-400 group-hover:text-purple-400 group-hover:bg-purple-500/10 transition-colors">
-											<Code2 class="w-6 h-6" />
-										</div>
-										<div>
-											<div class="font-bold text-slate-200 group-hover:text-white">Functions</div>
-											<div class="text-xs text-slate-500">Procedures</div>
-										</div>
-									</button>
-
-									<button
-										onclick={() => openTab('backups', 'Backups', 'backups')}
-										class="flex items-center gap-4 p-5 bg-slate-900/40 border border-slate-700/50 rounded-xl hover:bg-slate-800 hover:border-orange-500/30 transition-all group text-left shadow-lg shadow-black/10"
-									>
-										<div class="p-3 bg-stone-900 rounded-lg text-slate-400 group-hover:text-orange-400 group-hover:bg-orange-500/10 transition-colors">
-											<HardDrive class="w-6 h-6" />
-										</div>
-										<div>
-											<div class="font-bold text-slate-200 group-hover:text-white">Backups</div>
-											<div class="text-xs text-slate-500">Archives</div>
-										</div>
-									</button>
-
-									<button
-										onclick={() => openTab('roles', 'Roles', 'roles')}
-										class="flex items-center gap-4 p-5 bg-slate-900/40 border border-slate-700/50 rounded-xl hover:bg-slate-800 hover:border-emerald-500/30 transition-all group text-left shadow-lg shadow-black/10"
-									>
-										<div class="p-3 bg-stone-900 rounded-lg text-slate-400 group-hover:text-emerald-400 group-hover:bg-emerald-500/10 transition-colors">
-											<Shield class="w-6 h-6" />
-										</div>
-										<div>
-											<div class="font-bold text-slate-200 group-hover:text-white">Security</div>
-											<div class="text-xs text-slate-500">Roles & Users</div>
-										</div>
-									</button>
-								</div>
-							</div>
-
-							<!-- Table Stats -->
-							{#if tableCounts.length > 0}
-								<div class="space-y-6">
-									<h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-3">
-										<BarChart3 class="w-4 h-4 text-blue-400" />
-										Table Statistics
+							<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+								<!-- Quick Command Hub -->
+								<div class="lg:col-span-5 space-y-6">
+									<h2 class="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] flex items-center gap-5 italic">
+										<Zap class="w-4 h-4 text-amber-500 shadow-[0_0_10px_#f59e0b]" />
+										Uplink_Directives
 									</h2>
+									
+									<div class="grid grid-cols-1 gap-4">
+										<button
+											onclick={() => openTab('sql', 'SQL Editor', 'sql')}
+											class="flex items-center gap-6 p-6 bg-slate-900/40 border border-slate-800 rounded-2xl hover:border-amber-500/50 transition-all group text-left shadow-lg overflow-hidden relative"
+										>
+											<div class="absolute inset-0 bg-amber-500/0 group-hover:bg-amber-500/5 transition-colors duration-500"></div>
+											<div class="p-4 bg-slate-950 border border-slate-800 text-slate-500 group-hover:text-amber-400 group-hover:border-amber-500/30 rounded-xl transition-all duration-500 relative z-10">
+												<Terminal class="w-7 h-7" />
+											</div>
+											<div class="relative z-10">
+												<div class="font-black text-sm text-slate-300 group-hover:text-white uppercase tracking-widest italic transition-colors">SQL_Manual_Override</div>
+												<div class="text-[9px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-2 group-hover:text-slate-400 transition-colors">Execute direct neural queries</div>
+											</div>
+										</button>
+
+										<button
+											onclick={() => openTab('functions', 'Functions', 'functions')}
+											class="flex items-center gap-6 p-6 bg-slate-900/40 border border-slate-800 rounded-2xl hover:border-amber-500/50 transition-all group text-left shadow-lg overflow-hidden relative"
+										>
+											<div class="absolute inset-0 bg-amber-500/0 group-hover:bg-amber-500/5 transition-colors duration-500"></div>
+											<div class="p-4 bg-slate-950 border border-slate-800 text-slate-500 group-hover:text-amber-400 group-hover:border-amber-500/30 rounded-xl transition-all duration-500 relative z-10">
+												<Code2 class="w-7 h-7" />
+											</div>
+											<div class="relative z-10">
+												<div class="font-black text-sm text-slate-300 group-hover:text-white uppercase tracking-widest italic transition-colors">Logic_Unit_Control</div>
+												<div class="text-[9px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-2 group-hover:text-slate-400 transition-colors">Manage stored procedural units</div>
+											</div>
+										</button>
+
+										<button
+											onclick={() => openTab('backups', 'Backups', 'backups')}
+											class="flex items-center gap-6 p-6 bg-slate-900/40 border border-slate-800 rounded-2xl hover:border-amber-500/50 transition-all group text-left shadow-lg overflow-hidden relative"
+										>
+											<div class="absolute inset-0 bg-amber-500/0 group-hover:bg-amber-500/5 transition-colors duration-500"></div>
+											<div class="p-4 bg-slate-950 border border-slate-800 text-slate-500 group-hover:text-amber-400 group-hover:border-amber-500/30 rounded-xl transition-all duration-500 relative z-10">
+												<HardDrive class="w-7 h-7" />
+											</div>
+											<div class="relative z-10">
+												<div class="font-black text-sm text-slate-300 group-hover:text-white uppercase tracking-widest italic transition-colors">Archive_Sequencing</div>
+												<div class="text-[9px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-2 group-hover:text-slate-400 transition-colors">Generate and restore snapshots</div>
+											</div>
+										</button>
+									</div>
+								</div>
+
+								<!-- Entity Inventory -->
+								<div class="lg:col-span-7 space-y-6">
+									<div class="flex items-center justify-between">
+										<h2 class="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] flex items-center gap-5 italic">
+											<BarChart3 class="w-4 h-4 text-amber-500" />
+											Sector_Inventory_Metrics
+										</h2>
+										<span class="text-[9px] font-black text-slate-600 uppercase tracking-widest">{tableCounts.length} ENTITIES_MAPPED</span>
+									</div>
+									
 									<div
-										class="bg-slate-900/40 border border-slate-700/50 rounded-2xl overflow-hidden shadow-lg shadow-black/10"
+										class="bg-slate-900/40 border border-slate-800 rounded-2xl overflow-hidden shadow-xl"
 									>
 										<div class="overflow-x-auto custom-scrollbar">
-											<table class="w-full text-left">
-												<thead class="bg-slate-900/50 border-b border-slate-700/50">
+											<table class="w-full text-left font-jetbrains">
+												<thead class="bg-slate-950/50 border-b border-slate-800">
 													<tr>
 														<th
-															class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider"
-															>Table Name</th
+															class="px-8 py-5 text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] italic"
+															>Identifier_Tag</th
 														>
 														<th
-															class="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-wider"
-															>Row Count</th
+															class="px-8 py-5 text-right text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] italic"
+															>Density_Buffer</th
 														>
 													</tr>
 												</thead>
-												<tbody class="divide-y divide-slate-700/30">
+												<tbody class="divide-y divide-slate-800/50">
 													{#each tableCounts as table}
-														<tr class="hover:bg-slate-800/50 transition-colors group">
-															<td class="px-6 py-4">
-																<div class="flex items-center gap-3">
-																	<Table class="w-4 h-4 text-slate-500 group-hover:text-blue-400 transition-colors" />
-																	<span class="font-mono text-sm font-medium text-slate-300 group-hover:text-white"
+														<tr class="hover:bg-slate-800/30 transition-all group">
+															<td class="px-8 py-5">
+																<div class="flex items-center gap-5">
+																	<div class="w-8 h-8 bg-slate-950 border border-slate-800 rounded-lg flex items-center justify-center text-slate-600 group-hover:text-amber-500/80 group-hover:border-amber-500/20 transition-all duration-500">
+																		<Table class="w-4 h-4" />
+																	</div>
+																	<span class="font-black text-xs text-slate-400 group-hover:text-white tracking-[0.1em] transition-colors"
 																		>{table.name}</span
 																	>
 																</div>
 															</td>
-															<td class="px-6 py-4 text-right">
-																<span class="font-mono text-sm font-bold text-slate-400 group-hover:text-white"
-																	>{table.count?.toLocaleString() ?? '0'}</span
-																>
+															<td class="px-8 py-4 text-right">
+																<div class="flex flex-col items-end gap-1">
+																	<span class="font-mono text-sm font-black text-slate-500 group-hover:text-amber-400 tabular-nums transition-colors"
+																		>{table.count?.toLocaleString() ?? '0'}</span
+																	>
+																	<div class="w-24 h-1 bg-slate-800 overflow-hidden rounded-full">
+																		<div class="h-full bg-amber-500/20 group-hover:bg-amber-500 transition-all duration-1000" style="width: {Math.min(100, (table.count / 1000) * 100)}%"></div>
+																	</div>
+																</div>
 															</td>
 														</tr>
 													{/each}
@@ -526,7 +600,7 @@
 										</div>
 									</div>
 								</div>
-							{/if}
+							</div>
 						</div>
 					{:else if tab.type === 'sql'}
 						<SQLEditorTab />
@@ -564,12 +638,12 @@
 	}
 
 	.custom-scrollbar::-webkit-scrollbar-thumb {
-		background: #334155;
+		background: #1e293b;
 		border-radius: 3px;
 	}
 
 	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-		background: #475569;
+		background: #334155;
 	}
 
 	.no-scrollbar::-webkit-scrollbar {
