@@ -79,7 +79,7 @@
 		// Create irregular shard geometry
 		const geometry = new THREE.ConeGeometry(0.4, 0.8, 3); // Slightly smaller Triangle shards
 		const material = new THREE.MeshBasicMaterial({ 
-			color: 0x6366f1, // Tinted indigo
+			color: 0xc2410c, // Tinted Rust
 			transparent: true, 
 			opacity: 0.4,
 			side: THREE.DoubleSide

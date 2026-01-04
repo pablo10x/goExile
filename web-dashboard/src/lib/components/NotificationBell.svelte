@@ -26,15 +26,15 @@
 <div class="relative">
 	<button
 		onclick={toggleNotificationPanel}
-		class="p-2 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-blue-500/10 transition-all active:translate-y-px rounded-lg border border-slate-700"
+		class="p-2 text-neutral-400 hover:text-white bg-neutral-800/50 hover:bg-blue-500/10 transition-all active:tranneutral-y-px rounded-lg border border-neutral-700"
 	>
 		<Bell class="w-5 h-5 transition-transform group-hover:scale-110" />
 		{#if $notifications.length > 0}
 			<span
-				class="absolute top-0 right-0 w-2.5 h-2.5 bg-blue-500 rounded-full border-2 border-slate-900 animate-ping"
+				class="absolute top-0 right-0 w-2.5 h-2.5 bg-blue-500 rounded-full border-2 border-neutral-900 animate-ping"
 			></span>
 			<span
-				class="absolute top-0 right-0 w-2.5 h-2.5 bg-blue-500 rounded-full border-2 border-slate-900"
+				class="absolute top-0 right-0 w-2.5 h-2.5 bg-blue-500 rounded-full border-2 border-neutral-900"
 			></span>
 		{/if}
 	</button>
@@ -42,11 +42,11 @@
 	<!-- Notification Dropdown -->
 	{#if isNotificationPanelOpen}
 		<div
-			class="absolute right-0 top-14 w-96 bg-slate-900/95 backdrop-blur-xl shadow-2xl z-50 overflow-hidden border border-slate-700 rounded-xl"
+			class="absolute right-0 top-14 w-96 bg-neutral-900/95 backdrop-blur-xl shadow-2xl z-50 overflow-hidden border border-neutral-700 rounded-xl"
 			transition:slide={{ duration: 200 }}
 		>
 			<div
-				class="px-5 py-4 border-b border-slate-700 flex justify-between items-center bg-slate-800/40"
+				class="px-5 py-4 border-b border-neutral-700 flex justify-between items-center bg-neutral-800/40"
 			>
 				<span class="font-heading font-black text-white text-[10px] uppercase tracking-[0.2em]">Recent_Activity_Buffer</span>
 				<button
@@ -55,13 +55,13 @@
 				>PURGE_LOGS</button
 				>
 			</div>
-			<div class="max-h-80 overflow-y-auto p-3 space-y-2 custom-scrollbar bg-slate-950 relative">
+			<div class="max-h-80 overflow-y-auto p-3 space-y-2 custom-scrollbar bg-neutral-950 relative">
 				<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.03] pointer-events-none"></div>
 				
 				{#if $history && $history.length > 0}
 					{#each $history as note (note.id)}
 						<div
-							class="flex gap-4 p-4 bg-slate-900/30 border border-slate-800 hover:border-slate-700 transition-all group relative overflow-hidden rounded-lg"
+							class="flex gap-4 p-4 bg-neutral-900/30 border border-neutral-800 hover:border-neutral-700 transition-all group relative overflow-hidden rounded-lg"
 						>
 							<div class="mt-0.5 shrink-0">
 								{#if note.type === 'success'}

@@ -36,7 +36,7 @@
 <div class="relative dropdown-container">
 	<button
 		onclick={toggle}
-		class="flex items-center gap-3 px-5 py-2.5 bg-stone-950 text-stone-400 hover:text-white border border-stone-800 hover:border-rust/50 transition-all duration-300 font-heading font-black text-[10px] uppercase tracking-widest active:translate-y-px shadow-lg industrial-sharp"
+		class="flex items-center gap-3 px-5 py-2.5 bg-stone-950 text-stone-400 hover:text-white border border-stone-800 hover:border-rust/50 transition-all duration-300 font-heading font-black text-[10px] uppercase tracking-widest active:tranneutral-y-px shadow-lg industrial-sharp"
 	>
 		{#if Icon}
 			{@const DropdownIcon = Icon}

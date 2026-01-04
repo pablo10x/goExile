@@ -247,12 +247,12 @@
     <Card>
         <div class="overflow-x-auto overflow-y-auto max-h-[65vh] custom-scrollbar">
             <table class="w-full text-left font-jetbrains text-[11px] border-collapse">
-                <thead class="bg-slate-950/40 text-slate-500 sticky top-0 z-10 border-b border-slate-800 shadow-sm">
+                <thead class="bg-neutral-950/40 text-neutral-500 sticky top-0 z-10 border-b border-neutral-800 shadow-sm">
                     <tr class="uppercase font-bold tracking-widest">
                         <th class="px-6 py-5 w-16 text-center">
                             <button
                                 onclick={toggleSelectAll}
-                                class="w-5 h-5 mx-auto border-2 border-slate-700 rounded-lg flex items-center justify-center transition-all {selectedIds.size === logs.length && logs.length > 0 ? 'bg-indigo-600 border-indigo-500 shadow-lg shadow-indigo-500/20' : 'hover:border-slate-500'}"
+                                class="w-5 h-5 mx-auto border-2 border-neutral-700 rounded-lg flex items-center justify-center transition-all {selectedIds.size === logs.length && logs.length > 0 ? 'bg-indigo-600 border-indigo-500 shadow-lg shadow-indigo-500/20' : 'hover:border-neutral-500'}"
                             >
                                 {#if selectedIds.size === logs.length && logs.length > 0}
                                     <Check class="w-3.5 h-3.5 text-white" />
@@ -267,21 +267,21 @@
                         <th class="px-6 py-5 w-16"></th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-800/50">
+                <tbody class="divide-y divide-neutral-800/50">
                     {#if loading && logs.length === 0}
                         <tr>
                             <td colspan="7" class="py-32">
                                 <div class="flex flex-col items-center justify-center gap-4">
                                     <div class="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest animate-pulse">Retrieving Logs...</span>
+                                    <span class="text-[10px] font-bold text-neutral-500 uppercase tracking-widest animate-pulse">Retrieving Logs...</span>
                                 </div>
                             </td>
                         </tr>
                     {:else if logs.length === 0}
                         <tr>
                             <td colspan="7" class="py-32">
-                                <div class="flex flex-col items-center justify-center text-slate-700 gap-4">
-                                    <div class="p-6 bg-slate-900/50 rounded-3xl border border-dashed border-slate-800">
+                                <div class="flex flex-col items-center justify-center text-neutral-700 gap-4">
+                                    <div class="p-6 bg-neutral-900/50 rounded-3xl border border-dashed border-neutral-800">
                                         <Info size={40} class="opacity-20 text-indigo-400" />
                                     </div>
                                     <span class="text-[10px] font-bold uppercase tracking-widest">No logs found</span>
@@ -296,30 +296,30 @@
                             >
                                 <td class="px-6 py-4 text-center" onclick={(e) => toggleSelection(e, log.id)}>
                                     <div
-                                        class="w-5 h-5 mx-auto border-2 border-slate-800 rounded-lg flex items-center justify-center transition-all {selectedIds.has(log.id) ? 'bg-indigo-600 border-indigo-500 shadow-md shadow-indigo-500/20' : 'group-hover:border-slate-600 bg-slate-950/40'}"
+                                        class="w-5 h-5 mx-auto border-2 border-neutral-800 rounded-lg flex items-center justify-center transition-all {selectedIds.has(log.id) ? 'bg-indigo-600 border-indigo-500 shadow-md shadow-indigo-500/20' : 'group-hover:border-neutral-600 bg-neutral-950/40'}"
                                     >
                                         {#if selectedIds.has(log.id)}
                                             <Check class="w-3.5 h-3.5 text-white" />
                                         {/if}
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap font-medium tabular-nums text-slate-400 group-hover:text-slate-200 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap font-medium tabular-nums text-neutral-400 group-hover:text-neutral-200 transition-colors">
                                     {log.timestamp ? new Date(log.timestamp).toLocaleString([], { hour12: false }) : 'N/A'}
                                 </td>
                                 <td class="px-6 py-4 font-black tracking-tight {getLevelColor(log.level)}">{log.level}</td>
                                 <td class="px-6 py-4">
-                                    <span class="px-2 py-0.5 font-bold text-[9px] bg-slate-950/40 border border-slate-800 text-slate-500 rounded-md uppercase tracking-wider">
+                                    <span class="px-2 py-0.5 font-bold text-[9px] bg-neutral-950/40 border border-neutral-800 text-neutral-500 rounded-md uppercase tracking-wider">
                                         {log.category}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-slate-300 group-hover:text-white transition-colors max-w-xl truncate font-medium tracking-tight">
+                                <td class="px-6 py-4 text-neutral-300 group-hover:text-white transition-colors max-w-xl truncate font-medium tracking-tight">
                                     {log.message}
                                 </td>
-                                <td class="px-6 py-4 font-medium text-slate-500 uppercase tracking-tighter text-[10px]">{log.path || '/'}</td>
+                                <td class="px-6 py-4 font-medium text-neutral-500 uppercase tracking-tighter text-[10px]">{log.path || '/'}</td>
                                 <td class="px-6 py-4 text-right">
                                     <button
                                         onclick={(e) => deleteLog(e, log.id)}
-                                        class="p-2 text-slate-700 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100"
+                                        class="p-2 text-neutral-700 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100"
                                     >
                                         <Trash2 class="w-4 h-4" />
                                     </button>
@@ -331,9 +331,9 @@
             </table>
         </div>
 
-        <div class="p-6 border-t border-slate-800 bg-slate-950/20 flex items-center justify-between">
+        <div class="p-6 border-t border-neutral-800 bg-neutral-950/20 flex items-center justify-between">
             <div class="flex items-center gap-6">
-                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                <span class="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
                     Displaying <span class="text-indigo-400 font-black">{offset + 1}-{Math.min(offset + limit, total)}</span> of <span class="text-white font-black">{total}</span>
                 </span>
             </div>
@@ -349,7 +349,7 @@
 <!-- Detail Modal -->
 {#if selectedLog}
     <div
-        class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md"
+        class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-neutral-950/80 backdrop-blur-md"
         transition:fade={{ duration: 150 }}
         onclick={() => (selectedLog = null)}
         role="button"
@@ -359,35 +359,35 @@
         }}
     >
         <div
-            class="bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden"
+            class="bg-neutral-900 border border-neutral-800 rounded-3xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden"
             onclick={(e) => e.stopPropagation()}
             onkeydown={(e) => e.stopPropagation()}
             role="document"
             tabindex="0"
         >
             <div
-                class="p-8 border-b border-slate-800 bg-slate-950/40 flex justify-between items-start"
+                class="p-8 border-b border-neutral-800 bg-neutral-950/40 flex justify-between items-start"
             >
                 <div class="flex items-center gap-6">
-                    <div class="p-4 bg-slate-950 border border-slate-800 rounded-2xl">
+                    <div class="p-4 bg-neutral-950 border border-neutral-800 rounded-2xl">
                         <div class={`font-black text-2xl tracking-tighter ${getLevelColor(selectedLog.level)}`}>{selectedLog.level}</div>
                     </div>
                     <div>
                         <h3 class="text-xl font-heading font-black text-white uppercase tracking-tight">
                             Log Detail Readout
                         </h3>
-                        <p class="text-[10px] text-slate-500 font-bold mt-1 uppercase tracking-widest">
+                        <p class="text-[10px] text-neutral-500 font-bold mt-1 uppercase tracking-widest">
                             Captured: {selectedLog.timestamp ? new Date(selectedLog.timestamp).toLocaleString([], { hour12: false }) : 'N/A'}
                         </p>
                     </div>
                 </div>
                 <button
                     onclick={() => (selectedLog = null)}
-                    class="p-2 text-slate-500 hover:text-white transition-all hover:rotate-90">
+                    class="p-2 text-neutral-500 hover:text-white transition-all hover:rotate-90">
                     <X class="w-6 h-6" />
                 </button>
             </div>
-            <div class="p-10 overflow-y-auto space-y-10 custom-scrollbar bg-slate-900 relative">
+            <div class="p-10 overflow-y-auto space-y-10 custom-scrollbar bg-neutral-900 relative">
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-8 relative z-10">
                     {#each [
                         { label: 'Category', val: selectedLog.category },
@@ -397,17 +397,17 @@
                         { label: 'Client IP', val: selectedLog.client_ip || 'INTERNAL' },
                         { label: 'Log ID', val: `#${selectedLog.id}` }
                     ] as meta}
-                        <div class="space-y-2 bg-slate-950/20 border border-slate-800 p-4 rounded-xl">
-                            <span class="block text-[9px] font-bold text-slate-500 uppercase tracking-widest">{meta.label}</span>
-                            <span class="text-[11px] font-bold text-slate-200 uppercase tracking-tight break-all">{meta.val}</span>
+                        <div class="space-y-2 bg-neutral-950/20 border border-neutral-800 p-4 rounded-xl">
+                            <span class="block text-[9px] font-bold text-neutral-500 uppercase tracking-widest">{meta.label}</span>
+                            <span class="text-[11px] font-bold text-neutral-200 uppercase tracking-tight break-all">{meta.val}</span>
                         </div>
                     {/each}
                 </div>
 
                 <div class="space-y-4 relative z-10">
-                    <span class="block text-[9px] font-bold text-slate-500 uppercase tracking-widest">Raw Message</span>
+                    <span class="block text-[9px] font-bold text-neutral-500 uppercase tracking-widest">Raw Message</span>
                     <div
-                        class="bg-slate-950 p-6 border border-slate-800 text-slate-300 font-mono text-xs whitespace-pre-wrap leading-relaxed rounded-2xl shadow-inner"
+                        class="bg-neutral-950 p-6 border border-neutral-800 text-neutral-300 font-mono text-xs whitespace-pre-wrap leading-relaxed rounded-2xl shadow-inner"
                     >
                         {selectedLog.message}
                     </div>
@@ -415,9 +415,9 @@
 
                 {#if selectedLog.details}
                     <div class="space-y-4 relative z-10">
-                        <span class="block text-[9px] font-bold text-slate-500 uppercase tracking-widest">Extended Data</span>
+                        <span class="block text-[9px] font-bold text-neutral-500 uppercase tracking-widest">Extended Data</span>
                         <div
-                            class="bg-slate-950 p-6 border border-slate-800 text-slate-400 font-mono text-[11px] whitespace-pre-wrap overflow-x-auto shadow-inner leading-relaxed rounded-2xl"
+                            class="bg-neutral-950 p-6 border border-neutral-800 text-neutral-400 font-mono text-[11px] whitespace-pre-wrap overflow-x-auto shadow-inner leading-relaxed rounded-2xl"
                         >
                             {selectedLog.details}
                         </div>
@@ -425,7 +425,7 @@
                 {/if}
             </div>
             
-            <div class="p-8 bg-slate-950/40 border-t border-slate-800 flex justify-end">
+            <div class="p-8 bg-neutral-950/40 border-t border-neutral-800 flex justify-end">
                 <Button 
                     onclick={() => (selectedLog = null)}
                     variant="primary"

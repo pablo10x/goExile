@@ -238,7 +238,7 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 	>
 		<!-- Backdrop -->
 		<div 
-			class="absolute inset-0 bg-slate-950/90 backdrop-blur-md"
+			class="absolute inset-0 bg-neutral-950/90 backdrop-blur-md"
 			onclick={close} 
 			role="button" 
 			tabindex="0" 
@@ -248,13 +248,13 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 
 		<!-- Modal Window -->
 		<div 
-			class="relative w-full max-w-7xl h-full sm:h-[90vh] flex flex-col md:flex-row bg-slate-900/80 backdrop-blur-2xl border border-stone-800 rounded-none shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden industrial-frame"
+			class="relative w-full max-w-7xl h-full sm:h-[90vh] flex flex-col md:flex-row bg-neutral-900/80 backdrop-blur-2xl border border-stone-800 rounded-none shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden industrial-frame"
 			transition:scale={{ start: 0.98, duration: 200, easing: cubicOut }}
 		>
 			<!-- Tactical Sidebar -->
-			<div class="w-full md:w-72 bg-slate-950/40 border-b md:border-b-0 md:border-r border-stone-800 flex flex-col shrink-0 max-h-[40vh] md:max-h-full">
+			<div class="w-full md:w-72 bg-neutral-950/40 border-b md:border-b-0 md:border-r border-stone-800 flex flex-col shrink-0 max-h-[40vh] md:max-h-full">
 				<div class="p-4 sm:p-6 border-b border-stone-800 bg-stone-900/30 flex justify-between items-center md:block">
-					<h3 class="text-[10px] sm:text-xs font-heading font-black text-slate-200 truncate tracking-widest uppercase">{instanceId}</h3>
+					<h3 class="text-[10px] sm:text-xs font-heading font-black text-neutral-200 truncate tracking-widest uppercase">{instanceId}</h3>
 					<div class="md:mt-4 flex items-center gap-2">
 						<div class="flex items-center gap-2 px-3 py-1 bg-black/60 border border-stone-800 text-[8px] sm:text-[10px] font-jetbrains font-black uppercase tracking-widest {stats.status === 'Running' ? 'text-emerald-500' : 'text-red-500'}">
 							<span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full {stats.status === 'Running' ? 'bg-emerald-500 animate-pulse shadow-[0_0_100px_rgba(16,185,129,0.5)]' : 'bg-red-500'}"></span>
@@ -350,7 +350,7 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 			<!-- Main Terminal/Data Area -->
 			<div class="flex-1 flex flex-col min-w-0 bg-transparent overflow-hidden">
 				<!-- Navigation Tabs -->
-				<div class="flex border-b border-stone-800 bg-slate-950/20 overflow-x-auto no-scrollbar shrink-0">
+				<div class="flex border-b border-stone-800 bg-neutral-950/20 overflow-x-auto no-scrollbar shrink-0">
 					{#each tabs as tab}
 						<button 
 							onclick={() => activeTab = tab.id}
@@ -362,7 +362,7 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 				</div>
 
 				<!-- Content Viewport -->
-				<div class="flex-1 relative overflow-hidden flex flex-col bg-slate-900/40">
+				<div class="flex-1 relative overflow-hidden flex flex-col bg-neutral-900/40">
 					<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
 					
 					{#if activeTab === 'console'}
@@ -385,7 +385,7 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 						<div class="flex-1 p-4 sm:p-10 overflow-y-auto custom-scrollbar" in:fade={{ duration: 150 }}>
 							<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10 border-b border-stone-800 pb-6">
 								<div>
-									<h4 class="text-sm font-heading font-black text-slate-200 uppercase tracking-[0.3em]">Storage_Archives</h4>
+									<h4 class="text-sm font-heading font-black text-neutral-200 uppercase tracking-[0.3em]">Storage_Archives</h4>
 									<p class="font-jetbrains text-[10px] text-stone-600 mt-2 uppercase tracking-widest">Node Snapshot Management Protocol</p>
 								</div>
 								<Button 

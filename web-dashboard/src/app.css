@@ -6,26 +6,27 @@
   --font-body: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  /* Modern Tech Palette */
-  --color-brand: #6366f1; /* Indigo 500 */
-  --color-brand-light: #818cf8; /* Indigo 400 */
-  --color-brand-dark: #4338ca; /* Indigo 700 */
+  /* Industrial Tactical Palette */
+  --color-brand: #c2410c; /* Rust 700 */
+  --color-brand-light: #f97316; /* Rust 500 */
+  --color-brand-dark: #9a3412; /* Rust 800 */
   
   --color-accent: #f59e0b; /* Amber 500 */
-  --color-rust: #c2410c; /* Orange 700 */
-  --color-rust-light: #f97316; /* Orange 500 */
-  --color-danger: #ef4444; /* Red 500 */
+  --color-rust: #c2410c;
+  --color-rust-light: #f97316;
+  --color-danger: #ef4444;
   
-  /* Backgrounds */
-  --color-bg-core: #020617; /* Slate 950 */
-  --color-bg-surface: #0f172a; /* Slate 900 */
+  /* Deep Charcoal Backgrounds */
+  --color-bg-core: #0a0a0a; /* Pure Charcoal */
+  --color-bg-surface: #171717; /* Neutral 900 */
+  --color-bg-panel: #1a1a1a;
   
-  --radius-sm: 0.25rem;
-  --radius-md: 0.375rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
-  --radius-2xl: 1rem;
-  --radius-industrial: 0.125rem;
+  --radius-sm: 0.125rem;
+  --radius-md: 0.25rem;
+  --radius-lg: 0.375rem;
+  --radius-xl: 0.5rem;
+  --radius-2xl: 0.75rem;
+  --radius-industrial: 0rem;
 
   /* Animation Utilities */
   --animate-float: float 6s ease-in-out infinite;
@@ -63,25 +64,25 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 3px;
+  background: #262626;
+  border-radius: 0px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #c2410c;
 }
 
 :root {
-  /* Deep Slate Theme Variables */
-  --bg-core: #020617; /* Slate 950 */
-  --bg-surface: #0f172a; /* Slate 900 */
-  --bg-surface-glass: rgba(15, 23, 42, 0.6);
+  /* Deep Industrial Theme Variables */
+  --bg-core: #0a0a0a;
+  --bg-surface: #171717;
+  --bg-surface-glass: rgba(23, 23, 23, 0.7);
   
-  --text-primary: #f8fafc; /* Slate 50 */
-  --text-secondary: #94a3b8; /* Slate 400 */
-  --text-dim: #64748b; /* Slate 500 */
+  --text-primary: #f5f5f5;
+  --text-secondary: #a3a3a3;
+  --text-dim: #525252;
   
-  --border-color: #1e293b; /* Slate 800 */
-  --border-highlight: #334155; /* Slate 700 */
+  --border-color: #262626;
+  --border-highlight: #404040;
   
   --color-rust: #c2410c;
   --color-rust-light: #f97316;
@@ -115,26 +116,30 @@ h1, h2, h3, h4, .font-heading {
   @apply font-bold;
 }
 
-/* Glassmorphism Utilities */
+/* Glassmorphism Utilities - Industrial */
 .glass-panel {
-  @apply bg-slate-900/60 backdrop-blur-md border border-slate-800 shadow-xl;
+  @apply bg-neutral-900/80 backdrop-blur-xl border border-neutral-800 shadow-2xl;
 }
 
 /* 30% Industrial Utilities */
+.industrial-gradient {
+  background: radial-gradient(circle at 50% 50%, #1a1a1a 0%, #0a0a0a 100%);
+}
+
 .industrial-sharp {
-  @apply rounded-sm;
+  @apply rounded-none;
 }
 
 .industrial-frame {
-  @apply border-2 border-slate-800 bg-slate-950/40;
+  @apply border-2 border-neutral-800 bg-neutral-950/60;
 }
 
 .tactical-label {
-  @apply font-mono text-[10px] font-black uppercase tracking-widest text-slate-500;
+  @apply font-mono text-[10px] font-black uppercase tracking-widest text-neutral-500;
 }
 
 .tactical-code {
-  @apply font-mono text-xs text-rust-light bg-black/40 px-1.5 py-0.5 border border-rust/20;
+  @apply font-mono text-xs text-rust-light bg-black/60 px-1.5 py-0.5 border border-rust/20;
 }
 
 /* Corner Brackets for Industrial Feel */
@@ -147,45 +152,45 @@ h1, h2, h3, h4, .font-heading {
 
 /* Scanline Effect */
 .scanline-overlay {
-  @apply pointer-events-none fixed inset-0 z-[1000] opacity-[0.03];
+  @apply pointer-events-none fixed inset-0 z-[1000] opacity-[0.04];
   background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
   background-size: 100% 4px, 3px 100%;
 }
 
 .glass-panel-hover:hover {
-  @apply bg-slate-800/60 border-slate-700 shadow-2xl;
+  @apply bg-neutral-800/80 border-neutral-700 shadow-2xl;
   transition: all 0.3s ease;
 }
 
-/* Modern Card Style */
+/* Modern Card Style - Tactical */
 .modern-card {
-  @apply rounded-xl border-2 border-slate-800/50 bg-slate-900/40 overflow-hidden shadow-lg;
+  @apply rounded-none border-2 border-neutral-800 bg-neutral-900/40 overflow-hidden shadow-2xl;
   transform: translateZ(0);
   will-change: transform, opacity;
 }
 
-/* Navigation Links - Modern Tech with Industrial Touch */
+/* Navigation Links - Tactical Industrial */
 .nav-link-light {
-  @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 font-mono text-[11px] uppercase tracking-wider;
+  @apply flex items-center gap-3 px-3 py-3 rounded-none text-neutral-500 font-mono text-[11px] uppercase tracking-widest;
   transition: all 0.2s ease;
 }
 .nav-link-light:hover {
-  @apply bg-slate-800/40 text-slate-100 translate-x-1;
+  @apply bg-neutral-800/40 text-neutral-100 border-l-2 border-neutral-700;
 }
 .nav-link-light.active {
-  @apply bg-rust/10 text-rust-light font-black border-l-2 border-rust;
+  @apply bg-rust/5 text-rust-light font-black border-l-4 border-rust shadow-[inset_4px_0_15px_rgba(194,65,12,0.05)];
 }
 
 /* Navigation Icon Container */
 .nav-icon-container-light {
-  @apply w-8 h-8 flex items-center justify-center rounded bg-slate-950 border border-slate-800 shadow-inner;
+  @apply w-8 h-8 flex items-center justify-center rounded-none bg-neutral-950 border border-neutral-800 shadow-inner;
   transition: all 0.2s ease;
 }
 .nav-link-light:hover .nav-icon-container-light {
-  @apply bg-slate-900 border-rust/30 text-rust-light;
+  @apply bg-neutral-900 border-rust/30 text-rust-light;
 }
 .nav-link-light.active .nav-icon-container-light {
-  @apply bg-rust/20 border-rust/40 text-rust shadow-[0_0_10px_rgba(194,65,12,0.2)];
+  @apply bg-rust/10 border-rust/40 text-rust shadow-[0_0_10px_rgba(194,65,12,0.2)];
 }
 
 /* Typography Helpers */
@@ -193,7 +198,7 @@ h1, h2, h3, h4, .font-heading {
   @apply text-xs font-semibold tracking-wide;
 }
 .nav-subtext-light {
-  @apply text-[9px] font-medium text-slate-500 tracking-tight leading-none mt-0.5;
+  @apply text-[9px] font-medium text-neutral-500 tracking-tight leading-none mt-0.5;
 }
 
 /* Button Resets & Base Styles */
@@ -205,7 +210,7 @@ button:active {
   transform: scale(0.98);
 }
 button:focus-visible, a:focus-visible {
-  @apply ring-2 ring-indigo-500 ring-offset-2 ring-offset-slate-950;
+  @apply ring-2 ring-rust ring-offset-2 ring-offset-black;
 }
 
 /* Utility Animations */

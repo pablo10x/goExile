@@ -46,7 +46,7 @@
 	}
 
 	// Base classes
-	const baseClasses = "inline-flex items-center justify-center transition-all focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed active:translate-y-[2px] relative overflow-hidden group font-mono uppercase tracking-widest font-black";
+	const baseClasses = "inline-flex items-center justify-center transition-all focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed active:tranneutral-y-[2px] relative overflow-hidden group font-mono uppercase tracking-widest font-black";
 
 	// Size classes
 	const sizeClasses = {
@@ -59,12 +59,12 @@
 	// Industrial tech palette
 	const defaultColors = {
 		primary: "bg-rust text-white hover:bg-rust-light shadow-xl shadow-rust/20 border-2 border-rust/30",
-		secondary: "bg-slate-950 text-slate-400 border-2 border-slate-800 hover:text-white hover:border-slate-600 hover:bg-slate-900",
+		secondary: "bg-neutral-950 text-neutral-400 border-2 border-neutral-800 hover:text-white hover:border-neutral-600 hover:bg-neutral-900",
 		danger: "bg-red-600/10 text-red-500 border-2 border-red-600/30 hover:bg-red-600 hover:text-white shadow-xl shadow-red-600/10",
 		success: "bg-emerald-600/10 text-emerald-500 border-2 border-emerald-600/30 hover:bg-emerald-600 hover:text-white shadow-xl shadow-emerald-600/10",
 		warning: "bg-amber-600/10 text-amber-500 border-2 border-amber-600/30 hover:bg-amber-600 hover:text-white shadow-xl shadow-amber-600/10",
-		ghost: "bg-transparent text-slate-500 hover:text-rust-light hover:bg-rust/5 border-2 border-transparent",
-		outline: "bg-transparent text-slate-400 border-2 border-slate-800 hover:border-rust/50 hover:text-white"
+		ghost: "bg-transparent text-neutral-500 hover:text-rust-light hover:bg-rust/5 border-2 border-transparent",
+		outline: "bg-transparent text-neutral-400 border-2 border-neutral-800 hover:border-rust/50 hover:text-white"
 	};
 
 	// Loading spinner size

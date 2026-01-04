@@ -30,12 +30,12 @@
 	});
 </script>
 
-<div class="w-full bg-[#18181b] border-b border-[#1e293b] relative z-40 overflow-hidden font-mono text-[8px] md:text-[10px] tracking-tight">
-	<div class="max-w-7xl mx-auto px-2 md:px-4 py-1 flex flex-wrap items-center justify-between gap-2 text-[#888888] h-6 md:h-auto">
+<div class="w-full bg-[#050505] border-b-2 border-neutral-800 relative z-40 overflow-hidden font-mono text-[8px] md:text-[10px] tracking-tight">
+	<div class="max-w-7xl mx-auto px-2 md:px-4 py-1 flex flex-wrap items-center justify-between gap-2 text-neutral-500 h-6 md:h-auto uppercase font-black">
 		
 		<div class="flex items-center gap-2 md:gap-4 whitespace-nowrap">
-			<span class="text-[#888888] opacity-80">
-				> {visibleText}<span class="{isTyping ? 'animate-pulse' : 'opacity-0'} inline-block w-1.5 h-3 bg-[#f59e0b] align-middle ml-1"></span>
+			<span class="text-neutral-500 opacity-80">
+				> {visibleText}<span class="{isTyping ? 'animate-pulse' : 'opacity-0'} inline-block w-1.5 h-3 bg-rust align-middle ml-1"></span>
 			</span>
 		</div>
 

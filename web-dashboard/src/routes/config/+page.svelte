@@ -635,7 +635,7 @@
 		<!-- Search Bar -->
 		<div class="relative group">
 			<Search
-				class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-text-dim group-focus-within:text-rust transition-colors"
+				class="absolute left-5 top-1/2 -tranneutral-y-1/2 w-5 h-5 text-text-dim group-focus-within:text-rust transition-colors"
 			/>
 			<input
 				type="text"
@@ -646,7 +646,7 @@
 			{#if searchQuery}
 				<button
 					onclick={() => (searchQuery = '')}
-					class="absolute right-5 top-1/2 -translate-y-1/2 text-text-dim hover:text-white"
+					class="absolute right-5 top-1/2 -tranneutral-y-1/2 text-text-dim hover:text-white"
 				>
 					<X class="w-5 h-5" />
 				</button>
@@ -744,7 +744,7 @@
 																	{#if isSecret}
 																		<button 
 																			onclick={() => toggleSecret(item.key)} 
-																			class="absolute right-3 top-1/2 -translate-y-1/2 text-text-dim hover:text-rust transition-colors"
+																			class="absolute right-3 top-1/2 -tranneutral-y-1/2 text-text-dim hover:text-rust transition-colors"
 																		>
 																			{#if showValue}<EyeOff class="w-4 h-4"/>{:else}<Eye class="w-4 h-4"/>{/if}
 																		</button>
@@ -781,7 +781,7 @@
 									<Flame class="w-6 h-6 text-white" />
 								</div>
 								<div>
-									<h3 class="text-xl font-bold text-slate-100 font-heading tracking-widest uppercase">Firebase Remote Config</h3>
+									<h3 class="text-xl font-bold text-neutral-100 font-heading tracking-widest uppercase">Firebase Remote Config</h3>
 									<p class="text-xs text-text-dim font-mono italic">Synchronize remote client parameters</p>
 								</div>
 							</div>
@@ -803,7 +803,7 @@
 								<div class="px-6 py-4 border-b border-[var(--border-color)] flex items-center justify-between bg-black/20">
 									<div class="flex items-center gap-3">
 										<FileJson class="w-5 h-5 text-orange-500" />
-										<h3 class="text-lg font-bold text-slate-100 font-heading tracking-widest uppercase">Parameter Buffer</h3>
+										<h3 class="text-lg font-bold text-neutral-100 font-heading tracking-widest uppercase">Parameter Buffer</h3>
 									</div>
 									<div class="flex gap-2">
 										<Button
@@ -888,7 +888,7 @@
 				class="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-black"
 			>
 				<h3
-					class="text-xl font-bold text-slate-100 font-heading tracking-widest uppercase flex items-center gap-3"
+					class="text-xl font-bold text-neutral-100 font-heading tracking-widest uppercase flex items-center gap-3"
 				>
 					<Flame class="w-5 h-5 text-orange-500" />
 					{firebaseModalMode === 'create' ? 'Add Parameter' : 'Modify Parameter'}
@@ -911,7 +911,7 @@
 						bind:value={firebaseForm.key}
 						disabled={firebaseModalMode === 'edit'}
 						placeholder="PARAMETER_NAME"
-						class="w-full bg-black border border-white/5 px-4 py-3 text-slate-200 focus:border-orange-500 outline-none transition-all placeholder:text-stone-800"
+						class="w-full bg-black border border-white/5 px-4 py-3 text-neutral-200 focus:border-orange-500 outline-none transition-all placeholder:text-stone-800"
 					/>
 				</div>
 
@@ -920,7 +920,7 @@
 					<select
 						id="fbType"
 						bind:value={firebaseForm.valueType}
-						class="w-full bg-black border border-white/5 px-4 py-3 text-slate-200 focus:border-orange-500 outline-none transition-all appearance-none"
+						class="w-full bg-black border border-white/5 px-4 py-3 text-neutral-200 focus:border-orange-500 outline-none transition-all appearance-none"
 					>
 						<option value="STRING">STRING</option>
 						<option value="NUMBER">NUMBER</option>
@@ -935,7 +935,7 @@
 						<select
 							id="fbValue"
 							bind:value={firebaseForm.value}
-							class="w-full bg-black border border-white/5 px-4 py-3 text-slate-200 focus:border-orange-500 outline-none transition-all"
+							class="w-full bg-black border border-white/5 px-4 py-3 text-neutral-200 focus:border-orange-500 outline-none transition-all"
 						>
 							<option value="true">TRUE</option>
 							<option value="false">FALSE</option>
@@ -946,14 +946,14 @@
 																			bind:value={firebaseForm.value}
 																			rows={4}
 																			placeholder={`{ "status": "active" }`}
-																			class="w-full bg-black border border-white/5 px-4 py-3 text-slate-200 focus:border-orange-500 outline-none transition-all resize-none"
+																			class="w-full bg-black border border-white/5 px-4 py-3 text-neutral-200 focus:border-orange-500 outline-none transition-all resize-none"
 																		></textarea>					{:else}
 						<input
 							id="fbValue"
 							type={firebaseForm.valueType === 'NUMBER' ? 'number' : 'text'}
 							bind:value={firebaseForm.value}
 							placeholder="Enter value..."
-							class="w-full bg-black border border-white/5 px-4 py-3 text-slate-200 focus:border-orange-500 outline-none transition-all"
+							class="w-full bg-black border border-white/5 px-4 py-3 text-neutral-200 focus:border-orange-500 outline-none transition-all"
 						/>
 					{/if}
 				</div>
@@ -965,7 +965,7 @@
 											bind:value={firebaseForm.description}
 											rows={2}
 											placeholder="Purpose of this parameter..."
-											class="w-full bg-black border border-white/5 px-4 py-3 text-slate-200 focus:border-orange-500 outline-none transition-all resize-none"
+											class="w-full bg-black border border-white/5 px-4 py-3 text-neutral-200 focus:border-orange-500 outline-none transition-all resize-none"
 										></textarea>				</div>
 			</div>
 

@@ -87,14 +87,14 @@
 
 		<!-- Modal Container -->
 		<div
-			class="relative w-full max-w-lg bg-slate-900/80 backdrop-blur-2xl shadow-2xl overflow-hidden z-[460] border border-slate-700 rounded-xl"
+			class="relative w-full max-w-lg bg-neutral-900/80 backdrop-blur-2xl shadow-2xl overflow-hidden z-[460] border border-neutral-700 rounded-xl"
 			transition:modalScale
 		>
 			<!-- Status Bar -->
 			<div class={`h-1 w-full ${isCritical ? 'bg-red-600' : 'bg-rust'} opacity-40 animate-pulse`}></div>
 
 			<!-- Header -->
-			<div class="px-8 py-5 border-b border-slate-700 flex justify-between items-center bg-slate-950/40">
+			<div class="px-8 py-5 border-b border-neutral-700 flex justify-between items-center bg-neutral-950/40">
 				<div class="flex items-center gap-4">
 					{#if isCritical}
 						<Icon name="shield" size="1.25rem" class="text-red-500 animate-flicker" />
@@ -170,8 +170,8 @@
 			</div>
 
 			<!-- Commands -->
-			<div class="px-8 py-6 bg-slate-950/40 border-t border-slate-700 flex justify-between items-center">
-				<div class="font-jetbrains text-[10px] font-black tracking-[0.5em] uppercase italic text-slate-500">
+			<div class="px-8 py-6 bg-neutral-950/40 border-t border-neutral-700 flex justify-between items-center">
+				<div class="font-jetbrains text-[10px] font-black tracking-[0.5em] uppercase italic text-neutral-500">
 					AWAITING_INPUT
 				</div>
 				<div class="flex gap-4">

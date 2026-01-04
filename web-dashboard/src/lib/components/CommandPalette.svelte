@@ -142,50 +142,50 @@
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 		<div 
-			class="w-full max-w-2xl bg-slate-900/80 backdrop-blur-2xl border border-stone-800 shadow-[0_0_100px_rgba(0,0,0,1)] overflow-hidden industrial-sharp cursor-auto"
+			class="w-full max-w-2xl bg-neutral-900/90 backdrop-blur-2xl border-2 border-neutral-800 shadow-[0_0_100px_rgba(0,0,0,1)] overflow-hidden industrial-sharp cursor-auto"
 			transition:scale={{ start: 0.98, duration: 200, easing: cubicOut }}
 			onclick={e => e.stopPropagation()}
 			onkeydown={e => e.stopPropagation()}
 			role="document"
 		>
 			<!-- Status Header -->
-			<div class="px-6 py-3 border-b border-stone-800 bg-slate-950/40 flex justify-between items-center">
+			<div class="px-6 py-3 border-b-2 border-neutral-800 bg-black/40 flex justify-between items-center">
 				<div class="flex items-center gap-3">
-					<div class="w-1.5 h-1.5 rounded-full bg-rust animate-pulse"></div>
-					<span id="command-palette-title" class="text-[9px] font-black text-stone-500 uppercase tracking-[0.3em]">Smart_Uplink :: Command_Center</span>
+					<div class="w-1.5 h-1.5 rounded-full bg-rust animate-pulse shadow-[0_0_8px_#c2410c]"></div>
+					<span id="command-palette-title" class="text-[9px] font-black text-neutral-500 uppercase tracking-[0.3em]">Smart_Uplink :: Command_Center</span>
 				</div>
 				<div class="flex items-center gap-4">
-					<span class="text-[8px] text-stone-700 uppercase">Input_Mode: KBD_GLOBAL</span>
-					<button onclick={close} class="text-stone-600 hover:text-white transition-all">
+					<span class="text-[8px] text-neutral-700 uppercase font-black">Input_Mode: KBD_GLOBAL</span>
+					<button onclick={close} class="text-neutral-600 hover:text-white transition-all">
 						<X class="w-4 h-4" />
 					</button>
 				</div>
 			</div>
 
 			<!-- Search Input -->
-			<div class="relative group p-6 bg-black/40">
-				<Search class="absolute left-10 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-700 group-focus-within:text-rust transition-colors" />
+			<div class="relative group p-6 bg-neutral-950">
+				<Search class="absolute left-10 top-1/2 -tranneutral-y-1/2 w-5 h-5 text-neutral-700 group-focus-within:text-rust transition-colors" />
 				<input
 					bind:this={inputElement}
 					bind:value={query}
 					onkeydown={handleKeydown}
 					type="text"
 					placeholder="INITIATE_COMMAND_QUERY..."
-					class="w-full bg-stone-900/50 border border-stone-800 pl-14 pr-6 py-5 text-lg font-black text-white placeholder:text-stone-800 outline-none focus:border-rust transition-all industrial-sharp"
+					class="w-full bg-black border-2 border-neutral-800 pl-14 pr-6 py-5 text-lg font-black text-white placeholder:text-neutral-800 outline-none focus:border-rust transition-all rounded-none"
 				/>
 			</div>
 
 			<!-- Action List -->
-			<div class="max-h-[450px] overflow-y-auto p-4 space-y-1 custom-scrollbar bg-black/20">
+			<div class="max-h-[450px] overflow-y-auto p-4 space-y-1 custom-scrollbar bg-neutral-950/40">
 				{#each filteredActions as action, i}
 					<button
 						onclick={() => { action.action(); close(); }}
 						onmouseenter={() => selectedIndex = i}
-						class="w-full flex items-center justify-between p-4 transition-all relative group/item {selectedIndex === i ? 'bg-rust text-white translate-x-1' : 'text-stone-500 hover:text-stone-300'}"
+						class="w-full flex items-center justify-between p-4 transition-all relative group/item {selectedIndex === i ? 'bg-rust text-white tranneutral-x-1' : 'text-neutral-500 hover:text-neutral-300'}"
 					>
 						<div class="flex items-center gap-5">
-							<div class="p-2 bg-black/40 border border-stone-800 group-hover/item:border-white/20">
-								<action.icon class="w-5 h-5 {selectedIndex === i ? 'text-white' : 'text-stone-700'}" />
+							<div class="p-2 bg-black/40 border border-neutral-800 group-hover/item:border-white/20">
+								<action.icon class="w-5 h-5 {selectedIndex === i ? 'text-white' : 'text-neutral-700'}" />
 							</div>
 							<div class="text-left">
 								<span class="text-[8px] font-black uppercase opacity-40 block mb-0.5 tracking-widest">{action.category}</span>
@@ -196,7 +196,7 @@
 						{#if action.shortcut}
 							<div class="flex items-center gap-1.5 opacity-40">
 								{#each action.shortcut.split(' ') as key}
-									<kbd class="px-2 py-1 bg-black border border-stone-800 rounded text-[9px] font-black">{key}</kbd>
+									<kbd class="px-2 py-1 bg-black border border-neutral-800 rounded text-[9px] font-black">{key}</kbd>
 								{/each}
 							</div>
 						{/if}
@@ -214,15 +214,15 @@
 			</div>
 
 			<!-- Footer Tips -->
-			<div class="p-4 border-t border-stone-800 bg-stone-950/80 flex justify-between items-center">
-				<div class="flex gap-6 text-[8px] font-black text-stone-600 uppercase tracking-widest">
-					<span class="flex items-center gap-2"><kbd class="px-1.5 py-0.5 bg-black border border-stone-800">↑↓</kbd> Navigate</span>
-					<span class="flex items-center gap-2"><kbd class="px-1.5 py-0.5 bg-black border border-stone-800">ENTER</kbd> Execute</span>
-					<span class="flex items-center gap-2"><kbd class="px-1.5 py-0.5 bg-black border border-stone-800">ESC</kbd> Abort</span>
+			<div class="p-4 border-t-2 border-neutral-800 bg-black flex justify-between items-center">
+				<div class="flex gap-6 text-[8px] font-black text-neutral-600 uppercase tracking-widest">
+					<span class="flex items-center gap-2"><kbd class="px-1.5 py-0.5 bg-neutral-900 border border-neutral-800">↑↓</kbd> Navigate</span>
+					<span class="flex items-center gap-2"><kbd class="px-1.5 py-0.5 bg-neutral-900 border border-neutral-800">ENTER</kbd> Execute</span>
+					<span class="flex items-center gap-2"><kbd class="px-1.5 py-0.5 bg-neutral-900 border border-neutral-800">ESC</kbd> Abort</span>
 				</div>
 				<div class="flex items-center gap-2">
 					<div class="w-1 h-1 bg-emerald-500 rounded-full animate-flicker"></div>
-					<span class="text-[8px] text-stone-700 font-black uppercase tracking-widest">A11y_Optimized_Kernel</span>
+					<span class="text-[8px] text-neutral-700 font-black uppercase tracking-widest">A11y_Optimized_Kernel</span>
 				</div>
 			</div>
 		</div>

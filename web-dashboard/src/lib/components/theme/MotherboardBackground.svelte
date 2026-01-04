@@ -64,7 +64,7 @@
 		if (!context) return;
 		context.clearRect(0, 0, width, height);
 
-		context.fillStyle = 'rgba(99, 102, 241, 0.08)';
+		context.fillStyle = 'rgba(194, 65, 12, 0.15)';
 		context.lineWidth = 0.5;
 
 		// Update and draw particles
@@ -93,8 +93,8 @@
 
 				if (distSq < connectionDistanceSq) {
 					const dist = Math.sqrt(distSq);
-					const opacity = (1 - dist / connectionDistance) * 0.1;
-					context.strokeStyle = `rgba(99, 102, 241, ${opacity})`;
+					const opacity = (1 - dist / connectionDistance) * 0.12;
+					context.strokeStyle = `rgba(194, 65, 12, ${opacity})`;
 					context.beginPath();
 					context.moveTo(p.x, p.y);
 					context.lineTo(p2.x, p2.y);
@@ -125,13 +125,13 @@
 	});
 </script>
 
-<div class="fixed inset-0 z-[-1] overflow-hidden pointer-events-none bg-[#020617]" in:fade={{ duration: 1000 }}>
+<div class="fixed inset-0 z-[-1] overflow-hidden pointer-events-none bg-[#0a0a0a]" in:fade={{ duration: 1000 }}>
 	<!-- Soft ambient glows -->
-	<div class="absolute top-[-10%] -left-[10%] w-[40%] h-[40%] bg-indigo-500/5 blur-[120px] rounded-full animate-pulse"></div>
-	<div class="absolute bottom-[-10%] -right-[10%] w-[40%] h-[40%] bg-blue-500/5 blur-[120px] rounded-full animate-pulse" style="animation-delay: 2s;"></div>
+	<div class="absolute top-[-10%] -left-[10%] w-[40%] h-[40%] bg-rust/5 blur-[120px] rounded-full animate-pulse"></div>
+	<div class="absolute bottom-[-10%] -right-[10%] w-[40%] h-[40%] bg-neutral-800/5 blur-[120px] rounded-full animate-pulse" style="animation-delay: 2s;"></div>
 	
 	<!-- Subtle grid overlay -->
-	<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.03]"></div>
+	<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.04]"></div>
 	
 	<canvas bind:this={canvas} class="absolute inset-0 block"></canvas>
 </div>

@@ -205,7 +205,7 @@
 >
 	<!-- Mobile Top Nav -->
 	<div
-		class="lg:hidden border-b border-slate-800 bg-slate-900/90 overflow-x-auto no-scrollbar backdrop-blur-md shrink-0"
+		class="lg:hidden border-b border-neutral-800 bg-neutral-900/90 overflow-x-auto no-scrollbar backdrop-blur-md shrink-0"
 	>
 		<div class="flex items-center gap-2 p-3 min-w-max">
 			{#each allMenuItems as item}
@@ -213,7 +213,7 @@
 				<button
 					onclick={() => openTab(item.id, item.label, item.type)}
 					class="flex items-center gap-3 px-5 py-2 transition-all rounded-lg
-					{isActive ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-sm' : 'text-slate-500 hover:text-white hover:bg-slate-800'}"
+					{isActive ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-sm' : 'text-neutral-500 hover:text-white hover:bg-neutral-800'}"
 				>
 					<Icon name={item.iconName} size="1rem" />
 					<span class="text-[10px] font-bold uppercase tracking-widest">{item.label}</span>
@@ -224,14 +224,14 @@
 
 	<!-- Desktop Workbench Sidebar -->
 	<div
-		class="hidden lg:flex flex-col border-r border-slate-800/50 transition-[width] duration-500 bg-slate-900/40 backdrop-blur-xl will-change-[width] {isSidebarOpen
+		class="hidden lg:flex flex-col border-r border-neutral-800/50 transition-[width] duration-500 bg-neutral-900/40 backdrop-blur-xl will-change-[width] {isSidebarOpen
 			? 'w-72'
 			: 'w-20'} rounded-tr-2xl rounded-br-2xl my-4 ml-4 border-t border-b border-l shadow-2xl"
 		style="contain: layout paint;"
 	>
 		<!-- Sidebar Identity Area -->
 		<div
-			class="p-6 border-b border-slate-800/50 flex items-center justify-between relative overflow-hidden"
+			class="p-6 border-b border-neutral-800/50 flex items-center justify-between relative overflow-hidden"
 		>
 			{#if isSidebarOpen}
 				<div class="flex items-center gap-4 relative z-10" transition:fade={{ duration: 150 }}>
@@ -246,7 +246,7 @@
 			{/if}
 			<button
 				onclick={() => (isSidebarOpen = !isSidebarOpen)}
-				class="p-2 rounded-lg text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all relative z-10 {isSidebarOpen ? '' : 'mx-auto'}"
+				class="p-2 rounded-lg text-neutral-500 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all relative z-10 {isSidebarOpen ? '' : 'mx-auto'}"
 			>
 				{#if isSidebarOpen}
 					<ChevronLeft class="w-4 h-4" />
@@ -262,8 +262,8 @@
 				<div class="space-y-3">
 					{#if isSidebarOpen}
 						<div class="flex items-center gap-3 px-2" transition:fade={{ duration: 100 }}>
-							<span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">{category.name}</span>
-							<div class="h-px w-full bg-slate-800/50"></div>
+							<span class="text-[9px] font-bold text-neutral-500 uppercase tracking-widest whitespace-nowrap">{category.name}</span>
+							<div class="h-px w-full bg-neutral-800/50"></div>
 						</div>
 					{/if}
 					<div class="space-y-1">
@@ -274,19 +274,19 @@
 								class="w-full flex items-center gap-4 p-3 transition-all duration-300 group rounded-xl relative
 								{isActive
 									? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-sm'
-									: 'text-slate-500 hover:bg-slate-800/50 hover:text-white border border-transparent'}"
+									: 'text-neutral-500 hover:bg-neutral-800/50 hover:text-white border border-transparent'}"
 								title={item.description}
 								style="transform: translateZ(0);"
 							>
 								<div
-									class="transition-transform duration-300 {isActive ? 'scale-110 text-indigo-400' : 'text-slate-500 group-hover:text-slate-300'}"
+									class="transition-transform duration-300 {isActive ? 'scale-110 text-indigo-400' : 'text-neutral-500 group-hover:text-neutral-300'}"
 								>
 									<Icon name={item.iconName} size="1.15rem" />
 								</div>
 								{#if isSidebarOpen}
 									<div class="flex-1 text-left flex flex-col" transition:fade={{ duration: 100 }}>
 										<span class="font-bold text-[11px] uppercase tracking-wide leading-none mb-1">{item.label}</span>
-										<span class="text-[8px] text-slate-500 font-medium tracking-tight truncate group-hover:text-slate-400 transition-colors">{item.description}</span>
+										<span class="text-[8px] text-neutral-500 font-medium tracking-tight truncate group-hover:text-neutral-400 transition-colors">{item.description}</span>
 									</div>
 								{/if}
 							</button>
@@ -299,19 +299,19 @@
 		<!-- Sidebar Status Terminal -->
 		{#if isSidebarOpen}
 			<div
-				class="p-6 border-t border-slate-800/50 bg-slate-900/20"
+				class="p-6 border-t border-neutral-800/50 bg-neutral-900/20"
 				transition:fade={{ duration: 150 }}
 				style="contain: content;"
 			>
 				<div class="space-y-4">
-					<div class="flex justify-between items-center text-[8px] font-bold uppercase tracking-widest text-slate-500">
+					<div class="flex justify-between items-center text-[8px] font-bold uppercase tracking-widest text-neutral-500">
 						<span>Kernel_Sync</span>
 						<span class="text-indigo-400 font-black">ACTIVE</span>
 					</div>
-					<div class="h-1 bg-slate-800 rounded-full relative overflow-hidden">
+					<div class="h-1 bg-neutral-800 rounded-full relative overflow-hidden">
 						<div class="h-full bg-indigo-500 w-[92%] shadow-[0_0_10px_rgba(99,102,241,0.2)]"></div>
 					</div>
-					<div class="flex items-center gap-3 text-[9px] font-bold uppercase tracking-widest text-slate-500 italic">
+					<div class="flex items-center gap-3 text-[9px] font-bold uppercase tracking-widest text-neutral-500 italic">
 						<div class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981] animate-pulse" style="transform: translateZ(0);"></div>
 						<span>Uplink Verified</span>
 					</div>
@@ -349,40 +349,40 @@
 												<div class="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-10">
 													<div class="flex items-center gap-8">
 														<div
-															class="p-6 bg-slate-900/40 border border-slate-800 rounded-2xl shadow-xl relative group"
+															class="p-6 bg-neutral-900/40 border border-neutral-800 rounded-2xl shadow-xl relative group"
 															style="transform: translateZ(0);"
 														>
 															<Icon name="database" size="2rem" class="text-indigo-500 group-hover:scale-110 transition-transform duration-500" />
-															<div class="absolute -bottom-1 -right-1 p-1 bg-slate-900 border border-indigo-500/30 rounded-lg shadow-sm">
+															<div class="absolute -bottom-1 -right-1 p-1 bg-neutral-900 border border-indigo-500/30 rounded-lg shadow-sm">
 																<Zap class="w-3.5 h-3.5 text-indigo-400" />
 															</div>
 														</div>
 														<div>
 															<div class="flex items-center gap-4 mb-2">
 																<span class="px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[9px] font-black uppercase tracking-widest italic rounded-lg shadow-sm">Operational</span>
-																<span class="text-slate-500 font-mono text-[10px]">// node_id: 0x4F2A</span>
+																<span class="text-neutral-500 font-mono text-[10px]">// node_id: 0x4F2A</span>
 															</div>
 															<h1 class="text-4xl sm:text-5xl font-heading font-black text-white tracking-tighter uppercase leading-none">
 																Database Engine
 															</h1>
-															<div class="text-[11px] text-slate-500 font-bold mt-4 uppercase tracking-[0.4em] italic flex items-center gap-3">
-																<div class="w-8 h-px bg-slate-800"></div>
+															<div class="text-[11px] text-neutral-500 font-bold mt-4 uppercase tracking-[0.4em] italic flex items-center gap-3">
+																<div class="w-8 h-px bg-neutral-800"></div>
 																Database Management System
 															</div>
 														</div>
 													</div>
 													
 													<div class="grid grid-cols-2 gap-4 w-full xl:w-auto">
-														<div class="p-5 bg-slate-900/40 border border-slate-800 rounded-2xl flex flex-col gap-2 shadow-sm">
-															<span class="text-[8px] font-black text-slate-500 uppercase tracking-widest italic">Connection Status</span>
+														<div class="p-5 bg-neutral-900/40 border border-neutral-800 rounded-2xl flex flex-col gap-2 shadow-sm">
+															<span class="text-[8px] font-black text-neutral-500 uppercase tracking-widest italic">Connection Status</span>
 															<div class="flex items-center gap-1.5">
 																{#each [1,2,3,4,5] as i}
-																	<div class="w-1.5 h-4 rounded-full {i < 5 ? 'bg-indigo-500 shadow-[0_0_8px_#6366f1]' : 'bg-slate-800'}" style="transform: translateZ(0);"></div>
+																	<div class="w-1.5 h-4 rounded-full {i < 5 ? 'bg-indigo-500 shadow-[0_0_8px_#6366f1]' : 'bg-neutral-800'}" style="transform: translateZ(0);"></div>
 																{/each}
 															</div>
 														</div>
-														<div class="p-5 bg-slate-900/40 border border-slate-800 rounded-2xl flex flex-col gap-2 shadow-sm">
-															<span class="text-[8px] font-black text-slate-500 uppercase tracking-widest italic">System Health</span>
+														<div class="p-5 bg-neutral-900/40 border border-neutral-800 rounded-2xl flex flex-col gap-2 shadow-sm">
+															<span class="text-[8px] font-black text-neutral-500 uppercase tracking-widest italic">System Health</span>
 															<span class="text-lg font-heading font-black text-emerald-500 tabular-nums">OPTIMAL</span>
 														</div>
 													</div>
@@ -399,15 +399,15 @@
 											<HardDrive class="w-6 h-6" />
 										</div>
 										<div class="flex flex-col items-end">
-											<span class="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Storage Usage</span>
-											<span class="text-[8px] font-mono text-slate-600 mt-1">VOL_01_PRIMARY</span>
+											<span class="text-[10px] font-black text-neutral-500 uppercase tracking-widest italic">Storage Usage</span>
+											<span class="text-[8px] font-mono text-neutral-600 mt-1">VOL_01_PRIMARY</span>
 										</div>
 									</div>
 									<div class="mt-auto relative z-10">
 										<div class="text-4xl font-heading font-black text-white mb-2 tabular-nums tracking-tighter">
 											{formatBytes(dbStats.size_bytes)}
 										</div>
-										<div class="text-[9px] text-slate-500 font-bold uppercase tracking-widest flex items-center gap-2">
+										<div class="text-[9px] text-neutral-500 font-bold uppercase tracking-widest flex items-center gap-2">
 											<span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
 											Segmented Data Matrix
 										</div>
@@ -424,15 +424,15 @@
 											<Activity class="w-6 h-6" />
 										</div>
 										<div class="flex flex-col items-end">
-											<span class="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Active Connections</span>
-											<span class="text-[8px] font-mono text-slate-600 mt-1">STREAM_AUTH</span>
+											<span class="text-[10px] font-black text-neutral-500 uppercase tracking-widest italic">Active Connections</span>
+											<span class="text-[8px] font-mono text-neutral-600 mt-1">STREAM_AUTH</span>
 										</div>
 									</div>
 									<div class="mt-auto relative z-10">
 										<div class="text-4xl font-heading font-black text-white mb-2 tabular-nums tracking-tighter">
 											{dbStats.connections}
 										</div>
-										<div class="text-[9px] text-slate-500 font-bold uppercase tracking-widest flex items-center gap-2">
+										<div class="text-[9px] text-neutral-500 font-bold uppercase tracking-widest flex items-center gap-2">
 											<span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
 											Verified Client Uplinks
 										</div>
@@ -449,15 +449,15 @@
 											<Clock class="w-6 h-6" />
 										</div>
 										<div class="flex flex-col items-end">
-											<span class="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">System Uptime</span>
-											<span class="text-[8px] font-mono text-slate-600 mt-1">SESSION_PERSIST</span>
+											<span class="text-[10px] font-black text-neutral-500 uppercase tracking-widest italic">System Uptime</span>
+											<span class="text-[8px] font-mono text-neutral-600 mt-1">SESSION_PERSIST</span>
 										</div>
 									</div>
 									<div class="mt-auto relative z-10">
 										<div class="text-4xl font-heading font-black text-white mb-2 tabular-nums tracking-tighter">
-											{Math.floor(dbStats.uptime_seconds / 3600)}<span class="text-slate-600 text-2xl">H</span>
+											{Math.floor(dbStats.uptime_seconds / 3600)}<span class="text-neutral-600 text-2xl">H</span>
 										</div>
-										<div class="text-[9px] text-slate-500 font-bold uppercase tracking-widest flex items-center gap-2">
+										<div class="text-[9px] text-neutral-500 font-bold uppercase tracking-widest flex items-center gap-2">
 											<span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
 											Persistent System Uptime
 										</div>
@@ -474,15 +474,15 @@
 											<Server class="w-6 h-6" />
 										</div>
 										<div class="flex flex-col items-end">
-											<span class="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Engine Version</span>
-											<span class="text-[8px] font-mono text-slate-600 mt-1">CORE_REVISION</span>
+											<span class="text-[10px] font-black text-neutral-500 uppercase tracking-widest italic">Engine Version</span>
+											<span class="text-[8px] font-mono text-neutral-600 mt-1">CORE_REVISION</span>
 										</div>
 									</div>
 									<div class="mt-auto relative z-10">
 										<div class="text-3xl font-heading font-black text-white mb-2 truncate uppercase tracking-tighter">
 											{dbStats.version.split(' ')[0] || 'PGSQL_PRO'}
 										</div>
-										<div class="text-[9px] text-slate-500 font-bold uppercase tracking-widest flex items-center gap-2">
+										<div class="text-[9px] text-neutral-500 font-bold uppercase tracking-widest flex items-center gap-2">
 											<span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
 											Kernel Engine Revision
 										</div>
@@ -493,7 +493,7 @@
 							<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
 								<!-- Quick Command Hub -->
 								<div class="lg:col-span-5 space-y-6">
-									<h2 class="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] flex items-center gap-5 italic">
+									<h2 class="text-[11px] font-black text-neutral-500 uppercase tracking-[0.5em] flex items-center gap-5 italic">
 										<Zap class="w-4 h-4 text-amber-500 shadow-[0_0_10px_#f59e0b]" />
 										Uplink_Directives
 									</h2>
@@ -501,43 +501,43 @@
 									<div class="grid grid-cols-1 gap-4">
 										<button
 											onclick={() => openTab('sql', 'SQL Editor', 'sql')}
-											class="flex items-center gap-6 p-6 bg-slate-900/40 border border-slate-800 rounded-2xl hover:border-amber-500/50 transition-all group text-left shadow-lg overflow-hidden relative"
+											class="flex items-center gap-6 p-6 bg-neutral-900/40 border border-neutral-800 rounded-2xl hover:border-amber-500/50 transition-all group text-left shadow-lg overflow-hidden relative"
 										>
 											<div class="absolute inset-0 bg-amber-500/0 group-hover:bg-amber-500/5 transition-colors duration-500"></div>
-											<div class="p-4 bg-slate-950 border border-slate-800 text-slate-500 group-hover:text-amber-400 group-hover:border-amber-500/30 rounded-xl transition-all duration-500 relative z-10">
+											<div class="p-4 bg-neutral-950 border border-neutral-800 text-neutral-500 group-hover:text-amber-400 group-hover:border-amber-500/30 rounded-xl transition-all duration-500 relative z-10">
 												<Terminal class="w-7 h-7" />
 											</div>
 											<div class="relative z-10">
-												<div class="font-black text-sm text-slate-300 group-hover:text-white uppercase tracking-widest italic transition-colors">SQL_Manual_Override</div>
-												<div class="text-[9px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-2 group-hover:text-slate-400 transition-colors">Execute direct neural queries</div>
+												<div class="font-black text-sm text-neutral-300 group-hover:text-white uppercase tracking-widest italic transition-colors">SQL_Manual_Override</div>
+												<div class="text-[9px] text-neutral-500 font-bold uppercase tracking-[0.2em] mt-2 group-hover:text-neutral-400 transition-colors">Execute direct neural queries</div>
 											</div>
 										</button>
 
 										<button
 											onclick={() => openTab('functions', 'Functions', 'functions')}
-											class="flex items-center gap-6 p-6 bg-slate-900/40 border border-slate-800 rounded-2xl hover:border-amber-500/50 transition-all group text-left shadow-lg overflow-hidden relative"
+											class="flex items-center gap-6 p-6 bg-neutral-900/40 border border-neutral-800 rounded-2xl hover:border-amber-500/50 transition-all group text-left shadow-lg overflow-hidden relative"
 										>
 											<div class="absolute inset-0 bg-amber-500/0 group-hover:bg-amber-500/5 transition-colors duration-500"></div>
-											<div class="p-4 bg-slate-950 border border-slate-800 text-slate-500 group-hover:text-amber-400 group-hover:border-amber-500/30 rounded-xl transition-all duration-500 relative z-10">
+											<div class="p-4 bg-neutral-950 border border-neutral-800 text-neutral-500 group-hover:text-amber-400 group-hover:border-amber-500/30 rounded-xl transition-all duration-500 relative z-10">
 												<Code2 class="w-7 h-7" />
 											</div>
 											<div class="relative z-10">
-												<div class="font-black text-sm text-slate-300 group-hover:text-white uppercase tracking-widest italic transition-colors">Logic_Unit_Control</div>
-												<div class="text-[9px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-2 group-hover:text-slate-400 transition-colors">Manage stored procedural units</div>
+												<div class="font-black text-sm text-neutral-300 group-hover:text-white uppercase tracking-widest italic transition-colors">Logic_Unit_Control</div>
+												<div class="text-[9px] text-neutral-500 font-bold uppercase tracking-[0.2em] mt-2 group-hover:text-neutral-400 transition-colors">Manage stored procedural units</div>
 											</div>
 										</button>
 
 										<button
 											onclick={() => openTab('backups', 'Backups', 'backups')}
-											class="flex items-center gap-6 p-6 bg-slate-900/40 border border-slate-800 rounded-2xl hover:border-amber-500/50 transition-all group text-left shadow-lg overflow-hidden relative"
+											class="flex items-center gap-6 p-6 bg-neutral-900/40 border border-neutral-800 rounded-2xl hover:border-amber-500/50 transition-all group text-left shadow-lg overflow-hidden relative"
 										>
 											<div class="absolute inset-0 bg-amber-500/0 group-hover:bg-amber-500/5 transition-colors duration-500"></div>
-											<div class="p-4 bg-slate-950 border border-slate-800 text-slate-500 group-hover:text-amber-400 group-hover:border-amber-500/30 rounded-xl transition-all duration-500 relative z-10">
+											<div class="p-4 bg-neutral-950 border border-neutral-800 text-neutral-500 group-hover:text-amber-400 group-hover:border-amber-500/30 rounded-xl transition-all duration-500 relative z-10">
 												<HardDrive class="w-7 h-7" />
 											</div>
 											<div class="relative z-10">
-												<div class="font-black text-sm text-slate-300 group-hover:text-white uppercase tracking-widest italic transition-colors">Archive_Sequencing</div>
-												<div class="text-[9px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-2 group-hover:text-slate-400 transition-colors">Generate and restore snapshots</div>
+												<div class="font-black text-sm text-neutral-300 group-hover:text-white uppercase tracking-widest italic transition-colors">Archive_Sequencing</div>
+												<div class="text-[9px] text-neutral-500 font-bold uppercase tracking-[0.2em] mt-2 group-hover:text-neutral-400 transition-colors">Generate and restore snapshots</div>
 											</div>
 										</button>
 									</div>
@@ -546,49 +546,49 @@
 								<!-- Entity Inventory -->
 								<div class="lg:col-span-7 space-y-6">
 									<div class="flex items-center justify-between">
-										<h2 class="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] flex items-center gap-5 italic">
+										<h2 class="text-[11px] font-black text-neutral-500 uppercase tracking-[0.5em] flex items-center gap-5 italic">
 											<BarChart3 class="w-4 h-4 text-amber-500" />
 											Sector_Inventory_Metrics
 										</h2>
-										<span class="text-[9px] font-black text-slate-600 uppercase tracking-widest">{tableCounts.length} ENTITIES_MAPPED</span>
+										<span class="text-[9px] font-black text-neutral-600 uppercase tracking-widest">{tableCounts.length} ENTITIES_MAPPED</span>
 									</div>
 									
 									<div
-										class="bg-slate-900/40 border border-slate-800 rounded-2xl overflow-hidden shadow-xl"
+										class="bg-neutral-900/40 border border-neutral-800 rounded-2xl overflow-hidden shadow-xl"
 									>
 										<div class="overflow-x-auto custom-scrollbar">
 											<table class="w-full text-left font-jetbrains">
-												<thead class="bg-slate-950/50 border-b border-slate-800">
+												<thead class="bg-neutral-950/50 border-b border-neutral-800">
 													<tr>
 														<th
-															class="px-8 py-5 text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] italic"
+															class="px-8 py-5 text-[9px] font-black text-neutral-500 uppercase tracking-[0.3em] italic"
 															>Identifier_Tag</th
 														>
 														<th
-															class="px-8 py-5 text-right text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] italic"
+															class="px-8 py-5 text-right text-[9px] font-black text-neutral-500 uppercase tracking-[0.3em] italic"
 															>Density_Buffer</th
 														>
 													</tr>
 												</thead>
-												<tbody class="divide-y divide-slate-800/50">
+												<tbody class="divide-y divide-neutral-800/50">
 													{#each tableCounts as table}
-														<tr class="hover:bg-slate-800/30 transition-all group">
+														<tr class="hover:bg-neutral-800/30 transition-all group">
 															<td class="px-8 py-5">
 																<div class="flex items-center gap-5">
-																	<div class="w-8 h-8 bg-slate-950 border border-slate-800 rounded-lg flex items-center justify-center text-slate-600 group-hover:text-amber-500/80 group-hover:border-amber-500/20 transition-all duration-500">
+																	<div class="w-8 h-8 bg-neutral-950 border border-neutral-800 rounded-lg flex items-center justify-center text-neutral-600 group-hover:text-amber-500/80 group-hover:border-amber-500/20 transition-all duration-500">
 																		<Table class="w-4 h-4" />
 																	</div>
-																	<span class="font-black text-xs text-slate-400 group-hover:text-white tracking-[0.1em] transition-colors"
+																	<span class="font-black text-xs text-neutral-400 group-hover:text-white tracking-[0.1em] transition-colors"
 																		>{table.name}</span
 																	>
 																</div>
 															</td>
 															<td class="px-8 py-4 text-right">
 																<div class="flex flex-col items-end gap-1">
-																	<span class="font-mono text-sm font-black text-slate-500 group-hover:text-amber-400 tabular-nums transition-colors"
+																	<span class="font-mono text-sm font-black text-neutral-500 group-hover:text-amber-400 tabular-nums transition-colors"
 																		>{table.count?.toLocaleString() ?? '0'}</span
 																	>
-																	<div class="w-24 h-1 bg-slate-800 overflow-hidden rounded-full">
+																	<div class="w-24 h-1 bg-neutral-800 overflow-hidden rounded-full">
 																		<div class="h-full bg-amber-500/20 group-hover:bg-amber-500 transition-all duration-1000" style="width: {Math.min(100, (table.count / 1000) * 100)}%"></div>
 																	</div>
 																</div>
@@ -613,8 +613,8 @@
 					{:else if tab.type === 'functions'}
 						<FunctionsTab />
 					{:else}
-						<div class="p-12 text-slate-500 flex flex-col items-center justify-center h-full gap-4">
-							<div class="p-6 bg-slate-800/50 rounded-full">
+						<div class="p-12 text-neutral-500 flex flex-col items-center justify-center h-full gap-4">
+							<div class="p-6 bg-neutral-800/50 rounded-full">
 								<FileText class="w-12 h-12 opacity-50" />
 							</div>
 							<p class="font-medium">Loading Module...</p>

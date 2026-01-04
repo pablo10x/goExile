@@ -365,7 +365,7 @@
 			</div>
 			<button
 				onclick={refreshAll}
-				class="p-2.5 sm:p-3 bg-stone-900 border border-stone-800 hover:border-red-500/50 text-text-dim hover:text-danger transition-all shadow-xl active:translate-y-px"
+				class="p-2.5 sm:p-3 bg-stone-900 border border-stone-800 hover:border-red-500/50 text-text-dim hover:text-danger transition-all shadow-xl active:tranneutral-y-px"
 				aria-label="Refresh security data"
 			>
 				<RefreshCw class="w-5 h-5 sm:w-6 sm:h-6 {loading ? 'animate-spin' : ''}" />
@@ -585,7 +585,7 @@
 					</div>
 					<button
 						onclick={() => openModal()}
-						class="px-6 py-2.5 bg-danger hover:bg-danger/80 text-white font-heading font-black text-[10px] uppercase tracking-widest flex items-center gap-3 transition-all shadow-lg shadow-red-900/20 active:translate-y-px"
+						class="px-6 py-2.5 bg-danger hover:bg-danger/80 text-white font-heading font-black text-[10px] uppercase tracking-widest flex items-center gap-3 transition-all shadow-lg shadow-red-900/20 active:tranneutral-y-px"
 					>
 						<Plus class="w-4 h-4" /> Initialize_Protocol
 					</button>
@@ -701,7 +701,7 @@
 							</div>
 							<button
 								onclick={() => unbanIP(ban.ip)}
-								class="px-4 py-2 bg-stone-900 border border-stone-800 hover:border-emerald-500 hover:text-success font-heading font-black text-[9px] uppercase tracking-widest transition-all shadow-lg active:translate-y-px"
+								class="px-4 py-2 bg-stone-900 border border-stone-800 hover:border-emerald-500 hover:text-success font-heading font-black text-[9px] uppercase tracking-widest transition-all shadow-lg active:tranneutral-y-px"
 							>
 								DE_QUARANTINE
 							</button>
@@ -833,7 +833,7 @@
 									class={`absolute top-1 left-1 w-4.5 h-4.5 bg-white transition-all ${config[
 										'redeye.auto_ban_enabled'
 									]
-										? 'translate-x-8 bg-white shadow-lg'
+										? 'tranneutral-x-8 bg-white shadow-lg'
 										: 'bg-stone-700'}`}
 								></div>
 							</button>
@@ -892,7 +892,7 @@
 									class={`absolute top-1 left-1 w-4.5 h-4.5 bg-white transition-all ${config[
 										'redeye.alert_enabled'
 									]
-										? 'translate-x-8 bg-white shadow-lg'
+										? 'tranneutral-x-8 bg-white shadow-lg'
 										: 'bg-stone-700'}`}
 								></div>
 							</button>
@@ -1121,7 +1121,7 @@
 				</button>
 				<button
 					onclick={saveRule}
-					class="px-8 py-3 bg-danger hover:bg-danger/80 text-white text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-xl shadow-red-900/20 active:translate-y-px"
+					class="px-8 py-3 bg-danger hover:bg-danger/80 text-white text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-xl shadow-red-900/20 active:tranneutral-y-px"
 				>
 					Initialize
 				</button>

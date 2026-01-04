@@ -42,12 +42,12 @@
 		transition:slide={{ duration: 100 }}
 	>
 		<div
-			class="bg-slate-900/80 backdrop-blur-2xl border border-stone-800 rounded-none w-full max-w-md shadow-2xl flex flex-col industrial-frame"
+			class="bg-neutral-900/80 backdrop-blur-2xl border border-stone-800 rounded-none w-full max-w-md shadow-2xl flex flex-col industrial-frame"
 		>
 			<div
-				class="p-6 border-b border-stone-800 flex justify-between items-center bg-slate-950/40"
+				class="p-6 border-b border-stone-800 flex justify-between items-center bg-neutral-950/40"
 			>
-				<h3 class="text-xl font-heading font-black text-slate-100 uppercase tracking-tighter">
+				<h3 class="text-xl font-heading font-black text-neutral-100 uppercase tracking-tighter">
 					Alter_Schema: <span class="text-rust font-jetbrains text-xs ml-3 uppercase tracking-widest">{table}</span>
 				</h3>
 				<button
@@ -92,7 +92,7 @@
 			</div>
 
 			<div
-				class="p-6 border-t border-stone-800 bg-slate-950/40 flex justify-end gap-4"
+				class="p-6 border-t border-stone-800 bg-neutral-950/40 flex justify-end gap-4"
 			>
 				<button
 					onclick={onClose}
@@ -103,7 +103,7 @@
 				<button
 					onclick={handleSave}
 					disabled={loading || !columnName.trim()}
-					class="px-8 py-3 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rust/20 disabled:opacity-20 transition-all active:translate-y-px"
+					class="px-8 py-3 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rust/20 disabled:opacity-20 transition-all active:tranneutral-y-px"
 				>
 					{#if loading}
 						<div

@@ -135,15 +135,15 @@
 
 <div
 	class="flex flex-col gap-1 p-2 rounded-xl transition-all group border border-transparent {todo.done
-		? 'bg-slate-800/20 opacity-70'
-		: 'bg-slate-800/60 hover:bg-slate-800/80 hover:border-slate-300 dark:border-slate-700'}"
+		? 'bg-neutral-800/20 opacity-70'
+		: 'bg-neutral-800/60 hover:bg-neutral-800/80 hover:border-neutral-300 dark:border-neutral-700'}"
 	transition:slide|local
 >
 	<div class="flex items-center gap-2">
 		{#if todo.sub_tasks && todo.sub_tasks.length > 0}
 			<button
 				onclick={() => (expanded = !expanded)}
-				class="p-1 rounded hover:bg-slate-700 text-text-dim transition-colors"
+				class="p-1 rounded hover:bg-neutral-700 text-text-dim transition-colors"
 			>
 				{#if expanded}
 					<ChevronDown class="w-3 h-3" />
@@ -171,7 +171,7 @@
 				<span
 					class="text-sm font-medium truncate {todo.done
 						? 'line-through text-text-dim'
-						: 'text-slate-800 dark:text-slate-200'}"
+						: 'text-neutral-800 dark:text-neutral-200'}"
 				>
 					{todo.content}
 				</span>
@@ -217,21 +217,21 @@
 			{#if !todo.done}
 				<button
 					onclick={() => (showAddSubTask = !showAddSubTask)}
-					class="p-1.5 rounded hover:bg-slate-700 text-text-dim hover:text-success transition-colors"
+					class="p-1.5 rounded hover:bg-neutral-700 text-text-dim hover:text-success transition-colors"
 					title="Add sub-task"
 				>
 					<Plus class="w-3.5 h-3.5" />
 				</button>
 				<button
 					onclick={() => (showComments = !showComments)}
-					class="p-1.5 rounded hover:bg-slate-700 text-text-dim hover:text-indigo-400 transition-colors"
+					class="p-1.5 rounded hover:bg-neutral-700 text-text-dim hover:text-indigo-400 transition-colors"
 					title="Comments"
 				>
 					<MessageSquare class="w-3.5 h-3.5" />
 				</button>
 				<button
 					onclick={() => onToggleProgress(todo)}
-					class="p-1.5 rounded hover:bg-slate-700 transition-colors {todo.in_progress
+					class="p-1.5 rounded hover:bg-neutral-700 transition-colors {todo.in_progress
 						? 'text-info'
 						: 'text-text-dim'}"
 					title={todo.in_progress ? 'Pause progress' : 'Start progress'}
@@ -241,7 +241,7 @@
 			{/if}
 			<button
 				onclick={() => onDelete(todo.id)}
-				class="text-text-dim hover:text-danger p-1.5 rounded hover:bg-slate-700 transition-colors"
+				class="text-text-dim hover:text-danger p-1.5 rounded hover:bg-neutral-700 transition-colors"
 			>
 				<Trash2 class="w-3.5 h-3.5" />
 			</button>
@@ -262,12 +262,12 @@
 					type="text"
 					bind:value={newSubTaskContent}
 					placeholder="New sub-task..."
-					class="flex-1 bg-slate-900 border border-[var(--border-color)] rounded-lg px-2 py-1 text-xs text-slate-200 outline-none focus:border-rust transition-all"
+					class="flex-1 bg-neutral-900 border border-[var(--border-color)] rounded-lg px-2 py-1 text-xs text-neutral-200 outline-none focus:border-rust transition-all"
 				/>
 				<button
 					type="submit"
 					disabled={!newSubTaskContent.trim()}
-					class="p-1 bg-slate-700 hover:bg-rust text-white rounded transition-colors disabled:opacity-50"
+					class="p-1 bg-neutral-700 hover:bg-rust text-white rounded transition-colors disabled:opacity-50"
 				>
 					<Plus class="w-3 h-3" />
 				</button>
@@ -280,12 +280,12 @@
 		<div class="ml-8 mt-2 space-y-2 pr-2 border-l-2 border-rust/30 pl-3" transition:slide>
 			<div class="space-y-2">
 				{#each todo.comments || [] as comment (comment.id)}
-					<div class="flex flex-col gap-1 p-2 bg-slate-900/50 rounded-lg group/comment">
+					<div class="flex flex-col gap-1 p-2 bg-neutral-900/50 rounded-lg group/comment">
 						<div class="flex justify-between items-center">
 							<div class="flex items-center gap-1.5 text-[10px] font-bold text-rust-light">
 								<User class="w-2.5 h-2.5" />
 								<span>{comment.author || 'User'}</span>
-								<span class="text-slate-600 font-normal ml-1"
+								<span class="text-neutral-600 font-normal ml-1"
 									>{new Date(comment.created_at).toLocaleTimeString([], {
 										hour: '2-digit',
 										minute: '2-digit'
@@ -294,12 +294,12 @@
 							</div>
 							<button
 								onclick={() => deleteComment(comment.id)}
-								class="opacity-0 group-hover/comment:opacity-100 text-slate-600 hover:text-danger transition-all"
+								class="opacity-0 group-hover/comment:opacity-100 text-neutral-600 hover:text-danger transition-all"
 							>
 								<Trash2 class="w-2.5 h-2.5" />
 							</button>
 						</div>
-						<p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+						<p class="text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed">
 							{comment.content}
 						</p>
 					</div>
@@ -317,7 +317,7 @@
 					type="text"
 					bind:value={newCommentContent}
 					placeholder="Write a comment..."
-					class="flex-1 bg-slate-900 border border-[var(--border-color)] rounded-lg px-2 py-1.5 text-xs text-slate-200 outline-none focus:border-rust transition-all"
+					class="flex-1 bg-neutral-900 border border-[var(--border-color)] rounded-lg px-2 py-1.5 text-xs text-neutral-200 outline-none focus:border-rust transition-all"
 				/>
 				<button
 					type="submit"
@@ -333,7 +333,7 @@
 	<!-- Recursive Sub-tasks -->
 	{#if expanded && todo.sub_tasks && todo.sub_tasks.length > 0}
 		<div
-			class="ml-4 mt-1 flex flex-col gap-1 border-l border-slate-300/50 dark:border-slate-700/50 pl-2"
+			class="ml-4 mt-1 flex flex-col gap-1 border-l border-neutral-300/50 dark:border-neutral-700/50 pl-2"
 			transition:slide
 		>
 			{#each todo.sub_tasks as sub (sub.id)}

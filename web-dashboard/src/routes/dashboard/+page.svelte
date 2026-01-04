@@ -430,16 +430,16 @@
 	<div class="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-10">
 		<div
 			class="transform transition-all duration-700 {animateStats
-				? 'translate-y-0 opacity-100'
-				: 'translate-y-8 opacity-0'}"
+				? 'tranneutral-y-0 opacity-100'
+				: 'tranneutral-y-8 opacity-0'}"
 			style="animation-delay: 0.1s;"
 		>
 			<StatsCard title="UPTIME" value={formatUptime($stats.uptime)} iconName="ph:clock-bold" color="cyan" />
 		</div>
 		<div
 			class="transform transition-all duration-700 {animateStats
-				? 'translate-y-0 opacity-100'
-				: 'translate-y-8 opacity-0'}"
+				? 'tranneutral-y-0 opacity-100'
+				: 'tranneutral-y-8 opacity-0'}"
 			style="animation-delay: 0.2s;"
 		>
 			<StatsCard
@@ -451,8 +451,8 @@
 		</div>
 		<div
 			class="transform transition-all duration-700 {animateStats
-				? 'translate-y-0 opacity-100'
-				: 'translate-y-8 opacity-0'}"
+				? 'tranneutral-y-0 opacity-100'
+				: 'tranneutral-y-8 opacity-0'}"
 			style="animation-delay: 0.3s;"
 		>
 			<StatsCard
@@ -465,8 +465,8 @@
 		<a
 			href="/logs"
 			class="block transition-all duration-700 {animateStats
-				? 'translate-y-0 opacity-100'
-				: 'translate-y-8 opacity-0'}"
+				? 'tranneutral-y-0 opacity-100'
+				: 'tranneutral-y-8 opacity-0'}"
 			style="animation-delay: 0.4s;"
 		>
 			<StatsCard title="SYSTEM ERRORS" value={$stats.total_errors} iconName="ph:warning-octagon-bold" color="red" />
@@ -479,14 +479,14 @@
 		{#if $siteSettings.dashboard.show_traffic_card}
 		<div
 			class="transform transition-all duration-700 hover:scale-[1.01] {animateStats
-				? 'translate-y-0 opacity-100'
-				: 'translate-y-8 opacity-0'}"
+				? 'tranneutral-y-0 opacity-100'
+				: 'tranneutral-y-8 opacity-0'}"
 			style="animation-delay: 0.5s;"
 		>
 			<StatsCard
 				title="TRAFFIC"
 				value=""
-				subValue={`<span class="text-indigo-400">SENT: ${formatBytes($stats.bytes_sent)}</span> <span class="text-slate-700 mx-2">|</span> <span class="text-indigo-400">RECEIVED: ${formatBytes($stats.bytes_received)}</span>`}
+				subValue={`<span class="text-rust-light">SENT: ${formatBytes($stats.bytes_sent)}</span> <span class="text-neutral-700 mx-2">|</span> <span class="text-rust-light">RECEIVED: ${formatBytes($stats.bytes_received)}</span>`}
 				iconName="ph:wifi-high-bold"
 				color="orange"
 			/>
@@ -496,8 +496,8 @@
 		{#if $siteSettings.dashboard.show_db_card}
 		<div
 			class="transform transition-all duration-700 hover:scale-[1.01] {animateStats
-				? 'translate-y-0 opacity-100'
-				: 'translate-y-8 opacity-0'}"
+				? 'tranneutral-y-0 opacity-100'
+				: 'tranneutral-y-8 opacity-0'}"
 			style="animation-delay: 0.6s;"
 			onmouseenter={handleDBMouseEnter}
 			onmouseleave={handleDBMouseLeave}
@@ -508,7 +508,7 @@
 				title="DATABASE"
 				value={$stats.db_connected ? 'CONNECTED' : 'OFFLINE'}
 				subValue={$stats.db_connected
-					? `<span class="text-emerald-400">CONNS: ${$stats.db_open_connections}</span> <span class="text-slate-700 mx-2">|</span> <span class="text-indigo-400">IN USE: ${$stats.db_in_use}</span>`
+					? `<span class="text-emerald-400">CONNS: ${$stats.db_open_connections}</span> <span class="text-neutral-700 mx-2">|</span> <span class="text-rust-light">IN USE: ${$stats.db_in_use}</span>`
 					: 'RECONNECTING...'}
 				iconName="ph:database-bold"
 				color={$stats.db_connected ? 'emerald' : 'red'}
@@ -519,12 +519,12 @@
 
 	<!-- Quick Action HUD -->
 	<div 
-		class="mb-10 transform transition-all duration-700 {animateStats ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}"
+		class="mb-10 transform transition-all duration-700 {animateStats ? 'tranneutral-y-0 opacity-100' : 'tranneutral-y-8 opacity-0'}"
 		style="animation-delay: 0.62s;"
 	>
 		<QuickActionHUD 
 			on:tail={handleTail}
-			on:stop={(e) => openStopInstanceDialog({ detail: e.detail } as any)}
+			on:stop={(e: any) => openStopInstanceDialog({ detail: e.detail } as any)}
 		/>
 	</div>
 
@@ -532,8 +532,8 @@
 	{#if $siteSettings.dashboard.show_topology}
 	<div
 		class="mb-8 sm:mb-10 h-[350px] sm:h-[500px] lg:h-[700px] xl:h-[800px] w-full transform transition-all duration-700 {animateStats
-			? 'translate-y-0 opacity-100'
-			: 'translate-y-12 opacity-0'}"
+			? 'tranneutral-y-0 opacity-100'
+			: 'tranneutral-y-12 opacity-0'}"
 		style="animation-delay: 0.65s;"
 	>
 		<SystemTopology />
@@ -551,13 +551,13 @@
             {#snippet actions()}
                 <div class="flex items-center gap-4 sm:gap-6 w-full sm:w-auto justify-between sm:justify-end">
                     <div class="hidden xs:flex flex-col items-end text-right">
-                        <span class="text-[8px] sm:text-[9px] font-bold text-slate-500 uppercase tracking-widest italic">Inventory Status</span>
-                        <span class="text-[9px] sm:text-[10px] font-black text-white uppercase tracking-widest mt-0.5">Synced</span>
+                        <span class="text-[8px] sm:text-[9px] font-black text-neutral-600 uppercase tracking-widest italic">Inventory_Status</span>
+                        <span class="text-[9px] sm:text-[10px] font-black text-white uppercase tracking-widest mt-0.5">SYNCED</span>
                     </div>
-                    <div class="h-8 sm:h-10 w-px bg-slate-800 hidden xs:block"></div>
+                    <div class="h-8 sm:h-10 w-px bg-neutral-800 hidden xs:block"></div>
                     <span
-                        class="text-[9px] sm:text-[10px] font-bold bg-indigo-500/10 text-indigo-400 px-4 sm:px-5 py-1.5 sm:py-2 border border-indigo-500/20 rounded-full uppercase tracking-widest shadow-sm"
-                        >Live Stream</span>
+                        class="text-[9px] sm:text-[10px] font-bold bg-rust/10 text-rust-light px-4 sm:px-5 py-1.5 sm:py-2 border border-rust/20 rounded-none uppercase tracking-widest shadow-sm"
+                        >Live_Stream</span>
                 </div>
             {/snippet}
 

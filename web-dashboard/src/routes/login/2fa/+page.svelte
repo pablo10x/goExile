@@ -210,7 +210,7 @@
 										autofocus
 									/>
 									{#if loading}
-										<div class="absolute right-4 top-1/2 -translate-y-1/2">
+										<div class="absolute right-4 top-1/2 -tranneutral-y-1/2">
 											<div
 												class="w-5 h-5 border-2 border-rust border-t-transparent rounded-none animate-spin"
 											></div>
@@ -247,7 +247,7 @@
 										autofocus
 									/>
 									{#if loading}
-										<div class="absolute right-4 top-1/2 -translate-y-1/2">
+										<div class="absolute right-4 top-1/2 -tranneutral-y-1/2">
 											<div
 												class="w-5 h-5 border-2 border-rust border-t-transparent rounded-none animate-spin"
 											></div>

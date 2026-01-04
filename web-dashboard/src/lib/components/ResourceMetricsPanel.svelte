@@ -120,7 +120,7 @@
 					<button
 						onclick={metrics.refresh}
 						disabled={$loading}
-						class="p-2.5 bg-stone-900 border border-stone-800 text-stone-500 hover:text-rust hover:border-rust transition-all active:translate-y-px shadow-lg"
+						class="p-2.5 bg-stone-900 border border-stone-800 text-stone-500 hover:text-rust hover:border-rust transition-all active:tranneutral-y-px shadow-lg"
 						title="Refresh metrics"
 					>
 						<RefreshCw

@@ -203,9 +203,9 @@
 	function getStatusRing(status: Note['status']) {
 		switch (status) {
 			case 'warn':
-				return 'ring-2 ring-amber-400 ring-offset-4 ring-offset-slate-900';
+				return 'ring-2 ring-amber-400 ring-offset-4 ring-offset-neutral-900';
 			case 'critical':
-				return 'ring-2 ring-red-500 ring-offset-4 ring-offset-slate-900';
+				return 'ring-2 ring-red-500 ring-offset-4 ring-offset-neutral-900';
 			default:
 				return '';
 		}

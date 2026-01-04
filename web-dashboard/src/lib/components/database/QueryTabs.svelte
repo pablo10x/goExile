@@ -35,23 +35,23 @@
 </script>
 
 <div
-	class="flex items-center w-full bg-slate-900/40 border-b border-slate-800 overflow-x-auto no-scrollbar backdrop-blur-md rounded-t-2xl"
+	class="flex items-center w-full bg-neutral-900/40 border-b border-neutral-800 overflow-x-auto no-scrollbar backdrop-blur-md rounded-t-2xl"
 >
 	{#each tabs as tab (tab.id)}
 		{@const TabIcon = getIcon(tab.type)}
 		<div
 			animate:flip={{ duration: 200 }}
 			transition:fade={{ duration: 150 }}
-			class="group relative flex items-center gap-3 px-6 py-4 cursor-pointer border-r border-slate-800 select-none transition-all min-w-[150px] max-w-[220px]
+			class="group relative flex items-center gap-3 px-6 py-4 cursor-pointer border-r border-neutral-800 select-none transition-all min-w-[150px] max-w-[220px]
 			{activeTabId === tab.id
 				? 'bg-indigo-500/10 text-indigo-400 border-b-2 border-b-indigo-500'
-				: 'text-slate-500 hover:bg-slate-800/50 hover:text-slate-300 border-b-2 border-b-transparent'}"
+				: 'text-neutral-500 hover:bg-neutral-800/50 hover:text-neutral-300 border-b-2 border-b-transparent'}"
 			onclick={() => onSelect(tab.id)}
 			role="button"
 			tabindex="0"
 			onkeydown={(e) => e.key === 'Enter' && onSelect(tab.id)}
 		>
-			<TabIcon class="w-4 h-4 shrink-0 {activeTabId === tab.id ? 'text-indigo-400' : 'text-slate-600 group-hover:text-slate-400'}" />
+			<TabIcon class="w-4 h-4 shrink-0 {activeTabId === tab.id ? 'text-indigo-400' : 'text-neutral-600 group-hover:text-neutral-400'}" />
 
 			<span class="truncate text-[10px] font-bold uppercase tracking-widest flex-1">{tab.label}</span>
 
@@ -61,7 +61,7 @@
 						e.stopPropagation();
 						onClose(tab.id);
 					}}
-					class="p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-slate-800 text-slate-600 hover:text-red-400 transition-all"
+					class="p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-neutral-800 text-neutral-600 hover:text-red-400 transition-all"
 				>
 					<X class="w-3 h-3" />
 				</button>

@@ -188,7 +188,7 @@
 			case 'poor':
 				return 'text-danger border-red-500/20 bg-red-500/5';
 			default:
-				return 'text-text-dim border-slate-500/20 bg-slate-500/5';
+				return 'text-text-dim border-neutral-500/20 bg-neutral-500/5';
 		}
 	}
 
@@ -556,17 +556,17 @@
 				</div>
 
 				<!-- View Switcher -->
-				<div class="flex bg-slate-950 border border-slate-800 p-1 rounded-xl shadow-inner">
+				<div class="flex bg-neutral-950 border border-neutral-800 p-1 rounded-xl shadow-inner">
 					<button 
 						onclick={() => viewMode = 'fleet'}
-						class="flex items-center gap-2 px-4 py-2 rounded-lg transition-all {viewMode === 'fleet' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}"
+						class="flex items-center gap-2 px-4 py-2 rounded-lg transition-all {viewMode === 'fleet' ? 'bg-indigo-500 text-white shadow-lg' : 'text-neutral-500 hover:text-neutral-300'}"
 					>
 						<LayoutList class="w-4 h-4" />
 						<span class="text-[10px] font-black uppercase tracking-widest">Tactical_Stream</span>
 					</button>
 					<button 
 						onclick={() => viewMode = 'nodes'}
-						class="flex items-center gap-2 px-4 py-2 rounded-lg transition-all {viewMode === 'nodes' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}"
+						class="flex items-center gap-2 px-4 py-2 rounded-lg transition-all {viewMode === 'nodes' ? 'bg-indigo-500 text-white shadow-lg' : 'text-neutral-500 hover:text-neutral-300'}"
 					>
 						<LayoutGrid class="w-4 h-4" />
 						<span class="text-[10px] font-black uppercase tracking-widest">Node_Clusters</span>
@@ -823,7 +823,7 @@
 					<button
 						onclick={handleUpload}
 						disabled={uploading || !selectedFile || !version}
-						class="w-full px-8 py-4 bg-rust hover:bg-rust-light text-white font-heading font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-rust/20 transition-all active:translate-y-px disabled:opacity-20 flex items-center justify-center gap-4 industrial-frame"
+						class="w-full px-8 py-4 bg-rust hover:bg-rust-light text-white font-heading font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-rust/20 transition-all active:tranneutral-y-px disabled:opacity-20 flex items-center justify-center gap-4 industrial-frame"
 					>
 						{#if uploading}
 							<div
@@ -864,7 +864,7 @@
 			>
 				<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
 					<div class="flex-1 max-w-2xl relative group">
-						<Search class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-dim group-focus-within:text-rust transition-colors" />
+						<Search class="absolute left-4 top-1/2 -tranneutral-y-1/2 w-5 h-5 text-text-dim group-focus-within:text-rust transition-colors" />
 						<input
 							type="text"
 							bind:value={searchQuery}
@@ -896,7 +896,7 @@
 							</select>
 							<button
 								onclick={() => (sortOrder = sortOrder === 'desc' ? 'asc' : 'desc')}
-								class="p-3 bg-stone-950 border border-stone-800 text-text-dim hover:text-rust transition-all active:translate-y-px shadow-lg"
+								class="p-3 bg-stone-950 border border-stone-800 text-text-dim hover:text-rust transition-all active:tranneutral-y-px shadow-lg"
 								title="Toggle sort order"
 							>
 								{#if sortOrder === 'desc'}
@@ -991,7 +991,7 @@
 									{#if !version.is_active}
 										<button
 											onclick={() => requestActivate(version.id)}
-											class="flex-1 px-6 py-3 bg-stone-900 hover:bg-rust border border-stone-800 hover:border-rust-light text-text-dim hover:text-white font-heading font-black text-[10px] uppercase tracking-widest transition-all shadow-lg active:translate-y-px"
+											class="flex-1 px-6 py-3 bg-stone-900 hover:bg-rust border border-stone-800 hover:border-rust-light text-text-dim hover:text-white font-heading font-black text-[10px] uppercase tracking-widest transition-all shadow-lg active:tranneutral-y-px"
 										>
 											Execute_Activate
 										</button>
@@ -1070,7 +1070,7 @@
 						</p>
 						<button
 							onclick={() => (activeTab = 'upload')}
-							class="mt-10 px-8 py-3 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rust/20 transition-all active:translate-y-px"
+							class="mt-10 px-8 py-3 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rust/20 transition-all active:tranneutral-y-px"
 						>
 							<Upload class="w-4 h-4 inline mr-2" />
 							Initialize_Ingress
@@ -1140,7 +1140,7 @@
 										{#if !version.is_active}
 											<button
 												onclick={() => requestActivate(version.id)}
-												class="flex-1 px-6 py-3 bg-stone-900 hover:bg-rust border border-stone-800 hover:border-rust-light text-text-dim hover:text-white font-heading font-black text-[10px] uppercase tracking-widest transition-all shadow-lg active:translate-y-px"
+												class="flex-1 px-6 py-3 bg-stone-900 hover:bg-rust border border-stone-800 hover:border-rust-light text-text-dim hover:text-white font-heading font-black text-[10px] uppercase tracking-widest transition-all shadow-lg active:tranneutral-y-px"
 											>
 												Execute_Activate
 											</button>

@@ -228,7 +228,7 @@
 					<button
 						type="submit"
 						disabled={!newTodoContent.trim()}
-						class="p-3 bg-rust hover:bg-rust-light text-white transition-all disabled:opacity-20 shadow-lg shadow-rust/20 active:translate-y-px"
+						class="p-3 bg-rust hover:bg-rust-light text-white transition-all disabled:opacity-20 shadow-lg shadow-rust/20 active:tranneutral-y-px"
 					>
 						<Plus class="w-5 h-5" />
 					</button>
@@ -337,7 +337,7 @@
 
 			<div class="flex items-center gap-4 w-full xl:w-auto">
 				<div class="relative flex-1 xl:w-96 group">
-					<Search class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-dim group-focus-within:text-rust transition-colors" />
+					<Search class="absolute left-4 top-1/2 -tranneutral-y-1/2 w-5 h-5 text-text-dim group-focus-within:text-rust transition-colors" />
 					<input
 						type="text"
 						bind:value={searchQuery}
@@ -347,7 +347,7 @@
 				</div>
 				<button
 					onclick={openCreateNoteModal}
-					class="flex items-center gap-3 px-10 py-3.5 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rust/20 transition-all active:translate-y-px"
+					class="flex items-center gap-3 px-10 py-3.5 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rust/20 transition-all active:tranneutral-y-px"
 				>					<Plus class="w-5 h-5" />
 					<span>New_Entry</span>
 				</button>

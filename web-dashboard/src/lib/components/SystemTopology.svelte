@@ -588,7 +588,7 @@
 					{#if masterReceiving}
 						<!-- Particles from top -->
 						<div
-							class="absolute -top-16 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-emerald-400 animate-particle-fly-top shadow-[0_0_10px_rgba(52,211,153,0.8)]"
+							class="absolute -top-16 left-1/2 -tranneutral-x-1/2 w-2 h-2 rounded-full bg-emerald-400 animate-particle-fly-top shadow-[0_0_10px_rgba(52,211,153,0.8)]"
 						></div>
 						<div
 							class="absolute -top-14 left-1/3 w-1.5 h-1.5 rounded-full bg-green-400 animate-particle-fly-top"
@@ -604,7 +604,7 @@
 							class="absolute top-1/4 -left-16 w-2 h-2 rounded-full bg-emerald-400 animate-particle-fly-left shadow-[0_0_10px_rgba(74,222,128,0.8)]"
 						></div>
 						<div
-							class="absolute top-1/3 -left-14 w-1.5 h-1.5 rounded-full bg-slate-300-400 animate-particle-fly-left"
+							class="absolute top-1/3 -left-14 w-1.5 h-1.5 rounded-full bg-neutral-300-400 animate-particle-fly-left"
 							style="animation-delay: 0.07s;"
 						></div>
 						<div
@@ -617,7 +617,7 @@
 
 						<!-- Particles from bottom -->
 						<div
-							class="absolute -bottom-12 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-emerald-400 animate-particle-fly-bottom shadow-[0_0_10px_rgba(52,211,153,0.8)]"
+							class="absolute -bottom-12 left-1/2 -tranneutral-x-1/2 w-2 h-2 rounded-full bg-emerald-400 animate-particle-fly-bottom shadow-[0_0_10px_rgba(52,211,153,0.8)]"
 						></div>
 						<div
 							class="absolute -bottom-10 left-1/3 w-1.5 h-1.5 rounded-full bg-green-300 animate-particle-fly-bottom"
@@ -1111,7 +1111,7 @@
 						<div
 							class={`
 						relative w-12 h-12 rounded-full flex items-center justify-center border-2 shadow-lg backdrop-blur-md
-						${isActive ? 'bg-gradient-to-br from-stone-900 to-black border-rust-light shadow-rust-light/30' : 'bg-slate-900/95 border-red-500/70 shadow-red-500/40'}
+						${isActive ? 'bg-gradient-to-br from-stone-900 to-black border-rust-light shadow-rust-light/30' : 'bg-neutral-900/95 border-red-500/70 shadow-red-500/40'}
 						${(pulsingNodes.has(node.id)) ? 'node-pulse border-emerald-400 shadow-emerald-500/60' : ''}
 						transition-all duration-300
 					`}
@@ -1129,7 +1129,7 @@
 							<!-- Status indicator - only show for online nodes -->
 							{#if isActive}
 								<div
-									class={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-slate-900
+									class={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-neutral-900
 								bg-emerald-500 status-pulse`}
 								></div>
 							{/if}
@@ -1140,18 +1140,18 @@
 					<div
 						class="absolute top-16 flex flex-col items-center bg-stone-900 backdrop-blur-sm px-4 py-2 rounded-xl border border-stone-800 opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-40 pointer-events-none shadow-2xl"
 					>
-						<span class="text-sm font-bold text-slate-900 dark:text-white mb-1"
+						<span class="text-sm font-bold text-neutral-900 dark:text-white mb-1"
 							>Node #{node.id}</span
 						>
 						<div
 							class="w-full h-px bg-gradient-to-r from-transparent via-rust-light to-transparent mb-1"
 						></div>
-						<div class="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300">
+						<div class="flex items-center gap-2 text-xs text-neutral-700 dark:text-neutral-300">
 							<Activity class="w-3 h-3" />
 							<span>{node.region}</span>
 						</div>
-						<div class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-							Instances: <span class="font-mono text-slate-800 dark:text-slate-200"
+						<div class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+							Instances: <span class="font-mono text-neutral-800 dark:text-neutral-200"
 								>{node.current_instances}</span
 							>/<span class="font-mono">{node.max_instances}</span>
 							<span class="ml-2 text-[10px]">({utilization.toFixed(0)}%)</span>
@@ -1190,7 +1190,7 @@
 						<!-- Shatter pieces -->
 						{#each pieces as piece (piece.id)}
 							<div
-								class="absolute w-2 h-2 bg-gradient-to-br from-slate-600 to-slate-800 rounded-sm shadow-lg animate-shatter-piece"
+								class="absolute w-2 h-2 bg-gradient-to-br from-neutral-600 to-neutral-800 rounded-sm shadow-lg animate-shatter-piece"
 								style="
 							animation-delay: {piece.delay}s;
 							--dx: {piece.dx}px;
@@ -1206,7 +1206,7 @@
 						<div class="absolute -inset-8">
 							{#each Array(8) as _, smokeIndex}
 								<div
-									class="absolute w-6 h-6 bg-slate-600/40 rounded-full blur-sm animate-smoke-rise"
+									class="absolute w-6 h-6 bg-neutral-600/40 rounded-full blur-sm animate-smoke-rise"
 									style="
 								left: {Math.cos((smokeIndex / 8) * Math.PI * 2) * 20}px;
 								top: {Math.sin((smokeIndex / 8) * Math.PI * 2) * 20}px;

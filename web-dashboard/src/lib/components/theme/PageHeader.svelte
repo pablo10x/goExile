@@ -23,15 +23,15 @@
         transition:fade={{ duration: 400 }}
 	>
 		<div class="flex items-center gap-4 mb-3">
-			<div class="h-0.5 w-8 sm:w-12 bg-indigo-600"></div>
-			<span class="text-[10px] font-bold text-indigo-500 uppercase tracking-[0.3em]">{subtitle || 'System Module'}</span>
+			<div class="h-0.5 w-8 sm:w-12 bg-rust"></div>
+			<span class="text-[9px] font-mono font-black text-rust-light uppercase tracking-[0.4em] italic">{subtitle || 'System_Module'}</span>
 		</div>
 		<h1
-			class="text-4xl sm:text-5xl lg:text-6xl font-heading font-black text-white tracking-tight uppercase leading-none flex items-center gap-6"
+			class="text-4xl sm:text-5xl lg:text-6xl font-heading font-black text-white tracking-tighter uppercase leading-none flex items-center gap-6"
 		>
             {#if icon}
-                <div class="p-4 bg-indigo-500/10 rounded-3xl border border-indigo-500/20 shadow-2xl shadow-indigo-500/10">
-                    <Icon name={icon} size="2.5rem" class="text-indigo-400" />
+                <div class="p-4 bg-rust/10 border-2 border-rust/30 rounded-none shadow-2xl">
+                    <Icon name={icon} size="2.5rem" class="text-rust-light shadow-rust/20" />
                 </div>
             {/if}
 			{title}
@@ -43,8 +43,8 @@
 				<span class={`w-1.5 h-1.5 rounded-full ${$isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></span>
 				<span class="truncate max-w-[120px] sm:max-w-none">{$connectionStatus}</span>
 			</div>
-			<div class="w-px h-4 bg-slate-800 hidden sm:block"></div>
-			<span class="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest italic">Uplink Verified</span>
+			<div class="w-px h-4 bg-neutral-800 hidden sm:block"></div>
+			<span class="text-[9px] sm:text-[10px] font-bold text-neutral-500 uppercase tracking-widest italic">Uplink Verified</span>
 		</div>
 	</div>
 

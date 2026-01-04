@@ -34,7 +34,7 @@
 			case 'success': return 'text-emerald-500';
 			case 'error': return 'text-red-500';
 			case 'warning': return 'text-amber-500';
-			default: return 'text-blue-400';
+			default: return 'text-neutral-400';
 		}
 	}
 
@@ -43,7 +43,7 @@
 			case 'success': return 'border-emerald-500/30';
 			case 'error': return 'border-red-500/30';
 			case 'warning': return 'border-amber-500/30';
-			default: return 'border-blue-400/30';
+			default: return 'border-neutral-700/30';
 		}
 	}
 	
@@ -52,7 +52,7 @@
 			case 'success': return 'bg-emerald-500/10';
 			case 'error': return 'bg-red-500/10';
 			case 'warning': return 'bg-amber-500/10';
-			default: return 'bg-blue-400/10';
+			default: return 'bg-neutral-800/10';
 		}
 	}
 </script>

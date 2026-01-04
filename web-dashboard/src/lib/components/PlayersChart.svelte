@@ -140,7 +140,7 @@
 		{#if hoveredIndex !== null}
 			{@const d = data[hoveredIndex]}
 			<div
-				class="absolute z-10 pointer-events-none transform -translate-x-1/2 -translate-y-full mb-4 bg-stone-950/90 backdrop-blur-md border border-stone-800 px-4 py-3 shadow-2xl text-center min-w-[120px]"
+				class="absolute z-10 pointer-events-none transform -tranneutral-x-1/2 -tranneutral-y-full mb-4 bg-stone-950/90 backdrop-blur-md border border-stone-800 px-4 py-3 shadow-2xl text-center min-w-[120px]"
 				style="left: {tooltipX}px; top: 0;"
 			>
 				<div class="text-[9px] text-stone-500 font-black mb-2 uppercase tracking-widest border-b border-stone-800 pb-1">

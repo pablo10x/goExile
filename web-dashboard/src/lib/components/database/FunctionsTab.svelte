@@ -353,7 +353,7 @@
 			case 'window':
 				return 'text-info bg-cyan-500/10 border-cyan-500/30';
 			default:
-				return 'text-text-dim dark:text-text-dim bg-slate-500/10 border-slate-500/30';
+				return 'text-text-dim dark:text-text-dim bg-neutral-500/10 border-neutral-500/30';
 		}
 	}
 
@@ -366,7 +366,7 @@
 			case 'volatile':
 				return 'text-warning bg-orange-500/10 border-orange-500/30';
 			default:
-				return 'text-text-dim dark:text-text-dim bg-slate-500/10 border-slate-500/30';
+				return 'text-text-dim dark:text-text-dim bg-neutral-500/10 border-neutral-500/30';
 		}
 	}
 
@@ -383,7 +383,7 @@
 <div class="h-full flex flex-col bg-transparent">
 	<!-- Header -->
 	<div
-		class="p-6 border-b border-slate-800 bg-slate-900/40 backdrop-blur-md"
+		class="p-6 border-b border-neutral-800 bg-neutral-900/40 backdrop-blur-md"
 	>
 		<div class="flex justify-between items-start">
 			<div class="flex items-center gap-4">
@@ -394,14 +394,14 @@
 				</div>
 				<div>
 					<h2 class="text-2xl font-heading font-black text-white uppercase tracking-tighter italic">PROCEDURAL_KERNEL_v2</h2>
-					<p class="font-jetbrains text-[10px] text-slate-500 uppercase tracking-widest mt-1 italic font-bold">
+					<p class="font-jetbrains text-[10px] text-neutral-500 uppercase tracking-widest mt-1 italic font-bold">
 						Manage sector functions, procedures, and triggers
 					</p>
 				</div>
 			</div>
 			<button
 				onclick={openCreateModal}
-				class="relative z-10 px-6 py-3 bg-indigo-500 hover:bg-indigo-400 text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-indigo-900/20 transition-all active:translate-y-px rounded-xl"
+				class="relative z-10 px-6 py-3 bg-indigo-500 hover:bg-indigo-400 text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-indigo-900/20 transition-all active:tranneutral-y-px rounded-xl"
 			>
 				<Plus class="w-5 h-5" />
 				New_Logic_Unit
@@ -412,20 +412,20 @@
 		<div class="flex gap-4 mt-8">
 			<div class="relative flex-1 max-w-md">
 				<Search
-					class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 pointer-events-none"
+					class="absolute left-4 top-1/2 -tranneutral-y-1/2 w-4 h-4 text-neutral-600 pointer-events-none"
 				/>
 				<input
 					type="text"
 					bind:value={searchQuery}
 					placeholder="SEARCH_LOGIC_IDENTIFIERS..."
-					class="w-full pl-12 pr-4 py-3 bg-slate-950/40 border border-slate-800 text-stone-200 font-jetbrains text-[11px] placeholder-slate-800 focus:border-indigo-500 outline-none transition-all uppercase tracking-widest rounded-xl"
+					class="w-full pl-12 pr-4 py-3 bg-neutral-950/40 border border-neutral-800 text-stone-200 font-jetbrains text-[11px] placeholder-neutral-800 focus:border-indigo-500 outline-none transition-all uppercase tracking-widest rounded-xl"
 				/>
 			</div>
 
 			<select
 				bind:value={selectedSchema}
 				onchange={() => loadFunctions()}
-				class="px-4 py-3 bg-slate-950/40 border border-slate-800 text-slate-400 font-jetbrains text-[11px] focus:border-indigo-500 outline-none cursor-pointer uppercase tracking-widest rounded-xl appearance-none"
+				class="px-4 py-3 bg-neutral-950/40 border border-neutral-800 text-neutral-400 font-jetbrains text-[11px] focus:border-indigo-500 outline-none cursor-pointer uppercase tracking-widest rounded-xl appearance-none"
 			>
 				{#each schemas as schema}
 					<option value={schema}>{schema}</option>
@@ -434,7 +434,7 @@
 
 			<button
 				onclick={() => loadFunctions()}
-				class="p-3 bg-slate-900/40 border border-slate-800 text-slate-500 hover:text-indigo-400 hover:border-indigo-500/30 transition-all rounded-xl"
+				class="p-3 bg-neutral-900/40 border border-neutral-800 text-neutral-500 hover:text-indigo-400 hover:border-indigo-500/30 transition-all rounded-xl"
 				title="Refresh"
 			>
 				<RefreshCw class="w-5 h-5 {loading ? 'animate-spin' : ''}" />
@@ -449,10 +449,10 @@
 				<div
 					class="w-10 h-10 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin shadow-[0_0_15px_rgba(99,102,241,0.4)]"
 				></div>
-				<p class="mt-6 font-heading font-black text-[11px] text-slate-600 uppercase tracking-[0.2em] animate-pulse">Synchronizing_Kernel...</p>
+				<p class="mt-6 font-heading font-black text-[11px] text-neutral-600 uppercase tracking-[0.2em] animate-pulse">Synchronizing_Kernel...</p>
 			</div>
 		{:else if filteredFunctions.length === 0}
-			<div class="flex flex-col items-center justify-center h-64 text-slate-700">
+			<div class="flex flex-col items-center justify-center h-64 text-neutral-700">
 				<FileCode class="w-16 h-16 opacity-10 mb-6" />
 				<p class="font-heading font-black text-xs tracking-[0.2em] uppercase">No logical units found</p>
 				<p class="font-jetbrains text-[9px] mt-2 uppercase font-bold opacity-40 tracking-widest">
@@ -465,7 +465,7 @@
 			<div class="space-y-4 max-w-6xl mx-auto">
 				{#each filteredFunctions as fn (fn.oid)}
 					<div
-						class="bg-slate-900/40 border border-slate-800 overflow-hidden hover:border-indigo-500/40 transition-all group rounded-2xl backdrop-blur-sm shadow-lg"
+						class="bg-neutral-900/40 border border-neutral-800 overflow-hidden hover:border-indigo-500/40 transition-all group rounded-2xl backdrop-blur-sm shadow-lg"
 						transition:fade={{ duration: 150 }}
 					>
 						<!-- Function Header -->
@@ -474,7 +474,7 @@
 								<div class="flex items-start gap-4 flex-1 min-w-0">
 									<button
 										onclick={() => toggleExpand(fn.oid)}
-										class="p-1 mt-1 text-slate-600 hover:text-indigo-400 transition-colors"
+										class="p-1 mt-1 text-neutral-600 hover:text-indigo-400 transition-colors"
 									>
 										{#if expandedFunctions.has(fn.oid)}
 											<ChevronDown class="w-5 h-5" />
@@ -501,7 +501,7 @@
 												{fn.volatility}
 											</span>
 											<span
-												class="px-2 py-0.5 text-[9px] font-black font-jetbrains bg-slate-950 text-slate-600 border border-slate-800 uppercase tracking-widest italic rounded"
+												class="px-2 py-0.5 text-[9px] font-black font-jetbrains bg-neutral-950 text-neutral-600 border border-neutral-800 uppercase tracking-widest italic rounded"
 											>
 												{fn.language}
 											</span>
@@ -509,15 +509,15 @@
 
 										<div class="mt-3 font-jetbrains text-xs font-bold uppercase tracking-tight">
 											<span class="text-indigo-400">{fn.name}</span>
-											<span class="text-slate-700">(</span>
+											<span class="text-neutral-700">(</span>
 											<span class="text-indigo-500/70">{fn.argument_types || ''}</span>
-											<span class="text-slate-700">)</span>
-											<span class="text-slate-700 mx-3">::</span>
+											<span class="text-neutral-700">)</span>
+											<span class="text-neutral-700 mx-3">::</span>
 											<span class="text-emerald-500">{fn.result_type}</span>
 										</div>
 
 										{#if fn.description}
-											<p class="mt-3 font-jetbrains text-[10px] text-slate-500 uppercase tracking-tight font-bold">{fn.description}</p>
+											<p class="mt-3 font-jetbrains text-[10px] text-neutral-500 uppercase tracking-tight font-bold">{fn.description}</p>
 										{/if}
 									</div>
 								</div>
@@ -529,7 +529,7 @@
 									{#if fn.type === 'function'}
 										<button
 											onclick={() => openExecuteModal(fn)}
-											class="p-2 text-slate-600 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all rounded-lg"
+											class="p-2 text-neutral-600 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all rounded-lg"
 											title="Execute"
 										>
 											<Play class="w-4 h-4" />
@@ -537,14 +537,14 @@
 									{/if}
 									<button
 										onclick={() => openEditModal(fn)}
-										class="p-2 text-slate-600 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all rounded-lg"
+										class="p-2 text-neutral-600 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all rounded-lg"
 										title="Edit"
 									>
 										<Edit3 class="w-4 h-4" />
 									</button>
 									<button
 										onclick={() => deleteFunction(fn)}
-										class="p-2 text-slate-600 hover:text-red-400 hover:bg-red-500/10 transition-all rounded-lg"
+										class="p-2 text-neutral-600 hover:text-red-400 hover:bg-red-500/10 transition-all rounded-lg"
 										title="Delete"
 									>
 										<Trash2 class="w-4 h-4" />
@@ -556,17 +556,17 @@
 						<!-- Expanded Source Code -->
 						{#if expandedFunctions.has(fn.oid)}
 							<div
-								class="border-t border-slate-800 bg-slate-950/40"
+								class="border-t border-neutral-800 bg-neutral-950/40"
 								transition:slide={{ duration: 200 }}
 							>
 								<div class="p-6">
 									<div class="flex items-center justify-between mb-4">
-										<span class="font-heading text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] italic"
+										<span class="font-heading text-[10px] font-black text-neutral-600 uppercase tracking-[0.2em] italic"
 											>Logic_Source_Readout</span
 										>
 										<button
 											onclick={() => copySource(fn.source)}
-											class="flex items-center gap-3 px-4 py-1.5 font-jetbrains text-[9px] font-black text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/5 border border-slate-800 transition-all uppercase tracking-widest rounded-lg"
+											class="flex items-center gap-3 px-4 py-1.5 font-jetbrains text-[9px] font-black text-neutral-500 hover:text-indigo-400 hover:bg-indigo-500/5 border border-neutral-800 transition-all uppercase tracking-widest rounded-lg"
 										>
 											{#if copied}
 												<Check class="w-3 h-3" />
@@ -578,9 +578,9 @@
 										</button>
 									</div>
 									<pre
-										class="p-6 bg-slate-950 border border-slate-800 text-[11px] text-slate-400 font-jetbrains overflow-x-auto max-h-[500px] custom-scrollbar shadow-inner rounded-xl"><code>{fn.source}</code></pre>
+										class="p-6 bg-neutral-950 border border-neutral-800 text-[11px] text-neutral-400 font-jetbrains overflow-x-auto max-h-[500px] custom-scrollbar shadow-inner rounded-xl"><code>{fn.source}</code></pre>
 
-									<div class="flex items-center gap-8 mt-6 font-jetbrains text-[9px] font-bold text-slate-600 uppercase tracking-widest italic">
+									<div class="flex items-center gap-8 mt-6 font-jetbrains text-[9px] font-bold text-neutral-600 uppercase tracking-widest italic">
 										<span class="flex items-center gap-2">
 											<Shield class="w-3.5 h-3.5" />
 											Authorized_Owner: {fn.owner}
@@ -608,17 +608,17 @@
 		transition:fade={{ duration: 150 }}
 	>
 		<button
-			class="absolute inset-0 bg-slate-950/60 backdrop-blur-md cursor-default"
+			class="absolute inset-0 bg-neutral-950/60 backdrop-blur-md cursor-default"
 			onclick={closeModal}
 			aria-label="Close modal"
 		></button>
 
 		<div
-			class="relative w-full max-w-4xl max-h-[90vh] bg-slate-900/80 backdrop-blur-2xl border border-slate-800 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col"
+			class="relative w-full max-w-4xl max-h-[90vh] bg-neutral-900/80 backdrop-blur-2xl border border-neutral-800 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col"
 		>
 			<!-- Modal Header -->
 			<div
-				class="p-8 border-b border-slate-800 bg-slate-950/40"
+				class="p-8 border-b border-neutral-800 bg-neutral-950/40"
 			>
 				<div class="flex items-center justify-between">
 					<div class="flex items-center gap-5">
@@ -633,7 +633,7 @@
 							<h3 class="text-2xl font-heading font-black text-white uppercase tracking-tighter italic">
 								{isCreating ? 'Initialize_Logic_Unit' : 'Modify_Logic_Buffer'}
 							</h3>
-							<p class="font-jetbrains text-[10px] text-slate-500 uppercase tracking-widest mt-1 font-bold">
+							<p class="font-jetbrains text-[10px] text-neutral-500 uppercase tracking-widest mt-1 font-bold">
 								{isCreating
 									? 'Define a new procedural PostgreSQL unit'
 									: `Extracting and editing ${selectedFunction?.name}`}
@@ -642,7 +642,7 @@
 					</div>
 					<button
 						onclick={closeModal}
-						class="p-2 text-slate-500 hover:text-white transition-all rounded-lg"
+						class="p-2 text-neutral-500 hover:text-white transition-all rounded-lg"
 					>
 						<X class="w-6 h-6" />
 					</button>
@@ -656,13 +656,13 @@
 					<div class="space-y-3">
 						<label
 							for="fnSchema"
-							class="block font-jetbrains text-[10px] font-bold text-slate-500 uppercase tracking-widest italic"
+							class="block font-jetbrains text-[10px] font-bold text-neutral-500 uppercase tracking-widest italic"
 							>Schema_Vector</label
 						>
 						<select
 							id="fnSchema"
 							bind:value={formData.schema}
-							class="w-full px-4 py-3 bg-slate-950/40 border border-slate-800 text-stone-300 font-jetbrains text-xs focus:border-indigo-500 outline-none transition-all uppercase appearance-none rounded-xl"
+							class="w-full px-4 py-3 bg-neutral-950/40 border border-neutral-800 text-stone-300 font-jetbrains text-xs focus:border-indigo-500 outline-none transition-all uppercase appearance-none rounded-xl"
 						>
 							{#each schemas as schema}
 								<option value={schema}>{schema}</option>
@@ -672,14 +672,14 @@
 					<div class="space-y-3">
 						<label
 							for="fnName"
-							class="block font-jetbrains text-[10px] font-bold text-slate-500 uppercase tracking-widest italic"
+							class="block font-jetbrains text-[10px] font-bold text-neutral-500 uppercase tracking-widest italic"
 							>Identifier_Tag</label
 						>
 						<input
 							id="fnName"
 							type="text"
 							bind:value={formData.name}
-							class="w-full px-4 py-3 bg-slate-950/40 border border-slate-800 text-stone-200 font-jetbrains text-xs focus:border-indigo-500 outline-none transition-all uppercase rounded-xl"
+							class="w-full px-4 py-3 bg-neutral-950/40 border border-neutral-800 text-stone-200 font-jetbrains text-xs focus:border-indigo-500 outline-none transition-all uppercase rounded-xl"
 							placeholder="NULL_PTR"
 						/>
 					</div>
@@ -689,27 +689,27 @@
 					<div class="space-y-3">
 						<label
 							for="fnArgs"
-							class="block font-jetbrains text-[10px] font-bold text-slate-500 uppercase tracking-widest italic"
+							class="block font-jetbrains text-[10px] font-bold text-neutral-500 uppercase tracking-widest italic"
 							>Argument_Buffer</label
 						>
 						<input
 							id="fnArgs"
 							type="text"
 							bind:value={formData.arguments}
-							class="w-full px-4 py-3 bg-slate-950/40 border border-slate-800 text-stone-200 font-jetbrains text-xs focus:border-indigo-500 outline-none transition-all rounded-xl"
+							class="w-full px-4 py-3 bg-neutral-950/40 border border-neutral-800 text-stone-200 font-jetbrains text-xs focus:border-indigo-500 outline-none transition-all rounded-xl"
 							placeholder="arg1 integer, arg2 text"
 						/>
 					</div>
 					<div class="space-y-3">
 						<label
 							for="fnReturns"
-							class="block font-jetbrains text-[10px] font-bold text-slate-500 uppercase tracking-widest italic"
+							class="block font-jetbrains text-[10px] font-bold text-neutral-500 uppercase tracking-widest italic"
 							>Return_Signature</label
 						>
 						<select
 							id="fnReturns"
 							bind:value={formData.returns}
-							class="w-full px-4 py-3 bg-slate-950/40 border border-slate-800 text-stone-300 font-jetbrains text-xs focus:border-indigo-500 outline-none transition-all appearance-none rounded-xl"
+							class="w-full px-4 py-3 bg-neutral-950/40 border border-neutral-800 text-stone-300 font-jetbrains text-xs focus:border-indigo-500 outline-none transition-all appearance-none rounded-xl"
 						>
 							{#each returnTypes as type}
 								<option value={type}>{type}</option>
@@ -722,13 +722,13 @@
 					<div class="space-y-3">
 						<label
 							for="fnLang"
-							class="block font-jetbrains text-[10px] font-bold text-slate-500 uppercase tracking-widest italic"
+							class="block font-jetbrains text-[10px] font-bold text-neutral-500 uppercase tracking-widest italic"
 							>Language_Engine</label
 						>
 						<select
 							id="fnLang"
 							bind:value={formData.language}
-							class="w-full px-4 py-3 bg-slate-950/40 border border-slate-800 text-stone-300 font-jetbrains text-xs focus:border-indigo-500 outline-none transition-all appearance-none rounded-xl"
+							class="w-full px-4 py-3 bg-neutral-950/40 border border-neutral-800 text-stone-300 font-jetbrains text-xs focus:border-indigo-500 outline-none transition-all appearance-none rounded-xl"
 						>
 							{#each languages as lang}
 								<option value={lang}>{lang}</option>
@@ -738,13 +738,13 @@
 					<div class="space-y-3">
 						<label
 							for="fnVol"
-							class="block font-jetbrains text-[10px] font-bold text-slate-500 uppercase tracking-widest italic"
+							class="block font-jetbrains text-[10px] font-bold text-neutral-500 uppercase tracking-widest italic"
 							>Volatility_State</label
 						>
 						<select
 							id="fnVol"
 							bind:value={formData.volatility}
-							class="w-full px-4 py-3 bg-slate-950/40 border border-slate-800 text-stone-300 font-jetbrains text-xs focus:border-indigo-500 outline-none transition-all appearance-none rounded-xl"
+							class="w-full px-4 py-3 bg-neutral-950/40 border border-neutral-800 text-stone-300 font-jetbrains text-xs focus:border-indigo-500 outline-none transition-all appearance-none rounded-xl"
 						>
 							{#each volatilities as vol}
 								<option value={vol}>{vol}</option>
@@ -753,24 +753,24 @@
 					</div>
 					<div class="flex flex-col justify-end gap-3">
 						<label
-							class="flex items-center gap-3 p-3 bg-slate-950/40 border border-slate-800 cursor-pointer hover:border-indigo-500/50 transition-colors rounded-xl"
+							class="flex items-center gap-3 p-3 bg-neutral-950/40 border border-neutral-800 cursor-pointer hover:border-indigo-500/50 transition-colors rounded-xl"
 						>
 							<input
 								type="checkbox"
 								bind:checked={formData.isStrict}
-								class="rounded text-indigo-500 focus:ring-indigo-500 bg-slate-900 border-slate-700"
+								class="rounded text-indigo-500 focus:ring-indigo-500 bg-neutral-900 border-neutral-700"
 							/>
-							<span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Strict_Check</span>
+							<span class="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Strict_Check</span>
 						</label>
 						<label
-							class="flex items-center gap-3 p-3 bg-slate-950/40 border border-slate-800 cursor-pointer hover:border-indigo-500/50 transition-colors rounded-xl"
+							class="flex items-center gap-3 p-3 bg-neutral-950/40 border border-neutral-800 cursor-pointer hover:border-indigo-500/50 transition-colors rounded-xl"
 						>
 							<input
 								type="checkbox"
 								bind:checked={formData.securityDefiner}
-								class="rounded text-indigo-500 focus:ring-indigo-500 bg-slate-900 border-slate-700"
+								class="rounded text-indigo-500 focus:ring-indigo-500 bg-neutral-900 border-neutral-700"
 							/>
-							<span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Sec_Definer</span>
+							<span class="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Sec_Definer</span>
 						</label>
 					</div>
 				</div>
@@ -779,7 +779,7 @@
 				<div class="space-y-3">
 					<label
 						for="fnBody"
-						class="block font-jetbrains text-[10px] font-bold text-slate-500 uppercase tracking-widest italic"
+						class="block font-jetbrains text-[10px] font-bold text-neutral-500 uppercase tracking-widest italic"
 						>Logic_Kernel_Body</label
 					>
 					<div class="relative">
@@ -788,7 +788,7 @@
 							id="fnBody"
 							bind:value={formData.body}
 							rows="15"
-							class="w-full px-10 py-8 bg-slate-950/60 border border-slate-800 text-stone-200 focus:border-indigo-500 outline-none font-mono text-sm resize-none leading-relaxed shadow-inner rounded-2xl"
+							class="w-full px-10 py-8 bg-neutral-950/60 border border-neutral-800 text-stone-200 focus:border-indigo-500 outline-none font-mono text-sm resize-none leading-relaxed shadow-inner rounded-2xl"
 							placeholder="-- Your code here"
 						></textarea>
 						<div class="absolute bottom-4 right-4 text-indigo-500 font-bold text-xs opacity-20 pointer-events-none tracking-widest">END;</div>
@@ -798,22 +798,22 @@
 
 			<!-- Modal Footer -->
 			<div
-				class="p-8 border-t border-slate-800 bg-slate-950/40 flex justify-between items-center"
+				class="p-8 border-t border-neutral-800 bg-neutral-950/40 flex justify-between items-center"
 			>
-				<div class="font-jetbrains text-[8px] font-bold text-slate-700 uppercase tracking-[0.5em] italic">
+				<div class="font-jetbrains text-[8px] font-bold text-neutral-700 uppercase tracking-[0.5em] italic">
 					Waiting_For_Acknowledge
 				</div>
 				<div class="flex gap-6">
 					<button
 						onclick={closeModal}
-						class="px-8 py-3 text-[11px] font-bold text-slate-500 hover:text-white uppercase tracking-widest italic transition-all rounded-lg"
+						class="px-8 py-3 text-[11px] font-bold text-neutral-500 hover:text-white uppercase tracking-widest italic transition-all rounded-lg"
 					>
 						[Abort]
 					</button>
 					<button
 						onclick={saveFunction}
 						disabled={loading}
-						class="px-10 py-4 bg-indigo-500 hover:bg-indigo-400 text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-indigo-900/20 transition-all disabled:opacity-20 active:translate-y-px rounded-xl"
+						class="px-10 py-4 bg-indigo-500 hover:bg-indigo-400 text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-indigo-900/20 transition-all disabled:opacity-20 active:tranneutral-y-px rounded-xl"
 					>
 						{#if loading}
 							<RefreshCw class="w-4 h-4 animate-spin inline mr-3" />
@@ -837,17 +837,17 @@
 		transition:fade={{ duration: 150 }}
 	>
 		<button
-			class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm cursor-default"
+			class="absolute inset-0 bg-neutral-950/60 backdrop-blur-sm cursor-default"
 			onclick={() => (executeModalOpen = false)}
 			aria-label="Close modal"
 		></button>
 
 		<div
-			class="relative w-full max-w-2xl max-h-[80vh] bg-slate-900/80 backdrop-blur-2xl border border-slate-800 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col"
+			class="relative w-full max-w-2xl max-h-[80vh] bg-neutral-900/80 backdrop-blur-2xl border border-neutral-800 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col"
 		>
 			<!-- Modal Header -->
 			<div
-				class="p-8 border-b border-slate-800 bg-slate-950/40"
+				class="p-8 border-b border-neutral-800 bg-neutral-950/40"
 			>
 				<div class="flex items-center justify-between">
 					<div class="flex items-center gap-5">
@@ -856,12 +856,12 @@
 						</div>
 						<div>
 							<h3 class="text-2xl font-heading font-black text-white uppercase tracking-tighter italic">Execute_Unit</h3>
-							<p class="font-jetbrains text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1 italic">{functionToExecute.name}()</p>
+							<p class="font-jetbrains text-[10px] text-neutral-500 font-bold uppercase tracking-widest mt-1 italic">{functionToExecute.name}()</p>
 						</div>
 					</div>
 					<button
 						onclick={() => (executeModalOpen = false)}
-						class="p-2 text-slate-500 hover:text-white transition-all rounded-lg"
+						class="p-2 text-neutral-500 hover:text-white transition-all rounded-lg"
 					>
 						<X class="w-6 h-6" />
 					</button>
@@ -874,21 +874,21 @@
 					<div role="group" aria-labelledby="args-label">
 						<div
 							id="args-label"
-							class="block font-jetbrains text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-6 italic border-l border-slate-800 pl-4"
+							class="block font-jetbrains text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-6 italic border-l border-neutral-800 pl-4"
 						>
 							Input_Arguments
 						</div>
 						<div class="space-y-4">
 							{#each functionToExecute.argument_types.split(',') as arg, i}
 								<div class="flex items-center gap-6 group">
-									<label for={`execArg-${i}`} class="text-[10px] font-jetbrains font-bold text-slate-500 uppercase tracking-widest min-w-[140px] italic group-hover:text-indigo-400 transition-colors"
+									<label for={`execArg-${i}`} class="text-[10px] font-jetbrains font-bold text-neutral-500 uppercase tracking-widest min-w-[140px] italic group-hover:text-indigo-400 transition-colors"
 										>{arg.trim()}</label
 									>
 									<input
 										id={`execArg-${i}`}
 										type="text"
 										bind:value={executeArgs[i]}
-										class="flex-1 px-4 py-3 bg-slate-950/40 border border-slate-800 text-stone-200 focus:border-indigo-500 outline-none font-mono text-xs transition-all shadow-inner rounded-xl"
+										class="flex-1 px-4 py-3 bg-neutral-950/40 border border-neutral-800 text-stone-200 focus:border-indigo-500 outline-none font-mono text-xs transition-all shadow-inner rounded-xl"
 										placeholder="NULL_VAL"
 									/>
 								</div>
@@ -897,8 +897,8 @@
 					</div>
 				{:else}
 					<div class="flex flex-col items-center justify-center py-10 opacity-40">
-						<Info class="w-10 h-10 text-slate-700 mb-4" />
-						<p class="font-jetbrains text-[10px] font-bold text-slate-500 uppercase tracking-widest">Procedural unit requires no inputs.</p>
+						<Info class="w-10 h-10 text-neutral-700 mb-4" />
+						<p class="font-jetbrains text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Procedural unit requires no inputs.</p>
 					</div>
 				{/if}
 
@@ -911,25 +911,25 @@
 							Output_Result_Buffer
 						</div>
 						<div
-							class="bg-slate-950/40 border border-slate-800 rounded-2xl overflow-hidden shadow-inner"
+							class="bg-neutral-950/40 border border-neutral-800 rounded-2xl overflow-hidden shadow-inner"
 						>
 							<div class="overflow-x-auto custom-scrollbar">
 								<table class="w-full text-xs font-jetbrains">
-									<thead class="bg-slate-950 text-slate-500 border-b border-slate-800">
+									<thead class="bg-neutral-950 text-neutral-500 border-b border-neutral-800">
 										<tr>
 											{#each Object.keys(executeResult[0]) as key}
 												<th
-													class="px-6 py-4 text-left font-bold uppercase tracking-widest border-r border-slate-900 italic"
+													class="px-6 py-4 text-left font-bold uppercase tracking-widest border-r border-neutral-900 italic"
 													>{key}</th
 												>
 											{/each}
 										</tr>
 									</thead>
-									<tbody class="divide-y divide-slate-900">
+									<tbody class="divide-y divide-neutral-900">
 										{#each executeResult as row}
 											<tr class="hover:bg-indigo-500/5 transition-colors">
 												{#each Object.values(row) as val}
-													<td class="px-6 py-4 text-slate-400 font-medium tracking-tight">
+													<td class="px-6 py-4 text-neutral-400 font-medium tracking-tight">
 														{val === null ? 'NULL' : String(val)}
 													</td>
 												{/each}
@@ -945,18 +945,18 @@
 
 			<!-- Modal Footer -->
 			<div
-				class="p-8 border-t border-slate-800 bg-slate-950/40 flex justify-end gap-6"
+				class="p-8 border-t border-neutral-800 bg-neutral-950/40 flex justify-end gap-6"
 			>
 				<button
 					onclick={() => (executeModalOpen = false)}
-					class="px-8 py-3 text-[11px] font-bold text-slate-500 hover:text-white uppercase tracking-widest italic transition-all rounded-lg"
+					class="px-8 py-3 text-[11px] font-bold text-neutral-500 hover:text-white uppercase tracking-widest italic transition-all rounded-lg"
 				>
 					[Close]
 				</button>
 				<button
 					onclick={executeFunction}
 					disabled={executeLoading}
-					class="px-10 py-4 bg-emerald-500 hover:bg-emerald-400 text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-emerald-900/20 transition-all active:translate-y-px rounded-xl"
+					class="px-10 py-4 bg-emerald-500 hover:bg-emerald-400 text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-emerald-900/20 transition-all active:tranneutral-y-px rounded-xl"
 				>
 					{#if executeLoading}
 						<RefreshCw class="w-4 h-4 animate-spin inline mr-3" />

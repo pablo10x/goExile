@@ -537,7 +537,7 @@
 <div class="h-full flex flex-col bg-transparent">
 	<!-- Toolbar -->
 	<div
-		class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/40 backdrop-blur-md"
+		class="p-4 border-b border-neutral-800 flex justify-between items-center bg-neutral-900/40 backdrop-blur-md"
 	>
 		<div class="flex items-center gap-4">
 			<div class="p-2.5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
@@ -545,17 +545,17 @@
 			</div>
 			<div>
 				<h2 class="text-lg font-heading font-black text-white uppercase tracking-tighter italic">SQL_Terminal_v4</h2>
-				<p class="font-jetbrains text-[10px] text-slate-500 uppercase tracking-widest mt-1 italic">Execute raw neural queries against the sector</p>
+				<p class="font-jetbrains text-[10px] text-neutral-500 uppercase tracking-widest mt-1 italic">Execute raw neural queries against the sector</p>
 			</div>
 		</div>
 		<div class="flex gap-4 items-center">
 			{#if loadingMetadata}
-				<span class="font-jetbrains text-[10px] text-slate-500 flex items-center gap-2 uppercase tracking-widest italic font-bold">
+				<span class="font-jetbrains text-[10px] text-neutral-500 flex items-center gap-2 uppercase tracking-widest italic font-bold">
 					<RefreshCw class="w-3.5 h-3.5 animate-spin" />
 					Syncing_Schema...
 				</span>
 			{:else if tables.length > 0}
-				<span class="font-jetbrains text-[10px] text-slate-500 flex items-center gap-2 uppercase tracking-widest italic font-bold">
+				<span class="font-jetbrains text-[10px] text-neutral-500 flex items-center gap-2 uppercase tracking-widest italic font-bold">
 					<Database class="w-3.5 h-3.5 text-indigo-400/60" />
 					{tables.length} Sectors_Mapped
 				</span>
@@ -563,7 +563,7 @@
 			<button
 				onclick={runQuery}
 				disabled={loading || !query.trim()}
-				class="px-6 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-indigo-900/20 disabled:opacity-20 transition-all active:translate-y-px rounded-xl"
+				class="px-6 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-indigo-900/20 disabled:opacity-20 transition-all active:tranneutral-y-px rounded-xl"
 			>
 				{#if loading}
 					<RefreshCw class="w-4 h-4 animate-spin" /> EXECUTING...
@@ -578,13 +578,13 @@
 	<div class="flex-1 flex flex-col overflow-hidden bg-transparent">
 		<!-- Editor Area -->
 		<div
-			class="h-1/3 min-h-[200px] p-6 border-b border-slate-800 bg-transparent relative"
+			class="h-1/3 min-h-[200px] p-6 border-b border-neutral-800 bg-transparent relative"
 		>
 			<div class="relative w-full h-full">
 				<textarea
 					bind:this={textareaEl}
 					bind:value={query}
-					class="w-full h-full bg-slate-950/40 border border-slate-800 p-6 font-jetbrains text-xs text-slate-200 focus:border-indigo-500 outline-none resize-none shadow-inner uppercase tracking-widest rounded-xl"
+					class="w-full h-full bg-neutral-950/40 border border-neutral-800 p-6 font-jetbrains text-xs text-neutral-200 focus:border-indigo-500 outline-none resize-none shadow-inner uppercase tracking-widest rounded-xl"
 					placeholder="SELECT * FROM sector_registry LIMIT 10;"
 					onkeydown={handleKeydown}
 					oninput={handleInput}
@@ -596,7 +596,7 @@
 				<!-- Autocomplete Dropdown -->
 				{#if showAutocomplete && suggestions.length > 0}
 					<div
-						class="absolute z-50 bg-slate-900/90 backdrop-blur-xl border border-slate-800 shadow-2xl overflow-hidden min-w-[240px] max-w-[350px] rounded-xl"
+						class="absolute z-50 bg-neutral-900/90 backdrop-blur-xl border border-neutral-800 shadow-2xl overflow-hidden min-w-[240px] max-w-[350px] rounded-xl"
 						style="top: {autocompletePosition.top}px; left: {autocompletePosition.left}px;"
 						transition:slide={{ duration: 100 }}
 					>
@@ -606,7 +606,7 @@
 									class="w-full px-4 py-2.5 text-left font-jetbrains text-[10px] font-black uppercase tracking-widest flex items-center gap-3 transition-all {i ===
 									selectedIndex
 										? 'bg-indigo-500 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)]'
-										: 'text-slate-400 hover:bg-slate-800 hover:text-white'}"
+										: 'text-neutral-400 hover:bg-neutral-800 hover:text-white'}"
 									onmousedown={() => applySuggestion(suggestion)}
 									onmouseenter={() => (selectedIndex = i)}
 								>
@@ -617,35 +617,35 @@
 									{:else if tables.some((t) => t.table === suggestion || `${t.schema}.${t.table}` === suggestion)}
 										<span class="w-1.5 h-1.5 bg-amber-500 flex-shrink-0"></span>
 									{:else}
-										<span class="w-1.5 h-1.5 bg-slate-700 flex-shrink-0"></span>
+										<span class="w-1.5 h-1.5 bg-neutral-700 flex-shrink-0"></span>
 									{/if}
 									<span class="truncate">{suggestion}</span>
 								</button>
 							{/each}
 						</div>
 						<div
-							class="px-4 py-2 bg-slate-950 border-t border-slate-800 font-jetbrains text-[8px] font-bold text-slate-600 flex gap-4 uppercase tracking-[0.2em]"
+							class="px-4 py-2 bg-neutral-950 border-t border-neutral-800 font-jetbrains text-[8px] font-bold text-neutral-600 flex gap-4 uppercase tracking-[0.2em]"
 						>
 							<span
-								><kbd class="px-1 bg-slate-900 border border-slate-800 rounded text-slate-500"
+								><kbd class="px-1 bg-neutral-900 border border-neutral-800 rounded text-neutral-500"
 									>↑↓</kbd
 								> NAV</span>
 							<span
-								><kbd class="px-1 bg-slate-900 border border-slate-800 rounded text-slate-500"
+								><kbd class="px-1 bg-neutral-900 border border-neutral-800 rounded text-neutral-500"
 									>TAB</kbd
 								> SELECT</span>
 							<span
-								><kbd class="px-1 bg-slate-900 border border-slate-800 rounded text-slate-500"
+								><kbd class="px-1 bg-neutral-900 border border-neutral-800 rounded text-neutral-500"
 									>ESC</kbd
 								> EXIT</span>
 						</div>
 					</div>
 				{/if}
 			</div>
-			<div class="font-jetbrains text-[9px] font-bold text-slate-600 mt-3 flex justify-between uppercase tracking-[0.2em] italic">
+			<div class="font-jetbrains text-[9px] font-bold text-neutral-600 mt-3 flex justify-between uppercase tracking-[0.2em] italic">
 				<div class="flex gap-6">
-					<span class="flex items-center gap-2"><div class="w-1 h-1 bg-slate-800"></div> Ctrl + Enter_OP</span>
-					<span class="flex items-center gap-2"><div class="w-1 h-1 bg-slate-800"></div> Tab_Autocomplete</span>
+					<span class="flex items-center gap-2"><div class="w-1 h-1 bg-neutral-800"></div> Ctrl + Enter_OP</span>
+					<span class="flex items-center gap-2"><div class="w-1 h-1 bg-neutral-800"></div> Tab_Autocomplete</span>
 				</div>
 				{#if executionTime > 0}
 					<span class="text-indigo-400">RT_Execution: {executionTime.toFixed(2)}ms</span>
@@ -657,22 +657,22 @@
 		<div class="flex-1 flex flex-col overflow-hidden bg-transparent relative">
 			{#if results.length > 0}
 				<div
-					class="p-3 border-b border-slate-800 bg-slate-900/40 flex justify-between items-center px-6"
+					class="p-3 border-b border-neutral-800 bg-neutral-900/40 flex justify-between items-center px-6"
 				>
 					<span
-						class="font-jetbrains text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] italic"
+						class="font-jetbrains text-[10px] font-bold text-neutral-500 uppercase tracking-[0.3em] italic"
 						>{results.length} Entities_Mapped</span>
 					<div class="flex gap-3">
 						<button
 							onclick={copyToClipboard}
-							class="p-2 text-slate-500 hover:text-indigo-400 transition-all"
+							class="p-2 text-neutral-500 hover:text-indigo-400 transition-all"
 							title="Copy JSON"
 						>
 							<Copy class="w-4 h-4" />
 						</button>
 						<button
 							onclick={downloadCSV}
-							class="p-2 text-slate-500 hover:text-indigo-400 transition-all"
+							class="p-2 text-neutral-500 hover:text-indigo-400 transition-all"
 							title="Download CSV"
 						>
 							<Download class="w-4 h-4" />
@@ -682,23 +682,23 @@
 				<div class="flex-1 overflow-auto custom-scrollbar">
 					<table class="w-full text-left font-jetbrains text-[11px] border-collapse">
 						<thead
-							class="bg-slate-950 sticky top-0 z-10 border-b border-slate-800"
+							class="bg-neutral-950 sticky top-0 z-10 border-b border-neutral-800"
 						>
 							<tr>
 								{#each Object.keys(results[0]) as key}
 									<th
-										class="px-5 py-4 font-bold uppercase tracking-widest border-r border-slate-800/30 whitespace-nowrap italic text-slate-500"
+										class="px-5 py-4 font-bold uppercase tracking-widest border-r border-neutral-800/30 whitespace-nowrap italic text-neutral-500"
 										>{key}</th
 									>
 								{/each}
 							</tr>
 						</thead>
-						<tbody class="divide-y divide-slate-800/50">
+						<tbody class="divide-y divide-neutral-800/50">
 							{#each results as row}
 								<tr class="hover:bg-indigo-500/5 transition-colors group">
 									{#each Object.values(row) as val}
 										<td
-											class="px-5 py-3 text-slate-400 group-hover:text-slate-200 border-r border-slate-800/20 whitespace-nowrap max-w-xs truncate"
+											class="px-5 py-3 text-neutral-400 group-hover:text-neutral-200 border-r border-neutral-800/20 whitespace-nowrap max-w-xs truncate"
 											title={String(val)}
 										>
 											{val === null ? 'NULL' : String(val)}
@@ -716,12 +716,12 @@
 							<div class="w-2 h-2 bg-red-500 animate-pulse"></div>
 							Execution_Fault_Detected
 						</div>
-						<div class="text-slate-400 font-jetbrains text-[11px] whitespace-pre-wrap leading-relaxed uppercase tracking-widest">{error}</div>
+						<div class="text-neutral-400 font-jetbrains text-[11px] whitespace-pre-wrap leading-relaxed uppercase tracking-widest">{error}</div>
 					</div>
 				</div>
 			{:else if !loading}
-				<div class="flex-1 flex flex-col items-center justify-center text-slate-700">
-					<div class="p-8 bg-slate-900/40 border border-slate-800 rounded-2xl mb-6 shadow-inner">
+				<div class="flex-1 flex flex-col items-center justify-center text-neutral-700">
+					<div class="p-8 bg-neutral-900/40 border border-neutral-800 rounded-2xl mb-6 shadow-inner">
 						<Terminal class="w-16 h-16 opacity-10" />
 					</div>
 					<p class="font-heading font-black text-xs tracking-[0.4em] uppercase italic">Awaiting_Neural_Sequence</p>
@@ -731,7 +731,7 @@
 
 			{#if loading}
 				<div
-					class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center z-20"
+					class="absolute inset-0 bg-neutral-950/60 backdrop-blur-sm flex items-center justify-center z-20"
 				>
 					<div class="flex flex-col items-center gap-6">
 						<div

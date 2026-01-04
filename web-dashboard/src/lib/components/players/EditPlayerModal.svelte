@@ -56,7 +56,7 @@
 
 {#if isOpen}
 	<div
-		class="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md font-['JetBrains_Mono',monospace]"
+		class="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-neutral-950/60 backdrop-blur-md font-['JetBrains_Mono',monospace]"
 		transition:fade={{ duration: 200 }}
 		onclick={onClose}
 		role="button"
@@ -64,7 +64,7 @@
 		onkeydown={(e) => e.key === 'Escape' && onClose()}
 	>
 		        <div
-		            class="w-full max-w-lg bg-slate-900/80 backdrop-blur-2xl border border-stone-800 rounded-none shadow-2xl overflow-hidden relative industrial-sharp"
+		            class="w-full max-w-lg bg-neutral-900/80 backdrop-blur-2xl border border-stone-800 rounded-none shadow-2xl overflow-hidden relative industrial-sharp"
 		            onclick={(e) => e.stopPropagation()}
 		            transition:scale={{ duration: 200, start: 0.95 }}
 		        >			<!-- Tactical Corners -->
@@ -75,7 +75,7 @@
 
 			<!-- Header -->
 			<div
-				class="px-8 py-6 border-b border-stone-800 flex justify-between items-center bg-slate-950/40 relative overflow-hidden group"
+				class="px-8 py-6 border-b border-stone-800 flex justify-between items-center bg-neutral-950/40 relative overflow-hidden group"
 			>
 				<div class="absolute inset-0 bg-rust/5 animate-pulse"></div>
 				<h2 class="text-2xl font-heading font-black italic tracking-tighter text-white uppercase flex items-center gap-4 relative z-10">
@@ -110,7 +110,7 @@
 						<input
 							type="text"
 							bind:value={formData.name}
-							class="w-full bg-slate-950/40 border border-stone-800 px-4 py-3 text-white font-bold italic text-lg focus:border-rust outline-none transition-all placeholder:text-stone-900 industrial-frame"
+							class="w-full bg-neutral-950/40 border border-stone-800 px-4 py-3 text-white font-bold italic text-lg focus:border-rust outline-none transition-all placeholder:text-stone-900 industrial-frame"
 							placeholder="NULL_PTR"
 						/>
 					</div>
@@ -125,7 +125,7 @@
 						<input
 							type="text"
 							bind:value={formData.uid}
-							class="w-full bg-slate-950/40 border border-stone-800 px-4 py-3 text-stone-400 font-mono font-bold tracking-tighter text-sm focus:border-rust outline-none transition-all placeholder:text-stone-900 industrial-frame"
+							class="w-full bg-neutral-950/40 border border-stone-800 px-4 py-3 text-stone-400 font-mono font-bold tracking-tighter text-sm focus:border-rust outline-none transition-all placeholder:text-stone-900 industrial-frame"
 							placeholder="0x000...000"
 						/>
 					</div>
@@ -140,7 +140,7 @@
 						<input
 							type="text"
 							bind:value={formData.device_id}
-							class="w-full bg-slate-950/40 border border-stone-800 px-4 py-3 text-stone-400 font-mono font-bold tracking-tighter text-sm focus:border-rust outline-none transition-all placeholder:text-stone-900 industrial-frame"
+							class="w-full bg-neutral-950/40 border border-stone-800 px-4 py-3 text-stone-400 font-mono font-bold tracking-tighter text-sm focus:border-rust outline-none transition-all placeholder:text-stone-900 industrial-frame"
 							placeholder="UNK_HARDWARE_SIG"
 						/>
 					</div>
@@ -155,7 +155,7 @@
 						<input
 							type="number"
 							bind:value={formData.xp}
-							class="w-full bg-slate-950/40 border border-stone-800 px-4 py-3 text-warning font-mono font-bold italic text-2xl focus:border-rust outline-none transition-all placeholder:text-stone-900 industrial-frame"
+							class="w-full bg-neutral-950/40 border border-stone-800 px-4 py-3 text-warning font-mono font-bold italic text-2xl focus:border-rust outline-none transition-all placeholder:text-stone-900 industrial-frame"
 							placeholder="0"
 						/>
 					</div>
@@ -168,7 +168,7 @@
 			</div>
 
 			<!-- Footer Commands -->
-			<div class="p-8 border-t border-stone-800 bg-slate-950/40 flex justify-between items-center relative overflow-hidden">
+			<div class="p-8 border-t border-stone-800 bg-neutral-950/40 flex justify-between items-center relative overflow-hidden">
 				<div class="text-[9px] font-black text-stone-800 tracking-[0.5em] uppercase italic">
 					Waiting_For_Acknowledge
 				</div>

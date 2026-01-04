@@ -240,7 +240,7 @@
 
 <div class="h-full flex flex-col bg-transparent">
 	<!-- Header -->
-	<div class="shrink-0 border-b border-slate-800 bg-slate-900/40 backdrop-blur-md">
+	<div class="shrink-0 border-b border-neutral-800 bg-neutral-900/40 backdrop-blur-md">
 		<!-- Title Bar -->
 		<div class="px-6 py-4 flex items-center justify-between">
 			<div class="flex items-center gap-4">
@@ -249,23 +249,23 @@
 				</div>
 				<div>
 					<h2 class="text-sm font-heading font-black text-white tracking-widest uppercase italic">Schema_Explorer</h2>
-					<p class="text-[9px] text-slate-500 mt-1 font-bold uppercase tracking-widest italic">Database Topology Mapping</p>
+					<p class="text-[9px] text-neutral-500 mt-1 font-bold uppercase tracking-widest italic">Database Topology Mapping</p>
 				</div>
 			</div>
 
 			<div class="flex items-center gap-2">
 				<button
 					onclick={() => (isSchemaCreatorOpen = true)}
-					class="p-2 text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all rounded-xl"
+					class="p-2 text-neutral-500 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all rounded-xl"
 					title="New Schema"
 				>
 					<Plus class="w-5 h-5" />
 				</button>
-				<div class="w-px h-6 bg-slate-800 mx-1"></div>
+				<div class="w-px h-6 bg-neutral-800 mx-1"></div>
 				<button
 					onclick={refresh}
 					disabled={isRefreshing}
-					class="p-2 text-slate-500 hover:text-white hover:bg-slate-800 transition-all rounded-xl disabled:opacity-50"
+					class="p-2 text-neutral-500 hover:text-white hover:bg-neutral-800 transition-all rounded-xl disabled:opacity-50"
 					title="Refresh"
 				>
 					<RefreshCw class="w-5 h-5 {isRefreshing ? 'animate-spin' : ''}" />
@@ -275,13 +275,13 @@
 
 		<!-- Stats Bar -->
 		<div class="px-6 pb-4 flex items-center gap-3">
-			<div class="flex items-center gap-3 px-4 py-1.5 bg-slate-950/40 border border-slate-800 rounded-xl">
+			<div class="flex items-center gap-3 px-4 py-1.5 bg-neutral-950/40 border border-neutral-800 rounded-xl">
 				<Layers class="w-3.5 h-3.5 text-indigo-400" />
-				<span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">{totalSchemas} Sectors</span>
+				<span class="text-[9px] font-bold text-neutral-400 uppercase tracking-widest italic">{totalSchemas} Sectors</span>
 			</div>
-			<div class="flex items-center gap-3 px-4 py-1.5 bg-slate-950/40 border border-slate-800 rounded-xl">
+			<div class="flex items-center gap-3 px-4 py-1.5 bg-neutral-950/40 border border-neutral-800 rounded-xl">
 				<Table class="w-3.5 h-3.5 text-indigo-400" />
-				<span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">{totalTables} Tables</span>
+				<span class="text-[9px] font-bold text-neutral-400 uppercase tracking-widest italic">{totalTables} Tables</span>
 			</div>
 		</div>
 	</div>

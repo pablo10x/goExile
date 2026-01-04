@@ -3,7 +3,6 @@
 	import DOMPurify from 'dompurify';
 	import { siteSettings } from '$lib/stores.svelte';
 	import IconComponent from '$lib/components/theme/Icon.svelte';
-	import CardHoverOverlay from '$lib/components/theme/CardHoverOverlay.svelte';
 
 	type ColorKey = 'rust' | 'emerald' | 'orange' | 'red' | 'purple' | 'cyan';
 
@@ -40,7 +39,7 @@
 			border: 'border-rust/30',
 			text: 'text-rust-light',
 			bg: 'bg-rust/5',
-			iconBg: 'bg-rust',
+			iconBg: 'bg-rust/20',
 			glow: 'shadow-rust/10',
 			accent: 'bg-rust'
 		},
@@ -48,7 +47,7 @@
 			border: 'border-emerald-500/20',
 			text: 'text-emerald-500',
 			bg: 'bg-emerald-500/5',
-			iconBg: 'bg-emerald-600',
+			iconBg: 'bg-emerald-950/40',
 			glow: 'shadow-emerald-500/10',
 			accent: 'bg-emerald-500'
 		},
@@ -56,7 +55,7 @@
 			border: 'border-orange-500/20',
 			text: 'text-orange-500',
 			bg: 'bg-orange-500/5',
-			iconBg: 'bg-orange-600',
+			iconBg: 'bg-orange-950/40',
 			glow: 'shadow-orange-500/10',
 			accent: 'bg-orange-600'
 		},
@@ -64,25 +63,25 @@
 			border: 'border-red-500/20',
 			text: 'text-red-500',
 			bg: 'bg-red-500/5',
-			iconBg: 'bg-red-600',
+			iconBg: 'bg-red-950/40',
 			glow: 'shadow-red-500/10',
 			accent: 'bg-red-500'
 		},
 		purple: {
-			border: 'border-purple-500/20',
-			text: 'text-purple-500',
-			bg: 'bg-purple-500/5',
-			iconBg: 'bg-purple-600',
-			glow: 'shadow-purple-500/10',
-			accent: 'bg-purple-500'
+			border: 'border-neutral-700',
+			text: 'text-neutral-400',
+			bg: 'bg-neutral-900/40',
+			iconBg: 'bg-neutral-950',
+			glow: 'shadow-neutral-500/10',
+			accent: 'bg-neutral-600'
 		},
 		cyan: {
-			border: 'border-cyan-500/20',
-			text: 'text-cyan-500',
-			bg: 'bg-cyan-500/5',
-			iconBg: 'bg-cyan-600',
-			glow: 'shadow-cyan-500/10',
-			accent: 'bg-cyan-500'
+			border: 'border-neutral-700',
+			text: 'text-neutral-400',
+			bg: 'bg-neutral-900/40',
+			iconBg: 'bg-neutral-950',
+			glow: 'shadow-neutral-500/10',
+			accent: 'bg-neutral-600'
 		}
 	};
 
@@ -91,7 +90,7 @@
 </script>
 
 <div
-	class="group modern-card cursor-pointer font-primary relative hover:shadow-xl hover:shadow-rust/10 hover:-translate-y-1 !rounded-none"
+	class="group modern-card cursor-pointer font-primary relative hover:shadow-xl hover:shadow-rust/10 hover:-tranneutral-y-1 !rounded-none border-neutral-800"
 	onmouseenter={() => isHovered = true}
 	onmouseleave={() => isHovered = false}
 	role="button"
@@ -107,16 +106,16 @@
 	<div class={`absolute top-0 left-0 w-full h-1 ${colors.accent} opacity-40 group-hover:opacity-100 transition-opacity duration-500`}></div>
 
 	<!-- Glass Overlay -->
-	<div class="absolute inset-0 backdrop-blur-md bg-slate-950/40"></div>
+	<div class="absolute inset-0 backdrop-blur-md bg-neutral-950/60"></div>
 
 	<div class="relative z-10" class:p-6={!$siteSettings.dashboard.compact_mode} class:p-4={$siteSettings.dashboard.compact_mode}>
 		<div class="flex items-center justify-between" class:mb-5={!$siteSettings.dashboard.compact_mode} class:mb-3={$siteSettings.dashboard.compact_mode}>
 			<div class="flex flex-col gap-1">
 				<div class="flex items-center gap-2">
 					<div class={`w-1 h-3 ${colors.accent} shadow-[0_0_8px_currentColor]`}></div>
-					<span class="text-[8px] font-mono font-black uppercase tracking-widest text-slate-500 italic">Sector_Signal</span>
+					<span class="text-[8px] font-mono font-black uppercase tracking-widest text-neutral-500 italic">Sector_Signal</span>
 				</div>
-				<span class="text-[10px] font-mono font-black uppercase tracking-[0.2em] text-white italic"
+				<span class="text-[10px] font-mono font-black uppercase tracking-[0.2em] text-neutral-300 italic"
 					>{title}</span
 				>
 			</div>
@@ -140,7 +139,7 @@
 				{value}
 			</div>
 			{#if subValue}
-				<div class={`text-[9px] font-mono font-bold leading-relaxed uppercase tracking-widest ${subValueClass} bg-black/40 border border-slate-800 p-2.5 rounded-none shadow-inner`}
+				<div class={`text-[9px] font-mono font-bold leading-relaxed uppercase tracking-widest ${subValueClass} bg-black/60 border border-neutral-800 p-2.5 rounded-none shadow-inner`}
 				>
 					{@html sanitizedSubValue}
 				</div>

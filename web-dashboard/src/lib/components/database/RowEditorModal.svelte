@@ -96,9 +96,9 @@
 	function getFieldColor(type: string) {
 		if (!type)
 			return {
-				bg: 'bg-slate-500/20',
+				bg: 'bg-neutral-500/20',
 				text: 'text-text-dim dark:text-text-dim',
-				border: 'border-slate-500/30'
+				border: 'border-neutral-500/30'
 			};
 		const t = type.toLowerCase();
 		if (
@@ -123,9 +123,9 @@
 			return { bg: 'bg-rust/10', text: 'text-rust-light', border: 'border-rust/20' };
 		}
 		return {
-			bg: 'bg-slate-500/20',
+			bg: 'bg-neutral-500/20',
 			text: 'text-text-dim dark:text-text-dim',
-			border: 'border-slate-500/30'
+			border: 'border-neutral-500/30'
 		};
 	}
 
@@ -192,7 +192,7 @@
 		if (isSuccess) return 'border-emerald-500/50 bg-success/5';
 		if (isFocused) return 'border-rust/50 bg-rust/5';
 		if (isModified) return 'border-amber-500/30 bg-amber-500/5';
-		return 'border-slate-300/50 dark:border-slate-700/50 bg-slate-950/40 hover:border-slate-600/50';
+		return 'border-neutral-300/50 dark:border-neutral-700/50 bg-neutral-950/40 hover:border-neutral-600/50';
 	}
 
 	function getBoolButtonClass(formValue: any, optionValue: any, optionColor: string): string {
@@ -201,9 +201,9 @@
 				return 'bg-success/20 text-success border border-emerald-500/50 shadow-lg shadow-emerald-500/10';
 			if (optionColor === 'red')
 				return 'bg-red-500/20 text-danger border border-red-500/50 shadow-lg shadow-red-500/10';
-			return 'bg-slate-600/30 text-slate-700 dark:text-slate-300 border border-slate-500/50';
+			return 'bg-neutral-600/30 text-neutral-700 dark:text-neutral-300 border border-neutral-500/50';
 		}
-		return 'bg-slate-800/50 text-text-dim border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-600/50 hover:text-text-dim dark:text-text-dim';
+		return 'bg-neutral-800/50 text-text-dim border border-neutral-300/50 dark:border-neutral-700/50 hover:border-neutral-600/50 hover:text-text-dim dark:text-text-dim';
 	}
 </script>
 
@@ -248,14 +248,14 @@
 			></div>
 
 			<div
-				class="relative bg-slate-900/80 backdrop-blur-2xl border border-stone-800 rounded-2xl shadow-2xl overflow-hidden"
+				class="relative bg-neutral-900/80 backdrop-blur-2xl border border-stone-800 rounded-2xl shadow-2xl overflow-hidden"
 			>
 				<div class="relative overflow-hidden">
 					<div
 						class="absolute inset-0 bg-gradient-to-r from-rust/10 via-stone-600/10 to-orange-600/10"
 					></div>
 					<div
-						class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-shimmer"
+						class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -tranneutral-x-full animate-shimmer"
 					></div>
 
 					<div class="relative p-6 flex items-start justify-between gap-4">
@@ -289,10 +289,10 @@
 									{/if}
 								</h2>
 								<p class="text-sm text-text-dim dark:text-text-dim mt-1 flex items-center gap-2">
-									<span class="px-2 py-0.5 bg-slate-800 rounded-md font-mono text-xs"
+									<span class="px-2 py-0.5 bg-neutral-800 rounded-md font-mono text-xs"
 										>{schema}.{table}</span
 									>
-									<span class="text-slate-600">•</span>
+									<span class="text-neutral-600">•</span>
 									<span>{editableColumns.length} fields</span>
 									{#if modifiedCount > 0}
 										<span
@@ -309,7 +309,7 @@
 						<button
 							onclick={onClose}
 							disabled={loading}
-							class="p-2 text-text-dim dark:text-text-dim hover:text-slate-900 dark:text-white hover:bg-slate-800/80 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50"
+							class="p-2 text-text-dim dark:text-text-dim hover:text-neutral-900 dark:text-white hover:bg-neutral-800/80 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50"
 							aria-label="Close modal"
 						>
 							<X class="w-5 h-5" />
@@ -340,9 +340,9 @@
 					{#if editableColumns.length === 0}
 						<div class="text-center py-12">
 							<div
-								class="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800/50 flex items-center justify-center"
+								class="w-16 h-16 mx-auto mb-4 rounded-full bg-neutral-800/50 flex items-center justify-center"
 							>
-								<Database class="w-8 h-8 text-slate-600" />
+								<Database class="w-8 h-8 text-neutral-600" />
 							</div>
 							<p class="text-text-dim dark:text-text-dim font-medium">No editable columns</p>
 							<p class="text-text-dim text-sm mt-1">
@@ -374,7 +374,7 @@
 												for="field-{col.name}"
 												class="flex items-center gap-2 text-sm font-medium transition-colors {isFocused
 													? 'text-info'
-													: 'text-slate-700 dark:text-slate-300'}"
+													: 'text-neutral-700 dark:text-neutral-300'}"
 											>
 												<div class="p-1 rounded-md {colors.bg}">
 													<FieldIcon class="w-3.5 h-3.5 {colors.text}" />
@@ -391,7 +391,7 @@
 
 												{#if col.nullable === 'YES'}
 													<span
-														class="px-1.5 py-0.5 text-xs rounded-md bg-slate-700/50 text-text-dim"
+														class="px-1.5 py-0.5 text-xs rounded-md bg-neutral-700/50 text-text-dim"
 														>nullable</span
 													>
 												{/if}
@@ -436,7 +436,7 @@
 													oninput={() => handleFieldChange(col.name)}
 													onfocus={() => (focusedField = col.name)}
 													onblur={() => (focusedField = null)}
-													class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300/50 dark:border-slate-700/50 rounded-lg px-4 py-3 text-slate-800 dark:text-slate-200 font-mono text-sm outline-none transition-all duration-200 focus:border-rust/50 focus:ring-2 focus:ring-rust/20 resize-none"
+													class="w-full bg-white/50 dark:bg-neutral-950/50 border border-neutral-300/50 dark:border-neutral-700/50 rounded-lg px-4 py-3 text-neutral-800 dark:text-neutral-200 font-mono text-sm outline-none transition-all duration-200 focus:border-rust/50 focus:ring-2 focus:ring-rust/20 resize-none"
 													rows="4"
 													placeholder={'{ "key": "value" }'}
 													spellcheck="false"
@@ -449,7 +449,7 @@
 													oninput={() => handleFieldChange(col.name)}
 													onfocus={() => (focusedField = col.name)}
 													onblur={() => (focusedField = null)}
-													class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300/50 dark:border-slate-700/50 rounded-lg px-4 py-3 text-slate-800 dark:text-slate-200 outline-none transition-all duration-200 focus:border-rust/50 focus:ring-2 focus:ring-rust/20"
+													class="w-full bg-white/50 dark:bg-neutral-950/50 border border-neutral-300/50 dark:border-neutral-700/50 rounded-lg px-4 py-3 text-neutral-800 dark:text-neutral-200 outline-none transition-all duration-200 focus:border-rust/50 focus:ring-2 focus:ring-rust/20"
 												/>
 											{:else if col.type && (col.type.includes('int') || col.type.includes('float') || col.type.includes('numeric') || col.type.includes('decimal') || col.type === 'real')}
 												<input
@@ -459,7 +459,7 @@
 													oninput={() => handleFieldChange(col.name)}
 													onfocus={() => (focusedField = col.name)}
 													onblur={() => (focusedField = null)}
-													class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300/50 dark:border-slate-700/50 rounded-lg px-4 py-3 text-slate-800 dark:text-slate-200 outline-none transition-all duration-200 focus:border-rust/50 focus:ring-2 focus:ring-rust/20"
+													class="w-full bg-white/50 dark:bg-neutral-950/50 border border-neutral-300/50 dark:border-neutral-700/50 rounded-lg px-4 py-3 text-neutral-800 dark:text-neutral-200 outline-none transition-all duration-200 focus:border-rust/50 focus:ring-2 focus:ring-rust/20"
 													placeholder="Enter a number..."
 													step="any"
 												/>
@@ -470,7 +470,7 @@
 													oninput={() => handleFieldChange(col.name)}
 													onfocus={() => (focusedField = col.name)}
 													onblur={() => (focusedField = null)}
-													class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300/50 dark:border-slate-700/50 rounded-lg px-4 py-3 text-slate-800 dark:text-slate-200 outline-none transition-all duration-200 focus:border-rust/50 focus:ring-2 focus:ring-rust/20 resize-none"
+													class="w-full bg-white/50 dark:bg-neutral-950/50 border border-neutral-300/50 dark:border-neutral-700/50 rounded-lg px-4 py-3 text-neutral-800 dark:text-neutral-200 outline-none transition-all duration-200 focus:border-rust/50 focus:ring-2 focus:ring-rust/20 resize-none"
 													rows="2"
 													placeholder="Enter text..."
 												></textarea>
@@ -482,7 +482,7 @@
 													oninput={() => handleFieldChange(col.name)}
 													onfocus={() => (focusedField = col.name)}
 													onblur={() => (focusedField = null)}
-													class="w-full bg-white/50 dark:bg-slate-950/50 border border-slate-300/50 dark:border-slate-700/50 rounded-lg px-4 py-3 text-slate-800 dark:text-slate-200 outline-none transition-all duration-200 focus:border-rust/50 focus:ring-2 focus:ring-rust/20"
+													class="w-full bg-white/50 dark:bg-neutral-950/50 border border-neutral-300/50 dark:border-neutral-700/50 rounded-lg px-4 py-3 text-neutral-800 dark:text-neutral-200 outline-none transition-all duration-200 focus:border-rust/50 focus:ring-2 focus:ring-rust/20"
 													placeholder="Enter value..."
 												/>
 											{/if}
@@ -495,21 +495,21 @@
 				</div>
 
 				<div
-					class="relative border-t border-slate-300/50 dark:border-slate-700/50 bg-slate-900/80 backdrop-blur-sm p-4"
+					class="relative border-t border-neutral-300/50 dark:border-neutral-700/50 bg-neutral-900/80 backdrop-blur-sm p-4"
 				>
 					<div
-						class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-slate-600/50 to-transparent"
+						class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-neutral-600/50 to-transparent"
 					></div>
 
 					<div class="flex items-center justify-between gap-4">
 						<div class="hidden sm:flex items-center gap-2 text-xs text-text-dim">
 							<kbd
-								class="px-2 py-1 bg-slate-800 rounded border border-slate-300 dark:border-slate-700 font-mono"
+								class="px-2 py-1 bg-neutral-800 rounded border border-neutral-300 dark:border-neutral-700 font-mono"
 								>Ctrl</kbd
 							>
 							<span>+</span>
 							<kbd
-								class="px-2 py-1 bg-slate-800 rounded border border-slate-300 dark:border-slate-700 font-mono"
+								class="px-2 py-1 bg-neutral-800 rounded border border-neutral-300 dark:border-neutral-700 font-mono"
 								>Enter</kbd
 							>
 							<span>to save</span>

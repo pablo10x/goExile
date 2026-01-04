@@ -140,7 +140,7 @@
 
 <div class="flex flex-col h-full bg-transparent">
 	<!-- Header -->
-	<div class="border-b border-slate-800 bg-slate-900/40 backdrop-blur-md">
+	<div class="border-b border-neutral-800 bg-neutral-900/40 backdrop-blur-md">
 		<!-- Table Info Bar -->
 		<div class="px-6 py-4 flex items-center justify-between">
 			<div class="flex items-center gap-4">
@@ -154,13 +154,13 @@
 							{schema}
 						</span>
 					</h2>
-					<div class="flex items-center gap-4 text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-widest">
+					<div class="flex items-center gap-4 text-[10px] font-bold text-neutral-500 mt-1 uppercase tracking-widest">
 						<span class="flex items-center gap-2">
-							<Rows3 class="w-3.5 h-3.5 text-slate-600" />
+							<Rows3 class="w-3.5 h-3.5 text-neutral-600" />
 							{totalCount} rows
 						</span>
 						<span class="flex items-center gap-2">
-							<Hash class="w-3.5 h-3.5 text-slate-600" />
+							<Hash class="w-3.5 h-3.5 text-neutral-600" />
 							{columns.length} fields
 						</span>
 					</div>
@@ -170,7 +170,7 @@
 			<button
 				onclick={loadData}
 				disabled={loading}
-				class="p-2 text-slate-500 hover:text-indigo-400 hover:bg-slate-800 transition-all rounded-xl disabled:opacity-50"
+				class="p-2 text-neutral-500 hover:text-indigo-400 hover:bg-neutral-800 transition-all rounded-xl disabled:opacity-50"
 				title="Refresh Data"
 			>
 				<RefreshCw class="w-5 h-5 {loading ? 'animate-spin' : ''}" />
@@ -184,7 +184,7 @@
 				class="px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] border-b-2 transition-all flex items-center gap-3 {view ===
 				'data'
 					? 'border-indigo-500 text-indigo-400 bg-indigo-500/5'
-					: 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'}"
+					: 'border-transparent text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800/50'}"
 			>
 				<Table class="w-4 h-4" />
 				Data_Buffer
@@ -194,7 +194,7 @@
 				class="px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] border-b-2 transition-all flex items-center gap-3 {view ===
 				'structure'
 					? 'border-indigo-500 text-indigo-400 bg-indigo-500/5'
-					: 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'}"
+					: 'border-transparent text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800/50'}"
 			>
 				<Settings class="w-4 h-4" />
 				Core_Logic

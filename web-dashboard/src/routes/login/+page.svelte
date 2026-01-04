@@ -67,7 +67,7 @@
 <div class="min-h-screen w-full bg-black text-stone-300 font-jetbrains flex items-center justify-center p-4 sm:p-8 relative overflow-hidden">
 	<!-- Cinematic Background -->
 	<div class="absolute inset-0 bg-grid opacity-[0.03]"></div>
-	<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-rust/5 rounded-full blur-[150px] pointer-events-none opacity-50"></div>
+	<div class="absolute top-1/2 left-1/2 -tranneutral-x-1/2 -tranneutral-y-1/2 w-[800px] h-[800px] bg-rust/5 rounded-full blur-[150px] pointer-events-none opacity-50"></div>
 	<div class="fixed inset-0 pointer-events-none z-[100] bg-vignette opacity-60"></div>
 
 	<!-- Login Chassis -->
@@ -101,7 +101,7 @@
 			<div class="space-y-3">
 				<label for="email" class="text-[9px] font-black text-text-dim uppercase tracking-[0.3em] ml-1">Identity_Signature</label>
 				<div class="relative group">
-					<User class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-700 group-focus-within:text-rust transition-colors" />
+					<User class="absolute left-4 top-1/2 -tranneutral-y-1/2 w-4 h-4 text-stone-700 group-focus-within:text-rust transition-colors" />
 					<input
 						type="email"
 						id="email"
@@ -116,7 +116,7 @@
 			<div class="space-y-3">
 				<label for="password" class="text-[9px] font-black text-text-dim uppercase tracking-[0.3em] ml-1">Access_Cipher</label>
 				<div class="relative group">
-					<Lock class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-700 group-focus-within:text-rust transition-colors" />
+					<Lock class="absolute left-4 top-1/2 -tranneutral-y-1/2 w-4 h-4 text-stone-700 group-focus-within:text-rust transition-colors" />
 					<input
 						type="password"
 						id="password"

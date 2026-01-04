@@ -111,7 +111,7 @@
 				<Settings class="w-5 h-5 text-yellow-400" />
 			</div>
 			<div>
-				<h2 class="text-base font-heading font-black text-slate-100 flex items-center gap-3 tracking-widest uppercase italic">
+				<h2 class="text-base font-heading font-black text-neutral-100 flex items-center gap-3 tracking-widest uppercase italic">
 					Logic_Schema: <span class="text-yellow-500 font-mono text-xs">{schema}.{table}</span>
 				</h2>
 				<p class="text-[9px] text-stone-600 font-bold uppercase tracking-widest italic">Manage sectors, types, and primary constraints</p>
@@ -127,7 +127,7 @@
 
 	<div class="flex-1 overflow-auto p-8 bg-black/20">
 		<div
-			class="bg-slate-900/40 border border-stone-800 rounded-none overflow-hidden shadow-2xl industrial-sharp backdrop-blur-sm"
+			class="bg-neutral-900/40 border border-stone-800 rounded-none overflow-hidden shadow-2xl industrial-sharp backdrop-blur-sm"
 		>
 			<table class="w-full text-left font-jetbrains">
 				<thead

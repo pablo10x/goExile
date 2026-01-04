@@ -381,7 +381,7 @@
 				<button
 					onclick={toggleDrainMode}
 					disabled={togglingDrain}
-					class={`px-8 py-3 font-heading font-black text-[11px] uppercase tracking-widest transition-all border shadow-xl whitespace-nowrap active:translate-y-px flex items-center gap-3 ${node.is_draining ? 'bg-emerald-950/20 text-emerald-500 border-emerald-900/30 hover:bg-emerald-600 hover:text-white' : 'bg-amber-950/20 text-amber-500 border-amber-900/30 hover:bg-amber-600 hover:text-white'}`}
+					class={`px-8 py-3 font-heading font-black text-[11px] uppercase tracking-widest transition-all border shadow-xl whitespace-nowrap active:tranneutral-y-px flex items-center gap-3 ${node.is_draining ? 'bg-emerald-950/20 text-emerald-500 border-emerald-900/30 hover:bg-emerald-600 hover:text-white' : 'bg-amber-950/20 text-amber-500 border-amber-900/30 hover:bg-amber-600 hover:text-white'}`}
 				>
 					{#if node.is_draining}
 						<ShieldCheck class="w-4 h-4" />
@@ -395,7 +395,7 @@
 
 			<button
 				onclick={() => (isLogViewerOpen = true)}
-				class="px-8 py-3 bg-stone-900 hover:bg-white hover:text-black text-stone-400 font-heading font-black text-[11px] uppercase tracking-widest transition-all border border-stone-800 active:translate-y-px shadow-xl"
+				class="px-8 py-3 bg-stone-900 hover:bg-white hover:text-black text-stone-400 font-heading font-black text-[11px] uppercase tracking-widest transition-all border border-stone-800 active:tranneutral-y-px shadow-xl"
 			>
 				Console_Output
 			</button>
@@ -406,7 +406,7 @@
 					<button
 						onclick={() => openUpdateNodeBuildDialog()}
 						disabled={node.status === 'Updating'}
-						class={`px-8 py-3 font-heading font-black text-[11px] uppercase tracking-widest transition-all border shadow-xl whitespace-nowrap active:translate-y-px ${node.status === 'Updating' ? 'bg-stone-800 text-stone-600 border-stone-700 cursor-not-allowed' : cmp > 0 ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400 shadow-emerald-900/20' : 'bg-rust hover:bg-rust-light text-white border-rust-light shadow-rust/20'}`}
+						class={`px-8 py-3 font-heading font-black text-[11px] uppercase tracking-widest transition-all border shadow-xl whitespace-nowrap active:tranneutral-y-px ${node.status === 'Updating' ? 'bg-stone-800 text-stone-600 border-stone-700 cursor-not-allowed' : cmp > 0 ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400 shadow-emerald-900/20' : 'bg-rust hover:bg-rust-light text-white border-rust-light shadow-rust/20'}`}
 					>
 						{node.status === 'Updating' ? 'Synchronizing...' : cmp > 0 ? 'Apply_Patch' : 'Revert_Rev'}
 					</button>
@@ -534,7 +534,7 @@
 
 					<button
 						onclick={openSpawnDialog}
-						class="flex-1 lg:flex-none flex items-center justify-center gap-3 px-10 py-3.5 bg-rust hover:bg-rust-light text-white font-heading font-black text-xs uppercase tracking-[0.2em] transition-all shadow-xl shadow-rust/30 active:translate-y-px industrial-frame"
+						class="flex-1 lg:flex-none flex items-center justify-center gap-3 px-10 py-3.5 bg-rust hover:bg-rust-light text-white font-heading font-black text-xs uppercase tracking-[0.2em] transition-all shadow-xl shadow-rust/30 active:tranneutral-y-px industrial-frame"
 					>
 						<Plus class="w-5 h-5" />
 						Spawn
@@ -582,12 +582,12 @@
 								{nodeId}
 								{instance}
 								on:tail={handleTail}
-								on:start={(e) => openInstanceActionDialog('start', e.detail.instanceId)}
-								on:stop={(e) => openInstanceActionDialog('stop', e.detail.instanceId)}
-								on:restart={(e) => openInstanceActionDialog('restart', e.detail.instanceId)}
-								on:delete={(e) => openInstanceActionDialog('delete', e.detail.instanceId)}
-								on:update={(e) => openInstanceActionDialog('update', e.detail.instanceId)}
-								on:rename={(e) =>
+								on:start={(e: any) => openInstanceActionDialog('start', e.detail.instanceId)}
+								on:stop={(e: any) => openInstanceActionDialog('stop', e.detail.instanceId)}
+								on:restart={(e: any) => openInstanceActionDialog('restart', e.detail.instanceId)}
+								on:delete={(e: any) => openInstanceActionDialog('delete', e.detail.instanceId)}
+								on:update={(e: any) => openInstanceActionDialog('update', e.detail.instanceId)}
+								on:rename={(e: any) =>
 									openInstanceActionDialog('rename', e.detail.oldId, e.detail.newId)}
 							/>
 						{/each}

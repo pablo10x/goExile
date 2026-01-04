@@ -72,7 +72,7 @@
 				onclick={() => goto('/users')}
 				class="p-4 bg-stone-900 border border-stone-800 text-stone-500 hover:text-white hover:border-rust transition-all industrial-frame shadow-xl group"
 			>
-				<ArrowLeft class="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
+				<ArrowLeft class="w-6 h-6 group-hover:-tranneutral-x-1 transition-transform" />
 			</button>
 			<div>
 				<div class="flex items-center gap-3 mb-1">
@@ -91,7 +91,7 @@
 		<button
 			onclick={fetchPlayerDetails}
 			disabled={loading}
-			class="p-4 bg-stone-900 border border-stone-800 hover:border-rust text-stone-500 hover:text-rust transition-all industrial-frame shadow-xl active:translate-y-px disabled:opacity-20"
+			class="p-4 bg-stone-900 border border-stone-800 hover:border-rust text-stone-500 hover:text-rust transition-all industrial-frame shadow-xl active:tranneutral-y-px disabled:opacity-20"
 		>
 			<RefreshCw class="w-6 h-6 {loading ? 'animate-spin' : ''}" />
 		</button>
@@ -296,7 +296,7 @@
 										</div>
 										<div class="text-[9px] text-stone-600 font-jetbrains font-bold uppercase tracking-widest mt-1 italic">SIG: 0x{friend.id.toString(16).toUpperCase()}</div>
 									</div>
-									<ChevronRight class="w-4 h-4 text-stone-800 group-hover:text-rust group-hover:translate-x-1 transition-all" />
+									<ChevronRight class="w-4 h-4 text-stone-800 group-hover:text-rust group-hover:tranneutral-x-1 transition-all" />
 								</a>
 							{/each}
 						{:else}

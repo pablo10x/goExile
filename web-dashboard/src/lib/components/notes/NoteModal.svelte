@@ -110,7 +110,7 @@
 				colorClass = 'bg-cyan-100/80 text-cyan-900 border-cyan-200/50';
 				break;
 			default:
-				colorClass = 'bg-slate-100/80 text-slate-900 border-slate-200/50';
+				colorClass = 'bg-neutral-100/80 text-neutral-900 border-neutral-200/50';
 				break;
 		}
 

@@ -387,7 +387,7 @@
 		</div>
 
 		<div class="flex-1 relative group">
-			<IconComponent name="ph:magnifying-glass-bold" size="1rem" class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-700 group-focus-within:text-rust transition-colors" />
+			<IconComponent name="ph:magnifying-glass-bold" size="1rem" class="absolute left-4 top-1/2 -tranneutral-y-1/2 text-stone-700 group-focus-within:text-rust transition-colors" />
 			<input
 				type="text"
 				placeholder="FILTER_BUFFER_BY_IDENTIFIER..."

@@ -101,7 +101,7 @@
 
 		<!-- Modal -->
 		<div
-			class="bg-slate-900/80 backdrop-blur-2xl border border-stone-800 rounded-none w-full max-w-md shadow-2xl relative z-10 overflow-hidden industrial-frame"
+			class="bg-neutral-900/80 backdrop-blur-2xl border border-stone-800 rounded-none w-full max-w-md shadow-2xl relative z-10 overflow-hidden industrial-frame"
 			transition:scale={{ duration: 200, start: 0.95, easing: quintOut }}
 		>
 			<!-- Header -->
@@ -123,7 +123,7 @@
 
 					<!-- Content -->
 					<div class="flex-1 min-w-0">
-						<h3 id="confirm-modal-title" class="text-xl font-heading font-black text-slate-100 uppercase tracking-tighter mb-2">
+						<h3 id="confirm-modal-title" class="text-xl font-heading font-black text-neutral-100 uppercase tracking-tighter mb-2">
 							{title}
 						</h3>
 						<p class="font-jetbrains text-[11px] text-text-dim uppercase tracking-widest leading-relaxed">
@@ -143,7 +143,7 @@
 			</div>
 
 			<!-- Actions -->
-			<div class="p-8 flex items-center justify-end gap-4 bg-slate-950/40">
+			<div class="p-8 flex items-center justify-end gap-4 bg-neutral-950/40">
 				<button
 					onclick={handleCancel}
 					disabled={loading}

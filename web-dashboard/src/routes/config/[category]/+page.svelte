@@ -143,11 +143,11 @@
 					<div class="w-2 h-2 bg-rust animate-pulse"></div>
 					<span class="font-black text-[10px] text-rust-light uppercase tracking-widest">{pendingChanges.size} PENDING</span>
 				</div>
-				<button onclick={saveChanges} disabled={saving} class="px-8 py-3 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-xl shadow-rust/20 transition-all active:translate-y-px">
+				<button onclick={saveChanges} disabled={saving} class="px-8 py-3 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-xl shadow-rust/20 transition-all active:tranneutral-y-px">
 					{saving ? 'SYNCING...' : 'COMMIT CHANGES'}
 				</button>
 			{:else}
-				<button onclick={loadCategoryConfig} disabled={loading} class="px-8 py-3 bg-stone-950 hover:bg-white hover:text-black text-text-dim font-heading font-black text-[11px] uppercase tracking-widest transition-all border border-stone-800 active:translate-y-px">
+				<button onclick={loadCategoryConfig} disabled={loading} class="px-8 py-3 bg-stone-950 hover:bg-white hover:text-black text-text-dim font-heading font-black text-[11px] uppercase tracking-widest transition-all border border-stone-800 active:tranneutral-y-px">
 					<RefreshCw class="w-4 h-4 inline mr-3 {loading ? 'animate-spin' : ''}" />
 					Reload_Buffer
 				</button>
@@ -157,7 +157,7 @@
 
 	<!-- Search & Filters -->
 	<div class="relative group">
-		<Search class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-text-dim group-focus-within:text-rust transition-colors" />
+		<Search class="absolute left-5 top-1/2 -tranneutral-y-1/2 w-5 h-5 text-text-dim group-focus-within:text-rust transition-colors" />
 		<input type="text" bind:value={searchQuery} placeholder="FILTER PARAMETERS..." class="w-full pl-14 pr-10 py-4 bg-stone-950 border border-stone-800 text-stone-200 font-jetbrains text-xs focus:border-rust outline-none transition-all uppercase tracking-widest shadow-inner" />
 	</div>
 
@@ -207,7 +207,7 @@
 										disabled={item.is_read_only}
 										class="w-full bg-black border border-stone-800 focus:border-rust text-white font-mono text-xs px-4 py-3 transition-all disabled:opacity-30 shadow-inner"
 									/>
-									<button onclick={() => copyToClipboard(pendingChanges.get(item.key) ?? item.value)} class="absolute right-3 top-1/2 -translate-y-1/2 text-text-dim hover:text-rust opacity-0 group-hover/input:opacity-100 transition-all">
+									<button onclick={() => copyToClipboard(pendingChanges.get(item.key) ?? item.value)} class="absolute right-3 top-1/2 -tranneutral-y-1/2 text-text-dim hover:text-rust opacity-0 group-hover/input:opacity-100 transition-all">
 										<Copy class="w-4 h-4" />
 									</button>
 								</div>

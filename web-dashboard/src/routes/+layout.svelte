@@ -63,7 +63,8 @@
 		X,
 		Gauge,
 		FileText,
-		Sliders
+		Sliders,
+		AlertCircle
 	} from 'lucide-svelte';
 	import QuickActionsTooltip from '$lib/components/QuickActionsTooltip.svelte';
 	import NoteModal from '$lib/components/notes/NoteModal.svelte';
@@ -377,11 +378,11 @@
 
 {#if isChecking}
 	<div
-		class="flex items-center justify-center min-h-screen bg-slate-950"
+		class="flex items-center justify-center min-h-screen bg-black"
 	>
 		<div class="relative">
 			<div
-				class="animate-spin h-16 w-16 border-4 border-slate-900 border-t-rust shadow-[0_0_20px_rgba(194,65,12,0.3)]"
+				class="animate-spin h-16 w-16 border-4 border-neutral-900 border-t-rust shadow-[0_0_20px_rgba(194,65,12,0.3)]"
 			></div>
 			<div
 				class="absolute inset-0 bg-rust/10 blur-2xl animate-pulse"
@@ -395,35 +396,35 @@
 						<div class="scanline-overlay"></div>
 
 						<!-- Solid Background Layer -->
-						<div class="fixed inset-0 z-[-100] bg-slate-950"></div>
+						<div class="fixed inset-0 z-[-100] industrial-gradient"></div>
 		
 					<!-- System Status Bar -->
-					<div class="fixed top-0 left-0 right-0 h-6 bg-slate-900 border-b-2 border-slate-800 z-[120] flex items-center px-4 overflow-hidden shadow-sm backdrop-blur-md">
+					<div class="fixed top-0 left-0 right-0 h-6 bg-neutral-900 border-b-2 border-neutral-800 z-[120] flex items-center px-4 overflow-hidden shadow-sm backdrop-blur-md">
 						<div class="flex items-center gap-8 whitespace-nowrap w-full">
 							<div class="flex items-center gap-2 shrink-0">
 								<div class="w-1.5 h-1.5 bg-rust animate-pulse shadow-[0_0_8px_#c2410c]"></div>
 								<span class="font-mono font-black text-[9px] text-rust-light uppercase tracking-widest">[KERNEL_UPLINK_ESTABLISHED]</span>
 							</div>
-							<div class="flex items-center gap-6 text-slate-500 font-mono font-black text-[8px] uppercase tracking-[0.2em]">
-								<span>Network: <span class="text-slate-300">{$connectionStatus}</span></span>
-								<span>Fleet: <span class="text-slate-300">{$stats.active_nodes}</span></span>
+							<div class="flex items-center gap-6 text-neutral-500 font-mono font-black text-[8px] uppercase tracking-[0.2em]">
+								<span>Network: <span class="text-neutral-300">{$connectionStatus}</span></span>
+								<span>Fleet: <span class="text-neutral-300">{$stats.active_nodes}</span></span>
 								<span class="hidden sm:inline">Entropy: <span class="text-emerald-500">Optimal</span></span>
-								<span>Cycle: <span class="text-slate-300">{new Date().toLocaleTimeString([], { hour12: false })}</span></span>
+								<span>Cycle: <span class="text-neutral-300">{new Date().toLocaleTimeString([], { hour12: false })}</span></span>
 							</div>
 							<div class="ml-auto flex items-center gap-4 shrink-0">
 								<button 
 									onclick={() => isShortcutHelpOpen = true}
-									class="flex items-center gap-1.5 text-[8px] font-black text-slate-500 hover:text-rust-light transition-colors uppercase tracking-widest font-mono"
+									class="flex items-center gap-1.5 text-[8px] font-black text-neutral-500 hover:text-rust-light transition-colors uppercase tracking-widest font-mono"
 									title="Keyboard Shortcuts"
 								>
 									<Icon name="ph:question-bold" size="0.7rem" />
 									<span>Shortcuts</span>
 								</button>
-								<div class="w-[1px] h-3 bg-slate-800"></div>
+								<div class="w-[1px] h-3 bg-neutral-800"></div>
 								<span class="text-[8px] text-rust/60 font-black hidden md:inline font-mono tracking-widest">AES_256_ACTIVE</span>
-								<div class="w-[1px] h-3 bg-slate-800"></div>
+								<div class="w-[1px] h-3 bg-neutral-800"></div>
 								<div class="flex gap-1">
-									{#each [1,2,3] as i}<div class="w-1 h-1 bg-slate-800"></div>{/each}
+									{#each [1,2,3] as i}<div class="w-1 h-1 bg-neutral-800"></div>{/each}
 								</div>
 							</div>
 						</div>
@@ -437,7 +438,7 @@
 		
 								<div
 		
-									class="flex h-screen text-slate-400 overflow-hidden relative bg-transparent transition-colors duration-300 pt-6"
+									class="flex h-screen text-neutral-400 overflow-hidden relative bg-transparent transition-colors duration-300 pt-6"
 		
 								>			<!-- Global Restart Banner -->
 			{#if $restartRequired}
@@ -451,7 +452,7 @@
 					<button
 						onclick={restartServer}
 						disabled={restarting}
-						class="px-6 py-2 bg-white text-rust font-mono font-black text-[10px] uppercase tracking-widest hover:bg-slate-100 active:scale-95 transition-all shadow-xl disabled:opacity-50"
+						class="px-6 py-2 bg-white text-rust font-mono font-black text-[10px] uppercase tracking-widest hover:bg-neutral-100 active:scale-95 transition-all shadow-xl disabled:opacity-50"
 					>
 						{restarting ? 'Executing...' : 'Commence_Reboot'}
 					</button>
@@ -460,19 +461,22 @@
 
 			<!-- Desktop Sidebar -->
 			<aside
-				class="hidden md:flex relative transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] bg-slate-950/90 border-r-2 border-slate-800 flex-col shrink-0 overflow-hidden z-20 {isSidebarCollapsed
+				class="hidden md:flex relative transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] bg-[#050505] border-r-2 border-neutral-800 flex-col shrink-0 overflow-hidden z-20 {isSidebarCollapsed
 					? 'w-20'
-					: 'w-64'} shadow-2xl"
+					: 'w-64'} shadow-[10px_0_30px_rgba(0,0,0,0.5)]"
 			>
+				<!-- Inner Fitted Glow -->
+				<div class="absolute inset-y-0 right-0 w-[1px] bg-white/5 pointer-events-none"></div>
+				
 				{#if true}
 					<NavbarParticles />
 				{/if}
 				
-				<div class="relative z-10 flex flex-col h-full">
+				<div class="relative z-10 flex flex-col h-full shadow-[inset_-1px_0_0_rgba(255,255,255,0.02)]">
 					<div
-						class="p-6 border-b-2 border-slate-800/50 bg-slate-900/40 transform transition-all duration-700 {sidebarLoaded
-							? 'translate-y-0 opacity-100'
-							: '-translate-y-4 opacity-0'} flex items-center {isSidebarCollapsed ? 'justify-center' : 'justify-between'}"
+						class="p-6 border-b-2 border-neutral-800/80 bg-black/20 transform transition-all duration-700 {sidebarLoaded
+							? 'tranneutral-y-0 opacity-100'
+							: '-tranneutral-y-4 opacity-0'} flex items-center {isSidebarCollapsed ? 'justify-center' : 'justify-between'}"
 					>
 						{#if !isSidebarCollapsed}
 							<div class="flex flex-col animate-in fade-in zoom-in duration-500">
@@ -482,12 +486,12 @@
 										EXILE_<span class="text-rust-light">OS</span>
 									</h1>
 								</div>
-								<span class="text-[8px] font-mono text-slate-600 mt-2 tracking-[0.4em] font-black">STATION_PRO_4.2</span>
+								<span class="text-[8px] font-mono text-neutral-600 mt-2 tracking-[0.4em] font-black">STATION_PRO_4.2</span>
 							</div>
 						{/if}
 						<button
 							onclick={toggleSidebar}
-							class="p-2 border border-slate-800 bg-slate-950 text-slate-500 hover:text-rust-light hover:border-rust/30 transition-all duration-300"
+							class="p-2 border border-neutral-800 bg-neutral-950 text-neutral-500 hover:text-rust-light hover:border-rust/30 transition-all duration-300"
 						>
 							<Icon name={isSidebarCollapsed ? 'ph:caret-double-right-bold' : 'ph:caret-double-left-bold'} size="0.9rem" />
 						</button>
@@ -497,7 +501,7 @@
 						<div class="space-y-8">
 							<!-- CATEGORY: DASHBOARD -->
 							<div class="space-y-1.5">
-								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-slate-700 tracking-[0.4em] ml-3 mb-3 block uppercase italic">Core_Interface</span>{/if}
+								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-neutral-700 tracking-[0.4em] ml-3 mb-3 block uppercase italic">Core_Interface</span>{/if}
 								<a href="/dashboard" class="nav-link-light {isSidebarCollapsed ? 'justify-center !px-0' : ''}" class:active={isRouteActive('/dashboard') || isRouteActive('/')} title={isSidebarCollapsed ? 'Overview' : ''}>
 									<div class="nav-icon-container-light"><Icon name="gauge" size="1.1rem" /></div>
 									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Telemetry</span><span class="nav-subtext-light">System Dashboard</span></div>{/if}
@@ -510,7 +514,7 @@
 
 							<!-- CATEGORY: MANAGEMENT -->
 							<div class="space-y-1.5">
-								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-slate-700 tracking-[0.4em] ml-3 mb-3 block uppercase italic">Infrastructure</span>{/if}
+								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-neutral-700 tracking-[0.4em] ml-3 mb-3 block uppercase italic">Infrastructure</span>{/if}
 								{#each [
 									{ href: '/server', icon: 'cpu', label: 'Fleet', sub: 'Server Operations' },
 									{ href: '/users', icon: 'users', label: 'Subjects', sub: 'Access Registry' }
@@ -524,7 +528,7 @@
 
 							<!-- CATEGORY: RESOURCES -->
 							<div class="space-y-1.5">
-								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-slate-700 tracking-[0.4em] ml-3 mb-3 block uppercase italic">Persistence</span>{/if}
+								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-neutral-700 tracking-[0.4em] ml-3 mb-3 block uppercase italic">Persistence</span>{/if}
 								<a href="/database" class="nav-link-light {isSidebarCollapsed ? 'justify-center !px-0' : ''}" class:active={isRouteActive('/database')} title={isSidebarCollapsed ? 'Database' : ''}>
 									<div class="nav-icon-container-light"><Icon name="database" size="1.1rem" /></div>
 									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Archives</span><span class="nav-subtext-light">Neural Storage</span></div>{/if}
@@ -537,7 +541,7 @@
 
 							<!-- CATEGORY: SETTINGS -->
 							<div class="space-y-1.5">
-								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-slate-700 tracking-[0.4em] ml-3 mb-3 block uppercase italic">Command</span>{/if}
+								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-neutral-700 tracking-[0.4em] ml-3 mb-3 block uppercase italic">Command</span>{/if}
 								<a href="/config" class="nav-link-light {isSidebarCollapsed ? 'justify-center !px-0' : ''}" class:active={isRouteActive('/config')} title={isSidebarCollapsed ? 'Settings' : ''}>
 									<div class="nav-icon-container-light"><Icon name="sliders" size="1.1rem" /></div>
 									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Parameters</span><span class="nav-subtext-light">Environment</span></div>{/if}
@@ -552,9 +556,9 @@
 
 					<!-- Sidebar Footer -->
 					<div
-						class="mt-auto p-4 border-t-2 border-slate-800/50 bg-slate-900/20 flex flex-col gap-3 transform transition-all duration-700 {sidebarLoaded
-							? 'translate-y-0 opacity-100'
-							: 'translate-y-8 opacity-0'}"
+						class="mt-auto p-4 border-t-2 border-neutral-800/50 bg-neutral-900/20 flex flex-col gap-3 transform transition-all duration-700 {sidebarLoaded
+							? 'tranneutral-y-0 opacity-100'
+							: 'tranneutral-y-8 opacity-0'}"
 					>
 						<div class="flex items-center gap-2 {isSidebarCollapsed ? 'flex-col' : ''}">
 							<button
@@ -562,7 +566,7 @@
 								class="p-2 border transition-all flex items-center justify-center gap-2 flex-1
 								{$lowPowerMode 
 									? 'bg-amber-500/10 border-amber-500/30 text-amber-500' 
-									: 'bg-slate-950 border-slate-800 text-slate-600 hover:text-white hover:border-slate-600'}"
+									: 'bg-neutral-950 border-neutral-800 text-neutral-600 hover:text-white hover:border-neutral-600'}"
 								title={$lowPowerMode ? 'Disable Eco Mode' : 'Enable Eco Mode'}
 							>
 								<Zap class="w-3.5 h-3.5 {$lowPowerMode ? '' : 'opacity-40'}" />
@@ -586,12 +590,12 @@
 			<div class="flex-1 flex flex-col h-full overflow-hidden relative bg-transparent">
 				<!-- Mobile Top Header -->
 				<header
-					class="md:hidden h-16 bg-slate-950 border-b-2 border-slate-800 flex items-center justify-between px-4 z-[130] shrink-0 relative backdrop-blur-md"
+					class="md:hidden h-16 bg-neutral-950 border-b-2 border-neutral-800 flex items-center justify-between px-4 z-[130] shrink-0 relative backdrop-blur-md"
 				>
 					<div class="flex items-center gap-4">
 						<button 
 							onclick={() => isMobileMenuOpen = true}
-							class="p-2 -ml-2 text-slate-400 hover:text-rust transition-colors"
+							class="p-2 -ml-2 text-neutral-400 hover:text-rust transition-colors"
 						>
 							<Icon name="ph:list-bold" size="1.5rem" />
 						</button>

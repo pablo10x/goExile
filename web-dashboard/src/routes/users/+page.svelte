@@ -323,7 +323,7 @@
 		<!-- Neural Scanner HUD -->
 		<div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-center px-2">
 			<div class="xl:col-span-8 relative group">
-				<div class="absolute left-6 top-1/2 -translate-y-1/2 flex items-center gap-3 pointer-events-none opacity-50 group-focus-within:opacity-100 transition-opacity">
+				<div class="absolute left-6 top-1/2 -tranneutral-y-1/2 flex items-center gap-3 pointer-events-none opacity-50 group-focus-within:opacity-100 transition-opacity">
 					<Search class="w-5 h-5 text-rust" />
 					<div class="w-px h-4 bg-stone-800"></div>
 				</div>

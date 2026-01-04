@@ -59,7 +59,7 @@
 		transition:fade={{ duration: 200 }}
 	>
 		<div
-			class="bg-slate-900/80 backdrop-blur-2xl border border-stone-800 rounded-none w-full max-w-md shadow-2xl flex flex-col overflow-hidden relative group industrial-frame"
+			class="bg-neutral-900/80 backdrop-blur-2xl border border-stone-800 rounded-none w-full max-w-md shadow-2xl flex flex-col overflow-hidden relative group industrial-frame"
 			transition:scale={{ duration: 300, start: 0.95, easing: quintOut }}
 		>
 			<!-- Ambient Background Glow -->
@@ -69,11 +69,11 @@
 
 			<!-- Header -->
 			<div
-				class="p-6 border-b border-stone-800 relative z-10 flex justify-between items-start bg-slate-950/40"
+				class="p-6 border-b border-stone-800 relative z-10 flex justify-between items-start bg-neutral-950/40"
 			>
 				<div>
 					<h3
-						class="text-xl font-heading font-black text-slate-100 uppercase tracking-tighter flex items-center gap-3"
+						class="text-xl font-heading font-black text-neutral-100 uppercase tracking-tighter flex items-center gap-3"
 					>
 						<div
 							class="p-2 bg-rust/10 border border-rust/20 rounded-none industrial-frame"
@@ -111,7 +111,7 @@
 							placeholder="e.g. CORE_MODULE_V1"
 						/>
 						<div
-							class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-700 group-focus-within:text-rust transition-colors"
+							class="absolute left-4 top-1/2 -tranneutral-y-1/2 text-stone-700 group-focus-within:text-rust transition-colors"
 						>
 							<Shield class="w-4 h-4" />
 						</div>
@@ -135,12 +135,12 @@
 							{/each}
 						</select>
 						<div
-							class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-700"
+							class="absolute left-4 top-1/2 -tranneutral-y-1/2 text-stone-700"
 						>
 							<User class="w-4 h-4" />
 						</div>
 						<!-- Custom Chevron -->
-						<div class="absolute right-4 top-1/2 -translate-y-1/2 text-stone-700 pointer-events-none">
+						<div class="absolute right-4 top-1/2 -tranneutral-y-1/2 text-stone-700 pointer-events-none">
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
 								width="16"
@@ -160,7 +160,7 @@
 
 			<!-- Footer -->
 			<div
-				class="p-6 border-t border-stone-800 bg-slate-950/40 flex justify-end gap-4 relative z-10"
+				class="p-6 border-t border-stone-800 bg-neutral-950/40 flex justify-end gap-4 relative z-10"
 			>
 				<button
 					onclick={onClose}
@@ -171,7 +171,7 @@
 				<button
 					onclick={handleSubmit}
 					disabled={loading || !schemaName.trim()}
-					class="px-8 py-3 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rust/20 disabled:opacity-20 transition-all active:translate-y-px"
+					class="px-8 py-3 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rust/20 disabled:opacity-20 transition-all active:tranneutral-y-px"
 				>
 					{#if loading}
 						<div

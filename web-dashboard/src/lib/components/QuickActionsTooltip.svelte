@@ -73,11 +73,11 @@
 			case 'right':
 				return 'origin-top-left';
 			case 'left':
-				return 'origin-top-right -translate-x-full';
+				return 'origin-top-right -tranneutral-x-full';
 			case 'bottom':
-				return 'origin-top -translate-x-1/2';
+				return 'origin-top -tranneutral-x-1/2';
 			case 'top':
-				return 'origin-bottom -translate-x-1/2 -translate-y-full';
+				return 'origin-bottom -tranneutral-x-1/2 -tranneutral-y-full';
 			default:
 				return 'origin-top-left';
 		}

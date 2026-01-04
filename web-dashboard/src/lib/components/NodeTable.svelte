@@ -7,7 +7,6 @@
 	import Dropdown from './Dropdown.svelte';
 	import Icon from './theme/Icon.svelte';
 	import Button from './Button.svelte';
-	import CardHoverOverlay from './theme/CardHoverOverlay.svelte';
 	import { compareVersions } from '$lib/semver';
 	import { slide } from 'svelte/transition';
 
@@ -119,27 +118,24 @@
 		<div
 			class="modern-card glass-panel transition-all duration-500 group {node.id ===
 			highlightNewNodeId
-				? 'animate-highlight-new-node border-blue-500'
-				: 'hover:border-blue-500/30'} shadow-2xl overflow-hidden rounded-xl"
+				? 'animate-highlight-new-node border-rust'
+				: 'hover:border-rust/30'} shadow-2xl overflow-hidden rounded-none"
 			onmouseenter={() => hoveredRows[node.id] = true}
 			onmouseleave={() => hoveredRows[node.id] = false}
 			role="article"
 		>
-			<!-- Hover Intelligence Overlay -->
-			<CardHoverOverlay active={hoveredRows[node.id]} />
-
 			<!-- Header / Identity -->
 			<div 
-				class="p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-8 relative bg-slate-800/40"
+				class="p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-8 relative bg-neutral-900/40"
 			>
 				<div class="flex items-center gap-6 flex-1 min-w-0">
 					<button 
-						class="w-16 h-16 bg-stone-950 border border-stone-800 flex items-center justify-center group-hover:border-rust transition-all duration-500 industrial-sharp shadow-xl shrink-0 cursor-pointer"
+						class="w-16 h-16 bg-black border border-neutral-800 flex items-center justify-center group-hover:border-rust transition-all duration-500 industrial-sharp shadow-xl shrink-0 cursor-pointer"
 						onclick={() => toggleRow(node.id)}
 						aria-expanded={isExpanded}
 					>
-						<Icon name="radio" size="2rem" class={node.status === 'Online' ? 'text-rust' : 'text-stone-700'} />
-						<div class="absolute bottom-0 left-0 w-full h-1 {node.status === 'Online' ? 'bg-rust' : 'bg-stone-800'}"></div>
+						<Icon name="radio" size="2rem" class={node.status === 'Online' ? 'text-rust' : 'text-neutral-700'} />
+						<div class="absolute bottom-0 left-0 w-full h-1 {node.status === 'Online' ? 'bg-rust' : 'bg-neutral-800'}"></div>
 					</button>
 
 					<div class="min-w-0 flex-1">
@@ -152,15 +148,15 @@
 										{node.name || node.region}
 									</button>
 								</h3>
-							<span class="text-[9px] bg-stone-900 border border-stone-800 text-stone-500 px-3 py-1 font-black uppercase tracking-widest">Node {node.id.toString().padStart(3, '0')}</span>
+							<span class="text-[9px] bg-black border border-neutral-800 text-neutral-500 px-3 py-1 font-black uppercase tracking-widest">Node {node.id.toString().padStart(3, '0')}</span>
 							<div
 								class={`px-3 py-1 font-jetbrains font-bold text-[9px] uppercase flex items-center gap-2 border ${getStatusClass(node.status)}`}
 							>
-								<div class={`w-1.5 h-1.5 rounded-full ${node.status === 'Online' ? 'bg-emerald-500 animate-pulse' : 'bg-stone-600'}`}></div>
+								<div class={`w-1.5 h-1.5 rounded-full ${node.status === 'Online' ? 'bg-emerald-500 animate-pulse' : 'bg-neutral-600'}`}></div>
 								{node.status}
 							</div>
 						</div>
-						<div class="flex flex-wrap items-center gap-6 font-jetbrains text-[10px] font-bold text-stone-600 uppercase tracking-widest italic">
+						<div class="flex flex-wrap items-center gap-6 font-jetbrains text-[10px] font-bold text-neutral-600 uppercase tracking-widest italic">
 							<span class="flex items-center gap-2"><Icon name="ph:globe-bold" size="0.875rem" /> {node.region}</span>
 							<span class="flex items-center gap-2"><Icon name="ph:network-bold" size="0.875rem" /> {node.host}:{node.port}</span>
 							<span class="flex items-center gap-2 text-rust-light opacity-60"><Icon name="ph:cpu-bold" size="0.875rem" /> v{node.game_version || '0.0.0'}</span>
@@ -171,7 +167,7 @@
 				<!-- Quick Actions -->
 				<div class="flex items-center gap-3 shrink-0">
 					{#if node.status !== 'Offline'}
-						<div class="flex items-center gap-1 bg-black/20 p-1 border border-stone-800 mr-2">
+						<div class="flex items-center gap-1 bg-black/40 p-1 border border-neutral-800 mr-2">
 							<button 
 								onclick={() => dispatch('updateNodeBuild', node.id)}
 								class="p-2 text-emerald-500 hover:bg-emerald-500/10 transition-all"
@@ -180,7 +176,7 @@
 								<Icon name="ph:arrow-down-to-line-bold" size="1rem" />
 							</button>
 							<button 
-								class="p-2 text-stone-500 hover:bg-stone-500/10 transition-all opacity-30"
+								class="p-2 text-neutral-500 hover:bg-neutral-500/10 transition-all opacity-30"
 								title="Downgrade Build (N/A)"
 								disabled
 							>
@@ -207,7 +203,7 @@
 					{:else}
 						<Button 
 							onclick={() => deleteNode(node.id)} 
-							variant="danger"
+							variant="danger" 
 							size="sm"
 							icon="ph:trash-bold"
 						>
@@ -215,11 +211,11 @@
 						</Button>
 					{/if}
 					
-					<div class="w-[1px] h-10 bg-stone-800 mx-2 hidden md:block"></div>
+					<div class="w-[1px] h-10 bg-neutral-800 mx-2 hidden md:block"></div>
 					
 					<button 
 						onclick={() => toggleRow(node.id)}
-						class="p-3 text-stone-600 hover:text-rust transition-all hidden md:block"
+						class="p-3 text-neutral-600 hover:text-rust transition-all hidden md:block"
 					>
 						<Icon name="ph:caret-down-bold" size="1.5rem" class="transition-transform duration-500 {isExpanded ? 'rotate-180 text-rust' : ''}" />
 					</button>
@@ -227,53 +223,53 @@
 			</div>
 
 			<!-- Quick Telemetry Row -->
-			<div class="px-8 py-4 bg-slate-900/20 border-t border-slate-700/50 grid grid-cols-1 md:grid-cols-4 gap-8">
+			<div class="px-8 py-4 bg-black/20 border-t border-neutral-800/50 grid grid-cols-1 md:grid-cols-4 gap-8">
 				<div class="flex flex-col justify-center">
 					<div class="flex justify-between items-center mb-2">
-						<span class="text-[9px] font-black uppercase tracking-widest italic text-stone-500">Capacity</span>
+						<span class="text-[9px] font-black uppercase tracking-widest italic text-neutral-500">Capacity</span>
 						<span class="text-[10px] font-black text-rust-light tabular-nums">{node.current_instances} / {node.max_instances}</span>
 					</div>
-					<div class="h-1.5 bg-stone-950 border border-stone-800 p-0 overflow-hidden shadow-inner">
+					<div class="h-1.5 bg-black border border-neutral-800 p-0 overflow-hidden shadow-inner">
 						<div class="h-full bg-rust transition-all duration-1000 ease-out" style={`width: ${getInstancePercent(node)}%`}></div>
 					</div>
 				</div>
 
 				<div class="hidden md:flex flex-col justify-center">
 					<div class="flex justify-between items-center mb-2">
-						<span class="text-[9px] font-black uppercase tracking-widest italic flex items-center gap-2 text-stone-500">
-							<Icon name="ph:cpu-bold" size="0.75rem" class="text-stone-700" />
+						<span class="text-[9px] font-black uppercase tracking-widest italic flex items-center gap-2 text-neutral-500">
+							<Icon name="ph:cpu-bold" size="0.75rem" class="text-neutral-700" />
 							CPU Usage
 						</span>
-						<span class="text-[10px] font-black text-stone-400 tabular-nums">{node.cpu_usage?.toFixed(1)}%</span>
+						<span class="text-[10px] font-black text-neutral-400 tabular-nums">{node.cpu_usage?.toFixed(1)}%</span>
 					</div>
-					<div class="h-1 bg-stone-950 border border-stone-800/50 p-0 overflow-hidden">
-						<div class="h-full bg-stone-700 transition-all duration-1000 ease-out" style={`width: ${node.cpu_usage}%`}></div>
+					<div class="h-1 bg-black border border-neutral-800/50 p-0 overflow-hidden">
+						<div class="h-full bg-neutral-700 transition-all duration-1000 ease-out" style={`width: ${node.cpu_usage}%`}></div>
 					</div>
 				</div>
 
 				<div class="hidden md:flex flex-col justify-center">
 					<div class="flex justify-between items-center mb-2">
-						<span class="text-[9px] font-black uppercase tracking-widest italic flex items-center gap-2 text-stone-500">
-							<Icon name="ph:activity-bold" size="0.75rem" class="text-stone-700" />
+						<span class="text-[9px] font-black uppercase tracking-widest italic flex items-center gap-2 text-neutral-500">
+							<Icon name="ph:activity-bold" size="0.75rem" class="text-neutral-700" />
 							RAM Usage
 						</span>
-						<span class="text-[10px] font-black text-stone-400 tabular-nums">{node.mem_total ? ((node.mem_used / node.mem_total) * 100).toFixed(1) : 0}%</span>
+						<span class="text-[10px] font-black text-neutral-400 tabular-nums">{node.mem_total ? ((node.mem_used / node.mem_total) * 100).toFixed(1) : 0}%</span>
 					</div>
-					<div class="h-1 bg-stone-950 border border-stone-800/50 p-0 overflow-hidden">
-						<div class="h-full bg-stone-700 transition-all duration-1000 ease-out" style={`width: ${node.mem_total ? (node.mem_used / node.mem_total) * 100 : 0}%`}></div>
+					<div class="h-1 bg-black border border-neutral-800/50 p-0 overflow-hidden">
+						<div class="h-full bg-neutral-700 transition-all duration-1000 ease-out" style={`width: ${node.mem_total ? (node.mem_used / node.mem_total) * 100 : 0}%`}></div>
 					</div>
 				</div>
 
 				<div class="hidden md:flex flex-col justify-center">
 					<div class="flex justify-between items-center mb-2">
-						<span class="text-[9px] font-black uppercase tracking-widest italic flex items-center gap-2 text-stone-500">
-							<Icon name="ph:hard-drive-bold" size="0.75rem" class="text-stone-700" />
+						<span class="text-[9px] font-black uppercase tracking-widest italic flex items-center gap-2 text-neutral-500">
+							<Icon name="ph:hard-drive-bold" size="0.75rem" class="text-neutral-700" />
 							Disk IO
 						</span>
-						<span class="text-[10px] font-black text-stone-400 tabular-nums">{node.disk_total ? ((node.disk_used / node.disk_total) * 100).toFixed(1) : 0}%</span>
+						<span class="text-[10px] font-black text-neutral-400 tabular-nums">{node.disk_total ? ((node.disk_used / node.disk_total) * 100).toFixed(1) : 0}%</span>
 					</div>
-					<div class="h-1 bg-stone-950 border border-stone-800/50 p-0 overflow-hidden">
-						<div class="h-full bg-stone-700 transition-all duration-1000 ease-out" style={`width: ${node.disk_total ? (node.disk_used / node.disk_total) * 100 : 0}%`}></div>
+					<div class="h-1 bg-black border border-neutral-800/50 p-0 overflow-hidden">
+						<div class="h-full bg-neutral-700 transition-all duration-1000 ease-out" style={`width: ${node.disk_total ? (node.disk_used / node.disk_total) * 100 : 0}%`}></div>
 					</div>
 				</div>
 				
@@ -288,74 +284,74 @@
 			<!-- Expanded Section -->
 			{#if isExpanded}
 				<div 
-					class="border-t border-slate-700 bg-slate-900/60 p-8 space-y-10"
+					class="border-t border-neutral-800 bg-neutral-900/80 p-8 space-y-10"
 					transition:slide={{ duration: 300 }}
 				>
 					<!-- Metrics Grid -->
 					<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-						<div class="bg-stone-900/40 border border-stone-800 p-6 industrial-sharp shadow-xl group/m hover:border-rust/30 transition-all">
+						<div class="bg-neutral-950 border border-neutral-800 p-6 rounded-none shadow-xl group/m hover:border-rust/30 transition-all">
 							<div class="flex justify-between items-center mb-4">
-								<span class="text-[10px] font-black text-stone-500 uppercase tracking-widest italic group-hover/m:text-rust transition-colors">CPU LOAD</span>
-								<Icon name="ph:cpu-bold" size="1rem" class="text-stone-700" />
+								<span class="text-[10px] font-mono font-black text-neutral-500 uppercase tracking-widest italic group-hover/m:text-rust transition-colors">CPU_LOAD</span>
+								<Icon name="ph:cpu-bold" size="1rem" class="text-neutral-700" />
 							</div>
 							<div class="text-4xl font-heading font-black text-white tracking-tighter tabular-nums mb-4">{node.cpu_usage ? node.cpu_usage?.toFixed(1) : 0}%</div>
-							<div class="h-1.5 bg-stone-950 border border-stone-800 shadow-inner overflow-hidden">
-								<div class="h-full bg-rust shadow-[0_0_10px_rgba(249,115,22,0.4)]" style="width: {node.cpu_usage || 0}%"></div>
+							<div class="h-1.5 bg-black border border-neutral-800 shadow-inner overflow-hidden">
+								<div class="h-full bg-rust shadow-[0_0_10px_rgba(194,65,12,0.4)]" style="width: {node.cpu_usage || 0}%"></div>
 							</div>
 						</div>
 
-						<div class="bg-stone-900/40 border border-stone-800 p-6 industrial-sharp shadow-xl group/m hover:border-rust/30 transition-all">
+						<div class="bg-neutral-950 border border-neutral-800 p-6 rounded-none shadow-xl group/m hover:border-rust/30 transition-all">
 							<div class="flex justify-between items-center mb-4">
-								<span class="text-[10px] font-black text-stone-500 uppercase tracking-widest italic group-hover/m:text-rust transition-colors">RAM USAGE</span>
-								<Icon name="ph:activity-bold" size="1rem" class="text-stone-700" />
+								<span class="text-[10px] font-mono font-black text-neutral-500 uppercase tracking-widest italic group-hover/m:text-rust transition-colors">RAM_USAGE</span>
+								<Icon name="ph:activity-bold" size="1rem" class="text-neutral-700" />
 							</div>
 							<div class="text-2xl font-heading font-black text-white tracking-tighter mb-2 tabular-nums">
 								{formatBytes(node.mem_used || 0)} 
-								<span class="text-sm text-stone-600 font-jetbrains">/ {formatBytes(node.mem_total || 0)}</span>
+								<span class="text-sm text-neutral-600 font-jetbrains">/ {formatBytes(node.mem_total || 0)}</span>
 							</div>
-							<div class="h-1.5 bg-stone-950 border border-stone-800 shadow-inner overflow-hidden">
+							<div class="h-1.5 bg-black border border-neutral-800 shadow-inner overflow-hidden">
 								<div class="h-full bg-rust-light" style="width: {node.mem_total ? (node.mem_used / node.mem_total) * 100 : 0}%"></div>
 							</div>
 						</div>
 
-						<div class="bg-stone-900/40 border border-stone-800 p-6 industrial-sharp shadow-xl group/m hover:border-rust/30 transition-all">
+						<div class="bg-neutral-950 border border-neutral-800 p-6 rounded-none shadow-xl group/m hover:border-rust/30 transition-all">
 							<div class="flex justify-between items-center mb-4">
-								<span class="text-[10px] font-black text-stone-500 uppercase tracking-widest italic group-hover/m:text-rust transition-colors">DISK USAGE</span>
-								<Icon name="ph:hard-drive-bold" size="1rem" class="text-stone-700" />
+								<span class="text-[10px] font-mono font-black text-neutral-500 uppercase tracking-widest italic group-hover/m:text-rust transition-colors">DISK_USAGE</span>
+								<Icon name="ph:hard-drive-bold" size="1rem" class="text-neutral-700" />
 							</div>
 							<div class="text-2xl font-heading font-black text-white tracking-tighter mb-2 tabular-nums">
 								{formatBytes(node.disk_used || 0)} 
-								<span class="text-sm text-stone-600 font-jetbrains">/ {formatBytes(node.disk_total || 0)}</span>
+								<span class="text-sm text-neutral-600 font-jetbrains">/ {formatBytes(node.disk_total || 0)}</span>
 							</div>
-							<div class="h-1.5 bg-stone-950 border border-stone-800 shadow-inner overflow-hidden">
-								<div class="h-full bg-stone-600" style="width: {node.disk_total ? (node.disk_used / node.disk_total) * 100 : 0}%"></div>
+							<div class="h-1.5 bg-black border border-neutral-800 shadow-inner overflow-hidden">
+								<div class="h-full bg-neutral-600" style="width: {node.disk_total ? (node.disk_used / node.disk_total) * 100 : 0}%"></div>
 							</div>
 						</div>
 					</div>
 
 					<!-- Instance Management -->
 					<div class="space-y-6">
-						<div class="flex justify-between items-center px-2 border-b border-stone-800 pb-4">
+						<div class="flex justify-between items-center px-2 border-b-2 border-neutral-800 pb-4">
 							<div class="flex items-center gap-4">
-								<div class="p-2 bg-rust/5 industrial-sharp border border-rust/20">
+								<div class="p-2 bg-rust/5 rounded-none border border-rust/20">
 									<Icon name="ph:list-bullets-bold" size="1.25rem" class="text-rust-light" />
 								</div>
-								<h4 class="text-sm font-heading font-black text-white uppercase tracking-widest">Active Instances</h4>
+								<h4 class="text-sm font-heading font-black text-white uppercase tracking-widest italic">Active_Logic_Clusters</h4>
 							</div>
 							<div class="flex items-center gap-6">
-								<Dropdown label="Bulk Operations">
+								<Dropdown label="CLUSTER_DIRECTIVES">
 									{#snippet children()}
-										<button onclick={() => dispatchBulkAction('start', node.id)} class="w-full text-left px-6 py-3 text-[10px] font-black font-jetbrains uppercase text-emerald-400 hover:bg-emerald-500/10 tracking-widest">Start All</button>
-										<button onclick={() => dispatchBulkAction('stop', node.id)} class="w-full text-left px-6 py-3 text-[10px] font-black font-jetbrains uppercase text-rose-400 hover:bg-rose-500/10 tracking-widest">Stop All</button>
-										<button onclick={() => dispatchBulkAction('restart', node.id)} class="w-full text-left px-6 py-3 text-[10px] font-black font-jetbrains uppercase text-rust hover:bg-rust/10 tracking-widest">Restart All</button>
-										<button onclick={() => dispatchBulkAction('update', node.id)} class="w-full text-left px-6 py-3 text-[10px] font-black font-jetbrains uppercase text-amber-400 hover:bg-amber-500/10 border-t border-stone-800 tracking-widest">Update All</button>
+										<button onclick={() => dispatchBulkAction('start', node.id)} class="w-full text-left px-6 py-3 text-[10px] font-black font-jetbrains uppercase text-emerald-400 hover:bg-emerald-500/10 tracking-widest">Execute_All</button>
+										<button onclick={() => dispatchBulkAction('stop', node.id)} class="w-full text-left px-6 py-3 text-[10px] font-black font-jetbrains uppercase text-rose-400 hover:bg-rose-500/10 tracking-widest">Terminate_All</button>
+										<button onclick={() => dispatchBulkAction('restart', node.id)} class="w-full text-left px-6 py-3 text-[10px] font-black font-jetbrains uppercase text-rust hover:bg-rust/10 tracking-widest">Reboot_All</button>
+										<button onclick={() => dispatchBulkAction('update', node.id)} class="w-full text-left px-6 py-3 text-[10px] font-black font-jetbrains uppercase text-amber-400 hover:bg-amber-500/10 border-t border-neutral-800 tracking-widest">Patch_Buffer</button>
 									{/snippet}
 								</Dropdown>
-								<div class="w-px h-8 bg-stone-800"></div>
+								<div class="w-px h-8 bg-neutral-800"></div>
 								<button 
 									onclick={() => fetchInstances(node.id)} 
 									disabled={loadingInstances[node.id]}
-									class="flex items-center gap-2 font-jetbrains text-[10px] font-black text-rust-light hover:text-white transition-all uppercase tracking-widest disabled:opacity-30"
+									class="flex items-center gap-2 font-mono text-[10px] font-black text-rust-light hover:text-white transition-all uppercase tracking-widest disabled:opacity-30"
 								>
 									{#if loadingInstances[node.id]}
 										<Icon name="ph:arrows-clockwise-bold" size="0.875rem" class="animate-spin" />
@@ -368,12 +364,12 @@
 						{#if loadingInstances[node.id] && (!activeInstances[node.id] || activeInstances[node.id].length === 0)}
 							<div class="py-20 flex flex-col items-center gap-6">
 								<div class="w-12 h-12 border-2 border-rust border-t-transparent rounded-none animate-spin"></div>
-								<p class="font-heading font-black text-[10px] text-stone-600 uppercase tracking-widest animate-pulse">Synchronizing Instances...</p>
+								<p class="font-heading font-black text-[10px] text-neutral-600 uppercase tracking-widest animate-pulse">Synchronizing_Instances...</p>
 							</div>
 						{:else if !activeInstances[node.id] || activeInstances[node.id].length === 0}
-							<div class="py-20 text-center opacity-30 border-2 border-stone-800 border-dashed industrial-sharp bg-stone-900/20">
-								<Icon name="ph:cube-bold" size="3rem" class="text-stone-800 mx-auto mb-4" />
-								<p class="text-stone-600 font-jetbrains font-black text-[10px] uppercase tracking-widest">No Active Nodes Mapped</p>
+							<div class="py-20 text-center opacity-30 border-2 border-neutral-800 border-dashed rounded-none bg-black/20">
+								<Icon name="ph:cube-bold" size="3rem" class="text-neutral-800 mx-auto mb-4" />
+								<p class="text-neutral-600 font-mono font-black text-[10px] uppercase tracking-widest">Registry_Vacant</p>
 							</div>
 						{:else}
 							<div class={`grid grid-cols-1 gap-3 ${loadingInstances[node.id] ? 'opacity-50 pointer-events-none' : ''}`}>
@@ -381,13 +377,13 @@
 									<InstanceRow
 										nodeId={node.id}
 										{instance}
-										on:tail={(e) => dispatch('tail', e.detail)}
-										on:start={(e) => dispatch('startInstanceRequest', e.detail)}
-										on:stop={(e) => dispatch('stopInstanceRequest', e.detail)}
-										on:restart={(e) => dispatch('restartInstanceRequest', e.detail)}
-										on:update={(e) => dispatch('updateInstanceRequest', e.detail)}
-										on:rename={(e) => dispatch('renameInstanceRequest', e.detail)}
-										on:delete={(e) => dispatch('deleteInstanceRequest', e.detail)}
+										on:tail={(e: any) => dispatch('tail', e.detail)}
+										on:start={(e: any) => dispatch('startInstanceRequest', e.detail)}
+										on:stop={(e: any) => dispatch('stopInstanceRequest', e.detail)}
+										on:restart={(e: any) => dispatch('restartInstanceRequest', e.detail)}
+										on:update={(e: any) => dispatch('updateInstanceRequest', e.detail)}
+										on:rename={(e: any) => dispatch('renameInstanceRequest', e.detail)}
+										on:delete={(e: any) => dispatch('deleteInstanceRequest', e.detail)}
 									/>
 								{/each}
 							</div>
@@ -398,8 +394,8 @@
 		</div>
 	{:else}
 		<div class="py-40 text-center opacity-40">
-			<div class="inline-block p-8 bg-stone-900/40 border border-dashed border-stone-800 industrial-sharp mb-8">
-				<Icon name="ph:server-bold" size="4rem" class="text-stone-800" />
+			<div class="inline-block p-8 bg-neutral-900/40 border-2 border-dashed border-neutral-800 rounded-none mb-8">
+				<Icon name="ph:server-bold" size="4rem" class="text-neutral-800" />
 			</div>
 			<h3 class="font-heading font-black text-2xl text-stone-700 uppercase tracking-[0.4em] mb-3">No Nodes Active</h3>
 			<p class="font-jetbrains text-[11px] font-bold text-stone-600 uppercase tracking-widest">Waiting for nodes to synchronize with controller.</p>
