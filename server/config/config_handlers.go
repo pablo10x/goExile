@@ -15,6 +15,11 @@ import (
 
 // GetAllConfigHandler returns all configuration settings
 func GetAllConfigHandler(w http.ResponseWriter, r *http.Request) {
+	if database.DBConn == nil {
+		utils.WriteError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+
 	configs, err := database.GetAllConfig(database.DBConn)
 	if err != nil {
 		utils.WriteError(w, r, http.StatusInternalServerError, fmt.Sprintf("Failed to get configuration: %v", err))
@@ -26,6 +31,11 @@ func GetAllConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 // GetConfigByCategoryHandler returns configuration settings for a specific category
 func GetConfigByCategoryHandler(w http.ResponseWriter, r *http.Request) {
+	if database.DBConn == nil {
+		utils.WriteError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+
 	vars := mux.Vars(r)
 	category := vars["category"]
 	if category == "" {
@@ -44,6 +54,11 @@ func GetConfigByCategoryHandler(w http.ResponseWriter, r *http.Request) {
 
 // GetConfigByKeyHandler returns a specific configuration setting by key
 func GetConfigByKeyHandler(w http.ResponseWriter, r *http.Request) {
+	if database.DBConn == nil {
+		utils.WriteError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+
 	vars := mux.Vars(r)
 	key := vars["key"]
 	if key == "" {
@@ -67,6 +82,11 @@ func GetConfigByKeyHandler(w http.ResponseWriter, r *http.Request) {
 
 // UpdateConfigHandler updates a configuration setting
 func UpdateConfigHandler(w http.ResponseWriter, r *http.Request) {
+	if database.DBConn == nil {
+		utils.WriteError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+
 	if r.Method != "PUT" {
 		utils.WriteError(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return
@@ -100,6 +120,11 @@ func UpdateConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 // CreateConfigHandler creates a new configuration setting
 func CreateConfigHandler(w http.ResponseWriter, r *http.Request) {
+	if database.DBConn == nil {
+		utils.WriteError(w, r, http.StatusServiceUnavailable, "database not connected")
+		return
+	}
+
 	if r.Method != "POST" {
 		utils.WriteError(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 		return

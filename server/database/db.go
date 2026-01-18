@@ -4,13 +4,19 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/jmoiron/sqlx"
 
 	// Drivers
+	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	_ "github.com/mattn/go-sqlite3"
 
@@ -18,22 +24,34 @@ import (
 	"exile/server/utils"
 )
 
-var (
-	dbConn       *sqlx.DB
-	readOnlyConn *sqlx.DB // Separate connection for read-only queries if configured
-)
-
 // db.go provides a persistence layer for the registry using PostgreSQL.
 
 var (
 	DBConn         *sqlx.DB
 	ReadOnlyDBConn *sqlx.DB
+	EmbeddedServer *embeddedpostgres.EmbeddedPostgres
 )
 
 func InitDB(dsn string) error {
 	var err error
+
+	// If it's a postgres DSN but we need to start embedded first
+	if strings.HasPrefix(dsn, "postgres://") || strings.HasPrefix(dsn, "postgresql://") {
+		// Try to connect first, if it fails, maybe it's not running and we should try embedded?
+		// Actually, let's keep it simple: InitDB expects a running DB.
+		// The TUI/Main will handle starting embedded if needed.
+	}
+
 	DBConn, err = sqlx.Connect("pgx", dsn)
 	if err != nil {
+		// If it's potentially a SQLite path, ensure the directory exists
+		if !strings.HasPrefix(dsn, "postgres://") && !strings.HasPrefix(dsn, "postgresql://") {
+			dir := filepath.Dir(dsn)
+			if dir != "." && dir != "/" {
+				_ = os.MkdirAll(dir, 0755)
+			}
+		}
+
 		DBConn, err = sqlx.Connect("sqlite3", dsn)
 		if err != nil {
 			return fmt.Errorf("failed to connect to database: %w", err)
@@ -72,6 +90,73 @@ func InitDB(dsn string) error {
 	err = DBConn.QueryRow(`SELECT COUNT(*) FROM server_config`).Scan(&configCount)
 	if err == nil && configCount == 0 {
 		// No initial config population logic here now, handled by InitConfig
+	}
+	return nil
+}
+
+// StartEmbeddedPostgres starts a local PostgreSQL instance.
+func StartEmbeddedPostgres() error {
+	if EmbeddedServer != nil {
+		return nil
+	}
+
+	config := embeddedpostgres.DefaultConfig().
+		Database("exile_master").
+		Username("exile").
+		Password("exile").
+		Port(5432)
+
+	// Ensure data directory exists with correct permissions
+	dataDir := "/tmp/exile_pgdata"
+	if err := os.MkdirAll(dataDir, 0700); err != nil {
+		return fmt.Errorf("failed to create postgres data dir: %w", err)
+	}
+
+	// Cleanup stale lock file and process
+	lockFile := filepath.Join(dataDir, "postmaster.pid")
+	if _, err := os.Stat(lockFile); err == nil {
+		content, err := ioutil.ReadFile(lockFile)
+		if err == nil {
+			pidStr := strings.Split(string(content), "\n")[0]
+			pid, err := strconv.Atoi(strings.TrimSpace(pidStr))
+			if err == nil {
+				// Check if process exists and is running
+				process, err := os.FindProcess(pid)
+				if err == nil {
+					// Send SIGTERM
+					if err := process.Signal(syscall.SIGTERM); err == nil {
+						log.Printf("Cleaning up stale Postgres process (PID: %d)", pid)
+						// Wait a bit for it to exit
+						time.Sleep(1 * time.Second)
+						// Force kill if still running (check signal 0)
+						if err := process.Signal(syscall.Signal(0)); err == nil {
+							_ = process.Kill()
+						}
+					}
+				}
+			}
+		}
+		// Remove lock file regardless
+		_ = os.Remove(lockFile)
+	}
+
+	EmbeddedServer = embeddedpostgres.NewDatabase(config.DataPath(dataDir))
+	if err := EmbeddedServer.Start(); err != nil {
+		return fmt.Errorf("failed to start embedded postgres: %w", err)
+	}
+
+	log.Println("Embedded PostgreSQL started successfully on port 5432")
+	return nil
+}
+
+// StopEmbeddedPostgres stops the local PostgreSQL instance.
+func StopEmbeddedPostgres() error {
+	if EmbeddedServer != nil {
+		if err := EmbeddedServer.Stop(); err != nil {
+			return fmt.Errorf("failed to stop embedded postgres: %w", err)
+		}
+		EmbeddedServer = nil
+		log.Println("Embedded PostgreSQL stopped")
 	}
 	return nil
 }
@@ -784,7 +869,10 @@ func CloseDB(db *sqlx.DB) error {
 	if db == nil {
 		return nil
 	}
-	return db.Close()
+	err := db.Close()
+	// Also stop embedded if it was running
+	_ = StopEmbeddedPostgres()
+	return err
 }
 
 func execWithRetry(fn func() error) error {

@@ -140,6 +140,11 @@ func (c *PlayerConnection) readPump(pm *PlayerWSManager) {
 }
 
 func (pm *PlayerWSManager) handleMessage(c *PlayerConnection, msg WSMessage) {
+	if database.DBConn == nil {
+		pm.sendError(c.PlayerID, "database not connected")
+		return
+	}
+
 	switch msg.Type {
 	case "FRIEND_REQUEST_SEND":
 		var payload struct {

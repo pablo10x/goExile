@@ -511,8 +511,8 @@ func ListColumnsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ExecuteSQLHandler(w http.ResponseWriter, r *http.Request) {
-	// Use readOnlyConn if available, otherwise fall back to DBConn (which should be prevented if not safe)
-	conn := readOnlyConn
+	// Use ReadOnlyDBConn if available, otherwise fall back to DBConn (which should be prevented if not safe)
+	conn := ReadOnlyDBConn
 	if conn == nil {
 		conn = DBConn
 	}

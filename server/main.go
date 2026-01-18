@@ -20,8 +20,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
+	tea "github.com/charmbracelet/bubbletea"
 
 	"exile/server/auth"
 	"exile/server/config"
@@ -31,7 +30,6 @@ import (
 	"exile/server/middleware"
 	"exile/server/redeye"
 	"exile/server/registry"
-	"exile/server/sse"
 	"exile/server/utils"
 	"exile/server/ws"
 	"exile/server/ws_player"
@@ -114,146 +112,58 @@ func main() {
 // It handles database connection, route setup, background cleanup tasks,
 // and graceful shutdown.
 func run() error {
-	// Load .env file silently
-	_ = godotenv.Load()
+	// Initialize TUI for startup
+	p := tea.NewProgram(newTUIModel(), tea.WithAltScreen())
+	m, err := p.Run()
+	if err != nil {
+		return fmt.Errorf("TUI error: %w", err)
+	}
 
-	// Print startup banner
-	utils.PrintBanner()
+	model := m.(tuiModel)
+	if model.err != nil {
+		return model.err
+	}
+
+	// If credentials were generated, print them nicely
+	if len(model.GeneratedCreds) > 0 {
+		fmt.Println("\n================================================================================")
+		fmt.Println("  ⚠️  SECURITY NOTICE: NEW CREDENTIALS GENERATED  ⚠️")
+		fmt.Println("================================================================================")
+		if key, ok := model.GeneratedCreds["MASTER_API_KEY"]; ok {
+			fmt.Printf("  MASTER_API_KEY:  %s\n", key)
+		}
+		if key, ok := model.GeneratedCreds["GAME_API_KEY"]; ok {
+			fmt.Printf("  GAME_API_KEY:    %s\n", key)
+		}
+		if pass, ok := model.GeneratedCreds["ADMIN_PASSWORD"]; ok {
+			fmt.Printf("  ADMIN_PASSWORD:  %s\n", pass)
+		}
+		fmt.Println("================================================================================")
+		fmt.Println("  These have been saved to your .env file.")
+		fmt.Println("================================================================================")
+		fmt.Println()
+		// Pause briefly so user notices
+		time.Sleep(3 * time.Second)
+	}
+
+	// Use GlobalStartup initialized in TUI steps
+	authConfig := GlobalStartup.AuthConfig
+	sessionStore := GlobalStartup.SessionStore
+	sseHub := GlobalStartup.SSEHub
+	router := GlobalStartup.Router
 
 	// Create a root context for the application
 	_, cancel := context.WithCancel(context.Background())
-	// We defer cancel() at the end, but also call it on shutdown signal.
-	// Actually, we need 'cancel' to be available for the shutdown signal handler.
-
-	// Initialize authentication & session management
-	authConfig := auth.GetAuthConfig()
-	sessionStore := auth.NewSessionStore(authConfig.IsProduction)
-	go sessionStore.CleanupExpiredSessions()
-	utils.PrintSection("Authentication", "ready", true)
-
-	// Initialize Enrollment Manager for node enrollment
-	enrollment.InitializeEnrollmentManager()
-	utils.PrintSection("Enrollment Manager", "ready", true)
-
-	// Initialize SSE hub for real-time dashboard updates
-	sseHub := sse.NewSSEHub()
-	go sseHub.Run()
-	utils.PrintSection("SSE Hub", "ready", true)
-
-	// Initialize Router
-	router := mux.NewRouter()
-
-	// Initialize Database (PostgreSQL)
-	dbDSN := os.Getenv("DB_DSN")
-	if dbDSN == "" {
-		utils.PrintSection("Database", "disabled (no DB_DSN)", false)
-	} else {
-		var err error
-		err = database.InitDB(dbDSN)
-		if err != nil {
-			utils.PrintSection("Database", "failed", false)
-			utils.PrintSubItem(err.Error())
-			registry.GlobalStats.SetDBConnected(false)
-		} else {
-			registry.GlobalStats.SetDBConnected(true)
-			// Load existing nodes from DB to restore state
-			loaded, _ := database.LoadNodes(database.DBConn)
-			if len(loaded) > 0 {
-				maxID := registry.GetNextID() - 1
-				for i := range loaded {
-					s := loaded[i]
-					copyS := s
-					// Reconcile status: if marked online in DB but not actually connected via WS, set to offline
-					if copyS.Status == "Online" && !ws.GlobalWSManager.IsClientConnected(copyS.ID) {
-						log.Printf("INFO: Node ID %d was marked 'Online' in DB but not connected to WebSocket. Marking 'Offline'.", copyS.ID)
-						copyS.Status = "Offline"
-						// Optionally, persist this change to DB immediately, but WSManager will handle it on reconnect/disconnect
-						// For now, only update in-memory to reflect reality for the Dashboard
-					}
-					registry.SetItem(copyS.ID, &copyS)
-					if copyS.ID > maxID {
-						maxID = copyS.ID
-					}
-				}
-				utils.PrintSection("Database", "connected", true)
-				utils.PrintSubItem(fmt.Sprintf("Loaded %d nodes", len(loaded)))
-
-				// Get initial DB stats for display
-				if advStats, err := database.GetAdvancedDBStats(database.DBConn); err == nil {
-					utils.PrintSubItem(fmt.Sprintf("Size: %s | Cache Hit: %.1f%%", advStats.DatabaseSize, advStats.CacheHitRatio))
-				}
-			} else {
-				utils.PrintSection("Database", "connected", true)
-				// Get initial DB stats for display
-				if advStats, err := database.GetAdvancedDBStats(database.DBConn); err == nil {
-					utils.PrintSubItem(fmt.Sprintf("Size: %s | Cache Hit: %.1f%%", advStats.DatabaseSize, advStats.CacheHitRatio))
-				}
-			}
-
-			// Initialize Player System Schema
-			if err := database.InitPlayerSystem(database.DBConn); err != nil {
-				log.Printf("Failed to init player system: %v", err)
-			}
-
-			// Initialize GlobalStats from DB
-			registry.GlobalStats.InitializeStats(database.DBConn)
-		}
-
-		// Initialize Read-Only Database (Optional but recommended)
-		roDSN := os.Getenv("READONLY_DB_DSN")
-		if roDSN != "" {
-			err = database.InitReadOnlyDB(roDSN)
-			if err != nil {
-				utils.PrintSection("Read-Only DB", "failed", false)
-				utils.PrintSubItem(err.Error())
-
-			} else {
-				utils.PrintSection("Read-Only DB", "connected", true)
-			}
-		} else {
-			// If not set, use main connection but fallback to regex validation
-			database.ReadOnlyDBConn = database.DBConn
-			if database.DBConn != nil {
-				utils.PrintSection("Read-Only DB", "using primary (fallback)", true)
-			}
-		}
-	}
-
-	// Initialize RedEye Background Tasks
-	if database.DBConn != nil {
-		redeye.StartRedEyeBackground(database.DBConn)
-		if redeye.RedEyeActive {
-			utils.PrintSection("RedEye System", "active", true)
-		} else {
-			utils.PrintSection("RedEye System", "inactive (requires "+redeye.RedEyeError+")", false)
-		}
-	}
-
-	// Initialize Firebase Remote Config
-	_ = auth.InitFirebase()
-	if auth.FirebaseMgr != nil && auth.FirebaseMgr.Connected {
-		utils.PrintSection("Firebase", "connected", true)
-		utils.PrintSubItem(fmt.Sprintf("Project: %s", auth.FirebaseMgr.ProjectID))
-	} else {
-		utils.PrintSection("Firebase", "disabled", false)
-	}
+	defer cancel()
 
 	port := "8081"
 
 	// Define API Routes
-
-	// Node interactions (public/internal API) - Secured via API Key if set
 	apiRouter := router.PathPrefix("/api/nodes").Subrouter()
 
 	apiKey := os.Getenv("MASTER_API_KEY")
 	gameAPIKey := os.Getenv("GAME_API_KEY")
 	isProduction := os.Getenv("PRODUCTION_MODE") == "true"
-
-	// Start WS Manager
-	go ws.GlobalWSManager.Run()
-
-	// Initialize Player WS Manager
-	ws_player.InitPlayerWS()
 
 	if isProduction {
 		if apiKey == "" {
@@ -490,14 +400,6 @@ func run() error {
 
 		// Dashboard: Reports (Session Protected)
 		router.Handle("/api/reports", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ListReportsHandler))).Methods("GET")
-
-		// Game client routes - Secured via Game API Key
-		gameRouter := router.PathPrefix("/api/game").Subrouter()
-		gameRouter.Use(middleware.Auth_GameMiddleware(gameAPIKey))
-
-		gameRouter.Handle("/auth", http.HandlerFunc(handlers.AuthenticatePlayerHandler)).Methods("POST")
-		gameRouter.Handle("/ws", http.HandlerFunc(ws_player.GlobalPlayerWS.HandleWS))
-		// Note: All other player interactions (friends, etc.) are handled via WebSocket messages.
 	}
 
 	// Enrollment endpoints (public - enrollment key IS the auth)
@@ -511,8 +413,8 @@ func run() error {
 	// go ProactiveHealthCheck(healthCheckInterval)
 
 	// Start Stats Ticker (Memory & DB)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	statsCtx, statsCancel := context.WithCancel(context.Background())
+	defer statsCancel()
 
 	go func() {
 		ticker := time.NewTicker(5 * time.Second)
@@ -529,7 +431,7 @@ func run() error {
 						registry.GlobalStats.UpdateAdvancedDBStats(advStats)
 					}
 				}
-			case <-ctx.Done():
+			case <-statsCtx.Done():
 				return
 			}
 		}
