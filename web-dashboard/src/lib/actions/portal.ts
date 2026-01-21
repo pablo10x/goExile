@@ -1,3 +1,4 @@
+import { apiFetch } from "$lib/api";
 /**
  * Simple portal action to move an element to the body root.
  * This ensures modals escape parent stacking contexts.

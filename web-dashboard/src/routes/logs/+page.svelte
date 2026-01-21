@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { onMount } from 'svelte';
 	import { fade, slide, fly, scale } from 'svelte/transition';
 	import {
@@ -50,7 +51,7 @@
 				offset: offset.toString(),
 				category: category === 'All' ? '' : category
 			});
-			const res = await fetch(`/api/logs?${query}`);
+			const res = await apiFetch(`/api/logs?${query}`);
 			if (res.ok) {
 				const data = await res.json();
 				logs = data.logs;
@@ -65,7 +66,7 @@
 
 	async function fetchCounts() {
 		try {
-			const res = await fetch('/api/logs/counts');
+			const res = await apiFetch('/api/logs/counts');
 			if (res.ok) {
 				counts = await res.json();
 			}
@@ -104,7 +105,7 @@
 			selectedIds = new Set();
 
 			try {
-				await Promise.all(idsToDelete.map((id) => fetch(`/api/logs/${id}`, { method: 'DELETE' })));
+				await Promise.all(idsToDelete.map((id) => apiFetch(`/api/logs/${id}`, { method: 'DELETE' })));
 				fetchCounts();
 			} catch (e) {
 				logs = originalLogs;
@@ -118,7 +119,7 @@
 	async function deleteLog(e: MouseEvent, id: number) {
 		e.stopPropagation();
 		try {
-			const res = await fetch(`/api/logs/${id}`, { method: 'DELETE' });
+			const res = await apiFetch(`/api/logs/${id}`, { method: 'DELETE' });
 			if (res.ok) {
 				logs = logs.filter((l) => l.id !== id);
 				if (selectedIds.has(id)) {
@@ -138,7 +139,7 @@
 		confirmMessage = 'Executing root-level protocol to clear ALL system logs. System history will be permanently erased.';
 		isCriticalAction = true;
 		pendingAction = async () => {
-			const res = await fetch('/api/logs', { method: 'DELETE' });
+			const res = await apiFetch('/api/logs', { method: 'DELETE' });
 			if (res.ok) {
 				fetchLogs();
 				fetchCounts();

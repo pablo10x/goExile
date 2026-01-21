@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { Bell, CheckCircle, Info, XCircle, AlertCircle } from 'lucide-svelte';
 	import { slide } from 'svelte/transition';
 	import { notifications } from '$lib/stores.svelte';

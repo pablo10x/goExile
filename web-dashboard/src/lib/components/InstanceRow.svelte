@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { createEventDispatcher } from 'svelte';
 	import { slide } from 'svelte/transition';
 	import { serverVersions } from '$lib/stores.svelte';
@@ -40,7 +41,7 @@
 
 	async function fetchHistory() {
 		try {
-			const res = await fetch(`/api/nodes/${nodeId}/instances/${instance.id}/stats/history`);
+			const res = await apiFetch(`/api/nodes/${nodeId}/instances/${instance.id}/stats/history`);
 			if (res.ok) {
 				const data = await res.json();
 				if (data.history) {

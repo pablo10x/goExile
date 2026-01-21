@@ -1,7 +1,14 @@
+import { apiFetch } from "$lib/api";
 import type { Handle } from '@sveltejs/kit';
 import { redirect } from '@sveltejs/kit';
+import { building } from '$app/environment';
 
 export const handle: Handle = async ({ event, resolve }) => {
+	// Skip all logic during static build to prevent redirect errors
+	if (building) {
+		return await resolve(event);
+	}
+
 	const session = event.cookies.get('session');
 	const url = event.url.pathname;
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch, notify, API_BASE } from "$lib/api";
 	import '../app.css';
 	import { onMount, onDestroy } from 'svelte';
 	import { get } from 'svelte/store';
@@ -159,14 +160,20 @@
 		if (typeof window === 'undefined') return;
 		if (eventSource) eventSource.close();
 
-		eventSource = new EventSource('/events');
+		eventSource = new EventSource(`${API_BASE}/events`);
 
 		eventSource.onopen = () => {
+			if (!get(isConnected)) {
+				notify('Master Server Online', 'Successfully connected to the control uplink.');
+			}
 			isConnected.set(true);
 			connectionStatus.set('Live (SSE)');
 		};
 
 		eventSource.onerror = () => {
+			if (get(isConnected)) {
+				notify('Uplink Interrupted', 'Master Server connection lost. Attempting to reconnect...');
+			}
 			isConnected.set(false);
 			connectionStatus.set('Reconnecting...');
 		};
@@ -197,7 +204,7 @@
 		}
 
 		try {
-			const res = await fetch('/api/stats', { cache: 'no-store', credentials: 'include' });
+			const res = await apiFetch('/api/stats', { cache: 'no-store', credentials: 'include' });
 			if (res.ok) {
 				isAuthenticated.set(true);
 				connectSSE();
@@ -220,14 +227,14 @@
 	async function initialFetch() {
 		try {
 			const promises: Promise<any>[] = [
-				fetch('/api/nodes', { cache: 'no-store', credentials: 'include' }),
-				fetch('/api/versions', { cache: 'no-store', credentials: 'include' })
+				apiFetch('/api/nodes', { cache: 'no-store', credentials: 'include' }),
+				apiFetch('/api/versions', { cache: 'no-store', credentials: 'include' })
 			];
 
 			// Only fetch stats if not already provided by server load
 			const currentData = $state.snapshot(data);
 			if (!currentData?.stats) {
-				promises.push(fetch('/api/stats', { cache: 'no-store', credentials: 'include' }));
+				promises.push(apiFetch('/api/stats', { cache: 'no-store', credentials: 'include' }));
 			}
 
 			const results = await Promise.all(promises);
@@ -259,7 +266,7 @@
 
 		try {
 			restarting = true;
-			await fetch('/api/restart', { method: 'POST' });
+			await apiFetch('/api/restart', { method: 'POST' });
 			alert('Server restart triggered. The dashboard will reload in a moment.');
 			setTimeout(() => {
 				window.location.reload();
@@ -322,7 +329,7 @@
 	});
 
 	async function logout() {
-		await fetch('/api/auth/logout', { method: 'POST' });
+		await apiFetch('/api/auth/logout', { method: 'POST' });
 		isAuthenticated.set(false);
 		goto('/login');
 	}
@@ -341,7 +348,7 @@
 		// Quick Note is always a new note
 		const { id, ...noteWithoutId } = note;
 		try {
-			const res = await fetch('/api/notes', {
+			const res = await apiFetch('/api/notes', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(noteWithoutId)

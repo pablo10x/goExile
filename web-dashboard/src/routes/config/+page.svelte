@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { onMount } from 'svelte';
 	import { fade, slide, scale } from 'svelte/transition';
 	import {
@@ -266,7 +267,7 @@
 	async function loadConfig() {
 		loading = true;
 		try {
-			const response = await fetch('/api/config');
+			const response = await apiFetch('/api/config');
 			if (!response.ok) throw new Error('Failed to fetch config');
 			const configs = await response.json();
 			distributeConfigs(configs);
@@ -338,7 +339,7 @@
 	}
 
 	function loadFirebaseStatus() {
-		return fetch('/api/config/firebase/status').then(response => {
+		return apiFetch('/api/config/firebase/status').then(response => {
 			if (response.ok) {
 				return response.json();
 			}
@@ -380,7 +381,7 @@
 		firebaseSaving = true;
 		try {
 			const method = firebaseModalMode === 'create' ? 'POST' : 'PUT';
-			const response = await fetch('/api/config/firebase/parameter', {
+			const response = await apiFetch('/api/config/firebase/parameter', {
 				method: method,
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(firebaseForm)
@@ -412,7 +413,7 @@
 		if (!confirm(`Are you sure you want to delete parameter "${key}"?`)) return;
 
 		try {
-			const response = await fetch('/api/config/firebase/parameter', {
+			const response = await apiFetch('/api/config/firebase/parameter', {
 				method: 'DELETE',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ key })
@@ -440,7 +441,7 @@
 	async function syncFirebaseConfig() {
 		loading = true;
 		try {
-			const response = await fetch('/api/config/firebase/sync', { method: 'POST' });
+			const response = await apiFetch('/api/config/firebase/sync', { method: 'POST' });
 			if (!response.ok) {
 				const data = await response.json();
 				throw new Error(data.error || 'Sync failed');
@@ -493,7 +494,7 @@
 			const promises = [];
 			for (const [key, value] of pendingChanges.entries()) {
 				promises.push(
-					fetch(`/api/config/${key}`, {
+					apiFetch(`/api/config/${key}`, {
 						method: 'PUT',
 						headers: { 'Content-Type': 'application/json' },
 						body: JSON.stringify({ value })

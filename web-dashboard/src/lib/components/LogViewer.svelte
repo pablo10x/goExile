@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { onMount, tick, createEventDispatcher } from 'svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -75,7 +76,7 @@
 
 	async function handleClearLogs() {
 		try {
-			await fetch(`/api/nodes/${nodeId}/logs`, { method: 'DELETE' });
+			await apiFetch(`/api/nodes/${nodeId}/logs`, { method: 'DELETE' });
 			parsedLogs = [];
 			fileSize = 0;
 			updateStats();
@@ -186,7 +187,7 @@
 		loading = parsedLogs.length === 0;
 
 		try {
-			const r = await fetch(`/api/nodes/${nodeId}/logs`);
+			const r = await apiFetch(`/api/nodes/${nodeId}/logs`);
 			if (!r.ok) throw new Error('Failed to fetch logs');
 
 			const j = await r.json();

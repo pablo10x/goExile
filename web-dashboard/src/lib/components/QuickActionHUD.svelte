@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { onMount, onDestroy } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { createEventDispatcher } from 'svelte';
@@ -22,7 +23,7 @@
 
 	async function fetchRecent() {
 		try {
-			const res = await fetch('/api/instances');
+			const res = await apiFetch('/api/instances');
 			if (res.ok) {
 				const data = await res.json();
 				let active: MiniInstance[] = [];

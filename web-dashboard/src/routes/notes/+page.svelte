@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { onMount } from 'svelte';
 	import { fade, slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
@@ -21,7 +22,7 @@
 	async function loadData() {
 		loading = true;
 		try {
-			const [nRes, tRes] = await Promise.all([fetch('/api/notes'), fetch('/api/todos')]);
+			const [nRes, tRes] = await Promise.all([apiFetch('/api/notes'), apiFetch('/api/todos')]);
 			if (nRes.ok) notes.set(await nRes.json());
 			if (tRes.ok) todos.set(await tRes.json());
 		} catch (e) {
@@ -45,7 +46,7 @@
 		if (note.id === 0) {
 			const { id, ...noteWithoutId } = note;
 			try {
-				const res = await fetch('/api/notes', {
+				const res = await apiFetch('/api/notes', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify(noteWithoutId)
@@ -59,7 +60,7 @@
 			}
 		} else {
 			try {
-				await fetch(`/api/notes/${note.id}`, {
+				await apiFetch(`/api/notes/${note.id}`, {
 					method: 'PUT',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify(note)
@@ -73,7 +74,7 @@
 
 	async function deleteNote(id: number) {
 		try {
-			await fetch(`/api/notes/${id}`, { method: 'DELETE' });
+			await apiFetch(`/api/notes/${id}`, { method: 'DELETE' });
 			notes.update((n) => n.filter((x) => x.id !== id));
 		} catch (err) {
 			console.error(err);
@@ -83,7 +84,7 @@
 	async function addTodo() {
 		if (!newTodoContent.trim()) return;
 		try {
-			const res = await fetch('/api/todos', {
+			const res = await apiFetch('/api/todos', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -105,7 +106,7 @@
 	}
 	async function deleteTodo(id: number) {
 		try {
-			const res = await fetch(`/api/todos/${id}`, { method: 'DELETE' });
+			const res = await apiFetch(`/api/todos/${id}`, { method: 'DELETE' });
 			if (res.ok) {
 				todos.update((all) => {
 					const removeFromTree = (nodes: Todo[]): Todo[] => {
@@ -131,7 +132,7 @@
 			in_progress: !todo.done ? false : todo.in_progress
 		};
 		try {
-			await fetch(`/api/todos/${todo.id}`, {
+			await apiFetch(`/api/todos/${todo.id}`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(updated)
@@ -154,7 +155,7 @@
 	async function toggleProgress(todo: Todo) {
 		const updated = { ...todo, in_progress: !todo.in_progress, done: false };
 		try {
-			await fetch(`/api/todos/${todo.id}`, {
+			await apiFetch(`/api/todos/${todo.id}`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(updated)

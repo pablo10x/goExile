@@ -166,9 +166,21 @@ func UnifiedAuthMiddleware(apiKey string, authConfig auth.AuthConfig, sessionSto
 
 			// 2. Check Session (User-to-Service)
 			if authConfig.Enabled {
+				// Check Cookie first
 				cookie, err := r.Cookie("session")
+				sessionID := ""
 				if err == nil {
-					isValid, authStep := sessionStore.ValidateSession(cookie.Value)
+					sessionID = cookie.Value
+				} else {
+					// Fallback to Authorization Header (for Native Apps)
+					authHeader := r.Header.Get("Authorization")
+					if strings.HasPrefix(authHeader, "Bearer ") {
+						sessionID = strings.TrimPrefix(authHeader, "Bearer ")
+					}
+				}
+
+				if sessionID != "" {
+					isValid, authStep := sessionStore.ValidateSession(sessionID)
 					if isValid && authStep == auth.AuthStepAuthenticated {
 						next.ServeHTTP(w, r)
 						return
@@ -298,6 +310,30 @@ func SecurityHeadersMiddleware(next http.Handler) http.Handler {
 		// If behind a proxy that terminates TLS, we might want to set this if X-Forwarded-Proto is https
 		if r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" {
 			w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+// CORSMiddleware handles Cross-Origin Resource Sharing
+func CORSMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+
+		// Allow Tauri, local dev, and specific custom origins
+		// In production, you might want to be more restrictive based on an allowlist
+		if origin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+			w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-API-Key, X-Game-API-Key")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+		}
+
+		// Handle preflight
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusNoContent)
+			return
 		}
 
 		next.ServeHTTP(w, r)

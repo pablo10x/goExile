@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import type { ResourceProgressBarProps } from '$lib/types/resource-metrics';
 
 	let {

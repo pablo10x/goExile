@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import {
 		CheckSquare,
 		Square,
@@ -41,7 +42,7 @@
 	async function addSubTask() {
 		if (!newSubTaskContent.trim()) return;
 		try {
-			const res = await fetch('/api/todos', {
+			const res = await apiFetch('/api/todos', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -80,7 +81,7 @@
 	async function addComment() {
 		if (!newCommentContent.trim()) return;
 		try {
-			const res = await fetch(`/api/todos/${todo.id}/comments`, {
+			const res = await apiFetch(`/api/todos/${todo.id}/comments`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ content: newCommentContent, author: 'Admin' })
@@ -110,7 +111,7 @@
 
 	async function deleteComment(commentId: number) {
 		try {
-			const res = await fetch(`/api/todos/comments/${commentId}`, { method: 'DELETE' });
+			const res = await apiFetch(`/api/todos/comments/${commentId}`, { method: 'DELETE' });
 			if (res.ok) {
 				todos.update((all) => {
 					const updateTree = (nodes: Todo[]): Todo[] => {

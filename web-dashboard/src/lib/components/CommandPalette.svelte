@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { onMount, tick } from 'svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -19,7 +20,7 @@
 
 	async function fetchInstances() {
 		try {
-			const res = await fetch('/api/instances');
+			const res = await apiFetch('/api/instances');
 			if (res.ok) {
 				const data = await res.json();
 				let flat: any[] = [];
@@ -92,7 +93,7 @@
 
 	function triggerRestart() {
 		if (confirm('Initiate system reboot sequence?')) {
-			fetch('/api/restart', { method: 'POST' });
+			apiFetch('/api/restart', { method: 'POST' });
 			notifications.add({ type: 'warning', message: 'REBOOT_SEQUENCE_INITIATED' });
 		}
 	}

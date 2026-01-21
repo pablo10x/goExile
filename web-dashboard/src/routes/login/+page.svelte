@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { goto, invalidateAll } from '$app/navigation';
 	import { isAuthenticated } from '$lib/stores.svelte';
 	import { onMount } from 'svelte';
@@ -32,7 +33,7 @@
 		formData.append('password', password);
 
 		try {
-			const response = await fetch('/api/auth/login', {
+			const response = await apiFetch('/api/auth/login', {
 				method: 'POST',
 				body: formData,
 				headers: { 'Content-Type': 'application/x-www-form-urlencoded' }

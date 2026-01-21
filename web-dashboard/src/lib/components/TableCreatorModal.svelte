@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { Plus, Trash2, X, Save } from 'lucide-svelte';
 	import { slide } from 'svelte/transition';
 	import Button from './Button.svelte';

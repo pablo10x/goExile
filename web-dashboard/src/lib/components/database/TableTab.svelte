@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { onMount } from 'svelte';
 	import DataGrid from './DataGrid.svelte';
 	import TableDesigner from './TableDesigner.svelte';
@@ -25,7 +26,7 @@
 		loading = true;
 		try {
 			// Load Columns first to know structure
-			const colRes = await fetch(
+			const colRes = await apiFetch(
 				`/api/database/columns?schema=${encodeURIComponent(schema)}&table=${encodeURIComponent(table)}`
 			);
 			if (colRes.ok) {
@@ -47,7 +48,7 @@
 			}
 
 			// Load Rows
-			const res = await fetch(
+			const res = await apiFetch(
 				`/api/database/table/${table}?schema=${encodeURIComponent(schema)}&limit=${limit}&offset=${offset}`
 			);
 			if (res.ok) {
@@ -68,7 +69,7 @@
 
 	async function saveRow(pkValue: any, changes: any) {
 		try {
-			const res = await fetch(
+			const res = await apiFetch(
 				`/api/database/table/${table}/${encodeURIComponent(pkValue)}?schema=${encodeURIComponent(schema)}&pk=${encodeURIComponent(primaryKeyColumn)}`,
 				{
 					method: 'PUT',
@@ -90,7 +91,7 @@
 	async function deleteRows(ids: any[]) {
 		try {
 			for (const pkValue of ids) {
-				const res = await fetch(
+				const res = await apiFetch(
 					`/api/database/table/${table}/${encodeURIComponent(pkValue)}?schema=${encodeURIComponent(schema)}&pk=${encodeURIComponent(primaryKeyColumn)}`,
 					{ method: 'DELETE' }
 				);
@@ -116,7 +117,7 @@
 
 	async function handleRowSave(data: any) {
 		try {
-			const res = await fetch(`/api/database/table/${table}?schema=${encodeURIComponent(schema)}`, {
+			const res = await apiFetch(`/api/database/table/${table}?schema=${encodeURIComponent(schema)}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(data)

@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { onMount, tick } from 'svelte';
 	import { fade, fly, scale, slide } from 'svelte/transition';
 	import {
@@ -122,7 +123,7 @@
 	async function fetchPlayers() {
 		playersLoading = true;
 		try {
-			const res = await fetch('/api/admin/players');
+			const res = await apiFetch('/api/admin/players');
 			if (res.ok) {
 				players = (await res.json()) || [];
 			}
@@ -136,7 +137,7 @@
 	async function fetchReports() {
 		reportsLoading = true;
 		try {
-			const res = await fetch('/api/reports');
+			const res = await apiFetch('/api/reports');
 			if (res.ok) {
 				reports = (await res.json()) || [];
 			}
@@ -176,7 +177,7 @@
 	async function handleDeletePlayer() {
 		if (!playerToDelete) return;
 		try {
-			const res = await fetch(`/api/admin/players/${playerToDelete.id}`, { method: 'DELETE' });
+			const res = await apiFetch(`/api/admin/players/${playerToDelete.id}`, { method: 'DELETE' });
 			if (res.ok) {
 				players = players.filter((p) => p.id !== playerToDelete!.id);
 				notifications.add({ type: 'success', message: 'RECORD_DELETED' });
@@ -194,7 +195,7 @@
 	async function toggleBan(player: Player) {
 		const newStatus = !player.banned;
 		try {
-			const res = await fetch(`/api/admin/players/${player.id}/ban`, {
+			const res = await apiFetch(`/api/admin/players/${player.id}/ban`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ banned: newStatus })

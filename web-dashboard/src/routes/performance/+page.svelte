@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { onMount, onDestroy } from 'svelte';
 	import {
 		Zap,
@@ -208,7 +209,7 @@
 	// API calls
 	async function fetchMetrics() {
 		try {
-			const res = await fetch('/api/metrics');
+			const res = await apiFetch('/api/metrics');
 			if (!res.ok) throw new Error('COMMS_FAILURE');
 			const data = await res.json();
 			prevMetrics = metrics;
@@ -225,7 +226,7 @@
 	async function forceGC() {
 		gcLoading = true;
 		try {
-			await fetch('/api/metrics/gc', { method: 'POST' });
+			await apiFetch('/api/metrics/gc', { method: 'POST' });
 			await fetchMetrics();
 		} catch (e: any) {
 			error = e.message;
@@ -237,7 +238,7 @@
 	async function freeMemory() {
 		freeMemLoading = true;
 		try {
-			await fetch('/api/metrics/memory/free', { method: 'POST' });
+			await apiFetch('/api/metrics/memory/free', { method: 'POST' });
 			await fetchMetrics();
 		} catch (e: any) {
 			error = e.message;

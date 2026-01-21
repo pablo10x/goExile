@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { fade, fly } from 'svelte/transition';
 	import type { ResourceMetricsPanelProps } from '$lib/types/resource-metrics';
 	import { useResourceMetrics } from '$lib/composables/useResourceMetrics';

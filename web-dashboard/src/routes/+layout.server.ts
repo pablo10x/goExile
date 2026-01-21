@@ -1,3 +1,4 @@
+import { apiFetch } from "$lib/api";
 import type { LayoutServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 
@@ -13,7 +14,7 @@ export const load: LayoutServerLoad = async ({ fetch, cookies, url }) => {
 	}
 
 	try {
-		const statsRes = await fetch('/api/stats');
+		const statsRes = await apiFetch('/api/stats');
 		
 		const isValid = statsRes.ok;
 		let stats = null;

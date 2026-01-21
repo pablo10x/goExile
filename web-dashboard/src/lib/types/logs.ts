@@ -1,3 +1,4 @@
+import { apiFetch } from "$lib/api";
 export interface SystemLog {
 	id: number;
 	timestamp: string;

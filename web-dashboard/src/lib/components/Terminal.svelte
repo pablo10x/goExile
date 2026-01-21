@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { TerminalSquare, Check, Copy, ChevronDown } from 'lucide-svelte';
 
 	interface Props {

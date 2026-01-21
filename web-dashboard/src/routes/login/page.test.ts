@@ -1,3 +1,4 @@
+import { apiFetch } from "$lib/api";
 import { render, screen, waitFor } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { describe, it, expect } from 'vitest';

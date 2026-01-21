@@ -9,6 +9,12 @@ All API requests must include the Game API Key in the header:
 
 ## Authentication
 
+### Development Mode (Local Testing)
+If the server is running with `PRODUCTION_MODE=false` (default in dev), you can bypass real Firebase verification by using a token with the `dev_token_` prefix.
+
+**Example:**
+Using `id_token: "dev_token_user123"` will authenticate you as a user with UID `user123` without calling Firebase.
+
 ### 1. Authenticate Player (`POST /api/game/auth`)
 
 Authenticates a player using a Firebase ID Token. This is the entry point for the game client.

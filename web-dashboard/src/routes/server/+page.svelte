@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { onMount } from 'svelte';
 	import JSZip from 'jszip';
 	import { serverVersions, nodes, notifications, stats } from '$lib/stores.svelte';
@@ -74,7 +75,7 @@
 
 	async function loadVersions() {
 		try {
-			const res = await fetch('/api/versions');
+			const res = await apiFetch('/api/versions');
 			if (res.ok) {
 				serverVersions.set(await res.json());
 			}
@@ -300,7 +301,7 @@
 				}
 			}, 200);
 
-			const response = await fetch('/api/upload', {
+			const response = await apiFetch('/api/upload', {
 				method: 'POST',
 				body: formData
 			});
@@ -349,7 +350,7 @@
 
 	async function activateVersion(id: number) {
 		try {
-			const res = await fetch(`/api/versions/${id}/active`, { method: 'POST' });
+			const res = await apiFetch(`/api/versions/${id}/active`, { method: 'POST' });
 			if (res.ok) {
 				loadVersions();
 			} else {
@@ -372,7 +373,7 @@
 
 	async function deleteVersion(id: number) {
 		try {
-			const res = await fetch(`/api/versions/${id}`, { method: 'DELETE' });
+			const res = await apiFetch(`/api/versions/${id}`, { method: 'DELETE' });
 			if (res.ok) {
 				await loadVersions();
 			} else {
@@ -394,7 +395,7 @@
 	async function executeSpawn() {
 		if (!spawnTargetNodeId) return;
 		try {
-			const res = await fetch(`/api/nodes/${spawnTargetNodeId}/spawn`, { method: 'POST' });
+			const res = await apiFetch(`/api/nodes/${spawnTargetNodeId}/spawn`, { method: 'POST' });
 			if (!res.ok) throw new Error('Spawn failed');
 			const instance = await res.json();
 			consoleNodeId = spawnTargetNodeId;
@@ -423,25 +424,25 @@
 			let res: Response;
 			const baseUrl = `/api/nodes/${instanceActionNodeId}/instances/${instanceActionInstanceId}`;
 			
-			if (instanceActionType === 'start') res = await fetch(`${baseUrl}/start`, { method: 'POST' });
-			else if (instanceActionType === 'stop') res = await fetch(`${baseUrl}/stop`, { method: 'POST' });
-			else if (instanceActionType === 'delete') res = await fetch(baseUrl, { method: 'DELETE' });
-			else if (instanceActionType === 'update') res = await fetch(`${baseUrl}/update`, { method: 'POST' });
+			if (instanceActionType === 'start') res = await apiFetch(`${baseUrl}/start`, { method: 'POST' });
+			else if (instanceActionType === 'stop') res = await apiFetch(`${baseUrl}/stop`, { method: 'POST' });
+			else if (instanceActionType === 'delete') res = await apiFetch(baseUrl, { method: 'DELETE' });
+			else if (instanceActionType === 'update') res = await apiFetch(`${baseUrl}/update`, { method: 'POST' });
 			else if (instanceActionType === 'rename') {
-				res = await fetch(`${baseUrl}/rename`, {
+				res = await apiFetch(`${baseUrl}/rename`, {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({ new_id: instanceActionNewID })
 				});
 			} else if (instanceActionType === 'restart') {
-				await fetch(`${baseUrl}/stop`, { method: 'POST' });
-				res = await fetch(`${baseUrl}/start`, { method: 'POST' });
+				await apiFetch(`${baseUrl}/stop`, { method: 'POST' });
+				res = await apiFetch(`${baseUrl}/start`, { method: 'POST' });
 			} else if (instanceActionType.startsWith('bulk_')) {
 				const action = instanceActionType.replace('bulk_', '');
 				const promises = instanceActionBulkIds.map(async (id) => {
 					const url = `/api/nodes/${instanceActionNodeId}/instances/${id}/${action === 'restart' ? 'stop' : action}`;
-					await fetch(url, { method: 'POST' });
-					if (action === 'restart') await fetch(`/api/nodes/${instanceActionNodeId}/instances/${id}/start`, { method: 'POST' });
+					await apiFetch(url, { method: 'POST' });
+					if (action === 'restart') await apiFetch(`/api/nodes/${instanceActionNodeId}/instances/${id}/start`, { method: 'POST' });
 				});
 				await Promise.all(promises);
 				res = { ok: true } as Response;

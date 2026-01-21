@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { notifications } from '$lib/stores.svelte';
 	import { flip } from 'svelte/animate';
 	import { fly } from 'svelte/transition';

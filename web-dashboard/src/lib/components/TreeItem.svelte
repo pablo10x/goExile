@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { slide } from 'svelte/transition';
 	import { ChevronRight, Folder, Table, Columns, Database, RefreshCw } from 'lucide-svelte';
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
@@ -22,7 +23,7 @@
 
 	async function fetchErrors() {
 		try {
-			const res = await fetch('/api/errors');
+			const res = await apiFetch('/api/errors');
 			if (res.ok) {
 				errors = await res.json();
 			}
@@ -40,7 +41,7 @@
 
 	async function refreshStats() {
 		try {
-			const res = await fetch('/api/stats');
+			const res = await apiFetch('/api/stats');
 			if (res.ok) {
 				const statsData = await res.json();
 				stats.set(statsData);
@@ -53,7 +54,7 @@
 	async function clearErrors() {
 		clearing = true;
 		try {
-			const res = await fetch('/api/errors', { method: 'DELETE' });
+			const res = await apiFetch('/api/errors', { method: 'DELETE' });
 			if (res.ok) {
 				errors = [];
 				// Refresh dashboard stats after clearing errors

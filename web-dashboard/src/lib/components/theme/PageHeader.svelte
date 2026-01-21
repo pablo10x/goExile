@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import type { Snippet } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import Icon from './Icon.svelte';

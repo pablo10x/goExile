@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { createEventDispatcher } from 'svelte';
 	import Icon from './theme/Icon.svelte';
 	import { siteSettings } from '$lib/stores.svelte';

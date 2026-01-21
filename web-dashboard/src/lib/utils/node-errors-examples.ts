@@ -1,3 +1,4 @@
+import { apiFetch } from "$lib/api";
 // Example usage of NodeErrorWrapper
 
 import {
@@ -33,7 +34,7 @@ try {
 // Example 2: Wrapping existing errors
 async function connectToNode(nodeId: string) {
 	try {
-		const response = await fetch(`/api/nodes/${nodeId}/connect`);
+		const response = await apiFetch(`/api/nodes/${nodeId}/connect`);
 		if (!response.ok) {
 			throw new Error(`HTTP ${response.status}`);
 		}
@@ -64,7 +65,7 @@ async function spawnInstance(nodeId: string, config: any) {
 				);
 			}
 
-			const response = await fetch(`/api/nodes/${nodeId}/spawn`, {
+			const response = await apiFetch(`/api/nodes/${nodeId}/spawn`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(config)

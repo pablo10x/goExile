@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import {
 		Database,
 		Search,
@@ -176,7 +177,7 @@
 	// --- Initialization ---
 	async function loadOverviewData() {
 		try {
-			const res = await fetch('/api/database/overview');
+			const res = await apiFetch('/api/database/overview');
 			if (res.ok) {
 				dbStats = await res.json();
 			}
@@ -185,7 +186,7 @@
 		}
 
 		try {
-			const res = await fetch('/api/database/counts');
+			const res = await apiFetch('/api/database/counts');
 			if (res.ok) {
 				tableCounts = await res.json();
 			}

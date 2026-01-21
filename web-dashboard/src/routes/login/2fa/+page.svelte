@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { goto, invalidateAll } from '$app/navigation';
 	import { isAuthenticated } from '$lib/stores.svelte';
 	import { onMount } from 'svelte';
@@ -41,7 +42,7 @@
 		formData.append('code', code);
 
 		try {
-			const response = await fetch('/api/auth/2fa', {
+			const response = await apiFetch('/api/auth/2fa', {
 				method: 'POST',
 				body: formData,
 				headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
@@ -89,7 +90,7 @@
 		formData.append('code', emailCode);
 
 		try {
-			const response = await fetch('/api/auth/email', {
+			const response = await apiFetch('/api/auth/email', {
 				method: 'POST',
 				body: formData,
 				headers: { 'Content-Type': 'application/x-www-form-urlencoded' }

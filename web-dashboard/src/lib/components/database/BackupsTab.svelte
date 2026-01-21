@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { HardDrive, Download, RotateCcw, Trash2, FileText, Plus } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { notifications } from '$lib/stores.svelte';
@@ -10,7 +11,7 @@
 	async function loadBackups() {
 		loading = true;
 		try {
-			const res = await fetch('/api/database/backups');
+			const res = await apiFetch('/api/database/backups');
 			if (res.ok) {
 				backups = await res.json();
 			}
@@ -24,7 +25,7 @@
 	async function createBackup() {
 		loading = true;
 		try {
-			const res = await fetch('/api/database/backups', { method: 'POST' });
+			const res = await apiFetch('/api/database/backups', { method: 'POST' });
 			if (!res.ok) throw new Error('Backup failed');
 			notifications.add({ type: 'success', message: 'Backup created' });
 			loadBackups();
@@ -43,7 +44,7 @@
 			return;
 		loading = true;
 		try {
-			const res = await fetch('/api/database/restore', {
+			const res = await apiFetch('/api/database/restore', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ filename })
@@ -60,7 +61,7 @@
 	async function deleteBackup(filename: string) {
 		if (!confirm(`Delete backup '${filename}'?`)) return;
 		try {
-			const res = await fetch(`/api/database/backups/${filename}`, { method: 'DELETE' });
+			const res = await apiFetch(`/api/database/backups/${filename}`, { method: 'DELETE' });
 			if (!res.ok) throw new Error('Delete failed');
 			notifications.add({ type: 'success', message: 'Backup deleted' });
 			loadBackups();

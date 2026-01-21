@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	let { width = '100%', height = '1rem', class: className = '' } = $props<{
 		width?: string;
 		height?: string;

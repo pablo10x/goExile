@@ -1,3 +1,4 @@
+import { apiFetch } from "$lib/api";
 import { describe, it, expect } from 'vitest';
 import { formatBytes, formatUptime } from './utils';
 

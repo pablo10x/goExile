@@ -2,8 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
 
 	"exile/server/auth"
 	"exile/server/database"
@@ -17,29 +20,32 @@ import (
 // -- Player Handlers --
 
 // AuthenticatePlayerHandler verifies a Firebase ID token and checks if the player account exists.
+// It supports both application/json and application/x-www-form-urlencoded (Unity WWWForm).
 //
 // Flow:
 //  1. Validates database and Firebase connections
 //  2. Extracts and verifies the Firebase ID token from the request
 //  3. Checks if a player account exists for the given Firebase UID
-//  4. Generates a WebSocket authentication key for the session
+//  4. Automatically creates a player account if one doesn't exist and 'name' is provided
+//  5. Generates a WebSocket authentication key for the session
 //
-// Request (JSON):
+// Request Parameters (JSON or Form):
 //   - id_token (required): Firebase ID token for authentication
+//   - name (optional): Display name for account creation/update
+//   - device_id (optional): Device identifier for account linking
 //
 // Response (JSON):
-//   - accountexist: Boolean indicating if the player account exists
+//   - player: The full player object
 //   - ws_auth_key: WebSocket authentication key for real-time connection
+//   - ws_endpoint: Suggested WebSocket endpoint
 func AuthenticatePlayerHandler(w http.ResponseWriter, r *http.Request) {
 	// ==================== Validation ====================
 
-	// Check database connection
 	if database.DBConn == nil {
 		utils.WriteError(w, r, http.StatusServiceUnavailable, "database not connected")
 		return
 	}
 
-	// Check Firebase manager initialization
 	if auth.FirebaseMgr == nil {
 		utils.WriteError(w, r, http.StatusServiceUnavailable, "firebase not initialized")
 		return
@@ -47,60 +53,113 @@ func AuthenticatePlayerHandler(w http.ResponseWriter, r *http.Request) {
 
 	// ==================== Parse Request ====================
 
-	// Parse JSON request body
-	var req struct {
-		IDToken string `json:"id_token"`
+	var idToken, playerName, deviceID string
+
+	contentType := r.Header.Get("Content-Type")
+	if strings.Contains(contentType, "application/json") {
+		var req struct {
+			IDToken  string `json:"id_token"`
+			Name     string `json:"name"`
+			DeviceID string `json:"device_id"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			utils.WriteError(w, r, http.StatusBadRequest, "invalid JSON request")
+			return
+		}
+		idToken = req.IDToken
+		playerName = req.Name
+		deviceID = req.DeviceID
+	} else {
+		// Fallback to Form Data (Unity WWWForm)
+		if err := r.ParseForm(); err != nil {
+			utils.WriteError(w, r, http.StatusBadRequest, "failed to parse form data")
+			return
+		}
+		idToken = r.FormValue("id_token")
+		playerName = r.FormValue("name")
+		deviceID = r.FormValue("device_id")
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.WriteError(w, r, http.StatusBadRequest, "invalid JSON request")
-		return
-	}
-
-	// Validate that ID token is provided
-	if req.IDToken == "" {
+	if idToken == "" {
 		utils.WriteError(w, r, http.StatusBadRequest, "id_token is required")
 		return
 	}
 
 	// ==================== Firebase Authentication ====================
 
-	// Verify Firebase ID token and extract user ID (UID)
-	uid, err := auth.FirebaseMgr.VerifyIDToken(req.IDToken)
-	if err != nil {
-		utils.WriteError(w, r, http.StatusUnauthorized, "invalid token: "+err.Error())
-		return
+	var uid string
+	var err error
+
+	// Dev Mode Bypass: If not in production and token is "dev_token_uid", skip Firebase verification
+	isProd := strings.ToLower(os.Getenv("PRODUCTION_MODE")) == "true"
+	if !isProd && strings.HasPrefix(idToken, "dev_token_") {
+		uid = strings.TrimPrefix(idToken, "dev_token_")
+	} else {
+		uid, err = auth.FirebaseMgr.VerifyIDToken(idToken)
+		if err != nil {
+			utils.WriteError(w, r, http.StatusUnauthorized, "invalid token: "+err.Error())
+			return
+		}
 	}
 
-	// ==================== Player Lookup ====================
+	// ==================== Player Lookup / Creation ====================
 
-	// Check if player exists with this Firebase UID
 	p, err := database.GetPlayerByUID(database.DBConn, uid)
 	if err != nil {
-		utils.WriteError(w, r, http.StatusInternalServerError, err.Error())
+		utils.WriteError(w, r, http.StatusInternalServerError, "database error: "+err.Error())
 		return
 	}
 
-	// Set account existence flag
-	accountexist := false
-	if p != nil {
-		accountexist = true
+	accountExists := true
+
+	// Auto-Create player if they don't exist
+	if p == nil {
+		accountExists = false
+		if playerName == "" {
+			// Placeholder name, will be updated with ID below
+			playerName = "Survivor-Pending"
+		}
+		if deviceID == "" {
+			deviceID = "unknown_" + utils.GenerateRandomString(8)
+		}
+
+		newPlayer := &models.Player{
+			UID:      uid,
+			Name:     playerName,
+			DeviceID: deviceID,
+		}
+
+		id, err := database.CreatePlayer(database.DBConn, newPlayer)
+		if err != nil {
+			utils.WriteError(w, r, http.StatusInternalServerError, "failed to create player: "+err.Error())
+			return
+		}
+		newPlayer.ID = id
+		p = newPlayer
+
+		// If name was default/empty, set it to Survivor-{ID}
+		if p.Name == "Survivor-Pending" {
+			p.Name = fmt.Sprintf("Survivor-%d", p.ID)
+			_ = database.UpdatePlayer(database.DBConn, p)
+		}
+	} else if playerName != "" && playerName != p.Name {
+		// Update name if it changed (and user already exists)
+		p.Name = playerName
+		_ = database.UpdatePlayer(database.DBConn, p)
 	}
 
 	// ==================== WebSocket Session ====================
 
-	// Generate and register WebSocket authentication key
 	wsKey := utils.GenerateRandomString(32)
-	if p != nil {
-		ws_player.GlobalPlayerWS.RegisterSession(p.ID, wsKey)
-	}
+	ws_player.GlobalPlayerWS.RegisterSession(p.ID, wsKey)
 
 	// ==================== Response ====================
 
-	// Build and send response
 	response := map[string]interface{}{
-		"accountexist": accountexist,
-		"ws_auth_key":  wsKey,
+		"player":         p,
+		"account_exists": accountExists,
+		"ws_auth_key":    wsKey,
+		"ws_endpoint":    "/api/game/ws",
 	}
 
 	utils.WriteJSON(w, http.StatusOK, response)

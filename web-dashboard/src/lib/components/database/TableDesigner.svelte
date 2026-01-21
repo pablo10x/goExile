@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { Plus, Trash2, Save, X, Key, Type, Settings } from 'lucide-svelte';
 	import { slide } from 'svelte/transition';
 	import { notifications } from '$lib/stores.svelte';
@@ -78,7 +79,7 @@
 	async function performAlter(payload: any) {
 		loading = true;
 		try {
-			const res = await fetch(`/api/database/tables/${table}/alter`, {
+			const res = await apiFetch(`/api/database/tables/${table}/alter`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ schema, ...payload })

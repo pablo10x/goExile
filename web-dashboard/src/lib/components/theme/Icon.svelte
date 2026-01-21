@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import Iconify from '@iconify/svelte';
 
 	interface Props {

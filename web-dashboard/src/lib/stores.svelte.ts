@@ -1,6 +1,7 @@
 import { writable, get } from 'svelte/store';
 export * from './types/models';
 import type { Node, Note, Todo, ServerConfig } from './types/models';
+import { apiFetch } from './api';
 
 // Svelte 5 Runes Store implementation for maximum performance
 class SystemState {
@@ -101,7 +102,7 @@ class SystemState {
 			localStorage.setItem(key, JSON.stringify(value));
 		}
 		try {
-			await fetch(`/api/config/${key}`, {
+			await apiFetch(`/api/config/${key}`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ value: JSON.stringify(value) })
@@ -117,7 +118,7 @@ class SystemState {
 
 	async triggerGC() {
 		try {
-			await fetch('/api/metrics/gc', { method: 'POST' });
+			await apiFetch('/api/metrics/gc', { method: 'POST' });
 			notifications.add({ type: 'success', message: 'GARBAGE_COLLECTION_COMPLETE' });
 		} catch (e) {
 			notifications.add({ type: 'error', message: 'GC_FAULT' });
@@ -126,7 +127,7 @@ class SystemState {
 
 	async exportConfig() {
 		try {
-			const res = await fetch('/api/config');
+			const res = await apiFetch('/api/config');
 			const data = await res.json();
 			const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
 			const url = window.URL.createObjectURL(blob);
@@ -145,7 +146,7 @@ class SystemState {
 
 	async backupDatabase() {
 		try {
-			const res = await fetch('/api/database/backup', { method: 'POST' });
+			const res = await apiFetch('/api/database/backup', { method: 'POST' });
 			if (res.ok) {
 				notifications.add({ type: 'success', message: 'DATABASE_BACKUP_INITIATED' });
 			} else {
@@ -208,7 +209,7 @@ export const theme = writable<'light' | 'dark'>('dark');
  */
 export async function loadAllSettings() {
 	try {
-        const response = await fetch('/api/config');
+        const response = await apiFetch('/api/config');
         if (response.status === 401) return;
         if (!response.ok) return;
         const configs: any[] = await response.json();

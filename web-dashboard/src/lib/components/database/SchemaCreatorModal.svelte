@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { Save, X, Database, User, Shield, Check } from 'lucide-svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
@@ -22,7 +23,7 @@
 
 	async function loadRoles() {
 		try {
-			const res = await fetch('/api/database/roles');
+			const res = await apiFetch('/api/database/roles');
 			if (res.ok) {
 				const data = await res.json();
 				roles = data.map((r: any) => r.name);

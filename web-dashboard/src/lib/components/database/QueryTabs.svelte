@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { X, Database, Table, FileCode, Layers, Shield, HardDrive, Settings, Code2 } from 'lucide-svelte';
 	import { flip } from 'svelte/animate';
 	import { fade, slide } from 'svelte/transition';

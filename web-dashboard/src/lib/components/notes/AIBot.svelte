@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { Bot, X, Send, Sparkles, Loader2 } from 'lucide-svelte';
 	import { fade, slide, scale } from 'svelte/transition';
 	import { notes, todos } from '$lib/stores.svelte';
@@ -30,7 +31,7 @@
 
 		try {
 			// In a real app, we'd pass actual note content context here
-			const response = await fetch('/api/ai/chat', {
+			const response = await apiFetch('/api/ai/chat', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({

@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { fade, scale } from 'svelte/transition';
 	import { Database, HardDrive, Activity, Archive, Server, Clock } from 'lucide-svelte';
 

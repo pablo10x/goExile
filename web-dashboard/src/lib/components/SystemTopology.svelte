@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { onMount, untrack } from 'svelte';
 	import { nodes } from '$lib/stores.svelte';
 	import { Server, Activity, Cpu, Skull, Database, User } from 'lucide-svelte';

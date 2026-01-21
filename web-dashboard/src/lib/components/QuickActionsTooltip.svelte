@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { scale, fade } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import { portal } from '$lib/actions';

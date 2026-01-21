@@ -446,7 +446,7 @@ func run() error {
 
 	srv := &http.Server{
 		Addr:         fmt.Sprintf("%s:%s", serverHost, port),
-		Handler:      middleware.SecurityHeadersMiddleware(GzipMiddleware(redeye.RedEyeMiddleware(middleware.GlobalRateLimitMiddleware(middleware.StatsMiddleware(router))))),
+		Handler:      middleware.SecurityHeadersMiddleware(middleware.CORSMiddleware(GzipMiddleware(redeye.RedEyeMiddleware(middleware.GlobalRateLimitMiddleware(middleware.StatsMiddleware(router)))))),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,

@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { onMount } from 'svelte';
 
 	let { data = [], height = 200, color = 'var(--color-rust)' }: { data?: { timestamp: number; count: number }[]; height?: number; color?: string } = $props();

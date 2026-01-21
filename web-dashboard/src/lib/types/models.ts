@@ -1,3 +1,4 @@
+import { apiFetch } from "$lib/api";
 // Core models for goExile dashboard
 // These should match the backend structures in server/models/models.go
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import {
 		Code2,
 		Plus,
@@ -94,7 +95,7 @@
 
 	async function loadSchemas() {
 		try {
-			const res = await fetch('/api/database/schemas');
+			const res = await apiFetch('/api/database/schemas');
 			if (res.ok) {
 				const data = await res.json();
 				schemas = data.map((s: any) => s.name || s.schema_name || s);
@@ -107,7 +108,7 @@
 	async function loadFunctions() {
 		loading = true;
 		try {
-			const res = await fetch(`/api/database/functions?schema=${selectedSchema}`, {
+			const res = await apiFetch(`/api/database/functions?schema=${selectedSchema}`, {
 				credentials: 'include'
 			});
 
@@ -216,7 +217,7 @@
 		loading = true;
 		try {
 			const method = isCreating ? 'POST' : 'PUT';
-			const res = await fetch('/api/database/functions', {
+			const res = await apiFetch('/api/database/functions', {
 				method,
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -258,7 +259,7 @@
 
 		loading = true;
 		try {
-			const res = await fetch('/api/database/functions/delete', {
+			const res = await apiFetch('/api/database/functions/delete', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -299,7 +300,7 @@
 
 		executeLoading = true;
 		try {
-			const res = await fetch('/api/database/functions/execute', {
+			const res = await apiFetch('/api/database/functions/execute', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({

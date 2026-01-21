@@ -1,3 +1,4 @@
+import { apiFetch } from "$lib/api";
 // Error types for node operations
 export enum NodeErrorType {
 	NETWORK = 'NETWORK',

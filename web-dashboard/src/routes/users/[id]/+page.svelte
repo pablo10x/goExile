@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
@@ -45,7 +46,7 @@
 		loading = true;
 		error = null;
 		try {
-			const res = await fetch(`/api/admin/players/${playerId}`);
+			const res = await apiFetch(`/api/admin/players/${playerId}`);
 			if (res.ok) {
 				player = await res.json();
 			} else {

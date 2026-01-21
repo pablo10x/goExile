@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { Users, UserPlus, Trash2, Key, Shield, Check, X } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { notifications } from '$lib/stores.svelte';
@@ -23,7 +24,7 @@
 	async function loadRoles() {
 		loading = true;
 		try {
-			const res = await fetch('/api/database/roles');
+			const res = await apiFetch('/api/database/roles');
 			if (res.ok) {
 				roles = await res.json();
 			}
@@ -45,7 +46,7 @@
 			if (roleOptions.replication) options.push('REPLICATION');
 			if (roleOptions.bypassrls) options.push('BYPASSRLS');
 
-			const res = await fetch('/api/database/roles', {
+			const res = await apiFetch('/api/database/roles', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -73,7 +74,7 @@
 	async function deleteRole(name: string) {
 		if (!confirm(`Delete role '${name}'?`)) return;
 		try {
-			const res = await fetch(`/api/database/roles/${name}`, { method: 'DELETE' });
+			const res = await apiFetch(`/api/database/roles/${name}`, { method: 'DELETE' });
 			if (!res.ok) throw new Error('Failed to delete role');
 			notifications.add({ type: 'success', message: 'Role deleted' });
 			loadRoles();

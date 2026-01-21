@@ -1,3 +1,4 @@
+import { apiFetch } from "$lib/api";
 import { render, fireEvent, screen, waitFor } from '@testing-library/svelte';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { tick } from 'svelte'; // Import tick from svelte

@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { onMount, onDestroy } from 'svelte';
 	import { fade, slide, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -29,7 +30,7 @@
 
 	async function fetchFleet() {
 		try {
-			const res = await fetch('/api/instances');
+			const res = await apiFetch('/api/instances');
 			if (res.ok) {
 				const data = await res.json();
 				// Flatten the nested node results

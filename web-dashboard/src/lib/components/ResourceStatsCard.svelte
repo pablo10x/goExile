@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import type { ResourceStatsCardProps } from '$lib/types/resource-metrics';
 
 	let {

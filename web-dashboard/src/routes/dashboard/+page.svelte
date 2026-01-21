@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { onMount, onDestroy } from 'svelte';
 	import { stats, nodes, notifications, isConnected, connectionStatus, siteSettings } from '$lib/stores.svelte';
 	import StatsCard from '$lib/components/StatsCard.svelte';
@@ -244,7 +245,7 @@
 	async function executeDeleteNode() {
 		if (!nodeToDeleteId) return;
 		try {
-			const res = await fetch(`/api/nodes/${nodeToDeleteId}`, { method: 'DELETE' });
+			const res = await apiFetch(`/api/nodes/${nodeToDeleteId}`, { method: 'DELETE' });
 			if (!res.ok) {
 				const err = await res.json().catch(() => ({}));
 				throw new Error(err.error || 'Failed to delete node');
@@ -263,7 +264,7 @@
 	async function executeSpawn() {
 		if (!spawnTargetId) return;
 
-		const res = await fetch(`/api/nodes/${spawnTargetId}/spawn`, { method: 'POST' });
+		const res = await apiFetch(`/api/nodes/${spawnTargetId}/spawn`, { method: 'POST' });
 		if (!res.ok) {
 			const err = await res.json();
 			throw new Error(err.error || `Server returned ${res.status}`);
@@ -282,27 +283,27 @@
 		let res: Response;
 		try {
 			if (instanceActionType === 'start') {
-				res = await fetch(
+				res = await apiFetch(
 					`/api/nodes/${instanceActionNodeId}/instances/${instanceActionInstanceId}/start`,
 					{ method: 'POST' }
 				);
 			} else if (instanceActionType === 'stop') {
-				res = await fetch(
+				res = await apiFetch(
 					`/api/nodes/${instanceActionNodeId}/instances/${instanceActionInstanceId}/stop`,
 					{ method: 'POST' }
 				);
 			} else if (instanceActionType === 'delete') {
-				res = await fetch(
+				res = await apiFetch(
 					`/api/nodes/${instanceActionNodeId}/instances/${instanceActionInstanceId}`,
 					{ method: 'DELETE' }
 				);
 			} else if (instanceActionType === 'update') {
-				res = await fetch(
+				res = await apiFetch(
 					`/api/nodes/${instanceActionNodeId}/instances/${instanceActionInstanceId}/update`,
 					{ method: 'POST' }
 				);
 			} else if (instanceActionType === 'rename') {
-				res = await fetch(
+				res = await apiFetch(
 					`/api/nodes/${instanceActionNodeId}/instances/${instanceActionInstanceId}/rename`,
 					{
 						method: 'POST',
@@ -311,16 +312,16 @@
 					}
 				);
 			} else if (instanceActionType === 'restart') {
-				res = await fetch(
+				res = await apiFetch(
 					`/api/nodes/${instanceActionNodeId}/instances/${instanceActionInstanceId}/stop`,
 					{ method: 'POST' }
 				);
-				res = await fetch(
+				res = await apiFetch(
 					`/api/nodes/${instanceActionNodeId}/instances/${instanceActionInstanceId}/start`,
 					{ method: 'POST' }
 				);
 			} else if (instanceActionType === 'update_node_build') {
-				res = await fetch(`/api/nodes/${instanceActionNodeId}/update-template`, {
+				res = await apiFetch(`/api/nodes/${instanceActionNodeId}/update-template`, {
 					method: 'POST'
 				});
 			} else if (
@@ -337,14 +338,14 @@
 						} else if (instanceActionType === 'bulk_start') {
 							resUrl = `/api/nodes/${instanceActionNodeId}/instances/${id}/start`;
 						} else if (instanceActionType === 'bulk_restart') {
-							await fetch(`/api/nodes/${instanceActionNodeId}/instances/${id}/stop`, {
+							await apiFetch(`/api/nodes/${instanceActionNodeId}/instances/${id}/stop`, {
 								method: 'POST'
 							});
 							resUrl = `/api/nodes/${instanceActionNodeId}/instances/${id}/start`;
 						} else if (instanceActionType === 'bulk_update') {
 							resUrl = `/api/nodes/${instanceActionNodeId}/instances/${id}/update`;
 						}
-						await fetch(resUrl, { method: 'POST' });
+						await apiFetch(resUrl, { method: 'POST' });
 					} catch (e) {
 						console.error(e);
 					}

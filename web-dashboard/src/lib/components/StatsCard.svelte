@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import type { ComponentType } from 'svelte';
 	import DOMPurify from 'dompurify';
 	import { siteSettings } from '$lib/stores.svelte';

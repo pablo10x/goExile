@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import SchemaBrowser from '$lib/components/SchemaBrowser.svelte';
 	import TableCreatorModal from '$lib/components/TableCreatorModal.svelte';
 	import ColumnManagerModal from '$lib/components/ColumnManagerModal.svelte';
@@ -47,7 +48,7 @@
 		isRefreshing = true;
 		try {
 			// Fetch all tables at once
-			const res = await fetch('/api/database/all-tables');
+			const res = await apiFetch('/api/database/all-tables');
 			if (res.ok) {
 				const allTables: { schema: string; table: string }[] = await res.json();
 
@@ -62,7 +63,7 @@
 				});
 
 				// Fetch schemas list to get empty schemas too
-				const schemaRes = await fetch('/api/database/schemas');
+				const schemaRes = await apiFetch('/api/database/schemas');
 				if (schemaRes.ok) {
 					const schemaList: string[] = await schemaRes.json();
 					schemaList.forEach((s) => newSchemasSet.add(s));
@@ -100,7 +101,7 @@
 	async function handleSchemaCreate(data: { name: string; owner: string }) {
 		if (!data.name.trim()) return;
 		try {
-			const res = await fetch('/api/database/schemas', {
+			const res = await apiFetch('/api/database/schemas', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(data)
@@ -128,7 +129,7 @@
 	async function confirmDeleteSchema() {
 		deleteSchemaLoading = true;
 		try {
-			const res = await fetch(`/api/database/schemas/${pendingDeleteSchema}`, { method: 'DELETE' });
+			const res = await apiFetch(`/api/database/schemas/${pendingDeleteSchema}`, { method: 'DELETE' });
 			if (res.ok) {
 				notifications.add({ type: 'success', message: `Schema '${pendingDeleteSchema}' deleted` });
 				delete schemaTables[pendingDeleteSchema];
@@ -153,7 +154,7 @@
 
 	async function handleTableCreate(data: { name: string; columns: string[] }) {
 		try {
-			const res = await fetch('/api/database/tables/create', {
+			const res = await apiFetch('/api/database/tables/create', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ schema: creatorSchema, ...data })
@@ -178,7 +179,7 @@
 	async function confirmDeleteTable() {
 		deleteTableLoading = true;
 		try {
-			const res = await fetch(
+			const res = await apiFetch(
 				`/api/database/tables/${pendingDeleteTable.table}?schema=${encodeURIComponent(pendingDeleteTable.schema)}`,
 				{ method: 'DELETE' }
 			);
@@ -208,7 +209,7 @@
 
 	async function handleAddColumn(data: { column: string; type: string }) {
 		try {
-			const res = await fetch(`/api/database/tables/${columnManagerTarget.table}/alter`, {
+			const res = await apiFetch(`/api/database/tables/${columnManagerTarget.table}/alter`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({

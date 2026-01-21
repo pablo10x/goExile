@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { fade, scale, fly, slide } from 'svelte/transition';
 	import { cubicOut, elasticOut } from 'svelte/easing';
 	import { formatBytes, formatUptime } from '$lib/utils';
@@ -129,7 +130,7 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 		if (!nodeId || !instanceId) return;
 		isLoadingData = true;
 		try {
-			const res = await fetch(`/api/nodes/${nodeId}/instances/${instanceId}/backups`);
+			const res = await apiFetch(`/api/nodes/${nodeId}/instances/${instanceId}/backups`);
 			if (res.ok) {
 				const data = await res.json();
 				backups = (data.backups || []).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -141,7 +142,7 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 		if (!nodeId || !instanceId) return;
 		isLoadingData = true;
 		try {
-			const res = await fetch(`/api/nodes/${nodeId}/instances/${instanceId}/history`);
+			const res = await apiFetch(`/api/nodes/${nodeId}/instances/${instanceId}/history`);
 			if (res.ok) historyLogs = await res.json();
 		} catch (e) { console.error(e); } finally { isLoadingData = false; }
 	}
@@ -149,7 +150,7 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 	async function fetchInstanceLogs() {
 		if (!nodeId || !instanceId) return;
 		try {
-			const res = await fetch(`/api/nodes/${nodeId}/instances/${instanceId}/logs`);
+			const res = await apiFetch(`/api/nodes/${nodeId}/instances/${instanceId}/logs`);
 			if (res.ok) {
 				const data = await res.json();
 				if (data.logs) logs = data.logs.split('\n');
@@ -160,7 +161,7 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 	async function fetchStats() {
 		if (!nodeId || !instanceId) return;
 		try {
-			const res = await fetch(`/api/nodes/${nodeId}/instances/${instanceId}/stats`);
+			const res = await apiFetch(`/api/nodes/${nodeId}/instances/${instanceId}/stats`);
 			if (res.ok) stats = { ...stats, ...(await res.json()) };
 		} catch (e) { console.error('Stats fetch error:', e); }
 	}
@@ -198,7 +199,7 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 			if (action === 'restore') url = `/api/nodes/${nodeId}/instances/${instanceId}/restore`;
 			else if (action === 'delete') url = `/api/nodes/${nodeId}/instances/${instanceId}/backup/delete`;
 
-			const res = await fetch(url, {
+			const res = await apiFetch(url, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: filename ? JSON.stringify({ filename }) : null
@@ -220,7 +221,7 @@ type TabType = 'console' | 'metrics' | 'backups' | 'history' | 'node_logs';
 		confirmBtnText = action === 'delete' ? 'Terminate' : 'Confirm';
 		isCriticalAction = action === 'delete' || action === 'stop';
 		pendingBackupAction = async () => {
-			await fetch(`/api/nodes/${nodeId}/instances/${instanceId}/${action}`, { method: 'POST' });
+			await apiFetch(`/api/nodes/${nodeId}/instances/${instanceId}/${action}`, { method: 'POST' });
 		};
 		isConfirmOpen = true;
 	}

@@ -1,3 +1,4 @@
+import { apiFetch } from "$lib/api";
 import { writable, type Writable } from 'svelte/store';
 import type {
 	ResourceStats,
@@ -20,7 +21,7 @@ export function useResourceMetrics(nodeId: number, instanceId: number | string) 
 
 	async function fetchStats() {
 		try {
-			const response = await fetch(`/api/nodes/${nodeId}/instances/${instanceId}/stats`);
+			const response = await apiFetch(`/api/nodes/${nodeId}/instances/${instanceId}/stats`);
 			if (!response.ok) {
 				const err = await response.json().catch(() => ({}));
 				throw new Error(err.error || `Failed to fetch stats: ${response.statusText}`);
@@ -64,7 +65,7 @@ export function useResourceMetrics(nodeId: number, instanceId: number | string) 
 	async function fetchHistory() {
 		try {
 			loading.set(true);
-			const response = await fetch(
+			const response = await apiFetch(
 				`/api/nodes/${nodeId}/instances/${instanceId}/stats/history`
 			);
 			if (!response.ok) {
@@ -144,7 +145,7 @@ export async function getTopResourceConsumers(
 	try {
 		// This would need a new API endpoint for system-wide resource consumption
 		// For now, we'll use existing node data and sort by resource usage
-		const response = await fetch('/api/nodes');
+		const response = await apiFetch('/api/nodes');
 		if (!response.ok) throw new Error('Failed to fetch nodes');
 
 		const nodesData = await response.json();
@@ -153,7 +154,7 @@ export async function getTopResourceConsumers(
 
 		// Collect all instances from all nodes
 		for (const node of nodes) {
-			const instancesResponse = await fetch(`/api/nodes/${node.id}/instances`);
+			const instancesResponse = await apiFetch(`/api/nodes/${node.id}/instances`);
 			if (instancesResponse.ok) {
 				const instances = await instancesResponse.json();
 				for (const instance of instances) {

@@ -1,3 +1,4 @@
+import { apiFetch } from "$lib/api";
 export function parseVersion(v: string): number[] {
 	if (!v) return [0, 0, 0];
 	// Remove 'v' prefix if present

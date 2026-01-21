@@ -1,3 +1,4 @@
+import { apiFetch } from "$lib/api";
 export function autofocus(node: HTMLElement) {
 	node.focus();
 }

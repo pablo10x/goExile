@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { X, Save, User, Smartphone, Trophy, Hash, Terminal, ChevronRight, RefreshCw } from 'lucide-svelte';
@@ -30,7 +31,7 @@
 		if (!player) return;
 		isSaving = true;
 		try {
-			const res = await fetch(`/api/admin/players/${player.id}`, {
+			const res = await apiFetch(`/api/admin/players/${player.id}`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(formData)

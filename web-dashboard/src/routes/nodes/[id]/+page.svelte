@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { page } from '$app/stores';
 	import { onMount, onDestroy } from 'svelte';
 	import { formatBytes, formatUptime } from '$lib/utils';
@@ -70,14 +71,14 @@
 
 	async function fetchNodeData() {
 		try {
-			const res = await fetch(`/api/nodes/${nodeId}`);
+			const res = await apiFetch(`/api/nodes/${nodeId}`);
 			if (!res.ok) {
 				if (res.status === 404) throw new Error('Node not found');
 				throw new Error('Failed to load node details');
 			}
 			node = await res.json();
 
-			const instRes = await fetch(`/api/nodes/${nodeId}/instances`);
+			const instRes = await apiFetch(`/api/nodes/${nodeId}/instances`);
 			if (instRes.ok) {
 				const data = await instRes.json();
 				const list = data.instances || data || [];
@@ -95,7 +96,7 @@
 		if (!node) return;
 		togglingDrain = true;
 		try {
-			const res = await fetch(`/api/nodes/${nodeId}`, {
+			const res = await apiFetch(`/api/nodes/${nodeId}`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -127,7 +128,7 @@
 
 		// Fetch versions if not already loaded
 		if ($serverVersions.length === 0) {
-			fetch('/api/versions')
+			apiFetch('/api/versions')
 				.then((r) => r.json())
 				.then((v) => serverVersions.set(v))
 				.catch(console.error);
@@ -154,7 +155,7 @@
 
 	async function executeSpawn() {
 		try {
-			const res = await fetch(`/api/nodes/${nodeId}/spawn`, { method: 'POST' });
+			const res = await apiFetch(`/api/nodes/${nodeId}/spawn`, { method: 'POST' });
 			if (!res.ok) {
 				const err = await res.json();
 				throw new Error(err.error || `Server returned ${res.status}`);
@@ -245,7 +246,7 @@
 
 			if (instanceActionType === 'update_node_build') {
 				actionStatusMessage = 'Requesting node update...';
-				res = await fetch(`/api/nodes/${nodeId}/update-template`, { method: 'POST' });
+				res = await apiFetch(`/api/nodes/${nodeId}/update-template`, { method: 'POST' });
 			} else if (instanceActionType?.startsWith('bulk_')) {
 				const action = instanceActionType.replace('bulk_', '');
 				let failureCount = 0;
@@ -262,13 +263,13 @@
 					try {
 						let url = '';
 						if (action === 'restart') {
-							await fetch(`/api/nodes/${nodeId}/instances/${id}/stop`, { method: 'POST' });
+							await apiFetch(`/api/nodes/${nodeId}/instances/${id}/stop`, { method: 'POST' });
 							// Small delay between stop and start?
 							url = `/api/nodes/${nodeId}/instances/${id}/start`;
 						} else {
 							url = `/api/nodes/${nodeId}/instances/${id}/${action}`;
 						}
-						const r = await fetch(url, { method: 'POST' });
+						const r = await apiFetch(url, { method: 'POST' });
 						if (!r.ok) throw new Error('Failed');
 					} catch {
 						failureCount++;
@@ -291,23 +292,23 @@
 
 				if (instanceActionType === 'delete') {
 					method = 'DELETE';
-					res = await fetch(url, { method });
+					res = await apiFetch(url, { method });
 				} else if (instanceActionType === 'rename') {
 					url += '/rename';
-					res = await fetch(url, {
+					res = await apiFetch(url, {
 						method,
 						headers: { 'Content-Type': 'application/json' },
 						body: JSON.stringify({ new_id: instanceActionNewID })
 					});
 				} else if (instanceActionType === 'restart') {
 					actionStatusMessage = 'Stopping instance...';
-					await fetch(url + '/stop', { method: 'POST' });
+					await apiFetch(url + '/stop', { method: 'POST' });
 					actionStatusMessage = 'Starting instance...';
 					url += '/start';
-					res = await fetch(url, { method: 'POST' });
+					res = await apiFetch(url, { method: 'POST' });
 				} else {
 					url += `/${instanceActionType}`;
-					res = await fetch(url, { method });
+					res = await apiFetch(url, { method });
 				}
 			}
 

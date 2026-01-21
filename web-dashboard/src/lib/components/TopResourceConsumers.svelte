@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { onMount, onDestroy } from 'svelte';
 	import type {
 		TopResourceConsumersProps,

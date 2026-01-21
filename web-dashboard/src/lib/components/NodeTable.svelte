@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import type { Node } from '$lib/stores.svelte';
 	import { serverVersions } from '$lib/stores.svelte';
 	import { createEventDispatcher } from 'svelte';
@@ -70,7 +71,7 @@
 	async function fetchInstances(id: number) {
 		loadingInstances[id] = true;
 		try {
-			const res = await fetch(`/api/nodes/${id}/instances`);
+			const res = await apiFetch(`/api/nodes/${id}/instances`);
 			if (!res.ok) {
 				activeInstances[id] = [];
 				return;

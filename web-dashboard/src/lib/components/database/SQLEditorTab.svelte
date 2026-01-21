@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { Play, RefreshCw, Terminal, Download, Copy, Check, Database } from 'lucide-svelte';
 	import { notifications } from '$lib/stores.svelte';
 	import { slide } from 'svelte/transition';
@@ -166,7 +167,7 @@
 		loadingMetadata = true;
 		try {
 			// Load all tables
-			const tablesRes = await fetch('/api/database/all-tables');
+			const tablesRes = await apiFetch('/api/database/all-tables');
 			if (tablesRes.ok) {
 				tables = await tablesRes.json();
 			}
@@ -182,7 +183,7 @@
 		if (tableColumns[key]) return; // Already loaded
 
 		try {
-			const res = await fetch(
+			const res = await apiFetch(
 				`/api/database/columns?schema=${encodeURIComponent(schema)}&table=${encodeURIComponent(table)}`
 			);
 			if (res.ok) {
@@ -483,7 +484,7 @@
 		const start = performance.now();
 
 		try {
-			const res = await fetch('/api/database/sql', {
+			const res = await apiFetch('/api/database/sql', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ query })

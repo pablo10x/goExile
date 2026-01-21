@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { onMount } from 'svelte';
 	import { fade, fly, slide, scale } from 'svelte/transition';
 	import Icon from '$lib/components/theme/Icon.svelte';
@@ -130,7 +131,7 @@
 
 	async function fetchStats() {
 		try {
-			const res = await fetch('/api/redeye/stats');
+			const res = await apiFetch('/api/redeye/stats');
 			if (res.ok) stats = await res.json();
 		} catch (e) {
 			console.error(e);
@@ -139,7 +140,7 @@
 
 	async function fetchConfig() {
 		try {
-			const res = await fetch('/api/redeye/config');
+			const res = await apiFetch('/api/redeye/config');
 			if (res.ok) config = await res.json();
 		} catch (e) {
 			console.error(e);
@@ -148,7 +149,7 @@
 
 	async function updateConfig() {
 		try {
-			const res = await fetch('/api/redeye/config', {
+			const res = await apiFetch('/api/redeye/config', {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(config)
@@ -164,7 +165,7 @@
 	async function fetchRules() {
 		loading = true;
 		try {
-			const res = await fetch('/api/redeye/rules');
+			const res = await apiFetch('/api/redeye/rules');
 			if (res.ok) rules = await res.json();
 		} catch (e) {
 			console.error(e);
@@ -176,7 +177,7 @@
 	async function fetchLogs() {
 		loading = true;
 		try {
-			const res = await fetch('/api/redeye/logs?limit=100');
+			const res = await apiFetch('/api/redeye/logs?limit=100');
 			if (res.ok) {
 				const data = await res.json();
 				logs = data.logs;
@@ -191,7 +192,7 @@
 	async function fetchEvents() {
 		loading = true;
 		try {
-			const res = await fetch('/api/redeye/anticheat/events?limit=50');
+			const res = await apiFetch('/api/redeye/anticheat/events?limit=50');
 			if (res.ok) {
 				const data = await res.json();
 				events = data.events;
@@ -206,7 +207,7 @@
 	async function fetchBans() {
 		loading = true;
 		try {
-			const res = await fetch('/api/redeye/bans');
+			const res = await apiFetch('/api/redeye/bans');
 			if (res.ok) bans = await res.json();
 		} catch (e) {
 			console.error(e);
@@ -217,7 +218,7 @@
 
 	async function unbanIP(ip: string) {
 		try {
-			const res = await fetch(`/api/redeye/bans/${ip}`, { method: 'DELETE' });
+			const res = await apiFetch(`/api/redeye/bans/${ip}`, { method: 'DELETE' });
 			if (res.ok) {
 				bans = bans.filter((b) => b.ip !== ip);
 				fetchStats();
@@ -243,7 +244,7 @@
 
 			const payload = { ...form };
 
-			const res = await fetch(url, {
+			const res = await apiFetch(url, {
 				method,
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(payload)
@@ -261,7 +262,7 @@
 
 	async function deleteRule(id: number) {
 		try {
-			const res = await fetch(`/api/redeye/rules/${id}`, { method: 'DELETE' });
+			const res = await apiFetch(`/api/redeye/rules/${id}`, { method: 'DELETE' });
 			if (res.ok) {
 				rules = rules.filter((r) => r.id !== id);
 				fetchStats();

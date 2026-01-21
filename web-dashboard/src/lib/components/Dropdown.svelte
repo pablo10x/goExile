@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { slide } from 'svelte/transition';
 	import type { ComponentType, Snippet } from 'svelte';
 	import { ChevronDown } from 'lucide-svelte';

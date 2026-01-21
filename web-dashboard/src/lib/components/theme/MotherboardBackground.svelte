@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { lowPowerMode } from '$lib/stores.svelte';

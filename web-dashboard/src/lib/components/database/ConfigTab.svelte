@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { Settings, Save, RefreshCw, AlertCircle, Search } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { notifications } from '$lib/stores.svelte';
@@ -19,7 +20,7 @@
 	async function loadConfig() {
 		loading = true;
 		try {
-			const res = await fetch('/api/database/config');
+			const res = await apiFetch('/api/database/config');
 			if (res.ok) {
 				config = await res.json();
 			}
@@ -40,7 +41,7 @@
 		loading = true;
 		try {
 			for (const [name, value] of Object.entries(pendingChanges)) {
-				await fetch('/api/database/config', {
+				await apiFetch('/api/database/config', {
 					method: 'PUT',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({ name, value })
@@ -48,7 +49,7 @@
 			}
 
 			// Reload
-			const restart = await fetch('/api/database/config/restart', { method: 'POST' });
+			const restart = await apiFetch('/api/database/config/restart', { method: 'POST' });
 			if (!restart.ok) throw new Error('Failed to reload config');
 
 			notifications.add({ type: 'success', message: 'Configuration applied & reloaded' });

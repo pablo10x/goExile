@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { fade, scale } from 'svelte/transition';
 	import { backOut, cubicOut } from 'svelte/easing';
 	import {
@@ -79,7 +80,7 @@
 		initialCheckDone = true;
 		loading = true;
 		try {
-			const res = await fetch('/api/enrollment/keys');
+			const res = await apiFetch('/api/enrollment/keys');
 			if (res.ok) {
 				const keys = (await res.json()) || [];
 				if (!Array.isArray(keys)) {
@@ -137,7 +138,7 @@
 		enrollmentStatus = 'active';
 
 		try {
-			const response = await fetch('/api/enrollment/generate', {
+			const response = await apiFetch('/api/enrollment/generate', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -194,7 +195,7 @@
 			}
 
 			try {
-				const response = await fetch('/api/enrollment/status', {
+				const response = await apiFetch('/api/enrollment/status', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					credentials: 'include',
@@ -234,7 +235,7 @@
 		error = null;
 
 		try {
-			const response = await fetch('/api/enrollment/approve', {
+			const response = await apiFetch('/api/enrollment/approve', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',

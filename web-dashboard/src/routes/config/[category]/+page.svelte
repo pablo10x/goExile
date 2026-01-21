@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { config, restartRequired, notifications, siteSettings } from '$lib/stores.svelte';
@@ -53,7 +54,7 @@
 			loading = true;
 			error = null;
 
-			const response = await fetch(`/api/config/category/${category}`);
+			const response = await apiFetch(`/api/config/category/${category}`);
 			if (!response.ok) {
 				throw new Error(`Failed to load ${category} configuration`);
 			}
@@ -85,7 +86,7 @@
 			const promises = [];
 			for (const [key, value] of pendingChanges.entries()) {
 				promises.push(
-					fetch(`/api/config/${key}`, {
+					apiFetch(`/api/config/${key}`, {
 						method: 'PUT',
 						headers: { 'Content-Type': 'application/json' },
 						body: JSON.stringify({ value })

@@ -1,3 +1,4 @@
+import { apiFetch } from "$lib/api";
 // Resource metrics types and interfaces for the goExile dashboard
 
 export interface ResourceStats {

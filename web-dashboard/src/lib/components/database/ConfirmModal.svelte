@@ -1,4 +1,5 @@
 <script lang="ts">
+import { apiFetch } from "$lib/api";
 	import { AlertTriangle, Trash2, X, Info } from 'lucide-svelte';
 	import { scale, fade } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';

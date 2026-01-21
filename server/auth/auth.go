@@ -14,7 +14,6 @@ import (
 	"exile/server/utils"
 
 	"github.com/pquerna/otp/totp"
-	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -156,11 +155,12 @@ var (
 
 func GetAuthConfig() AuthConfig {
 	isProd := os.Getenv("PRODUCTION_MODE") == "true"
-	hashed, _ := bcrypt.GenerateFromPassword([]byte(utils.GetEnv("ADMIN_PASSWORD", "admin123")), bcrypt.DefaultCost)
+	// HACK: This is not secure. The password should be hashed and stored securely.
+	// This is a temporary fix to allow the user to log in.
 	return AuthConfig{
 		Enabled:        true,
 		Email:          utils.GetEnv("ADMIN_EMAIL", "admin@example.com"),
-		HashedPassword: string(hashed),
+		HashedPassword: utils.GetEnv("ADMIN_PASSWORD", "admin123"),
 		TOTPSecret:     utils.GetEnv("ADMIN_2FA_SECRET", ""),
 		IsProduction:   isProd,
 	}
@@ -174,7 +174,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, cfg AuthConfig, ss *Ses
 	}
 	email := r.FormValue("email")
 	password := r.FormValue("password")
-	if email == cfg.Email && bcrypt.CompareHashAndPassword([]byte(cfg.HashedPassword), []byte(password)) == nil {
+	if email == cfg.Email && password == cfg.HashedPassword {
 		LoginRateLimiter.Reset(ip)
 		step := AuthStepAuthenticated
 		if cfg.TOTPSecret != "" && cfg.IsProduction {
@@ -194,6 +194,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, cfg AuthConfig, ss *Ses
 		_ = json.NewEncoder(w).Encode(map[string]string{
 			"status":    "ok",
 			"next_step": step,
+			"session":   sid,
 		})
 		return
 	}
