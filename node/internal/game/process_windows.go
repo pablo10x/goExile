@@ -3,9 +3,9 @@
 package game
 
 import (
+	nodeErrors "node/internal/errors"
 	"os"
 	"os/exec"
-	nodeErrors "node/internal/errors"
 )
 
 func newGameCmd(binaryPath string, args []string, logFile *os.File) *exec.Cmd {

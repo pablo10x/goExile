@@ -190,8 +190,8 @@ func GetHealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 		"gc_cpu_fraction": allMetrics.Master.GCCPUFraction,
 		"db_connected":    allMetrics.Database.Connected,
 		"error_rate":      allMetrics.Network.ErrorRate,
-		"nodes_online": allMetrics.Nodes.OnlineNodes,
-		"nodes_total":  allMetrics.Nodes.TotalNodes,
+		"nodes_online":    allMetrics.Nodes.OnlineNodes,
+		"nodes_total":     allMetrics.Nodes.TotalNodes,
 		"uptime_ms":       allMetrics.Master.Uptime,
 	})
 }

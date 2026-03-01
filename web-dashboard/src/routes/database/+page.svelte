@@ -2,31 +2,19 @@
 import { apiFetch } from "$lib/api";
 	import {
 		Database,
-		Search,
-		Plus,
-		X,
-		Trash2,
-		Table,
 		ChevronLeft,
 		ChevronRight,
-		Settings,
-		LayoutDashboard,
-		Terminal,
-		Users,
 		HardDrive,
-		FileText,
 		Activity,
 		Clock,
-		Code2,
-		Layers,
-		Zap,
 		Server,
+		Zap,
+		Terminal,
+		Code2,
+		Table,
 		BarChart3,
-		Shield,
-		FolderTree,
-		Menu
+		FileText
 	} from 'lucide-svelte';
-	import SchemaBrowser from '$lib/components/SchemaBrowser.svelte';
 	import Icon from '$lib/components/theme/Icon.svelte';
 	import QueryTabs from '$lib/components/database/QueryTabs.svelte';
 	import TableTab from '$lib/components/database/TableTab.svelte';
@@ -36,28 +24,16 @@ import { apiFetch } from "$lib/api";
 	import BackupsTab from '$lib/components/database/BackupsTab.svelte';
 	import ConfigTab from '$lib/components/database/ConfigTab.svelte';
 	import FunctionsTab from '$lib/components/database/FunctionsTab.svelte';
-	import TableCreatorModal from '$lib/components/TableCreatorModal.svelte';
-	import ColumnManagerModal from '$lib/components/ColumnManagerModal.svelte';
-	import { notifications } from '$lib/stores.svelte';
-	import StatsCard from '$lib/components/StatsCard.svelte';
 	import { formatBytes } from '$lib/utils';
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
+    import Card from '$lib/components/theme/Card.svelte';
 
-	// State
 	let isSidebarOpen = $state(true);
-	let tabs = $state<
-		{
-			id: string;
-			label: string;
-			type: 'table' | 'sql' | 'info' | 'config' | 'roles' | 'backups' | 'browser' | 'functions';
-			data?: any;
-		}[]
-	>([{ id: 'overview', label: 'Overview', type: 'info' }]);
+	let tabs = $state<any[]>([{ id: 'overview', label: 'Overview', type: 'info' }]);
 	let activeTabId = $state<string>('overview');
 	let isLoaded = $state(false);
 
-	// Overview Data
 	let dbStats = $state({
 		size_bytes: 0,
 		version: '',
@@ -68,105 +44,47 @@ import { apiFetch } from "$lib/api";
 	});
 	let tableCounts = $state<{ name: string; count: number }[]>([]);
 
-	// Sidebar menu items with categories
 	const menuCategories = [
 		{
 			name: 'Overview',
 			items: [
-				{
-					id: 'overview',
-					label: 'Telemetry',
-					type: 'info',
-					iconName: 'ph:chart-line-up-bold',
-					description: 'Database overview & stats'
-				},
-				{
-					id: 'browser',
-					label: 'Browser',
-					type: 'browser',
-					iconName: 'ph:folder-open-bold',
-					description: 'Browse schemas & tables'
-				}
+				{ id: 'overview', label: 'Dashboard', type: 'info', iconName: 'ph:chart-line-up-bold', description: 'Real-time database metrics' },
+				{ id: 'browser', label: 'Browser', type: 'browser', iconName: 'ph:folder-open-bold', description: 'Explore tables and data' }
 			]
 		},
 		{
 			name: 'Development',
 			items: [
-				{
-					id: 'sql',
-					label: 'SQL Editor',
-					type: 'sql',
-					iconName: 'ph:terminal-window-bold',
-					description: 'Execute SQL queries'
-				},
-				{
-					id: 'functions',
-					label: 'Functions',
-					type: 'functions',
-					iconName: 'ph:code-bold',
-					description: 'Manage functions & procedures'
-				}
+				{ id: 'sql', label: 'Query Editor', type: 'sql', iconName: 'ph:terminal-window-bold', description: 'Execute direct SQL queries' },
+				{ id: 'functions', label: 'Procedures', type: 'functions', iconName: 'ph:code-bold', description: 'Manage stored functions' }
 			]
 		},
 		{
-			name: 'Administration',
+			name: 'Management',
 			items: [
-				{
-					id: 'roles',
-					label: 'Security',
-					type: 'roles',
-					iconName: 'ph:shield-check-bold',
-					description: 'User & role management'
-				},
-				{
-					id: 'backups',
-					label: 'Archives',
-					type: 'backups',
-					iconName: 'ph:archive-bold',
-					description: 'Backup & restore'
-				},
-				{
-					id: 'config',
-					label: 'Tuning',
-					type: 'config',
-					iconName: 'ph:sliders-bold',
-					description: 'PostgreSQL settings'
-				}
+				{ id: 'roles', label: 'Security', type: 'roles', iconName: 'ph:shield-check-bold', description: 'Roles and permissions' },
+				{ id: 'backups', label: 'Backups', type: 'backups', iconName: 'ph:archive-bold', description: 'Snapshots and restoration' },
+				{ id: 'config', label: 'Settings', type: 'config', iconName: 'ph:sliders-bold', description: 'Database configuration' }
 			]
 		}
 	];
 
-	// Flattened items for mobile nav
 	const allMenuItems = menuCategories.flatMap((c) => c.items);
-
-	// --- Tab Management ---
 
 	function openTab(id: string, label: string, type: any, data: any = {}) {
 		const existing = tabs.find((t) => t.id === id);
-		if (existing) {
-			activeTabId = id;
-		} else {
-			tabs = [...tabs, { id, label, type, data }];
-			activeTabId = id;
-		}
+		if (existing) activeTabId = id;
+		else { tabs = [...tabs, { id, label, type, data }]; activeTabId = id; }
 	}
 
 	function closeTab(id: string) {
 		const idx = tabs.findIndex((t) => t.id === id);
 		if (idx === -1) return;
-
 		const newTabs = tabs.filter((t) => t.id !== id);
 		tabs = newTabs;
-
 		if (activeTabId === id) {
-			// Activate neighbor
-			if (newTabs.length > 0) {
-				const newIdx = Math.min(idx, newTabs.length - 1);
-				activeTabId = newTabs[newIdx].id;
-			} else {
-				activeTabId = ''; // Or reopen overview
-				openTab('overview', 'Dashboard', 'info');
-			}
+			if (newTabs.length > 0) activeTabId = newTabs[Math.min(idx, newTabs.length - 1)].id;
+			else openTab('overview', 'Dashboard', 'info');
 		}
 	}
 
@@ -174,122 +92,53 @@ import { apiFetch } from "$lib/api";
 		openTab(`table:${schema}.${table}`, `${table}`, 'table', { schema, table });
 	}
 
-	// --- Initialization ---
 	async function loadOverviewData() {
 		try {
 			const res = await apiFetch('/api/database/overview');
-			if (res.ok) {
-				dbStats = await res.json();
-			}
-		} catch (e) {
-			console.error('Failed to load overview data', e);
-		}
-
-		try {
-			const res = await apiFetch('/api/database/counts');
-			if (res.ok) {
-				tableCounts = await res.json();
-			}
-		} catch (e) {
-			console.error('Failed to load table counts', e);
-		}
+			if (res.ok) dbStats = await res.json();
+			const resCounts = await apiFetch('/api/database/counts');
+			if (resCounts.ok) tableCounts = await resCounts.json();
+		} catch (e) { console.error(e); }
 	}
 
-	onMount(() => {
-		loadOverviewData();
-		setTimeout(() => (isLoaded = true), 100);
-	});
+	onMount(() => { loadOverviewData(); setTimeout(() => (isLoaded = true), 100); });
 </script>
 
-<div
-	class="flex flex-col lg:flex-row h-[calc(100vh-6rem)] -mt-6 -mx-4 sm:-mx-6 md:-mx-10 overflow-hidden relative z-10"
->
-	<!-- Mobile Top Nav -->
-	<div
-		class="lg:hidden border-b border-neutral-800 bg-neutral-900/90 overflow-x-auto no-scrollbar backdrop-blur-md shrink-0"
-	>
+<div class="flex flex-col lg:flex-row h-[calc(100vh-6rem)] -mt-6 -mx-4 sm:-mx-6 md:-mx-10 overflow-hidden relative z-10 font-sans">
+	<!-- Mobile Nav -->
+	<div class="lg:hidden border-b border-white/5 bg-slate-950/80 overflow-x-auto no-scrollbar backdrop-blur-md shrink-0">
 		<div class="flex items-center gap-2 p-3 min-w-max">
 			{#each allMenuItems as item}
-				{@const isActive = activeTabId === item.id}
-				<button
-					onclick={() => openTab(item.id, item.label, item.type)}
-					class="flex items-center gap-3 px-5 py-2 transition-all rounded-lg
-					{isActive ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-sm' : 'text-neutral-500 hover:text-white hover:bg-neutral-800'}"
-				>
-					<Icon name={item.iconName} size="1rem" />
-					<span class="text-[10px] font-bold uppercase tracking-widest">{item.label}</span>
+				<button onclick={() => openTab(item.id, item.label, item.type)} class="flex items-center gap-3 px-5 py-2 transition-all rounded-lg {activeTabId === item.id ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20 shadow-sm' : 'text-slate-500 hover:text-white hover:bg-slate-800'}">
+					<Icon name={item.iconName} size="1rem" /><span class="text-xs font-bold uppercase tracking-wide">{item.label}</span>
 				</button>
 			{/each}
 		</div>
 	</div>
 
-	<!-- Desktop Workbench Sidebar -->
-	<div
-		class="hidden lg:flex flex-col border-r border-neutral-800/50 transition-[width] duration-500 bg-neutral-900/40 backdrop-blur-xl will-change-[width] {isSidebarOpen
-			? 'w-72'
-			: 'w-20'} rounded-tr-2xl rounded-br-2xl my-4 ml-4 border-t border-b border-l shadow-2xl"
-		style="contain: layout paint;"
-	>
-		<!-- Sidebar Identity Area -->
-		<div
-			class="p-6 border-b border-neutral-800/50 flex items-center justify-between relative overflow-hidden"
-		>
+	<!-- Workbench Sidebar -->
+	<div class="hidden lg:flex flex-col border-r border-white/5 transition-all duration-500 bg-slate-900/40 backdrop-blur-xl {isSidebarOpen ? 'w-72' : 'w-24'} rounded-tr-3xl rounded-br-3xl my-4 ml-4 shadow-2xl border-t border-b border-l">
+		<div class="p-8 border-b border-white/5 flex items-center justify-between">
 			{#if isSidebarOpen}
-				<div class="flex items-center gap-4 relative z-10" transition:fade={{ duration: 150 }}>
-					<div class="p-2.5 bg-indigo-500/10 rounded-xl border border-indigo-500/20 shadow-inner">
-						<Database class="w-5 h-5 text-indigo-400" />
-					</div>
-					<div class="flex flex-col">
-						<h2 class="font-heading font-black text-[11px] text-white tracking-[0.1em] uppercase">Data_Sector</h2>
-						<span class="font-mono text-[8px] text-indigo-400 mt-0.5 font-bold tracking-widest">STATION_PRO_4.2</span>
-					</div>
+				<div class="flex items-center gap-4" transition:fade>
+					<div class="p-3 bg-sky-500/10 rounded-2xl border border-sky-500/20 shadow-sm"><Database class="w-5 h-5 text-sky-400" /></div>
+					<div class="flex flex-col"><h2 class="text-sm font-bold text-white tracking-tight leading-none">Database</h2><span class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wider">Storage</span></div>
 				</div>
 			{/if}
-			<button
-				onclick={() => (isSidebarOpen = !isSidebarOpen)}
-				class="p-2 rounded-lg text-neutral-500 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all relative z-10 {isSidebarOpen ? '' : 'mx-auto'}"
-			>
-				{#if isSidebarOpen}
-					<ChevronLeft class="w-4 h-4" />
-				{:else}
-					<ChevronRight class="w-4 h-4" />
-				{/if}
+			<button onclick={() => (isSidebarOpen = !isSidebarOpen)} class="p-2 rounded-xl text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-all {isSidebarOpen ? '' : 'mx-auto'}">
+				{#if isSidebarOpen}<ChevronLeft class="w-4 h-4" />{:else}<ChevronRight class="w-4 h-4" />{/if}
 			</button>
 		</div>
 
-		<!-- Sidebar Navigation Hub -->
-		<div class="flex-1 overflow-y-auto py-6 px-4 space-y-8 custom-scrollbar" style="contain: content;">
+		<div class="flex-1 overflow-y-auto py-6 px-4 space-y-8 no-scrollbar">
 			{#each menuCategories as category}
 				<div class="space-y-3">
-					{#if isSidebarOpen}
-						<div class="flex items-center gap-3 px-2" transition:fade={{ duration: 100 }}>
-							<span class="text-[9px] font-bold text-neutral-500 uppercase tracking-widest whitespace-nowrap">{category.name}</span>
-							<div class="h-px w-full bg-neutral-800/50"></div>
-						</div>
-					{/if}
+					{#if isSidebarOpen}<span class="text-[11px] font-bold text-slate-600 uppercase tracking-widest ml-3">{category.name}</span>{/if}
 					<div class="space-y-1">
 						{#each category.items as item}
-							{@const isActive = activeTabId === item.id}
-							<button
-								onclick={() => openTab(item.id, item.label, item.type)}
-								class="w-full flex items-center gap-4 p-3 transition-all duration-300 group rounded-xl relative
-								{isActive
-									? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-sm'
-									: 'text-neutral-500 hover:bg-neutral-800/50 hover:text-white border border-transparent'}"
-								title={item.description}
-								style="transform: translateZ(0);"
-							>
-								<div
-									class="transition-transform duration-300 {isActive ? 'scale-110 text-indigo-400' : 'text-neutral-500 group-hover:text-neutral-300'}"
-								>
-									<Icon name={item.iconName} size="1.15rem" />
-								</div>
-								{#if isSidebarOpen}
-									<div class="flex-1 text-left flex flex-col" transition:fade={{ duration: 100 }}>
-										<span class="font-bold text-[11px] uppercase tracking-wide leading-none mb-1">{item.label}</span>
-										<span class="text-[8px] text-neutral-500 font-medium tracking-tight truncate group-hover:text-neutral-400 transition-colors">{item.description}</span>
-									</div>
-								{/if}
+							<button onclick={() => openTab(item.id, item.label, item.type)} class="w-full flex items-center gap-4 p-3.5 transition-all rounded-2xl {activeTabId === item.id ? 'bg-white/10 text-sky-400 shadow-xl' : 'text-slate-500 hover:bg-white/5 hover:text-slate-200'}">
+								<Icon name={item.iconName} size="1.25rem" class={activeTabId === item.id ? 'scale-110' : ''} />
+								{#if isSidebarOpen}<div class="flex-1 text-left flex flex-col"><span class="font-bold text-xs uppercase tracking-wide leading-none mb-1">{item.label}</span><span class="text-[10px] text-slate-500 font-medium truncate">{item.description}</span></div>{/if}
 							</button>
 						{/each}
 					</div>
@@ -297,329 +146,101 @@ import { apiFetch } from "$lib/api";
 			{/each}
 		</div>
 
-		<!-- Sidebar Status Terminal -->
 		{#if isSidebarOpen}
-			<div
-				class="p-6 border-t border-neutral-800/50 bg-neutral-900/20"
-				transition:fade={{ duration: 150 }}
-				style="contain: content;"
-			>
+			<div class="p-8 border-t border-white/5 bg-white/[0.02]">
 				<div class="space-y-4">
-					<div class="flex justify-between items-center text-[8px] font-bold uppercase tracking-widest text-neutral-500">
-						<span>Kernel_Sync</span>
-						<span class="text-indigo-400 font-black">ACTIVE</span>
-					</div>
-					<div class="h-1 bg-neutral-800 rounded-full relative overflow-hidden">
-						<div class="h-full bg-indigo-500 w-[92%] shadow-[0_0_10px_rgba(99,102,241,0.2)]"></div>
-					</div>
-					<div class="flex items-center gap-3 text-[9px] font-bold uppercase tracking-widest text-neutral-500 italic">
-						<div class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981] animate-pulse" style="transform: translateZ(0);"></div>
-						<span>Uplink Verified</span>
-					</div>
+					<div class="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-slate-500"><span>Sync Status</span><span class="text-sky-400">Active</span></div>
+					<div class="h-1 bg-slate-800 rounded-full overflow-hidden"><div class="h-full bg-sky-500 w-[92%]"></div></div>
+					<div class="flex items-center gap-2 text-[10px] font-bold text-slate-600 uppercase tracking-wide"><div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div><span>Live Connection</span></div>
 				</div>
 			</div>
 		{/if}
 	</div>
 
-	<!-- Workbench Main Content Area -->
+	<!-- Main Area -->
 	<div class="flex-1 flex flex-col min-w-0 bg-transparent relative">
-		<!-- Integrated Tab Bar -->
-		<div class="relative z-20 px-4 pt-4">
-			<QueryTabs {tabs} {activeTabId} onSelect={(id) => (activeTabId = id)} onClose={closeTab} />
-		</div>
-
+		<div class="relative z-20 px-6 pt-6"><QueryTabs {tabs} {activeTabId} onSelect={(id) => (activeTabId = id)} onClose={closeTab} /></div>
 		<div class="flex-1 overflow-hidden relative">
 			{#each tabs as tab (tab.id)}
-				<div
-					class="absolute inset-0 {activeTabId === tab.id
-						? 'z-10 block'
-						: 'z-0 hidden'} transition-opacity duration-300"
-				>
-					{#if tab.type === 'table'}
-						<TableTab schema={tab.data.schema} table={tab.data.table} />
-					{:else if tab.type === 'browser'}
-						<DatabaseBrowserTab onSelectTable={handleSelectTable} />
-					                    {:else if tab.id === 'overview'}
-											<!-- Modern Overview Content -->
-											<div
-												class="h-full overflow-auto custom-scrollbar p-6 lg:p-10 space-y-8"
-												style="contain: content;"
-											>
-												
-												<!-- Workbench Header -->
-												<div class="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-10">
-													<div class="flex items-center gap-8">
-														<div
-															class="p-6 bg-neutral-900/40 border border-neutral-800 rounded-2xl shadow-xl relative group"
-															style="transform: translateZ(0);"
-														>
-															<Icon name="database" size="2rem" class="text-indigo-500 group-hover:scale-110 transition-transform duration-500" />
-															<div class="absolute -bottom-1 -right-1 p-1 bg-neutral-900 border border-indigo-500/30 rounded-lg shadow-sm">
-																<Zap class="w-3.5 h-3.5 text-indigo-400" />
-															</div>
-														</div>
-														<div>
-															<div class="flex items-center gap-4 mb-2">
-																<span class="px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[9px] font-black uppercase tracking-widest italic rounded-lg shadow-sm">Operational</span>
-																<span class="text-neutral-500 font-mono text-[10px]">// node_id: 0x4F2A</span>
-															</div>
-															<h1 class="text-4xl sm:text-5xl font-heading font-black text-white tracking-tighter uppercase leading-none">
-																Database Engine
-															</h1>
-															<div class="text-[11px] text-neutral-500 font-bold mt-4 uppercase tracking-[0.4em] italic flex items-center gap-3">
-																<div class="w-8 h-px bg-neutral-800"></div>
-																Database Management System
-															</div>
-														</div>
-													</div>
-													
-													<div class="grid grid-cols-2 gap-4 w-full xl:w-auto">
-														<div class="p-5 bg-neutral-900/40 border border-neutral-800 rounded-2xl flex flex-col gap-2 shadow-sm">
-															<span class="text-[8px] font-black text-neutral-500 uppercase tracking-widest italic">Connection Status</span>
-															<div class="flex items-center gap-1.5">
-																{#each [1,2,3,4,5] as i}
-																	<div class="w-1.5 h-4 rounded-full {i < 5 ? 'bg-indigo-500 shadow-[0_0_8px_#6366f1]' : 'bg-neutral-800'}" style="transform: translateZ(0);"></div>
-																{/each}
-															</div>
-														</div>
-														<div class="p-5 bg-neutral-900/40 border border-neutral-800 rounded-2xl flex flex-col gap-2 shadow-sm">
-															<span class="text-[8px] font-black text-neutral-500 uppercase tracking-widest italic">System Health</span>
-															<span class="text-lg font-heading font-black text-emerald-500 tabular-nums">OPTIMAL</span>
-														</div>
-													</div>
-												</div>
-							<!-- Metrics Panel -->
+				<div class="absolute inset-0 {activeTabId === tab.id ? 'z-10 block' : 'z-0 hidden'}">
+					{#if tab.type === 'table'}<TableTab schema={tab.data.schema} table={tab.data.table} />
+					{:else if tab.type === 'browser'}<DatabaseBrowserTab onSelectTable={handleSelectTable} />
+					{:else if tab.id === 'overview'}
+						<div class="h-full overflow-auto no-scrollbar p-6 lg:p-10 space-y-10">
+							<div class="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-10">
+								<div class="flex items-center gap-8">
+									<div class="p-6 bg-slate-800/40 border border-white/5 rounded-3xl shadow-2xl backdrop-blur-md group"><Icon name="database" size="2.5rem" class="text-sky-500 transition-transform group-hover:scale-110" /></div>
+									<div>
+										<div class="flex items-center gap-4 mb-2"><span class="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-wide rounded-lg">Operational</span><span class="text-slate-500 text-xs font-mono">ID: 0x4F2A</span></div>
+										<h1 class="text-4xl font-bold text-white tracking-tight">Database Status</h1>
+										<p class="text-xs font-medium text-slate-500 mt-2 uppercase tracking-widest">PostgreSQL Management System</p>
+									</div>
+								</div>
+								<div class="grid grid-cols-2 gap-4 w-full xl:w-auto">
+									<div class="p-6 bg-slate-800/40 border border-white/5 rounded-2xl shadow-xl backdrop-blur-sm"><span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Connections</span><div class="flex items-center gap-2">{#each [1,2,3,4,5] as i}<div class="w-2 h-5 rounded-full {i < 5 ? 'bg-sky-500 shadow-lg shadow-sky-500/30' : 'bg-slate-800'}"></div>{/each}</div></div>
+									<div class="p-6 bg-slate-800/40 border border-white/5 rounded-2xl shadow-xl backdrop-blur-sm"><span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Health</span><span class="text-2xl font-bold text-emerald-400">OPTIMAL</span></div>
+								</div>
+							</div>
+
 							<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-								<!-- Size -->
-								<div class="modern-card p-8 hover:border-indigo-500/40 transition-all group relative overflow-hidden flex flex-col" style="transform: translateZ(0); contain: content;">
-									<div class="absolute -top-10 -right-10 opacity-5 group-hover:scale-110 transition-transform duration-1000 will-change-transform">
-										<HardDrive class="w-40 h-40 text-indigo-500" />
+								{#each [
+									{ icon: HardDrive, label: 'Storage Usage', val: formatBytes(dbStats.size_bytes), sub: 'Primary Disk', color: 'text-sky-400' },
+									{ icon: Activity, label: 'Active Links', val: dbStats.connections, sub: 'Verified Auth', color: 'text-sky-400' },
+									{ icon: Clock, label: 'System Uptime', val: `${Math.floor(dbStats.uptime_seconds / 3600)}h`, sub: 'Active Session', color: 'text-sky-400' },
+									{ icon: Server, label: 'Engine Build', val: dbStats.version.split(' ')[0] || 'Postgres', sub: 'Core Release', color: 'text-sky-400' }
+								] as m}
+									<div class="modern-card p-8 bg-slate-800/40 border-white/5 rounded-3xl flex flex-col group relative overflow-hidden transition-all hover:border-sky-500/30">
+										<m.icon class="absolute -top-10 -right-10 w-40 h-40 opacity-5 group-hover:scale-110 transition-transform duration-1000" />
+										<div class="flex justify-between items-start mb-10 relative z-10">
+											<div class="p-3 bg-sky-500/10 rounded-2xl border border-sky-500/20 transition-all group-hover:bg-sky-500 group-hover:text-white"><m.icon class="w-6 h-6" /></div>
+											<div class="text-right flex flex-col"><span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{m.label}</span><span class="text-[9px] text-slate-600 mt-1 font-bold">{m.sub}</span></div>
+										</div>
+										<div class="mt-auto relative z-10"><div class="text-3xl font-bold text-white mb-1">{m.val}</div><div class="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-wide"><div class="w-1 h-1 rounded-full bg-sky-500"></div>System Monitor</div></div>
 									</div>
-									<div class="flex justify-between items-start mb-10 relative z-10">
-										<div class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 border border-indigo-500/20 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-500 shadow-inner">
-											<HardDrive class="w-6 h-6" />
-										</div>
-										<div class="flex flex-col items-end">
-											<span class="text-[10px] font-black text-neutral-500 uppercase tracking-widest italic">Storage Usage</span>
-											<span class="text-[8px] font-mono text-neutral-600 mt-1">VOL_01_PRIMARY</span>
-										</div>
-									</div>
-									<div class="mt-auto relative z-10">
-										<div class="text-4xl font-heading font-black text-white mb-2 tabular-nums tracking-tighter">
-											{formatBytes(dbStats.size_bytes)}
-										</div>
-										<div class="text-[9px] text-neutral-500 font-bold uppercase tracking-widest flex items-center gap-2">
-											<span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
-											Segmented Data Matrix
-										</div>
-									</div>
-								</div>
-
-								<!-- Connections -->
-								<div class="modern-card p-8 hover:border-indigo-500/40 transition-all group relative overflow-hidden flex flex-col" style="transform: translateZ(0); contain: content;">
-									<div class="absolute -top-10 -right-10 opacity-5 group-hover:scale-110 transition-transform duration-1000 will-change-transform">
-										<Activity class="w-40 h-40 text-indigo-500" />
-									</div>
-									<div class="flex justify-between items-start mb-10 relative z-10">
-										<div class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 border border-indigo-500/20 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-500 shadow-inner">
-											<Activity class="w-6 h-6" />
-										</div>
-										<div class="flex flex-col items-end">
-											<span class="text-[10px] font-black text-neutral-500 uppercase tracking-widest italic">Active Connections</span>
-											<span class="text-[8px] font-mono text-neutral-600 mt-1">STREAM_AUTH</span>
-										</div>
-									</div>
-									<div class="mt-auto relative z-10">
-										<div class="text-4xl font-heading font-black text-white mb-2 tabular-nums tracking-tighter">
-											{dbStats.connections}
-										</div>
-										<div class="text-[9px] text-neutral-500 font-bold uppercase tracking-widest flex items-center gap-2">
-											<span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
-											Verified Client Uplinks
-										</div>
-									</div>
-								</div>
-
-								<!-- Uptime -->
-								<div class="modern-card p-8 hover:border-indigo-500/40 transition-all group relative overflow-hidden flex flex-col" style="transform: translateZ(0); contain: content;">
-									<div class="absolute -top-10 -right-10 opacity-5 group-hover:scale-110 transition-transform duration-1000 will-change-transform">
-										<Clock class="w-40 h-40 text-indigo-500" />
-									</div>
-									<div class="flex justify-between items-start mb-10 relative z-10">
-										<div class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 border border-indigo-500/20 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-500 shadow-inner">
-											<Clock class="w-6 h-6" />
-										</div>
-										<div class="flex flex-col items-end">
-											<span class="text-[10px] font-black text-neutral-500 uppercase tracking-widest italic">System Uptime</span>
-											<span class="text-[8px] font-mono text-neutral-600 mt-1">SESSION_PERSIST</span>
-										</div>
-									</div>
-									<div class="mt-auto relative z-10">
-										<div class="text-4xl font-heading font-black text-white mb-2 tabular-nums tracking-tighter">
-											{Math.floor(dbStats.uptime_seconds / 3600)}<span class="text-neutral-600 text-2xl">H</span>
-										</div>
-										<div class="text-[9px] text-neutral-500 font-bold uppercase tracking-widest flex items-center gap-2">
-											<span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
-											Persistent System Uptime
-										</div>
-									</div>
-								</div>
-
-								<!-- Version -->
-								<div class="modern-card p-8 hover:border-indigo-500/40 transition-all group relative overflow-hidden flex flex-col" style="transform: translateZ(0); contain: content;">
-									<div class="absolute -top-10 -right-10 opacity-5 group-hover:scale-110 transition-transform duration-1000 will-change-transform">
-										<Server class="w-40 h-40 text-indigo-500" />
-									</div>
-									<div class="flex justify-between items-start mb-10 relative z-10">
-										<div class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 border border-indigo-500/20 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-500 shadow-inner">
-											<Server class="w-6 h-6" />
-										</div>
-										<div class="flex flex-col items-end">
-											<span class="text-[10px] font-black text-neutral-500 uppercase tracking-widest italic">Engine Version</span>
-											<span class="text-[8px] font-mono text-neutral-600 mt-1">CORE_REVISION</span>
-										</div>
-									</div>
-									<div class="mt-auto relative z-10">
-										<div class="text-3xl font-heading font-black text-white mb-2 truncate uppercase tracking-tighter">
-											{dbStats.version.split(' ')[0] || 'PGSQL_PRO'}
-										</div>
-										<div class="text-[9px] text-neutral-500 font-bold uppercase tracking-widest flex items-center gap-2">
-											<span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
-											Kernel Engine Revision
-										</div>
-									</div>
-								</div>
+								{/each}
 							</div>
 
 							<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-								<!-- Quick Command Hub -->
 								<div class="lg:col-span-5 space-y-6">
-									<h2 class="text-[11px] font-black text-neutral-500 uppercase tracking-[0.5em] flex items-center gap-5 italic">
-										<Zap class="w-4 h-4 text-amber-500 shadow-[0_0_10px_#f59e0b]" />
-										Uplink_Directives
-									</h2>
-									
-									<div class="grid grid-cols-1 gap-4">
-										<button
-											onclick={() => openTab('sql', 'SQL Editor', 'sql')}
-											class="flex items-center gap-6 p-6 bg-neutral-900/40 border border-neutral-800 rounded-2xl hover:border-amber-500/50 transition-all group text-left shadow-lg overflow-hidden relative"
-										>
-											<div class="absolute inset-0 bg-amber-500/0 group-hover:bg-amber-500/5 transition-colors duration-500"></div>
-											<div class="p-4 bg-neutral-950 border border-neutral-800 text-neutral-500 group-hover:text-amber-400 group-hover:border-amber-500/30 rounded-xl transition-all duration-500 relative z-10">
-												<Terminal class="w-7 h-7" />
-											</div>
-											<div class="relative z-10">
-												<div class="font-black text-sm text-neutral-300 group-hover:text-white uppercase tracking-widest italic transition-colors">SQL_Manual_Override</div>
-												<div class="text-[9px] text-neutral-500 font-bold uppercase tracking-[0.2em] mt-2 group-hover:text-neutral-400 transition-colors">Execute direct neural queries</div>
-											</div>
-										</button>
-
-										<button
-											onclick={() => openTab('functions', 'Functions', 'functions')}
-											class="flex items-center gap-6 p-6 bg-neutral-900/40 border border-neutral-800 rounded-2xl hover:border-amber-500/50 transition-all group text-left shadow-lg overflow-hidden relative"
-										>
-											<div class="absolute inset-0 bg-amber-500/0 group-hover:bg-amber-500/5 transition-colors duration-500"></div>
-											<div class="p-4 bg-neutral-950 border border-neutral-800 text-neutral-500 group-hover:text-amber-400 group-hover:border-amber-500/30 rounded-xl transition-all duration-500 relative z-10">
-												<Code2 class="w-7 h-7" />
-											</div>
-											<div class="relative z-10">
-												<div class="font-black text-sm text-neutral-300 group-hover:text-white uppercase tracking-widest italic transition-colors">Logic_Unit_Control</div>
-												<div class="text-[9px] text-neutral-500 font-bold uppercase tracking-[0.2em] mt-2 group-hover:text-neutral-400 transition-colors">Manage stored procedural units</div>
-											</div>
-										</button>
-
-										<button
-											onclick={() => openTab('backups', 'Backups', 'backups')}
-											class="flex items-center gap-6 p-6 bg-neutral-900/40 border border-neutral-800 rounded-2xl hover:border-amber-500/50 transition-all group text-left shadow-lg overflow-hidden relative"
-										>
-											<div class="absolute inset-0 bg-amber-500/0 group-hover:bg-amber-500/5 transition-colors duration-500"></div>
-											<div class="p-4 bg-neutral-950 border border-neutral-800 text-neutral-500 group-hover:text-amber-400 group-hover:border-amber-500/30 rounded-xl transition-all duration-500 relative z-10">
-												<HardDrive class="w-7 h-7" />
-											</div>
-											<div class="relative z-10">
-												<div class="font-black text-sm text-neutral-300 group-hover:text-white uppercase tracking-widest italic transition-colors">Archive_Sequencing</div>
-												<div class="text-[9px] text-neutral-500 font-bold uppercase tracking-[0.2em] mt-2 group-hover:text-neutral-400 transition-colors">Generate and restore snapshots</div>
-											</div>
-										</button>
+									<h2 class="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-3"><div class="p-1.5 bg-amber-500/10 rounded-lg"><Zap class="w-4 h-4 text-amber-500" /></div>Quick Actions</h2>
+									<div class="space-y-4">
+										{#each [
+											{ id: 'sql', type: 'sql', label: 'Query Editor', desc: 'Execute SQL queries', icon: Terminal, accent: 'amber' },
+											{ id: 'functions', type: 'functions', label: 'Stored Procedures', desc: 'Manage functions', icon: Code2, accent: 'sky' },
+											{ id: 'backups', type: 'backups', label: 'Backups', desc: 'Snapshots & Restoration', icon: HardDrive, accent: 'emerald' }
+										] as a}
+											<button onclick={() => openTab(a.id, a.label, a.type)} class="w-full flex items-center gap-6 p-6 bg-slate-800/40 border border-white/5 rounded-[2rem] hover:border-{a.accent}-500/50 transition-all group shadow-xl backdrop-blur-md">
+												<div class="p-4 bg-slate-900 border border-white/5 text-slate-500 group-hover:text-{a.accent}-400 rounded-2xl transition-all shadow-inner"><a.icon class="w-7 h-7" /></div>
+												<div><div class="font-bold text-base text-slate-200 group-hover:text-white transition-colors">{a.label}</div><div class="text-[11px] text-slate-500 font-bold uppercase tracking-wider mt-1">{a.desc}</div></div>
+											</button>
+										{/each}
 									</div>
 								</div>
-
-								<!-- Entity Inventory -->
 								<div class="lg:col-span-7 space-y-6">
-									<div class="flex items-center justify-between">
-										<h2 class="text-[11px] font-black text-neutral-500 uppercase tracking-[0.5em] flex items-center gap-5 italic">
-											<BarChart3 class="w-4 h-4 text-amber-500" />
-											Sector_Inventory_Metrics
-										</h2>
-										<span class="text-[9px] font-black text-neutral-600 uppercase tracking-widest">{tableCounts.length} ENTITIES_MAPPED</span>
-									</div>
-									
-									<div
-										class="bg-neutral-900/40 border border-neutral-800 rounded-2xl overflow-hidden shadow-xl"
-									>
-										<div class="overflow-x-auto custom-scrollbar">
-											<table class="w-full text-left font-jetbrains">
-												<thead class="bg-neutral-950/50 border-b border-neutral-800">
-													<tr>
-														<th
-															class="px-8 py-5 text-[9px] font-black text-neutral-500 uppercase tracking-[0.3em] italic"
-															>Identifier_Tag</th
-														>
-														<th
-															class="px-8 py-5 text-right text-[9px] font-black text-neutral-500 uppercase tracking-[0.3em] italic"
-															>Density_Buffer</th
-														>
+									<div class="flex items-center justify-between px-2"><h2 class="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-3"><div class="p-1.5 bg-amber-500/10 rounded-lg"><BarChart3 class="w-4 h-4 text-amber-500" /></div>Table Metrics</h2><span class="text-[10px] font-bold text-slate-600 uppercase tracking-wider">{tableCounts.length} Records</span></div>
+									<div class="bg-slate-800/40 border border-white/5 rounded-[2rem] overflow-hidden shadow-2xl backdrop-blur-md">
+										<table class="w-full text-left">
+											<thead class="bg-slate-950/50 border-b border-white/5"><tr><th class="px-8 py-5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Table Name</th><th class="px-8 py-5 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider">Record Count</th></tr></thead>
+											<tbody class="divide-y divide-white/5">
+												{#each tableCounts as table}
+													<tr class="hover:bg-white/5 transition-all group">
+														<td class="px-8 py-5"><div class="flex items-center gap-5"><div class="w-10 h-10 bg-slate-900 border border-white/5 rounded-xl flex items-center justify-center text-slate-500 group-hover:text-amber-400 transition-all"><Table class="w-5 h-5" /></div><span class="font-bold text-sm text-slate-200 group-hover:text-white transition-colors">{table.name}</span></div></td>
+														<td class="px-8 py-4 text-right"><div class="flex flex-col items-end gap-2"><span class="text-base font-bold text-slate-400 group-hover:text-amber-400 tabular-nums">{table.count?.toLocaleString() ?? '0'}</span><div class="w-28 h-1.5 bg-slate-900 overflow-hidden rounded-full border border-white/5 shadow-inner"><div class="h-full bg-amber-500/20 group-hover:bg-amber-500 transition-all duration-1000" style="width: {Math.min(100, (table.count / 1000) * 100)}%"></div></div></div></td>
 													</tr>
-												</thead>
-												<tbody class="divide-y divide-neutral-800/50">
-													{#each tableCounts as table}
-														<tr class="hover:bg-neutral-800/30 transition-all group">
-															<td class="px-8 py-5">
-																<div class="flex items-center gap-5">
-																	<div class="w-8 h-8 bg-neutral-950 border border-neutral-800 rounded-lg flex items-center justify-center text-neutral-600 group-hover:text-amber-500/80 group-hover:border-amber-500/20 transition-all duration-500">
-																		<Table class="w-4 h-4" />
-																	</div>
-																	<span class="font-black text-xs text-neutral-400 group-hover:text-white tracking-[0.1em] transition-colors"
-																		>{table.name}</span
-																	>
-																</div>
-															</td>
-															<td class="px-8 py-4 text-right">
-																<div class="flex flex-col items-end gap-1">
-																	<span class="font-mono text-sm font-black text-neutral-500 group-hover:text-amber-400 tabular-nums transition-colors"
-																		>{table.count?.toLocaleString() ?? '0'}</span
-																	>
-																	<div class="w-24 h-1 bg-neutral-800 overflow-hidden rounded-full">
-																		<div class="h-full bg-amber-500/20 group-hover:bg-amber-500 transition-all duration-1000" style="width: {Math.min(100, (table.count / 1000) * 100)}%"></div>
-																	</div>
-																</div>
-															</td>
-														</tr>
-													{/each}
-												</tbody>
-											</table>
-										</div>
+												{/each}
+											</tbody>
+										</table>
 									</div>
 								</div>
 							</div>
 						</div>
-					{:else if tab.type === 'sql'}
-						<SQLEditorTab />
-					{:else if tab.type === 'roles'}
-						<RolesTab />
-					{:else if tab.type === 'backups'}
-						<BackupsTab />
-					{:else if tab.type === 'config'}
-						<ConfigTab />
-					{:else if tab.type === 'functions'}
-						<FunctionsTab />
+					{:else if tab.type === 'sql'}<SQLEditorTab />
+					{:else if tab.type === 'roles'}<RolesTab />
+					{:else if tab.type === 'backups'}<BackupsTab />
+					{:else if tab.type === 'config'}<ConfigTab />
+					{:else if tab.type === 'functions'}<FunctionsTab />
 					{:else}
-						<div class="p-12 text-neutral-500 flex flex-col items-center justify-center h-full gap-4">
-							<div class="p-6 bg-neutral-800/50 rounded-full">
-								<FileText class="w-12 h-12 opacity-50" />
-							</div>
-							<p class="font-medium">Loading Module...</p>
-						</div>
+						<div class="p-12 text-slate-500 flex flex-col items-center justify-center h-full gap-4"><div class="p-6 bg-slate-800/50 rounded-full"><FileText class="w-12 h-12 opacity-50" /></div><p class="font-bold uppercase tracking-widest text-xs">Loading Session...</p></div>
 					{/if}
 				</div>
 			{/each}
@@ -628,30 +249,8 @@ import { apiFetch } from "$lib/api";
 </div>
 
 <style>
-	/* Custom scrollbar */
-	.custom-scrollbar::-webkit-scrollbar {
-		width: 6px;
-		height: 6px;
-	}
-
-	.custom-scrollbar::-webkit-scrollbar-track {
-		background: transparent;
-	}
-
-	.custom-scrollbar::-webkit-scrollbar-thumb {
-		background: #1e293b;
-		border-radius: 3px;
-	}
-
-	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-		background: #334155;
-	}
-
-	.no-scrollbar::-webkit-scrollbar {
-		display: none;
-	}
-	.no-scrollbar {
-		-ms-overflow-style: none;
-		scrollbar-width: none;
-	}
+	.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+	.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+	.custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
+	.no-scrollbar::-webkit-scrollbar { display: none; }
 </style>

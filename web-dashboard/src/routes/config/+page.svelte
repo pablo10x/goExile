@@ -53,6 +53,8 @@ import { apiFetch } from "$lib/api";
 		Activity,
 		Settings as SettingsIcon
 	} from 'lucide-svelte';
+    import PageHeader from '$lib/components/theme/PageHeader.svelte';
+    import Card from '$lib/components/theme/Card.svelte';
 
 	// Types
 	interface ConfigItem {
@@ -65,12 +67,6 @@ import { apiFetch } from "$lib/api";
 		requires_restart: boolean;
 		updated_at: string;
 		updated_by: string;
-		validation?: {
-			min?: number;
-			max?: number;
-			pattern?: string;
-			options?: string[];
-		};
 	}
 
 	interface ConfigSection {
@@ -78,10 +74,7 @@ import { apiFetch } from "$lib/api";
 		title: string;
 		description: string;
 		icon: any;
-		color: string;
-		gradient: string;
 		items: ConfigItem[];
-		expanded: boolean;
 	}
 
 	interface FirebaseConfig {
@@ -89,8 +82,6 @@ import { apiFetch } from "$lib/api";
 		value: string;
 		valueType: 'string' | 'number' | 'boolean' | 'json';
 		description: string;
-		conditions?: string[];
-		defaultValue: string;
 		updated_at: string;
 	}
 
@@ -115,110 +106,25 @@ import { apiFetch } from "$lib/api";
 	});
 	let firebaseSaving = $state(false);
 
-	// Master Server Configuration Sections
 	let masterSections = $state<ConfigSection[]>([
-		{
-			id: 'general',
-			title: 'General Settings',
-			description: 'Core server identification and behavior',
-			icon: SettingsIcon,
-			color: 'blue',
-			gradient: 'from-rust to-rust-light',
-			expanded: true,
-			items: []
-		},
-		{
-			id: 'network',
-			title: 'Network & Connectivity',
-			description: 'Ports, hosts, and connection settings',
-			icon: Network,
-			color: 'cyan',
-			gradient: 'from-orange-600 to-amber-600',
-			expanded: true,
-			items: []
-		},
-		{
-			id: 'security',
-			title: 'Security & Authentication',
-			description: 'API keys, tokens, and access control',
-			icon: Shield,
-			color: 'red',
-			gradient: 'from-red-600 to-rose-600',
-			expanded: false,
-			items: []
-		},
-		{
-			id: 'database',
-			title: 'Database Configuration',
-			description: 'Database connections and pooling',
-			icon: Database,
-			color: 'purple',
-			gradient: 'from-amber-700 to-orange-800',
-			expanded: false,
-			items: []
-		},
-		{
-			id: 'performance',
-			title: 'Performance & Limits',
-			description: 'Resource limits and performance tuning',
-			icon: Zap,
-			color: 'amber',
-			gradient: 'from-rust to-rust-light',
-			expanded: false,
-			items: []
-		}
+		{ id: 'general', title: 'General Settings', description: 'Core server identification and behavior', icon: SettingsIcon, items: [] },
+		{ id: 'network', title: 'Network & Connectivity', description: 'Ports, hosts, and connection settings', icon: Network, items: [] },
+		{ id: 'security', title: 'Security & Authentication', description: 'API keys, tokens, and access control', icon: Shield, items: [] },
+		{ id: 'database', title: 'Database Configuration', description: 'Database connections and pooling', icon: Database, items: [] },
+		{ id: 'performance', title: 'Performance & Limits', description: 'Resource limits and performance tuning', icon: Zap, items: [] }
 	]);
 
-	// Node Configuration Sections -> Node Configuration Sections
 	let nodeSections = $state<ConfigSection[]>([
-		{
-			id: 'defaults',
-			title: 'Default Settings',
-			description: 'Default values for new nodes',
-			icon: Cpu,
-			color: 'green',
-			gradient: 'from-stone-700 to-stone-800',
-			expanded: true,
-			items: []
-		},
-		{
-			id: 'limits',
-			title: 'Resource Limits',
-			description: 'Instance limits and resource allocation',
-			icon: HardDrive,
-			color: 'orange',
-			gradient: 'from-rust to-orange-700',
-			expanded: true,
-			items: []
-		},
-		{
-			id: 'ports',
-			title: 'Port Configuration',
-			description: 'Game server port ranges',
-			icon: Network,
-			color: 'teal',
-			gradient: 'from-rust-light to-rust',
-			expanded: false,
-			items: []
-		},
-		{
-			id: 'updates',
-			title: 'Auto-Update Settings',
-			description: 'Automatic update behavior',
-			icon: RefreshCw,
-			color: 'indigo',
-			gradient: 'from-stone-600 to-rust',
-			expanded: false,
-			items: []
-		}
+		{ id: 'defaults', title: 'Templates', description: 'Default values for new infrastructure', icon: Cpu, items: [] },
+		{ id: 'limits', title: 'Resource Allocation', description: 'Instance limits and resource bounds', icon: HardDrive, items: [] },
+		{ id: 'ports', title: 'Port Ranges', description: 'Game server network port pools', icon: Network, items: [] },
+		{ id: 'updates', title: 'Software Updates', description: 'Automatic binary update behavior', icon: RefreshCw, items: [] }
 	]);
 
-	// Firebase Remote Config
 	let firebaseConfigs = $state<FirebaseConfig[]>([]);
 	let firebaseConnected = $state(false);
 	let firebaseProjectId = $state('');
 
-	// Derived values
 	let pendingChangeCount = $derived(pendingChanges.size);
 	let hasUnsavedChanges = $derived(pendingChangeCount > 0);
 
@@ -226,145 +132,70 @@ import { apiFetch } from "$lib/api";
 		if (!searchQuery.trim()) return masterSections;
 		const query = searchQuery.toLowerCase();
 		return masterSections
-			.map((section) => ({
-				...section,
-				items: section.items.filter(
-					(item) =>
-						item.key.toLowerCase().includes(query) ||
-						item.description.toLowerCase().includes(query) ||
-						item.value.toLowerCase().includes(query)
-				)
-			}))
-			.filter((section) => section.items.length > 0);
+			.map(s => ({ ...s, items: s.items.filter(i => i.key.toLowerCase().includes(query) || i.description.toLowerCase().includes(query) || i.value.toLowerCase().includes(query)) }))
+			.filter(s => s.items.length > 0);
 	});
 
 	let filteredNodeSections = $derived.by(() => {
 		if (!searchQuery.trim()) return nodeSections;
 		const query = searchQuery.toLowerCase();
 		return nodeSections
-			.map((section) => ({
-				...section,
-				items: section.items.filter(
-					(item) =>
-						item.key.toLowerCase().includes(query) ||
-						item.description.toLowerCase().includes(query) ||
-						item.value.toLowerCase().includes(query)
-				)
-			}))
-			.filter((section) => section.items.length > 0);
+			.map(s => ({ ...s, items: s.items.filter(i => i.key.toLowerCase().includes(query) || i.description.toLowerCase().includes(query) || i.value.toLowerCase().includes(query)) }))
+			.filter(s => s.items.length > 0);
 	});
 
 	let filteredFirebaseConfigs = $derived.by(() => {
 		if (!searchQuery.trim()) return firebaseConfigs;
 		const query = searchQuery.toLowerCase();
-		return firebaseConfigs.filter(
-			(config) =>
-				config.key.toLowerCase().includes(query) || config.description.toLowerCase().includes(query)
-		);
+		return firebaseConfigs.filter(c => c.key.toLowerCase().includes(query) || c.description.toLowerCase().includes(query));
 	});
 
-	// Load configuration data
 	async function loadConfig() {
 		loading = true;
 		try {
-			const response = await apiFetch('/api/config');
-			if (!response.ok) throw new Error('Failed to fetch config');
-			const configs = await response.json();
-			distributeConfigs(configs);
-		} catch (e: any) {
-			notifications.add({
-				type: 'error',
-				message: 'Failed to load configuration',
-				details: e.message
-			});
-		} finally {
-			loading = false;
-		}
+			const res = await apiFetch('/api/config');
+			if (!res.ok) throw new Error('Failed to fetch config');
+			distributeConfigs(await res.json());
+		} catch (e: any) { notifications.add({ type: 'error', message: 'Config Error', details: e.message }); }
+		finally { loading = false; }
 	}
 
 	function distributeConfigs(configs: ConfigItem[]) {
-		masterSections = masterSections.map((s) => ({ ...s, items: [] }));
-		nodeSections = nodeSections.map((s) => ({ ...s, items: [] }));
-
-		for (const config of configs) {
-			if (config.category === 'system') {
-				if (
-					config.key.includes('port') ||
-					config.key.includes('host') ||
-					config.key.includes('url')
-				) {
-					masterSections.find((s) => s.id === 'network')?.items.push(config);
-				} else if (
-					config.key.includes('key') ||
-					config.key.includes('secret') ||
-					config.key.includes('auth') ||
-					config.key.includes('token')
-				) {
-					masterSections.find((s) => s.id === 'security')?.items.push(config);
-				} else if (
-					config.key.includes('db') ||
-					config.key.includes('database') ||
-					config.key.includes('pool')
-				) {
-					masterSections.find((s) => s.id === 'database')?.items.push(config);
-				} else if (
-					config.key.includes('max') ||
-					config.key.includes('limit') ||
-					config.key.includes('timeout') ||
-					config.key.includes('ttl')
-				) {
-					masterSections.find((s) => s.id === 'performance')?.items.push(config);
-				} else {
-					masterSections.find((s) => s.id === 'general')?.items.push(config);
-				}
-			} else if (config.category === 'node') {
-				if (config.key.includes('port')) {
-					nodeSections.find((s) => s.id === 'ports')?.items.push(config);
-				} else if (
-					config.key.includes('max') ||
-					config.key.includes('limit') ||
-					config.key.includes('memory') ||
-					config.key.includes('cpu')
-				) {
-					nodeSections.find((s) => s.id === 'limits')?.items.push(config);
-				} else if (config.key.includes('update') || config.key.includes('auto')) {
-					nodeSections.find((s) => s.id === 'updates')?.items.push(config);
-				} else {
-					nodeSections.find((s) => s.id === 'defaults')?.items.push(config);
-				}
+		masterSections = masterSections.map(s => ({ ...s, items: [] }));
+		nodeSections = nodeSections.map(s => ({ ...s, items: [] }));
+		for (const c of configs) {
+			if (c.category === 'system') {
+				if (c.key.includes('port') || c.key.includes('host') || c.key.includes('url')) masterSections.find(s => s.id === 'network')?.items.push(c);
+				else if (c.key.includes('key') || c.key.includes('secret') || c.key.includes('auth') || c.key.includes('token')) masterSections.find(s => s.id === 'security')?.items.push(c);
+				else if (c.key.includes('db') || c.key.includes('database') || c.key.includes('pool')) masterSections.find(s => s.id === 'database')?.items.push(c);
+				else if (c.key.includes('max') || c.key.includes('limit') || c.key.includes('timeout') || c.key.includes('ttl')) masterSections.find(s => s.id === 'performance')?.items.push(c);
+				else masterSections.find(s => s.id === 'general')?.items.push(c);
+			} else if (c.category === 'node') {
+				if (c.key.includes('port')) nodeSections.find(s => s.id === 'ports')?.items.push(c);
+				else if (c.key.includes('max') || c.key.includes('limit') || c.key.includes('memory') || c.key.includes('cpu')) nodeSections.find(s => s.id === 'limits')?.items.push(c);
+				else if (c.key.includes('update') || c.key.includes('auto')) nodeSections.find(s => s.id === 'updates')?.items.push(c);
+				else nodeSections.find(s => s.id === 'defaults')?.items.push(c);
 			}
 		}
-		masterSections = [...masterSections];
-		nodeSections = [...nodeSections];
 	}
 
-	function loadFirebaseStatus() {
-		return apiFetch('/api/config/firebase/status').then(response => {
-			if (response.ok) {
-				return response.json();
+	async function loadFirebaseStatus() {
+		try {
+			const res = await apiFetch('/api/config/firebase/status');
+			if (res.ok) {
+				const status = await res.json();
+				firebaseConnected = status.connected;
+				firebaseProjectId = status.project_id || '';
+				if (status.configs) firebaseConfigs = status.configs;
 			}
-		}).then((status) => {
-			firebaseConnected = status.connected;
-			firebaseProjectId = status.project_id || '';
-			if (status.configs) {
-				firebaseConfigs = status.configs;
-			}
-		}).catch(() => {
-			firebaseConnected = false;
-		});
+		} catch { firebaseConnected = false; }
 	}
 
-	// Firebase functions
 	function openFirebaseModal(mode: 'create' | 'edit', config?: FirebaseConfig) {
 		firebaseModalMode = mode;
 		if (mode === 'edit' && config) {
 			firebaseEditingKey = config.key;
-			firebaseForm = {
-				key: config.key,
-				value: config.value,
-				valueType: config.valueType.toUpperCase() as any,
-				description: config.description || ''
-			};
+			firebaseForm = { key: config.key, value: config.value, valueType: config.valueType.toUpperCase() as any, description: config.description || '' };
 		} else {
 			firebaseEditingKey = '';
 			firebaseForm = { key: '', value: '', valueType: 'STRING' as any, description: '' };
@@ -372,636 +203,207 @@ import { apiFetch } from "$lib/api";
 		showFirebaseModal = true;
 	}
 
-	function closeFirebaseModal() {
-		showFirebaseModal = false;
-		firebaseForm = { key: '', value: '', valueType: 'STRING' as any, description: '' };
-	}
-
 	async function saveFirebaseParameter() {
 		firebaseSaving = true;
 		try {
-			const method = firebaseModalMode === 'create' ? 'POST' : 'PUT';
-			const response = await apiFetch('/api/config/firebase/parameter', {
-				method: method,
+			const res = await apiFetch('/api/config/firebase/parameter', {
+				method: firebaseModalMode === 'create' ? 'POST' : 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(firebaseForm)
 			});
-
-			if (!response.ok) {
-				const data = await response.json();
-				throw new Error(data.error || 'Failed to save parameter');
-			}
-
-			notifications.add({
-				type: 'success',
-				message: `Parameter ${firebaseModalMode === 'create' ? 'created' : 'updated'} successfully`
-			});
-			closeFirebaseModal();
+			if (!res.ok) throw new Error((await res.json()).error);
+			notifications.add({ type: 'success', message: 'Parameter updated' });
+			showFirebaseModal = false;
 			await loadFirebaseStatus();
-		} catch (e: any) {
-			notifications.add({
-				type: 'error',
-				message: 'Failed to save parameter',
-				details: e.message
-			});
-		} finally {
-			firebaseSaving = false;
-		}
+		} catch (e: any) { notifications.add({ type: 'error', message: 'Save failed', details: e.message }); }
+		finally { firebaseSaving = false; }
 	}
 
 	async function deleteFirebaseParameter(key: string) {
-		if (!confirm(`Are you sure you want to delete parameter "${key}"?`)) return;
-
+		if (!confirm(`Delete parameter "${key}"?`)) return;
 		try {
-			const response = await apiFetch('/api/config/firebase/parameter', {
-				method: 'DELETE',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ key })
-			});
-
-			if (!response.ok) {
-				const data = await response.json();
-				throw new Error(data.error || 'Failed to delete parameter');
-			}
-
-			notifications.add({
-				type: 'success',
-				message: 'Parameter deleted successfully'
-			});
-			await loadFirebaseStatus();
-		} catch (e: any) {
-			notifications.add({
-				type: 'error',
-				message: 'Failed to delete parameter',
-				details: e.message
-			});
-		}
+			const res = await apiFetch('/api/config/firebase/parameter', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key }) });
+			if (res.ok) { notifications.add({ type: 'success', message: 'Deleted' }); await loadFirebaseStatus(); }
+		} catch (e: any) { notifications.add({ type: 'error', message: 'Delete failed', details: e.message }); }
 	}
 
 	async function syncFirebaseConfig() {
 		loading = true;
 		try {
-			const response = await apiFetch('/api/config/firebase/sync', { method: 'POST' });
-			if (!response.ok) {
-				const data = await response.json();
-				throw new Error(data.error || 'Sync failed');
-			}
-			notifications.add({ type: 'success', message: 'Synced with Firebase successfully' });
-			await loadFirebaseStatus();
-		} catch (e: any) {
-			notifications.add({
-				type: 'error',
-				message: 'Failed to sync with Firebase',
-				details: e.message
-			});
-		} finally {
-			loading = false;
-		}
+			const res = await apiFetch('/api/config/firebase/sync', { method: 'POST' });
+			if (res.ok) { notifications.add({ type: 'success', message: 'Sync complete' }); await loadFirebaseStatus(); }
+		} catch (e: any) { notifications.add({ type: 'error', message: 'Sync failed', details: e.message }); }
+		finally { loading = false; }
 	}
 
-	function handleValueChange(key: string, value: string, originalValue: string) {
-		if (value !== originalValue) {
-			pendingChanges.set(key, value);
-		} else {
-			pendingChanges.delete(key);
-		}
+	function handleValueChange(key: string, value: string, original: string) {
+		if (value !== original) pendingChanges.set(key, value);
+		else pendingChanges.delete(key);
 		pendingChanges = new Map(pendingChanges);
 	}
 
-	function toggleSecret(key: string) {
-		if (showSecrets.has(key)) {
-			showSecrets.delete(key);
-		} else {
-			showSecrets.add(key);
-		}
-		showSecrets = new Set(showSecrets);
-	}
-
-	function toggleSection(sectionId: string) {
-		if (expandedSections.has(sectionId)) {
-			expandedSections.delete(sectionId);
-		} else {
-			expandedSections.add(sectionId);
-		}
-		expandedSections = new Set(expandedSections);
-	}
-
 	async function saveChanges() {
-		if (pendingChanges.size === 0) return;
 		saving = true;
-		
 		try {
-			const promises = [];
-			for (const [key, value] of pendingChanges.entries()) {
-				promises.push(
-					apiFetch(`/api/config/${key}`, {
-						method: 'PUT',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({ value })
-					})
-				);
-			}
-
-			const results = await Promise.all(promises);
-			const failed = results.filter(r => !r.ok);
-
-			if (failed.length > 0) {
-				throw new Error(`Failed to save ${failed.length} items`);
-			}
-
-			notifications.add({ type: 'success', message: 'Configuration saved successfully' });
-			pendingChanges = new Map();
-			await loadConfig(); // Reload to refresh timestamps etc
-		} catch (e: any) {
-			notifications.add({
-				type: 'error',
-				message: 'Save failed',
-				details: e.message
-			});
-		} finally {
-			saving = false;
-		}
+			const ps = [];
+			for (const [k, v] of pendingChanges.entries()) ps.push(apiFetch(`/api/config/${k}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: v }) }));
+			const rs = await Promise.all(ps);
+			if (rs.every(r => r.ok)) { notifications.add({ type: 'success', message: 'Saved' }); pendingChanges = new Map(); await loadConfig(); }
+			else throw new Error('Some items failed to save');
+		} catch (e: any) { notifications.add({ type: 'error', message: 'Error', details: e.message }); }
+		finally { saving = false; }
 	}
 
-	function discardChanges() {
-		pendingChanges = new Map();
-		loadConfig();
-	}
-
-	function copyToClipboard(value: string) {
-		navigator.clipboard.writeText(value);
-		notifications.add({ type: 'success', message: 'Copied to clipboard' });
-	}
-
-	onMount(async () => {
-		await loadConfig();
-		await loadFirebaseStatus();
-	});
+	onMount(() => { loadConfig(); loadFirebaseStatus(); });
 </script>
 
-<div class="relative z-10 w-full space-y-10 pb-32 md:pb-12">
-	<!-- Header -->
-	<div class="space-y-10">
-		<div class="flex flex-col xl:flex-row xl:items-center justify-between gap-8 mb-10 border-l-4 border-rust pl-6 sm:pl-10 py-2 bg-[var(--header-bg)]/60 backdrop-blur-xl industrial-frame">
-			<div class="flex items-center gap-6">
-				<div
-					class="p-4 bg-rust/10 border border-rust/30 shadow-2xl industrial-frame"
-				>
-					<SettingsIcon class="w-10 h-10 text-rust-light" />
-				</div>
-				<div>
-					<h1 class="text-4xl sm:text-5xl font-heading font-black text-white uppercase tracking-tighter leading-none">
-						CONFIGURATION
-					</h1>
-					<p class="font-jetbrains text-[10px] text-text-dim uppercase tracking-[0.3em] font-black mt-2">
-						System Parameters & Environment Control
-					</p>
-				</div>
-			</div>
-
-			<!-- Actions Bar -->
+<div class="space-y-10 font-sans">
+	<PageHeader title="Settings" subtitle="System Configuration & Environment" icon="ph:sliders-bold">
+		{#snippet actions()}
 			<div class="flex items-center gap-4">
 				{#if hasUnsavedChanges}
-					<div
-						class="flex items-center gap-4 px-5 py-3 bg-rust/10 border border-rust/30 industrial-frame"
-						transition:slide={{ axis: 'x' }}
-					>
-						<div class="w-2.5 h-2.5 bg-rust animate-pulse shadow-rust/50 shadow-lg"></div>
-						<span class="font-jetbrains text-[11px] font-black text-rust-light uppercase tracking-[0.2em]" >{pendingChangeCount} PENDING CHANGES</span>
+					<div class="flex items-center gap-3 px-4 py-2 bg-sky-500/10 border border-sky-500/20 rounded-xl" transition:fade>
+						<div class="w-2 h-2 bg-sky-500 rounded-full animate-pulse shadow-lg"></div>
+						<span class="text-xs font-bold text-sky-400 uppercase tracking-wider">{pendingChangeCount} Unsaved Changes</span>
 					</div>
-					<Button
-						onclick={discardChanges}
-						variant="secondary"
-						size="md"
-					>
-						Discard
-					</Button>
-					<Button
-						onclick={saveChanges}
-						disabled={saving}
-						variant="primary"
-						size="md"
-						loading={saving}
-					>
-						SAVE CHANGES
-					</Button>
+					<Button onclick={() => { pendingChanges = new Map(); loadConfig(); }} variant="secondary" size="md">Discard</Button>
+					<Button onclick={saveChanges} loading={saving} variant="primary" size="md">Save All</Button>
 				{:else}
-					<Button
-						onclick={loadConfig}
-						disabled={loading}
-						variant="secondary"
-						size="md"
-						loading={loading}
-						icon="ph:arrows-clockwise-bold"
-					>
-						Reload
-					</Button>
+					<Button onclick={loadConfig} loading={loading} variant="secondary" size="md" icon="ph:arrows-clockwise-bold">Reload</Button>
 				{/if}
 			</div>
-		</div>
+		{/snippet}
+	</PageHeader>
 
-		<!-- Tab Navigation -->
-		<div
-			class="flex items-center p-1.5 bg-[var(--header-bg)]/80 border border-stone-800 backdrop-blur-xl overflow-x-auto no-scrollbar industrial-frame shadow-2xl"
-		>
-			<button
-				onclick={() => (activeTab = 'master')}
-				class="flex-1 flex flex-col items-center gap-1.5 px-8 py-4 transition-all {activeTab === 'master'
-					? 'bg-rust text-white shadow-lg'
-					: 'text-text-dim hover:text-white hover:bg-stone-900'}"
-			>
-				<span class="font-heading font-black text-[12px] uppercase tracking-[0.2em]">MASTER SERVER</span>
-				<span class="font-jetbrains text-[8px] font-black opacity-40 uppercase tracking-widest">CORE CONFIG</span>
+	<!-- Tabs -->
+	<div class="flex bg-slate-900/50 p-1 rounded-2xl border border-white/5 backdrop-blur-md">
+		{#each [
+			{ id: 'master', label: 'Master Server', sub: 'Main Settings' },
+			{ id: 'nodes', label: 'Infrastructure', sub: 'Templates' },
+			{ id: 'firebase', label: 'Remote Config', sub: 'External Sync' }
+		] as tab}
+			<button onclick={() => activeTab = tab.id as any} class="flex-1 flex flex-col items-center py-3 rounded-xl transition-all {activeTab === tab.id ? 'bg-sky-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}">
+				<span class="text-xs font-bold uppercase tracking-wider">{tab.label}</span>
+				<span class="text-[9px] font-semibold opacity-60 uppercase">{tab.sub}</span>
 			</button>
-			<button
-				onclick={() => (activeTab = 'nodes')}
-				class="flex-1 flex flex-col items-center gap-1.5 px-8 py-4 transition-all {activeTab === 'nodes'
-					? 'bg-rust text-white shadow-lg'
-					: 'text-text-dim hover:text-white hover:bg-stone-900'}"
-			>
-				<span class="font-heading font-black text-[12px] uppercase tracking-[0.2em]">Node_Fleet</span>
-				<span class="font-jetbrains text-[8px] font-black opacity-40 uppercase tracking-widest">DEFAULT SETTINGS</span>
-			</button>
-			<button
-				onclick={() => (activeTab = 'firebase')}
-				class="flex-1 flex flex-col items-center gap-1.5 px-8 py-4 transition-all {activeTab === 'firebase'
-					? 'bg-rust text-white shadow-lg'
-					: 'text-text-dim hover:text-white hover:bg-stone-900'}"
-			>
-				<span class="font-heading font-black text-[12px] uppercase tracking-[0.2em]">REMOTE CONFIG</span>
-				<span class="font-jetbrains text-[8px] font-black opacity-40 uppercase tracking-widest">FIREBASE SYNC</span>
-			</button>
-		</div>
-
-		<!-- Search Bar -->
-		<div class="relative group">
-			<Search
-				class="absolute left-5 top-1/2 -tranneutral-y-1/2 w-5 h-5 text-text-dim group-focus-within:text-rust transition-colors"
-			/>
-			<input
-				type="text"
-				bind:value={searchQuery}
-				placeholder="SEARCH PARAMETERS..."
-				class="w-full pl-14 pr-10 py-4 bg-stone-950 border border-stone-800 text-stone-200 font-jetbrains text-xs focus:border-rust outline-none transition-all uppercase tracking-widest shadow-inner"
-			/>
-			{#if searchQuery}
-				<button
-					onclick={() => (searchQuery = '')}
-					class="absolute right-5 top-1/2 -tranneutral-y-1/2 text-text-dim hover:text-white"
-				>
-					<X class="w-5 h-5" />
-				</button>
-			{/if}
-		</div>
+		{/each}
 	</div>
 
-	<!-- Loading State -->
+	<!-- Search -->
+	<div class="relative group">
+		<Search class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-sky-400 transition-colors" />
+		<input type="text" bind:value={searchQuery} placeholder="Search settings..." class="w-full pl-14 pr-6 py-4 bg-slate-900/50 border border-white/5 rounded-2xl text-white text-sm focus:border-sky-500/50 outline-none transition-all shadow-inner backdrop-blur-sm" />
+	</div>
+
 	{#if loading}
-		<div class="flex items-center justify-center py-20" transition:fade>
-			<div class="flex flex-col items-center gap-4">
-				<div
-					class="w-10 h-10 sm:w-12 sm:h-12 border-4 border-rust-light border-t-transparent rounded-full animate-spin"
-				></div>
-				<span class="text-text-dim font-mono text-sm uppercase">Loading...</span>
-			</div>
+		<div class="flex flex-col items-center justify-center py-20 gap-4" transition:fade>
+			<div class="w-10 h-10 border-4 border-sky-500/20 border-t-sky-500 rounded-full animate-spin"></div>
+			<span class="text-slate-500 text-xs font-bold uppercase tracking-widest">Loading Settings...</span>
 		</div>
 	{:else}
 		<div class="space-y-6">
 			{#if activeTab === 'master' || activeTab === 'nodes'}
-				<div class="space-y-8" transition:fade={{ duration: 200 }}>
-					{#each activeTab === 'master' ? filteredMasterSections : filteredNodeSections as section (section.id)}
-						{@const isExpanded = expandedSections.has(section.id)}
-						{@const SectionIcon = section.icon}
-						<div
-							class="brutalist-card rounded-none border-2 overflow-hidden shadow-2xl transition-all duration-300"
-						>
-							<button
-								onclick={() => toggleSection(section.id)}
-								class="w-full px-6 py-5 flex items-center justify-between hover:bg-white/5 transition-colors border-b border-stone-800"
-							>
-								<div class="flex items-center gap-5">
-									<div
-										class="p-2.5 bg-rust/20 border border-rust/40 rounded-none shadow-[0_0_15px_rgba(120,53,15,0.2)]"
-									>
-										<SectionIcon class="w-5 h-5 text-rust-light" />
-									</div>
-									<div class="text-left">
-										<h3 class="text-lg font-black military-label text-white uppercase tracking-widest">
-											{section.title}
-										</h3>
-										<p class="text-[9px] font-mono text-text-dim uppercase tracking-widest mt-0.5">
-											{section.description}
-										</p>
-									</div>
-								</div>
-								<div class="flex items-center gap-4">
-									<span class="tactical-code text-text-dim hidden sm:inline">{section.items.length} PARAMETERS</span>
-									<ChevronDown class="w-5 h-5 text-text-dim transition-transform duration-300 {isExpanded ? 'rotate-180 text-rust' : ''}" />
-								</div>
-							</button>
-
-							{#if isExpanded}
-								<div class="px-6 py-6 space-y-4 bg-black/20" transition:slide={{ duration: 300 }}>
-									{#each section.items as item (item.key)}
-										{@const isPending = pendingChanges.has(item.key)}
-										{@const isSecret = item.type === 'secret'}
-										{@const showValue = showSecrets.has(item.key)}
-										<div class="p-5 bg-stone-900/40 border-l-4 {isPending ? 'border-rust bg-rust/5' : 'border-stone-800'} transition-all group">
-											<div class="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
-												<div class="flex-1 min-w-0">
-													<div class="flex items-center gap-3 mb-2 flex-wrap">
-														<span class="font-jetbrains text-xs font-black text-rust-light uppercase tracking-wider">{item.key}</span>
-														<div class="flex gap-1">
-															{#if item.is_read_only}
-																<span class="text-[7px] font-black bg-stone-800 text-text-dim px-2 py-0.5 border border-stone-700 uppercase">ReadOnly</span>
-															{/if}
-															{#if item.requires_restart}
-																<span class="text-[7px] font-black bg-amber-950/30 text-warning px-2 py-0.5 border border-amber-900/30 uppercase">Restart Required</span>
-															{/if}
-														</div>
-													</div>
-													<p class="text-[10px] font-mono text-text-dim uppercase tracking-tight leading-relaxed max-w-2xl">{item.description}</p>
-													
-													<div class="mt-4">
-														{#if item.type === 'bool'}
-															<button 
-																onclick={() => handleValueChange(item.key, (pendingChanges.get(item.key) ?? item.value) === 'true' ? 'false' : 'true', item.value)}
-																disabled={item.is_read_only}
-																class="flex items-center gap-3 px-4 py-2 rounded-none border-2 transition-all {(pendingChanges.get(item.key) ?? item.value) === 'true' ? 'bg-rust/20 border-rust text-white' : 'bg-stone-950 border-stone-800 text-text-dim'}"
-															>
-																<div class="w-2 h-2 {(pendingChanges.get(item.key) ?? item.value) === 'true' ? 'bg-rust shadow-[0_0_8px_var(--color-rust)]' : 'bg-stone-800'}"></div>
-																<span class="font-black text-[10px] uppercase tracking-[0.2em]">{(pendingChanges.get(item.key) ?? item.value) === 'true' ? 'ENABLED' : 'DISABLED'}</span>
-															</button>
-														{:else}
-															<div class="flex items-center gap-2 max-w-xl">
-																<div class="relative flex-1">
-																	<input
-																		type={isSecret && !showValue ? 'password' : 'text'}
-																		value={pendingChanges.get(item.key) ?? item.value}
-																		oninput={e => handleValueChange(item.key, e.currentTarget.value, item.value)}
-																		disabled={item.is_read_only}
-																		class="w-full bg-black border-2 border-stone-800 focus:border-rust text-white font-mono text-xs px-4 py-2.5 transition-all disabled:opacity-30"
-																	/>
-																	{#if isSecret}
-																		<button 
-																			onclick={() => toggleSecret(item.key)} 
-																			class="absolute right-3 top-1/2 -tranneutral-y-1/2 text-text-dim hover:text-rust transition-colors"
-																		>
-																			{#if showValue}<EyeOff class="w-4 h-4"/>{:else}<Eye class="w-4 h-4"/>{/if}
-																		</button>
-																	{/if}
-																</div>
-																<button 
-																	onclick={() => copyToClipboard(pendingChanges.get(item.key) ?? item.value)} 
-																	class="p-2.5 bg-stone-800 text-text-dim hover:text-white hover:bg-rust transition-all border border-stone-700"
-																	title="Copy"
-																>
-																	<Copy class="w-4 h-4" />
-																</button>
+				<div class="space-y-8">
+					{#each (activeTab === 'master' ? filteredMasterSections : filteredNodeSections) as section (section.id)}
+						<Card title={section.title} subtitle={section.description} icon={section.icon} class="overflow-hidden">
+							{#snippet actions()}
+								<span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-lg">{section.items.length} Settings</span>
+							{/snippet}
+							<div class="p-6 space-y-4">
+								{#each section.items as item (item.key)}
+									{@const isPending = pendingChanges.has(item.key)}
+									{@const isSecret = item.type === 'secret'}
+									<div class="p-5 bg-slate-900/40 rounded-2xl border {isPending ? 'border-sky-500/30 bg-sky-500/5 shadow-inner' : 'border-white/5'} transition-all group">
+										<div class="flex flex-col sm:flex-row justify-between gap-6">
+											<div class="flex-1">
+												<div class="flex items-center gap-3 mb-2 flex-wrap">
+													<span class="text-xs font-bold text-sky-400 uppercase tracking-wide">{item.key}</span>
+													{#if item.is_read_only}<span class="text-[9px] font-bold bg-slate-800 text-slate-500 px-2 py-0.5 rounded uppercase border border-white/5">Read Only</span>{/if}
+													{#if item.requires_restart}<span class="text-[9px] font-bold bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded uppercase border border-amber-500/20">Restart Required</span>{/if}
+												</div>
+												<p class="text-xs text-slate-500 leading-relaxed font-medium">{item.description}</p>
+												
+												<div class="mt-4">
+													{#if item.type === 'bool'}
+														<button onclick={() => handleValueChange(item.key, (pendingChanges.get(item.key) ?? item.value) === 'true' ? 'false' : 'true', item.value)} disabled={item.is_read_only} class="flex items-center gap-3 px-4 py-2 rounded-xl border transition-all {(pendingChanges.get(item.key) ?? item.value) === 'true' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-slate-950 border-white/5 text-slate-500'}">
+															<div class="w-2 h-2 rounded-full {(pendingChanges.get(item.key) ?? item.value) === 'true' ? 'bg-emerald-500 shadow-lg' : 'bg-slate-800'}"></div>
+															<span class="font-bold text-[10px] uppercase tracking-widest">{(pendingChanges.get(item.key) ?? item.value) === 'true' ? 'Enabled' : 'Disabled'}</span>
+														</button>
+													{:else}
+														<div class="flex items-center gap-2 max-w-xl">
+															<div class="relative flex-1">
+																<input type={isSecret && !showSecrets.has(item.key) ? 'password' : 'text'} value={pendingChanges.get(item.key) ?? item.value} oninput={e => handleValueChange(item.key, e.currentTarget.value, item.value)} disabled={item.is_read_only} class="w-full bg-slate-950 border border-white/5 rounded-xl text-white font-mono text-xs px-4 py-2.5 focus:border-sky-500/50 outline-none transition-all disabled:opacity-30" />
+																{#if isSecret}<button onclick={() => { if(showSecrets.has(item.key)) showSecrets.delete(item.key); else showSecrets.add(item.key); showSecrets = new Set(showSecrets); }} class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-sky-400">{#if showSecrets.has(item.key)}<EyeOff size={16}/>{:else}<Eye size={16}/>{/if}</button>{/if}
 															</div>
-														{/if}
-													</div>
+															<button onclick={() => { navigator.clipboard.writeText(pendingChanges.get(item.key) ?? item.value); notifications.add({ type: 'success', message: 'Copied' }); }} class="p-2.5 bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 rounded-xl border border-white/5 transition-all"><Copy size={16} /></button>
+														</div>
+													{/if}
 												</div>
 											</div>
 										</div>
-									{/each}
-								</div>
-							{/if}
-						</div>
+									</div>
+								{/each}
+							</div>
+						</Card>
 					{/each}
 				</div>
 			{/if}
 
 			{#if activeTab === 'firebase'}
-				<div class="space-y-6" transition:fade={{ duration: 200 }}>
-					<!-- Connection Status Card -->
-					<div class="bg-[var(--card-bg)] backdrop-blur-sm border border-[var(--border-color)] rounded-2xl p-6 shadow-2xl">
-						<div class="flex items-center justify-between">
-							<div class="flex items-center gap-4">
-								<div class="p-3 bg-gradient-to-br from-orange-600 to-amber-600 rounded-xl shadow-lg">
-									<Flame class="w-6 h-6 text-white" />
-								</div>
-								<div>
-									<h3 class="text-xl font-bold text-neutral-100 font-heading tracking-widest uppercase">Firebase Remote Config</h3>
-									<p class="text-xs text-text-dim font-mono italic">Synchronize remote client parameters</p>
-								</div>
-							</div>
+				<div class="space-y-6">
+					<Card title="Firebase Remote Config" subtitle="Synchronize remote client parameters" icon={Flame}>
+						{#snippet actions()}
+							{#if firebaseConnected}<div class="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-[10px] font-bold uppercase"><div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>Connected</div>
+							{:else}<div class="flex items-center gap-2 px-3 py-1 bg-slate-800 border border-white/5 rounded-lg text-slate-500 text-[10px] font-bold uppercase"><div class="w-1.5 h-1.5 bg-slate-600 rounded-full"></div>Offline</div>{/if}
+						{/snippet}
+						<div class="p-6">
 							{#if firebaseConnected}
-								<div class="px-4 py-2 bg-success/10 border border-emerald-500/30 rounded-xl flex items-center gap-2">
-									<div class="w-2 h-2 bg-success rounded-full animate-pulse shadow-[0_0_10px_#10b981]"></div>
-									<span class="text-success font-black text-xs uppercase tracking-widest">CONNECTED</span>
-								</div>
-							{:else}
-								<div class="px-4 py-2 bg-stone-800 border border-white/5 rounded-xl flex items-center gap-2">
-									<div class="w-2 h-2 bg-stone-600 rounded-full"></div>
-									<span class="text-text-dim font-black text-xs uppercase tracking-widest">OFFLINE</span>
-								</div>
-							{/if}
-						</div>
-
-						{#if firebaseConnected}
-							<div class="bg-[var(--card-bg)] backdrop-blur-sm border border-[var(--border-color)] rounded-2xl overflow-hidden shadow-2xl mt-8">
-								<div class="px-6 py-4 border-b border-[var(--border-color)] flex items-center justify-between bg-black/20">
-									<div class="flex items-center gap-3">
-										<FileJson class="w-5 h-5 text-orange-500" />
-										<h3 class="text-lg font-bold text-neutral-100 font-heading tracking-widest uppercase">Parameter Buffer</h3>
+								<div class="space-y-6">
+									<div class="flex items-center justify-between border-b border-white/5 pb-4">
+										<div class="flex items-center gap-3"><FileJson class="w-5 h-5 text-sky-400" /><h3 class="text-sm font-bold text-white uppercase tracking-wider">Remote Parameters</h3></div>
+										<div class="flex gap-2"><Button onclick={syncFirebaseConfig} variant="secondary" size="sm">Sync All</Button><Button onclick={() => openFirebaseModal('create')} variant="primary" size="sm">Add Parameter</Button></div>
 									</div>
-									<div class="flex gap-2">
-										<Button
-											onclick={syncFirebaseConfig}
-											variant="secondary"
-											size="sm"
-										>
-											Sync
-										</Button>
-										<Button
-											onclick={() => openFirebaseModal('create')}
-											variant="primary"
-											size="sm"
-										>
-											Add Node
-										</Button>
-									</div>
-								</div>
-								<div class="p-6">
 									<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 										{#each filteredFirebaseConfigs as config (config.key)}
-											<div class="p-4 bg-black/40 rounded-xl border border-white/5 group hover:border-orange-500/30 transition-all">
+											<div class="p-5 bg-slate-900/40 rounded-2xl border border-white/5 hover:border-sky-500/30 transition-all group">
 												<div class="flex items-start justify-between gap-4">
 													<div class="min-w-0">
-														<div class="flex items-center gap-2 mb-1">
-															<span class="text-xs font-bold text-orange-500 font-mono uppercase">{config.key}</span>
-															<span class="text-[8px] bg-stone-800 text-text-dim px-1 py-0.5 rounded">{config.valueType}</span>
-														</div>
-														<p class="text-[10px] text-text-dim italic mb-2 truncate uppercase tracking-tight">{config.description || 'NO_META_DATA'}</p>
-														<code class="text-[10px] text-stone-400 bg-stone-900/50 px-2 py-1 rounded block truncate font-mono">
-															{config.value}
-														</code>
+														<div class="flex items-center gap-2 mb-1"><span class="text-xs font-bold text-sky-400 font-mono uppercase">{config.key}</span><span class="text-[9px] bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded font-bold">{config.valueType}</span></div>
+														<p class="text-[10px] text-slate-500 font-medium mb-3 truncate uppercase tracking-tight">{config.description || 'No description'}</p>
+														<code class="text-[10px] text-slate-400 bg-slate-950 px-3 py-2 rounded-lg block truncate font-mono border border-white/5 shadow-inner">{config.value}</code>
 													</div>
-													<div class="flex gap-1">
-														<Button
-															onclick={() => openFirebaseModal('edit', config)}
-															variant="ghost"
-															size="xs"
-															icon="edit-3"
-														/>
-														<Button
-															onclick={() => deleteFirebaseParameter(config.key)}
-															variant="ghost"
-															size="xs"
-															icon="trash-2"
-															class="text-text-dim hover:text-danger"
-														/>
-													</div>
+													<div class="flex gap-1"><Button onclick={() => openFirebaseModal('edit', config)} variant="ghost" size="xs" icon="ph:pencil-bold" /><Button onclick={() => deleteFirebaseParameter(config.key)} variant="ghost" size="xs" icon="ph:trash-bold" class="text-slate-500 hover:text-rose-500" /></div>
 												</div>
 											</div>
 										{/each}
 									</div>
 								</div>
-							</div>
-						{/if}
-					</div>
+							{:else}
+								<div class="text-center py-12 text-slate-500"><CloudCog class="w-12 h-12 mx-auto opacity-20 mb-4" /><p class="text-sm font-bold uppercase tracking-widest">Firebase integration not configured</p></div>
+							{/if}
+						</div>
+					</Card>
 				</div>
 			{/if}
 		</div>
 	{/if}
 </div>
 
-
-<!-- Firebase Parameter Modal -->
 {#if showFirebaseModal}
-	<div
-		class="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
-		onclick={(e) => e.target === e.currentTarget && closeFirebaseModal()}
-		onkeydown={(e) => {
-			if (e.key === 'Enter' || e.key === ' ') closeFirebaseModal();
-		}}
-		role="button"
-		tabindex="0"
-		transition:fade={{ duration: 150 }}
-	>
-		<div
-			class="w-full max-w-lg bg-black border border-white/10 rounded-xl shadow-2xl overflow-hidden"
-			transition:scale={{ duration: 200, start: 0.95 }}
-		>
-			<!-- Header -->
-			<div
-				class="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-black"
-			>
-				<h3
-					class="text-xl font-bold text-neutral-100 font-heading tracking-widest uppercase flex items-center gap-3"
-				>
-					<Flame class="w-5 h-5 text-orange-500" />
-					{firebaseModalMode === 'create' ? 'Add Parameter' : 'Modify Parameter'}
-				</h3>
-				<button
-					onclick={closeFirebaseModal}
-					class="p-2 text-text-dim hover:text-white transition-colors"
-				>
-					<X class="w-5 h-5" />
-				</button>
+	<div class="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md" onclick={e => e.target === e.currentTarget && (showFirebaseModal = false)} role="button" tabindex="0" onkeydown={null} transition:fade>
+		<div class="w-full max-w-lg bg-slate-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden" transition:scale>
+			<div class="px-8 py-6 border-b border-white/5 flex items-center justify-between"><h3 class="text-xl font-bold text-white tracking-tight flex items-center gap-3"><Flame class="text-sky-400" />{firebaseModalMode === 'create' ? 'New Parameter' : 'Edit Parameter'}</h3><button onclick={() => showFirebaseModal = false} class="p-2 text-slate-500 hover:text-white transition-colors"><X /></button></div>
+			<div class="p-8 space-y-6 max-h-[70vh] overflow-y-auto no-scrollbar">
+				<div><label for="fbKey" class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Identifier</label><input id="fbKey" type="text" bind:value={firebaseForm.key} disabled={firebaseModalMode === 'edit'} placeholder="e.g. MAINTENANCE_MODE" class="w-full bg-slate-950 border border-white/5 rounded-xl px-4 py-3 text-white text-sm focus:border-sky-500/50 outline-none" /></div>
+				<div><label for="fbType" class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Value Type</label><select id="fbType" bind:value={firebaseForm.valueType} class="w-full bg-slate-950 border border-white/5 rounded-xl px-4 py-3 text-white text-sm focus:border-sky-500/50 outline-none appearance-none"><option value="STRING">STRING</option><option value="NUMBER">NUMBER</option><option value="BOOLEAN">BOOLEAN</option><option value="JSON">JSON</option></select></div>
+				<div><label for="fbValue" class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Value</label>{#if firebaseForm.valueType === 'BOOLEAN'}<select id="fbValue" bind:value={firebaseForm.value} class="w-full bg-slate-950 border border-white/5 rounded-xl px-4 py-3 text-white text-sm focus:border-sky-500/50 outline-none"><option value="true">TRUE</option><option value="false">FALSE</option></select>{:else if firebaseForm.valueType === 'JSON'}<textarea id="fbValue" bind:value={firebaseForm.value} rows={4} placeholder={`{ "active": true }`} class="w-full bg-slate-950 border border-white/5 rounded-xl px-4 py-3 text-white text-sm font-mono focus:border-sky-500/50 outline-none resize-none"></textarea>{:else}<input id="fbValue" type={firebaseForm.valueType === 'NUMBER' ? 'number' : 'text'} bind:value={firebaseForm.value} placeholder="Enter value..." class="w-full bg-slate-950 border border-white/5 rounded-xl px-4 py-3 text-white text-sm focus:border-sky-500/50 outline-none" />{/if}</div>
+				<div><label for="fbDesc" class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Description</label><textarea id="fbDesc" bind:value={firebaseForm.description} rows={2} placeholder="Brief description of this setting..." class="w-full bg-slate-950 border border-white/5 rounded-xl px-4 py-3 text-white text-sm focus:border-sky-500/50 outline-none resize-none"></textarea></div>
 			</div>
-
-			<!-- Body -->
-			<div class="p-8 space-y-6 max-h-[70vh] overflow-y-auto bg-[var(--terminal-bg)] font-mono">
-				<div>
-					<label for="fbKey" class="block text-[10px] font-bold text-text-dim uppercase tracking-widest mb-2">Identifier</label>
-					<input
-						id="fbKey"
-						type="text"
-						bind:value={firebaseForm.key}
-						disabled={firebaseModalMode === 'edit'}
-						placeholder="PARAMETER_NAME"
-						class="w-full bg-black border border-white/5 px-4 py-3 text-neutral-200 focus:border-orange-500 outline-none transition-all placeholder:text-stone-800"
-					/>
-				</div>
-
-				<div>
-					<label for="fbType" class="block text-[10px] font-bold text-text-dim uppercase tracking-widest mb-2">Value Type</label>
-					<select
-						id="fbType"
-						bind:value={firebaseForm.valueType}
-						class="w-full bg-black border border-white/5 px-4 py-3 text-neutral-200 focus:border-orange-500 outline-none transition-all appearance-none"
-					>
-						<option value="STRING">STRING</option>
-						<option value="NUMBER">NUMBER</option>
-						<option value="BOOLEAN">BOOLEAN</option>
-						<option value="JSON">JSON</option>
-					</select>
-				</div>
-
-				<div>
-					<label for="fbValue" class="block text-[10px] font-bold text-text-dim uppercase tracking-widest mb-2">Value</label>
-					{#if firebaseForm.valueType === 'BOOLEAN'}
-						<select
-							id="fbValue"
-							bind:value={firebaseForm.value}
-							class="w-full bg-black border border-white/5 px-4 py-3 text-neutral-200 focus:border-orange-500 outline-none transition-all"
-						>
-							<option value="true">TRUE</option>
-							<option value="false">FALSE</option>
-						</select>
-					{:else if firebaseForm.valueType === 'JSON'}
-																		<textarea
-																			id="fbValue"
-																			bind:value={firebaseForm.value}
-																			rows={4}
-																			placeholder={`{ "status": "active" }`}
-																			class="w-full bg-black border border-white/5 px-4 py-3 text-neutral-200 focus:border-orange-500 outline-none transition-all resize-none"
-																		></textarea>					{:else}
-						<input
-							id="fbValue"
-							type={firebaseForm.valueType === 'NUMBER' ? 'number' : 'text'}
-							bind:value={firebaseForm.value}
-							placeholder="Enter value..."
-							class="w-full bg-black border border-white/5 px-4 py-3 text-neutral-200 focus:border-orange-500 outline-none transition-all"
-						/>
-					{/if}
-				</div>
-
-				<div>
-					<label for="fbDesc" class="block text-[10px] font-bold text-text-dim uppercase tracking-widest mb-2">Description</label>
-										<textarea
-											id="fbDesc"
-											bind:value={firebaseForm.description}
-											rows={2}
-											placeholder="Purpose of this parameter..."
-											class="w-full bg-black border border-white/5 px-4 py-3 text-neutral-200 focus:border-orange-500 outline-none transition-all resize-none"
-										></textarea>				</div>
-			</div>
-
-			<!-- Footer -->
-			<div class="px-8 py-6 bg-black border-t border-white/5 flex items-center justify-end gap-4">
-				<Button 
-					onclick={closeFirebaseModal}
-					variant="ghost"
-					size="md"
-				>
-					Cancel
-				</Button>
-				<Button
-					onclick={saveFirebaseParameter}
-					disabled={firebaseSaving || !firebaseForm.key.trim()}
-					variant="primary"
-					size="md"
-					loading={firebaseSaving}
-				>
-					SAVE PARAMETER
-				</Button>
-			</div>
+			<div class="px-8 py-6 bg-slate-950 border-t border-white/5 flex items-center justify-end gap-4"><Button onclick={() => showFirebaseModal = false} variant="ghost" size="md">Cancel</Button><Button onclick={saveFirebaseParameter} disabled={firebaseSaving || !firebaseForm.key.trim()} variant="primary" size="md" loading={firebaseSaving}>Save Parameter</Button></div>
 		</div>
 	</div>
 {/if}
 
 <style>
-	/* Hide scrollbar for Chrome, Safari and Opera */
-	.no-scrollbar::-webkit-scrollbar {
-		display: none;
-	}
-
-	/* Hide scrollbar for IE, Edge and Firefox */
-	.no-scrollbar {
-		-ms-overflow-style: none; /* IE and Edge */
-		scrollbar-width: none; /* Firefox */
-	}
+	.no-scrollbar::-webkit-scrollbar { display: none; }
 </style>

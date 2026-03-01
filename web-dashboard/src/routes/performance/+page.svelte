@@ -274,76 +274,73 @@ import { apiFetch } from "$lib/api";
 
 <PageHeader 
     title="Analytics" 
-    subtitle="Telemetry Hub" 
+    subtitle="System Monitoring" 
     icon="ph:chart-line-up-bold"
 >
     {#snippet actions()}
-        <div class="flex bg-neutral-900 border-2 border-neutral-800 p-1 rounded-none shadow-2xl">
-            <Button
-                variant={autoRefresh ? 'primary' : 'secondary'}
-                size="md"
+        <div class="flex bg-slate-900/50 border border-white/5 p-1 rounded-xl shadow-lg backdrop-blur-md">
+            <button
                 onclick={toggleAutoRefresh}
-                class="min-w-[140px] !rounded-none"
+                class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all {autoRefresh ? 'bg-sky-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}"
             >
-                {autoRefresh ? 'STREAM_LIVE' : 'LINK_PAUSED'}
-            </Button>
+                {autoRefresh ? 'Live Updates' : 'Updates Paused'}
+            </button>
             <Button
                 variant="ghost"
-                size="md"
+                size="sm"
                 onclick={fetchMetrics}
                 disabled={loading}
                 loading={loading}
                 icon="ph:arrows-clockwise-bold"
-                class="!rounded-none"
+                class="!rounded-lg"
             />
         </div>
     {/snippet}
 </PageHeader>
 
-<div class="space-y-10">
+<div class="space-y-8">
     <!-- Summary Metrics -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {#if metrics}
             {#each [
-                { label: 'Uptime_Persist', val: formatDuration(metrics.master.uptime_ms), icon: Clock, color: 'text-rust-light' },
-                { label: 'Routines_Active', val: metrics.master.num_goroutine, icon: Activity, color: 'text-neutral-400' },
-                { label: 'Heap_Allocation', val: formatBytes(metrics.master.heap_alloc), icon: MemoryStick, color: 'text-neutral-400' },
-                { label: 'Network_Cycle', val: `${metrics.network.requests_per_second?.toFixed(1)} req/s`, icon: Zap, color: 'text-rust-light' },
-                { label: 'Threat_Vector', val: formatNumber(metrics.redeye?.total_blocks || 0), icon: ShieldAlert, color: 'text-red-500' },
-                { label: 'Fault_Ratio', val: `${metrics.network.error_rate?.toFixed(2)}%`, icon: AlertCircle, color: metrics.network.error_rate > 5 ? 'text-red-500' : 'text-neutral-600' }
+                { label: 'System Uptime', val: formatDuration(metrics.master.uptime_ms), icon: Clock, color: 'text-sky-400' },
+                { label: 'Active Routines', val: metrics.master.num_goroutine, icon: Activity, color: 'text-slate-400' },
+                { label: 'Memory Allocated', val: formatBytes(metrics.master.heap_alloc), icon: MemoryStick, color: 'text-slate-400' },
+                { label: 'Request Rate', val: `${metrics.network.requests_per_second?.toFixed(1)}/s`, icon: Zap, color: 'text-sky-400' },
+                { label: 'Security Blocks', val: formatNumber(metrics.redeye?.total_blocks || 0), icon: ShieldAlert, color: 'text-rose-500' },
+                { label: 'Error Rate', val: `${metrics.network.error_rate?.toFixed(2)}%`, icon: AlertCircle, color: metrics.network.error_rate > 5 ? 'text-rose-500' : 'text-slate-500' }
             ] as block}
-                <div class="bg-neutral-900/60 border-2 border-neutral-800 rounded-none p-6 shadow-2xl hover:border-rust/30 transition-all flex flex-col justify-between min-h-[130px] group relative overflow-hidden">
-                    <div class="corner-bracket-tl opacity-20"></div>
+                <div class="bg-slate-800/40 border border-white/5 rounded-2xl p-5 shadow-lg backdrop-blur-md hover:border-sky-500/30 transition-all flex flex-col justify-between min-h-[120px] group relative overflow-hidden">
                     <div class="flex justify-between items-start relative z-10">
-                        <span class="text-[8px] font-mono font-black text-neutral-500 uppercase tracking-[0.2em]">{block.label}</span>
-                        <block.icon size={14} class={block.color} />
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">{block.label}</span>
+                        <block.icon size={16} class={block.color} />
                     </div>
-                    <div class="text-2xl font-heading font-black text-white tracking-tighter mt-4 italic relative z-10">{block.val}</div>
+                    <div class="text-2xl font-sans font-semibold text-slate-100 tracking-tight mt-2 relative z-10">{block.val}</div>
                 </div>
             {/each}
         {/if}
     </div>
 
-    <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
-        <!-- Memory Diagnostics -->
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 lg:gap-8">
+        <!-- Memory -->
         <div class="xl:col-span-8">
-            <Card title="Memory Diagnostics" subtitle="Allocation_Lifecycle" icon="ph:memory-bold">
+            <Card title="Memory Usage" subtitle="Resource Details" icon="ph:memory-bold">
                 {#snippet actions()}
                     <div class="flex gap-2">
-                        <Button variant="secondary" size="xs" onclick={forceGC} disabled={gcLoading} loading={gcLoading}>EXECUTE_GC</Button>
-                        <Button variant="secondary" size="xs" onclick={freeMemory} disabled={freeMemLoading} loading={freeMemLoading}>RELEASE_MEM</Button>
+                        <Button variant="secondary" size="xs" onclick={forceGC} disabled={gcLoading} loading={gcLoading}>Run GC</Button>
+                        <Button variant="secondary" size="xs" onclick={freeMemory} disabled={freeMemLoading} loading={freeMemLoading}>Free Memory</Button>
                     </div>
                 {/snippet}
 
-                <div class="p-8 space-y-10">
-                    <div class="space-y-4">
-                        <div class="flex justify-between text-[9px] font-mono font-black uppercase tracking-[0.3em]">
-                            <span class="text-neutral-500">Heap_State_Buffer</span>
-                            <span class="text-rust-light">Limit: {formatBytes(metrics?.master.sys || 0)}</span>
+                <div class="p-6 lg:p-8 space-y-8">
+                    <div class="space-y-3">
+                        <div class="flex justify-between text-xs font-medium text-slate-400">
+                            <span>Memory Allocation</span>
+                            <span class="text-sky-400">Total: {formatBytes(metrics?.master.sys || 0)}</span>
                         </div>
-                        <div class="h-2 bg-black border border-neutral-800 rounded-none overflow-hidden p-0 shadow-inner">
+                        <div class="h-2.5 bg-slate-900/50 border border-white/5 rounded-full overflow-hidden p-0">
                             <div
-                                class="h-full bg-rust transition-all duration-1000 ease-out shadow-[0_0_15px_#c2410c]"
+                                class="h-full bg-gradient-to-r from-sky-500 to-indigo-500 transition-all duration-1000 ease-out rounded-full shadow-lg shadow-sky-500/20"
                                 style="width: {(metrics?.master.heap_usage_ratio || 0) * 100}%"
                             ></div>
                         </div>
@@ -351,16 +348,16 @@ import { apiFetch } from "$lib/api";
 
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                         {#each [
-                            { label: 'Allocated', val: formatBytes(metrics?.master.heap_alloc || 0) },
-                            { label: 'Stack_Size', val: formatBytes(metrics?.master.stack_sys || 0) },
-                            { label: 'Live_Objects', val: formatNumber(metrics?.master.live_objects || 0) },
-                            { label: 'Cycle_Rate', val: `${formatBytes(metrics?.master.heap_alloc_rate || 0)}/s` },
-                            { label: 'Idle_Segment', val: formatBytes(metrics?.master.heap_idle || 0) },
-                            { label: 'GC_Target', val: formatBytes(metrics?.master.next_gc_target || 0) }
+                            { label: 'Heap Allocated', val: formatBytes(metrics?.master.heap_alloc || 0) },
+                            { label: 'Stack Size', val: formatBytes(metrics?.master.stack_sys || 0) },
+                            { label: 'Live Objects', val: formatNumber(metrics?.master.live_objects || 0) },
+                            { label: 'Allocation Rate', val: `${formatBytes(metrics?.master.heap_alloc_rate || 0)}/s` },
+                            { label: 'Idle Memory', val: formatBytes(metrics?.master.heap_idle || 0) },
+                            { label: 'GC Threshold', val: formatBytes(metrics?.master.next_gc_target || 0) }
                         ] as item}
-                            <div class="bg-black/40 border border-neutral-800 p-5 rounded-none group hover:border-rust/20 transition-all shadow-inner relative">
-                                <div class="text-[8px] font-mono font-black text-neutral-600 uppercase tracking-widest mb-2 group-hover:text-rust-light transition-colors">{item.label}</div>
-                                <div class="text-xl font-heading font-black text-neutral-300 italic">{item.val}</div>
+                            <div class="bg-slate-900/50 border border-white/5 p-4 rounded-xl group hover:border-sky-500/20 transition-all relative">
+                                <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 group-hover:text-sky-400 transition-colors">{item.label}</div>
+                                <div class="text-lg font-semibold text-slate-200">{item.val}</div>
                             </div>
                         {/each}
                     </div>
@@ -368,40 +365,39 @@ import { apiFetch } from "$lib/api";
             </Card>
         </div>
 
-        <!-- Network Operations -->
+        <!-- Network -->
         <div class="xl:col-span-4">
-            <Card title="Network Flow" subtitle="Traffic_Error_Vectors" icon="ph:globe-bold">
-                <div class="p-8 space-y-8">
-                    <div class="bg-black/60 border border-neutral-800 p-6 rounded-none shadow-inner relative overflow-hidden">
-                        <div class="corner-bracket-tl opacity-10"></div>
-                        <div class="flex justify-between items-end mb-3">
-                            <span class="text-[9px] font-mono font-black text-neutral-500 uppercase tracking-[0.2em]">Active_Uplinks</span>
-                            <span class="text-3xl font-heading font-black text-white italic">{metrics?.network.active_connections}</span>
+            <Card title="Network Traffic" subtitle="Data Overview" icon="ph:globe-bold">
+                <div class="p-6 lg:p-8 space-y-8">
+                    <div class="bg-slate-900/50 border border-white/5 p-6 rounded-2xl relative overflow-hidden">
+                        <div class="flex justify-between items-end mb-4">
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Active Connections</span>
+                            <span class="text-3xl font-semibold text-white">{metrics?.network.active_connections}</span>
                         </div>
-                        <div class="w-full h-1 bg-neutral-900 overflow-hidden rounded-none">
-                            <div class="h-full bg-rust-light animate-pulse shadow-[0_0_10px_#f97316]" style="width: 100%"></div>
+                        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-emerald-500 animate-pulse rounded-full" style="width: 100%"></div>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-6">
                         <div class="space-y-1">
-                            <span class="text-[8px] font-mono font-black text-neutral-600 uppercase tracking-widest block">Data_Ingress</span>
-                            <div class="text-xl font-heading font-black text-neutral-300 tabular-nums">{formatBytes(metrics?.network.bytes_received || 0)}</div>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Data Received</span>
+                            <div class="text-xl font-semibold text-slate-200 tabular-nums">{formatBytes(metrics?.network.bytes_received || 0)}</div>
                         </div>
                         <div class="space-y-1 text-right">
-                            <span class="text-[8px] font-mono font-black text-neutral-600 uppercase tracking-widest block">Data_Egress</span>
-                            <div class="text-xl font-heading font-black text-neutral-300 tabular-nums">{formatBytes(metrics?.network.bytes_sent || 0)}</div>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Data Sent</span>
+                            <div class="text-xl font-semibold text-slate-200 tabular-nums">{formatBytes(metrics?.network.bytes_sent || 0)}</div>
                         </div>
                     </div>
 
-                    <div class="space-y-4 pt-6 border-t border-neutral-800">
+                    <div class="space-y-3 pt-6 border-t border-white/5">
                         <div class="flex justify-between items-center">
-                            <span class="text-[9px] font-mono font-black text-neutral-500 uppercase tracking-widest">Fault_Ratio</span>
-                            <span class="font-mono font-black text-rust-light">{(metrics?.network.error_rate || 0).toFixed(2)}%</span>
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Error Rate</span>
+                            <span class="font-medium text-rose-400">{(metrics?.network.error_rate || 0).toFixed(2)}%</span>
                         </div>
-                        <div class="h-1.5 bg-black border border-neutral-800 rounded-none overflow-hidden">
+                        <div class="h-1.5 bg-slate-900/50 border border-white/5 rounded-full overflow-hidden">
                             <div 
-                                class="h-full bg-rust shadow-[0_0_8px_#c2410c]" 
+                                class="h-full bg-rose-500 rounded-full" 
                                 style="width: {Math.min(metrics?.network.error_rate || 0, 100)}%"
                             ></div>
                         </div>
@@ -410,43 +406,43 @@ import { apiFetch } from "$lib/api";
             </Card>
         </div>
 
-        <!-- Security & Persistence -->
+        <!-- Security -->
         <div class="xl:col-span-6">
-            <Card title="RedEye Sentinel" subtitle="Surveillance_Engine" icon="ph:shield-check-bold">
+            <Card title="Security Monitor" subtitle="Active Protection" icon="ph:shield-check-bold">
                 {#snippet actions()}
-                    <div class="px-3 py-1 bg-red-500/10 text-red-500 text-[9px] font-mono font-black uppercase rounded-none border border-red-500/20 animate-flicker">
-                        ALERT_LEVEL: {metrics?.redeye?.threat_level || 'LOW'}
+                    <div class="px-3 py-1 bg-rose-500/10 text-rose-400 text-[10px] font-bold uppercase rounded-lg border border-rose-500/20">
+                        Status: {metrics?.redeye?.threat_level || 'Normal'}
                     </div>
                 {/snippet}
 
-                <div class="p-8 space-y-10">
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                <div class="p-6 lg:p-8 space-y-8">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         {#each [
-                            { label: 'Intercepts', val: formatNumber(metrics?.redeye?.total_blocks || 0), icon: ShieldAlert, color: 'text-red-500' },
-                            { label: 'Rate_Caps', val: formatNumber(metrics?.redeye?.total_rate_limits || 0), icon: Activity, color: 'text-amber-500' },
-                            { label: 'Active_Bans', val: formatNumber(metrics?.redeye?.active_bans || 0), icon: Ban, color: 'text-red-600' },
-                            { label: 'Logic_Delay', val: `${metrics?.redeye?.avg_processing_time_ms.toFixed(2)}ms`, icon: Clock, color: 'text-neutral-500' }
+                            { label: 'Blocked', val: formatNumber(metrics?.redeye?.total_blocks || 0), icon: ShieldAlert, color: 'text-rose-500' },
+                            { label: 'Rate Limited', val: formatNumber(metrics?.redeye?.total_rate_limits || 0), icon: Activity, color: 'text-amber-500' },
+                            { label: 'Active Bans', val: formatNumber(metrics?.redeye?.active_bans || 0), icon: Ban, color: 'text-rose-600' },
+                            { label: 'Avg Latency', val: `${metrics?.redeye?.avg_processing_time_ms.toFixed(2)}ms`, icon: Clock, color: 'text-slate-500' }
                         ] as item}
                             <div class="flex flex-col items-center text-center space-y-3 group">
-                                <div class="p-4 bg-black border border-neutral-800 rounded-none shadow-inner relative group-hover:border-rust/40 transition-colors">
+                                <div class="p-3 bg-slate-900/50 border border-white/5 rounded-xl group-hover:border-sky-500/30 transition-colors">
                                     <item.icon size={20} class={item.color} />
                                 </div>
-                                <div class="space-y-1">
-                                    <span class="text-[8px] font-mono font-black text-neutral-600 uppercase tracking-widest">{item.label}</span>
-                                    <div class="text-xl font-heading font-black text-white italic">{item.val}</div>
+                                <div class="space-y-0.5">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">{item.label}</span>
+                                    <div class="text-lg font-semibold text-slate-200">{item.val}</div>
                                 </div>
                             </div>
                         {/each}
                     </div>
 
-                    <div class="p-6 bg-black border border-neutral-800 rounded-none relative overflow-hidden">
-                        <div class="absolute top-0 left-0 w-1 h-full bg-red-600/40"></div>
-                        <div class="flex items-center gap-3 mb-3 ml-2">
-                            <div class="w-1 h-3 bg-red-600 shadow-[0_0_8px_#dc2626]"></div>
-                            <span class="text-[9px] font-mono font-black text-red-500 uppercase tracking-[0.3em]">Neural_Mitigation_Active</span>
+                    <div class="p-5 bg-slate-900/50 border border-white/5 rounded-xl relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-rose-500/50"></div>
+                        <div class="flex items-center gap-2 mb-2 ml-2">
+                            <div class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></div>
+                            <span class="text-[10px] font-bold text-rose-400 uppercase tracking-wider">Protection Enabled</span>
                         </div>
-                        <p class="text-[10px] font-mono text-neutral-500 leading-relaxed font-black ml-2 uppercase tracking-tight">
-                            Last tactical intercept confirmed at: <span class="text-neutral-300 font-bold">{metrics?.redeye?.last_block_at ? new Date(metrics.redeye.last_block_at).toLocaleTimeString() : 'NO_RECENT_EVENT'}</span>
+                        <p class="text-xs font-medium text-slate-400 ml-2">
+                            Last security event: <span class="text-slate-200">{metrics?.redeye?.last_block_at ? new Date(metrics.redeye.last_block_at).toLocaleTimeString() : 'None'}</span>
                         </p>
                     </div>
                 </div>
@@ -454,45 +450,45 @@ import { apiFetch } from "$lib/api";
         </div>
 
         <div class="xl:col-span-6">
-            <Card title="Persistence Core" subtitle="Database_Cluster" icon="ph:database-bold">
-                <div class="p-8 space-y-10">
+            <Card title="Database Status" subtitle="Connection Details" icon="ph:database-bold">
+                <div class="p-6 lg:p-8 space-y-8">
                     <div class="grid grid-cols-2 gap-6">
-                        <div class="space-y-4">
-                            <span class="text-[9px] font-mono font-black text-neutral-600 uppercase tracking-[0.2em] block">Pool_Saturation</span>
+                        <div class="space-y-3">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Connection Pool</span>
                             <div class="grid grid-cols-2 gap-3">
-                                <div class="bg-black border border-neutral-800 p-4 rounded-none text-center shadow-inner">
-                                    <div class="text-[7px] text-neutral-600 font-mono font-black uppercase mb-1">In_Use</div>
-                                    <div class="text-xl font-heading font-black text-emerald-500 tabular-nums">{metrics?.database.in_use}</div>
+                                <div class="bg-slate-900/50 border border-white/5 p-3 rounded-xl text-center">
+                                    <div class="text-[9px] text-slate-500 font-bold uppercase mb-1">In Use</div>
+                                    <div class="text-lg font-semibold text-emerald-400 tabular-nums">{metrics?.database.in_use}</div>
                                 </div>
-                                <div class="bg-black border border-neutral-800 p-4 rounded-none text-center shadow-inner">
-                                    <div class="text-[7px] text-neutral-600 font-mono font-black uppercase mb-1">Idle</div>
-                                    <div class="text-xl font-heading font-black text-neutral-500 tabular-nums">{metrics?.database.idle}</div>
+                                <div class="bg-slate-900/50 border border-white/5 p-3 rounded-xl text-center">
+                                    <div class="text-[9px] text-slate-500 font-bold uppercase mb-1">Idle</div>
+                                    <div class="text-lg font-semibold text-slate-400 tabular-nums">{metrics?.database.idle}</div>
                                 </div>
                             </div>
                         </div>
-                        <div class="space-y-4">
-                            <span class="text-[9px] font-mono font-black text-neutral-600 uppercase tracking-[0.2em] block">Commit_Cycle</span>
+                        <div class="space-y-3">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Transactions</span>
                             <div class="grid grid-cols-2 gap-3">
-                                <div class="bg-black border border-neutral-800 p-4 rounded-none text-center shadow-inner">
-                                    <div class="text-[7px] text-neutral-600 font-mono font-black uppercase mb-1">Success</div>
-                                    <div class="text-xl font-heading font-black text-neutral-300 tabular-nums">{formatNumber(metrics?.database.commits || 0)}</div>
+                                <div class="bg-slate-900/50 border border-white/5 p-3 rounded-xl text-center">
+                                    <div class="text-[9px] text-slate-500 font-bold uppercase mb-1">Success</div>
+                                    <div class="text-lg font-semibold text-slate-200 tabular-nums">{formatNumber(metrics?.database.commits || 0)}</div>
                                 </div>
-                                <div class="bg-black border border-neutral-800 p-4 rounded-none text-center shadow-inner">
-                                    <div class="text-[7px] text-neutral-600 font-mono font-black uppercase mb-1">Faults</div>
-                                    <div class="text-xl font-heading font-black text-red-500 tabular-nums">{formatNumber(metrics?.database.rollbacks || 0)}</div>
+                                <div class="bg-slate-900/50 border border-white/5 p-3 rounded-xl text-center">
+                                    <div class="text-[9px] text-slate-500 font-bold uppercase mb-1">Errors</div>
+                                    <div class="text-lg font-semibold text-rose-500 tabular-nums">{formatNumber(metrics?.database.rollbacks || 0)}</div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="space-y-4">
-                        <div class="flex justify-between text-[9px] font-mono font-black uppercase tracking-[0.3em]">
-                            <span class="text-neutral-600">Cache_Hit_Efficiency</span>
-                            <span class="text-emerald-500 font-black italic">{(metrics?.database.cache_hit_ratio || 0).toFixed(2)}%</span>
+                    <div class="space-y-3">
+                        <div class="flex justify-between text-xs font-medium">
+                            <span class="text-slate-400">Cache Hit Efficiency</span>
+                            <span class="text-emerald-400">{(metrics?.database.cache_hit_ratio || 0).toFixed(2)}%</span>
                         </div>
-                        <div class="h-2 bg-black border border-neutral-800 rounded-none overflow-hidden p-0 shadow-inner">
+                        <div class="h-2.5 bg-slate-900/50 border border-white/5 rounded-full overflow-hidden p-0">
                             <div
-                                class="h-full bg-emerald-500 transition-all duration-1000 ease-out shadow-[0_0_10px_#10b981]"
+                                class="h-full bg-emerald-500 transition-all duration-1000 ease-out rounded-full shadow-lg shadow-emerald-500/20"
                                 style="width: {metrics?.database.cache_hit_ratio || 0}%"
                             ></div>
                         </div>
@@ -502,26 +498,23 @@ import { apiFetch } from "$lib/api";
         </div>
     </div>
 
-    <!-- Infrastructure Summary -->
-    <div class="bg-neutral-900 border-2 border-neutral-800 p-8 rounded-none flex flex-wrap justify-center gap-12 text-[9px] font-mono font-black uppercase tracking-[0.3em] text-neutral-600 shadow-2xl relative">
-        <div class="corner-bracket-tl opacity-20"></div>
-        <div class="corner-bracket-br opacity-20"></div>
-        
-        <div class="flex items-center gap-3 group cursor-default">
-            <Cpu size={14} class="text-rust-light opacity-40 group-hover:opacity-100 transition-opacity" />
-            <span class="group-hover:text-neutral-300 transition-colors">Nodes: {metrics?.nodes.online_nodes || 0} Online</span>
+    <!-- System Summary -->
+    <div class="bg-slate-900/50 border border-white/5 p-6 rounded-2xl flex flex-wrap justify-center gap-8 text-xs font-medium text-slate-500 shadow-lg backdrop-blur-md">
+        <div class="flex items-center gap-2.5 group cursor-default">
+            <Cpu size={16} class="text-sky-400 opacity-60 group-hover:opacity-100 transition-opacity" />
+            <span class="group-hover:text-slate-300 transition-colors">Nodes: {metrics?.nodes.online_nodes || 0} Online</span>
         </div>
-        <div class="flex items-center gap-3 group cursor-default">
-            <Database size={14} class="text-rust-light opacity-40 group-hover:opacity-100 transition-opacity" />
-            <span class="group-hover:text-neutral-300 transition-colors">Storage: {metrics?.database.size || 'NULL'}</span>
+        <div class="flex items-center gap-2.5 group cursor-default">
+            <Database size={16} class="text-sky-400 opacity-60 group-hover:opacity-100 transition-opacity" />
+            <span class="group-hover:text-slate-300 transition-colors">Storage: {metrics?.database.size || 'N/A'}</span>
         </div>
-        <div class="flex items-center gap-3 group cursor-default">
-            <Activity size={14} class="text-rust-light opacity-40 group-hover:opacity-100 transition-opacity" />
-            <span class="group-hover:text-neutral-300 transition-colors">IO_Status: NOMINAL</span>
+        <div class="flex items-center gap-2.5 group cursor-default">
+            <Activity size={16} class="text-sky-400 opacity-60 group-hover:opacity-100 transition-opacity" />
+            <span class="group-hover:text-slate-300 transition-colors">Status: Normal</span>
         </div>
-        <div class="flex items-center gap-3 text-rust border-b border-rust/20 pb-1">
+        <div class="flex items-center gap-2.5 text-sky-400 border-b border-sky-500/20 pb-0.5">
             <RefreshCw size={14} class="animate-spin" />
-            <span class="italic">Tactical_Link_Stable</span>
+            <span>Connection Stable</span>
         </div>
     </div>
 </div>
@@ -534,10 +527,10 @@ import { apiFetch } from "$lib/api";
 		background: transparent;
 	}
 	.custom-scrollbar::-webkit-scrollbar-thumb {
-		background: #262626;
-		border-radius: 0px;
+		background: #1e293b;
+		border-radius: 99px;
 	}
 	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-		background: #c2410c;
+		background: #475569;
 	}
 </style>

@@ -36,30 +36,51 @@ func GetDatabaseOverviewHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stats := make(map[string]interface{})
+	driver := DBConn.DriverName()
 
-	var sizeBytes int64
-	if err := DBConn.Get(&sizeBytes, "SELECT pg_database_size(current_database())"); err != nil {
-		log.Printf("Error getting DB size: %v", err)
-	}
-	stats["size_bytes"] = sizeBytes
+	if driver == "pgx" || driver == "postgres" {
+		var sizeBytes int64
+		if err := DBConn.Get(&sizeBytes, "SELECT pg_database_size(current_database())"); err != nil {
+			log.Printf("Error getting DB size: %v", err)
+		}
+		stats["size_bytes"] = sizeBytes
 
-	var version string
-	if err := DBConn.Get(&version, "SELECT version()"); err != nil {
-		log.Printf("Error getting DB version: %v", err)
-	}
-	stats["version"] = version
+		var version string
+		if err := DBConn.Get(&version, "SELECT version()"); err != nil {
+			log.Printf("Error getting DB version: %v", err)
+		}
+		stats["version"] = version
 
-	var connections int
-	if err := DBConn.Get(&connections, "SELECT count(*) FROM pg_stat_activity"); err != nil {
-		log.Printf("Error getting connections: %v", err)
-	}
-	stats["connections"] = connections
+		var connections int
+		if err := DBConn.Get(&connections, "SELECT count(*) FROM pg_stat_activity"); err != nil {
+			log.Printf("Error getting connections: %v", err)
+		}
+		stats["connections"] = connections
 
-	var startTime time.Time
-	if err := DBConn.Get(&startTime, "SELECT pg_postmaster_start_time()"); err == nil {
-		stats["uptime_seconds"] = time.Since(startTime).Seconds()
-	} else {
-		stats["uptime_seconds"] = 0
+		var startTime time.Time
+		if err := DBConn.Get(&startTime, "SELECT pg_postmaster_start_time()"); err == nil {
+			stats["uptime_seconds"] = time.Since(startTime).Seconds()
+		} else {
+			stats["uptime_seconds"] = 0
+		}
+	} else if driver == "sqlite" {
+		var sizeBytes int64
+		// Approximate DB size by checking file size
+		// We can get the file path from the DSN in DBConn, but accessing it directly is tricky.
+		// Instead, execute a PRAGMA.
+		var pageCount, pageSize int64
+		_ = DBConn.Get(&pageCount, "PRAGMA page_count")
+		_ = DBConn.Get(&pageSize, "PRAGMA page_size")
+		sizeBytes = pageCount * pageSize
+		stats["size_bytes"] = sizeBytes
+
+		var version string
+		_ = DBConn.Get(&version, "SELECT sqlite_version()")
+		stats["version"] = "SQLite " + version
+
+		// SQLite is embedded/in-process, so connections is usually just open conns in pool
+		stats["connections"] = DBConn.Stats().OpenConnections
+		stats["uptime_seconds"] = 0 // Not applicable for file DB
 	}
 
 	utils.WriteJSON(w, http.StatusOK, stats)

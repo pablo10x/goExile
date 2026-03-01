@@ -47,25 +47,25 @@ import { apiFetch } from "$lib/api";
 	}
 
 	// Base classes
-	const baseClasses = "inline-flex items-center justify-center transition-all focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed active:tranneutral-y-[2px] relative overflow-hidden group font-mono uppercase tracking-widest font-black";
+	const baseClasses = "btn-premium active:scale-95 transition-all duration-300 group tracking-tight";
 
 	// Size classes
 	const sizeClasses = {
-		xs: "text-[8px] px-2.5 py-1.5 gap-1.5",
-		sm: "text-[9px] px-4 py-2 gap-2",
-		md: "text-[10px] px-6 py-3 gap-2.5",
-		lg: "text-[11px] px-8 py-4 gap-3"
+		xs: "text-[10px] px-3 py-1.5 gap-1.5",
+		sm: "text-xs px-4 py-2 gap-2",
+		md: "text-sm px-6 py-3 gap-2.5",
+		lg: "text-base px-8 py-4 gap-3"
 	};
 
-	// Industrial tech palette
+	// Modern professional palette
 	const defaultColors = {
-		primary: "bg-rust text-white hover:bg-rust-light shadow-xl shadow-rust/20 border-2 border-rust/30",
-		secondary: "bg-neutral-950 text-neutral-400 border-2 border-neutral-800 hover:text-white hover:border-neutral-600 hover:bg-neutral-900",
-		danger: "bg-red-600/10 text-red-500 border-2 border-red-600/30 hover:bg-red-600 hover:text-white shadow-xl shadow-red-600/10",
-		success: "bg-emerald-600/10 text-emerald-500 border-2 border-emerald-600/30 hover:bg-emerald-600 hover:text-white shadow-xl shadow-emerald-600/10",
-		warning: "bg-amber-600/10 text-amber-500 border-2 border-amber-600/30 hover:bg-amber-600 hover:text-white shadow-xl shadow-amber-600/10",
-		ghost: "bg-transparent text-neutral-500 hover:text-rust-light hover:bg-rust/5 border-2 border-transparent",
-		outline: "bg-transparent text-neutral-400 border-2 border-neutral-800 hover:border-rust/50 hover:text-white"
+		primary: "btn-premium-primary",
+		secondary: "btn-premium-secondary",
+		danger: "bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500 hover:text-white shadow-lg shadow-rose-500/10",
+		success: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white shadow-lg shadow-emerald-500/10",
+		warning: "bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500 hover:text-white shadow-lg shadow-amber-500/10",
+		ghost: "bg-transparent text-slate-400 hover:text-slate-100 hover:bg-white/5",
+		outline: "bg-transparent text-slate-300 border border-white/10 hover:bg-white/5 hover:border-white/20"
 	};
 
 	// Loading spinner size
@@ -81,7 +81,7 @@ import { apiFetch } from "$lib/api";
 	<a
 		{href}
 		{title}
-		class="{baseClasses} {sizeClasses[size]} {className} {defaultColors[variant]} rounded-sm"
+		class="{baseClasses} {sizeClasses[size]} {className} {defaultColors[variant]} rounded-xl"
 		onclick={handleClick}
 	>
 		{#if icon}
@@ -94,7 +94,7 @@ import { apiFetch } from "$lib/api";
 	<button
 		{type}
 		{title}
-		class="{baseClasses} {sizeClasses[size]} {className} {defaultColors[variant]} rounded-sm"
+		class="{baseClasses} {sizeClasses[size]} {className} {defaultColors[variant]} rounded-xl"
 		{disabled}
 		aria-disabled={disabled || loading}
 		onclick={handleClick}

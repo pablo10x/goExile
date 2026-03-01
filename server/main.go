@@ -156,7 +156,10 @@ func run() error {
 	_, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	port := "8081"
+	port := os.Getenv("SERVER_PORT")
+	if port == "" {
+		port = "8081"
+	}
 
 	// Define API Routes
 	apiRouter := router.PathPrefix("/api/nodes").Subrouter()

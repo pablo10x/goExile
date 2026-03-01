@@ -2,14 +2,20 @@ package api
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
 
 var upgrader = websocket.Upgrader{
-	CheckOrigin: func(_ *http.Request) bool {
-		return true // Allow local connections
+	CheckOrigin: func(r *http.Request) bool {
+		// Only allow local connections for game server stats
+		host := r.Host
+		if host == "localhost" || host == "127.0.0.1" || strings.HasPrefix(host, "127.0.0.1:") || strings.HasPrefix(host, "localhost:") {
+			return true
+		}
+		return false
 	},
 }
 

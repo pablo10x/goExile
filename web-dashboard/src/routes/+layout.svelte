@@ -27,39 +27,11 @@ import { apiFetch, notify, API_BASE } from "$lib/api";
 	} from '$lib/stores.svelte';
 	import type { Note } from '$lib/stores.svelte';
 	import {
-		FolderTree,
-		Menu,
-		StickyNote,
-		LayoutDashboard,
 		Activity,
 		Settings as SettingsIcon,
-		Server,
-		Database,
-		Code2,
-		Users,
-		HardDrive,
-		RefreshCw,
-		History,
-		Trash2,
-		Download,
-		Upload,
-		ShieldCheck,
-		ShieldAlert,
 		Plus,
 		Zap,
-		ZapOff,
 		Eye,
-		Sun,
-		Moon,
-		Palette,
-		Radio,
-		Compass,
-		Cpu,
-		Terminal,
-		Lock,
-		Shield,
-		Layers,
-		BarChart3,
 		ChevronRight,
 		X,
 		Gauge,
@@ -67,11 +39,8 @@ import { apiFetch, notify, API_BASE } from "$lib/api";
 		Sliders,
 		AlertCircle
 	} from 'lucide-svelte';
-	import QuickActionsTooltip from '$lib/components/QuickActionsTooltip.svelte';
 	import NoteModal from '$lib/components/notes/NoteModal.svelte';
 
-	import NavbarParticles from '$lib/components/theme/NavbarParticles.svelte';
-	import MotherboardBackground from '$lib/components/theme/MotherboardBackground.svelte';
 	import ServerStatus from '$lib/components/theme/ServerStatus.svelte';
 	import Notifications from '$lib/components/theme/Notifications.svelte';
 	import Icon from '$lib/components/theme/Icon.svelte';
@@ -93,16 +62,11 @@ import { apiFetch, notify, API_BASE } from "$lib/api";
 	// Keyboard shortcut orchestration
 	onMount(() => {
 		const handleGlobalKeydown = (e: KeyboardEvent) => {
-			// Ctrl+K or Cmd+K for Command Palette
 			if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
 				e.preventDefault();
 				isCommandPaletteOpen = !isCommandPaletteOpen;
 			}
-
-			// Don't trigger shortcuts if user is typing in an input
 			if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-
-			// G + [key] navigation pattern
 			if (e.key === 'g') {
 				const nextKey = (ev: KeyboardEvent) => {
 					if (ev.key === 'd') goto('/dashboard');
@@ -115,218 +79,120 @@ import { apiFetch, notify, API_BASE } from "$lib/api";
 				window.addEventListener('keydown', nextKey, { once: true });
 			}
 		};
-
 		window.addEventListener('keydown', handleGlobalKeydown);
 		return () => window.removeEventListener('keydown', handleGlobalKeydown);
 	});
 
-	// Sync isAuthenticated and stats store with server-side data on load
-	$effect.pre(() => {
-		if (data?.isAuthenticated !== undefined) {
-			isAuthenticated.set(data.isAuthenticated);
-		}
-		if (data?.stats) {
-			stats.set(data.stats);
+	$effect(() => {
+		if (data && 'isAuthenticated' in data) {
+			const auth = (data as any).isAuthenticated;
+			if (auth !== get(isAuthenticated)) {
+				isAuthenticated.set(auth);
+			}
 		}
 	});
 
-	// Theme handling
+	$effect(() => {
+		if ($isAuthenticated && !isChecking && page.url.pathname !== '/login' && page.url.pathname !== '/login/2fa') {
+			loadAllSettings().then(() => {
+				if ($nodes.length === 0) initialFetch();
+			});
+			if (!eventSource) connectSSE();
+		}
+	});
+
 	$effect(() => {
 		if (typeof window !== 'undefined') {
-			if ($theme === 'dark') {
-				document.documentElement.classList.add('dark');
-			} else {
-				document.documentElement.classList.remove('dark');
-			}
+			if ($theme === 'dark') document.documentElement.classList.add('dark');
+			else document.documentElement.classList.remove('dark');
 			localStorage.setItem('theme', $theme);
 		}
 	});
 
-	function toggleTheme() {
-		// Theme is now hardcoded to dark, this function might be redundant or can be kept for future expansion
-		// For now, we'll keep it simple
-		// theme.update((t) => (t === 'dark' ? 'light' : 'dark'));
-	}
-
-	// Animation states
 	let sidebarLoaded = $state(false);
-	let mouseX = $state(0);
-	let mouseY = $state(0);
-	let hoveredItem = $state(-1);
-	let isSidebarCollapsed = $state(true);
+	let isSidebarCollapsed = $state(false);
 	let isMobileMenuOpen = $state(false);
 
 	function connectSSE() {
 		if (typeof window === 'undefined') return;
 		if (eventSource) eventSource.close();
-
-		eventSource = new EventSource(`${API_BASE}/events`);
-
+		const token = localStorage.getItem('exile_session');
+		const url = token ? `${API_BASE}/events?token=${token}` : `${API_BASE}/events`;
+		eventSource = new EventSource(url, { withCredentials: true });
 		eventSource.onopen = () => {
-			if (!get(isConnected)) {
-				notify('Master Server Online', 'Successfully connected to the control uplink.');
-			}
 			isConnected.set(true);
-			connectionStatus.set('Live (SSE)');
+			connectionStatus.set('Live');
 		};
-
 		eventSource.onerror = () => {
-			if (get(isConnected)) {
-				notify('Uplink Interrupted', 'Master Server connection lost. Attempting to reconnect...');
-			}
 			isConnected.set(false);
-			connectionStatus.set('Reconnecting...');
+			connectionStatus.set('Disconnected');
 		};
-
 		eventSource.onmessage = (event) => {
 			try {
 				const data = JSON.parse(event.data);
-				if (data.type === 'stats') {
-					stats.set(data.payload);
-				} else if (data.type === 'nodes') {
-					const list: any[] = Array.isArray(data.payload)
-						? data.payload
-						: Object.values(data.payload);
+				if (data.type === 'stats') stats.set(data.payload);
+				else if (data.type === 'nodes') {
+					const list: any[] = Array.isArray(data.payload) ? data.payload : Object.values(data.payload);
 					list.sort((a, b) => a.id - b.id);
 					nodes.set(list);
 				}
-			} catch (e) {
-				console.error('SSE Parse Error', e);
-			}
+			} catch (e) { console.error('SSE Error', e); }
 		};
 	}
 
 	async function checkAuth() {
-		// Don't check auth if we are already on the login page
 		if (page.url.pathname === '/login' || page.url.pathname === '/login/2fa') {
 			isChecking = false;
 			return;
 		}
-
 		try {
 			const res = await apiFetch('/api/stats', { cache: 'no-store', credentials: 'include' });
 			if (res.ok) {
 				isAuthenticated.set(true);
 				connectSSE();
-			} else {
-				isAuthenticated.set(false);
-				if (window.location.pathname !== '/login') {
-					goto('/login');
-				}
-			}
+			} else throw new Error('Auth failed');
 		} catch (e) {
 			isAuthenticated.set(false);
-			if (window.location.pathname !== '/login') {
-				goto('/login');
-			}
-		} finally {
-			isChecking = false;
-		}
+			if (window.location.pathname !== '/login') goto('/login');
+		} finally { isChecking = false; }
 	}
 
 	async function initialFetch() {
 		try {
-			const promises: Promise<any>[] = [
+			const promises = [
 				apiFetch('/api/nodes', { cache: 'no-store', credentials: 'include' }),
-				apiFetch('/api/versions', { cache: 'no-store', credentials: 'include' })
+				apiFetch('/api/versions', { cache: 'no-store', credentials: 'include' }),
+				apiFetch('/api/stats', { cache: 'no-store', credentials: 'include' })
 			];
-
-			// Only fetch stats if not already provided by server load
-			const currentData = $state.snapshot(data);
-			if (!currentData?.stats) {
-				promises.push(apiFetch('/api/stats', { cache: 'no-store', credentials: 'include' }));
-			}
-
 			const results = await Promise.all(promises);
-			
-			const nodesRes = results[0];
-			const versionsRes = results[1];
-			
-			if (nodesRes.ok) nodes.set(await nodesRes.json());
-			if (versionsRes.ok) serverVersions.set(await versionsRes.json());
-			
-			if (results.length > 2) {
-				const statsRes = results[2];
-				if (statsRes.ok) stats.set(await statsRes.json());
-			} else if (currentData?.stats) {
-				stats.set(currentData.stats);
-			}
-		} catch (e) {
-			console.error('Initial fetch failed', e);
-		}
+			if (results[0].ok) nodes.set(await results[0].json());
+			if (results[1].ok) serverVersions.set(await results[1].json());
+			if (results[2].ok) stats.set(await results[2].json());
+		} catch (e) { console.error('Initial fetch failed', e); }
 	}
 
 	async function restartServer() {
-		if (
-			!confirm(
-				'Are you sure you want to restart the server? This will interrupt all active connections.'
-			)
-		)
-			return;
-
+		if (!confirm('Restart server and interrupt connections?')) return;
 		try {
 			restarting = true;
 			await apiFetch('/api/restart', { method: 'POST' });
-			alert('Server restart triggered. The dashboard will reload in a moment.');
-			setTimeout(() => {
-				window.location.reload();
-			}, 5000);
-		} catch (e) {
-			alert('Failed to trigger restart: ' + e);
-			restarting = false;
-		}
+			setTimeout(() => window.location.reload(), 5000);
+		} catch (e) { alert(e); restarting = false; }
 	}
 
-
-
 	onMount(() => {
-		// Visibility-aware background sync
 		const handleVisibilityChange = () => {
-			if (document.visibilityState === 'visible') {
-				if (get(isAuthenticated)) connectSSE();
-			} else {
-				if (eventSource) {
-					eventSource.close();
-					eventSource = null;
-					isConnected.set(false);
-					connectionStatus.set('Standby (Hidden)');
-				}
-			}
+			if (document.visibilityState === 'visible') { if (get(isAuthenticated)) connectSSE(); }
+			else if (eventSource) { eventSource.close(); eventSource = null; isConnected.set(false); }
 		};
 		document.addEventListener('visibilitychange', handleVisibilityChange);
-
-		if (page.url.pathname === '/login' || page.url.pathname === '/login/2fa') {
-			isChecking = false;
-		} else {
-			// If server-side load already determined we are authenticated,
-			// we can proceed to fetch data immediately.
-			if (data?.isAuthenticated) {
-				isAuthenticated.set(true);
-				isChecking = false;
-				connectSSE();
-				loadAllSettings().then(() => initialFetch());
-			} else {
-				// Otherwise, verify or redirect
-				checkAuth().then(() => {
-					if (get(isAuthenticated)) {
-						loadAllSettings().then(() => initialFetch());
-					}
-				});
-			}
-		}
-
-		setTimeout(() => {
-			sidebarLoaded = true;
-		}, 300);
-
-		return () => {
-			document.removeEventListener('visibilitychange', handleVisibilityChange);
-		};
+		if (page.url.pathname === '/login' || page.url.pathname === '/login/2fa') isChecking = false;
+		else checkAuth().then(() => { if (get(isAuthenticated)) loadAllSettings().then(() => initialFetch()); });
+		setTimeout(() => { sidebarLoaded = true; }, 300);
+		return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
 	});
 
-	onDestroy(() => {
-		if (eventSource) eventSource.close();
-	});
+	onDestroy(() => { if (eventSource) eventSource.close(); });
 
 	async function logout() {
 		await apiFetch('/api/auth/logout', { method: 'POST' });
@@ -334,18 +200,11 @@ import { apiFetch, notify, API_BASE } from "$lib/api";
 		goto('/login');
 	}
 
-	function isRouteActive(path: string) {
-		return page.url.pathname === path;
-	}
-
-	function toggleSidebar() {
-		isSidebarCollapsed = !isSidebarCollapsed;
-	}
+	function isRouteActive(path: string) { return page.url.pathname === path; }
+	function toggleSidebar() { isSidebarCollapsed = !isSidebarCollapsed; }
 
 	let showGlobalNoteModal = $state(false);
-
 	async function handleGlobalSaveNote(note: Note) {
-		// Quick Note is always a new note
 		const { id, ...noteWithoutId } = note;
 		try {
 			const res = await apiFetch('/api/notes', {
@@ -357,460 +216,139 @@ import { apiFetch, notify, API_BASE } from "$lib/api";
 				const saved = await res.json();
 				notes.update((n) => [saved, ...n]);
 			}
-		} catch (e) {
-			console.error(e);
-		}
+		} catch (e) { console.error(e); }
 	}
-
-	function toggleQuickActions() {
-		showQuickActions.update((v) => !v);
-	}
-
-	onMount(() => {
-		let rafId: number;
-		const handleMouseMove = (e: MouseEvent) => {
-			if (rafId) cancelAnimationFrame(rafId);
-			rafId = requestAnimationFrame(() => {
-				document.documentElement.style.setProperty('--mouse-x-global', `${e.clientX}px`);
-				document.documentElement.style.setProperty('--mouse-y-global', `${e.clientY}px`);
-			});
-		};
-		window.addEventListener('mousemove', handleMouseMove, { passive: true });
-		return () => {
-			window.removeEventListener('mousemove', handleMouseMove);
-			if (rafId) cancelAnimationFrame(rafId);
-		};
-	});
 </script>
 
 {#if isChecking}
-	<div
-		class="flex items-center justify-center min-h-screen bg-black"
-	>
-		<div class="relative">
-			<div
-				class="animate-spin h-16 w-16 border-4 border-neutral-900 border-t-rust shadow-[0_0_20px_rgba(194,65,12,0.3)]"
-			></div>
-			<div
-				class="absolute inset-0 bg-rust/10 blur-2xl animate-pulse"
-			></div>
+	<div class="flex items-center justify-center min-h-screen bg-slate-950">
+		<div class="relative flex flex-col items-center gap-8">
+			<div class="animate-spin h-14 w-14 border-4 border-sky-500/20 border-t-sky-500 rounded-full"></div>
+			<span class="text-slate-400 font-sans text-sm font-semibold tracking-wide animate-pulse">Initializing Interface...</span>
 		</div>
 	</div>
 {:else}
-				{#if $isAuthenticated && page.url.pathname !== '/login'}
-					<div class="relative min-h-screen selection:bg-rust selection:text-white">
-						<!-- Global Scanline Overlay -->
-						<div class="scanline-overlay"></div>
+	{#if $isAuthenticated && page.url.pathname !== '/login' && page.url.pathname !== '/login/2fa'}
+		<div class="relative min-h-screen selection:bg-sky-500 selection:text-white bg-transparent font-sans">
+			<!-- Professional Animated Gradient Mesh -->
+			<div class="fixed inset-0 z-[-1] animate-gradient-mesh opacity-100"></div>
 
-						<!-- Solid Background Layer -->
-						<div class="fixed inset-0 z-[-100] industrial-gradient"></div>
-		
-					<!-- System Status Bar -->
-					<div class="fixed top-0 left-0 right-0 h-6 bg-neutral-900 border-b-2 border-neutral-800 z-[120] flex items-center px-4 overflow-hidden shadow-sm backdrop-blur-md">
-						<div class="flex items-center gap-8 whitespace-nowrap w-full">
-							<div class="flex items-center gap-2 shrink-0">
-								<div class="w-1.5 h-1.5 bg-rust animate-pulse shadow-[0_0_8px_#c2410c]"></div>
-								<span class="font-mono font-black text-[9px] text-rust-light uppercase tracking-widest">[KERNEL_UPLINK_ESTABLISHED]</span>
-							</div>
-							<div class="flex items-center gap-6 text-neutral-500 font-mono font-black text-[8px] uppercase tracking-[0.2em]">
-								<span>Network: <span class="text-neutral-300">{$connectionStatus}</span></span>
-								<span>Fleet: <span class="text-neutral-300">{$stats.active_nodes}</span></span>
-								<span class="hidden sm:inline">Entropy: <span class="text-emerald-500">Optimal</span></span>
-								<span>Cycle: <span class="text-neutral-300">{new Date().toLocaleTimeString([], { hour12: false })}</span></span>
-							</div>
-							<div class="ml-auto flex items-center gap-4 shrink-0">
-								<button 
-									onclick={() => isShortcutHelpOpen = true}
-									class="flex items-center gap-1.5 text-[8px] font-black text-neutral-500 hover:text-rust-light transition-colors uppercase tracking-widest font-mono"
-									title="Keyboard Shortcuts"
-								>
-									<Icon name="ph:question-bold" size="0.7rem" />
-									<span>Shortcuts</span>
-								</button>
-								<div class="w-[1px] h-3 bg-neutral-800"></div>
-								<span class="text-[8px] text-rust/60 font-black hidden md:inline font-mono tracking-widest">AES_256_ACTIVE</span>
-								<div class="w-[1px] h-3 bg-neutral-800"></div>
-								<div class="flex gap-1">
-									{#each [1,2,3] as i}<div class="w-1 h-1 bg-neutral-800"></div>{/each}
-								</div>
-							</div>
-						</div>
+			<!-- System Status Bar -->
+			<div class="fixed top-0 left-0 right-0 h-16 bg-slate-950/40 border-b border-white/5 z-[120] flex items-center px-8 backdrop-blur-2xl">
+				<div class="flex items-center gap-8 whitespace-nowrap w-full">
+					<div class="flex items-center gap-3 shrink-0">
+						<div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.4)]"></div>
+						<span class="font-bold text-xs text-slate-200">System Online</span>
 					</div>
-		
-											<!-- Background/Atmospheric Overlays (Lower Z-Index) -->
-											<div class="fixed inset-0 z-[-50] pointer-events-none overflow-hidden opacity-20 grayscale">
-												<MotherboardBackground />
-											</div>		
-					
-		
-								<div
-		
-									class="flex h-screen text-neutral-400 overflow-hidden relative bg-transparent transition-colors duration-300 pt-6"
-		
-								>			<!-- Global Restart Banner -->
-			{#if $restartRequired}
-				<div
-					class="absolute top-0 md:left-64 left-0 right-0 z-50 bg-rust text-white px-4 py-3 flex justify-between items-center shadow-2xl border-b-2 border-rust-light/50 animate-slide-fade text-xs md:text-sm industrial-frame"
-				>
-					<div class="flex items-center gap-4">
-						<AlertCircle class="w-5 h-5 shrink-0 animate-flicker" />
-						<span class="font-mono font-black uppercase tracking-widest truncate">Critical: Kernel reboot required to commit parameter delta</span>
+					<div class="flex items-center gap-8 text-slate-500 text-xs font-semibold">
+						<span class="hidden sm:inline">Uplink: <span class="text-slate-300">{$connectionStatus}</span></span>
+						<span>Nodes: <span class="text-slate-300">{$stats.active_nodes} Active</span></span>
 					</div>
-					<button
-						onclick={restartServer}
-						disabled={restarting}
-						class="px-6 py-2 bg-white text-rust font-mono font-black text-[10px] uppercase tracking-widest hover:bg-neutral-100 active:scale-95 transition-all shadow-xl disabled:opacity-50"
-					>
-						{restarting ? 'Executing...' : 'Commence_Reboot'}
-					</button>
-				</div>
-			{/if}
-
-			<!-- Desktop Sidebar -->
-			<aside
-				class="hidden md:flex relative transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] bg-[#050505] border-r-2 border-neutral-800 flex-col shrink-0 overflow-hidden z-20 {isSidebarCollapsed
-					? 'w-20'
-					: 'w-64'} shadow-[10px_0_30px_rgba(0,0,0,0.5)]"
-			>
-				<!-- Inner Fitted Glow -->
-				<div class="absolute inset-y-0 right-0 w-[1px] bg-white/5 pointer-events-none"></div>
-				
-				{#if true}
-					<NavbarParticles />
-				{/if}
-				
-				<div class="relative z-10 flex flex-col h-full shadow-[inset_-1px_0_0_rgba(255,255,255,0.02)]">
-					<div
-						class="p-6 border-b-2 border-neutral-800/80 bg-black/20 transform transition-all duration-700 {sidebarLoaded
-							? 'tranneutral-y-0 opacity-100'
-							: '-tranneutral-y-4 opacity-0'} flex items-center {isSidebarCollapsed ? 'justify-center' : 'justify-between'}"
-					>
-						{#if !isSidebarCollapsed}
-							<div class="flex flex-col animate-in fade-in zoom-in duration-500">
-								<div class="flex items-center gap-2">
-									<div class="w-2 h-2 bg-rust shadow-[0_0_8px_rgba(194,65,12,0.5)]"></div>
-									<h1 class="text-xl font-black text-white tracking-tighter uppercase italic leading-none">
-										EXILE_<span class="text-rust-light">OS</span>
-									</h1>
-								</div>
-								<span class="text-[8px] font-mono text-neutral-600 mt-2 tracking-[0.4em] font-black">STATION_PRO_4.2</span>
-							</div>
-						{/if}
-						<button
-							onclick={toggleSidebar}
-							class="p-2 border border-neutral-800 bg-neutral-950 text-neutral-500 hover:text-rust-light hover:border-rust/30 transition-all duration-300"
-						>
-							<Icon name={isSidebarCollapsed ? 'ph:caret-double-right-bold' : 'ph:caret-double-left-bold'} size="0.9rem" />
+					<div class="ml-auto flex items-center gap-6 shrink-0">
+						<button onclick={() => isShortcutHelpOpen = true} class="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-sky-400 transition-all">
+							<Icon name="ph:question-bold" size="1.1rem" />
+							<span class="hidden md:inline">Help</span>
 						</button>
 					</div>
+				</div>
+			</div>
 
-					<nav class="flex-1 p-3 space-y-8 overflow-y-auto overflow-x-hidden no-scrollbar py-8">
-						<div class="space-y-8">
-							<!-- CATEGORY: DASHBOARD -->
-							<div class="space-y-1.5">
-								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-neutral-700 tracking-[0.4em] ml-3 mb-3 block uppercase italic">Core_Interface</span>{/if}
-								<a href="/dashboard" class="nav-link-light {isSidebarCollapsed ? 'justify-center !px-0' : ''}" class:active={isRouteActive('/dashboard') || isRouteActive('/')} title={isSidebarCollapsed ? 'Overview' : ''}>
-									<div class="nav-icon-container-light"><Icon name="gauge" size="1.1rem" /></div>
-									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Telemetry</span><span class="nav-subtext-light">System Dashboard</span></div>{/if}
-								</a>
-								<a href="/performance" class="nav-link-light {isSidebarCollapsed ? 'justify-center !px-0' : ''}" class:active={isRouteActive('/performance')} title={isSidebarCollapsed ? 'Performance' : ''}>
-									<div class="nav-icon-container-light"><Icon name="activity" size="1.1rem" /></div>
-									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Analytics</span><span class="nav-subtext-light">Real-time Metrics</span></div>{/if}
-								</a>
-							</div>
+			<div class="flex h-screen text-slate-300 overflow-hidden relative pt-16">
+				<!-- Desktop Sidebar -->
+				<aside class="hidden md:flex relative transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] bg-slate-950/20 border-r border-white/5 flex-col shrink-0 overflow-hidden z-20 {isSidebarCollapsed ? 'w-24' : 'w-72'}">
+					<div class="relative z-10 flex flex-col h-full">
+						<div class="p-8 border-b border-white/5 flex items-center {isSidebarCollapsed ? 'justify-center' : 'justify-between'}">
+							{#if !isSidebarCollapsed}
+								<div class="flex items-center gap-4 animate-in fade-in slide-in-from-left-2 duration-500">
+									<div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-sky-500 to-sky-700 flex items-center justify-center shadow-2xl shadow-sky-500/20">
+										<span class="font-bold text-white text-lg">E</span>
+									</div>
+									<h1 class="text-2xl font-bold text-white tracking-tight">Exile<span class="text-sky-400">OS</span></h1>
+								</div>
+							{/if}
+							<button onclick={toggleSidebar} class="p-2.5 rounded-2xl text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-all">
+								<Icon name={isSidebarCollapsed ? 'ph:caret-double-right-bold' : 'ph:caret-double-left-bold'} size="1.2rem" />
+							</button>
+						</div>
 
-							<!-- CATEGORY: MANAGEMENT -->
-							<div class="space-y-1.5">
-								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-neutral-700 tracking-[0.4em] ml-3 mb-3 block uppercase italic">Infrastructure</span>{/if}
+						<nav class="flex-1 p-6 space-y-10 overflow-y-auto no-scrollbar py-10">
+							<div class="space-y-10">
 								{#each [
-									{ href: '/server', icon: 'cpu', label: 'Fleet', sub: 'Server Operations' },
-									{ href: '/users', icon: 'users', label: 'Subjects', sub: 'Access Registry' }
-								] as link}
-									<a href={link.href} class="nav-link-light {isSidebarCollapsed ? 'justify-center !px-0' : ''}" class:active={isRouteActive(link.href)} title={isSidebarCollapsed ? link.label : ''}>
-										<div class="nav-icon-container-light"><Icon name={link.icon} size="1.1rem" /></div>
-										{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">{link.label}</span><span class="nav-subtext-light">{link.sub}</span></div>{/if}
-									</a>
+									{ title: 'Dashboard', items: [{ href: '/dashboard', icon: 'gauge', label: 'Overview', sub: 'Control Center' }, { href: '/performance', icon: 'activity', label: 'Analytics', sub: 'Real-time Metrics' }] },
+									{ title: 'Fleet', items: [{ href: '/server', icon: 'cpu', label: 'Nodes', sub: 'Infrastructure' }, { href: '/users', icon: 'users', label: 'Users', sub: 'Access Control' }] },
+									{ title: 'Resources', items: [{ href: '/database', icon: 'database', label: 'Database', sub: 'Global Storage' }, { href: '/notes', icon: 'file-text', label: 'Journal', sub: 'Internal Notes' }] },
+									{ title: 'Protection', items: [{ href: '/config', icon: 'sliders', label: 'Settings', sub: 'Environment' }, { href: '/redeye', icon: 'shield', label: 'Security', sub: 'Sentinel Guard' }] }
+								] as section}
+									<div class="space-y-2">
+										{#if !isSidebarCollapsed}<span class="text-xs font-bold text-slate-600 uppercase tracking-wider ml-4 mb-4 block">{section.title}</span>{/if}
+										{#each section.items as link}
+											<a href={link.href} class="nav-link-light {isSidebarCollapsed ? 'justify-center !px-0' : ''}" class:active={isRouteActive(link.href)} title={isSidebarCollapsed ? link.label : ''}>
+												<div class="nav-icon-container-light"><Icon name={link.icon} size="1.3rem" /></div>
+												{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light text-base">{link.label}</span><span class="nav-subtext-light">{link.sub}</span></div>{/if}
+											</a>
+										{/each}
+									</div>
 								{/each}
 							</div>
+						</nav>
 
-							<!-- CATEGORY: RESOURCES -->
-							<div class="space-y-1.5">
-								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-neutral-700 tracking-[0.4em] ml-3 mb-3 block uppercase italic">Persistence</span>{/if}
-								<a href="/database" class="nav-link-light {isSidebarCollapsed ? 'justify-center !px-0' : ''}" class:active={isRouteActive('/database')} title={isSidebarCollapsed ? 'Database' : ''}>
-									<div class="nav-icon-container-light"><Icon name="database" size="1.1rem" /></div>
-									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Archives</span><span class="nav-subtext-light">Neural Storage</span></div>{/if}
-								</a>
-								<a href="/notes" class="nav-link-light {isSidebarCollapsed ? 'justify-center !px-0' : ''}" class:active={isRouteActive('/notes')} title={isSidebarCollapsed ? 'Operations' : ''}>
-									<div class="nav-icon-container-light"><Icon name="file-text" size="1.1rem" /></div>
-									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Worklog</span><span class="nav-subtext-light">Tactical Journal</span></div>{/if}
-								</a>
-							</div>
-
-							<!-- CATEGORY: SETTINGS -->
-							<div class="space-y-1.5">
-								{#if !isSidebarCollapsed}<span class="text-[8px] font-black text-neutral-700 tracking-[0.4em] ml-3 mb-3 block uppercase italic">Command</span>{/if}
-								<a href="/config" class="nav-link-light {isSidebarCollapsed ? 'justify-center !px-0' : ''}" class:active={isRouteActive('/config')} title={isSidebarCollapsed ? 'Settings' : ''}>
-									<div class="nav-icon-container-light"><Icon name="sliders" size="1.1rem" /></div>
-									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Parameters</span><span class="nav-subtext-light">Environment</span></div>{/if}
-								</a>
-								<a href="/redeye" class="nav-link-light {isSidebarCollapsed ? 'justify-center !px-0' : ''}" class:active={isRouteActive('/redeye')} title={isSidebarCollapsed ? 'Security' : ''}>
-									<div class="nav-icon-container-light"><Icon name="shield" size="1.1rem" /></div>
-									{#if !isSidebarCollapsed}<div class="flex flex-col"><span class="nav-text-light">Sentinel</span><span class="nav-subtext-light">Network Shield</span></div>{/if}
-								</a>
-							</div>
-						</div>
-					</nav>
-
-					<!-- Sidebar Footer -->
-					<div
-						class="mt-auto p-4 border-t-2 border-neutral-800/50 bg-neutral-900/20 flex flex-col gap-3 transform transition-all duration-700 {sidebarLoaded
-							? 'tranneutral-y-0 opacity-100'
-							: 'tranneutral-y-8 opacity-0'}"
-					>
-						<div class="flex items-center gap-2 {isSidebarCollapsed ? 'flex-col' : ''}">
-							<button
-								onclick={() => lowPowerMode.update(v => !v)}
-								class="p-2 border transition-all flex items-center justify-center gap-2 flex-1
-								{$lowPowerMode 
-									? 'bg-amber-500/10 border-amber-500/30 text-amber-500' 
-									: 'bg-neutral-950 border-neutral-800 text-neutral-600 hover:text-white hover:border-neutral-600'}"
-								title={$lowPowerMode ? 'Disable Eco Mode' : 'Enable Eco Mode'}
-							>
-								<Zap class="w-3.5 h-3.5 {$lowPowerMode ? '' : 'opacity-40'}" />
-								{#if !isSidebarCollapsed}
-									<span class="text-[9px] font-black font-mono tracking-widest uppercase">{$lowPowerMode ? 'ECO_ON' : 'PERF_MAX'}</span>
-								{/if}
-							</button>
-
-							<button
-								onclick={logout}
-								class="p-2 border border-red-900/30 bg-red-950/10 text-red-600 hover:bg-red-600 hover:text-white transition-all flex items-center justify-center group shadow-lg"
-								title="Terminate Session"
-							>
-								<Icon name="ph:power-bold" size="1rem" />
-							</button>
-						</div>
-					</div>
-				</div>
-			</aside>
-
-			<div class="flex-1 flex flex-col h-full overflow-hidden relative bg-transparent">
-				<!-- Mobile Top Header -->
-				<header
-					class="md:hidden h-16 bg-neutral-950 border-b-2 border-neutral-800 flex items-center justify-between px-4 z-[130] shrink-0 relative backdrop-blur-md"
-				>
-					<div class="flex items-center gap-4">
-						<button 
-							onclick={() => isMobileMenuOpen = true}
-							class="p-2 -ml-2 text-neutral-400 hover:text-rust transition-colors"
-						>
-							<Icon name="ph:list-bold" size="1.5rem" />
-						</button>
-						<div class="flex flex-col">
-							<div class="flex items-center gap-2">
-								<div class="w-1.5 h-1.5 bg-rust shadow-[0_0_8px_var(--color-rust)] animate-pulse"></div>
-								<h1 class="text-xl font-black text-white tracking-tighter uppercase italic italic">
-									EXILE_<span class="text-rust-light">OS</span>
-								</h1>
-							</div>
-						</div>
-					</div>
-					<div class="flex items-center gap-2">
-						<div class="hidden sm:flex flex-col items-end mr-2">
-							<span class="text-[8px] text-emerald-500 font-mono font-black uppercase tracking-widest">Connected</span>
-						</div>
-					</div>
-				</header>
-				<!-- Mobile Sidebar Overlay -->
-				{#if isMobileMenuOpen}
-					<div 
-						class="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md md:hidden"
-						transition:fade={{ duration: 200 }}
-						onclick={() => isMobileMenuOpen = false}
-						onkeydown={(e) => e.key === 'Escape' && (isMobileMenuOpen = false)}
-						role="button"
-						tabindex="0"
-					>
-						<aside 
-							class="w-80 h-full bg-black border-r border-stone-800 flex flex-col shadow-[0_0_100px_rgba(0,0,0,1)] relative"
-							transition:slide={{ axis: 'x', duration: 400, easing: cubicOut }}
-							onclick={(e) => e.stopPropagation()}
-							onkeydown={(e) => e.stopPropagation()}
-							role="none"
-						>
-							<!-- Mobile Sidebar Tactical Corners -->
-							<div class="corner-tr opacity-20"></div>
-							<div class="corner-br opacity-20"></div>
-
-							<div class="p-8 border-b border-stone-800 bg-[#050505] flex items-center justify-between">
-								<div class="flex flex-col">
-									<div class="flex items-center gap-3">
-										<div class="w-2 h-2 bg-rust shadow-[0_0_8px_var(--color-rust)]"></div>
-										<h1 class="text-2xl font-black military-label text-white tracking-tighter uppercase leading-none">
-											EXILE_<span class="text-rust-light">CORE</span>
-										</h1>
-									</div>
-									<span class="text-[8px] font-mono text-stone-600 mt-2 tracking-[0.4em]">MOBILE_AUTH_TERMINAL</span>
-								</div>
-								<button 
-									onclick={() => isMobileMenuOpen = false}
-									class="p-2 text-stone-600 hover:text-white border border-stone-800 hover:border-rust transition-all"
-								>
-									<Icon name="ph:x-bold" size="1.5rem" />
+						<div class="mt-auto p-8 border-t border-white/5 bg-white/[0.03] flex flex-col gap-4 rounded-t-[3rem]">
+							<div class="flex items-center gap-4 {isSidebarCollapsed ? 'flex-col' : ''}">
+								<button onclick={() => lowPowerMode.update(v => !v)} class="p-4 rounded-2xl transition-all flex items-center justify-center gap-3 flex-1 {$lowPowerMode ? 'bg-amber-500/10 border border-amber-500/20 text-amber-500' : 'bg-white/5 border border-white/5 text-slate-400 hover:text-white hover:bg-white/10'}">
+									<Zap class="w-5 h-5 {$lowPowerMode ? '' : 'opacity-60'}" />
+									{#if !isSidebarCollapsed}<span class="text-xs font-bold tracking-wide">{$lowPowerMode ? 'Power Saving' : 'Max Perf'}</span>{/if}
+								</button>
+								<button onclick={logout} class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center group shadow-2xl shadow-rose-500/10">
+									<Icon name="ph:power-bold" size="1.2rem" />
 								</button>
 							</div>
-
-							<nav class="flex-1 p-4 space-y-6 overflow-y-auto custom-scrollbar">
-								<div class="space-y-1">
-									<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Command</span>
-									<a href="/dashboard" class="nav-link" class:active={isRouteActive('/dashboard') || isRouteActive('/')} onclick={() => isMobileMenuOpen = false}>
-										<div class="nav-icon-container"><Icon name="gauge" /></div>
-										<div class="flex flex-col"><span class="nav-text">INTERFACE</span><span class="nav-subtext">Core Dashboard</span></div>
-									</a>
-									<a href="/performance" class="nav-link" class:active={isRouteActive('/performance')} onclick={() => isMobileMenuOpen = false}>
-										<div class="nav-icon-container"><Icon name="activity" /></div>
-										<div class="flex flex-col"><span class="nav-text">TELEMETRY</span><span class="nav-subtext">Real-time Stream</span></div>
-									</a>
-								</div>
-
-								<div class="space-y-1">
-									<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Assets</span>
-									<a href="/server" class="nav-link" class:active={isRouteActive('/server')} onclick={() => isMobileMenuOpen = false}>
-										<div class="nav-icon-container"><Icon name="cpu" /></div>
-										<div class="flex flex-col"><span class="nav-text">FILE_SYS</span><span class="nav-subtext">Binary Storage</span></div>
-									</a>
-									<a href="/database" class="nav-link" class:active={isRouteActive('/database')} onclick={() => isMobileMenuOpen = false}>
-										<div class="nav-icon-container"><Icon name="database" /></div>
-										<div class="flex flex-col"><span class="nav-text">PERSISTENCE</span><span class="nav-subtext">Data Archive</span></div>
-									</a>
-									<a href="/users" class="nav-link" class:active={isRouteActive('/users')} onclick={() => isMobileMenuOpen = false}>
-										<div class="nav-icon-container"><Icon name="users" /></div>
-										<div class="flex flex-col"><span class="nav-text">SUBJECTS</span><span class="nav-subtext">User Registry</span></div>
-									</a>
-								</div>
-
-								<div class="space-y-1">
-									<span class="text-[8px] font-black text-stone-700 tracking-[0.4em] ml-2 mb-2 block uppercase">Security</span>
-									<a href="/redeye" class="nav-link" class:active={isRouteActive('/redeye')} onclick={() => isMobileMenuOpen = false}>
-										<div class="nav-icon-container"><Icon name="shield" /></div>
-										<div class="flex flex-col"><span class="nav-text">SENTINEL</span><span class="nav-subtext">Network Shield</span></div>
-									</a>
-								</div>
-							</nav>
-
-							<div class="p-8 border-t border-stone-800 bg-[#050505] flex flex-col gap-4">
-								<div class="flex items-center justify-between mb-2">
-									<div class="flex flex-col">
-										<span class="text-[7px] text-stone-700 font-mono uppercase">Session_Token</span>
-										<span class="text-[9px] text-stone-500 font-mono">0x{Math.random().toString(16).slice(2, 10).toUpperCase()}</span>
-									</div>
-									<div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-								</div>
-								                        <Button 
-															onclick={logout} 
-															variant="danger"
-															size="md"
-															block={true}
-															class="!py-4"
-														>
-															Terminate_Session
-														</Button>							</div>
-						</aside>
+						</div>
 					</div>
-				{/if}
+				</aside>
 
-				<!-- Main Content -->
-				<main class="flex-1 overflow-auto relative">
-					<div class="w-full px-4 sm:px-6 md:px-10 py-8 md:py-12 min-h-full pb-32 md:pb-12">
-						{@render children()}
-					</div>
-				</main>
+				<div class="flex-1 flex flex-col h-full overflow-hidden relative bg-transparent">
+					<!-- Mobile Header -->
+					<header class="md:hidden h-16 bg-slate-950/60 border-b border-white/5 flex items-center justify-between px-6 z-[130] shrink-0 backdrop-blur-2xl">
+						<div class="flex items-center gap-4">
+							<button onclick={() => isMobileMenuOpen = true} class="p-2 -ml-2 text-slate-400 hover:text-sky-400 transition-all"><Icon name="ph:list-bold" size="1.5rem" /></button>
+							<div class="flex items-center gap-3">
+								<div class="w-1.5 h-1.5 rounded-full bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.5)]"></div>
+								<h1 class="text-xl font-bold text-white tracking-tight">Exile<span class="text-sky-400">OS</span></h1>
+							</div>
+						</div>
+						<span class="text-[10px] text-emerald-500 font-bold uppercase tracking-wider">Online</span>
+					</header>
 
-				<!-- Mobile Bottom Nav -->
-				<nav
-					class="md:hidden h-16 bg-[var(--header-bg)] backdrop-blur-xl border-t-2 border-stone-800 fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2 safe-area-pb"
-				>
-					<a
-						href="/dashboard"
-						class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive(
-							'/dashboard'
-						) || isRouteActive('/')
-							? 'text-rust-light'
-							: 'text-stone-600'} transition-colors"
-					>
-						<Icon name="gauge" size="1.25rem" />
-						<span class="font-mono text-[8px] font-black uppercase">CORE</span>
-					</a>
-					<a
-						href="/performance"
-						class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive(
-							'/performance'
-						)
-							? 'text-rust-light'
-							: 'text-stone-600'} transition-colors"
-					>
-						<Icon name="activity" size="1.25rem" />
-						<span class="font-mono text-[8px] font-black uppercase">PERF</span>
-					</a>
-					<a
-						href="/config"
-						class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive(
-							'/config'
-						) || isRouteActive('/config/')
-							? 'text-rust-light'
-							: 'text-stone-600'} transition-colors"
-					>
-						<Icon name="sliders" size="1.25rem" />
-						<span class="font-mono text-[8px] font-black uppercase">CNFG</span>
-					</a>
-					<a
-						href="/redeye"
-						class="flex flex-col items-center justify-center w-full h-full gap-1 {isRouteActive(
-							'/redeye'
-						)
-							? 'text-rust-light'
-							: 'text-stone-600'} transition-colors"
-					>
-						<Icon name="shield" size="1.25rem" />
-						<span class="font-mono text-[8px] font-black uppercase">SHLD</span>
-					</a>
-				</nav>
+					<!-- Content -->
+					<main class="flex-1 overflow-auto relative">
+						<div class="w-full px-6 sm:px-10 py-10 md:py-14 min-h-full pb-32 md:pb-12">
+							{@render children()}
+						</div>
+					</main>
+
+					<!-- Mobile Nav -->
+					<nav class="md:hidden h-16 bg-slate-950/80 backdrop-blur-2xl border-t border-white/5 fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2 pb-safe">
+						{#each [['/dashboard', 'gauge'], ['/performance', 'activity'], ['/config', 'sliders'], ['/redeye', 'shield']] as [href, icon]}
+							<a href={href} class="flex flex-col items-center justify-center w-full h-full {isRouteActive(href) ? 'text-sky-400' : 'text-slate-500'} transition-all">
+								<Icon name={icon} size="1.5rem" />
+							</a>
+						{/each}
+					</nav>
+				</div>
 			</div>
 		</div>
-	</div>
 
-		<ServerStatus 
-			status={$isConnected ? 'ONLINE' : 'OFFLINE'} 
-			players={$stats.active_nodes * 10} 
-			servers={$stats.active_nodes} 
-		/>
-
+		<ServerStatus status={$isConnected ? 'ONLINE' : 'OFFLINE'} players={$stats.active_nodes * 10} servers={$stats.active_nodes} />
 		<Notifications />
-		
 		<CommandPalette bind:isOpen={isCommandPaletteOpen} />
-
 		<ShortcutHelpModal bind:isOpen={isShortcutHelpOpen} />
-
-		<InstanceManagerModal
-			bind:isOpen={sysState.console.isOpen}
-			nodeId={sysState.console.nodeId}
-			instanceId={sysState.console.instanceId}
-			onClose={() => (sysState.console.isOpen = false)}
-		/>
+		<InstanceManagerModal bind:isOpen={sysState.console.isOpen} nodeId={sysState.console.nodeId} instanceId={sysState.console.instanceId} onClose={() => (sysState.console.isOpen = false)} />
 	{:else}
 		{@render children()}
 	{/if}
-
-	<NoteModal
-		bind:isOpen={showGlobalNoteModal}
-		note={null}
-		onSave={handleGlobalSaveNote}
-		onClose={() => (showGlobalNoteModal = false)}
-	/>
+	<NoteModal bind:isOpen={showGlobalNoteModal} note={null} onSave={handleGlobalSaveNote} onClose={() => (showGlobalNoteModal = false)} />
 {/if}
 
 <style>
-	.safe-area-pb {
-		padding-bottom: env(safe-area-inset-bottom);
-	}
+	:global(.pb-safe) { padding-bottom: env(safe-area-inset-bottom); }
 </style>

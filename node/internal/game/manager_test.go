@@ -3,9 +3,9 @@ package game
 import (
 	"log/slog"
 	"net"
+	"node/internal/config"
 	"os"
 	"runtime"
-	"node/internal/config"
 	"testing"
 )
 

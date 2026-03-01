@@ -158,6 +158,7 @@ var (
 			Foreground(colorLightGray).
 			MarginLeft(4)
 )
+
 func newTUIModel() tuiModel {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
@@ -196,7 +197,7 @@ func checkConfigCmd() tea.Msg {
 	if os.Getenv("DB_DRIVER") == "" || os.Getenv("MASTER_API_KEY") == "" {
 		return stateConfigMenu // Force menu if not configured
 	}
-	return stateConfigMenu 
+	return stateConfigMenu
 }
 
 type autoSelectTickMsg time.Time
@@ -286,7 +287,7 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				m.selectedPort = port
 				_ = updateEnvFile("SERVER_PORT", port) // Save immediately
-				
+
 				m.state = stateConfigDB
 				m.cursor = 0 // Reset cursor for next menu
 				return m, nil
@@ -308,13 +309,13 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if m.cursor == 0 {
 					m.selectedDriver = "embedded"
 					os.Setenv("DB_DRIVER", "postgres")
-					os.Setenv("DB_DSN", "") 
+					os.Setenv("DB_DSN", "")
 					_ = updateEnvFile("DB_DRIVER", "postgres")
 					_ = updateEnvFile("DB_DSN", "")
 				} else {
 					m.selectedDriver = "external"
 				}
-				
+
 				m.state = stateRunningSteps
 				return m, tea.Batch(m.spinner.Tick, nextStepCmd(0))
 			}
@@ -351,7 +352,7 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.state != stateRunningSteps {
 			return m, nil
 		}
-		
+
 		if msg.index == -1 {
 			return m, runStepCmd(&m, 0)
 		}
@@ -430,13 +431,13 @@ func (m tuiModel) viewConfigMenu() string {
 			cursor = "❯"
 			style = selectedItemStyle
 		}
-		
+
 		// Append countdown to first option if active
 		text := choice
 		if i == 0 && !m.userInteracted && m.autoSelectLeft > 0 {
 			text = fmt.Sprintf("%s (Auto-starting in %ds)", choice, m.autoSelectLeft)
 		}
-		
+
 		s.WriteString(style.Render(fmt.Sprintf("%s %s", cursor, text)) + "\n")
 	}
 	return s.String()
@@ -528,13 +529,13 @@ func initAuthStep(m *tuiModel) error {
 	GlobalStartup.AuthConfig = auth.GetAuthConfig()
 	GlobalStartup.SessionStore = auth.NewSessionStore(GlobalStartup.AuthConfig.IsProduction)
 	go GlobalStartup.SessionStore.CleanupExpiredSessions()
-	
+
 	enrollment.InitializeEnrollmentManager()
-	
+
 	GlobalStartup.SSEHub = sse.NewSSEHub()
 	go GlobalStartup.SSEHub.Run()
-	
-time.Sleep(100 * time.Millisecond)
+
+	time.Sleep(100 * time.Millisecond)
 	return nil
 }
 
@@ -566,7 +567,7 @@ func setupDBEngineStep(m *tuiModel) error {
 
 func ensureKeysStep(m *tuiModel) error {
 	updates := make(map[string]string)
-	
+
 	if os.Getenv("MASTER_API_KEY") == "" {
 		key := utils.GenerateRandomString(32)
 		os.Setenv("MASTER_API_KEY", key)
@@ -598,7 +599,7 @@ func ensureKeysStep(m *tuiModel) error {
 	} else {
 		m.steps[m.current].message = "Security keys present"
 	}
-	
+
 	time.Sleep(200 * time.Millisecond)
 	return nil
 }
@@ -671,11 +672,16 @@ func connectDBStep(m *tuiModel) error {
 }
 
 func initRegistryStep(m *tuiModel) error {
+	// Seed default config first
+	if err := database.SeedDefaultConfig(database.DBConn); err != nil {
+		return fmt.Errorf("seed config: %w", err)
+	}
+
 	loaded, err := database.LoadNodes(database.DBConn)
 	if err != nil {
 		return err
 	}
-	
+
 	maxID := registry.GetNextID() - 1
 	for i := range loaded {
 		s := loaded[i]
@@ -688,15 +694,15 @@ func initRegistryStep(m *tuiModel) error {
 			maxID = copyS.ID
 		}
 	}
-	
+
 	if err := database.InitPlayerSystem(database.DBConn); err != nil {
 		return err
 	}
-	
+
 	registry.GlobalStats.InitializeStats(database.DBConn)
 	m.steps[m.current].message = fmt.Sprintf("Restored %d nodes from database", len(loaded))
-	
-time.Sleep(100 * time.Millisecond)
+
+	time.Sleep(100 * time.Millisecond)
 	return nil
 }
 
@@ -704,12 +710,12 @@ func startServicesStep(m *tuiModel) error {
 	if database.DBConn != nil {
 		redeye.StartRedEyeBackground(database.DBConn)
 	}
-	
+
 	_ = auth.InitFirebase()
-	
-go ws.GlobalWSManager.Run()
+
+	go ws.GlobalWSManager.Run()
 	ws_player.InitPlayerWS()
-	
-time.Sleep(100 * time.Millisecond)
+
+	time.Sleep(100 * time.Millisecond)
 	return nil
 }

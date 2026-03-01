@@ -236,7 +236,7 @@ func SpawnNodeInstance(w http.ResponseWriter, r *http.Request) {
 		}
 		if json.Unmarshal(resp.Data, &resData) == nil && resData.ID != "" {
 			database.SaveInstanceAction(database.DBConn, &models.InstanceAction{
-				NodeID:  id,
+				NodeID:     id,
 				InstanceID: resData.ID,
 				Action:     "spawn",
 				Timestamp:  time.Now().UTC(),
@@ -377,7 +377,7 @@ func UpdateNodeInstance(w http.ResponseWriter, r *http.Request) {
 
 	if database.DBConn != nil {
 		database.SaveInstanceAction(database.DBConn, &models.InstanceAction{
-			NodeID:  id,
+			NodeID:     id,
 			InstanceID: instanceID,
 			Action:     "update",
 			Timestamp:  time.Now().UTC(),
@@ -425,7 +425,7 @@ func RenameNodeInstance(w http.ResponseWriter, r *http.Request) {
 
 	if database.DBConn != nil {
 		database.SaveInstanceAction(database.DBConn, &models.InstanceAction{
-			NodeID:  id,
+			NodeID:     id,
 			InstanceID: instanceID,
 			Action:     "rename",
 			Timestamp:  time.Now().UTC(),
@@ -465,7 +465,7 @@ func RemoveNodeInstance(w http.ResponseWriter, r *http.Request) {
 
 	if database.DBConn != nil {
 		database.SaveInstanceAction(database.DBConn, &models.InstanceAction{
-			NodeID:  id,
+			NodeID:     id,
 			InstanceID: instanceID,
 			Action:     "delete",
 			Timestamp:  time.Now().UTC(),
@@ -505,7 +505,7 @@ func StopNodeInstance(w http.ResponseWriter, r *http.Request) {
 
 	if database.DBConn != nil {
 		database.SaveInstanceAction(database.DBConn, &models.InstanceAction{
-			NodeID:  id,
+			NodeID:     id,
 			InstanceID: instanceID,
 			Action:     "stop",
 			Timestamp:  time.Now().UTC(),
@@ -544,7 +544,7 @@ func StartNodeInstance(w http.ResponseWriter, r *http.Request) {
 
 	if database.DBConn != nil {
 		database.SaveInstanceAction(database.DBConn, &models.InstanceAction{
-			NodeID:  id,
+			NodeID:     id,
 			InstanceID: instanceID,
 			Action:     "start",
 			Timestamp:  time.Now().UTC(),
@@ -582,7 +582,7 @@ func RestartNodeInstance(w http.ResponseWriter, r *http.Request) {
 
 	if database.DBConn != nil {
 		database.SaveInstanceAction(database.DBConn, &models.InstanceAction{
-			NodeID:  id,
+			NodeID:     id,
 			InstanceID: instanceID,
 			Action:     "restart",
 			Timestamp:  time.Now().UTC(),
@@ -883,7 +883,7 @@ func DeleteNodeBackup(w http.ResponseWriter, r *http.Request) {
 // ListAllInstances fetches active game instances from all nodes concurrently.
 func ListAllInstances(w http.ResponseWriter, r *http.Request) {
 	nodes := registry.GlobalRegistry.All()
-	
+
 	type nodeResult struct {
 		NodeID    int           `json:"node_id"`
 		NodeName  string        `json:"node_name"`
@@ -892,7 +892,7 @@ func ListAllInstances(w http.ResponseWriter, r *http.Request) {
 	}
 
 	results := make([]nodeResult, len(nodes))
-	
+
 	// Use a WaitGroup to fetch from all nodes concurrently
 	type asyncResult struct {
 		index int

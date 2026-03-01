@@ -7,10 +7,10 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"node/internal/config"
 	"os"
 	"path/filepath"
 	"runtime"
-	"node/internal/config"
 	"strings"
 )
 

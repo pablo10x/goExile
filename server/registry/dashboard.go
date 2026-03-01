@@ -38,7 +38,7 @@ type DashboardStats struct {
 	Mu              sync.RWMutex
 	TotalRequests   int64
 	TotalErrors     int64
-	ActiveNodes  int
+	ActiveNodes     int
 	BytesSent       int64
 	BytesReceived   int64
 	MemUsage        uint64
@@ -215,7 +215,7 @@ func (ds *DashboardStats) GetStatsMap() map[string]interface{} {
 	uptime := time.Since(ds.StartTime)
 	return map[string]interface{}{
 		"uptime":                 uptime.Milliseconds(),
-		"active_nodes":        ds.ActiveNodes,
+		"active_nodes":           ds.ActiveNodes,
 		"total_requests":         ds.TotalRequests,
 		"total_errors":           ds.TotalErrors,
 		"db_connected":           ds.DBConnected,

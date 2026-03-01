@@ -36,14 +36,17 @@ import { apiFetch } from "$lib/api";
 	};
 
 	let resolvedIcon = $derived(() => {
+		// Ensure name is a string to prevent runtime errors if passed incorrectly
+		const iconName = String(name || '');
+
 		// If name is already a full iconify name (contains :), use it directly
-		if (name.includes(':')) return name;
+		if (iconName.includes(':')) return iconName;
 		
-		const entry = iconMap[name.toLowerCase()];
+		const entry = iconMap[iconName.toLowerCase()];
 		if (entry) return entry;
 		
 		// Fallback to ph or just the name if no mapping found
-		return `ph:${name}`;
+		return `ph:${iconName}`;
 	});
 
 	let computedStyle = $derived.by(() => {

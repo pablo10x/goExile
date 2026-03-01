@@ -91,11 +91,11 @@ func (em *EnrollmentManager) ClaimKey(key string, host string, port int) (*model
 	// To support multi-use properly, we'd need a list of Pending nodes per key.
 	// For now, let's keep it simple: If Status is Pending, it's busy.
 	// UNLESS MaxUsages > 1, then maybe we clone the key state?
-	
+
 	// Simplification: Multi-use keys just remain "active" and we spawn a transient "pending" record?
 	// That requires architectural change.
 	// Let's stick to: ClaimKey locks it for this specific request.
-	
+
 	if enrollmentKey.Status != "active" {
 		// If it's pending/approved, it's busy.
 		return nil, fmt.Errorf("enrollment key is currently in use (status: %s)", enrollmentKey.Status)
@@ -134,7 +134,7 @@ func (em *EnrollmentManager) ApproveKey(key string, region string, maxInstances 
 
 	// Update usage
 	enrollmentKey.UsageCount++
-	
+
 	// Mark as used for this instance
 	now := time.Now()
 	enrollmentKey.UsedAt = &now

@@ -27,7 +27,7 @@ type Config struct {
 	InstancesDir      string // Directory where game server instances are spawned
 	EnrollmentKey     string // One-time enrollment key for initial registration
 	IsDraining        bool   // Drain mode status
-	
+
 	// New Settings
 	Tags              string // CSV tags
 	MaintenanceWindow string // Maintenance window string

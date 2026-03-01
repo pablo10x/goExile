@@ -6,6 +6,29 @@
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:ital,wght@0,400;0,700;0,800;1,400&display=swap" rel="stylesheet">
+		<script>
+			window.onerror = function(msg, url, line, col, error) {
+				const errorBox = document.createElement('div');
+				errorBox.style.position = 'fixed';
+				errorBox.style.top = '0';
+				errorBox.style.left = '0';
+				errorBox.style.width = '100%';
+				errorBox.style.height = '100%';
+				errorBox.style.backgroundColor = 'rgba(50, 0, 0, 0.95)';
+				errorBox.style.color = '#ffcccc';
+				errorBox.style.zIndex = '999999';
+				errorBox.style.padding = '20px';
+				errorBox.style.fontFamily = 'monospace';
+				errorBox.style.whiteSpace = 'pre-wrap';
+				errorBox.style.overflow = 'auto';
+				errorBox.innerHTML = `<h1>CRITICAL SYSTEM FAILURE</h1><h3>${msg}</h3><p>Location: ${url}:${line}:${col}</p><pre>${error ? error.stack : ''}</pre>`;
+				document.body.appendChild(errorBox);
+				return false;
+			};
+			window.onunhandledrejection = function(event) {
+				window.onerror('Unhandled Rejection: ' + (event.reason ? (event.reason.message || event.reason) : 'Unknown'), '', 0, 0, event.reason);
+			};
+		</script>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

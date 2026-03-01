@@ -72,8 +72,8 @@ type RuntimeMetrics struct {
 
 // NodeMetrics holds aggregated metrics from all nodes
 type NodeMetrics struct {
-	TotalNodes    int     `json:"total_nodes"`
-	OnlineNodes   int     `json:"online_nodes"`
+	TotalNodes       int     `json:"total_nodes"`
+	OnlineNodes      int     `json:"online_nodes"`
 	TotalInstances   int     `json:"total_instances"`
 	RunningInstances int     `json:"running_instances"`
 	TotalCPUUsage    float64 `json:"total_cpu_usage"`
@@ -112,7 +112,7 @@ type NodeDetail struct {
 // CombinedMetrics holds all system metrics
 type CombinedMetrics struct {
 	Master   RuntimeMetrics  `json:"master"`
-	Nodes NodeMetrics  `json:"nodes"`
+	Nodes    NodeMetrics     `json:"nodes"`
 	Database DatabaseMetrics `json:"database"`
 	Network  NetworkMetrics  `json:"network"`
 	RedEye   RedEyeMetrics   `json:"redeye"`
@@ -120,13 +120,13 @@ type CombinedMetrics struct {
 
 // RedEyeMetrics holds security-related metrics
 type RedEyeMetrics struct {
-	TotalBlocks          int64  `json:"total_blocks"`
-	TotalRateLimits      int64  `json:"total_rate_limits"`
-	ActiveBans           int    `json:"active_bans"`
-	TotalRules           int    `json:"total_rules"`
-	AvgProcessingTimeMs  float64 `json:"avg_processing_time_ms"`
-	ThreatLevel          string `json:"threat_level"`
-	LastBlockAt          string `json:"last_block_at"`
+	TotalBlocks         int64   `json:"total_blocks"`
+	TotalRateLimits     int64   `json:"total_rate_limits"`
+	ActiveBans          int     `json:"active_bans"`
+	TotalRules          int     `json:"total_rules"`
+	AvgProcessingTimeMs float64 `json:"avg_processing_time_ms"`
+	ThreatLevel         string  `json:"threat_level"`
+	LastBlockAt         string  `json:"last_block_at"`
 }
 
 // DatabaseMetrics holds database-specific metrics
@@ -258,7 +258,7 @@ func (mc *MetricsCollector) CollectRuntimeMetrics() RuntimeMetrics {
 
 	// Get GC target ratio (estimate based on common defaults or env)
 	gcTriggerRatio := 1.0 // Default GOGC=100
-	
+
 	// Update history
 	mc.appendUint64History(&mc.heapHistory, m.HeapAlloc)
 	mc.appendIntHistory(&mc.goroutineHistory, currentGoroutines)
@@ -487,7 +487,7 @@ func (mc *MetricsCollector) CollectNetworkMetrics() NetworkMetrics {
 func (mc *MetricsCollector) CollectAllMetrics() CombinedMetrics {
 	return CombinedMetrics{
 		Master:   mc.CollectRuntimeMetrics(),
-		Nodes: mc.CollectNodeMetrics(),
+		Nodes:    mc.CollectNodeMetrics(),
 		Database: mc.CollectDatabaseMetrics(),
 		Network:  mc.CollectNetworkMetrics(),
 		RedEye:   mc.CollectRedEyeMetrics(),
@@ -512,7 +512,7 @@ func (mc *MetricsCollector) CollectRedEyeMetrics() RedEyeMetrics {
 		TotalBlocks:         registry.GlobalStats.RedEyeTotalBlocks,
 		TotalRateLimits:     registry.GlobalStats.RedEyeTotalRateLimit,
 		ActiveBans:          registry.GlobalStats.RedEyeActiveBans,
-		TotalRules:           0, // Would need redeye registry for this
+		TotalRules:          0,    // Would need redeye registry for this
 		AvgProcessingTimeMs: 0.12, // Placeholder for actual timing
 		ThreatLevel:         threatLevel,
 		LastBlockAt:         time.Now().Format(time.RFC3339), // Placeholder

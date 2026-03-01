@@ -5,9 +5,9 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"node/internal/config"
 	"os"
 	"path/filepath"
-	"node/internal/config"
 	"testing"
 )
 

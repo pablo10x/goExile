@@ -385,9 +385,9 @@ import { apiFetch } from "$lib/api";
 </script>
 
 {#snippet statsSkeleton()}
-	<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
+	<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 lg:gap-8 mb-10">
 		{#each Array(4) as _}
-			<div class="modern-card p-6 h-32 flex flex-col justify-between">
+			<div class="rounded-2xl border border-white/5 bg-slate-900/40 p-6 h-32 flex flex-col justify-between backdrop-blur-md">
 				<Skeleton width="40%" height="0.5rem" />
 				<Skeleton width="70%" height="1.5rem" />
 				<Skeleton width="100%" height="0.5rem" />
@@ -430,34 +430,28 @@ import { apiFetch } from "$lib/api";
 	{#if $siteSettings.dashboard.show_stats_cards}
 	<div class="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-10">
 		<div
-			class="transform transition-all duration-700 {animateStats
-				? 'tranneutral-y-0 opacity-100'
-				: 'tranneutral-y-8 opacity-0'}"
+			class="animate-reveal"
 			style="animation-delay: 0.1s;"
 		>
-			<StatsCard title="UPTIME" value={formatUptime($stats.uptime)} iconName="ph:clock-bold" color="cyan" />
+			<StatsCard title="System Uptime" value={formatUptime($stats.uptime)} iconName="ph:clock-bold" color="cyan" />
 		</div>
 		<div
-			class="transform transition-all duration-700 {animateStats
-				? 'tranneutral-y-0 opacity-100'
-				: 'tranneutral-y-8 opacity-0'}"
+			class="animate-reveal"
 			style="animation-delay: 0.2s;"
 		>
 			<StatsCard
-				title="ACTIVE NODES"
+				title="Active Nodes"
 				value={$stats.active_nodes}
 				iconName="ph:server-bold"
 				color="emerald"
 			/>
 		</div>
 		<div
-			class="transform transition-all duration-700 {animateStats
-				? 'tranneutral-y-0 opacity-100'
-				: 'tranneutral-y-8 opacity-0'}"
+			class="animate-reveal"
 			style="animation-delay: 0.3s;"
 		>
 			<StatsCard
-				title="TOTAL REQUESTS"
+				title="Total Requests"
 				value={$stats.total_requests}
 				iconName="ph:activity-bold"
 				color="purple"
@@ -465,12 +459,10 @@ import { apiFetch } from "$lib/api";
 		</div>
 		<a
 			href="/logs"
-			class="block transition-all duration-700 {animateStats
-				? 'tranneutral-y-0 opacity-100'
-				: 'tranneutral-y-8 opacity-0'}"
+			class="block animate-reveal"
 			style="animation-delay: 0.4s;"
 		>
-			<StatsCard title="SYSTEM ERRORS" value={$stats.total_errors} iconName="ph:warning-octagon-bold" color="red" />
+			<StatsCard title="System Errors" value={$stats.total_errors} iconName="ph:warning-octagon-bold" color="red" />
 		</a>
 	</div>
 	{/if}
@@ -479,15 +471,13 @@ import { apiFetch } from "$lib/api";
 	<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-10">
 		{#if $siteSettings.dashboard.show_traffic_card}
 		<div
-			class="transform transition-all duration-700 hover:scale-[1.01] {animateStats
-				? 'tranneutral-y-0 opacity-100'
-				: 'tranneutral-y-8 opacity-0'}"
+			class="animate-reveal"
 			style="animation-delay: 0.5s;"
 		>
 			<StatsCard
-				title="TRAFFIC"
+				title="Network Traffic"
 				value=""
-				subValue={`<span class="text-rust-light">SENT: ${formatBytes($stats.bytes_sent)}</span> <span class="text-neutral-700 mx-2">|</span> <span class="text-rust-light">RECEIVED: ${formatBytes($stats.bytes_received)}</span>`}
+				subValue={`<span class="text-sky-400">SENT: ${formatBytes($stats.bytes_sent)}</span> <span class="text-slate-600 mx-2">|</span> <span class="text-sky-400">RECEIVED: ${formatBytes($stats.bytes_received)}</span>`}
 				iconName="ph:wifi-high-bold"
 				color="orange"
 			/>
@@ -496,9 +486,7 @@ import { apiFetch } from "$lib/api";
 		
 		{#if $siteSettings.dashboard.show_db_card}
 		<div
-			class="transform transition-all duration-700 hover:scale-[1.01] {animateStats
-				? 'tranneutral-y-0 opacity-100'
-				: 'tranneutral-y-8 opacity-0'}"
+			class="animate-reveal"
 			style="animation-delay: 0.6s;"
 			onmouseenter={handleDBMouseEnter}
 			onmouseleave={handleDBMouseLeave}
@@ -506,10 +494,10 @@ import { apiFetch } from "$lib/api";
 			role="tooltip"
 		>
 			<StatsCard
-				title="DATABASE"
-				value={$stats.db_connected ? 'CONNECTED' : 'OFFLINE'}
+				title="Database Status"
+				value={$stats.db_connected ? 'Live' : 'Offline'}
 				subValue={$stats.db_connected
-					? `<span class="text-emerald-400">CONNS: ${$stats.db_open_connections}</span> <span class="text-neutral-700 mx-2">|</span> <span class="text-rust-light">IN USE: ${$stats.db_in_use}</span>`
+					? `<span class="text-emerald-400">CONNECTIONS: ${$stats.db_open_connections}</span> <span class="text-slate-600 mx-2">|</span> <span class="text-slate-400">LOAD: ${$stats.db_in_use}</span>`
 					: 'RECONNECTING...'}
 				iconName="ph:database-bold"
 				color={$stats.db_connected ? 'emerald' : 'red'}
@@ -543,45 +531,41 @@ import { apiFetch } from "$lib/api";
 
 	<!-- Nodes Section -->
 	{#if $siteSettings.dashboard.show_nodes_table}
-        <Card 
-            title="Node Infrastructure" 
-            subtitle="Active Node Stream"
-            icon="ph:server-bold"
-            class="transform transition-all duration-700 shadow-sm"
-        >
-            {#snippet actions()}
-                <div class="flex items-center gap-4 sm:gap-6 w-full sm:w-auto justify-between sm:justify-end">
-                    <div class="hidden xs:flex flex-col items-end text-right">
-                        <span class="text-[8px] sm:text-[9px] font-black text-neutral-600 uppercase tracking-widest italic">Inventory_Status</span>
-                        <span class="text-[9px] sm:text-[10px] font-black text-white uppercase tracking-widest mt-0.5">SYNCED</span>
-                    </div>
-                    <div class="h-8 sm:h-10 w-px bg-neutral-800 hidden xs:block"></div>
-                    <span
-                        class="text-[9px] sm:text-[10px] font-bold bg-rust/10 text-rust-light px-4 sm:px-5 py-1.5 sm:py-2 border border-rust/20 rounded-none uppercase tracking-widest shadow-sm"
-                        >Live_Stream</span>
-                </div>
-            {/snippet}
+		<div class="animate-reveal" style="animation-delay: 0.7s;">
+			<Card 
+				title="Node Infrastructure" 
+				subtitle="Active Node Fleet"
+				icon="ph:server-bold"
+				class="shadow-sm"
+			>
+				{#snippet actions()}
+					<div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+						<div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+						<span class="text-[10px] font-bold text-emerald-500 uppercase tracking-wide">Live Updates</span>
+					</div>
+				{/snippet}
 
-            <div class="p-0 bg-transparent relative">
-                <NodeTable
-                    bind:this={nodeTableComponent}
-                    nodes={$nodes}
-                    on:spawn={openSpawnDialog}
-                    on:viewLogs={handleViewLogs}
-                    on:startInstanceRequest={openStartInstanceDialog}
-                    on:stopInstanceRequest={openStopInstanceDialog}
-                    on:restartInstanceRequest={openRestartInstanceDialog}
-                    on:deleteInstanceRequest={openDeleteInstanceDialog}
-                    on:updateInstanceRequest={openUpdateInstanceDialog}
-                    on:renameInstanceRequest={openRenameInstanceDialog}
-                    on:updateNodeBuild={openUpdateNodeBuildDialog}
-                    on:bulkInstanceActionRequest={openBulkActionDialog}
-                    on:deleteNodeRequest={openDeleteNodeDialog}
-                    on:tail={handleTail}
-                    highlightNewNodeId={highlightNewNodeId}
-                />
-            </div>
-        </Card>
+				<div class="p-0 bg-transparent relative">
+					<NodeTable
+						bind:this={nodeTableComponent}
+						nodes={$nodes}
+						on:spawn={openSpawnDialog}
+						on:viewLogs={handleViewLogs}
+						on:startInstanceRequest={openStartInstanceDialog}
+						on:stopInstanceRequest={openStopInstanceDialog}
+						on:restartInstanceRequest={openRestartInstanceDialog}
+						on:deleteInstanceRequest={openDeleteInstanceDialog}
+						on:updateInstanceRequest={openUpdateInstanceDialog}
+						on:renameInstanceRequest={openRenameInstanceDialog}
+						on:updateNodeBuild={openUpdateNodeBuildDialog}
+						on:bulkInstanceActionRequest={openBulkActionDialog}
+						on:deleteNodeRequest={openDeleteNodeDialog}
+						on:tail={handleTail}
+						highlightNewNodeId={highlightNewNodeId}
+					/>
+				</div>
+			</Card>
+		</div>
 	{/if}
 {/if}
 

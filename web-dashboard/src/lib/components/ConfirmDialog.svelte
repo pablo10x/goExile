@@ -73,12 +73,12 @@ import { apiFetch } from "$lib/api";
 
 {#if isOpen}
 	<div
-		class="fixed inset-0 z-[400] flex items-center justify-center p-4 sm:p-6 font-mono"
+		class="fixed inset-0 z-[400] flex items-center justify-center p-4 sm:p-6 font-sans"
 		transition:fade={{ duration: 200 }}
 	>
 		<!-- Backdrop -->
 		<div
-			class="absolute inset-0 bg-black/90 backdrop-blur-sm"
+			class="absolute inset-0 bg-black/60 backdrop-blur-sm"
 			onclick={!loading ? close : undefined}
 			onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && !loading && close()}
 			role="button"
@@ -88,53 +88,42 @@ import { apiFetch } from "$lib/api";
 
 		<!-- Modal Container -->
 		<div
-			class="relative w-full max-w-lg bg-neutral-900/80 backdrop-blur-2xl shadow-2xl overflow-hidden z-[460] border border-neutral-700 rounded-xl"
+			class="relative w-full max-w-lg bg-slate-900/90 backdrop-blur-3xl shadow-2xl overflow-hidden z-[460] border border-white/10 rounded-[2.5rem]"
 			transition:modalScale
 		>
-			<!-- Status Bar -->
-			<div class={`h-1 w-full ${isCritical ? 'bg-red-600' : 'bg-rust'} opacity-40 animate-pulse`}></div>
-
 			<!-- Header -->
-			<div class="px-8 py-5 border-b border-neutral-700 flex justify-between items-center bg-neutral-950/40">
+			<div class="px-8 py-6 border-b border-white/5 flex justify-between items-center bg-white/5">
 				<div class="flex items-center gap-4">
-					{#if isCritical}
-						<Icon name="shield" size="1.25rem" class="text-red-500 animate-flicker" />
-					{:else}
-						<Icon name="file-text" size="1.25rem" class="text-rust-light" />
-					{/if}
-					<h3 class="text-xl font-heading font-black tracking-tighter text-white uppercase italic">
+					<div class={`p-2.5 rounded-xl ${isCritical ? 'bg-rose-500/10 text-rose-400' : 'bg-sky-500/10 text-sky-400'}`}>
+						<Icon name={isCritical ? 'ph:warning-circle-bold' : 'ph:question-bold'} size="1.25rem" />
+					</div>
+					<h3 class="text-xl font-bold text-white tracking-tight">
 						{title}
 					</h3>
 				</div>
 				<button
 					onclick={close}
-					class="text-stone-600 hover:text-white transition-all p-1"
+					class="text-slate-500 hover:text-white transition-all p-2 rounded-lg hover:bg-white/5"
 				>
 					<Icon name="ph:x-bold" size="1.25rem" />
 				</button>
 			</div>
 
 			<!-- Content -->
-			<div class="p-10 space-y-8 relative overflow-hidden bg-transparent">
-				<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
-				
+			<div class="p-10 space-y-6 relative overflow-hidden bg-transparent">
 				<div class="flex items-start gap-6 relative z-10">
-					<div class="flex-1 space-y-6">
-						<div class="flex items-center gap-3 font-jetbrains text-[10px] font-black tracking-[0.4em] uppercase italic text-stone-500">
-							<Icon name="ph:caret-right-bold" size="0.875rem" class={isCritical ? 'text-red-600' : 'text-rust'} />
-							SYSTEM_PROMPT_BUFFER
-						</div>
-						<div class="text-stone-300 font-jetbrains font-bold uppercase tracking-tight leading-relaxed">
+					<div class="flex-1 space-y-4">
+						<div class="text-slate-300 font-medium leading-relaxed">
 							{#if loading && statusMessage}
-								<p class="animate-pulse text-rust">
-									>> {statusMessage}
+								<p class="animate-pulse text-sky-400">
+									{statusMessage}
 								</p>
 							{:else}
-								<p class="opacity-90">&gt;&gt; {message}</p>
+								<p class="text-lg opacity-90">{message}</p>
 							{/if}
 						</div>
 						{#if children}
-							<div class="pt-4 border-t border-stone-800/50">
+							<div class="pt-4 border-t border-white/5">
 								{@render children()}
 							</div>
 						{/if}
@@ -143,26 +132,26 @@ import { apiFetch } from "$lib/api";
 
 				{#if error}
 					<div
-						class="p-5 bg-red-950/20 text-red-500 font-jetbrains text-[10px] font-black uppercase tracking-widest border border-red-900/30"
+						class="p-4 bg-rose-500/10 text-rose-400 text-sm font-medium rounded-xl border border-rose-500/20"
 						transition:scale={{ start: 0.98, duration: 200 }}
 					>
-						<div class="flex items-center gap-4">
-							<Icon name="alert" size="1.25rem" class="shrink-0" />
-							<span>OP_FAULT: {error}</span>
+						<div class="flex items-center gap-3">
+							<Icon name="alert" size="1.1rem" class="shrink-0" />
+							<span>{error}</span>
 						</div>
 					</div>
 				{/if}
 
 				{#if loading && progress !== null}
 					<!-- Progress -->
-					<div class="space-y-4" transition:fade>
-						<div class="flex justify-between font-jetbrains text-[9px] font-black uppercase tracking-widest italic text-stone-500">
-							<span>STREAM_PROGRESS</span>
-							<span class="text-rust">{Math.round(progress)}%</span>
+					<div class="space-y-3" transition:fade>
+						<div class="flex justify-between text-xs font-bold uppercase tracking-wider text-slate-500">
+							<span>Progress</span>
+							<span class="text-sky-400">{Math.round(progress)}%</span>
 						</div>
-						<div class="w-full h-1.5 bg-stone-950 border border-stone-800 p-0 relative shadow-inner overflow-hidden">
+						<div class="w-full h-2 bg-slate-950 rounded-full p-0.5 border border-white/5">
 							<div
-								class="h-full {isCritical ? 'bg-red-600 shadow-red-900/40' : 'bg-rust shadow-rust/40'} transition-all duration-300 ease-out shadow-lg"
+								class="h-full rounded-full {isCritical ? 'bg-rose-500' : 'bg-sky-500'} transition-all duration-300 ease-out shadow-lg"
 								style="width: {progress}%"
 							></div>
 						</div>
@@ -170,38 +159,35 @@ import { apiFetch } from "$lib/api";
 				{/if}
 			</div>
 
-			<!-- Commands -->
-			<div class="px-8 py-6 bg-neutral-950/40 border-t border-neutral-700 flex justify-between items-center">
-				<div class="font-jetbrains text-[10px] font-black tracking-[0.5em] uppercase italic text-neutral-500">
-					AWAITING_INPUT
-				</div>
-				<div class="flex gap-4">
-					{#if loading && progress !== null}
-						<div class="font-heading font-black text-[11px] text-stone-600 uppercase italic animate-pulse tracking-widest">
-							[BUSY]
-						</div>
-					{:else if loading}
-						<div class="flex items-center gap-3 font-heading font-black text-[11px] text-rust uppercase italic animate-pulse tracking-widest">
-							<Icon name="ph:arrows-clockwise-bold" size="1rem" class="animate-spin" />
-							EXECUTING...
-						</div>
-					{:else}
-						<Button
-							onclick={close}
-							variant="ghost"
-							size="sm"
-						>
-							{cancelText}
-						</Button>
-						<Button
-							onclick={handleConfirm}
-							variant={isCritical ? 'danger' : 'primary'}
-							size="md"
-						>
-							{confirmText}
-						</Button>
-					{/if}
-				</div>
+			<!-- Footer -->
+			<div class="px-8 py-6 bg-white/5 border-t border-white/5 flex justify-end items-center gap-3">
+				{#if loading && progress !== null}
+					<div class="text-sm font-bold text-slate-500 uppercase tracking-wider animate-pulse">
+						Processing...
+					</div>
+				{:else if loading}
+					<div class="flex items-center gap-3 text-sm font-bold text-sky-400 uppercase tracking-wider animate-pulse">
+						<Icon name="ph:arrows-clockwise-bold" size="1rem" class="animate-spin" />
+						Executing...
+					</div>
+				{:else}
+					<Button
+						onclick={close}
+						variant="ghost"
+						size="md"
+						class="!rounded-xl"
+					>
+						{cancelText}
+					</Button>
+					<Button
+						onclick={handleConfirm}
+						variant={isCritical ? 'danger' : 'primary'}
+						size="lg"
+						class="!rounded-xl"
+					>
+						{confirmText}
+					</Button>
+				{/if}
 			</div>
 		</div>
 	</div>

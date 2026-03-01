@@ -3,9 +3,9 @@
 package game
 
 import (
+	nodeErrors "node/internal/errors"
 	"os"
 	"os/exec"
-	nodeErrors "node/internal/errors"
 	"syscall"
 )
 

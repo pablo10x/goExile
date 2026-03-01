@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
@@ -18,7 +19,7 @@ import (
 	// Drivers
 	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 
 	"exile/server/models"
 	"exile/server/utils"
@@ -34,28 +35,34 @@ var (
 
 func InitDB(dsn string) error {
 	var err error
-
-	// If it's a postgres DSN but we need to start embedded first
-	if strings.HasPrefix(dsn, "postgres://") || strings.HasPrefix(dsn, "postgresql://") {
-		// Try to connect first, if it fails, maybe it's not running and we should try embedded?
-		// Actually, let's keep it simple: InitDB expects a running DB.
-		// The TUI/Main will handle starting embedded if needed.
+	driver := os.Getenv("DB_DRIVER")
+	if driver == "" {
+		// Default to sqlite if not specified
+		driver = "sqlite"
 	}
 
-	DBConn, err = sqlx.Connect("pgx", dsn)
-	if err != nil {
-		// If it's potentially a SQLite path, ensure the directory exists
-		if !strings.HasPrefix(dsn, "postgres://") && !strings.HasPrefix(dsn, "postgresql://") {
-			dir := filepath.Dir(dsn)
-			if dir != "." && dir != "/" {
-				_ = os.MkdirAll(dir, 0755)
-			}
-		}
+	log.Printf("Initializing database connection (Driver: %s)", driver)
 
-		DBConn, err = sqlx.Connect("sqlite3", dsn)
-		if err != nil {
-			return fmt.Errorf("failed to connect to database: %w", err)
+	if driver == "pgx" || driver == "postgres" {
+		DBConn, err = sqlx.Connect("pgx", dsn)
+	} else {
+		// Ensure directory exists for SQLite
+		dir := filepath.Dir(dsn)
+		if dir != "." && dir != "/" {
+			_ = os.MkdirAll(dir, 0755)
 		}
+		// Enable WAL mode and set busy_timeout for better concurrency
+		// Check if dsn already has query params
+		separator := "?"
+		if strings.Contains(dsn, "?") {
+			separator = "&"
+		}
+		dsnWithPragmas := dsn + separator + "_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)"
+		DBConn, err = sqlx.Connect("sqlite", dsnWithPragmas)
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed to connect to database (%s): %w", driver, err)
 	}
 
 	// Configurable pool settings
@@ -100,17 +107,24 @@ func StartEmbeddedPostgres() error {
 		return nil
 	}
 
+	// Use a project-local directory for data, ensuring Windows compatibility and persistence
+	cwd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get current working directory: %w", err)
+	}
+	dataDir := filepath.Join(cwd, "database", "pg_data")
+
+	// Ensure data directory exists with correct permissions
+	if err := os.MkdirAll(dataDir, 0700); err != nil {
+		return fmt.Errorf("failed to create postgres data dir: %w", err)
+	}
+
 	config := embeddedpostgres.DefaultConfig().
 		Database("exile_master").
 		Username("exile").
 		Password("exile").
-		Port(5432)
-
-	// Ensure data directory exists with correct permissions
-	dataDir := "/tmp/exile_pgdata"
-	if err := os.MkdirAll(dataDir, 0700); err != nil {
-		return fmt.Errorf("failed to create postgres data dir: %w", err)
-	}
+		Port(5432).
+		DataPath(dataDir) // Explicitly set data path
 
 	// Cleanup stale lock file and process
 	lockFile := filepath.Join(dataDir, "postmaster.pid")
@@ -123,14 +137,19 @@ func StartEmbeddedPostgres() error {
 				// Check if process exists and is running
 				process, err := os.FindProcess(pid)
 				if err == nil {
-					// Send SIGTERM
-					if err := process.Signal(syscall.SIGTERM); err == nil {
-						log.Printf("Cleaning up stale Postgres process (PID: %d)", pid)
-						// Wait a bit for it to exit
-						time.Sleep(1 * time.Second)
-						// Force kill if still running (check signal 0)
-						if err := process.Signal(syscall.Signal(0)); err == nil {
-							_ = process.Kill()
+					log.Printf("Cleaning up stale Postgres process (PID: %d)", pid)
+					// On Windows, Signal(SIGTERM) is not fully supported, so we use Kill
+					if runtime.GOOS == "windows" {
+						_ = process.Kill()
+					} else {
+						// Send SIGTERM on Unix-like systems
+						if err := process.Signal(syscall.SIGTERM); err == nil {
+							// Wait a bit for it to exit
+							time.Sleep(1 * time.Second)
+							// Force kill if still running
+							if err := process.Signal(syscall.Signal(0)); err == nil {
+								_ = process.Kill()
+							}
 						}
 					}
 				}
@@ -140,7 +159,7 @@ func StartEmbeddedPostgres() error {
 		_ = os.Remove(lockFile)
 	}
 
-	EmbeddedServer = embeddedpostgres.NewDatabase(config.DataPath(dataDir))
+	EmbeddedServer = embeddedpostgres.NewDatabase(config)
 	if err := EmbeddedServer.Start(); err != nil {
 		return fmt.Errorf("failed to start embedded postgres: %w", err)
 	}
@@ -166,7 +185,13 @@ func InitReadOnlyDB(dsn string) error {
 	var err error
 	ReadOnlyDBConn, err = sqlx.Connect("pgx", dsn)
 	if err != nil {
-		ReadOnlyDBConn, err = sqlx.Connect("sqlite3", dsn)
+		// Enable WAL mode and set busy_timeout for read-only connection too
+		separator := "?"
+		if strings.Contains(dsn, "?") {
+			separator = "&"
+		}
+		dsnWithPragmas := dsn + separator + "_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)"
+		ReadOnlyDBConn, err = sqlx.Connect("sqlite", dsnWithPragmas)
 		if err != nil {
 			return fmt.Errorf("failed to connect to read-only database: %w", err)
 		}
@@ -240,7 +265,7 @@ func GetAdvancedDBStats(db *sqlx.DB) (*AdvancedDBStats, error) {
 
 func MigrateDB(db *sqlx.DB) error {
 	pkType := "SERIAL PRIMARY KEY"
-	if db.DriverName() == "sqlite3" {
+	if db.DriverName() == "sqlite" {
 		pkType = "INTEGER PRIMARY KEY AUTOINCREMENT"
 	}
 
@@ -410,11 +435,11 @@ func MigrateDB(db *sqlx.DB) error {
 	_, _ = db.Exec("ALTER TABLE todos ADD COLUMN deadline INTEGER")
 	// Add parent_id to todos if missing
 	_, _ = db.Exec("ALTER TABLE todos ADD COLUMN parent_id INTEGER")
-	
-    // NODE RENAMING MIGRATION
-    _, _ = db.Exec("ALTER TABLE spawners RENAME TO nodes")
-    _, _ = db.Exec("ALTER TABLE instance_actions RENAME COLUMN spawner_id TO node_id")
-    
+
+	// NODE RENAMING MIGRATION
+	_, _ = db.Exec("ALTER TABLE spawners RENAME TO nodes")
+	_, _ = db.Exec("ALTER TABLE instance_actions RENAME COLUMN spawner_id TO node_id")
+
 	// Add is_draining to nodes if missing
 	_, _ = db.Exec("ALTER TABLE nodes ADD COLUMN is_draining INTEGER DEFAULT 0")
 	// Add new node settings if missing
@@ -425,7 +450,7 @@ func MigrateDB(db *sqlx.DB) error {
 
 	// Add details to redeye_logs if missing
 	_, _ = db.Exec("ALTER TABLE redeye_logs ADD COLUMN details TEXT")
-    
+
 	return nil
 }
 
@@ -1460,13 +1485,12 @@ func SeedDefaultConfig(db *sqlx.DB) error {
 
 func SaveConfig(db *sqlx.DB, c *models.ServerConfig) error {
 	do := func() error {
+		// Use DO NOTHING to respect existing configuration (user overrides)
+		// This ensures we only seed keys that don't exist yet.
 		query := `INSERT INTO server_config
                         (key, value, type, category, description, is_read_only, requires_restart, updated_at, updated_by)
                         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-                        ON CONFLICT(key) DO UPDATE SET
-                        value=excluded.value,
-                        updated_at=excluded.updated_at,
-                        updated_by=excluded.updated_by`
+                        ON CONFLICT(key) DO NOTHING`
 
 		_, err := db.Exec(query,
 			c.Key, c.Value, c.Type, c.Category, c.Description, boolToInt(c.IsReadOnly), boolToInt(c.RequiresRestart), c.UpdatedAt.Unix(), c.UpdatedBy)

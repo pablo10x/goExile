@@ -146,7 +146,7 @@ func (r *Registry) UpdateHeartbeat(id int, currentInstances, maxInstances int, s
 	s.DiskTotal = diskTotal
 	s.GameVersion = gameVersion
 	s.IsDraining = isDraining
-	
+
 	// Create a copy for persistence to avoid holding the lock during I/O
 	sCopy := *s
 	r.mu.Unlock()
@@ -170,11 +170,11 @@ func (r *Registry) UpdateNodeStatus(id int, newStatus string) error {
 	}
 	s.Status = newStatus
 	s.LastSeen = time.Now().UTC() // Update LastSeen as well
-	
+
 	// Create a copy for persistence
 	sCopy := *s
 	r.mu.Unlock()
-	
+
 	if database.DBConn != nil {
 		if _, err := database.SaveNode(database.DBConn, &sCopy); err != nil {
 			log.Printf("warning: failed to persist status update for id=%d: %v", id, err)

@@ -227,7 +227,7 @@ func ReportAnticheatEventHandler(w http.ResponseWriter, r *http.Request) {
 	// 2. Feed the Real-time Engine
 	// Severity 1-100. We multiply by 2 for reputation impact (e.g. 50 severity = 100 score = instant ban).
 	details := fmt.Sprintf("[%s] Player: %s - %s", event.EventType, event.PlayerID, event.Details)
-	IngestSignal(event.ClientIP, SignalTypeReport, event.Severity * 2, details)
+	IngestSignal(event.ClientIP, SignalTypeReport, event.Severity*2, details)
 
 	utils.WriteJSON(w, http.StatusOK, map[string]string{"status": "reported", "action": "processed_by_engine"})
 }

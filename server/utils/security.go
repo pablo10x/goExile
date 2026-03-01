@@ -244,13 +244,13 @@ func ValidateColumnDefinition(def string) error {
 	if strings.ContainsAny(def, ";--") {
 		return fmt.Errorf("invalid characters in column definition")
 	}
-	
+
 	// Ensure it starts with a valid identifier
 	parts := strings.Fields(def)
 	if len(parts) < 2 {
 		return fmt.Errorf("invalid column definition format")
 	}
-	
+
 	if err := ValidateIdentifier(parts[0]); err != nil {
 		return fmt.Errorf("invalid column name: %w", err)
 	}

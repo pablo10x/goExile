@@ -179,6 +179,14 @@ func UnifiedAuthMiddleware(apiKey string, authConfig auth.AuthConfig, sessionSto
 					}
 				}
 
+				// Fallback to Query Parameter (for SSE/EventSource)
+				if sessionID == "" {
+					sessionID = r.URL.Query().Get("token")
+					if sessionID == "" {
+						sessionID = r.URL.Query().Get("session")
+					}
+				}
+
 				if sessionID != "" {
 					isValid, authStep := sessionStore.ValidateSession(sessionID)
 					if isValid && authStep == auth.AuthStepAuthenticated {
@@ -222,7 +230,7 @@ func GlobalRateLimitMiddleware(next http.Handler) http.Handler {
 		lastUpdate time.Time
 		mu         sync.Mutex
 	}
-	
+
 	var (
 		limiters = make(map[string]*clientLimiter)
 		mu       sync.RWMutex

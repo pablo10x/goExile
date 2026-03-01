@@ -37,12 +37,12 @@ import { apiFetch } from "$lib/api";
 
 	function colorize(line: string) {
 		if (line.includes('Error') || line.includes('Exception') || line.includes('Failed') || line.includes('CRITICAL'))
-			return 'text-red-500 font-bold drop-shadow-[0_0_5px_rgba(239,68,68,0.3)]';
-		if (line.includes('Warning') || line.includes('Warn')) return 'text-amber-500 font-bold';
-		if (line.includes('Success') || line.includes('Done') || line.includes('Ready')) return 'text-emerald-400 font-bold';
-		if (line.includes('Info') || line.includes('unity')) return 'text-rust-light font-bold';
-		if (line.includes('DEBUG')) return 'text-stone-600';
-		return 'text-stone-300';
+			return 'text-rose-400 font-semibold';
+		if (line.includes('Warning') || line.includes('Warn')) return 'text-amber-400 font-semibold';
+		if (line.includes('Success') || line.includes('Done') || line.includes('Ready')) return 'text-emerald-400 font-semibold';
+		if (line.includes('Info') || line.includes('unity')) return 'text-indigo-300';
+		if (line.includes('DEBUG')) return 'text-slate-500';
+		return 'text-slate-300';
 	}
 
 	function copyLogs() {
@@ -55,43 +55,37 @@ import { apiFetch } from "$lib/api";
 </script>
 
 <div
-	class="relative flex flex-col h-full bg-[var(--terminal-bg)] rounded-none border border-stone-800 overflow-hidden font-jetbrains text-[11px] shadow-2xl group glass-panel industrial-frame"
+	class="relative flex flex-col h-full bg-slate-950 rounded-xl border border-white/10 shadow-2xl overflow-hidden font-mono text-xs group"
 >
-	<!-- CRT Overlay Effects -->
-	<div class="absolute inset-0 pointer-events-none z-20 overflow-hidden">
-		<div class="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,255,255,0.02),rgba(255,255,255,0.04),rgba(255,255,255,0.02))] bg-[length:100%_2px,3px_100%] opacity-5"></div>
-		<div class="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-transparent opacity-5"></div>
-	</div>
-
 	<!-- Terminal Header -->
 	<div
-		class="relative z-30 px-5 py-3 bg-[var(--header-bg)] border-b border-stone-800 flex justify-between items-center select-none"
+		class="relative z-30 px-4 py-2.5 bg-slate-900/80 backdrop-blur-md border-b border-white/5 flex justify-between items-center select-none"
 	>
 		<div class="flex items-center gap-4">
-			<div class="flex gap-2 opacity-50">
-				<div class="w-2.5 h-2.5 rounded-none bg-red-500/40 border border-red-500/60 shadow-[0_0_8px_rgba(239,68,68,0.2)]"></div>
-				<div class="w-2.5 h-2.5 rounded-none bg-amber-500/40 border border-amber-500/60 shadow-[0_0_8px_rgba(245,158,11,0.2)]"></div>
-				<div class="w-2.5 h-2.5 rounded-none bg-rust/40 border border-rust/60 shadow-[0_0_8px_rgba(249,115,22,0.2)]"></div>
+			<div class="flex gap-1.5 opacity-80">
+				<div class="w-2.5 h-2.5 rounded-full bg-rose-500/80"></div>
+				<div class="w-2.5 h-2.5 rounded-full bg-amber-500/80"></div>
+				<div class="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></div>
 			</div>
-			<div class="flex items-center gap-3">
-				<TerminalSquare class="w-4 h-4 text-stone-600" />
-				<span class="text-stone-400 font-heading font-black tracking-widest text-[10px] uppercase font-mono"
+			<div class="flex items-center gap-2">
+				<TerminalSquare class="w-3.5 h-3.5 text-slate-500" />
+				<span class="text-slate-400 font-medium tracking-wide text-[11px]"
 					>{title}</span
 				>
 			</div>
 		</div>
-		<div class="flex items-center gap-3">
+		<div class="flex items-center gap-2">
 			<button
 				onclick={copyLogs}
-				class="flex items-center gap-2 px-3 py-1.5 rounded-none bg-stone-900 hover:bg-rust hover:text-white border border-stone-800 hover:border-rust text-[9px] font-heading font-black text-stone-500 transition-all uppercase tracking-widest"
-				title="Copy all logs"
+				class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/5 hover:bg-white/10 border border-white/5 text-[10px] font-medium text-slate-400 hover:text-white transition-all"
+				title="Copy logs"
 			>
 				{#if isCopied}
-					<Check class="w-3.5 h-3.5 text-emerald-400" />
-					<span class="text-emerald-400">COPIED</span>
+					<Check class="w-3 h-3 text-emerald-400" />
+					<span class="text-emerald-400">Copied</span>
 				{:else}
-					<Copy class="w-3.5 h-3.5" />
-					<span>CLONE_BUFFER</span>
+					<Copy class="w-3 h-3" />
+					<span>Copy</span>
 				{/if}
 			</button>
 			{#if !autoScroll}
@@ -99,10 +93,10 @@ import { apiFetch } from "$lib/api";
 					onclick={() => {
 						autoScroll = true;
 					}}
-					class="flex items-center gap-2 px-3 py-1.5 rounded-none bg-amber-500/10 text-amber-500 border border-amber-500/30 hover:bg-amber-500/20 transition-all text-[9px] font-heading font-black animate-pulse uppercase tracking-widest"
+					class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 transition-all text-[10px] font-medium animate-pulse"
 				>
-					<ChevronDown class="w-3.5 h-3.5" />
-					RESUME_SYNC
+					<ChevronDown class="w-3 h-3" />
+					Resume
 				</button>
 			{/if}
 		</div>
@@ -112,49 +106,45 @@ import { apiFetch } from "$lib/api";
 	<div
 		bind:this={container}
 		onscroll={handleScroll}
-		class="relative z-10 flex-1 overflow-y-auto p-6 space-y-1 custom-scrollbar bg-[var(--terminal-bg)]"
+		class="relative z-10 flex-1 overflow-y-auto p-4 space-y-0.5 custom-scrollbar bg-slate-950"
 	>
-		<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.01] pointer-events-none"></div>
-		
 		{#each logs as line}
-			<div class={`break-all whitespace-pre-wrap leading-relaxed ${colorize(line)} font-bold uppercase tracking-tight opacity-80 hover:opacity-100 transition-opacity flex items-start gap-3`}>
-				<span class="opacity-20 select-none text-stone-600 font-black">>></span>
+			<div class={`break-all whitespace-pre-wrap leading-relaxed ${colorize(line)} flex items-start gap-3`}>
+				<span class="opacity-30 select-none text-slate-600">›</span>
 				<span class="flex-1">{line}</span>
 			</div>
 		{/each}
 		{#if logs.length === 0}
-			<div class="flex flex-col items-center justify-center h-full text-stone-800 gap-4 opacity-40">
-				<div class="w-12 h-12 border border-dashed border-stone-800 flex items-center justify-center industrial-frame">
-					<div class="w-2 h-2 bg-stone-800 animate-ping"></div>
-				</div>
-				<span class="font-jetbrains text-[10px] font-black uppercase tracking-[0.4em]">Signal_Lost // Awaiting_Neural_Stream</span>
+			<div class="flex flex-col items-center justify-center h-full text-slate-700 gap-3 opacity-60">
+				<TerminalSquare class="w-8 h-8 opacity-50" />
+				<span class="text-[10px] uppercase tracking-wider font-medium">Awaiting Output stream...</span>
 			</div>
 		{/if}
 		
-		<!-- Blinking Cursor at the end -->
-		<div class="mt-2 flex items-center gap-2 opacity-30">
-			<div class="w-2 h-4 bg-rust shadow-[0_0_10px_rgba(249,115,22,0.5)] animate-pulse"></div>
+		<!-- Blinking Cursor -->
+		<div class="mt-1 flex items-center gap-2 opacity-50">
+			<div class="w-1.5 h-3 bg-indigo-500 animate-pulse"></div>
 		</div>
 	</div>
 </div>
 
 <style>
 	.custom-scrollbar::-webkit-scrollbar {
-		width: 10px;
+		width: 6px;
 	}
 
 	.custom-scrollbar::-webkit-scrollbar-track {
-		background: var(--header-bg);
-		border-left: 1px solid #1a1a1a;
+		background: transparent;
 	}
 
 	.custom-scrollbar::-webkit-scrollbar-thumb {
-		background: #262626;
-		border: 2px solid var(--header-bg);
-		border-radius: 4px;
+		background: #334155;
+		border-radius: 99px;
+		border: 2px solid transparent;
+		background-clip: content-box;
 	}
 
 	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-		background: #404040;
+		background: #475569;
 	}
 </style>

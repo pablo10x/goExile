@@ -14,7 +14,7 @@ type LogCategory string
 
 const (
 	LogCategoryInternal LogCategory = "Internal"
-	LogCategoryNode  LogCategory = "Node"
+	LogCategoryNode     LogCategory = "Node"
 	LogCategorySecurity LogCategory = "Security"
 	LogCategoryGeneral  LogCategory = "General"
 )

@@ -6,8 +6,8 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -23,15 +23,25 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		// Validate Origin header to prevent Cross-Site WebSocket Hijacking
 		origin := r.Header.Get("Origin")
+		isProduction := os.Getenv("PRODUCTION_MODE") == "true"
 
-		// If no Origin header, this is likely a direct API call (not from browser)
-		// Still require API key validation in the handler
+		// If no Origin header:
+		// - In Production: REJECT. All legitimate clients (including Node CLI if using standard libs) 
+		//   should send an Origin or User-Agent we can whitelist. 
+		//   However, for now, we'll allow it ONLY if not browser (checked via User-Agent?) 
+		//   actually, standard practice is to allow empty origin for non-browser clients 
+		//   BUT rely on the Authentication (API Key) which we do in the Handler.
+		//   So we'll keep the "allow empty" logic but log it in production.
 		if origin == "" {
+			if isProduction {
+				// Optional: Log this for audit
+				// log.Printf("WS: Empty origin connection from %s", r.RemoteAddr)
+			}
 			return true
 		}
 
-		// Get allowed origins from environment or use defaults
-		allowedOrigins := getAllowedOrigins()
+		// Get allowed origins using shared utility
+		allowedOrigins := utils.GetAllowedOrigins(database.DBConn)
 
 		for _, allowed := range allowedOrigins {
 			if origin == allowed {
@@ -44,47 +54,7 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-// getAllowedOrigins returns the list of allowed WebSocket origins
-func getAllowedOrigins() []string {
-	// Try loading from DB first
-	if database.DBConn != nil {
-		if c, err := database.GetConfigByKey(database.DBConn, "allowed_origins"); err == nil && c != nil {
-			return splitAndTrim(c.Value, ",")
-		}
-	}
 
-	// Default allowed origins for development and production
-	defaults := []string{
-		"http://localhost:5173", // SvelteKit dev server
-		"http://localhost:8081", // Backend server
-		"http://127.0.0.1:5173",
-		"http://127.0.0.1:8081",
-	}
-
-	// Add custom origins from environment variable if set
-	// Format: ALLOWED_ORIGINS=https://example.com,https://admin.example.com
-	if customOrigins := utils.GetEnv("ALLOWED_ORIGINS", ""); customOrigins != "" {
-		for _, origin := range splitAndTrim(customOrigins, ",") {
-			if origin != "" {
-				defaults = append(defaults, origin)
-			}
-		}
-	}
-
-	return defaults
-}
-
-// splitAndTrim splits a string and trims whitespace from each part
-func splitAndTrim(s, sep string) []string {
-	parts := make([]string, 0)
-	for _, part := range strings.Split(s, sep) {
-		trimmed := strings.TrimSpace(part)
-		if trimmed != "" {
-			parts = append(parts, trimmed)
-		}
-	}
-	return parts
-}
 
 // NodeConnection represents a connected Node.
 type NodeConnection struct {

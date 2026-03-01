@@ -36,22 +36,22 @@ var (
 	BannedIPCache = make(map[string]bool)
 	RuleCache     = []models.RedEyeRule{}
 	BanCacheMu    sync.RWMutex
-	
+
 	// System Status
 	RedEyeActive = false
 	RedEyeError  = ""
 
 	// High-Performance Event Bus
 	signalChan = make(chan SecuritySignal, 10000)
-	
+
 	// Config Cache
 	configMu       sync.RWMutex
 	autoBanEnabled = true
 	banThreshold   = 100
-	
+
 	// IP Reputation Tracker (In-Memory)
-	ipScores   = make(map[string]int)
-	scoreMu    sync.RWMutex
+	ipScores = make(map[string]int)
+	scoreMu  sync.RWMutex
 
 	// Rate Limiters
 	limiters = make(map[string]*rateLimiter)
@@ -60,7 +60,7 @@ var (
 	// Lifecycle Management
 	done = make(chan struct{})
 	wg   sync.WaitGroup
-	
+
 	// Deduplication for ban operations
 	banningIPs sync.Map
 )
@@ -159,7 +159,7 @@ func analysisLoop(db *sqlx.DB) {
 
 	logBuffer := make([]models.RedEyeLog, 0, 100)
 	logTicker := time.NewTicker(2 * time.Second)
-	
+
 	flushLogs := func() {
 		if len(logBuffer) == 0 {
 			return
@@ -180,7 +180,7 @@ func analysisLoop(db *sqlx.DB) {
 
 		case sig := <-signalChan:
 			newScore := updateScore(sig.IP, sig.Severity)
-			
+
 			configMu.RLock()
 			limit := banThreshold
 			enabled := autoBanEnabled
@@ -204,7 +204,7 @@ func analysisLoop(db *sqlx.DB) {
 				}
 				logBuffer = append(logBuffer, l)
 			}
-			
+
 			if sig.Type == SignalTypeBlock {
 				registry.GlobalStats.RecordRedEyeBlock()
 			} else if sig.Type == SignalTypeRateLimit {
@@ -415,7 +415,7 @@ func RedEyeMiddleware(next http.Handler) http.Handler {
 			http.Error(w, "Rate Limit Exceeded (RedEye)", http.StatusTooManyRequests)
 			return
 		}
-		
+
 		// Log generic traffic for statistics
 		IngestSignal(clientIP, SignalTypeTraffic, 0, r.Method+" "+r.URL.Path)
 
@@ -431,8 +431,12 @@ type rateLimiter struct {
 }
 
 func checkRateLimit(ip string, limit int, burst int) bool {
-	if limit <= 0 { return true }
-	if burst <= 0 { burst = limit }
+	if limit <= 0 {
+		return true
+	}
+	if burst <= 0 {
+		burst = limit
+	}
 
 	limitMu.RLock()
 	lim, exists := limiters[ip]
@@ -507,7 +511,7 @@ func GetEngineStats() map[string]interface{} {
 	scoreMu.RLock()
 	activeTrackers := len(ipScores)
 	scoreMu.RUnlock()
-	
+
 	BanCacheMu.RLock()
 	activeRules := len(RuleCache)
 	cachedBans := len(BannedIPCache)

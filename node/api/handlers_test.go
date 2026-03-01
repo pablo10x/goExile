@@ -5,9 +5,9 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"node/internal/config"
 	"node/internal/game"
+	"os"
 	"testing"
 
 	"github.com/gin-gonic/gin"

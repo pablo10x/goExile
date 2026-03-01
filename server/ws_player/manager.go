@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"exile/server/database"
+	"exile/server/utils"
 
 	"github.com/gorilla/websocket"
 )
@@ -38,7 +39,25 @@ var GlobalPlayerWS *PlayerWSManager
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
-		return true // Allow all origins for game clients
+		// Validate Origin header to prevent Cross-Site WebSocket Hijacking
+		origin := r.Header.Get("Origin")
+
+		// If no Origin header, this is likely a direct API call or non-browser client (Unity)
+		if origin == "" {
+			return true
+		}
+
+		// Get allowed origins
+		allowedOrigins := utils.GetAllowedOrigins(database.DBConn)
+
+		for _, allowed := range allowedOrigins {
+			if origin == allowed {
+				return true
+			}
+		}
+
+		log.Printf("PlayerWS: connection rejected: invalid origin %s", origin)
+		return false
 	},
 }
 

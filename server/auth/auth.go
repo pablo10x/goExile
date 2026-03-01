@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -43,9 +44,9 @@ type SessionData struct {
 }
 
 type SessionStore struct {
-	mu               sync.RWMutex
-	sessions         map[string]SessionData
-	maxSessions      int
+	mu                sync.RWMutex
+	sessions          map[string]SessionData
+	maxSessions       int
 	inactivityTimeout time.Duration
 }
 
@@ -153,6 +154,30 @@ var (
 	TwoFactorRateLimiter = NewRateLimiter(3, 15*time.Minute)
 )
 
+// GetSessionID extracts the session ID from the request using Cookie, Bearer Token, or Query Parameter.
+func GetSessionID(r *http.Request) string {
+	// 1. Check Cookie
+	if c, err := r.Cookie("session"); err == nil && c.Value != "" {
+		return c.Value
+	}
+
+	// 2. Check Authorization Header (Bearer)
+	authHeader := r.Header.Get("Authorization")
+	if strings.HasPrefix(authHeader, "Bearer ") {
+		return strings.TrimPrefix(authHeader, "Bearer ")
+	}
+
+	// 3. Check Query Parameter (for SSE/EventSource)
+	if token := r.URL.Query().Get("token"); token != "" {
+		return token
+	}
+	if session := r.URL.Query().Get("session"); session != "" {
+		return session
+	}
+
+	return ""
+}
+
 func GetAuthConfig() AuthConfig {
 	isProd := os.Getenv("PRODUCTION_MODE") == "true"
 	// HACK: This is not secure. The password should be hashed and stored securely.
@@ -172,9 +197,28 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, cfg AuthConfig, ss *Ses
 		http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
 		return
 	}
-	email := r.FormValue("email")
-	password := r.FormValue("password")
+
+	var email, password string
+
+	// Handle JSON or Form-encoded
+	if strings.Contains(r.Header.Get("Content-Type"), "application/json") {
+		var creds struct {
+			Email    string `json:"email"`
+			Password string `json:"password"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&creds); err == nil {
+			email = creds.Email
+			password = creds.Password
+		}
+	} else {
+		email = r.FormValue("email")
+		password = r.FormValue("password")
+	}
+
+	log.Printf("[AUTH] Login attempt for: %s from IP: %s", email, ip)
+
 	if email == cfg.Email && password == cfg.HashedPassword {
+		log.Printf("[AUTH] Login successful for: %s", email)
 		LoginRateLimiter.Reset(ip)
 		step := AuthStepAuthenticated
 		if cfg.TOTPSecret != "" && cfg.IsProduction {
@@ -198,23 +242,25 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, cfg AuthConfig, ss *Ses
 		})
 		return
 	}
+
+	log.Printf("[AUTH] Login FAILED for: %s (Expected: %s)", email, cfg.Email)
 	http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 }
 
 func Handle2FAVerify(w http.ResponseWriter, r *http.Request, cfg AuthConfig, ss *SessionStore) {
-	cookie, _ := r.Cookie("session")
-	if cookie == nil {
+	sessionID := GetSessionID(r)
+	if sessionID == "" {
 		http.Error(w, "No session", http.StatusUnauthorized)
 		return
 	}
-	valid, step := ss.ValidateSession(cookie.Value)
+	valid, step := ss.ValidateSession(sessionID)
 	if !valid || step != AuthStepTOTP {
 		http.Error(w, "Invalid session or step", http.StatusUnauthorized)
 		return
 	}
 	code := r.FormValue("code")
 	if totp.Validate(code, cfg.TOTPSecret) {
-		ss.MarkSessionAuthenticated(cookie.Value)
+		ss.MarkSessionAuthenticated(sessionID)
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 		return
@@ -227,8 +273,8 @@ func HandleEmailVerify(w http.ResponseWriter, r *http.Request, cfg AuthConfig, s
 }
 
 func HandleLogout(w http.ResponseWriter, r *http.Request, ss *SessionStore) {
-	if c, _ := r.Cookie("session"); c != nil {
-		ss.RevokeSession(c.Value)
+	if sessionID := GetSessionID(r); sessionID != "" {
+		ss.RevokeSession(sessionID)
 	}
 	http.SetCookie(w, &http.Cookie{Name: "session", Value: "", Path: "/", MaxAge: -1})
 	w.Header().Set("Content-Type", "application/json")
@@ -238,8 +284,8 @@ func HandleLogout(w http.ResponseWriter, r *http.Request, ss *SessionStore) {
 func AuthMiddleware(cfg AuthConfig, ss *SessionStore) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if c, _ := r.Cookie("session"); c != nil {
-				if valid, step := ss.ValidateSession(c.Value); valid && step == AuthStepAuthenticated {
+			if sessionID := GetSessionID(r); sessionID != "" {
+				if valid, step := ss.ValidateSession(sessionID); valid && step == AuthStepAuthenticated {
 					next.ServeHTTP(w, r)
 					return
 				}

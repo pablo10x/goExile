@@ -6,27 +6,29 @@
   --font-body: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  /* Industrial Tactical Palette */
-  --color-brand: #c2410c; /* Rust 700 */
-  --color-brand-light: #f97316; /* Rust 500 */
-  --color-brand-dark: #9a3412; /* Rust 800 */
+  /* Professional Noir Palette */
+  --color-brand: #0ea5e9; /* Sky 500 */
+  --color-brand-light: #38bdf8; /* Sky 400 */
+  --color-brand-dark: #0284c7; /* Sky 700 */
   
-  --color-accent: #f59e0b; /* Amber 500 */
-  --color-rust: #c2410c;
-  --color-rust-light: #f97316;
-  --color-danger: #ef4444;
+  --color-accent: #2dd4bf; /* Teal 400 */
   
-  /* Deep Charcoal Backgrounds */
-  --color-bg-core: #0a0a0a; /* Pure Charcoal */
-  --color-bg-surface: #171717; /* Neutral 900 */
-  --color-bg-panel: #1a1a1a;
+  /* Remapped Legacy variables */
+  --color-rust: #0ea5e9; /* Mapped to Tech Blue */
+  --color-rust-light: #38bdf8;
+  --color-danger: #f43f5e; /* Rose 500 */
   
-  --radius-sm: 0.125rem;
-  --radius-md: 0.25rem;
-  --radius-lg: 0.375rem;
-  --radius-xl: 0.5rem;
-  --radius-2xl: 0.75rem;
-  --radius-industrial: 0rem;
+  /* Noir Backgrounds */
+  --color-bg-core: #000000;
+  --color-bg-surface: #0f172a;
+  --color-bg-panel: #1e293b;
+  
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-industrial: 1rem;
 
   /* Animation Utilities */
   --animate-float: float 6s ease-in-out infinite;
@@ -45,8 +47,8 @@
   }
   
   @keyframes glow {
-    from { box-shadow: 0 0 5px currentColor; }
-    to { box-shadow: 0 0 20px currentColor, 0 0 10px currentColor; }
+    from { box-shadow: 0 0 5px #0ea5e9; }
+    to { box-shadow: 0 0 20px #0ea5e9, 0 0 10px #2dd4bf; }
   }
 
   @keyframes flicker {
@@ -64,28 +66,28 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #262626;
-  border-radius: 0px;
+  background: #334155;
+  border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #c2410c;
+  background: #0ea5e9;
 }
 
 :root {
-  /* Deep Industrial Theme Variables */
-  --bg-core: #0a0a0a;
-  --bg-surface: #171717;
-  --bg-surface-glass: rgba(23, 23, 23, 0.7);
+  /* Noir Theme Variables */
+  --bg-core: #000000;
+  --bg-surface: #0f172a;
+  --bg-surface-glass: rgba(15, 23, 42, 0.6);
   
-  --text-primary: #f5f5f5;
-  --text-secondary: #a3a3a3;
-  --text-dim: #525252;
+  --text-primary: #f8fafc; /* Slate 50 */
+  --text-secondary: #cbd5e1; /* Slate 300 */
+  --text-dim: #64748b; /* Slate 500 */
   
-  --border-color: #262626;
-  --border-highlight: #404040;
+  --border-color: #1e293b; /* Slate 800 */
+  --border-highlight: #334155; /* Slate 700 */
   
-  --color-rust: #c2410c;
-  --color-rust-light: #f97316;
+  --color-rust: #0ea5e9; /* Sky 500 */
+  --color-rust-light: #38bdf8; /* Sky 400 */
   
   /* Layout */
   --sidebar-width: 260px;
@@ -97,108 +99,158 @@
   --font-mono: 'JetBrains Mono', monospace;
 }
 
-html {
-  background-color: var(--bg-core);
+html, body {
+  background-color: #000000;
+  margin: 0;
+  padding: 0;
 }
 
-body {
-  background-color: transparent;
-  font-family: var(--font-body);
-  color: var(--text-primary);
-  line-height: 1.6;
-  @apply font-body selection:bg-rust selection:text-white antialiased;
-  min-height: 100vh;
+/* Ambient Mesh - Ultra Smooth & Dark */
+@keyframes aurora-slow {
+  0%, 100% { transform: scale(1) translate(0, 0); opacity: 0.3; }
+  50% { transform: scale(1.1) translate(2%, 2%); opacity: 0.5; }
 }
 
-h1, h2, h3, h4, .font-heading {
-  font-family: var(--font-heading);
-  letter-spacing: -0.02em;
-  @apply font-bold;
+.animate-gradient-mesh {
+  background-color: #000000;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.15) 0, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(30, 41, 59, 0.3) 0, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(15, 23, 42, 0.4) 0, transparent 50%);
+  position: relative;
 }
 
-/* Glassmorphism Utilities - Industrial */
-.glass-panel {
-  @apply bg-neutral-900/80 backdrop-blur-xl border border-neutral-800 shadow-2xl;
+.animate-gradient-mesh::before {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  background: radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.05), transparent 50%);
+  animation: aurora-slow 20s ease-in-out infinite;
+  filter: blur(100px);
+  pointer-events: none;
 }
 
-/* 30% Industrial Utilities */
-.industrial-gradient {
-  background: radial-gradient(circle at 50% 50%, #1a1a1a 0%, #0a0a0a 100%);
-}
-
-.industrial-sharp {
-  @apply rounded-none;
-}
-
-.industrial-frame {
-  @apply border-2 border-neutral-800 bg-neutral-950/60;
-}
-
-.tactical-label {
-  @apply font-mono text-[10px] font-black uppercase tracking-widest text-neutral-500;
-}
-
-.tactical-code {
-  @apply font-mono text-xs text-rust-light bg-black/60 px-1.5 py-0.5 border border-rust/20;
-}
-
-/* Corner Brackets for Industrial Feel */
-.corner-bracket-tl {
-  @apply absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-rust/40 pointer-events-none;
-}
-.corner-bracket-br {
-  @apply absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-rust/40 pointer-events-none;
-}
-
-/* Scanline Effect */
-.scanline-overlay {
-  @apply pointer-events-none fixed inset-0 z-[1000] opacity-[0.04];
-  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-  background-size: 100% 4px, 3px 100%;
-}
-
-.glass-panel-hover:hover {
-  @apply bg-neutral-800/80 border-neutral-700 shadow-2xl;
-  transition: all 0.3s ease;
-}
-
-/* Modern Card Style - Tactical */
+/* Depth & Glass System - Improved Readability */
 .modern-card {
-  @apply rounded-none border-2 border-neutral-800 bg-neutral-900/40 overflow-hidden shadow-2xl;
-  transform: translateZ(0);
-  will-change: transform, opacity;
+  @apply rounded-[2.5rem] border border-white/[0.1] bg-slate-900/90 backdrop-blur-3xl shadow-2xl transition-all duration-500 overflow-hidden relative;
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, transparent 100%);
 }
 
-/* Navigation Links - Tactical Industrial */
+.modern-card::after {
+  content: "";
+  @apply absolute inset-0 rounded-[2.5rem] border border-white/[0.02] pointer-events-none;
+}
+
+.hover-float:hover {
+  @apply -translate-y-2 border-white/20 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.7)];
+  background-color: #0f172a;
+}
+
+/* Typography Harmony */
+body {
+  @apply text-slate-300 antialiased selection:bg-sky-500/30 font-sans;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+.text-primary { @apply text-white; }
+.text-secondary { @apply text-slate-400; }
+
+/* Premium Button System */
+.btn-premium {
+  @apply relative inline-flex items-center justify-center px-6 py-3 rounded-2xl font-bold transition-all duration-300 active:scale-95 overflow-hidden;
+}
+
+.btn-premium-primary {
+  @apply bg-sky-500 text-white shadow-lg shadow-sky-500/25 hover:bg-sky-400 hover:shadow-sky-500/40;
+}
+
+.btn-premium-secondary {
+  @apply bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:text-white;
+}
+
+/* Smooth Entrance */
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-reveal {
+  animation: reveal-up 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Navigation Overhaul */
 .nav-link-light {
-  @apply flex items-center gap-3 px-3 py-3 rounded-none text-neutral-500 font-mono text-[11px] uppercase tracking-widest;
-  transition: all 0.2s ease;
+  @apply flex items-center gap-4 px-5 py-4 rounded-[1.25rem] text-slate-500 font-medium transition-all duration-300 hover:bg-white/5 hover:text-slate-200;
+}
+
+.nav-link-light.active {
+  @apply bg-white/10 text-sky-400 shadow-xl;
+  background-image: linear-gradient(90deg, rgba(14, 165, 233, 0.1) 0%, transparent 100%);
+}
+
+.nav-icon-container-light {
+  @apply w-10 h-10 flex items-center justify-center rounded-xl bg-slate-900/50 border border-white/[0.05] transition-all duration-500;
+}
+
+.nav-link-light.active .nav-icon-container-light {
+  @apply bg-sky-500/10 border-sky-500/20 text-sky-400 scale-110 shadow-lg shadow-sky-500/10;
+}
+
+/* Clean Labels */
+.font-label {
+  @apply font-sans text-[11px] font-bold uppercase tracking-wider text-slate-500;
+}
+
+/* Clean Data Display */
+.font-data {
+  @apply font-sans font-semibold tracking-tight;
+}
+
+/* Global Transitions */
+* {
+  @apply transition-colors duration-200;
+}
+
+/* Scrollbar Polish */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-700/50 rounded-full hover:bg-sky-500/50;
+}
+
+/* Navigation Links - Elegant */
+.nav-link-light {
+  @apply flex items-center gap-4 px-4 py-3.5 rounded-2xl text-slate-500 font-sans text-sm font-medium transition-all duration-300;
 }
 .nav-link-light:hover {
-  @apply bg-neutral-800/40 text-neutral-100 border-l-2 border-neutral-700;
+  @apply bg-white/5 text-slate-200;
 }
 .nav-link-light.active {
-  @apply bg-rust/5 text-rust-light font-black border-l-4 border-rust shadow-[inset_4px_0_15px_rgba(194,65,12,0.05)];
+  @apply bg-white/[0.08] text-sky-400 shadow-xl shadow-black/20;
 }
 
 /* Navigation Icon Container */
 .nav-icon-container-light {
-  @apply w-8 h-8 flex items-center justify-center rounded-none bg-neutral-950 border border-neutral-800 shadow-inner;
-  transition: all 0.2s ease;
+  @apply w-9 h-9 flex items-center justify-center rounded-xl bg-slate-900/50 border border-white/5 shadow-sm transition-all duration-300;
 }
 .nav-link-light:hover .nav-icon-container-light {
-  @apply bg-neutral-900 border-rust/30 text-rust-light;
+  @apply bg-slate-800 border-sky-500/20 text-sky-400;
 }
 .nav-link-light.active .nav-icon-container-light {
-  @apply bg-rust/10 border-rust/40 text-rust shadow-[0_0_10px_rgba(194,65,12,0.2)];
+  @apply bg-sky-500/10 border-sky-500/30 text-sky-400 shadow-lg shadow-sky-500/20 scale-110;
 }
 
 /* Typography Helpers */
 .nav-text-light {
-  @apply text-xs font-semibold tracking-wide;
+  @apply text-sm font-semibold tracking-tight;
 }
 .nav-subtext-light {
-  @apply text-[9px] font-medium text-neutral-500 tracking-tight leading-none mt-0.5;
+  @apply text-[11px] font-medium text-slate-500 mt-0.5;
 }
 
 /* Button Resets & Base Styles */

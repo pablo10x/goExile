@@ -66,6 +66,6 @@ func PrintStartupComplete(port string) {
 		Sprint(content)
 
 	pterm.Println(box)
-	
-pterm.Info.Println("Press Ctrl+C to stop the server")
+
+	pterm.Info.Println("Press Ctrl+C to stop the server")
 }
