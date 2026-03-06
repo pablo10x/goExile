@@ -131,9 +131,9 @@ npm run dev   # Starts Vite dev server
 *   **Dashboard UI:**
     *   Enhanced **SystemTopology** component:
         *   Resized RedEye and Database nodes to be smaller than the Master node for better visual hierarchy.
-        *   Replaced hexagonal frames with custom SVG "Cyber Frames" featuring corner brackets.
-        *   Upgraded interception animation from plasma bolts to realistic rockets with flickering engine flames and smoke trails.
-        *   Added a cinematic "destruction" sequence where the attacker icon shatters and fades upon impact.
+        *   Replaced hexagonal frames with custom SVG "Interface Frames" featuring corner accents.
+        *   Upgraded interception animation from plasma bolts to realistic kinetic projectiles with flickering engine flames and smoke trails.
+        *   Added a cinematic sequence where the incoming icon shatters and fades upon impact.
 *   **Bug Fixes:**
     *   Fixed a syntax error and missing `fmt` import in `server/auth/auth.go`.
     *   Removed an unreachable and incorrect `os.Chdir()` call in `node/main.go`.
@@ -165,10 +165,10 @@ npm run dev   # Starts Vite dev server
 *   **Logging:** Implemented log rotation (max 5MB, keep 20 lines) in Node, filtered noisy log types, and added file size display in Dashboard LogViewer.
 *   **Database:** Integrated PostgreSQL support (via `pgx` driver) alongside SQLite. Added "Databases" tab to Dashboard for table listing. Use `DB_DRIVER=pgx` for Postgres. Added 5s timeout to DB init to prevent startup hangs. Enhanced Database Management: Full UI for Overview, Table Browser/Editor (CRUD), Internal Backups (Create/Restore/Download), and Config viewing.
 *   **Dashboard Stability:** Fixed Svelte 5 reactivity issues in Layout and Dashboard Page (Runes migration) resolving navigation bugs and blank screen issues. Fixed accessibility warnings and template syntax errors.
-*   **Theme & Aesthetic Migration:** Completed the migration to the tactical Rust/Stone "Exile" terminal aesthetic.
-    *   Replaced all remaining hardcoded blue, indigo, and cyan accents with Rust theme colors across all major routes (`/dashboard`, `/config`, `/logs`, `/database`, `/notes`, `/users`).
-    *   Implemented full `industrial_styling` support: all cards and modals now respect the sharp-corner/heavy-border toggle.
-    *   Updated `NotificationBell` and `TaskItem` components to match the new industrial aesthetic.
+*   **Theme & Aesthetic Migration:** Completed the migration to the professional Deep Slate "Exile" interface.
+    *   Replaced all remaining hardcoded blue, indigo, and cyan accents with refined brand colors across all major routes (`/dashboard`, `/config`, `/logs`, `/database`, `/notes`, `/users`).
+    *   Implemented full `industrial_styling` support: all cards and modals now respect the clean-corner/structured-border toggle.
+    *   Updated `NotificationBell` and `TaskItem` components to match the new professional aesthetic.
     *   Fixed multiple Svelte 5 syntax errors and tag nesting issues in `config/+page.svelte`.
     *   Optimized Three.js lifecycle management: `NavbarParticles` now properly stops its animation loop when disabled or in Low Power Mode.
     *   Implemented persistence for aesthetic settings: `theme`, `backgroundConfig`, and `siteSettings` now automatically sync with `localStorage`.
@@ -234,7 +234,7 @@ The following security improvements have been implemented:
 ### Remote Configuration & Management
 *   **Real-Time Sync:** Settings updated in the Dashboard (Region, Max Instances) are instantly pushed to connected Nodes via WebSocket (`update_config` command).
 *   **Persistence:** Nodes automatically save updated configurations to their local `.env` file, ensuring changes persist across restarts.
-*   **Drain Mode:** (In Progress) Support for enabling "Maintenance Mode" to prevent new spawns while allowing existing games to finish.
+*   **Maintenance Mode:** Support for enabling "Drain Mode" to prevent new spawns while allowing existing games to finish.
 
 ### System Logging & Error Reporting
 *   **Architecture:** Implemented a new persistent, categorized logging system.
@@ -274,15 +274,15 @@ The following security improvements have been implemented:
     *   **Atmospheric Effects:** Introduced advanced controls for glitch frequency, lens fringing (chromatic aberration), flicker intensity, and grid substrate opacity.
     *   **Preset Engine:** Added industrial theme presets (DEEP_COMMAND, MERCURY_PROTO, SOLAR_FLARE, VOID_WALKER) for instant system-wide visual reconfiguration.
 *   **Layout & CSS Audit:**
-    *   **Z-Index Normalization:** Re-stratified UI layers to ensure the Command Module (Sidebar) and System Tickersit above all atmospheric overlays.
+    *   **Z-Index Normalization:** Re-stratified UI layers to ensure the Command Module (Sidebar) and System Ticker sit above all atmospheric overlays.
     *   **Navigation Centering:** Fixed alignment bugs in the collapsed sidebar state, ensuring perfectly centered tactical icons.
     *   **Typography Harmonization:** Migrated all text blocks, code segments, and headers to a unified CSS variable registry for real-time recalibration.
 *   **Player Account Page Overhaul:**
-    *   Refactored the layout to include a strategic summary section with StatsCards (Total Subjects, Online Count, Cumulative XP, Active Reports).
+    *   Refactored the layout to include a summary section with StatsCards (Total Subjects, Online Count, Cumulative XP, Active Reports).
     *   Implemented a new sorting engine allowing administrators to sort by ID, Name, XP, or Last Seen.
-    *   Upgraded Player and Report cards with "Tactical Corners", monospace typography for identifiers/values, and dynamic theme-aware rounding.
+    *   Upgraded Player and Report cards with "Accent Corners", monospace typography for identifiers/values, and dynamic theme-aware rounding.
     *   Introduced "Ban/Restore" functionality with real-time UI feedback and backend integration.
-    *   Modernized the `EditPlayerModal` to match the industrial aesthetic, featuring monospace input fields and theme-calibrated accents.
+    *   Modernized the `EditPlayerModal` to match the professional aesthetic, featuring monospace input fields and theme-calibrated accents.
 *   **Performance Page Overhaul:**
     *   Refactored the layout to introduce a new "Network Operations" card alongside the "Memory Matrix", optimizing screen real estate usage.
     *   Implemented detailed network metrics display: Active Links, Inbound/Outbound traffic stats, and Error Vector visualization.
@@ -320,8 +320,8 @@ The following security improvements have been implemented:
 *   **Database**: Implemented schema migrations to automatically add new columns to existing databases.
 
 ### 👁️ RedEye Visual Overhaul
-*   **Robotic Aesthetic**: Implemented a modern, high-contrast cyber-theme for the RedEye Guardian panel.
-*   **Animations**: Added a grid background and scanning line animation for a "neural core" feel.
+*   **Modern Aesthetic**: Implemented a modern, high-contrast interface for the RedEye Security panel.
+*   **Animations**: Added a grid background and scanning line animation for a structured feel.
 *   **Technical Detail**: Enhanced data display with monospaced typography and technical metadata (CRC, entropy tracking).
 *   **Modern Components**: Refactored the dashboard to use Svelte 5 best practices, including `$props`, `$state`, and the new dynamic component syntax.
 *   **Type Safety**: Resolved all TypeScript indexing and component type errors across modernized components.
@@ -341,16 +341,16 @@ The following security improvements have been implemented:
 *   **Backend Resilience**: Hardened the HTTP server with production-grade read/write timeouts and context-aware background goroutines for graceful shutdown.
 *   **Network Compression**: Implemented a native Gzip middleware in the Go backend. All JSON responses (logs, configs, stats) are now compressed during transit, reducing bandwidth usage by up to 80% and improving load times for remote operators.
 *   **Intelligent Hibernation**: Integrated the **Page Visibility API** into the dashboard. Real-time data streams (SSE) are now automatically paused when the browser tab is hidden and resumed when brought to the focus, significantly reducing background CPU and network overhead.
-*   **Compositor Isolation**: Applied `isolation: isolate` and `contain: content` to the System Topology SVG. This prevents node-level animations from triggering expensive full-screen layout recalculations.
+*   **Compositor Isolation**: Applied `isolation: isolate` and `contain: content` to the System Topology SVG. This prevents node-level animations from triggering full-screen layout recalculations.
 *   **Reactivity Throttling**: Refactored the topology heartbeat logic using Svelte 5's `untrack`. Heartbeat pulses are now processed in an isolated context, preventing redundant array scans and keeping the main thread free for high-priority UI interactions.
 *   **Log Buffer Windowing**: Implemented an automated rendering cap for the Log Viewer. The system now only renders the most recent 200 log lines by default, eliminating the browser "hang" typical when loading massive operational logs while still keeping the full dataset available in memory.
-*   **Tactical Command Palette**: Implemented a global **Smart-Uplink** hub accessible via `Ctrl+K` or `Cmd+K`. This enables instant fuzzy-search navigation across all system modules and the execution of high-level system commands (e.g., reboots, theme switching) without leaving the current view.
+*   **Management Command Palette**: Implemented a global **Smart-Uplink** hub accessible via `Ctrl+K` or `Cmd+K`. This enables instant fuzzy-search navigation across all system modules and the execution of high-level system commands (e.g., reboots, theme switching) without leaving the current view.
 *   **Keyboard-First Navigation**: Added global shortcut listeners for "Quick Jump" navigation (`G+D` for Dashboard, `G+L` for Logs, etc.) and full keyboard support for all interactive dialogs.
-*   **A11y Hardening**: Performed a comprehensive accessibility pass. All custom industrial modals and components now include standard ARIA roles, high-contrast focus indicators, and semantic labels for screen-reader compatibility.
+*   **A11y Hardening**: Performed a comprehensive accessibility pass. All custom modals and components now include standard ARIA roles, high-contrast focus indicators, and semantic labels for screen-reader compatibility.
 *   **UI Modernization & Performance**: 
     *   Standardized the "Modern Tech" aesthetic across the dashboard, ensuring a consistent Deep Slate (#020617) theme.
     *   Fixed dark mode conflicts in `StatsCard.svelte` (formerly light-themed) and `+layout.svelte` (fixed background layer).
-    *   Cleaned up the Sidebar by removing "Tactical/Military" noise (grid overlays, fake terminal outputs) for a sleeker, professional look.
+    *   Cleaned up the Sidebar by removing unnecessary visual noise for a sleeker, professional look.
     *   Completely refactored the Database page (`/database`) and its sub-components (`QueryTabs`, `DataGrid`, `TableTab`, `DatabaseBrowserTab`, `SQLEditorTab`, `BackupsTab`, `ConfigTab`, `RolesTab`, `FunctionsTab`) to the "Deep Slate" aesthetic, replacing yellow accents with indigo for global consistency.
     *   **Animation & Background Optimization**:
         *   Achieved significant performance gains by reducing particle counts in `MotherboardBackground` (from 60 to 45) and `NavbarParticles` (from 300 to 120).
@@ -359,13 +359,13 @@ The following security improvements have been implemented:
         *   Hardened UI smoothness by replacing expensive `transition-all` rules with targeted property transitions and implementing `contain: content` on cards to isolate browser paint operations.
     *   Improved performance by removing unused CSS animations (`float`, `pulse-glow`, `blob`) and heavy DOM elements (rain layers).
 - Renamed "Spawner" to "Node" across the project and implemented "Drain Mode" for maintenance. Updated the frontend to Svelte 5 Runes and fixed multiple stability issues.
-- Shifted aesthetic from "Military Industrial" to "Modern Tech" (Darker "20% Industrial" Variant).
+- Shifted aesthetic from "Tactical" to "Modern Enterprise" (Darker refined Variant).
     - Palette: Deep Slate/Black (#020617) backgrounds, Blue 500 primary, Amber 500 accent.
     - Style: Rounded corners (xl/lg), glassmorphism, softer borders.
     - Background: New `MotherboardBackground` component with circuit path animations.
-- Cleaned up all components to remove `siteSettings.aesthetic` dependencies, ensuring consistent styling and better performance.
-- Removed "hover card animation" (CardHoverOverlay) and CRT scanline/noise effects for a cleaner, static industrial look.
-- Fixed a major issue where full-screen atmospheric overlays (clouds, rain) were blocking clicks on interactive elements by adding `pointer-events-none`.
+- Cleaned up all components to remove legacy aesthetic dependencies, ensuring consistent styling and better performance.
+- Removed excessive visual effects for a cleaner, static professional look.
+- Fixed a major issue where full-screen atmospheric overlays were blocking clicks on interactive elements by adding `pointer-events-none`.
 - Fixed a runtime error in `SystemTopology.svelte` by removing the `topology_blobs` reference, which was causing a crash after the theme system removal.
     *   **Database UI Overhaul:** Completely refactored the Database tab (`/database`) to a "Modern Tech" aesthetic (Slate/Blue, rounded corners).
     - Redesigned the Dashboard Overview with professional metric cards and quick actions.
@@ -379,12 +379,12 @@ The following security improvements have been implemented:
 *   **Layout Fix**: Resolved a missing `cubicOut` import in `+layout.svelte` to satisfy type checking.
 
 ### 🎨 Sidebar & UI Refinement
-*   **Icon Refresh**: Updated sidebar icons to better match the "Tactical" aesthetic:
+*   **Icon Refresh**: Updated sidebar icons to better match the professional aesthetic:
     *   Dashboard -> `Gauge`
     *   Notes -> `FileText`
     *   Config -> `Sliders`
 *   **Scrollbar**: Hidden the default scrollbar on the sidebar (`no-scrollbar`) for a cleaner look while maintaining scrollability.
-*   **Active State**: Enhanced the `.nav-link-industrial` active state with a left border indicator and gradient background.
+*   **Active State**: Enhanced the navigation link active state with a left border indicator and gradient background.
 
 ## 🔴 RedEye System Architecture Analysis
 
@@ -415,27 +415,26 @@ While separating services can offer benefits like independent scalability and im
 Therefore, for the current architecture, RedEye is most appropriately managed as an internal component of the Master Server.
 ## 🎨 Style Guide
 
-### Terminal Theme
-*   **Background:** Deep charcoal (#0a0a0a) or tactical gray (#121212) with radial vignette overlays.
+### Dashboard Theme
+*   **Background:** Deep charcoal (#0a0a0a) or refined gray (#121212) with subtle radial overlays.
 *   **Typography:** 
-    *   Primary: Bold, uppercase sans-serif (Inter) for headlines and high-level subjects.
-    *   Secondary: Strict monospace (JetBrains Mono) for technical data, logs, and metadata.
+    *   Primary: Clean, bold sans-serif (Inter) for headlines and primary subjects.
+    *   Secondary: Structured monospace (JetBrains Mono) for technical data, logs, and metadata.
 *   **Palette:**
-    *   Primary: Tactical Amber/Orange (#f97316).
+    *   Primary: Brand Blue/Sky (#0ea5e9).
     *   Secondary: Alert Red (#ef4444) for faults and critical actions.
     *   Neutral: Slate Gray (#a0a0a0) and Deep Steel (#1a1a1a).
-*   **UI Structure:** Horizontally aligned data cards resembling intelligence briefings or intercepted transmissions. Minimal 1px borders and low-opacity separators.
-*   **Atmosphere:** Subtle CRT scanlines (low opacity), soft radial vignette, and cinematic warm-up animations. No noise texture for maximum readability.
-*   **Feel:** Professional command-center, surveillance-driven, dystopian, and authoritative. AAA game cinematic intelligence interface.
+*   **UI Structure:** Horizontally aligned data cards resembling professional analytics reports. Minimal 1px borders and low-opacity separators.
+*   **Atmosphere:** Subtle visual structure, soft radial gradients, and smooth transition animations. Clean, high-performance professional aesthetic.
 
-## 🚀 2026 UI Overhaul (Tactical Command HUD)
-The dashboard has been upgraded to a high-density "Tactical Command" architecture to eliminate navigation bottlenecks.
+## 🚀 2026 UI Overhaul (Enterprise Management HUD)
+The dashboard has been upgraded to a high-density architecture to eliminate navigation bottlenecks.
 
-### **Omni-Stream Fleet Management**
-*   **FleetCommander:** A flattened, high-performance view of all instances across the entire fleet.
+### **Unified Infrastructure Management**
+*   **SystemCommander:** A flattened, high-performance view of all instances across the entire infrastructure.
     *   **Unified API:** New `GET /api/instances` endpoint for concurrent cross-node instance fetching.
-    *   **One-Tap Actions:** Direct Stop/Start/Restart buttons on every instance in the tactical stream.
-    *   **Status Auras:** Real-time visual glowing borders indicating instance health.
-    *   **Tactical View Toggle:** Switch instantly between Node-Centric (Clusters) and Instance-Centric (Stream) views.
+    *   **One-Tap Actions:** Direct Stop/Start/Restart buttons on every instance in the management stream.
+    *   **Status Indicators:** Real-time visual indicators of instance health.
+    *   **Flexible View Toggle:** Switch instantly between Node-Centric (Clusters) and Instance-Centric (Stream) views.
 *   **Keyboard-First Workflow:** Integrated global search and action triggers to reduce manual menu navigation.
-*   **Resource Visualization:** Miniature HUD-style bars for CPU/RAM metrics per instance.
+*   **Resource Visualization:** Clean progress-style bars for CPU/RAM metrics per instance.

@@ -48,16 +48,25 @@ import { apiFetch, notify, API_BASE } from "$lib/api";
 	import CommandPalette from '$lib/components/CommandPalette.svelte';
 	import InstanceManagerModal from '$lib/components/InstanceManagerModal.svelte';
 	import ShortcutHelpModal from '$lib/components/ShortcutHelpModal.svelte';
+	import ConnectionModal from '$lib/components/ConnectionModal.svelte';
+    import { isNative, checkConnection } from "$lib/api";
 
 	let { children, data } = $props();
 	let isChecking = $state(true);
 	let restarting = $state(false);
 	let isCommandPaletteOpen = $state(false);
 	let isShortcutHelpOpen = $state(false);
+    let isConnectionModalOpen = $state(false);
 	let eventSource: EventSource | null = null;
+    let reconnectTimer: any = null;
+    let reconnectAttempts = 0;
 
 	let localBackgroundConfig = $derived($backgroundConfig);
 	let localSiteSettings = $derived($siteSettings);
+
+	let sidebarLoaded = $state(false);
+	let isSidebarCollapsed = $state(false);
+	let isMobileMenuOpen = $state(false);
 
 	// Keyboard shortcut orchestration
 	onMount(() => {
@@ -109,25 +118,59 @@ import { apiFetch, notify, API_BASE } from "$lib/api";
 		}
 	});
 
-	let sidebarLoaded = $state(false);
-	let isSidebarCollapsed = $state(false);
-	let isMobileMenuOpen = $state(false);
-
-	function connectSSE() {
+    function connectSSE() {
 		if (typeof window === 'undefined') return;
-		if (eventSource) eventSource.close();
+        if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+        }
+
+        // Don't connect if offline, but schedule a retry
+        if (reconnectAttempts > 0 && !get(isConnected)) {
+             // We can do a pre-check here if we want, but EventSource also fails fast
+        }
+
 		const token = localStorage.getItem('exile_session');
 		const url = token ? `${API_BASE}/events?token=${token}` : `${API_BASE}/events`;
-		eventSource = new EventSource(url, { withCredentials: true });
-		eventSource.onopen = () => {
-			isConnected.set(true);
+		
+        console.log(`[SSE] Connecting to ${url} (Attempt ${reconnectAttempts + 1})`);
+        
+        eventSource = new EventSource(url, { withCredentials: true });
+		
+        eventSource.onopen = () => {
+			console.log('[SSE] Connected');
+            isConnected.set(true);
 			connectionStatus.set('Live');
+            reconnectAttempts = 0;
+            if (reconnectTimer) clearTimeout(reconnectTimer);
 		};
-		eventSource.onerror = () => {
-			isConnected.set(false);
+		
+        eventSource.onerror = (err) => {
+			console.error('[SSE] Disconnected', err);
+            isConnected.set(false);
 			connectionStatus.set('Disconnected');
+            eventSource?.close();
+            eventSource = null;
+
+            // Exponential backoff for reconnect
+            const timeout = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+            reconnectAttempts++;
+            
+            console.log(`[SSE] Reconnecting in ${timeout}ms...`);
+            if (reconnectTimer) clearTimeout(reconnectTimer);
+            reconnectTimer = setTimeout(async () => {
+                // Check if server is actually reachable before trying SSE again to avoid spam
+                const online = await checkConnection();
+                if (online) {
+                    connectSSE();
+                } else {
+                    // If still offline, schedule next check
+                    connectSSE(); // connectSSE will hit onerror again and backoff further
+                }
+            }, timeout);
 		};
-		eventSource.onmessage = (event) => {
+		
+        eventSource.onmessage = (event) => {
 			try {
 				const data = JSON.parse(event.data);
 				if (data.type === 'stats') stats.set(data.payload);
@@ -237,17 +280,26 @@ import { apiFetch, notify, API_BASE } from "$lib/api";
 			<div class="fixed top-0 left-0 right-0 h-16 bg-slate-950/40 border-b border-white/5 z-[120] flex items-center px-8 backdrop-blur-2xl">
 				<div class="flex items-center gap-8 whitespace-nowrap w-full">
 					<div class="flex items-center gap-3 shrink-0">
-						<div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.4)]"></div>
-						<span class="font-bold text-xs text-slate-200">System Online</span>
+						<div class="w-2 h-2 rounded-full {$isConnected ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.4)]' : 'bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.4)]'}"></div>
+						<span class="font-bold text-xs text-slate-200">System {$isConnected ? 'Online' : 'Offline'}</span>
+                        {#if isNative}
+                            <span class="text-[9px] font-bold bg-sky-500/10 text-sky-400 px-2 py-0.5 rounded border border-sky-500/20 uppercase tracking-widest ml-1">Native Application</span>
+                        {/if}
 					</div>
 					<div class="flex items-center gap-8 text-slate-500 text-xs font-semibold">
-						<span class="hidden sm:inline">Uplink: <span class="text-slate-300">{$connectionStatus}</span></span>
-						<span>Nodes: <span class="text-slate-300">{$stats.active_nodes} Active</span></span>
+						<button 
+                            onclick={() => isConnectionModalOpen = true}
+                            class="group flex items-center gap-2 hover:text-sky-400 transition-all cursor-pointer"
+                        >
+                            <span class="hidden sm:inline">Connection: <span class="text-slate-300 group-hover:text-sky-400 transition-colors">{API_BASE || 'Default'}</span></span>
+                            <Sliders class="w-3 h-3 opacity-50 group-hover:opacity-100" />
+                        </button>
+						<span>Servers: <span class="text-slate-300">{$stats.active_nodes} Active</span></span>
 					</div>
 					<div class="ml-auto flex items-center gap-6 shrink-0">
 						<button onclick={() => isShortcutHelpOpen = true} class="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-sky-400 transition-all">
 							<Icon name="ph:question-bold" size="1.1rem" />
-							<span class="hidden md:inline">Help</span>
+							<span class="hidden md:inline">Help Center</span>
 						</button>
 					</div>
 				</div>
@@ -274,10 +326,10 @@ import { apiFetch, notify, API_BASE } from "$lib/api";
 						<nav class="flex-1 p-6 space-y-10 overflow-y-auto no-scrollbar py-10">
 							<div class="space-y-10">
 								{#each [
-									{ title: 'Dashboard', items: [{ href: '/dashboard', icon: 'gauge', label: 'Overview', sub: 'Control Center' }, { href: '/performance', icon: 'activity', label: 'Analytics', sub: 'Real-time Metrics' }] },
-									{ title: 'Fleet', items: [{ href: '/server', icon: 'cpu', label: 'Nodes', sub: 'Infrastructure' }, { href: '/users', icon: 'users', label: 'Users', sub: 'Access Control' }] },
-									{ title: 'Resources', items: [{ href: '/database', icon: 'database', label: 'Database', sub: 'Global Storage' }, { href: '/notes', icon: 'file-text', label: 'Journal', sub: 'Internal Notes' }] },
-									{ title: 'Protection', items: [{ href: '/config', icon: 'sliders', label: 'Settings', sub: 'Environment' }, { href: '/redeye', icon: 'shield', label: 'Security', sub: 'Sentinel Guard' }] }
+									{ title: 'Monitoring', items: [{ href: '/dashboard', icon: 'gauge', label: 'Overview', sub: 'Control Panel' }, { href: '/performance', icon: 'activity', label: 'Analytics', sub: 'Real-time Metrics' }] },
+									{ title: 'Infrastructure', items: [{ href: '/server', icon: 'cpu', label: 'Servers', sub: 'Hardware Nodes' }, { href: '/users', icon: 'users', label: 'Accounts', sub: 'Access Control' }] },
+									{ title: 'Resources', items: [{ href: '/database', icon: 'database', label: 'Database', sub: 'Global Storage' }, { href: '/notes', icon: 'file-text', label: 'Documentation', sub: 'Internal Notes' }] },
+									{ title: 'Maintenance', items: [{ href: '/config', icon: 'sliders', label: 'Settings', sub: 'Environment' }, { href: '/redeye', icon: 'shield', label: 'Security', sub: 'Network Guard' }] }
 								] as section}
 									<div class="space-y-2">
 										{#if !isSidebarCollapsed}<span class="text-xs font-bold text-slate-600 uppercase tracking-wider ml-4 mb-4 block">{section.title}</span>{/if}
@@ -342,6 +394,7 @@ import { apiFetch, notify, API_BASE } from "$lib/api";
 		<Notifications />
 		<CommandPalette bind:isOpen={isCommandPaletteOpen} />
 		<ShortcutHelpModal bind:isOpen={isShortcutHelpOpen} />
+        <ConnectionModal bind:isOpen={isConnectionModalOpen} />
 		<InstanceManagerModal bind:isOpen={sysState.console.isOpen} nodeId={sysState.console.nodeId} instanceId={sysState.console.instanceId} onClose={() => (sysState.console.isOpen = false)} />
 	{:else}
 		{@render children()}

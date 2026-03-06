@@ -37,22 +37,47 @@ func InitDB(dsn string) error {
 	var err error
 	driver := os.Getenv("DB_DRIVER")
 	if driver == "" {
-		// Default to sqlite if not specified
+		// Default to sqlite if not specified for a true zero-config experience
 		driver = "sqlite"
+		if dsn == "" {
+			dsn = "database/registry.db"
+		}
 	}
 
 	log.Printf("Initializing database connection (Driver: %s)", driver)
 
 	if driver == "pgx" || driver == "postgres" {
+		// If DSN is empty, use default
+		if dsn == "" {
+			dsn = "postgres://exile:exile@localhost:5432/exile_master?sslmode=disable"
+		}
 		DBConn, err = sqlx.Connect("pgx", dsn)
-	} else {
+		
+		// If Postgres fails and it's a localhost connection, fallback to SQLite for development ease
+		isLocalhost := strings.Contains(dsn, "localhost") || strings.Contains(dsn, "127.0.0.1") || strings.Contains(dsn, "[::1]")
+		if err != nil && isLocalhost {
+			log.Printf("Local PostgreSQL connection failed: %v. Falling back to SQLite for zero-config startup.", err)
+			driver = "sqlite"
+			dsn = "database/registry.db"
+			os.Setenv("DB_DRIVER", "sqlite")
+			os.Setenv("DB_DSN", dsn)
+			_ = utils.UpdateEnvFile("DB_DRIVER", "sqlite")
+			_ = utils.UpdateEnvFile("DB_DSN", dsn)
+			// Reset error and try SQLite below
+			err = nil
+		}
+	}
+
+	if driver == "sqlite" {
 		// Ensure directory exists for SQLite
+		if dsn == "" {
+			dsn = "database/registry.db"
+		}
 		dir := filepath.Dir(dsn)
 		if dir != "." && dir != "/" {
 			_ = os.MkdirAll(dir, 0755)
 		}
 		// Enable WAL mode and set busy_timeout for better concurrency
-		// Check if dsn already has query params
 		separator := "?"
 		if strings.Contains(dsn, "?") {
 			separator = "&"

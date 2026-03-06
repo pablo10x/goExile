@@ -115,3 +115,24 @@ export interface RedEyeLog {
 	details: string;
 	timestamp: string;
 }
+
+export interface RedEyeAnticheatEvent {
+	id: number;
+	player_id: string;
+	game_server_id: number;
+	event_type: string;
+	details: string;
+	client_ip: string;
+	severity: number;
+	timestamp: string;
+}
+
+export interface RedEyeIPReputation {
+	ip: string;
+	reputation_score: number;
+	total_events: number;
+	last_seen: string;
+	is_banned: boolean;
+	ban_reason: string;
+	ban_expires_at?: string;
+}

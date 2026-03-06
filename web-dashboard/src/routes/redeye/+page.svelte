@@ -1,3 +1,172 @@
+<script lang="ts">
+	import { onMount } from 'svelte';
+	import { fade, scale, slide } from 'svelte/transition';
+	import { 
+		ShieldCheck, Ban, AlertTriangle, Terminal, Settings, 
+		ShieldAlert, Activity, Cpu, Globe, Plus, Edit2, Trash2, 
+		Lock, Zap, X, RefreshCw, BarChart3, ChevronRight, Search
+	} from 'lucide-svelte';
+	import { apiFetch, notify } from '$lib/api';
+	import Icon from '$lib/components/theme/Icon.svelte';
+	import type { RedEyeRule, RedEyeLog, RedEyeAnticheatEvent, RedEyeIPReputation } from '$lib/stores.svelte';
+
+	let activeTab = $state<'overview' | 'rules' | 'bans' | 'anticheat' | 'logs' | 'config'>('overview');
+	let loading = $state(false);
+	let rules = $state<RedEyeRule[]>([]);
+	let bans = $state<RedEyeIPReputation[]>([]);
+	let events = $state<RedEyeAnticheatEvent[]>([]);
+	let logs = $state<RedEyeLog[]>([]);
+	let stats = $state<any>({});
+	let config = $state<any>({
+		'redeye.auto_ban_enabled': true,
+		'redeye.auto_ban_threshold': 100,
+		'redeye.alert_enabled': true
+	});
+
+	// Modal state
+	let showModal = $state(false);
+	let editingRule = $state<RedEyeRule | null>(null);
+	let form = $state<Partial<RedEyeRule>>({
+		name: '',
+		cidr: '',
+		port: '*',
+		path_pattern: '',
+		action: 'DENY',
+		protocol: 'ANY',
+		rate_limit: 0,
+		burst: 0,
+		enabled: true
+	});
+
+	async function refreshAll() {
+		loading = true;
+		try {
+			const [sRes, rRes, bRes, eRes, lRes, cRes] = await Promise.all([
+				apiFetch('/api/redeye/stats'),
+				apiFetch('/api/redeye/rules'),
+				apiFetch('/api/redeye/bans'),
+				apiFetch('/api/redeye/anticheat/events'),
+				apiFetch('/api/redeye/logs'),
+				apiFetch('/api/redeye/config')
+			]);
+
+			if (sRes.ok) stats = await sRes.json();
+			if (rRes.ok) rules = await rRes.json();
+			if (bRes.ok) bans = await bRes.json();
+			if (eRes.ok) {
+				const data = await eRes.json();
+				events = data.events || [];
+			}
+			if (lRes.ok) {
+				const data = await lRes.json();
+				logs = data.logs || [];
+			}
+			if (cRes.ok) config = await cRes.json();
+		} catch (e) {
+			console.error('Failed to refresh RedEye data', e);
+		} finally {
+			loading = false;
+		}
+	}
+
+	onMount(() => {
+		refreshAll();
+		const interval = setInterval(refreshAll, 30000);
+		return () => clearInterval(interval);
+	});
+
+	function openModal(rule: RedEyeRule | null = null) {
+		editingRule = rule;
+		if (rule) {
+			form = { ...rule };
+		} else {
+			form = {
+				name: '',
+				cidr: '',
+				port: '*',
+				path_pattern: '',
+				action: 'DENY',
+				protocol: 'ANY',
+				rate_limit: 0,
+				burst: 0,
+				enabled: true
+			};
+		}
+		showModal = true;
+	}
+
+	async function saveRule() {
+		try {
+			const url = editingRule ? `/api/redeye/rules/${editingRule.id}` : '/api/redeye/rules';
+			const res = await apiFetch(url, {
+				method: editingRule ? 'PUT' : 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(form)
+			});
+
+			if (res.ok) {
+				notify('Rule saved successfully', 'success');
+				showModal = false;
+				refreshAll();
+			} else {
+				const err = await res.json();
+				notify(err.error || 'Failed to save rule', 'error');
+			}
+		} catch (e) {
+			notify('Connection error', 'error');
+		}
+	}
+
+	async function deleteRule(id: number) {
+		if (!confirm('Are you sure you want to delete this rule?')) return;
+		try {
+			const res = await apiFetch(`/api/redeye/rules/${id}`, { method: 'DELETE' });
+			if (res.ok) {
+				notify('Rule deleted', 'success');
+				refreshAll();
+			}
+		} catch (e) {
+			notify('Failed to delete rule', 'error');
+		}
+	}
+
+	async function unbanIP(ip: string) {
+		try {
+			const res = await apiFetch(`/api/redeye/bans/${ip}`, { method: 'DELETE' });
+			if (res.ok) {
+				notify(`IP ${ip} released`, 'success');
+				refreshAll();
+			}
+		} catch (e) {
+			notify('Failed to release IP', 'error');
+		}
+	}
+
+	async function updateConfig() {
+		try {
+			const res = await apiFetch('/api/redeye/config', {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(config)
+			});
+			if (res.ok) {
+				notify('Configuration updated', 'success');
+			}
+		} catch (e) {
+			notify('Failed to update config', 'error');
+		}
+	}
+
+	function getActionColor(action: string) {
+		switch (action) {
+			case 'ALLOW': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+			case 'DENY': return 'text-rose-400 bg-rose-500/10 border-rose-500/20';
+			case 'RATE_LIMIT': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+			default: return 'text-slate-400 bg-slate-500/10 border-slate-500/20';
+		}
+	}
+</script>
+
 <div class="w-full h-full flex flex-col overflow-hidden relative font-sans">
 	
 	<!-- Header -->
@@ -594,7 +763,7 @@
 					</div>
 				</div>
 			</div>
-		{:/if}
+		{/if}
 	</div>
 </div>
 

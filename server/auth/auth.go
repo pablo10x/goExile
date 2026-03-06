@@ -15,6 +15,7 @@ import (
 	"exile/server/utils"
 
 	"github.com/pquerna/otp/totp"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -51,14 +52,14 @@ type SessionStore struct {
 }
 
 func NewSessionStore(isProduction bool) *SessionStore {
-	max := 2
+	max := 5 // Increased for multi-device support
 	if isProduction {
-		max = 1
+		max = 3
 	}
 	return &SessionStore{
 		sessions:          make(map[string]SessionData),
 		maxSessions:       max,
-		inactivityTimeout: 1 * time.Hour,
+		inactivityTimeout: 24 * time.Hour, // Extended session lifetime
 	}
 }
 
@@ -72,7 +73,7 @@ func (ss *SessionStore) CreateSession(initialStep string) (string, error) {
 	ss.mu.Lock()
 	defer ss.mu.Unlock()
 	ss.sessions[sessionID] = SessionData{
-		Expiry:     time.Now().Add(24 * time.Hour),
+		Expiry:     time.Now().Add(7 * 24 * time.Hour), // 7 Days expiry
 		LastActive: time.Now(),
 		AuthStep:   initialStep,
 	}
@@ -83,7 +84,12 @@ func (ss *SessionStore) ValidateSession(sessionID string) (bool, string) {
 	ss.mu.Lock()
 	defer ss.mu.Unlock()
 	data, exists := ss.sessions[sessionID]
-	if !exists || time.Now().After(data.Expiry) {
+	if !exists {
+		return false, ""
+	}
+
+	if time.Now().After(data.Expiry) {
+		delete(ss.sessions, sessionID)
 		return false, ""
 	}
 
@@ -120,7 +126,7 @@ func (ss *SessionStore) CleanupExpiredSessions() {
 	defer ss.mu.Unlock()
 	now := time.Now()
 	for id, data := range ss.sessions {
-		if now.After(data.Expiry) {
+		if now.After(data.Expiry) || time.Since(data.LastActive) > ss.inactivityTimeout {
 			delete(ss.sessions, id)
 		}
 	}
@@ -133,7 +139,16 @@ type RateLimiter struct {
 }
 
 func NewRateLimiter(max int, window time.Duration) *RateLimiter {
-	return &RateLimiter{attempts: make(map[string]int), maxAttempts: max}
+	rl := &RateLimiter{attempts: make(map[string]int), maxAttempts: max}
+	go func() {
+		for {
+			time.Sleep(window)
+			rl.mu.Lock()
+			rl.attempts = make(map[string]int)
+			rl.mu.Unlock()
+		}
+	}()
+	return rl
 }
 
 func (rl *RateLimiter) Allow(key string) (bool, int) {
@@ -150,21 +165,21 @@ func (rl *RateLimiter) Reset(key string) {
 }
 
 var (
-	LoginRateLimiter     = NewRateLimiter(5, 15*time.Minute)
-	TwoFactorRateLimiter = NewRateLimiter(3, 15*time.Minute)
+	LoginRateLimiter     = NewRateLimiter(10, 15*time.Minute)
+	TwoFactorRateLimiter = NewRateLimiter(5, 15*time.Minute)
 )
 
 // GetSessionID extracts the session ID from the request using Cookie, Bearer Token, or Query Parameter.
 func GetSessionID(r *http.Request) string {
-	// 1. Check Cookie
-	if c, err := r.Cookie("session"); err == nil && c.Value != "" {
-		return c.Value
-	}
-
-	// 2. Check Authorization Header (Bearer)
+	// 1. Check Authorization Header (Bearer) - Priority for API/Native
 	authHeader := r.Header.Get("Authorization")
 	if strings.HasPrefix(authHeader, "Bearer ") {
 		return strings.TrimPrefix(authHeader, "Bearer ")
+	}
+
+	// 2. Check Cookie
+	if c, err := r.Cookie("session"); err == nil && c.Value != "" {
+		return c.Value
 	}
 
 	// 3. Check Query Parameter (for SSE/EventSource)
@@ -180,15 +195,26 @@ func GetSessionID(r *http.Request) string {
 
 func GetAuthConfig() AuthConfig {
 	isProd := os.Getenv("PRODUCTION_MODE") == "true"
-	// HACK: This is not secure. The password should be hashed and stored securely.
-	// This is a temporary fix to allow the user to log in.
 	return AuthConfig{
 		Enabled:        true,
-		Email:          utils.GetEnv("ADMIN_EMAIL", "admin@example.com"),
-		HashedPassword: utils.GetEnv("ADMIN_PASSWORD", "admin123"),
-		TOTPSecret:     utils.GetEnv("ADMIN_2FA_SECRET", ""),
+		Email:          strings.TrimSpace(utils.GetEnv("ADMIN_EMAIL", "admin@example.com")),
+		HashedPassword: strings.TrimSpace(utils.GetEnv("ADMIN_PASSWORD", "admin123")), // Now supports bcrypt hash or plaintext
+		TOTPSecret:     strings.TrimSpace(utils.GetEnv("ADMIN_2FA_SECRET", "")),
 		IsProduction:   isProd,
 	}
+}
+
+func comparePassword(stored, provided string) bool {
+	stored = strings.TrimSpace(stored)
+	provided = strings.TrimSpace(provided)
+
+	// Check if stored password is a bcrypt hash
+	if strings.HasPrefix(stored, "$2a$") || strings.HasPrefix(stored, "$2b$") || strings.HasPrefix(stored, "$2y$") {
+		err := bcrypt.CompareHashAndPassword([]byte(stored), []byte(provided))
+		return err == nil
+	}
+	// Fallback to plaintext comparison
+	return stored == provided
 }
 
 func HandleLogin(w http.ResponseWriter, r *http.Request, cfg AuthConfig, ss *SessionStore) {
@@ -215,9 +241,10 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, cfg AuthConfig, ss *Ses
 		password = r.FormValue("password")
 	}
 
-	log.Printf("[AUTH] Login attempt for: %s from IP: %s", email, ip)
+	email = strings.TrimSpace(email)
+	password = strings.TrimSpace(password)
 
-	if email == cfg.Email && password == cfg.HashedPassword {
+	if email == cfg.Email && comparePassword(cfg.HashedPassword, password) {
 		log.Printf("[AUTH] Login successful for: %s", email)
 		LoginRateLimiter.Reset(ip)
 		step := AuthStepAuthenticated
@@ -225,6 +252,8 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, cfg AuthConfig, ss *Ses
 			step = AuthStepTOTP
 		}
 		sid, _ := ss.CreateSession(step)
+		
+		// Set cookie (still useful for web)
 		http.SetCookie(w, &http.Cookie{
 			Name:     "session",
 			Value:    sid,
@@ -232,6 +261,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, cfg AuthConfig, ss *Ses
 			HttpOnly: true,
 			Secure:   cfg.IsProduction,
 			SameSite: http.SameSiteStrictMode,
+			MaxAge:   7 * 24 * 60 * 60, // 7 days
 		})
 
 		w.Header().Set("Content-Type", "application/json")
@@ -243,7 +273,11 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, cfg AuthConfig, ss *Ses
 		return
 	}
 
-	log.Printf("[AUTH] Login FAILED for: %s (Expected: %s)", email, cfg.Email)
+	if email != cfg.Email {
+		log.Printf("[AUTH] Login FAILED for: %s (Reason: Identity mismatch)", email)
+	} else {
+		log.Printf("[AUTH] Login FAILED for: %s (Reason: Invalid token)", email)
+	}
 	http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 }
 

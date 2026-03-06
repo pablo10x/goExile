@@ -193,9 +193,9 @@ func (m tuiModel) Init() tea.Cmd {
 }
 
 func checkConfigCmd() tea.Msg {
-	// Check if key config exists to decide whether to auto-start or show menu
-	if os.Getenv("DB_DRIVER") == "" || os.Getenv("MASTER_API_KEY") == "" {
-		return stateConfigMenu // Force menu if not configured
+	// If everything is already configured, we can just start the steps
+	if os.Getenv("MASTER_API_KEY") != "" && os.Getenv("DB_DRIVER") != "" {
+		return stateRunningSteps
 	}
 	return stateConfigMenu
 }
@@ -286,7 +286,7 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					port = "8081"
 				}
 				m.selectedPort = port
-				_ = updateEnvFile("SERVER_PORT", port) // Save immediately
+				_ = utils.UpdateEnvFile("SERVER_PORT", port) // Save immediately
 
 				m.state = stateConfigDB
 				m.cursor = 0 // Reset cursor for next menu
@@ -302,18 +302,29 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.cursor--
 				}
 			case "down", "j":
-				if m.cursor < 1 { // 2 options: Embedded vs External
+				if m.cursor < 2 { // 3 options: SQLite, Embedded PG, External PG
 					m.cursor++
 				}
 			case "enter":
 				if m.cursor == 0 {
+					// Zero-Config SQLite
+					m.selectedDriver = "sqlite"
+					os.Setenv("DB_DRIVER", "sqlite")
+					os.Setenv("DB_DSN", "database/registry.db")
+					_ = utils.UpdateEnvFile("DB_DRIVER", "sqlite")
+					_ = utils.UpdateEnvFile("DB_DSN", "database/registry.db")
+				} else if m.cursor == 1 {
+					// Embedded Postgres
 					m.selectedDriver = "embedded"
 					os.Setenv("DB_DRIVER", "postgres")
-					os.Setenv("DB_DSN", "")
-					_ = updateEnvFile("DB_DRIVER", "postgres")
-					_ = updateEnvFile("DB_DSN", "")
+					os.Setenv("DB_DSN", "") // Step will handle setup
+					_ = utils.UpdateEnvFile("DB_DRIVER", "postgres")
+					_ = utils.UpdateEnvFile("DB_DSN", "")
 				} else {
+					// External Postgres
 					m.selectedDriver = "external"
+					m.state = stateRunningSteps // We assume they will edit .env or already did
+					return m, tea.Batch(m.spinner.Tick, nextStepCmd(0))
 				}
 
 				m.state = stateRunningSteps
@@ -455,9 +466,13 @@ func (m tuiModel) viewConfigPort() string {
 func (m tuiModel) viewConfigDB() string {
 	var s strings.Builder
 	s.WriteString("Configuration > Database\n\n")
-	s.WriteString("Select Database Driver:\n\n")
+	s.WriteString("Select Database Engine:\n\n")
 
-	options := []string{"Embedded PostgreSQL (Recommended)", "External PostgreSQL"}
+	options := []string{
+		"SQLite (Zero-Config, Local File)",
+		"Embedded PostgreSQL (Automatic Download)",
+		"External PostgreSQL (Requires Connection String)",
+	}
 	for i, choice := range options {
 		cursor := " "
 		style := itemStyle
@@ -467,8 +482,8 @@ func (m tuiModel) viewConfigDB() string {
 		}
 		s.WriteString(style.Render(fmt.Sprintf("%s %s", cursor, choice)) + "\n")
 	}
-	s.WriteString("\n" + subItemStyle.Render("Embedded: Zero-config, runs locally."))
-	s.WriteString("\n" + subItemStyle.Render("External: Requires DB_DSN in .env."))
+	s.WriteString("\n" + subItemStyle.Render("SQLite: Easiest setup, recommended for small deployments."))
+	s.WriteString("\n" + subItemStyle.Render("Embedded: Advanced features, runs locally."))
 	return s.String()
 }
 
@@ -544,23 +559,34 @@ func setupDBEngineStep(m *tuiModel) error {
 	dsn := os.Getenv("DB_DSN")
 
 	if driver == "" {
-		driver = "postgres"
-		os.Setenv("DB_DRIVER", "postgres")
-		_ = updateEnvFile("DB_DRIVER", "postgres")
-		m.steps[m.current].message = "No driver specified. Defaulting to PostgreSQL."
+		// Zero-Config Default
+		driver = "sqlite"
+		dsn = "database/registry.db"
+		os.Setenv("DB_DRIVER", "sqlite")
+		os.Setenv("DB_DSN", dsn)
+		_ = utils.UpdateEnvFile("DB_DRIVER", "sqlite")
+		_ = utils.UpdateEnvFile("DB_DSN", dsn)
+		m.steps[m.current].message = "No driver specified. Defaulting to Zero-Config SQLite."
 		time.Sleep(500 * time.Millisecond)
 	}
 
-	if driver == "postgres" && dsn == "" {
-		m.steps[m.current].message = "Installing Embedded PostgreSQL..."
+	if (driver == "postgres" || driver == "pgx") && dsn == "" {
+		m.steps[m.current].message = "Initializing Embedded PostgreSQL..."
 		if err := database.StartEmbeddedPostgres(); err != nil {
 			return err
 		}
 		defaultDSN := "postgres://exile:exile@localhost:5432/exile_master?sslmode=disable"
 		os.Setenv("DB_DSN", defaultDSN)
-		_ = updateEnvFile("DB_DSN", defaultDSN)
-		m.steps[m.current].message = "Embedded PostgreSQL started."
+		_ = utils.UpdateEnvFile("DB_DSN", defaultDSN)
+		m.steps[m.current].message = "Embedded PostgreSQL instance active."
 		time.Sleep(500 * time.Millisecond)
+	} else if driver == "sqlite" {
+		if dsn == "" {
+			dsn = "database/registry.db"
+			os.Setenv("DB_DSN", dsn)
+			_ = utils.UpdateEnvFile("DB_DSN", dsn)
+		}
+		m.steps[m.current].message = "Using SQLite local database."
 	}
 	return nil
 }
@@ -591,7 +617,7 @@ func ensureKeysStep(m *tuiModel) error {
 
 	if len(updates) > 0 {
 		for k, v := range updates {
-			if err := updateEnvFile(k, v); err != nil {
+			if err := utils.UpdateEnvFile(k, v); err != nil {
 				return err
 			}
 		}
@@ -602,49 +628,6 @@ func ensureKeysStep(m *tuiModel) error {
 
 	time.Sleep(200 * time.Millisecond)
 	return nil
-}
-
-func updateEnvFile(key, value string) error {
-	path := ".env"
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		f, err := os.Create(path)
-		if err != nil {
-			return err
-		}
-		f.Close()
-	}
-
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return err
-	}
-
-	lines := strings.Split(string(content), "\n")
-	found := false
-	newLines := make([]string, 0, len(lines)+1)
-
-	for _, line := range lines {
-		if strings.HasPrefix(line, key+"=") {
-			newLines = append(newLines, fmt.Sprintf("%s=%s", key, value))
-			found = true
-		} else {
-			newLines = append(newLines, line)
-		}
-	}
-
-	if !found {
-		if len(newLines) > 0 && newLines[len(newLines)-1] != "" {
-			newLines = append(newLines, "")
-		}
-		newLines = append(newLines, fmt.Sprintf("%s=%s", key, value))
-	}
-
-	output := strings.Join(newLines, "\n")
-	if !strings.HasSuffix(output, "\n") {
-		output += "\n"
-	}
-
-	return os.WriteFile(path, []byte(output), 0600)
 }
 
 func connectDBStep(m *tuiModel) error {

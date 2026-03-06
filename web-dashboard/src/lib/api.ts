@@ -3,6 +3,7 @@ import { browser } from '$app/environment';
 // Detect if we are running in a native environment (Tauri)
 export const isNative = typeof window !== 'undefined' && (
     (window as any).__TAURI_INTERNALS__ !== undefined ||
+    (window as any).__TAURI__ !== undefined ||
     window.location.protocol === 'tauri:' ||
     window.location.hostname === 'tauri.localhost' ||
     window.location.protocol === 'asset:'
@@ -91,4 +92,45 @@ export async function apiFetch(path: string, init?: RequestInit): Promise<Respon
     }
 
     return response;
-}
+    }
+
+    /**
+    * Retries a fetch request with exponential backoff
+    */
+    export async function retryFetch(path: string, options: RequestInit = {}, retries = 3, backoff = 500): Promise<Response> {
+    try {
+        const res = await apiFetch(path, options);
+        // Retry on 5xx errors or if explicitly requested (e.g. 429)
+        if (res.status >= 500 || res.status === 429) {
+            throw new Error(`Server returned ${res.status}`);
+        }
+        return res;
+    } catch (e) {
+        if (retries > 0) {
+            console.warn(`[API] Fetch failed for ${path}, retrying in ${backoff}ms... (${retries} left)`);
+            await new Promise(r => setTimeout(r, backoff));
+            return retryFetch(path, options, retries - 1, backoff * 2);
+        }
+        throw e;
+    }
+    }
+
+    /**
+    * Pings the server to check connectivity
+    */
+    export async function checkConnection(): Promise<boolean> {
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
+
+        const res = await apiFetch('/health', { 
+            signal: controller.signal,
+            cache: 'no-store' 
+        });
+
+        clearTimeout(timeoutId);
+        return res.ok;
+    } catch (e) {
+        return false;
+    }
+    }

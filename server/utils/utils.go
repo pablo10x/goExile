@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"exile/server/models"
@@ -101,4 +102,53 @@ func GetEnvDuration(key string, fallback time.Duration) time.Duration {
 		}
 	}
 	return fallback
+}
+
+// UpdateEnvFile updates or adds a key-value pair in the .env file.
+func UpdateEnvFile(key, value string) error {
+	path := ".env"
+	// Check if we are in the server directory or root
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		// Try to find it in parent or current
+		if _, err := os.Stat("server/.env"); err == nil {
+			path = "server/.env"
+		}
+	}
+
+	content, err := os.ReadFile(path)
+	if err != nil {
+		// If it doesn't exist, create it
+		if os.IsNotExist(err) {
+			return os.WriteFile(path, []byte(fmt.Sprintf("%s=%s\n", key, value)), 0600)
+		}
+		return err
+	}
+
+	lines := strings.Split(string(content), "\n")
+	found := false
+	newLines := make([]string, 0, len(lines)+1)
+
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, key+"=") {
+			newLines = append(newLines, fmt.Sprintf("%s=%s", key, value))
+			found = true
+		} else {
+			newLines = append(newLines, line)
+		}
+	}
+
+	if !found {
+		if len(newLines) > 0 && newLines[len(newLines)-1] != "" {
+			newLines = append(newLines, "")
+		}
+		newLines = append(newLines, fmt.Sprintf("%s=%s", key, value))
+	}
+
+	output := strings.Join(newLines, "\n")
+	if !strings.HasSuffix(output, "\n") {
+		output += "\n"
+	}
+
+	return os.WriteFile(path, []byte(output), 0600)
 }

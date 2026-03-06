@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "ExileCommand",
-  "version": "0.1.0",
-  "identifier": "com.exile.command.hud",
+  "productName": "Exile Command HUD",
+  "version": "0.9.4",
+  "identifier": "com.goexile.command.hud",
   "build": {
     "frontendDist": "../build",
     "devUrl": "http://localhost:3001",
@@ -12,15 +12,20 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "Exile Command HUD",
-        "width": 800,
-        "height": 600,
+        "width": 1200,
+        "height": 800,
+        "minWidth": 1000,
+        "minHeight": 700,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "shadow": true,
+        "theme": "Dark"
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' http: https: ws: wss:;"
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' http: https: ws: wss:;"
     }
   },
   "bundle": {
@@ -32,9 +37,17 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "publisher": "Exile Operations",
+    "copyright": "© 2026 Exile Operations",
+    "category": "Utility",
+    "shortDescription": "High-performance command and control interface for the Exile network.",
+    "longDescription": "Exile Command HUD provides administrators with a high-density, real-time tactical overview of game server infrastructure, node health, and player sessions."
   },
   "plugins": {
-    "notification": null
+    "notification": null,
+    "log": null,
+    "shell": null,
+    "process": null
   }
 }
