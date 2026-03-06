@@ -21,7 +21,7 @@ require (
 	github.com/pquerna/otp v1.5.0
 	github.com/pterm/pterm v0.12.82
 	golang.org/x/crypto v0.46.0
-	golang.org/x/oauth2 v0.33.0
+	golang.org/x/oauth2 v0.35.0
 	google.golang.org/api v0.257.0
 	modernc.org/sqlite v1.44.3
 )
