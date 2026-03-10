@@ -1,4 +1,4 @@
-import { apiFetch } from "$lib/api";
+import { apiFetch } from '$lib/api';
 // Core models for goExile dashboard
 // These should match the backend structures in server/models/models.go
 
@@ -23,6 +23,21 @@ export interface Node {
 	disk_used: number;
 	disk_total: number;
 	game_version: string;
+}
+
+export interface Player {
+	id: number;
+	uid: string;
+	name: string;
+	xp: number;
+	device_id: string;
+	banned: boolean;
+	online: boolean;
+	last_seen: string;
+	created_at: string;
+	updated_at: string;
+	last_joined_server?: string;
+	last_joined_at?: string;
 }
 
 export interface GameServerVersion {
@@ -109,22 +124,28 @@ export interface RedEyeLog {
 	id: number;
 	rule_id?: number;
 	source_ip: string;
+	ip: string; // Compatibility
 	dest_port: number;
 	protocol: string;
 	action: string;
 	details: string;
+	path: string; // Compatibility
 	timestamp: string;
+	created_at: string; // Compatibility
 }
 
 export interface RedEyeAnticheatEvent {
 	id: number;
 	player_id: string;
 	game_server_id: number;
+	node_id: number; // Compatibility
 	event_type: string;
+	type: string; // Compatibility
 	details: string;
 	client_ip: string;
-	severity: number;
+	severity: string; // Should be string according to usage ('high')
 	timestamp: string;
+	created_at: string; // Compatibility
 }
 
 export interface RedEyeIPReputation {

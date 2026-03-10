@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import type { ResourceProgressBarProps } from '$lib/types/resource-metrics';
 
 	let {
@@ -89,9 +89,13 @@ import { apiFetch } from "$lib/api";
 	<div class="flex items-center justify-between">
 		<span class="text-[10px] font-black text-stone-500 uppercase tracking-widest">{label}</span>
 		<div class="flex items-center gap-3">
-			<span class="text-xs font-black text-white tabular-nums tracking-tighter">{displayValue.toFixed(1)}</span>
+			<span class="text-xs font-black text-white tabular-nums tracking-tighter"
+				>{displayValue.toFixed(1)}</span
+			>
 			{#if showThreshold}
-				<span class="{getThresholdColor()} text-[9px] font-black border border-current/20 px-1.5 py-0.5 bg-black/40">
+				<span
+					class="{getThresholdColor()} text-[9px] font-black border border-current/20 px-1.5 py-0.5 bg-black/40"
+				>
 					{getProgressPercentage().toFixed(0)}%_LOAD
 				</span>
 			{/if}
@@ -99,16 +103,24 @@ import { apiFetch } from "$lib/api";
 	</div>
 
 	<!-- Progress Bar -->
-	<div class="{height} bg-stone-900 border border-stone-800 rounded-none overflow-hidden relative shadow-inner">
+	<div
+		class="{height} bg-stone-900 border border-stone-800 rounded-none overflow-hidden relative shadow-inner"
+	>
 		<!-- Progress fill -->
-		<div class="absolute top-0 left-0 h-full {getColorClasses()} transition-all duration-500 ease-out shadow-lg shadow-current/20" style="width: {animatedWidth}%">
+		<div
+			class="absolute top-0 left-0 h-full {getColorClasses()} transition-all duration-500 ease-out shadow-lg shadow-current/20"
+			style="width: {animatedWidth}%"
+		>
 			<!-- Animated pulse effect -->
 			<div class="absolute inset-0 bg-white/10 animate-pulse"></div>
 		</div>
 
 		<!-- Threshold indicator -->
 		{#if showThreshold}
-			<div class="absolute top-0 h-full w-[1px] bg-red-500/40 z-10" style="left: {threshold}%"></div>
+			<div
+				class="absolute top-0 h-full w-[1px] bg-red-500/40 z-10"
+				style="left: {threshold}%"
+			></div>
 		{/if}
 	</div>
 </div>

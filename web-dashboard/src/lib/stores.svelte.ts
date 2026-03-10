@@ -5,7 +5,7 @@ import { apiFetch } from './api';
 
 // Svelte 5 Runes Store implementation for maximum performance
 class SystemState {
-	isAuthenticated = $state(false);
+	isAuthenticated = $state(typeof window !== 'undefined' ? !!localStorage.getItem('exile_session') : false);
 	userEmail = $state('');
 	isConnected = $state(false);
 	connectionStatus = $state('Connecting...');
@@ -53,8 +53,8 @@ class SystemState {
 	todos = $state<Todo[]>([]);
 
 	siteSettings = $state({
-		site_name: 'EXILE',
-		version_tag: 'v0.9.4-PROTOTYPE',
+		site_name: 'Exile',
+		version_tag: 'v0.9.4',
 		dashboard: {
 			show_topology: true,
 			show_stats_cards: true,
@@ -65,15 +65,15 @@ class SystemState {
 		},
 		site_notice: {
 			enabled: false,
-			message: 'SYSTEM MAINTENANCE SCHEDULED FOR 0200 HOURS',
+			message: 'System maintenance scheduled for 02:00 AM',
 			type: 'info'
 		}
 	});
 
 	backgroundConfig = $state({
-		global_type: 'digital_stream',
+		global_type: 'modern_mesh',
 		show_global_background: true,
-		show_navbar_particles: true
+		show_navbar_particles: false
 	});
 
 	constructor() {
@@ -85,7 +85,7 @@ class SystemState {
 
 	loadPersistedState() {
 		const keys = ['theme', 'siteSettings', 'backgroundConfig'];
-		keys.forEach(key => {
+		keys.forEach((key) => {
 			const saved = localStorage.getItem(key);
 			if (saved) {
 				try {
@@ -119,9 +119,9 @@ class SystemState {
 	async triggerGC() {
 		try {
 			await apiFetch('/api/metrics/gc', { method: 'POST' });
-			notifications.add({ type: 'success', message: 'GARBAGE_COLLECTION_COMPLETE' });
+			notifications.add({ type: 'success', message: 'Memory optimization complete' });
 		} catch (e) {
-			notifications.add({ type: 'error', message: 'GC_FAULT' });
+			notifications.add({ type: 'error', message: 'Optimization request failed' });
 		}
 	}
 
@@ -138,9 +138,9 @@ class SystemState {
 			a.click();
 			document.body.removeChild(a);
 			window.URL.revokeObjectURL(url);
-			notifications.add({ type: 'success', message: 'CONFIG_EXPORT_SUCCESS' });
+			notifications.add({ type: 'success', message: 'Configuration exported successfully' });
 		} catch (e) {
-			notifications.add({ type: 'error', message: 'EXPORT_FAULT' });
+			notifications.add({ type: 'error', message: 'Export failed' });
 		}
 	}
 
@@ -148,12 +148,12 @@ class SystemState {
 		try {
 			const res = await apiFetch('/api/database/backup', { method: 'POST' });
 			if (res.ok) {
-				notifications.add({ type: 'success', message: 'DATABASE_BACKUP_INITIATED' });
+				notifications.add({ type: 'success', message: 'Database backup initiated' });
 			} else {
-				notifications.add({ type: 'error', message: 'BACKUP_FAULT' });
+				notifications.add({ type: 'error', message: 'Backup failed' });
 			}
 		} catch (e) {
-			notifications.add({ type: 'error', message: 'BACKUP_SYNC_FAILED' });
+			notifications.add({ type: 'error', message: 'Backup synchronization failed' });
 		}
 	}
 
@@ -164,7 +164,7 @@ class SystemState {
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);
-		notifications.add({ type: 'info', message: 'BINARY_DOWNLOAD_STARTED' });
+		notifications.add({ type: 'info', message: 'Build download started' });
 	}
 }
 
@@ -177,7 +177,10 @@ function bridge<T>(getter: () => T, setter: (val: T) => void) {
 	const { subscribe, set, update } = writable<T>(getter());
 	return {
 		subscribe,
-		set: (val: T) => { set(val); setter(val); },
+		set: (val: T) => {
+			set(val);
+			setter(val);
+		},
 		update: (fn: (v: T) => T) => {
 			const current = getter();
 			const next = fn(current);
@@ -187,21 +190,66 @@ function bridge<T>(getter: () => T, setter: (val: T) => void) {
 	};
 }
 
-export const isAuthenticated = bridge(() => sysState.isAuthenticated, (v) => sysState.isAuthenticated = v);
-export const userEmail = bridge(() => sysState.userEmail, (v) => sysState.userEmail = v);
-export const isConnected = bridge(() => sysState.isConnected, (v) => sysState.isConnected = v);
-export const connectionStatus = bridge(() => sysState.connectionStatus, (v) => sysState.connectionStatus = v);
-export const restartRequired = bridge(() => sysState.restartRequired, (v) => sysState.restartRequired = v);
-export const showQuickActions = bridge(() => sysState.showQuickActions, (v) => sysState.showQuickActions = v);
-export const lowPowerMode = bridge(() => sysState.lowPowerMode, (v) => sysState.lowPowerMode = v);
-export const stats = bridge(() => sysState.stats, (v) => sysState.stats = v);
-export const nodes = bridge(() => sysState.nodes, (v) => sysState.nodes = v);
-export const serverVersions = bridge(() => sysState.serverVersions, (v) => sysState.serverVersions = v);
-export const config = bridge(() => sysState.config, (v) => sysState.config = v);
-export const notes = bridge(() => sysState.notes, (v) => sysState.notes = v);
-export const todos = bridge(() => sysState.todos, (v) => sysState.todos = v);
-export const siteSettings = bridge(() => sysState.siteSettings, (v) => sysState.siteSettings = v);
-export const backgroundConfig = bridge(() => sysState.backgroundConfig, (v) => sysState.backgroundConfig = v);
+export const isAuthenticated = bridge(
+	() => sysState.isAuthenticated,
+	(v) => (sysState.isAuthenticated = v)
+);
+export const userEmail = bridge(
+	() => sysState.userEmail,
+	(v) => (sysState.userEmail = v)
+);
+export const isConnected = bridge(
+	() => sysState.isConnected,
+	(v) => (sysState.isConnected = v)
+);
+export const connectionStatus = bridge(
+	() => sysState.connectionStatus,
+	(v) => (sysState.connectionStatus = v)
+);
+export const restartRequired = bridge(
+	() => sysState.restartRequired,
+	(v) => (sysState.restartRequired = v)
+);
+export const showQuickActions = bridge(
+	() => sysState.showQuickActions,
+	(v) => (sysState.showQuickActions = v)
+);
+export const lowPowerMode = bridge(
+	() => sysState.lowPowerMode,
+	(v) => (sysState.lowPowerMode = v)
+);
+export const stats = bridge(
+	() => sysState.stats,
+	(v) => (sysState.stats = v)
+);
+export const nodes = bridge(
+	() => sysState.nodes,
+	(v) => (sysState.nodes = v)
+);
+export const serverVersions = bridge(
+	() => sysState.serverVersions,
+	(v) => (sysState.serverVersions = v)
+);
+export const config = bridge(
+	() => sysState.config,
+	(v) => (sysState.config = v)
+);
+export const notes = bridge(
+	() => sysState.notes,
+	(v) => (sysState.notes = v)
+);
+export const todos = bridge(
+	() => sysState.todos,
+	(v) => (sysState.todos = v)
+);
+export const siteSettings = bridge(
+	() => sysState.siteSettings,
+	(v) => (sysState.siteSettings = v)
+);
+export const backgroundConfig = bridge(
+	() => sysState.backgroundConfig,
+	(v) => (sysState.backgroundConfig = v)
+);
 export const theme = writable<'light' | 'dark'>('dark');
 
 /**
@@ -209,17 +257,17 @@ export const theme = writable<'light' | 'dark'>('dark');
  */
 export async function loadAllSettings() {
 	try {
-        const response = await apiFetch('/api/config');
-        if (response.status === 401) return;
-        if (!response.ok) return;
-        const configs: any[] = await response.json();
+		const response = await apiFetch('/api/config');
+		if (response.status === 401) return;
+		if (!response.ok) return;
+		const configs: any[] = await response.json();
 
 		configs.forEach((cfg) => {
 			try {
 				if (cfg.key === 'site.settings') {
-                    const val = JSON.parse(cfg.value);
-                    sysState.siteSettings = { ...sysState.siteSettings, ...val };
-                    siteSettings.set(sysState.siteSettings);
+					const val = JSON.parse(cfg.value);
+					sysState.siteSettings = { ...sysState.siteSettings, ...val };
+					siteSettings.set(sysState.siteSettings);
 				}
 			} catch (e) {
 				console.error(`Error parsing config ${cfg.key}:`, e);

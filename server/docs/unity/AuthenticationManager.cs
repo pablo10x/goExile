@@ -4,7 +4,15 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
 
-// Data models for JSON deserialization
+// Data models for JSON serialization/deserialization
+[Serializable]
+public class AuthRequest
+{
+    public string id_token;
+    public string name;
+    public string device_id;
+}
+
 [Serializable]
 public class AuthResponse
 {
@@ -20,7 +28,7 @@ public class Player
     public string uid;
     public string name;
     public int xp;
-    // Add other fields as needed
+    // Add other fields matching server/models/players.go
 }
 
 public class AuthenticationManager : MonoBehaviour
@@ -29,7 +37,7 @@ public class AuthenticationManager : MonoBehaviour
     [SerializeField] private string masterServerUrl = "http://localhost:8081";
     [SerializeField] private string gameApiKey = "YOUR_GAME_API_KEY"; // Set this in Inspector
 
-    // Events
+    // Events for UI or other systems to listen to
     public event Action<AuthResponse> OnAuthenticated;
     public event Action<string> OnAuthError;
 
@@ -51,7 +59,7 @@ public class AuthenticationManager : MonoBehaviour
 
     /// <summary>
     /// Authenticates with the Master Server using Form Data (WWWForm).
-    /// This is the standard Unity way and sends 'application/x-www-form-urlencoded'.
+    /// Recommended for simple integrations or if using standard Unity fields.
     /// </summary>
     public void AuthenticateWithFormData(string firebaseIdToken, string playerName)
     {
@@ -60,7 +68,7 @@ public class AuthenticationManager : MonoBehaviour
 
     /// <summary>
     /// Authenticates with the Master Server using JSON payload.
-    /// Requires manually setting Content-Type to 'application/json'.
+    /// Modern approach, useful for complex nested objects.
     /// </summary>
     public void AuthenticateWithJson(string firebaseIdToken, string playerName)
     {
@@ -97,8 +105,8 @@ public class AuthenticationManager : MonoBehaviour
 
         Debug.Log($"[Auth] Connecting to {url} via JSON...");
 
-        // Create payload object
-        var payload = new
+        // JsonUtility requires a class/struct (anonymous objects NOT supported)
+        AuthRequest payload = new AuthRequest
         {
             id_token = idToken,
             name = name,
@@ -125,9 +133,9 @@ public class AuthenticationManager : MonoBehaviour
 
     private void HandleResponse(UnityWebRequest request)
     {
-        if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
+        if (request.result != UnityWebRequest.Result.Success)
         {
-            string errorMsg = $"Auth Failed: {request.error} ({request.downloadHandler.text})";
+            string errorMsg = $"Auth Failed: {request.error} (Status: {request.responseCode})\nResponse: {request.downloadHandler.text}";
             Debug.LogError(errorMsg);
             OnAuthError?.Invoke(errorMsg);
         }

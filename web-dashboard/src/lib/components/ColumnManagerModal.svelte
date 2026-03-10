@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { Plus, Trash2, X, Save } from 'lucide-svelte';
 	import { slide } from 'svelte/transition';
 
@@ -49,12 +49,11 @@ import { apiFetch } from "$lib/api";
 				class="p-6 border-b border-stone-800 flex justify-between items-center bg-neutral-950/40"
 			>
 				<h3 class="text-xl font-heading font-black text-neutral-100 uppercase tracking-tighter">
-					Alter_Schema: <span class="text-rust font-jetbrains text-xs ml-3 uppercase tracking-widest">{table}</span>
+					Alter_Schema: <span
+						class="text-rust font-jetbrains text-xs ml-3 uppercase tracking-widest">{table}</span
+					>
 				</h3>
-				<button
-					onclick={onClose}
-					class="text-stone-600 hover:text-white transition-colors"
-				>
+				<button onclick={onClose} class="text-stone-600 hover:text-white transition-colors">
 					<X class="w-5 h-5" />
 				</button>
 			</div>
@@ -92,9 +91,7 @@ import { apiFetch } from "$lib/api";
 				</div>
 			</div>
 
-			<div
-				class="p-6 border-t border-stone-800 bg-neutral-950/40 flex justify-end gap-4"
-			>
+			<div class="p-6 border-t border-stone-800 bg-neutral-950/40 flex justify-end gap-4">
 				<button
 					onclick={onClose}
 					class="px-6 py-3 font-heading font-black text-[10px] text-stone-500 hover:text-white transition-all uppercase tracking-widest"
@@ -107,9 +104,7 @@ import { apiFetch } from "$lib/api";
 					class="px-8 py-3 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rust/20 disabled:opacity-20 transition-all active:tranneutral-y-px"
 				>
 					{#if loading}
-						<div
-							class="w-4 h-4 border-2 border-white/30 border-t-white animate-spin"
-						></div>
+						<div class="w-4 h-4 border-2 border-white/30 border-t-white animate-spin"></div>
 						SYNCING...
 					{:else}
 						<Save class="w-4 h-4" />

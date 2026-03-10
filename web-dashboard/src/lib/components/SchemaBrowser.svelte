@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import {
 		Database,
 		Search,
@@ -82,9 +82,7 @@ import { apiFetch } from "$lib/api";
 		: 'w-16 bg-transparent border-none'}"
 >
 	<!-- Header -->
-	<div
-		class="p-4 border-b border-neutral-800 flex flex-col gap-4 relative shrink-0"
-	>
+	<div class="p-4 border-b border-neutral-800 flex flex-col gap-4 relative shrink-0">
 		<div class="flex justify-between items-center h-10">
 			{#if isSidebarOpen}
 				<div
@@ -93,7 +91,9 @@ import { apiFetch } from "$lib/api";
 					<div class="p-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
 						<FolderOpen class="w-4 h-4 text-indigo-400" />
 					</div>
-					<span class="font-heading font-black text-xs uppercase tracking-widest italic">Explorer</span>
+					<span class="font-heading font-black text-xs uppercase tracking-widest italic"
+						>Explorer</span
+					>
 				</div>
 				<div class="flex gap-1">
 					<button
@@ -194,7 +194,9 @@ import { apiFetch } from "$lib/api";
 						</span>
 
 						<!-- Schema Actions (Hover) -->
-						<div class="flex gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity ml-auto">
+						<div
+							class="flex gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity ml-auto"
+						>
 							<button
 								onclick={(e) => {
 									e.stopPropagation();
@@ -225,7 +227,11 @@ import { apiFetch } from "$lib/api";
 							transition:slide|local={{ duration: 150 }}
 						>
 							{#if schema.tables.length === 0}
-								<div class="px-3 py-2 text-[9px] font-medium text-neutral-700 uppercase italic tracking-widest">No_Tables_Mapped</div>
+								<div
+									class="px-3 py-2 text-[9px] font-medium text-neutral-700 uppercase italic tracking-widest"
+								>
+									No_Tables_Mapped
+								</div>
 							{/if}
 
 							{#each schema.tables as table (table)}
@@ -246,7 +252,10 @@ import { apiFetch } from "$lib/api";
 											? 'text-indigo-400'
 											: 'text-neutral-700 group-hover/table:text-neutral-500'}"
 									/>
-									<span class="truncate font-mono text-[10px] font-bold uppercase tracking-tight flex-1">{table}</span>
+									<span
+										class="truncate font-mono text-[10px] font-bold uppercase tracking-tight flex-1"
+										>{table}</span
+									>
 
 									<!-- Table Actions -->
 									<div

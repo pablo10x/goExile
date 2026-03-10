@@ -1,32 +1,37 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
 	import { portal } from '../../actions/portal';
-    import type { Snippet } from 'svelte';
+	import type { Snippet } from 'svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { backOut } from 'svelte/easing';
 	import Button from '../Button.svelte';
 
-	let { 
-        show = $bindable(), 
-        title, 
-        children, 
-        footer, 
-        hideFooter = false, 
-        maxWidth = 'max-w-2xl',
-        onclose = () => {} 
-    } = $props<{
-        show?: boolean;
-        title: string;
-        children: Snippet;
-        footer?: Snippet;
-        hideFooter?: boolean;
-        maxWidth?: string;
-        onclose?: () => void;
-    }>();
+	let {
+		show = $bindable(),
+		title,
+		children,
+		footer,
+		hideFooter = false,
+		maxWidth = 'max-w-2xl',
+		onclose = () => {}
+	} = $props<{
+		show?: boolean;
+		title: string;
+		children: Snippet;
+		footer?: Snippet;
+		hideFooter?: boolean;
+		maxWidth?: string;
+		onclose?: () => void;
+	}>();
 
 	function close() {
 		show = false;
 		onclose();
+	}
+
+	function handleKeydown(e: KeyboardEvent) {
+		if (e.key === 'Escape') {
+			close();
+		}
 	}
 
 	function getTransition(node: HTMLElement) {
@@ -36,31 +41,53 @@ import { apiFetch } from "$lib/api";
 
 {#if show}
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div 
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+	<div
 		use:portal
 		class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-neutral-950/80 backdrop-blur-md"
 		onclick={close}
+		onkeydown={handleKeydown}
 		transition:fade={{ duration: 200 }}
 		role="dialog"
 		aria-modal="true"
 		aria-labelledby="modal-title"
+		tabindex="-1"
 	>
-		<div 
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div
 			class="w-full {maxWidth} overflow-hidden shadow-2xl border border-neutral-800 rounded-3xl bg-neutral-900/90 backdrop-blur-2xl"
-			onclick={e => e.stopPropagation()}
+			onclick={(e) => e.stopPropagation()}
 			transition:getTransition
 			role="document"
 		>
 			<!-- Header -->
-			<div class="flex items-center justify-between bg-neutral-950/40 px-8 py-6 border-b border-neutral-800">
-				<h3 id="modal-title" class="font-heading text-2xl text-white font-black tracking-tight uppercase italic">{title}</h3>
-				<button 
+			<div
+				class="flex items-center justify-between bg-neutral-950/40 px-8 py-6 border-b border-neutral-800"
+			>
+				<h3
+					id="modal-title"
+					class="font-heading text-2xl text-white font-black tracking-tight uppercase italic"
+				>
+					{title}
+				</h3>
+				<button
 					onclick={close}
 					class="text-neutral-500 hover:text-white transition-all p-2 rounded-lg hover:bg-white/5"
 					aria-label="Close"
 				>
-					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="24"
+						height="24"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2.5"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"
+						></line></svg
+					>
 				</button>
 			</div>
 
@@ -77,20 +104,8 @@ import { apiFetch } from "$lib/api";
 					{#if footer}
 						{@render footer()}
 					{:else}
-						<Button 
-							onclick={close} 
-							variant="secondary"
-							size="md"
-						>
-							CLOSE
-						</Button>
-						<Button 
-							onclick={close} 
-							variant="primary"
-							size="md"
-						>
-							ACKNOWLEDGE
-						</Button>
+						<Button onclick={close} variant="secondary" size="md">CLOSE</Button>
+						<Button onclick={close} variant="primary" size="md">ACKNOWLEDGE</Button>
 					{/if}
 				</div>
 			{/if}

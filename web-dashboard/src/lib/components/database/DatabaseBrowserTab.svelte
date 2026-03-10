@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import SchemaBrowser from '$lib/components/SchemaBrowser.svelte';
 	import TableCreatorModal from '$lib/components/TableCreatorModal.svelte';
 	import ColumnManagerModal from '$lib/components/ColumnManagerModal.svelte';
@@ -129,7 +129,9 @@ import { apiFetch } from "$lib/api";
 	async function confirmDeleteSchema() {
 		deleteSchemaLoading = true;
 		try {
-			const res = await apiFetch(`/api/database/schemas/${pendingDeleteSchema}`, { method: 'DELETE' });
+			const res = await apiFetch(`/api/database/schemas/${pendingDeleteSchema}`, {
+				method: 'DELETE'
+			});
 			if (res.ok) {
 				notifications.add({ type: 'success', message: `Schema '${pendingDeleteSchema}' deleted` });
 				delete schemaTables[pendingDeleteSchema];
@@ -249,8 +251,12 @@ import { apiFetch } from "$lib/api";
 					<FolderTree class="w-5 h-5 text-indigo-400" />
 				</div>
 				<div>
-					<h2 class="text-sm font-heading font-black text-white tracking-widest uppercase italic">Schema_Explorer</h2>
-					<p class="text-[9px] text-neutral-500 mt-1 font-bold uppercase tracking-widest italic">Database Topology Mapping</p>
+					<h2 class="text-sm font-heading font-black text-white tracking-widest uppercase italic">
+						Schema_Explorer
+					</h2>
+					<p class="text-[9px] text-neutral-500 mt-1 font-bold uppercase tracking-widest italic">
+						Database Topology Mapping
+					</p>
 				</div>
 			</div>
 
@@ -276,13 +282,21 @@ import { apiFetch } from "$lib/api";
 
 		<!-- Stats Bar -->
 		<div class="px-6 pb-4 flex items-center gap-3">
-			<div class="flex items-center gap-3 px-4 py-1.5 bg-neutral-950/40 border border-neutral-800 rounded-xl">
+			<div
+				class="flex items-center gap-3 px-4 py-1.5 bg-neutral-950/40 border border-neutral-800 rounded-xl"
+			>
 				<Layers class="w-3.5 h-3.5 text-indigo-400" />
-				<span class="text-[9px] font-bold text-neutral-400 uppercase tracking-widest italic">{totalSchemas} Sectors</span>
+				<span class="text-[9px] font-bold text-neutral-400 uppercase tracking-widest italic"
+					>{totalSchemas} Sectors</span
+				>
 			</div>
-			<div class="flex items-center gap-3 px-4 py-1.5 bg-neutral-950/40 border border-neutral-800 rounded-xl">
+			<div
+				class="flex items-center gap-3 px-4 py-1.5 bg-neutral-950/40 border border-neutral-800 rounded-xl"
+			>
 				<Table class="w-3.5 h-3.5 text-indigo-400" />
-				<span class="text-[9px] font-bold text-neutral-400 uppercase tracking-widest italic">{totalTables} Tables</span>
+				<span class="text-[9px] font-bold text-neutral-400 uppercase tracking-widest italic"
+					>{totalTables} Tables</span
+				>
 			</div>
 		</div>
 	</div>

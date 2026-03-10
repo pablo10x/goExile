@@ -7,6 +7,23 @@ This document outlines the API endpoints and WebSocket protocol for the game cli
 All API requests must include the Game API Key in the header:
 `X-Game-API-Key: <YOUR_GAME_API_KEY>`
 
+## Rate Limiting
+
+The Master Server employs protective rate limiting for all Game API endpoints. If you exceed the thresholds, you will receive a `429 Too Many Requests` response.
+
+- **Authentication:** 10 requests per minute per IP.
+- **WebSocket Handshake:** 5 attempts per minute per IP.
+- **General Queries:** 100 requests per minute per IP.
+
+## Unity Integration
+
+Two drop-in scripts are provided in `server/docs/unity/` to accelerate your integration:
+
+1.  **`AuthenticationManager.cs`**: Handles the POST request to `/api/game/auth` using either `WWWForm` or JSON. It also manages the unique `device_id`.
+2.  **`GameWebSocketManager.cs`**: Handles the real-time WebSocket connection, message serialization, and friend system actions. (Requires the `NativeWebSocket` library).
+
+---
+
 ## Authentication
 
 ### Development Mode (Local Testing)

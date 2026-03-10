@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { TerminalSquare, Check, Copy, ChevronDown } from 'lucide-svelte';
 
 	interface Props {
@@ -36,10 +36,16 @@ import { apiFetch } from "$lib/api";
 	}
 
 	function colorize(line: string) {
-		if (line.includes('Error') || line.includes('Exception') || line.includes('Failed') || line.includes('CRITICAL'))
+		if (
+			line.includes('Error') ||
+			line.includes('Exception') ||
+			line.includes('Failed') ||
+			line.includes('CRITICAL')
+		)
 			return 'text-rose-400 font-semibold';
 		if (line.includes('Warning') || line.includes('Warn')) return 'text-amber-400 font-semibold';
-		if (line.includes('Success') || line.includes('Done') || line.includes('Ready')) return 'text-emerald-400 font-semibold';
+		if (line.includes('Success') || line.includes('Done') || line.includes('Ready'))
+			return 'text-emerald-400 font-semibold';
 		if (line.includes('Info') || line.includes('unity')) return 'text-indigo-300';
 		if (line.includes('DEBUG')) return 'text-slate-500';
 		return 'text-slate-300';
@@ -69,9 +75,7 @@ import { apiFetch } from "$lib/api";
 			</div>
 			<div class="flex items-center gap-2">
 				<TerminalSquare class="w-3.5 h-3.5 text-slate-500" />
-				<span class="text-slate-400 font-medium tracking-wide text-[11px]"
-					>{title}</span
-				>
+				<span class="text-slate-400 font-medium tracking-wide text-[11px]">{title}</span>
 			</div>
 		</div>
 		<div class="flex items-center gap-2">
@@ -109,7 +113,9 @@ import { apiFetch } from "$lib/api";
 		class="relative z-10 flex-1 overflow-y-auto p-4 space-y-0.5 custom-scrollbar bg-slate-950"
 	>
 		{#each logs as line}
-			<div class={`break-all whitespace-pre-wrap leading-relaxed ${colorize(line)} flex items-start gap-3`}>
+			<div
+				class={`break-all whitespace-pre-wrap leading-relaxed ${colorize(line)} flex items-start gap-3`}
+			>
 				<span class="opacity-30 select-none text-slate-600">›</span>
 				<span class="flex-1">{line}</span>
 			</div>
@@ -117,10 +123,10 @@ import { apiFetch } from "$lib/api";
 		{#if logs.length === 0}
 			<div class="flex flex-col items-center justify-center h-full text-slate-700 gap-3 opacity-60">
 				<TerminalSquare class="w-8 h-8 opacity-50" />
-				<span class="text-[10px] uppercase tracking-wider font-medium">Awaiting Output stream...</span>
+				<span class="text-[10px] uppercase tracking-wider font-medium">Awaiting log output...</span>
 			</div>
 		{/if}
-		
+
 		<!-- Blinking Cursor -->
 		<div class="mt-1 flex items-center gap-2 opacity-50">
 			<div class="w-1.5 h-3 bg-indigo-500 animate-pulse"></div>

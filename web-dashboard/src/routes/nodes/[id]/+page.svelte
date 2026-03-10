@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { page } from '$app/stores';
 	import { onMount, onDestroy } from 'svelte';
 	import { formatBytes, formatUptime } from '$lib/utils';
@@ -12,7 +12,19 @@ import { apiFetch } from "$lib/api";
 	import { serverVersions, notifications } from '$lib/stores.svelte';
 	import { compareVersions } from '$lib/semver';
 	import PlayersChart from '$lib/components/PlayersChart.svelte';
-	import { Server, Cpu, HardDrive, MemoryStick, List, Plus, ArrowLeft, AlertCircle, Activity, ShieldAlert, ShieldCheck } from 'lucide-svelte';
+	import {
+		Server,
+		Cpu,
+		HardDrive,
+		MemoryStick,
+		List,
+		Plus,
+		ArrowLeft,
+		AlertCircle,
+		Activity,
+		ShieldAlert,
+		ShieldCheck
+	} from 'lucide-svelte';
 
 	const nodeId = parseInt($page.params.id || '0');
 
@@ -109,7 +121,9 @@ import { apiFetch } from "$lib/api";
 				notifications.add({
 					type: 'success',
 					message: `Drain Mode ${!node.is_draining ? 'enabled' : 'disabled'}`,
-					details: !node.is_draining ? 'No new instances will be spawned on this node.' : 'Node is now accepting new instances.'
+					details: !node.is_draining
+						? 'No new instances will be spawned on this node.'
+						: 'Node is now accepting new instances.'
 				});
 				await fetchNodeData();
 			} else {
@@ -351,9 +365,13 @@ import { apiFetch } from "$lib/api";
 			<div>
 				<div class="flex items-center gap-3 mb-1">
 					<div class="h-0.5 w-8 bg-rust"></div>
-					<span class="font-jetbrains text-[10px] font-black text-rust uppercase tracking-[0.3em]">Node_Telemetry_Bridge</span>
+					<span class="font-jetbrains text-[10px] font-black text-rust uppercase tracking-[0.3em]"
+						>Node_Telemetry_Bridge</span
+					>
 				</div>
-				<h1 class="text-4xl sm:text-5xl font-heading font-black text-white uppercase tracking-tighter">
+				<h1
+					class="text-4xl sm:text-5xl font-heading font-black text-white uppercase tracking-tighter"
+				>
 					Node_<span class="text-rust">#{nodeId}</span>
 				</h1>
 				{#if node}
@@ -361,17 +379,24 @@ import { apiFetch } from "$lib/api";
 						<div
 							class={`px-3 py-1 font-jetbrains font-bold text-[10px] uppercase flex items-center gap-2.5 border ${getStatusClass(node.status)}`}
 						>
-							<span class={`w-1.5 h-1.5 rounded-full ${node.status === 'Online' || node.status === 'active' ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`}></span>
+							<span
+								class={`w-1.5 h-1.5 rounded-full ${node.status === 'Online' || node.status === 'active' ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`}
+							></span>
 							{node.status}
 						</div>
 						<div class="w-px h-4 bg-stone-800"></div>
 						{#if node.is_draining}
-							<div class="flex items-center gap-2 px-3 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[10px] font-black uppercase tracking-widest">
+							<div
+								class="flex items-center gap-2 px-3 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[10px] font-black uppercase tracking-widest"
+							>
 								<ShieldAlert class="w-3.5 h-3.5 animate-pulse" />
 								DRAINING
 							</div>
 						{/if}
-						<span class="text-[10px] font-jetbrains font-bold text-stone-600 uppercase tracking-widest">Binary_Rev: v{node.game_version || '0.0.0'}</span>
+						<span
+							class="text-[10px] font-jetbrains font-bold text-stone-600 uppercase tracking-widest"
+							>Binary_Rev: v{node.game_version || '0.0.0'}</span
+						>
 					</div>
 				{/if}
 			</div>
@@ -409,7 +434,11 @@ import { apiFetch } from "$lib/api";
 						disabled={node.status === 'Updating'}
 						class={`px-8 py-3 font-heading font-black text-[11px] uppercase tracking-widest transition-all border shadow-xl whitespace-nowrap active:tranneutral-y-px ${node.status === 'Updating' ? 'bg-stone-800 text-stone-600 border-stone-700 cursor-not-allowed' : cmp > 0 ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400 shadow-emerald-900/20' : 'bg-rust hover:bg-rust-light text-white border-rust-light shadow-rust/20'}`}
 					>
-						{node.status === 'Updating' ? 'Synchronizing...' : cmp > 0 ? 'Apply_Patch' : 'Revert_Rev'}
+						{node.status === 'Updating'
+							? 'Synchronizing...'
+							: cmp > 0
+								? 'Apply_Patch'
+								: 'Revert_Rev'}
 					</button>
 				{:else}
 					<div
@@ -424,15 +453,28 @@ import { apiFetch } from "$lib/api";
 
 	{#if isLoading && !node}
 		<div class="flex flex-col items-center justify-center h-96 gap-6">
-			<div class="w-16 h-16 border-2 border-rust border-t-transparent rounded-none animate-spin shadow-lg shadow-rust/20"></div>
-			<p class="font-heading font-black text-[12px] text-rust animate-pulse uppercase tracking-[0.5em]">Establishing_Uplink...</p>
+			<div
+				class="w-16 h-16 border-2 border-rust border-t-transparent rounded-none animate-spin shadow-lg shadow-rust/20"
+			></div>
+			<p
+				class="font-heading font-black text-[12px] text-rust animate-pulse uppercase tracking-[0.5em]"
+			>
+				Connecting to Node...
+			</p>
 		</div>
 	{:else if error}
-		<div class="p-12 text-center bg-red-950/10 border border-red-900/30 industrial-frame shadow-2xl">
+		<div
+			class="p-12 text-center bg-red-950/10 border border-red-900/30 industrial-frame shadow-2xl"
+		>
 			<AlertCircle class="w-16 h-16 text-red-600 mx-auto mb-6 animate-pulse" />
-			<h2 class="text-2xl font-heading font-black text-red-500 mb-3 uppercase tracking-widest">Terminal_Connection_Fault</h2>
+			<h2 class="text-2xl font-heading font-black text-red-500 mb-3 uppercase tracking-widest">
+				Terminal_Connection_Fault
+			</h2>
 			<p class="font-jetbrains text-stone-500 font-bold uppercase tracking-tight">{error}</p>
-			<button class="mt-10 px-10 py-3 bg-red-600 hover:bg-red-500 text-white font-heading font-black text-[11px] uppercase tracking-widest transition-all shadow-lg" onclick={fetchNodeData}>Retry_Protocol</button>
+			<button
+				class="mt-10 px-10 py-3 bg-red-600 hover:bg-red-500 text-white font-heading font-black text-[11px] uppercase tracking-widest transition-all shadow-lg"
+				onclick={fetchNodeData}>Retry_Protocol</button
+			>
 		</div>
 	{:else if node}
 		<!-- Node Stats -->
@@ -480,7 +522,9 @@ import { apiFetch } from "$lib/api";
 					<h3 class="text-2xl font-heading font-black text-white uppercase tracking-[0.2em] mb-3">
 						Synchronizing_Core
 					</h3>
-					<p class="font-jetbrains text-stone-500 text-[11px] font-black uppercase tracking-widest">Downloading deployment package. System locked.</p>
+					<p class="font-jetbrains text-stone-500 text-[11px] font-black uppercase tracking-widest">
+						Downloading deployment package. System locked.
+					</p>
 				</div>
 			{/if}
 
@@ -492,15 +536,19 @@ import { apiFetch } from "$lib/api";
 						<div class="p-2.5 bg-rust/5 border border-rust/20 industrial-frame">
 							<List class="w-5 h-5 text-rust-light" />
 						</div>
-						<h2 class="text-2xl font-heading font-black text-white uppercase tracking-tighter">Sub_Logic_Clusters</h2>
+						<h2 class="text-2xl font-heading font-black text-white uppercase tracking-tighter">
+							Sub_Logic_Clusters
+						</h2>
 					</div>
-					<p class="text-[10px] font-jetbrains font-bold text-stone-600 uppercase tracking-widest ml-12">
+					<p
+						class="text-[10px] font-jetbrains font-bold text-stone-600 uppercase tracking-widest ml-12"
+					>
 						Manage active instance buffers on this node.
 					</p>
 				</div>
 
 				<div class="flex items-center gap-4 w-full lg:w-auto">
-					<Dropdown label="CLUSTER_DIRECTIVES" Icon={List}>
+					<Dropdown label="NODE ACTIONS" Icon={List}>
 						{#snippet children()}
 							<button
 								onclick={() => {
@@ -548,7 +596,9 @@ import { apiFetch } from "$lib/api";
 				<div class="space-y-6">
 					<div class="flex justify-between items-end px-2">
 						<div class="space-y-2">
-							<div class="flex items-center gap-3 font-jetbrains text-[9px] font-black text-stone-600 uppercase tracking-[0.4em] italic">
+							<div
+								class="flex items-center gap-3 font-jetbrains text-[9px] font-black text-stone-600 uppercase tracking-[0.4em] italic"
+							>
 								<Activity class="w-3.5 h-3.5 text-rust" />
 								TELEMETRY_STREAM_24H
 							</div>
@@ -556,14 +606,19 @@ import { apiFetch } from "$lib/api";
 								Active_Client_Load
 							</h3>
 						</div>
-						<div class="text-3xl font-heading font-black text-rust-light tabular-nums tracking-tighter">
-							{chartData[chartData.length - 1].count} <span class="text-[10px] font-jetbrains text-stone-700 tracking-widest">UNITS</span>
+						<div
+							class="text-3xl font-heading font-black text-rust-light tabular-nums tracking-tighter"
+						>
+							{chartData[chartData.length - 1].count}
+							<span class="text-[10px] font-jetbrains text-stone-700 tracking-widest">UNITS</span>
 						</div>
 					</div>
 					<div
 						class="h-48 sm:h-64 bg-stone-950 border border-stone-800 industrial-frame overflow-hidden relative shadow-inner p-6"
 					>
-						<div class="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.02] pointer-events-none"></div>
+						<div
+							class="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.02] pointer-events-none"
+						></div>
 						<PlayersChart data={chartData} height={200} color="var(--color-rust)" />
 					</div>
 				</div>
@@ -573,8 +628,12 @@ import { apiFetch } from "$lib/api";
 						class="text-center py-24 text-stone-700 bg-stone-900/20 border-2 border-stone-800 border-dashed industrial-frame"
 					>
 						<Server class="w-16 h-16 mx-auto mb-6 opacity-20 text-stone-600" />
-						<p class="text-xl font-heading font-black uppercase tracking-[0.3em] mb-2">Registry_Vacant</p>
-						<p class="font-jetbrains text-[10px] font-bold uppercase tracking-widest">Initialize a new logic buffer to begin synchronization.</p>
+						<p class="text-xl font-heading font-black uppercase tracking-[0.3em] mb-2">
+							Registry_Vacant
+						</p>
+						<p class="font-jetbrains text-[10px] font-bold uppercase tracking-widest">
+							Initialize a new logic buffer to begin synchronization.
+						</p>
 					</div>
 				{:else}
 					<div class="space-y-4">

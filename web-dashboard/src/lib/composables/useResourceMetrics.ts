@@ -1,4 +1,4 @@
-import { apiFetch } from "$lib/api";
+import { apiFetch } from '$lib/api';
 import { writable, type Writable } from 'svelte/store';
 import type {
 	ResourceStats,
@@ -65,9 +65,7 @@ export function useResourceMetrics(nodeId: number, instanceId: number | string) 
 	async function fetchHistory() {
 		try {
 			loading.set(true);
-			const response = await apiFetch(
-				`/api/nodes/${nodeId}/instances/${instanceId}/stats/history`
-			);
+			const response = await apiFetch(`/api/nodes/${nodeId}/instances/${instanceId}/stats/history`);
 			if (!response.ok) {
 				const err = await response.json().catch(() => ({}));
 				throw new Error(err.error || `Failed to fetch history: ${response.statusText}`);

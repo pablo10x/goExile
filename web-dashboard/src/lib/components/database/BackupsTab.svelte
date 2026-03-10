@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { HardDrive, Download, RotateCcw, Trash2, FileText, Plus } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { notifications } from '$lib/stores.svelte';
@@ -88,15 +88,22 @@ import { apiFetch } from "$lib/api";
 				<HardDrive class="w-6 h-6 text-indigo-400" />
 			</div>
 			<div>
-				<h2 class="text-xl font-heading font-black text-white uppercase tracking-tighter italic">ARCHIVE_STORAGE_CORE</h2>
-				<p class="font-jetbrains text-[10px] text-neutral-500 uppercase tracking-widest mt-1 italic font-bold">Create and restore internal database snapshots</p>
+				<h2 class="text-xl font-heading font-black text-white uppercase tracking-tighter italic">
+					ARCHIVE_STORAGE_CORE
+				</h2>
+				<p
+					class="font-jetbrains text-[10px] text-neutral-500 uppercase tracking-widest mt-1 italic font-bold"
+				>
+					Create and restore internal database snapshots
+				</p>
 			</div>
 		</div>
-					<button
-						onclick={createBackup}
-						disabled={loading}
-						class="px-6 py-3 bg-indigo-500 hover:bg-indigo-400 text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-indigo-900/20 disabled:opacity-20 transition-all active:tranneutral-y-px rounded-xl"
-					>			<Plus class="w-4 h-4" /> Generate_Snapshot
+		<button
+			onclick={createBackup}
+			disabled={loading}
+			class="px-6 py-3 bg-indigo-500 hover:bg-indigo-400 text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-indigo-900/20 disabled:opacity-20 transition-all active:tranneutral-y-px rounded-xl"
+		>
+			<Plus class="w-4 h-4" /> Generate_Snapshot
 		</button>
 	</div>
 
@@ -112,8 +119,12 @@ import { apiFetch } from "$lib/api";
 				class="flex flex-col items-center justify-center h-64 text-neutral-700 border border-dashed border-neutral-800 rounded-2xl bg-neutral-900/20"
 			>
 				<HardDrive class="w-16 h-16 opacity-10 mb-6" />
-				<p class="font-heading font-black text-xs tracking-[0.2em] uppercase">No archives detected</p>
-				<p class="font-jetbrains text-[9px] mt-2 uppercase tracking-widest opacity-60">Generate first snapshot to secure sector data</p>
+				<p class="font-heading font-black text-xs tracking-[0.2em] uppercase">
+					No archives detected
+				</p>
+				<p class="font-jetbrains text-[9px] mt-2 uppercase tracking-widest opacity-60">
+					Generate first snapshot to secure sector data
+				</p>
 			</div>
 		{:else}
 			<div class="grid grid-cols-1 gap-4 max-w-5xl mx-auto">
@@ -128,10 +139,14 @@ import { apiFetch } from "$lib/api";
 								<FileText class="w-7 h-7" />
 							</div>
 							<div>
-								<div class="font-jetbrains font-black text-neutral-200 text-base uppercase tracking-tighter italic">
+								<div
+									class="font-jetbrains font-black text-neutral-200 text-base uppercase tracking-tighter italic"
+								>
 									{backup.name}
 								</div>
-								<div class="font-jetbrains text-[10px] text-neutral-500 flex gap-4 mt-2 uppercase tracking-widest font-bold">
+								<div
+									class="font-jetbrains text-[10px] text-neutral-500 flex gap-4 mt-2 uppercase tracking-widest font-bold"
+								>
 									<span class="text-indigo-400 font-black">{formatBytes(backup.size)}</span>
 									<span class="w-1 h-1 bg-neutral-800 self-center rounded-full"></span>
 									<span>{new Date(backup.created_at).toLocaleString()}</span>

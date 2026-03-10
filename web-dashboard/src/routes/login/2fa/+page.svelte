@@ -1,35 +1,42 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { isAuthenticated } from '$lib/stores.svelte';
 	import { onMount } from 'svelte';
 	import { fade, slide } from 'svelte/transition';
+	import { Shield, Smartphone, Mail, ArrowLeft } from 'lucide-svelte';
 
-	let code = '';
-	let emailCode = '';
-	let loading = false;
-	let mounted = false;
-	let shake = false;
-	let isSubmitting = false;
-	let showEmailSection = false;
+	let code = $state('');
+	let emailCode = $state('');
+	let loading = $state(false);
+	let mounted = $state(false);
+	let shake = $state(false);
+	let isSubmitting = $state(false);
+	let showEmailSection = $state(false);
 
 	onMount(() => {
 		mounted = true;
 	});
 
 	// Sanitize inputs (digits only)
-	$: code = code.replace(/\D/g, '');
-	$: emailCode = emailCode.replace(/\D/g, '');
+	$effect(() => {
+		code = code.replace(/\D/g, '');
+		emailCode = emailCode.replace(/\D/g, '');
+	});
 
 	// Auto-verify effect for TOTP code
-	$: if (code.length === 6 && !loading && !isSubmitting && !showEmailSection) {
-		handleVerify();
-	}
+	$effect(() => {
+		if (code.length === 6 && !loading && !isSubmitting && !showEmailSection) {
+			handleVerify();
+		}
+	});
 
 	// Auto-verify effect for Email code
-	$: if (emailCode.length === 6 && !loading && !isSubmitting && showEmailSection) {
-		handleEmailVerify();
-	}
+	$effect(() => {
+		if (emailCode.length === 6 && !loading && !isSubmitting && showEmailSection) {
+			handleEmailVerify();
+		}
+	});
 
 	async function handleVerify(e?: Event) {
 		if (e) e.preventDefault();
@@ -123,183 +130,159 @@ import { apiFetch } from "$lib/api";
 	}
 </script>
 
+<svelte:head>
+	<title>Verification | Exile</title>
+</svelte:head>
+
 {#if mounted}
-	<!-- Industrial Background -->
-	<div class="fixed inset-0 -z-50 bg-stone-950 overflow-hidden">
-		<!-- CRT Scanline Effect -->
-		<div class="absolute inset-0 pointer-events-none z-50 opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%]"></div>
-		
-		<!-- Static Noise -->
-		<div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/asfalt-dark.png')] opacity-[0.02] mix-blend-overlay"></div>
-
-		<div
-			class="absolute inset-0 bg-gradient-to-tr from-stone-950 via-[#0a0a0a] to-[#121212] opacity-80"
-		></div>
-		
-		<!-- Animated Grid -->
-		<div class="absolute inset-0 opacity-[0.03]" style="background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px); background-size: 50px 50px;"></div>
-	</div>
-
-	<div class="min-h-screen flex items-center justify-center p-6 font-jetbrains" in:fade={{ duration: 300 }}>
-		<div class="w-full max-w-[420px] relative">
-			<!-- Card -->
-			<div
-				class="bg-stone-900 border-2 border-stone-800 shadow-[12px_12px_0px_rgba(0,0,0,0.4)] overflow-hidden relative group industrial-frame"
-			>
-				<!-- Status Highlight -->
-				<div
-					class="absolute top-0 left-0 w-full h-1 bg-rust opacity-40 group-hover:opacity-100 transition-opacity"
-				></div>
-
-				<div class="p-10 pt-12 text-center bg-black/40">
-					<!-- Icon -->
+	<div
+		class="min-h-screen w-full flex flex-col items-center justify-center p-6 relative overflow-hidden animate-gradient-mesh"
+	>
+		<div class="w-full max-w-[420px] relative z-10" in:fade={{ duration: 400 }}>
+			<!-- Header -->
+			<div class="text-center mb-8 animate-reveal" style="animation-delay: 0.1s">
+				<div class="inline-flex relative mb-4">
+					<div class="absolute inset-0 bg-sky-500/20 blur-2xl rounded-full"></div>
 					<div
-						class="w-20 h-20 mx-auto bg-stone-950 border border-stone-800 flex items-center justify-center mb-8 shadow-2xl industrial-frame transition-all group-hover:border-rust/50"
+						class="relative w-14 h-14 rounded-2xl bg-slate-950 border border-white/10 flex items-center justify-center shadow-2xl"
 					>
 						{#if showEmailSection}
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								class="w-8 h-8 text-rust"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="1.5"
-								><rect width="20" height="16" x="2" y="4" rx="0" /><path
-									d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"
-								/></svg
-							>
+							<Mail class="w-7 h-7 text-sky-400" />
 						{:else}
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								class="w-8 h-8 text-rust"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="1.5"
-								><rect width="18" height="11" x="3" y="11" rx="0" ry="0" /><path
-									d="M7 11V7a5 5 0 0 1 10 0v4"
-								/></svg
-							>
+							<Smartphone class="w-7 h-7 text-sky-400" />
 						{/if}
 					</div>
-
-					<h1 class="text-2xl font-black text-white mb-2 uppercase tracking-tighter italic">Auth_Verify</h1>
-					<p class="text-[10px] text-stone-500 font-bold uppercase tracking-widest italic">
-						{#if showEmailSection}
-							Secondary_Vector: Email_Auth
-						{:else}
-							Primary_Vector: TOTP_Buffer
-						{/if}
-					</p>
 				</div>
+				<h1 class="text-3xl font-bold text-white tracking-tight mb-2">
+					Two-Factor <span class="text-sky-500">Auth</span>
+				</h1>
+				<p class="text-sm text-slate-400 font-medium">
+					{#if showEmailSection}
+						Enter the code sent to your email
+					{:else}
+						Enter the code from your authenticator app
+					{/if}
+				</p>
+			</div>
 
-				<div class="px-10 pb-12 pt-8">
-					<div class="relative" class:animate-shake={shake}>
-						{#if !showEmailSection}
-							<div class="space-y-8">
-								<div class="relative group/input">
-									<!-- svelte-ignore a11y_autofocus -->
-									<input
-										type="text"
-										bind:value={code}
-										maxlength="6"
-										inputmode="numeric"
-										autocomplete="one-time-code"
-										class="w-full bg-black border-2 border-stone-800 px-4 py-5 text-center text-4xl font-mono tracking-[0.4em] text-white focus:border-rust outline-none transition-all placeholder:text-stone-900 shadow-inner"
-										placeholder="000000"
-										disabled={loading}
-										autofocus
-									/>
-									{#if loading}
-										<div class="absolute right-4 top-1/2 -tranneutral-y-1/2">
-											<div
-												class="w-5 h-5 border-2 border-rust border-t-transparent rounded-none animate-spin"
-											></div>
-										</div>
-									{/if}
-								</div>
-							</div>
-						{:else}
-							<div in:slide={{ axis: 'y', duration: 400 }} class="space-y-8">
-								<div
-									class="flex items-center justify-center gap-3 text-[10px] font-black text-emerald-400 bg-emerald-950/10 py-3 border border-emerald-900/30 uppercase tracking-widest shadow-inner"
-								>
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										class="w-4 h-4"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										stroke-width="3"><polyline points="20 6 9 17 4 12" /></svg
-									>
-									<span>Primary_Link_Stable</span>
-								</div>
+			<!-- Verification Card -->
+			<div
+				class="modern-card animate-reveal"
+				style="animation-delay: 0.2s"
+				class:animate-shake={shake}
+			>
+				<div class="p-8 sm:p-10">
+					<form onsubmit={showEmailSection ? handleEmailVerify : handleVerify} class="space-y-8">
+						<div class="relative group">
+							{#if showEmailSection}
+								<input
+									type="text"
+									bind:value={emailCode}
+									maxlength="6"
+									inputmode="numeric"
+									autocomplete="one-time-code"
+									placeholder="000000"
+									class="w-full bg-slate-950/50 border border-white/5 px-4 py-6 text-center text-5xl font-mono tracking-[0.4em] text-white focus:border-sky-500/40 focus:ring-4 focus:ring-sky-500/5 outline-none transition-all placeholder:text-slate-800 rounded-2xl"
+									disabled={loading}
+									autofocus
+								/>
+							{:else}
+								<input
+									type="text"
+									bind:value={code}
+									maxlength="6"
+									inputmode="numeric"
+									autocomplete="one-time-code"
+									placeholder="000000"
+									class="w-full bg-slate-950/50 border border-white/5 px-4 py-6 text-center text-5xl font-mono tracking-[0.4em] text-white focus:border-sky-500/40 focus:ring-4 focus:ring-sky-500/5 outline-none transition-all placeholder:text-slate-800 rounded-2xl"
+									disabled={loading}
+									autofocus
+								/>
+							{/if}
 
-								<div class="relative group/input">
-									<!-- svelte-ignore a11y_autofocus -->
-									<input
-										type="text"
-										bind:value={emailCode}
-										maxlength="6"
-										inputmode="numeric"
-										class="w-full bg-black border-2 border-stone-800 px-4 py-5 text-center text-4xl font-mono tracking-[0.4em] text-white focus:border-rust outline-none transition-all placeholder:text-stone-900 shadow-inner"
-										placeholder="000000"
-										disabled={loading}
-										autofocus
-									/>
-									{#if loading}
-										<div class="absolute right-4 top-1/2 -tranneutral-y-1/2">
-											<div
-												class="w-5 h-5 border-2 border-rust border-t-transparent rounded-none animate-spin"
-											></div>
-										</div>
-									{/if}
+							{#if loading}
+								<div class="absolute right-6 top-1/2 -translate-y-1/2">
+									<div
+										class="w-6 h-6 border-2 border-sky-500 border-t-transparent rounded-full animate-spin"
+									></div>
 								</div>
+							{/if}
+						</div>
+
+						{#if showEmailSection}
+							<div
+								in:slide={{ axis: 'y', duration: 400 }}
+								class="flex items-center justify-center gap-2 text-xs font-bold text-emerald-500 bg-emerald-500/10 py-3 rounded-xl border border-emerald-500/20 uppercase tracking-wider"
+							>
+								<Shield class="w-4 h-4" />
+								<span>Identity Verified</span>
 							</div>
 						{/if}
-					</div>
 
-					<div class="mt-10 text-center border-t border-stone-800 pt-8">
-						<a
-							href="/login"
-							class="text-[10px] font-black text-stone-600 hover:text-white uppercase tracking-[0.3em] transition-all italic"
-						>
-							[Abord_Sequence]
-						</a>
-					</div>
+						<div class="text-center pt-4 border-t border-white/5">
+							<a
+								href="/login"
+								class="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-white uppercase tracking-widest transition-colors"
+							>
+								<ArrowLeft class="w-3.5 h-3.5" />
+								Cancel Verification
+							</a>
+						</div>
+					</form>
 				</div>
 			</div>
 
-			<div
-				class="text-center mt-8 text-[8px] text-stone-700 uppercase tracking-[0.5em] font-black opacity-40 italic"
-			>
-				Neural_Encryption: Active_GCM_256
+			<!-- Footer Info -->
+			<div class="mt-8 text-center animate-reveal" style="animation-delay: 0.3s">
+				<p class="text-[10px] font-bold text-slate-600 uppercase tracking-[0.3em]">
+					Secure Encryption Active
+				</p>
 			</div>
 		</div>
 	</div>
 {/if}
 
 <style>
-	.animate-shake {
-		animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+	:global(body) {
+		background-color: black;
+		overflow: hidden;
 	}
+
 	@keyframes shake {
+		0%,
+		100% {
+			transform: translateX(0);
+		}
 		10%,
-		90% {
-			transform: translate3d(-1px, 0, 0);
-		}
-		20%,
-		80% {
-			transform: translate3d(2px, 0, 0);
-		}
 		30%,
 		50%,
-		70% {
-			transform: translate3d(-4px, 0, 0);
+		70%,
+		90% {
+			transform: translateX(-4px);
 		}
+		20%,
 		40%,
-		60% {
-			transform: translate3d(4px, 0, 0);
+		60%,
+		80% {
+			transform: translateX(4px);
 		}
+	}
+	.animate-shake {
+		animation: shake 0.4s ease-in-out;
+	}
+
+	@keyframes reveal-up {
+		from {
+			opacity: 0;
+			transform: translateY(20px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+	.animate-reveal {
+		animation: reveal-up 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+		opacity: 0;
 	}
 </style>

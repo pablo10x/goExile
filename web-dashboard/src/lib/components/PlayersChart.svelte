@@ -1,8 +1,12 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { onMount } from 'svelte';
 
-	let { data = [], height = 200, color = 'var(--color-rust)' }: { data?: { timestamp: number; count: number }[]; height?: number; color?: string } = $props();
+	let {
+		data = [],
+		height = 200,
+		color = 'var(--color-rust)'
+	}: { data?: { timestamp: number; count: number }[]; height?: number; color?: string } = $props();
 
 	let width = $state(0);
 	let container: HTMLDivElement;
@@ -25,13 +29,16 @@ import { apiFetch } from "$lib/api";
 	let maxVal = $derived(Math.max(...data.map((d) => d.count), 10)); // Minimum max of 10 for scale
 	let minVal = 0;
 
-	let points = $derived(data
-		.map((d, i) => {
-			const x = (i / (data.length - 1)) * width;
-			const y = height - ((d.count - minVal) / (maxVal - minVal)) * (height * 0.7) - height * 0.15; // Padding
-			return `${x},${y}`;
-		})
-		.join(' '));
+	let points = $derived(
+		data
+			.map((d, i) => {
+				const x = (i / (data.length - 1)) * width;
+				const y =
+					height - ((d.count - minVal) / (maxVal - minVal)) * (height * 0.7) - height * 0.15; // Padding
+				return `${x},${y}`;
+			})
+			.join(' ')
+	);
 
 	let areaPoints = $derived(`${points} ${width},${height} 0,${height}`);
 
@@ -59,7 +66,11 @@ import { apiFetch } from "$lib/api";
 	}
 
 	function formatTime(ts: number) {
-		return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+		return new Date(ts).toLocaleTimeString([], {
+			hour: '2-digit',
+			minute: '2-digit',
+			hour12: false
+		});
 	}
 </script>
 
@@ -144,7 +155,9 @@ import { apiFetch } from "$lib/api";
 				class="absolute z-10 pointer-events-none transform -tranneutral-x-1/2 -tranneutral-y-full mb-4 bg-stone-950/90 backdrop-blur-md border border-stone-800 px-4 py-3 shadow-2xl text-center min-w-[120px]"
 				style="left: {tooltipX}px; top: 0;"
 			>
-				<div class="text-[9px] text-stone-500 font-black mb-2 uppercase tracking-widest border-b border-stone-800 pb-1">
+				<div
+					class="text-[9px] text-stone-500 font-black mb-2 uppercase tracking-widest border-b border-stone-800 pb-1"
+				>
 					{formatTime(d.timestamp)}
 				</div>
 				<div
@@ -169,7 +182,9 @@ import { apiFetch } from "$lib/api";
 			<div class="w-8 h-8 border border-dashed border-stone-800 flex items-center justify-center">
 				<div class="w-1.5 h-1.5 bg-stone-800 animate-ping"></div>
 			</div>
-			<span class="text-[10px] font-black uppercase tracking-widest">Signal_Lost // Empty_Buffer</span>
+			<span class="text-[10px] font-black uppercase tracking-widest"
+				>Signal_Lost // Empty_Buffer</span
+			>
 		</div>
 	{/if}
 </div>

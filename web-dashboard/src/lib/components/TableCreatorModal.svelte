@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { Plus, Trash2, X, Save } from 'lucide-svelte';
 	import { slide } from 'svelte/transition';
 	import Button from './Button.svelte';
@@ -77,12 +77,11 @@ import { apiFetch } from "$lib/api";
 				class="p-6 border-b border-stone-800 flex justify-between items-center bg-neutral-950/40"
 			>
 				<h3 class="text-xl font-heading font-black text-neutral-100 uppercase tracking-tighter">
-					Initialize_Sector in <span class="text-rust font-jetbrains text-xs ml-3 uppercase tracking-widest">{schema}</span>
+					Initialize_Sector in <span
+						class="text-rust font-jetbrains text-xs ml-3 uppercase tracking-widest">{schema}</span
+					>
 				</h3>
-				<button
-					onclick={onClose}
-					class="text-stone-600 hover:text-white transition-colors"
-				>
+				<button onclick={onClose} class="text-stone-600 hover:text-white transition-colors">
 					<X class="w-5 h-5" />
 				</button>
 			</div>
@@ -105,9 +104,7 @@ import { apiFetch } from "$lib/api";
 
 				<div class="space-y-4">
 					<div class="flex justify-between items-center border-b border-stone-800/50 pb-3">
-						<h4
-							class="font-heading font-black text-xs text-stone-500 uppercase tracking-[0.2em]"
-						>
+						<h4 class="font-heading font-black text-xs text-stone-500 uppercase tracking-[0.2em]">
 							COLUMN_DEFINITIONS
 						</h4>
 						<Button
@@ -128,7 +125,9 @@ import { apiFetch } from "$lib/api";
 							>
 								<div class="flex gap-4 items-start">
 									<div class="flex flex-col gap-2 w-full">
-										<label for="columnName-{i}" class="font-jetbrains text-[9px] font-bold text-stone-600 uppercase tracking-widest"
+										<label
+											for="columnName-{i}"
+											class="font-jetbrains text-[9px] font-bold text-stone-600 uppercase tracking-widest"
 											>Field_ID</label
 										>
 										<input
@@ -140,7 +139,9 @@ import { apiFetch } from "$lib/api";
 										/>
 									</div>
 									<div class="flex flex-col gap-2 w-full">
-										<label for="columnType-{i}" class="font-jetbrains text-[9px] font-bold text-stone-600 uppercase tracking-widest"
+										<label
+											for="columnType-{i}"
+											class="font-jetbrains text-[9px] font-bold text-stone-600 uppercase tracking-widest"
 											>Data_Type</label
 										>
 										<select
@@ -182,22 +183,14 @@ import { apiFetch } from "$lib/api";
 				</div>
 			</div>
 
-			<div
-				class="p-6 border-t border-stone-800 bg-neutral-950/40 flex justify-end gap-4"
-			>
-				<Button
-					onclick={onClose}
-					variant="ghost"
-					size="md"
-				>
-					Abort_OP
-				</Button>
+			<div class="p-6 border-t border-stone-800 bg-neutral-950/40 flex justify-end gap-4">
+				<Button onclick={onClose} variant="ghost" size="md">Abort_OP</Button>
 				<Button
 					onclick={handleSave}
 					disabled={loading || !tableName.trim()}
 					variant="primary"
 					size="md"
-					loading={loading}
+					{loading}
 					icon="save"
 				>
 					Authorize_Init

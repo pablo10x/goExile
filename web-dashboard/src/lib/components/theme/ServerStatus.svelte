@@ -1,19 +1,20 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
 	import { onMount } from 'svelte';
 
-	export let status = 'ONLINE';
-	export let players = 0;
-	export let servers = 0;
+	let { status = 'ONLINE', players = 0, servers = 0 } = $props<{
+		status: string;
+		players: number;
+		servers: number;
+	}>();
 
 	const fmt = (n: number) => n.toLocaleString();
 
-	let visibleText = "";
-	let fullText = "";
-	let isTyping = true;
+	let visibleText = $state('');
+	let fullText = '';
+	let isTyping = $state(true);
 
 	onMount(() => {
-		fullText = `SYSTEM: ${status} -- ONLINE: ${fmt(players)} -- SERVERS: ${fmt(servers)}`;
+		fullText = `STATUS: ${status} -- SESSIONS: ${fmt(players)} -- NODES: ${fmt(servers)}`;
 		let i = 0;
 		const speed = 30;
 
@@ -31,31 +32,42 @@ import { apiFetch } from "$lib/api";
 	});
 </script>
 
-<div class="w-full bg-[#050505] border-b-2 border-neutral-800 relative z-40 overflow-hidden font-mono text-[8px] md:text-[10px] tracking-tight">
-	<div class="max-w-7xl mx-auto px-2 md:px-4 py-1 flex flex-wrap items-center justify-between gap-2 text-neutral-500 h-6 md:h-auto uppercase font-black">
-		
+<div
+	class="w-full bg-black/40 border-b border-white/5 relative z-40 overflow-hidden font-mono text-[8px] md:text-[9px] tracking-widest"
+>
+	<div
+		class="px-6 py-1 flex flex-wrap items-center justify-between gap-2 text-slate-600 h-6 md:h-auto uppercase font-bold"
+	>
 		<div class="flex items-center gap-2 md:gap-4 whitespace-nowrap">
-			<span class="text-neutral-500 opacity-80">
-				> {visibleText}<span class="{isTyping ? 'animate-pulse' : 'opacity-0'} inline-block w-1.5 h-3 bg-rust align-middle ml-1"></span>
+			<span class="text-slate-500">
+				> {visibleText}<span
+					class="{isTyping
+						? 'animate-pulse'
+						: 'opacity-0'} inline-block w-1.5 h-2.5 bg-sky-500 align-middle ml-1"
+				></span>
 			</span>
 		</div>
 
-		<div class="hidden sm:block flex-1 mx-4 overflow-hidden relative h-3 opacity-30">
-			<div class="absolute whitespace-nowrap animate-marquee text-[#888888]">
-				/// SYSTEM UPDATE: SECTOR 7 PACIFIED /// WEATHER WARNING: ACID RAIN IN ZONE 4 /// NEW FACTION DETECTED /// SYSTEM UPDATE: SECTOR 7 PACIFIED ///
+		<div class="hidden sm:block flex-1 mx-8 overflow-hidden relative h-3 opacity-20">
+			<div class="absolute whitespace-nowrap animate-marquee text-slate-400">
+				/// INFRASTRUCTURE OPTIMIZED /// DATABASE REPLICATION ACTIVE /// NETWORK LATENCY: 1.2MS /// ALL SYSTEMS OPERATIONAL ///
 			</div>
 		</div>
 
-		<div class="hidden md:flex items-center gap-2 text-[#888888] opacity-40">
-			<span>v0.9.4b</span>
+		<div class="hidden md:flex items-center gap-2 text-slate-600 opacity-40">
+			<span>BUILD 0.9.4B</span>
 		</div>
 	</div>
 </div>
 
 <style>
 	@keyframes marquee {
-		0% { transform: translateX(100%); }
-		100% { transform: translateX(-100%); }
+		0% {
+			transform: translateX(100%);
+		}
+		100% {
+			transform: translateX(-100%);
+		}
 	}
 	.animate-marquee {
 		animation: marquee 20s linear infinite;

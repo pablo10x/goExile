@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { onMount, onDestroy } from 'svelte';
 	import type {
 		TopResourceConsumersProps,
@@ -100,26 +100,36 @@ import { apiFetch } from "$lib/api";
 	<!-- Header -->
 	<div class="flex items-center justify-between mb-8">
 		<div class="flex items-center gap-5">
-			<div
-				class="p-3 bg-stone-950 border border-stone-800 industrial-frame text-rust"
-			>
+			<div class="p-3 bg-stone-950 border border-stone-800 industrial-frame text-rust">
 				<Icon class="w-6 h-6" />
 			</div>
 			<div>
 				<h3 class="font-heading font-black text-white uppercase tracking-widest">
 					Top_Resource_Load
 				</h3>
-				<p class="font-jetbrains text-[10px] font-black text-stone-500 uppercase tracking-widest mt-1">
-					Metric: {resourceType === 'cpu' ? 'PROC_LOAD' : resourceType === 'memory' ? 'MEM_LOAD' : 'IO_DISK'}
+				<p
+					class="font-jetbrains text-[10px] font-black text-stone-500 uppercase tracking-widest mt-1"
+				>
+					Metric: {resourceType === 'cpu'
+						? 'PROC_LOAD'
+						: resourceType === 'memory'
+							? 'MEM_LOAD'
+							: 'IO_DISK'}
 				</p>
 			</div>
 		</div>
 
 		<div class="flex items-center gap-4">
 			{#if loading}
-				<div class="animate-spin rounded-none h-5 w-5 border-2 border-rust border-t-transparent shadow-lg shadow-rust/20"></div>
+				<div
+					class="animate-spin rounded-none h-5 w-5 border-2 border-rust border-t-transparent shadow-lg shadow-rust/20"
+				></div>
 			{:else if error}
-				<div class="text-red-500 font-jetbrains font-black text-[10px] uppercase tracking-widest border border-red-900/30 px-3 py-1 bg-red-950/10 shadow-lg">FAULT_DETECTED</div>
+				<div
+					class="text-red-500 font-jetbrains font-black text-[10px] uppercase tracking-widest border border-red-900/30 px-3 py-1 bg-red-950/10 shadow-lg"
+				>
+					FAULT_DETECTED
+				</div>
 			{:else}
 				<button
 					onclick={loadConsumers}
@@ -134,11 +144,15 @@ import { apiFetch } from "$lib/api";
 
 	<!-- Error State -->
 	{#if error}
-		<div class="bg-red-950/20 border border-red-900/40 industrial-frame p-6 text-red-500 mb-6 shadow-2xl">
+		<div
+			class="bg-red-950/20 border border-red-900/40 industrial-frame p-6 text-red-500 mb-6 shadow-2xl"
+		>
 			<div class="flex items-center gap-4">
 				<AlertCircle class="w-6 h-6 shrink-0 animate-pulse" />
 				<div class="space-y-1">
-					<span class="block font-heading font-black text-xs uppercase tracking-widest">SIGNAL_FAULT_0x09</span>
+					<span class="block font-heading font-black text-xs uppercase tracking-widest"
+						>SIGNAL_FAULT_0x09</span
+					>
 					<p class="font-jetbrains text-[10px] font-bold uppercase tracking-tight">{error}</p>
 				</div>
 			</div>
@@ -149,10 +163,14 @@ import { apiFetch } from "$lib/api";
 	{#if !loading && !error}
 		{#if consumers.length === 0}
 			<div class="text-center py-20 opacity-40">
-				<div class="inline-block p-6 bg-stone-900/40 border border-dashed border-stone-800 industrial-frame mb-6">
+				<div
+					class="inline-block p-6 bg-stone-900/40 border border-dashed border-stone-800 industrial-frame mb-6"
+				>
 					<Activity class="w-10 h-10 text-stone-700" />
 				</div>
-				<p class="text-stone-600 font-jetbrains font-black text-[11px] uppercase tracking-[0.3em]">Zero_Nodes_Mapped_To_Buffer</p>
+				<p class="text-stone-600 font-jetbrains font-black text-[11px] uppercase tracking-[0.3em]">
+					Zero_Nodes_Mapped_To_Buffer
+				</p>
 			</div>
 		{:else}
 			<div class="space-y-4">
@@ -163,20 +181,30 @@ import { apiFetch } from "$lib/api";
 						<!-- Instance Info -->
 						<div class="flex items-center gap-5 flex-1 min-w-0">
 							<div class="flex-shrink-0 border-r border-stone-800 pr-5">
-								<div class="text-xs font-jetbrains font-black text-stone-400 tracking-tighter uppercase mb-1">
+								<div
+									class="text-xs font-jetbrains font-black text-stone-400 tracking-tighter uppercase mb-1"
+								>
 									#{consumer.port}
 								</div>
-								<div class="text-[9px] font-jetbrains font-bold text-stone-600 uppercase tracking-widest">
+								<div
+									class="text-[9px] font-jetbrains font-bold text-stone-600 uppercase tracking-widest"
+								>
 									{consumer.region}
 								</div>
 							</div>
 
 							{#if !compact}
 								<div class="min-w-0">
-									<div class="text-[11px] font-black text-stone-200 uppercase tracking-widest truncate group-hover:text-rust transition-colors duration-500">
+									<div
+										class="text-[11px] font-black text-stone-200 uppercase tracking-widest truncate group-hover:text-rust transition-colors duration-500"
+									>
 										Node_{consumer.instanceId.split('-').pop()}
 									</div>
-									<div class="text-[8px] font-jetbrains font-black text-stone-700 uppercase tracking-[0.2em] mt-1">{consumer.host}</div>
+									<div
+										class="text-[8px] font-jetbrains font-black text-stone-700 uppercase tracking-[0.2em] mt-1"
+									>
+										{consumer.host}
+									</div>
 								</div>
 							{/if}
 						</div>
@@ -192,18 +220,22 @@ import { apiFetch } from "$lib/api";
 								>
 									{consumer.cpu_percent?.toFixed(1)}%
 								</div>
-								<div class="text-[8px] font-jetbrains font-black text-stone-600 uppercase tracking-widest mt-1">
+								<div
+									class="text-[8px] font-jetbrains font-black text-stone-600 uppercase tracking-widest mt-1"
+								>
 									LOAD_INDEX
 								</div>
 							</div>
 
 							<!-- Visual Indicator -->
-							<div class="w-20 h-1.5 bg-stone-950 border border-stone-800 rounded-none overflow-hidden relative p-0 shadow-inner">
+							<div
+								class="w-20 h-1.5 bg-stone-950 border border-stone-800 rounded-none overflow-hidden relative p-0 shadow-inner"
+							>
 								<div
-									class="h-full {getBackgroundForValue(
-										consumer.cpu_percent,
-										resourceType
-									).replace('/10', '')} transition-all duration-1000 ease-out shadow-lg"
+									class="h-full {getBackgroundForValue(consumer.cpu_percent, resourceType).replace(
+										'/10',
+										''
+									)} transition-all duration-1000 ease-out shadow-lg"
 									style="width: {Math.min(consumer.cpu_percent, 100)}%"
 								></div>
 
@@ -217,11 +249,15 @@ import { apiFetch } from "$lib/api";
 						<!-- Status -->
 						<div class="flex items-center gap-3 border-l border-stone-800 pl-6 ml-6">
 							<div
-								class={`w-1.5 h-1.5 rounded-full ${consumer.status === 'Running'
-									? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]'
-									: 'bg-stone-700'}`}
+								class={`w-1.5 h-1.5 rounded-full ${
+									consumer.status === 'Running'
+										? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]'
+										: 'bg-stone-700'
+								}`}
 							></div>
-							<div class="text-[10px] font-heading font-black text-stone-500 uppercase tracking-widest group-hover:text-stone-300 transition-colors">
+							<div
+								class="text-[10px] font-heading font-black text-stone-500 uppercase tracking-widest group-hover:text-stone-300 transition-colors"
+							>
 								{consumer.status}
 							</div>
 						</div>

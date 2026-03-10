@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { onMount } from 'svelte';
 	import type { ResourceHistory } from '$lib/types/resource-metrics';
 
@@ -196,7 +196,9 @@ import { apiFetch } from "$lib/api";
 				class="absolute z-10 pointer-events-none transform -tranneutral-x-1/2 -tranneutral-y-full mb-4 bg-stone-950/90 backdrop-blur-md border border-stone-800 px-4 py-3 shadow-2xl text-center min-w-[120px]"
 				style="left: {tooltipX}px; top: 0;"
 			>
-				<div class="text-[9px] text-stone-500 font-black mb-2 uppercase tracking-widest border-b border-stone-800 pb-1">
+				<div
+					class="text-[9px] text-stone-500 font-black mb-2 uppercase tracking-widest border-b border-stone-800 pb-1"
+				>
 					{formatTime(d.timestamp)}
 				</div>
 				<div class="flex flex-col gap-2">

@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
@@ -119,13 +119,13 @@ import { apiFetch } from "$lib/api";
 			<div class="p-12 text-center text-text-dim animate-pulse">Loading error logs...</div>
 		{:else if errors.length === 0}
 			<div class="p-16 text-center text-text-dim flex flex-col items-center gap-4">
-				<div
-					class="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center text-3xl"
-				>
+				<div class="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center text-3xl">
 					✓
 				</div>
 				<div>
-					<h3 class="text-lg font-semibold text-neutral-800 dark:text-neutral-200">No Errors Found</h3>
+					<h3 class="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
+						No Errors Found
+					</h3>
 					<p class="text-sm">The system is running smoothly.</p>
 				</div>
 			</div>

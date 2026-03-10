@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { onMount } from 'svelte';
 	import DataGrid from './DataGrid.svelte';
 	import TableDesigner from './TableDesigner.svelte';
@@ -117,11 +117,14 @@ import { apiFetch } from "$lib/api";
 
 	async function handleRowSave(data: any) {
 		try {
-			const res = await apiFetch(`/api/database/table/${table}?schema=${encodeURIComponent(schema)}`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(data)
-			});
+			const res = await apiFetch(
+				`/api/database/table/${table}?schema=${encodeURIComponent(schema)}`,
+				{
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(data)
+				}
+			);
 			if (!res.ok) {
 				const err = await res.json();
 				throw new Error(err.error || 'Insert failed');
@@ -149,13 +152,19 @@ import { apiFetch } from "$lib/api";
 					<Database class="w-5 h-5 text-indigo-400" />
 				</div>
 				<div>
-					<h2 class="text-base font-heading font-black text-white flex items-center gap-4 tracking-widest uppercase italic">
+					<h2
+						class="text-base font-heading font-black text-white flex items-center gap-4 tracking-widest uppercase italic"
+					>
 						{table}
-						<span class="font-mono text-[9px] font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md border border-indigo-500/20 uppercase tracking-widest">
+						<span
+							class="font-mono text-[9px] font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md border border-indigo-500/20 uppercase tracking-widest"
+						>
 							{schema}
 						</span>
 					</h2>
-					<div class="flex items-center gap-4 text-[10px] font-bold text-neutral-500 mt-1 uppercase tracking-widest">
+					<div
+						class="flex items-center gap-4 text-[10px] font-bold text-neutral-500 mt-1 uppercase tracking-widest"
+					>
 						<span class="flex items-center gap-2">
 							<Rows3 class="w-3.5 h-3.5 text-neutral-600" />
 							{totalCount} rows

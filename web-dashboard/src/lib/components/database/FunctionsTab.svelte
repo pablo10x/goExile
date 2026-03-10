@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import {
 		Code2,
 		Plus,
@@ -18,7 +18,8 @@ import { apiFetch } from "$lib/api";
 		Settings2,
 		Shield,
 		Database,
-		Info
+		Info,
+		AlertOctagon
 	} from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { notifications } from '$lib/stores.svelte';
@@ -115,7 +116,6 @@ import { apiFetch } from "$lib/api";
 			const text = await res.text();
 
 			if (!res.ok) {
-				// Try to parse as JSON error, otherwise use text
 				try {
 					const err = JSON.parse(text);
 					throw new Error(err.error || `Failed to load functions (${res.status})`);
@@ -124,7 +124,6 @@ import { apiFetch } from "$lib/api";
 				}
 			}
 
-			// Parse successful response
 			try {
 				functions = JSON.parse(text);
 				if (!Array.isArray(functions)) {
@@ -178,10 +177,7 @@ import { apiFetch } from "$lib/api";
 
 	function openEditModal(fn: PGFunction) {
 		selectedFunction = fn;
-
-		// Parse the source to extract the body
 		let body = fn.source;
-		// Try to extract just the body from the full function definition
 		const bodyMatch = fn.source.match(/\$\$\s*([\s\S]*?)\s*\$\$/);
 		if (bodyMatch) {
 			body = bodyMatch[1].trim();
@@ -346,28 +342,28 @@ import { apiFetch } from "$lib/api";
 	function getTypeColor(type: string): string {
 		switch (type) {
 			case 'function':
-				return 'text-info bg-blue-500/10 border-blue-500/30';
+				return 'text-sky-400 bg-sky-500/10 border-sky-500/30';
 			case 'procedure':
 				return 'text-purple-400 bg-purple-500/10 border-purple-500/30';
 			case 'aggregate':
-				return 'text-warning bg-amber-500/10 border-amber-500/30';
+				return 'text-amber-400 bg-amber-500/10 border-amber-500/30';
 			case 'window':
-				return 'text-info bg-cyan-500/10 border-cyan-500/30';
+				return 'text-cyan-400 bg-cyan-500/10 border-cyan-500/30';
 			default:
-				return 'text-text-dim dark:text-text-dim bg-neutral-500/10 border-neutral-500/30';
+				return 'text-slate-500 bg-neutral-500/10 border-neutral-500/30';
 		}
 	}
 
 	function getVolatilityColor(vol: string): string {
 		switch (vol.toLowerCase()) {
 			case 'immutable':
-				return 'text-success bg-success/10 border-emerald-500/30';
+				return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30';
 			case 'stable':
-				return 'text-info bg-blue-500/10 border-blue-500/30';
+				return 'text-sky-400 bg-sky-500/10 border-sky-500/30';
 			case 'volatile':
-				return 'text-warning bg-orange-500/10 border-orange-500/30';
+				return 'text-orange-400 bg-orange-500/10 border-orange-500/30';
 			default:
-				return 'text-text-dim dark:text-text-dim bg-neutral-500/10 border-neutral-500/30';
+				return 'text-slate-500 bg-neutral-500/10 border-neutral-500/30';
 		}
 	}
 
@@ -381,31 +377,33 @@ import { apiFetch } from "$lib/api";
 	});
 </script>
 
-<div class="h-full flex flex-col bg-transparent">
+<div class="h-full flex flex-col bg-transparent font-sans">
 	<!-- Header -->
-	<div
-		class="p-6 border-b border-neutral-800 bg-neutral-900/40 backdrop-blur-md"
-	>
+	<div class="p-6 border-b border-white/5 bg-slate-900/40 backdrop-blur-md">
 		<div class="flex justify-between items-start">
 			<div class="flex items-center gap-4">
 				<div
-					class="p-3 bg-indigo-500/10 rounded-xl border border-indigo-500/20 shadow-lg shadow-indigo-900/10"
+					class="p-3 bg-sky-500/10 rounded-xl border border-sky-500/20 shadow-lg shadow-sky-900/10"
 				>
-					<Code2 class="w-7 h-7 text-indigo-400" />
+					<Code2 class="w-7 h-7 text-sky-400" />
 				</div>
 				<div>
-					<h2 class="text-2xl font-heading font-black text-white uppercase tracking-tighter italic">PROCEDURAL_KERNEL_v2</h2>
-					<p class="font-jetbrains text-[10px] text-neutral-500 uppercase tracking-widest mt-1 italic font-bold">
-						Manage sector functions, procedures, and triggers
+					<h2 class="text-2xl font-bold text-white uppercase tracking-tight italic">
+						Database Functions
+					</h2>
+					<p
+						class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1"
+					>
+						Manage stored procedures, functions and triggers
 					</p>
 				</div>
 			</div>
 			<button
 				onclick={openCreateModal}
-				class="relative z-10 px-6 py-3 bg-indigo-500 hover:bg-indigo-400 text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-indigo-900/20 transition-all active:tranneutral-y-px rounded-xl"
+				class="relative z-10 px-6 py-3 bg-sky-500 hover:bg-sky-400 text-white font-bold text-[11px] uppercase tracking-widest shadow-lg shadow-sky-900/20 transition-all rounded-xl"
 			>
 				<Plus class="w-5 h-5" />
-				New_Logic_Unit
+				New Function
 			</button>
 		</div>
 
@@ -413,20 +411,20 @@ import { apiFetch } from "$lib/api";
 		<div class="flex gap-4 mt-8">
 			<div class="relative flex-1 max-w-md">
 				<Search
-					class="absolute left-4 top-1/2 -tranneutral-y-1/2 w-4 h-4 text-neutral-600 pointer-events-none"
+					class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 pointer-events-none"
 				/>
 				<input
 					type="text"
 					bind:value={searchQuery}
-					placeholder="SEARCH_LOGIC_IDENTIFIERS..."
-					class="w-full pl-12 pr-4 py-3 bg-neutral-950/40 border border-neutral-800 text-stone-200 font-jetbrains text-[11px] placeholder-neutral-800 focus:border-indigo-500 outline-none transition-all uppercase tracking-widest rounded-xl"
+					placeholder="Search functions by name or type..."
+					class="w-full pl-12 pr-4 py-3 bg-black/40 border border-white/10 text-slate-200 text-[11px] placeholder-slate-800 focus:border-sky-500 outline-none transition-all uppercase tracking-widest rounded-xl"
 				/>
 			</div>
 
 			<select
 				bind:value={selectedSchema}
 				onchange={() => loadFunctions()}
-				class="px-4 py-3 bg-neutral-950/40 border border-neutral-800 text-neutral-400 font-jetbrains text-[11px] focus:border-indigo-500 outline-none cursor-pointer uppercase tracking-widest rounded-xl appearance-none"
+				class="px-4 py-3 bg-black/40 border border-white/10 text-slate-400 text-[11px] focus:border-sky-500 outline-none cursor-pointer uppercase tracking-widest rounded-xl appearance-none"
 			>
 				{#each schemas as schema}
 					<option value={schema}>{schema}</option>
@@ -435,7 +433,7 @@ import { apiFetch } from "$lib/api";
 
 			<button
 				onclick={() => loadFunctions()}
-				class="p-3 bg-neutral-900/40 border border-neutral-800 text-neutral-500 hover:text-indigo-400 hover:border-indigo-500/30 transition-all rounded-xl"
+				class="p-3 bg-slate-900/40 border border-white/10 text-slate-500 hover:text-sky-400 hover:border-sky-500/30 transition-all rounded-xl"
 				title="Refresh"
 			>
 				<RefreshCw class="w-5 h-5 {loading ? 'animate-spin' : ''}" />
@@ -448,25 +446,31 @@ import { apiFetch } from "$lib/api";
 		{#if loading && functions.length === 0}
 			<div class="flex flex-col items-center justify-center h-64">
 				<div
-					class="w-10 h-10 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin shadow-[0_0_15px_rgba(99,102,241,0.4)]"
+					class="w-10 h-10 border-2 border-sky-500 border-t-transparent rounded-full animate-spin shadow-[0_0_15px_rgba(14,165,233,0.4)]"
 				></div>
-				<p class="mt-6 font-heading font-black text-[11px] text-neutral-600 uppercase tracking-[0.2em] animate-pulse">Synchronizing_Kernel...</p>
+				<p
+					class="mt-6 font-bold text-[11px] text-slate-600 uppercase tracking-widest animate-pulse"
+				>
+					Loading Functions...
+				</p>
 			</div>
 		{:else if filteredFunctions.length === 0}
-			<div class="flex flex-col items-center justify-center h-64 text-neutral-700">
+			<div class="flex flex-col items-center justify-center h-64 text-slate-700">
 				<FileCode class="w-16 h-16 opacity-10 mb-6" />
-				<p class="font-heading font-black text-xs tracking-[0.2em] uppercase">No logical units found</p>
-				<p class="font-jetbrains text-[9px] mt-2 uppercase font-bold opacity-40 tracking-widest">
+				<p class="font-bold text-xs tracking-widest uppercase">
+					No functions found
+				</p>
+				<p class="text-[9px] mt-2 uppercase font-bold opacity-40 tracking-widest">
 					{searchQuery
-						? 'Neural filters returned zero results'
-						: 'Initialize first procedural unit to begin'}
+						? 'Try adjusting your filters'
+						: 'Create your first function to begin'}
 				</p>
 			</div>
 		{:else}
 			<div class="space-y-4 max-w-6xl mx-auto">
 				{#each filteredFunctions as fn (fn.oid)}
 					<div
-						class="bg-neutral-900/40 border border-neutral-800 overflow-hidden hover:border-indigo-500/40 transition-all group rounded-2xl backdrop-blur-sm shadow-lg"
+						class="bg-slate-900/40 border border-white/5 overflow-hidden hover:border-sky-500/40 transition-all group rounded-2xl backdrop-blur-sm shadow-lg"
 						transition:fade={{ duration: 150 }}
 					>
 						<!-- Function Header -->
@@ -475,7 +479,7 @@ import { apiFetch } from "$lib/api";
 								<div class="flex items-start gap-4 flex-1 min-w-0">
 									<button
 										onclick={() => toggleExpand(fn.oid)}
-										class="p-1 mt-1 text-neutral-600 hover:text-indigo-400 transition-colors"
+										class="p-1 mt-1 text-slate-600 hover:text-sky-400 transition-colors"
 									>
 										{#if expandedFunctions.has(fn.oid)}
 											<ChevronDown class="w-5 h-5" />
@@ -486,39 +490,47 @@ import { apiFetch } from "$lib/api";
 
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center gap-4 flex-wrap">
-											<h3 class="font-heading font-black text-white text-lg tracking-tight uppercase italic">{fn.name}</h3>
+											<h3
+												class="font-bold text-white text-lg tracking-tight uppercase italic"
+											>
+												{fn.name}
+											</h3>
 											<span
-												class="px-2 py-0.5 text-[9px] font-black font-jetbrains border uppercase tracking-widest rounded {getTypeColor(
+												class="px-2 py-0.5 text-[9px] font-bold border uppercase tracking-widest rounded {getTypeColor(
 													fn.type
 												)}"
 											>
 												{fn.type}
 											</span>
 											<span
-												class="px-2 py-0.5 text-[9px] font-black font-jetbrains border uppercase tracking-widest rounded {getVolatilityColor(
+												class="px-2 py-0.5 text-[9px] font-bold border uppercase tracking-widest rounded {getVolatilityColor(
 													fn.volatility
 												)}"
 											>
 												{fn.volatility}
 											</span>
 											<span
-												class="px-2 py-0.5 text-[9px] font-black font-jetbrains bg-neutral-950 text-neutral-600 border border-neutral-800 uppercase tracking-widest italic rounded"
+												class="px-2 py-0.5 text-[9px] font-bold bg-black text-slate-600 border border-white/5 uppercase tracking-widest italic rounded"
 											>
 												{fn.language}
 											</span>
 										</div>
 
-										<div class="mt-3 font-jetbrains text-xs font-bold uppercase tracking-tight">
-											<span class="text-indigo-400">{fn.name}</span>
-											<span class="text-neutral-700">(</span>
-											<span class="text-indigo-500/70">{fn.argument_types || ''}</span>
-											<span class="text-neutral-700">)</span>
-											<span class="text-neutral-700 mx-3">::</span>
+										<div class="mt-3 text-xs font-bold uppercase tracking-tight">
+											<span class="text-sky-400">{fn.name}</span>
+											<span class="text-slate-700">(</span>
+											<span class="text-sky-500/70">{fn.argument_types || ''}</span>
+											<span class="text-slate-700">)</span>
+											<span class="text-slate-700 mx-3">::</span>
 											<span class="text-emerald-500">{fn.result_type}</span>
 										</div>
 
 										{#if fn.description}
-											<p class="mt-3 font-jetbrains text-[10px] text-neutral-500 uppercase tracking-tight font-bold">{fn.description}</p>
+											<p
+												class="mt-3 text-[10px] text-slate-500 uppercase tracking-tight font-bold"
+											>
+												{fn.description}
+											</p>
 										{/if}
 									</div>
 								</div>
@@ -530,7 +542,7 @@ import { apiFetch } from "$lib/api";
 									{#if fn.type === 'function'}
 										<button
 											onclick={() => openExecuteModal(fn)}
-											class="p-2 text-neutral-600 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all rounded-lg"
+											class="p-2 text-slate-600 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all rounded-lg"
 											title="Execute"
 										>
 											<Play class="w-4 h-4" />
@@ -538,14 +550,14 @@ import { apiFetch } from "$lib/api";
 									{/if}
 									<button
 										onclick={() => openEditModal(fn)}
-										class="p-2 text-neutral-600 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all rounded-lg"
+										class="p-2 text-slate-600 hover:text-sky-400 hover:bg-sky-500/10 transition-all rounded-lg"
 										title="Edit"
 									>
 										<Edit3 class="w-4 h-4" />
 									</button>
 									<button
 										onclick={() => deleteFunction(fn)}
-										class="p-2 text-neutral-600 hover:text-red-400 hover:bg-red-500/10 transition-all rounded-lg"
+										class="p-2 text-slate-600 hover:text-red-400 hover:bg-red-500/10 transition-all rounded-lg"
 										title="Delete"
 									>
 										<Trash2 class="w-4 h-4" />
@@ -557,38 +569,41 @@ import { apiFetch } from "$lib/api";
 						<!-- Expanded Source Code -->
 						{#if expandedFunctions.has(fn.oid)}
 							<div
-								class="border-t border-neutral-800 bg-neutral-950/40"
+								class="border-t border-white/5 bg-black/20"
 								transition:slide={{ duration: 200 }}
 							>
 								<div class="p-6">
 									<div class="flex items-center justify-between mb-4">
-										<span class="font-heading text-[10px] font-black text-neutral-600 uppercase tracking-[0.2em] italic"
-											>Logic_Source_Readout</span
+										<span
+											class="text-[10px] font-bold text-slate-600 uppercase tracking-widest italic"
+											>Source Code</span
 										>
 										<button
 											onclick={() => copySource(fn.source)}
-											class="flex items-center gap-3 px-4 py-1.5 font-jetbrains text-[9px] font-black text-neutral-500 hover:text-indigo-400 hover:bg-indigo-500/5 border border-neutral-800 transition-all uppercase tracking-widest rounded-lg"
+											class="flex items-center gap-3 px-4 py-1.5 text-[9px] font-bold text-slate-500 hover:text-sky-400 hover:bg-sky-500/5 border border-white/5 transition-all uppercase tracking-widest rounded-lg"
 										>
 											{#if copied}
 												<Check class="w-3 h-3" />
-												COPIED_TO_BUFFER
+												Copied
 											{:else}
 												<Copy class="w-3 h-3" />
-												CLONE_SOURCE
+												Copy Source
 											{/if}
 										</button>
 									</div>
 									<pre
-										class="p-6 bg-neutral-950 border border-neutral-800 text-[11px] text-neutral-400 font-jetbrains overflow-x-auto max-h-[500px] custom-scrollbar shadow-inner rounded-xl"><code>{fn.source}</code></pre>
+										class="p-6 bg-black border border-white/5 text-[11px] text-slate-400 font-mono overflow-x-auto max-h-[500px] custom-scrollbar shadow-inner rounded-xl"><code>{fn.source}</code></pre>
 
-									<div class="flex items-center gap-8 mt-6 font-jetbrains text-[9px] font-bold text-neutral-600 uppercase tracking-widest italic">
+									<div
+										class="flex items-center gap-8 mt-6 text-[9px] font-bold text-slate-600 uppercase tracking-widest italic"
+									>
 										<span class="flex items-center gap-2">
 											<Shield class="w-3.5 h-3.5" />
-											Authorized_Owner: {fn.owner}
+											Owner: {fn.owner}
 										</span>
 										<span class="flex items-center gap-2">
 											<Database class="w-3.5 h-3.5" />
-											Logic_OID: {fn.oid}
+											OID: {fn.oid}
 										</span>
 									</div>
 								</div>
@@ -609,41 +624,43 @@ import { apiFetch } from "$lib/api";
 		transition:fade={{ duration: 150 }}
 	>
 		<button
-			class="absolute inset-0 bg-neutral-950/60 backdrop-blur-md cursor-default"
+			class="absolute inset-0 bg-black/60 backdrop-blur-md cursor-default"
 			onclick={closeModal}
 			aria-label="Close modal"
 		></button>
 
 		<div
-			class="relative w-full max-w-4xl max-h-[90vh] bg-neutral-900/80 backdrop-blur-2xl border border-neutral-800 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col"
+			class="relative w-full max-w-4xl max-h-[90vh] bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col"
 		>
 			<!-- Modal Header -->
-			<div
-				class="p-8 border-b border-neutral-800 bg-neutral-950/40"
-			>
+			<div class="p-8 border-b border-white/5 bg-black/40">
 				<div class="flex items-center justify-between">
 					<div class="flex items-center gap-5">
-						<div class="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl shadow-lg">
+						<div class="p-3 bg-sky-500/10 border border-sky-500/20 rounded-2xl shadow-lg">
 							{#if isCreating}
-								<Plus class="w-6 h-6 text-indigo-400" />
+								<Plus class="w-6 h-6 text-sky-400" />
 							{:else}
-								<Edit3 class="w-6 h-6 text-indigo-400" />
+								<Edit3 class="w-6 h-6 text-sky-400" />
 							{/if}
 						</div>
 						<div>
-							<h3 class="text-2xl font-heading font-black text-white uppercase tracking-tighter italic">
-								{isCreating ? 'Initialize_Logic_Unit' : 'Modify_Logic_Buffer'}
+							<h3
+								class="text-2xl font-bold text-white uppercase tracking-tight italic"
+							>
+								{isCreating ? 'New Function' : 'Edit Function'}
 							</h3>
-							<p class="font-jetbrains text-[10px] text-neutral-500 uppercase tracking-widest mt-1 font-bold">
+							<p
+								class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1"
+							>
 								{isCreating
-									? 'Define a new procedural PostgreSQL unit'
-									: `Extracting and editing ${selectedFunction?.name}`}
+									? 'Define a new database function'
+									: `Modifying ${selectedFunction?.name}`}
 							</p>
 						</div>
 					</div>
 					<button
 						onclick={closeModal}
-						class="p-2 text-neutral-500 hover:text-white transition-all rounded-lg"
+						class="p-2 text-slate-500 hover:text-white transition-all rounded-lg"
 					>
 						<X class="w-6 h-6" />
 					</button>
@@ -657,13 +674,13 @@ import { apiFetch } from "$lib/api";
 					<div class="space-y-3">
 						<label
 							for="fnSchema"
-							class="block font-jetbrains text-[10px] font-bold text-neutral-500 uppercase tracking-widest italic"
-							>Schema_Vector</label
+							class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest italic"
+							>Database Schema</label
 						>
 						<select
 							id="fnSchema"
 							bind:value={formData.schema}
-							class="w-full px-4 py-3 bg-neutral-950/40 border border-neutral-800 text-stone-300 font-jetbrains text-xs focus:border-indigo-500 outline-none transition-all uppercase appearance-none rounded-xl"
+							class="w-full px-4 py-3 bg-black/40 border border-white/10 text-slate-300 text-xs focus:border-sky-500 outline-none transition-all uppercase appearance-none rounded-xl"
 						>
 							{#each schemas as schema}
 								<option value={schema}>{schema}</option>
@@ -673,15 +690,15 @@ import { apiFetch } from "$lib/api";
 					<div class="space-y-3">
 						<label
 							for="fnName"
-							class="block font-jetbrains text-[10px] font-bold text-neutral-500 uppercase tracking-widest italic"
-							>Identifier_Tag</label
+							class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest italic"
+							>Function Name</label
 						>
 						<input
 							id="fnName"
 							type="text"
 							bind:value={formData.name}
-							class="w-full px-4 py-3 bg-neutral-950/40 border border-neutral-800 text-stone-200 font-jetbrains text-xs focus:border-indigo-500 outline-none transition-all uppercase rounded-xl"
-							placeholder="NULL_PTR"
+							class="w-full px-4 py-3 bg-black/40 border border-white/10 text-slate-200 text-xs focus:border-sky-500 outline-none transition-all uppercase rounded-xl"
+							placeholder="function_name"
 						/>
 					</div>
 				</div>
@@ -690,27 +707,27 @@ import { apiFetch } from "$lib/api";
 					<div class="space-y-3">
 						<label
 							for="fnArgs"
-							class="block font-jetbrains text-[10px] font-bold text-neutral-500 uppercase tracking-widest italic"
-							>Argument_Buffer</label
+							class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest italic"
+							>Arguments</label
 						>
 						<input
 							id="fnArgs"
 							type="text"
 							bind:value={formData.arguments}
-							class="w-full px-4 py-3 bg-neutral-950/40 border border-neutral-800 text-stone-200 font-jetbrains text-xs focus:border-indigo-500 outline-none transition-all rounded-xl"
+							class="w-full px-4 py-3 bg-black/40 border border-white/10 text-slate-200 text-xs focus:border-sky-500 outline-none transition-all rounded-xl"
 							placeholder="arg1 integer, arg2 text"
 						/>
 					</div>
 					<div class="space-y-3">
 						<label
 							for="fnReturns"
-							class="block font-jetbrains text-[10px] font-bold text-neutral-500 uppercase tracking-widest italic"
-							>Return_Signature</label
+							class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest italic"
+							>Return Type</label
 						>
 						<select
 							id="fnReturns"
 							bind:value={formData.returns}
-							class="w-full px-4 py-3 bg-neutral-950/40 border border-neutral-800 text-stone-300 font-jetbrains text-xs focus:border-indigo-500 outline-none transition-all appearance-none rounded-xl"
+							class="w-full px-4 py-3 bg-black/40 border border-white/10 text-slate-300 text-xs focus:border-sky-500 outline-none transition-all appearance-none rounded-xl"
 						>
 							{#each returnTypes as type}
 								<option value={type}>{type}</option>
@@ -723,13 +740,13 @@ import { apiFetch } from "$lib/api";
 					<div class="space-y-3">
 						<label
 							for="fnLang"
-							class="block font-jetbrains text-[10px] font-bold text-neutral-500 uppercase tracking-widest italic"
-							>Language_Engine</label
+							class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest italic"
+							>Language</label
 						>
 						<select
 							id="fnLang"
 							bind:value={formData.language}
-							class="w-full px-4 py-3 bg-neutral-950/40 border border-neutral-800 text-stone-300 font-jetbrains text-xs focus:border-indigo-500 outline-none transition-all appearance-none rounded-xl"
+							class="w-full px-4 py-3 bg-black/40 border border-white/10 text-slate-300 text-xs focus:border-sky-500 outline-none transition-all appearance-none rounded-xl"
 						>
 							{#each languages as lang}
 								<option value={lang}>{lang}</option>
@@ -739,13 +756,13 @@ import { apiFetch } from "$lib/api";
 					<div class="space-y-3">
 						<label
 							for="fnVol"
-							class="block font-jetbrains text-[10px] font-bold text-neutral-500 uppercase tracking-widest italic"
-							>Volatility_State</label
+							class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest italic"
+							>Volatility</label
 						>
 						<select
 							id="fnVol"
 							bind:value={formData.volatility}
-							class="w-full px-4 py-3 bg-neutral-950/40 border border-neutral-800 text-stone-300 font-jetbrains text-xs focus:border-indigo-500 outline-none transition-all appearance-none rounded-xl"
+							class="w-full px-4 py-3 bg-black/40 border border-white/10 text-slate-300 text-xs focus:border-sky-500 outline-none transition-all appearance-none rounded-xl"
 						>
 							{#each volatilities as vol}
 								<option value={vol}>{vol}</option>
@@ -754,24 +771,28 @@ import { apiFetch } from "$lib/api";
 					</div>
 					<div class="flex flex-col justify-end gap-3">
 						<label
-							class="flex items-center gap-3 p-3 bg-neutral-950/40 border border-neutral-800 cursor-pointer hover:border-indigo-500/50 transition-colors rounded-xl"
+							class="flex items-center gap-3 p-3 bg-black/40 border border-white/10 cursor-pointer hover:border-sky-500/50 transition-colors rounded-xl"
 						>
 							<input
 								type="checkbox"
 								bind:checked={formData.isStrict}
-								class="rounded text-indigo-500 focus:ring-indigo-500 bg-neutral-900 border-neutral-700"
+								class="rounded text-sky-500 focus:ring-sky-500 bg-slate-900 border-white/10"
 							/>
-							<span class="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Strict_Check</span>
+							<span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
+								>Strict Check</span
+							>
 						</label>
 						<label
-							class="flex items-center gap-3 p-3 bg-neutral-950/40 border border-neutral-800 cursor-pointer hover:border-indigo-500/50 transition-colors rounded-xl"
+							class="flex items-center gap-3 p-3 bg-black/40 border border-white/10 cursor-pointer hover:border-sky-500/50 transition-colors rounded-xl"
 						>
 							<input
 								type="checkbox"
 								bind:checked={formData.securityDefiner}
-								class="rounded text-indigo-500 focus:ring-indigo-500 bg-neutral-900 border-neutral-700"
+								class="rounded text-sky-500 focus:ring-sky-500 bg-slate-900 border-white/10"
 							/>
-							<span class="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Sec_Definer</span>
+							<span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
+								>Security Definer</span
+							>
 						</label>
 					</div>
 				</div>
@@ -780,51 +801,54 @@ import { apiFetch } from "$lib/api";
 				<div class="space-y-3">
 					<label
 						for="fnBody"
-						class="block font-jetbrains text-[10px] font-bold text-neutral-500 uppercase tracking-widest italic"
-						>Logic_Kernel_Body</label
+						class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest italic"
+						>Execution Logic</label
 					>
 					<div class="relative">
-						<div class="absolute top-4 left-4 text-indigo-500 font-bold text-xs opacity-20 pointer-events-none tracking-widest">BEGIN</div>
+						<div
+							class="absolute top-4 left-4 text-sky-500 font-bold text-xs opacity-20 pointer-events-none tracking-widest"
+						>
+							BEGIN
+						</div>
 						<textarea
 							id="fnBody"
 							bind:value={formData.body}
 							rows="15"
-							class="w-full px-10 py-8 bg-neutral-950/60 border border-neutral-800 text-stone-200 focus:border-indigo-500 outline-none font-mono text-sm resize-none leading-relaxed shadow-inner rounded-2xl"
+							class="w-full px-10 py-8 bg-black/60 border border-white/10 text-slate-200 focus:border-sky-500 outline-none font-mono text-sm resize-none leading-relaxed shadow-inner rounded-2xl"
 							placeholder="-- Your code here"
 						></textarea>
-						<div class="absolute bottom-4 right-4 text-indigo-500 font-bold text-xs opacity-20 pointer-events-none tracking-widest">END;</div>
+						<div
+							class="absolute bottom-4 right-4 text-sky-500 font-bold text-xs opacity-20 pointer-events-none tracking-widest"
+						>
+							END;
+						</div>
 					</div>
 				</div>
 			</div>
 
 			<!-- Modal Footer -->
 			<div
-				class="p-8 border-t border-neutral-800 bg-neutral-950/40 flex justify-between items-center"
+				class="p-8 border-t border-white/5 bg-black/40 flex justify-end items-center gap-6"
 			>
-				<div class="font-jetbrains text-[8px] font-bold text-neutral-700 uppercase tracking-[0.5em] italic">
-					Waiting_For_Acknowledge
-				</div>
-				<div class="flex gap-6">
-					<button
-						onclick={closeModal}
-						class="px-8 py-3 text-[11px] font-bold text-neutral-500 hover:text-white uppercase tracking-widest italic transition-all rounded-lg"
-					>
-						[Abort]
-					</button>
-					<button
-						onclick={saveFunction}
-						disabled={loading}
-						class="px-10 py-4 bg-indigo-500 hover:bg-indigo-400 text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-indigo-900/20 transition-all disabled:opacity-20 active:tranneutral-y-px rounded-xl"
-					>
-						{#if loading}
-							<RefreshCw class="w-4 h-4 animate-spin inline mr-3" />
-							SYCNING...
-						{:else}
-							<Check class="w-4 h-4 inline mr-3" />
-							COMMIT_LOGIC
-						{/if}
-					</button>
-				</div>
+				<button
+					onclick={closeModal}
+					class="px-8 py-3 text-[11px] font-bold text-slate-500 hover:text-white uppercase tracking-widest transition-all rounded-lg"
+				>
+					Cancel
+				</button>
+				<button
+					onclick={saveFunction}
+					disabled={loading}
+					class="px-10 py-4 bg-sky-500 hover:bg-sky-400 text-white font-bold text-[11px] uppercase tracking-widest shadow-lg shadow-sky-900/20 transition-all disabled:opacity-20 active:translate-y-px rounded-xl"
+				>
+					{#if loading}
+						<RefreshCw class="w-4 h-4 animate-spin inline mr-3" />
+						Saving...
+					{:else}
+						<Check class="w-4 h-4 inline mr-3" />
+						Save Function
+					{/if}
+				</button>
 			</div>
 		</div>
 	</div>
@@ -838,31 +862,37 @@ import { apiFetch } from "$lib/api";
 		transition:fade={{ duration: 150 }}
 	>
 		<button
-			class="absolute inset-0 bg-neutral-950/60 backdrop-blur-sm cursor-default"
+			class="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-default"
 			onclick={() => (executeModalOpen = false)}
 			aria-label="Close modal"
 		></button>
 
 		<div
-			class="relative w-full max-w-2xl max-h-[80vh] bg-neutral-900/80 backdrop-blur-2xl border border-neutral-800 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col"
+			class="relative w-full max-w-2xl max-h-[80vh] bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col"
 		>
 			<!-- Modal Header -->
-			<div
-				class="p-8 border-b border-neutral-800 bg-neutral-950/40"
-			>
+			<div class="p-8 border-b border-white/5 bg-black/40">
 				<div class="flex items-center justify-between">
 					<div class="flex items-center gap-5">
 						<div class="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl shadow-lg">
 							<Play class="w-6 h-6 text-emerald-400" />
 						</div>
 						<div>
-							<h3 class="text-2xl font-heading font-black text-white uppercase tracking-tighter italic">Execute_Unit</h3>
-							<p class="font-jetbrains text-[10px] text-neutral-500 font-bold uppercase tracking-widest mt-1 italic">{functionToExecute.name}()</p>
+							<h3
+								class="text-2xl font-bold text-white uppercase tracking-tight italic"
+							>
+								Execute Function
+							</h3>
+							<p
+								class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1 italic"
+							>
+								{functionToExecute.name}()
+							</p>
 						</div>
 					</div>
 					<button
 						onclick={() => (executeModalOpen = false)}
-						class="p-2 text-neutral-500 hover:text-white transition-all rounded-lg"
+						class="p-2 text-slate-500 hover:text-white transition-all rounded-lg"
 					>
 						<X class="w-6 h-6" />
 					</button>
@@ -875,22 +905,24 @@ import { apiFetch } from "$lib/api";
 					<div role="group" aria-labelledby="args-label">
 						<div
 							id="args-label"
-							class="block font-jetbrains text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-6 italic border-l border-neutral-800 pl-4"
+							class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-6 italic border-l border-white/10 pl-4"
 						>
-							Input_Arguments
+							Input Arguments
 						</div>
 						<div class="space-y-4">
 							{#each functionToExecute.argument_types.split(',') as arg, i}
 								<div class="flex items-center gap-6 group">
-									<label for={`execArg-${i}`} class="text-[10px] font-jetbrains font-bold text-neutral-500 uppercase tracking-widest min-w-[140px] italic group-hover:text-indigo-400 transition-colors"
+									<label
+										for={`execArg-${i}`}
+										class="text-[10px] font-bold text-slate-500 uppercase tracking-widest min-w-[140px] italic group-hover:text-sky-400 transition-colors"
 										>{arg.trim()}</label
 									>
 									<input
 										id={`execArg-${i}`}
 										type="text"
 										bind:value={executeArgs[i]}
-										class="flex-1 px-4 py-3 bg-neutral-950/40 border border-neutral-800 text-stone-200 focus:border-indigo-500 outline-none font-mono text-xs transition-all shadow-inner rounded-xl"
-										placeholder="NULL_VAL"
+										class="flex-1 px-4 py-3 bg-black/40 border border-white/10 text-slate-200 focus:border-sky-500 outline-none font-mono text-xs transition-all shadow-inner rounded-xl"
+										placeholder="Value"
 									/>
 								</div>
 							{/each}
@@ -898,8 +930,12 @@ import { apiFetch } from "$lib/api";
 					</div>
 				{:else}
 					<div class="flex flex-col items-center justify-center py-10 opacity-40">
-						<Info class="w-10 h-10 text-neutral-700 mb-4" />
-						<p class="font-jetbrains text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Procedural unit requires no inputs.</p>
+						<Info class="w-10 h-10 text-slate-700 mb-4" />
+						<p
+							class="font-bold text-[10px] text-slate-500 uppercase tracking-widest"
+						>
+							This function requires no input arguments.
+						</p>
 					</div>
 				{/if}
 
@@ -907,30 +943,30 @@ import { apiFetch } from "$lib/api";
 					<div role="group" aria-labelledby="result-label" transition:slide>
 						<div
 							id="result-label"
-							class="block font-jetbrains text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-6 italic border-l border-emerald-900/50 pl-4"
+							class="block text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-6 italic border-l border-emerald-900/50 pl-4"
 						>
-							Output_Result_Buffer
+							Results
 						</div>
 						<div
-							class="bg-neutral-950/40 border border-neutral-800 rounded-2xl overflow-hidden shadow-inner"
+							class="bg-black/40 border border-white/10 rounded-2xl overflow-hidden shadow-inner"
 						>
 							<div class="overflow-x-auto custom-scrollbar">
-								<table class="w-full text-xs font-jetbrains">
-									<thead class="bg-neutral-950 text-neutral-500 border-b border-neutral-800">
+								<table class="w-full text-xs">
+									<thead class="bg-black text-slate-500 border-b border-white/10">
 										<tr>
 											{#each Object.keys(executeResult[0]) as key}
 												<th
-													class="px-6 py-4 text-left font-bold uppercase tracking-widest border-r border-neutral-900 italic"
+													class="px-6 py-4 text-left font-bold uppercase tracking-widest border-r border-white/5 italic"
 													>{key}</th
 												>
 											{/each}
 										</tr>
 									</thead>
-									<tbody class="divide-y divide-neutral-900">
+									<tbody class="divide-y divide-white/5">
 										{#each executeResult as row}
-											<tr class="hover:bg-indigo-500/5 transition-colors">
+											<tr class="hover:bg-sky-500/5 transition-colors">
 												{#each Object.values(row) as val}
-													<td class="px-6 py-4 text-neutral-400 font-medium tracking-tight">
+													<td class="px-6 py-4 text-slate-400 font-medium tracking-tight">
 														{val === null ? 'NULL' : String(val)}
 													</td>
 												{/each}
@@ -945,29 +981,44 @@ import { apiFetch } from "$lib/api";
 			</div>
 
 			<!-- Modal Footer -->
-			<div
-				class="p-8 border-t border-neutral-800 bg-neutral-950/40 flex justify-end gap-6"
-			>
+			<div class="p-8 border-t border-white/5 bg-black/40 flex justify-end gap-6">
 				<button
 					onclick={() => (executeModalOpen = false)}
-					class="px-8 py-3 text-[11px] font-bold text-neutral-500 hover:text-white uppercase tracking-widest italic transition-all rounded-lg"
+					class="px-8 py-3 text-[11px] font-bold text-slate-500 hover:text-white uppercase tracking-widest transition-all rounded-lg"
 				>
-					[Close]
+					Close
 				</button>
 				<button
 					onclick={executeFunction}
 					disabled={executeLoading}
-					class="px-10 py-4 bg-emerald-500 hover:bg-emerald-400 text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-emerald-900/20 transition-all active:tranneutral-y-px rounded-xl"
+					class="px-10 py-4 bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-[11px] uppercase tracking-widest shadow-lg shadow-emerald-900/20 transition-all active:translate-y-px rounded-xl"
 				>
 					{#if executeLoading}
 						<RefreshCw class="w-4 h-4 animate-spin inline mr-3" />
-						PROCESSING...
+						Executing...
 					{:else}
 						<Play class="w-4 h-4 inline mr-3" />
-						Execute_Sequence
+						Run Function
 					{/if}
 				</button>
 			</div>
 		</div>
 	</div>
 {/if}
+
+<style>
+	.custom-scrollbar::-webkit-scrollbar {
+		width: 4px;
+		height: 4px;
+	}
+	.custom-scrollbar::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	.custom-scrollbar::-webkit-scrollbar-thumb {
+		background: rgba(255, 255, 255, 0.05);
+		border-radius: 10px;
+	}
+	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+		background: rgba(255, 255, 255, 0.1);
+	}
+</style>

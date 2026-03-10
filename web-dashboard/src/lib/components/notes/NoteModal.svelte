@@ -1,18 +1,11 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
-	import {
-		Save,
-		X,
-		RotateCw,
-		Bell,
-		TriangleAlert,
-		ShieldAlert,
-		ChevronRight
-	} from 'lucide-svelte';
+	import { apiFetch } from '$lib/api';
+	import { Save, X, RotateCw, Bell, TriangleAlert, ShieldAlert, ChevronRight, FileText } from 'lucide-svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import type { Note } from '$lib/stores.svelte';
 	import { autofocus } from '$lib/actions';
+	import Button from '../Button.svelte';
 
 	let {
 		isOpen = $bindable(false),
@@ -38,7 +31,10 @@ import { apiFetch } from "$lib/api";
 	});
 
 	let loading = $state(false);
-	let isEditing = $derived(initialNote !== null && (initialNote.id !== 0 || initialNote.title !== '' || initialNote.content !== ''));
+	let isEditing = $derived(
+		initialNote !== null &&
+			(initialNote.id !== 0 || initialNote.title !== '' || initialNote.content !== '')
+	);
 
 	const noteColors = ['yellow', 'blue', 'green', 'purple', 'orange', 'pink', 'cyan'];
 	const noteStatuses: Array<Note['status']> = ['normal', 'warn', 'critical'];
@@ -51,7 +47,7 @@ import { apiFetch } from "$lib/api";
 				content: initialNote.content || '',
 				color: initialNote.color || 'yellow',
 				status: initialNote.status || 'normal',
-				rotation: initialNote.rotation || Math.floor(Math.random() * 6) - 3,
+				rotation: initialNote.rotation || 0,
 				created_at: initialNote.created_at || new Date().toISOString(),
 				updated_at: initialNote.updated_at || new Date().toISOString()
 			};
@@ -84,188 +80,141 @@ import { apiFetch } from "$lib/api";
 		}
 	}
 
-	function getNoteCardClasses(color: string, status: Note['status']) {
-		let colorClass = '';
-		let statusClass = '';
+	const colorThemeMap: Record<string, { bg: string; border: string; icon: string }> = {
+		yellow: { bg: 'bg-amber-500/10', border: 'border-amber-500/20', icon: 'text-amber-400' },
+		blue: { bg: 'bg-sky-500/10', border: 'border-sky-500/20', icon: 'text-sky-400' },
+		green: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', icon: 'text-emerald-400' },
+		purple: { bg: 'bg-indigo-500/10', border: 'border-indigo-500/20', icon: 'text-indigo-400' },
+		orange: { bg: 'bg-orange-500/10', border: 'border-orange-500/20', icon: 'text-orange-400' },
+		pink: { bg: 'bg-rose-500/10', border: 'border-rose-500/20', icon: 'text-rose-400' },
+		cyan: { bg: 'bg-cyan-500/10', border: 'border-cyan-500/20', icon: 'text-cyan-400' }
+	};
 
-		switch (color) {
-			case 'yellow':
-				colorClass = 'bg-yellow-100/80 text-yellow-900 border-yellow-200/50';
-				break;
-			case 'blue':
-				colorClass = 'bg-orange-100/80 text-orange-900 border-orange-200/50';
-				break;
-			case 'green':
-				colorClass = 'bg-green-100/80 text-green-900 border-green-200/50';
-				break;
-			case 'purple':
-				colorClass = 'bg-purple-100/80 text-purple-900 border-purple-200/50';
-				break;
-			case 'orange':
-				colorClass = 'bg-orange-100/80 text-orange-900 border-orange-200/50';
-				break;
-			case 'pink':
-				colorClass = 'bg-pink-100/80 text-pink-900 border-pink-200/50';
-				break;
-			case 'cyan':
-				colorClass = 'bg-cyan-100/80 text-cyan-900 border-cyan-200/50';
-				break;
-			default:
-				colorClass = 'bg-neutral-100/80 text-neutral-900 border-neutral-200/50';
-				break;
-		}
-
-		switch (status) {
-			case 'warn':
-				statusClass = 'border-amber-400 ring-2 ring-amber-300/50';
-				break;
-			case 'critical':
-				statusClass = 'border-red-500 ring-2 ring-red-400/50';
-				break;
-			case 'normal':
-			default:
-				break;
-		}
-
-		return `${colorClass} ${statusClass}`;
-	}
+	let activeTheme = $derived(colorThemeMap[currentNote.color] || colorThemeMap.blue);
 </script>
 
 {#if isOpen}
 	<div
-		class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+		class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
 		onclick={handleBackdropClick}
-		onkeydown={(e) => {
-			if (e.key === 'Escape' && !loading) onClose();
-			if (
-				e.key === 'Enter' &&
-				e.ctrlKey &&
-				!loading &&
-				(currentNote.title.trim() || currentNote.content.trim())
-			)
-				handleSave();
-		}}
 		role="dialog"
 		aria-modal="true"
 		tabindex="-1"
 	>
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
-			class="relative w-full max-w-lg p-0 transition-all duration-300 flex flex-col items-center"
-			style="transform: rotate({currentNote.rotation}deg);"
-			transition:scale={{ start: 0.8, duration: 200, easing: cubicOut }}
+			class="relative w-full max-w-2xl bg-slate-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col font-sans"
+			transition:scale={{ duration: 200, start: 0.95 }}
+			onclick={e => e.stopPropagation()}
 		>
-			<!-- Card Body -->
-			<div
-				class="relative w-full min-h-[350px] flex flex-col p-8 rounded-none border-2 shadow-2xl {getNoteCardClasses(
-					currentNote.color,
-					currentNote.status
-				)} industrial-sharp backdrop-blur-md"
-			>
-				<div class="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/pinstriped-suit.png')]"></div>
-
-				<div class="relative z-10 flex flex-col h-full flex-1">
-					<div class="flex items-center gap-2 mb-4 opacity-40">
-						<ChevronRight class="w-3 h-3" />
-						<span class="text-[8px] font-black font-jetbrains uppercase tracking-widest">SIGNAL_MEMO_INPUT</span>
+			<!-- Header -->
+			<div class="px-8 py-6 border-b border-white/5 flex justify-between items-center bg-black/20">
+				<div class="flex items-center gap-4">
+					<div class="p-2.5 {activeTheme.bg} {activeTheme.border} border rounded-xl">
+						<FileText class="w-5 h-5 {activeTheme.icon}" />
 					</div>
-
-					<input
-						type="text"
-						bind:value={currentNote.title}
-						class="w-full bg-transparent border-b-2 border-black/10 px-0 py-2 font-black font-heading text-2xl outline-none placeholder-black/20 mb-4 uppercase tracking-tighter"
-						placeholder="MEMO_IDENTIFIER"
-						use:autofocus
-					/>
-					<textarea
-						bind:value={currentNote.content}
-						class="flex-1 w-full bg-transparent p-0 resize-none outline-none text-base font-jetbrains font-bold placeholder-black/20 leading-relaxed uppercase"
-						placeholder="ENTER_SIGNAL_DATA..."
-					></textarea>
+					<h2 class="text-xl font-bold text-white tracking-tight uppercase italic font-heading">
+						{isEditing ? 'Edit Note' : 'Create New Note'}
+					</h2>
 				</div>
-
-				<button
-					onclick={onClose}
-					class="absolute top-4 right-4 p-1.5 text-black/40 hover:text-black hover:bg-black/5 transition-all rounded-none"
-					title="Discard"
-					disabled={loading}
-				>
-					<X class="w-5 h-5" />
+				<button onclick={onClose} class="text-slate-500 hover:text-white transition-all p-2 rounded-lg hover:bg-white/5">
+					<X class="w-6 h-6" />
 				</button>
 			</div>
 
-			<!-- Controls Bar -->
-			<div class="mt-8 flex flex-col gap-4 w-full max-w-md" style="transform: rotate({-currentNote.rotation}deg);">
-				<div class="flex flex-wrap gap-4 justify-center">
-					<!-- Color Palette -->
-					<div
-						class="p-2 bg-black/60 backdrop-blur-md border border-stone-800 flex gap-2 shadow-2xl industrial-sharp"
-					>
-						{#each noteColors as color}
-							<button
-								onclick={() => (currentNote.color = color)}
-								class="w-6 h-6 border transition-all {currentNote.color === color
-									? 'border-white scale-110 shadow-lg'
-									: 'border-white/10 hover:border-white/40'}"
-								style="background-color: {
-									color === 'yellow' ? '#facc15' : 
-									color === 'blue' ? '#fb923c' : 
-									color === 'green' ? '#4ade80' : 
-									color === 'purple' ? '#c084fc' : 
-									color === 'orange' ? '#f97316' : 
-									color === 'pink' ? '#f472b6' : 
-									'#22d3ee'
-								}"
-								title={color.toUpperCase()}
-							>
-								{#if currentNote.color === color}
-									<div class="w-full h-full flex items-center justify-center">
-										<div class="w-1.5 h-1.5 bg-black rounded-full"></div>
-									</div>
-								{/if}
-							</button>
-						{/each}
+			<!-- Body -->
+			<div class="p-8 space-y-8 bg-black/40 flex-1">
+				<div class="space-y-6">
+					<div class="space-y-2">
+						<label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Title</label>
+						<input
+							type="text"
+							bind:value={currentNote.title}
+							class="w-full bg-black border border-white/10 px-4 py-3 text-white font-bold rounded-xl focus:border-sky-500 outline-none transition-all placeholder:text-slate-800"
+							placeholder="Enter note title..."
+							use:autofocus
+						/>
 					</div>
 
-					<!-- Status Selector -->
-					<div
-						class="p-2 bg-black/60 backdrop-blur-md border border-stone-800 flex gap-2 shadow-2xl industrial-sharp"
-					>
-						{#each noteStatuses as status}
-							<button
-								onclick={() => (currentNote.status = status)}
-								class="w-8 h-8 flex items-center justify-center border transition-all {currentNote.status === status
-									? 'bg-rust/20 border-rust text-white shadow-lg shadow-rust/20'
-									: 'border-white/5 text-stone-500 hover:text-stone-300 hover:border-white/20'}"
-								title={status.toUpperCase()}
-							>
-								{#if status === 'normal'}
-									<Bell class="w-4 h-4" />
-								{:else if status === 'warn'}
-									<TriangleAlert class="w-4 h-4 text-warning" />
-								{:else if status === 'critical'}
-									<ShieldAlert class="w-4 h-4 text-danger" />
-								{/if}
-							</button>
-						{/each}
+					<div class="space-y-2">
+						<label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Content</label>
+						<textarea
+							bind:value={currentNote.content}
+							rows="8"
+							class="w-full bg-black border border-white/10 p-4 text-slate-200 rounded-xl focus:border-sky-500 outline-none transition-all placeholder:text-slate-800 resize-none leading-relaxed"
+							placeholder="Write your note here..."
+						></textarea>
 					</div>
 				</div>
 
-				<!-- Save Button -->
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+					<!-- Color Selection -->
+					<div class="space-y-3">
+						<label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Color Theme</label>
+						<div class="flex flex-wrap gap-2 p-3 bg-black/40 border border-white/5 rounded-xl shadow-inner">
+							{#each noteColors as color}
+								<button
+									onclick={() => (currentNote.color = color)}
+									class="w-7 h-7 rounded-lg border-2 transition-all {currentNote.color === color
+										? 'border-white scale-110 shadow-lg'
+										: 'border-transparent hover:border-white/20'}"
+									style="background-color: {color === 'yellow' ? '#fbbf24' : color === 'blue' ? '#0ea5e9' : color === 'green' ? '#10b981' : color === 'purple' ? '#8b5cf6' : color === 'orange' ? '#f59e0b' : color === 'pink' ? '#ec4899' : '#06b6d4'}"
+									title={color}
+								></button>
+							{/each}
+						</div>
+					</div>
+
+					<!-- Status Selection -->
+					<div class="space-y-3">
+						<label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Status Priority</label>
+						<div class="flex gap-2 p-1.5 bg-black/40 border border-white/5 rounded-xl shadow-inner">
+							{#each noteStatuses as status}
+								<button
+									onclick={() => (currentNote.status = status)}
+									class="flex-1 py-2.5 flex items-center justify-center rounded-lg border transition-all {currentNote.status === status
+										? 'bg-sky-500/10 border-sky-500/40 text-sky-400 shadow-lg'
+										: 'border-transparent text-slate-600 hover:text-slate-300'}"
+								>
+									{#if status === 'normal'}
+										<Bell class="w-4 h-4" />
+									{:else if status === 'warn'}
+										<TriangleAlert class="w-4 h-4" />
+									{:else}
+										<ShieldAlert class="w-4 h-4" />
+									{/if}
+								</button>
+							{/each}
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Footer -->
+			<div class="px-8 py-6 border-t border-white/5 bg-black/20 flex justify-end items-center gap-4">
+				<button
+					onclick={onClose}
+					class="px-6 py-2.5 text-xs font-bold text-slate-500 hover:text-white uppercase tracking-widest transition-all"
+				>
+					Cancel
+				</button>
 				<button
 					onclick={handleSave}
 					disabled={loading || (!currentNote.title.trim() && !currentNote.content.trim())}
-					class="w-full py-4 bg-rust hover:bg-rust-light text-white font-heading font-black text-xs uppercase tracking-[0.3em] shadow-2xl transition-all flex items-center justify-center gap-4 disabled:opacity-30 industrial-sharp"
+					class="px-8 py-3 bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl shadow-lg shadow-sky-500/20 transition-all disabled:opacity-20 flex items-center gap-3"
 				>
 					{#if loading}
-						<RotateCw class="w-5 h-5 animate-spin" />
-						<span>Committing_Buffer...</span>
+						<RotateCw class="w-4 h-4 animate-spin" />
+						<span>Saving...</span>
 					{:else}
-						<Save class="w-5 h-5" />
-						<span>{isEditing ? 'Sync_Changes' : 'Initialize_Memo'}</span>
+						<Save class="w-4 h-4" />
+						<span>{isEditing ? 'Update Note' : 'Create Note'}</span>
 					{/if}
 				</button>
 			</div>
 		</div>
 	</div>
 {/if}
+
+<style>
+</style>

@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { Save, X, Database, User, Shield, Check } from 'lucide-svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
@@ -76,9 +76,7 @@ import { apiFetch } from "$lib/api";
 					<h3
 						class="text-xl font-heading font-black text-neutral-100 uppercase tracking-tighter flex items-center gap-3"
 					>
-						<div
-							class="p-2 bg-rust/10 border border-rust/20 rounded-none industrial-frame"
-						>
+						<div class="p-2 bg-rust/10 border border-rust/20 rounded-none industrial-frame">
 							<Database class="w-5 h-5 text-rust-light" />
 						</div>
 						Initialize_Schema
@@ -135,13 +133,13 @@ import { apiFetch } from "$lib/api";
 								<option value={role} class="bg-stone-900">{role}</option>
 							{/each}
 						</select>
-						<div
-							class="absolute left-4 top-1/2 -tranneutral-y-1/2 text-stone-700"
-						>
+						<div class="absolute left-4 top-1/2 -tranneutral-y-1/2 text-stone-700">
 							<User class="w-4 h-4" />
 						</div>
 						<!-- Custom Chevron -->
-						<div class="absolute right-4 top-1/2 -tranneutral-y-1/2 text-stone-700 pointer-events-none">
+						<div
+							class="absolute right-4 top-1/2 -tranneutral-y-1/2 text-stone-700 pointer-events-none"
+						>
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
 								width="16"
@@ -155,7 +153,9 @@ import { apiFetch } from "$lib/api";
 							>
 						</div>
 					</div>
-					<p class="font-jetbrains text-[9px] text-text-dim uppercase tracking-widest pl-1">Authorized identity that will govern the schema sector.</p>
+					<p class="font-jetbrains text-[9px] text-text-dim uppercase tracking-widest pl-1">
+						Authorized identity that will govern the schema sector.
+					</p>
 				</div>
 			</div>
 
@@ -175,9 +175,7 @@ import { apiFetch } from "$lib/api";
 					class="px-8 py-3 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rust/20 disabled:opacity-20 transition-all active:tranneutral-y-px"
 				>
 					{#if loading}
-						<div
-							class="w-4 h-4 border-2 border-white/30 border-t-white animate-spin"
-						></div>
+						<div class="w-4 h-4 border-2 border-white/30 border-t-white animate-spin"></div>
 						Initializing...
 					{:else}
 						<Check class="w-4 h-4" />

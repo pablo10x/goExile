@@ -1,0 +1,1 @@
+C:/Users/gucci/.embedded-postgres-go/extracted/bin/postgres.exe "-D" "C:/Users/gucci/Desktop/dev/goExile/server/database/pg_data" "-p" "5432"

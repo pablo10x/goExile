@@ -1,4 +1,4 @@
-import { apiFetch } from "$lib/api";
+import { apiFetch } from '$lib/api';
 import { render, screen } from '@testing-library/svelte';
 import { describe, it, expect } from 'vitest';
 import StatsCard from './StatsCard.svelte';

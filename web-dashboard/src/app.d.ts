@@ -1,4 +1,4 @@
-import { apiFetch } from "$lib/api";
+import { apiFetch } from '$lib/api';
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
 declare global {

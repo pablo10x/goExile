@@ -2457,7 +2457,7 @@ type RedEyeStats struct {
 	Events24h       int     `json:"events_24h"`
 	Logs24h         int     `json:"logs_24h"`
 	ReputationCount int     `json:"reputation_count"`
-	Entropy         float64 `json:"entropy"`
+	RiskFactor      float64 `json:"risk_factor"`
 	ThreatLevel     string  `json:"threat_level"`
 	Uptime          string  `json:"uptime"`
 }
@@ -2489,10 +2489,10 @@ func GetRedEyeStats(db *sqlx.DB) (*RedEyeStats, error) {
 		return nil, err
 	}
 
-	// Calculate simulated entropy
-	stats.Entropy = 0.0042 // Baseline
+	// Calculate simulated risk factor
+	stats.RiskFactor = 0.0042 // Baseline
 	if stats.Events24h > 0 {
-		stats.Entropy += float64(stats.Events24h) * 0.0001
+		stats.RiskFactor += float64(stats.Events24h) * 0.0001
 	}
 
 	// Determine threat level

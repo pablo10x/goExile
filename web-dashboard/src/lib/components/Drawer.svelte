@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { X, ChevronRight, Terminal } from 'lucide-svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -28,7 +28,9 @@ import { apiFetch } from "$lib/api";
 			transition:fly={{ x: 100, duration: 400, easing: cubicOut }}
 		>
 			<!-- CRT Overlay -->
-			<div class="absolute inset-0 pointer-events-none z-50 opacity-[0.03] bg-[linear-gradient(rgba(18, 16, 16, 0)_50%,rgba(0, 0, 0, 0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%]"></div>
+			<div
+				class="absolute inset-0 pointer-events-none z-50 opacity-[0.03] bg-[linear-gradient(rgba(18, 16, 16, 0)_50%,rgba(0, 0, 0, 0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%]"
+			></div>
 
 			<!-- Header -->
 			<div
@@ -39,10 +41,15 @@ import { apiFetch } from "$lib/api";
 						<Terminal class="w-5 h-5 text-rust" />
 					</div>
 					<div>
-						<h2 class="text-xl font-heading font-black text-white uppercase tracking-tighter">{title}</h2>
+						<h2 class="text-xl font-heading font-black text-white uppercase tracking-tighter">
+							{title}
+						</h2>
 						<div class="flex items-center gap-2 mt-1">
 							<ChevronRight class="w-3 h-3 text-rust" />
-							<span class="font-jetbrains text-[9px] font-black text-stone-500 uppercase tracking-widest">DRAWER_PANEL_ACTIVE</span>
+							<span
+								class="font-jetbrains text-[9px] font-black text-stone-500 uppercase tracking-widest"
+								>DRAWER_PANEL_ACTIVE</span
+							>
 						</div>
 					</div>
 				</div>
@@ -57,8 +64,10 @@ import { apiFetch } from "$lib/api";
 			<!-- Content Area -->
 			<div class="flex-1 overflow-y-auto p-8 relative bg-[#050505] custom-scrollbar z-10">
 				<!-- Background Grid -->
-				<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
-				
+				<div
+					class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"
+				></div>
+
 				<div class="relative z-10">
 					<slot />
 				</div>

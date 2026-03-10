@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { AlertTriangle, Trash2, X, Info } from 'lucide-svelte';
 	import { scale, fade } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
@@ -109,25 +109,32 @@ import { apiFetch } from "$lib/api";
 			<div class="p-8 pb-4">
 				<div class="flex items-start gap-5">
 					<!-- Icon -->
-					<div class="shrink-0 p-3 rounded-none border border-stone-800 bg-stone-900/50 {style.iconColor}">
+					<div
+						class="shrink-0 p-3 rounded-none border border-stone-800 bg-stone-900/50 {style.iconColor}"
+					>
 						{#if variant === 'danger'}
 							<Trash2 class="w-6 h-6" />
 						{:else if variant === 'warning'}
 							<AlertTriangle class="w-6 h-6" />
 						{:else}
 							<Info class="w-6 h-6" />
-						{#if variant === 'info'}
-							<span class="sr-only">Info</span>
-						{/if}
+							{#if variant === 'info'}
+								<span class="sr-only">Info</span>
+							{/if}
 						{/if}
 					</div>
 
 					<!-- Content -->
 					<div class="flex-1 min-w-0">
-						<h3 id="confirm-modal-title" class="text-xl font-heading font-black text-neutral-100 uppercase tracking-tighter mb-2">
+						<h3
+							id="confirm-modal-title"
+							class="text-xl font-heading font-black text-neutral-100 uppercase tracking-tighter mb-2"
+						>
 							{title}
 						</h3>
-						<p class="font-jetbrains text-[11px] text-text-dim uppercase tracking-widest leading-relaxed">
+						<p
+							class="font-jetbrains text-[11px] text-text-dim uppercase tracking-widest leading-relaxed"
+						>
 							{message}
 						</p>
 					</div>
@@ -158,9 +165,7 @@ import { apiFetch } from "$lib/api";
 					class="px-8 py-3 font-heading font-black text-[11px] text-white uppercase tracking-widest shadow-lg transition-all disabled:opacity-20 flex items-center gap-3 {style.buttonBg} {style.buttonShadow}"
 				>
 					{#if loading}
-						<div
-							class="w-4 h-4 border-2 border-white/30 border-t-white animate-spin"
-						></div>
+						<div class="w-4 h-4 border-2 border-white/30 border-t-white animate-spin"></div>
 						<span>PROCESSING...</span>
 					{:else}
 						{#if variant === 'danger'}

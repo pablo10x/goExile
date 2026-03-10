@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import type { ResourceStatsCardProps } from '$lib/types/resource-metrics';
 
 	let {
@@ -63,14 +63,16 @@ import { apiFetch } from "$lib/api";
 >
 	<div class="flex justify-between items-start mb-5 relative z-10">
 		<div>
-			<div class="text-[9px] font-jetbrains font-black text-stone-500 uppercase tracking-[0.3em] mb-1.5 flex items-center gap-2">
+			<div
+				class="text-[9px] font-jetbrains font-black text-stone-500 uppercase tracking-[0.3em] mb-1.5 flex items-center gap-2"
+			>
 				<div class="w-1 h-1 rounded-full {c.bg} shadow-lg shadow-current"></div>
 				{title}
 			</div>
-			<div
-				class="text-3xl font-heading font-black text-white tabular-nums tracking-tighter"
-			>
-				{displayCurrent.toFixed(1)}<span class="text-xs text-stone-600 ml-1 font-jetbrains font-bold uppercase">{unit}</span>
+			<div class="text-3xl font-heading font-black text-white tabular-nums tracking-tighter">
+				{displayCurrent.toFixed(1)}<span
+					class="text-xs text-stone-600 ml-1 font-jetbrains font-bold uppercase">{unit}</span
+				>
 			</div>
 		</div>
 		<div
@@ -81,7 +83,9 @@ import { apiFetch } from "$lib/api";
 	</div>
 
 	<!-- Progress Bar -->
-	<div class="h-1 w-full bg-stone-950 border border-stone-800/50 rounded-none overflow-hidden mb-4 p-0 relative z-10 shadow-inner">
+	<div
+		class="h-1 w-full bg-stone-950 border border-stone-800/50 rounded-none overflow-hidden mb-4 p-0 relative z-10 shadow-inner"
+	>
 		<div
 			class="absolute top-0 left-0 h-full {c.bg} transition-all duration-700 ease-out"
 			style="width: {pct}%; box-shadow: 0 0 15px currentColor;"
@@ -89,9 +93,15 @@ import { apiFetch } from "$lib/api";
 	</div>
 
 	<!-- Footer -->
-	<div class="flex items-center justify-between text-[9px] font-jetbrains font-black text-stone-600 uppercase tracking-widest relative z-10">
-		<span class="flex items-center gap-2">MAX_DETECTION: <span class="text-stone-400">{peak.toFixed(1)} {unit}</span></span>
-		<div class={`px-2 py-0.5 border ${trend === 'up' ? 'text-red-500 border-red-500/20 bg-red-500/5' : 'text-emerald-500 border-emerald-500/20 bg-emerald-500/5'}`}>
+	<div
+		class="flex items-center justify-between text-[9px] font-jetbrains font-black text-stone-600 uppercase tracking-widest relative z-10"
+	>
+		<span class="flex items-center gap-2"
+			>MAX_DETECTION: <span class="text-stone-400">{peak.toFixed(1)} {unit}</span></span
+		>
+		<div
+			class={`px-2 py-0.5 border ${trend === 'up' ? 'text-red-500 border-red-500/20 bg-red-500/5' : 'text-emerald-500 border-emerald-500/20 bg-emerald-500/5'}`}
+		>
 			{pct.toFixed(0)}%_LOAD
 		</div>
 	</div>

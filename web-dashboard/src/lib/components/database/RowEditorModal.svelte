@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import {
 		Save,
 		X,
@@ -346,9 +346,7 @@ import { apiFetch } from "$lib/api";
 								<Database class="w-8 h-8 text-neutral-600" />
 							</div>
 							<p class="text-text-dim dark:text-text-dim font-medium">No editable columns</p>
-							<p class="text-text-dim text-sm mt-1">
-								This table has no columns that can be edited
-							</p>
+							<p class="text-text-dim text-sm mt-1">This table has no columns that can be edited</p>
 						</div>
 					{:else}
 						<div class="grid gap-4">
@@ -517,21 +515,14 @@ import { apiFetch } from "$lib/api";
 						</div>
 
 						<div class="flex items-center gap-3 ml-auto">
-							<Button
-								onclick={onClose}
-								disabled={loading}
-								variant="ghost"
-								size="md"
-							>
-								Cancel
-							</Button>
+							<Button onclick={onClose} disabled={loading} variant="ghost" size="md">Cancel</Button>
 
 							<Button
 								onclick={handleSubmit}
 								disabled={loading || editableColumns.length === 0}
 								variant="primary"
 								size="md"
-								loading={loading}
+								{loading}
 								icon={isEditing ? 'save' : 'plus'}
 							>
 								{isEditing ? 'Update Row' : 'Add Row'}

@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { Bot, X, Send, Sparkles, Loader2 } from 'lucide-svelte';
 	import { fade, slide, scale } from 'svelte/transition';
 	import { notes, todos } from '$lib/stores.svelte';
@@ -108,7 +108,9 @@ import { apiFetch } from "$lib/api";
 				{/each}
 				{#if isLoading}
 					<div class="flex justify-start">
-						<div class="bg-neutral-800 rounded-2xl rounded-bl-none px-4 py-2 flex items-center gap-2">
+						<div
+							class="bg-neutral-800 rounded-2xl rounded-bl-none px-4 py-2 flex items-center gap-2"
+						>
 							<Loader2 class="w-4 h-4 text-violet-400 animate-spin" />
 							<span class="text-xs text-text-dim dark:text-text-dim">Thinking...</span>
 						</div>

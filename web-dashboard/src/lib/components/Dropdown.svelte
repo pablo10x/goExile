@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { slide } from 'svelte/transition';
 	import type { ComponentType, Snippet } from 'svelte';
 	import { ChevronDown } from 'lucide-svelte';
@@ -44,7 +44,11 @@ import { apiFetch } from "$lib/api";
 			<DropdownIcon class="w-3.5 h-3.5" />
 		{/if}
 		{label}
-		<ChevronDown class="w-3.5 h-3.5 text-stone-600 transition-transform duration-300 {isOpen ? 'rotate-180 text-rust' : ''}" />
+		<ChevronDown
+			class="w-3.5 h-3.5 text-stone-600 transition-transform duration-300 {isOpen
+				? 'rotate-180 text-rust'
+				: ''}"
+		/>
 	</button>
 
 	{#if isOpen}
@@ -52,7 +56,9 @@ import { apiFetch } from "$lib/api";
 			transition:slide={{ duration: 200 }}
 			class="absolute right-0 mt-2 w-56 bg-black/80 border border-stone-800 shadow-[0_0_50px_rgba(0,0,0,0.8)] z-50 overflow-hidden industrial-sharp"
 		>
-			<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
+			<div
+				class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"
+			></div>
 			<div class="relative z-10 flex flex-col divide-y divide-stone-900">
 				{#if children}
 					{@render children()}

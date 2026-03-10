@@ -1,4 +1,4 @@
-import { apiFetch } from "$lib/api";
+import { apiFetch } from '$lib/api';
 import type { Handle } from '@sveltejs/kit';
 import { redirect } from '@sveltejs/kit';
 import { building } from '$app/environment';

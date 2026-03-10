@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { onMount } from 'svelte';
 	import * as THREE from 'three';
 	import { lowPowerMode } from '$lib/stores.svelte';
@@ -15,17 +15,17 @@ import { apiFetch } from "$lib/api";
 
 	const count = 120;
 	const dummy = new THREE.Object3D();
-	
+
 	// Particle data
 	const particles = new Array(count).fill(0).map(() => ({
 		position: new THREE.Vector3(
 			(Math.random() - 0.5) * 50, // X: Wide spread
 			(Math.random() - 0.5) * 10, // Y: Height
-			(Math.random() - 0.5) * 5   // Z: Depth
+			(Math.random() - 0.5) * 5 // Z: Depth
 		),
 		velocity: new THREE.Vector3(
 			(Math.random() - 0.5) * 0.04 + 0.04, // Drift Right
-			(Math.random() - 0.5) * 0.015,        // Slight vertical drift
+			(Math.random() - 0.5) * 0.015, // Slight vertical drift
 			0
 		),
 		rotation: new THREE.Vector3(
@@ -72,16 +72,20 @@ import { apiFetch } from "$lib/api";
 		camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 100);
 		camera.position.z = 10;
 
-		renderer = new THREE.WebGLRenderer({ alpha: true, antialias: false, powerPreference: 'low-power' });
+		renderer = new THREE.WebGLRenderer({
+			alpha: true,
+			antialias: false,
+			powerPreference: 'low-power'
+		});
 		renderer.setSize(width, height);
 		renderer.setPixelRatio(1); // Force 1x resolution for performance
 		container.appendChild(renderer.domElement);
 
 		// Create irregular shard geometry
 		const geometry = new THREE.ConeGeometry(0.4, 0.8, 3); // Slightly smaller Triangle shards
-		const material = new THREE.MeshBasicMaterial({ 
+		const material = new THREE.MeshBasicMaterial({
 			color: 0xc2410c, // Tinted Rust
-			transparent: true, 
+			transparent: true,
 			opacity: 0.4,
 			side: THREE.DoubleSide
 		});
@@ -144,7 +148,7 @@ import { apiFetch } from "$lib/api";
 
 	onMount(() => {
 		init();
-		
+
 		const handleVisibility = () => {
 			isVisible = document.visibilityState === 'visible';
 		};
@@ -157,4 +161,7 @@ import { apiFetch } from "$lib/api";
 	});
 </script>
 
-<div bind:this={container} class="absolute inset-0 pointer-events-none opacity-60 mix-blend-screen overflow-hidden"></div>
+<div
+	bind:this={container}
+	class="absolute inset-0 pointer-events-none opacity-60 mix-blend-screen overflow-hidden"
+></div>

@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { createEventDispatcher } from 'svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -43,7 +43,7 @@ import { apiFetch } from "$lib/api";
 			dispatch('success');
 			close();
 		} catch (e: any) {
-			error = e.message || 'ERR_OP_FAILED: Unexpected interrupt';
+			error = e.message || 'Operation failed. Please try again.';
 			loading = false;
 		}
 	}
@@ -88,16 +88,21 @@ import { apiFetch } from "$lib/api";
 
 		<!-- Modal Container -->
 		<div
-			class="relative w-full max-w-lg bg-slate-900/90 backdrop-blur-3xl shadow-2xl overflow-hidden z-[460] border border-white/10 rounded-[2.5rem]"
+			class="relative w-full max-w-lg bg-slate-900/95 backdrop-blur-3xl shadow-2xl overflow-hidden z-[460] border border-white/10 rounded-3xl"
 			transition:modalScale
 		>
 			<!-- Header -->
-			<div class="px-8 py-6 border-b border-white/5 flex justify-between items-center bg-white/5">
+			<div class="px-8 py-6 border-b border-white/5 flex justify-between items-center bg-black/20">
 				<div class="flex items-center gap-4">
-					<div class={`p-2.5 rounded-xl ${isCritical ? 'bg-rose-500/10 text-rose-400' : 'bg-sky-500/10 text-sky-400'}`}>
-						<Icon name={isCritical ? 'ph:warning-circle-bold' : 'ph:question-bold'} size="1.25rem" />
+					<div
+						class={`p-2.5 rounded-xl ${isCritical ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 'bg-sky-500/10 text-sky-400 border border-sky-500/20'}`}
+					>
+						<Icon
+							name={isCritical ? 'ph:warning-circle-bold' : 'ph:question-bold'}
+							size="1.25rem"
+						/>
 					</div>
-					<h3 class="text-xl font-bold text-white tracking-tight">
+					<h3 class="text-xl font-bold text-white tracking-tight uppercase italic font-heading">
 						{title}
 					</h3>
 				</div>
@@ -115,11 +120,11 @@ import { apiFetch } from "$lib/api";
 					<div class="flex-1 space-y-4">
 						<div class="text-slate-300 font-medium leading-relaxed">
 							{#if loading && statusMessage}
-								<p class="animate-pulse text-sky-400">
+								<p class="animate-pulse {isCritical ? 'text-rose-400' : 'text-emerald-400'} font-bold uppercase tracking-wider text-sm">
 									{statusMessage}
 								</p>
 							{:else}
-								<p class="text-lg opacity-90">{message}</p>
+								<p class="text-lg opacity-90 text-slate-200">{message}</p>
 							{/if}
 						</div>
 						{#if children}
@@ -136,7 +141,7 @@ import { apiFetch } from "$lib/api";
 						transition:scale={{ start: 0.98, duration: 200 }}
 					>
 						<div class="flex items-center gap-3">
-							<Icon name="alert" size="1.1rem" class="shrink-0" />
+							<Icon name="ph:warning-bold" size="1.1rem" class="shrink-0" />
 							<span>{error}</span>
 						</div>
 					</div>
@@ -145,13 +150,17 @@ import { apiFetch } from "$lib/api";
 				{#if loading && progress !== null}
 					<!-- Progress -->
 					<div class="space-y-3" transition:fade>
-						<div class="flex justify-between text-xs font-bold uppercase tracking-wider text-slate-500">
-							<span>Progress</span>
-							<span class="text-sky-400">{Math.round(progress)}%</span>
+						<div
+							class="flex justify-between text-xs font-bold uppercase tracking-wider text-slate-500"
+						>
+							<span>Operation Progress</span>
+							<span class={isCritical ? 'text-rose-400' : 'text-emerald-400'}>{Math.round(progress)}%</span>
 						</div>
-						<div class="w-full h-2 bg-slate-950 rounded-full p-0.5 border border-white/5">
+						<div class="w-full h-2 bg-black rounded-full p-0.5 border border-white/5 shadow-inner">
 							<div
-								class="h-full rounded-full {isCritical ? 'bg-rose-500' : 'bg-sky-500'} transition-all duration-300 ease-out shadow-lg"
+								class="h-full rounded-full {isCritical
+									? 'bg-rose-500'
+									: 'bg-emerald-500'} transition-all duration-300 ease-out shadow-[0_0_10px_rgba(16,185,129,0.3)]"
 								style="width: {progress}%"
 							></div>
 						</div>
@@ -160,23 +169,20 @@ import { apiFetch } from "$lib/api";
 			</div>
 
 			<!-- Footer -->
-			<div class="px-8 py-6 bg-white/5 border-t border-white/5 flex justify-end items-center gap-3">
+			<div class="px-8 py-6 bg-black/20 border-t border-white/5 flex justify-end items-center gap-3">
 				{#if loading && progress !== null}
 					<div class="text-sm font-bold text-slate-500 uppercase tracking-wider animate-pulse">
 						Processing...
 					</div>
 				{:else if loading}
-					<div class="flex items-center gap-3 text-sm font-bold text-sky-400 uppercase tracking-wider animate-pulse">
+					<div
+						class="flex items-center gap-3 text-sm font-bold {isCritical ? 'text-rose-400' : 'text-sky-400'} uppercase tracking-wider animate-pulse"
+					>
 						<Icon name="ph:arrows-clockwise-bold" size="1rem" class="animate-spin" />
 						Executing...
 					</div>
 				{:else}
-					<Button
-						onclick={close}
-						variant="ghost"
-						size="md"
-						class="!rounded-xl"
-					>
+					<Button onclick={close} variant="ghost" size="md" class="!rounded-xl">
 						{cancelText}
 					</Button>
 					<Button
@@ -195,10 +201,19 @@ import { apiFetch } from "$lib/api";
 
 <style>
 	@keyframes flicker {
-		0%, 100% { opacity: 1; }
-		50% { opacity: 0.8; }
-		55% { opacity: 0.95; }
-		60% { opacity: 0.7; }
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.8;
+		}
+		55% {
+			opacity: 0.95;
+		}
+		60% {
+			opacity: 0.7;
+		}
 	}
 	.animate-flicker {
 		animation: flicker 0.25s infinite;

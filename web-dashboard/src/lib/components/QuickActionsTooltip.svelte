@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { scale, fade } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import { portal } from '$lib/actions';
@@ -142,7 +142,9 @@ import { apiFetch } from "$lib/api";
 						)}"
 					>
 						{#if action.icon}
-							<action.icon class="w-3.5 h-3.5 transition-transform group-hover:scale-110 group-hover:text-rust" />
+							<action.icon
+								class="w-3.5 h-3.5 transition-transform group-hover:scale-110 group-hover:text-rust"
+							/>
 						{/if}
 						<span class="tracking-widest">{action.label}</span>
 					</button>

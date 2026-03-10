@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import Iconify from '@iconify/svelte';
 
 	interface Props {
@@ -14,25 +14,25 @@ import { apiFetch } from "$lib/api";
 
 	// Map generic names to specific icon names in Phosphor (ph) pack as default
 	const iconMap: Record<string, string> = {
-		'dashboard': 'ph:squares-four-bold',
-		'gauge': 'ph:gauge-bold',
-		'server': 'ph:server-bold',
-		'cpu': 'ph:cpu-bold',
-		'database': 'ph:database-bold',
-		'users': 'ph:users-bold',
-		'settings': 'ph:gear-bold',
-		'sliders': 'ph:sliders-bold',
-		'palette': 'ph:palette-bold',
+		dashboard: 'ph:squares-four-bold',
+		gauge: 'ph:gauge-bold',
+		server: 'ph:server-bold',
+		cpu: 'ph:cpu-bold',
+		database: 'ph:database-bold',
+		users: 'ph:users-bold',
+		settings: 'ph:gear-bold',
+		sliders: 'ph:sliders-bold',
+		palette: 'ph:palette-bold',
 		'file-text': 'ph:file-text-bold',
-		'shield': 'ph:shield-check-bold',
-		'activity': 'ph:activity-bold',
-		'plus': 'ph:plus-bold',
-		'upload': 'ph:upload-simple-bold',
+		shield: 'ph:shield-check-bold',
+		activity: 'ph:activity-bold',
+		plus: 'ph:plus-bold',
+		upload: 'ph:upload-simple-bold',
 		'hard-drive': 'ph:hard-drive-bold',
-		'clock': 'ph:clock-bold',
-		'radio': 'ph:radio-button-bold',
-		'globe': 'ph:globe-bold',
-		'alert': 'ph:warning-circle-bold'
+		clock: 'ph:clock-bold',
+		radio: 'ph:radio-button-bold',
+		globe: 'ph:globe-bold',
+		alert: 'ph:warning-circle-bold'
 	};
 
 	let resolvedIcon = $derived(() => {
@@ -41,10 +41,10 @@ import { apiFetch } from "$lib/api";
 
 		// If name is already a full iconify name (contains :), use it directly
 		if (iconName.includes(':')) return iconName;
-		
+
 		const entry = iconMap[iconName.toLowerCase()];
 		if (entry) return entry;
-		
+
 		// Fallback to ph or just the name if no mapping found
 		return `ph:${iconName}`;
 	});
@@ -55,10 +55,4 @@ import { apiFetch } from "$lib/api";
 	});
 </script>
 
-<Iconify 
-	icon={resolvedIcon()} 
-	class={className} 
-	width={size} 
-	height={size}
-	style={computedStyle}
-/>
+<Iconify icon={resolvedIcon()} class={className} width={size} height={size} style={computedStyle} />

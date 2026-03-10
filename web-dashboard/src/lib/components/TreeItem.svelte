@@ -1,7 +1,7 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
 	import { slide } from 'svelte/transition';
 	import { ChevronRight, Folder, Table, Columns, Database, RefreshCw } from 'lucide-svelte';
+	import type { Snippet } from 'svelte';
 
 	let {
 		label,
@@ -10,7 +10,8 @@ import { apiFetch } from "$lib/api";
 		isLoading = false,
 		isSelected = false,
 		onToggle = () => {},
-		onSelect = () => {}
+		onSelect = () => {},
+		children
 	} = $props<{
 		label: string;
 		type: 'schema' | 'table' | 'column' | 'root';
@@ -19,6 +20,7 @@ import { apiFetch } from "$lib/api";
 		isSelected?: boolean;
 		onToggle?: () => void;
 		onSelect?: () => void;
+		children?: Snippet;
 	}>();
 </script>
 
@@ -35,7 +37,12 @@ import { apiFetch } from "$lib/api";
 		}}
 		role="button"
 		tabindex="0"
-		onkeydown={(e) => e.key === 'Enter' && onToggle()}
+		onkeydown={(e) => {
+			if (e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault();
+				onToggle();
+			}
+		}}
 	>
 		{#if type !== 'column'}
 			<div
@@ -75,7 +82,7 @@ import { apiFetch } from "$lib/api";
 			class="ml-5 pl-3 border-l border-stone-800/50 space-y-0.5 mt-0.5"
 			transition:slide={{ duration: 200 }}
 		>
-			<slot />
+			{@render children?.()}
 		</div>
 	{/if}
 </div>

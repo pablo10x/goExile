@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import {
 		CheckSquare,
 		Square,
@@ -55,7 +55,6 @@ import { apiFetch } from "$lib/api";
 			if (res.ok) {
 				const saved = await res.json();
 				todos.update((all) => {
-					// Need to find and update the parent in the tree
 					const updateTree = (nodes: Todo[]): Todo[] => {
 						return nodes.map((n) => {
 							if (n.id === todo.id) {
@@ -136,15 +135,15 @@ import { apiFetch } from "$lib/api";
 
 <div
 	class="flex flex-col gap-1 p-2 rounded-xl transition-all group border border-transparent {todo.done
-		? 'bg-neutral-800/20 opacity-70'
-		: 'bg-neutral-800/60 hover:bg-neutral-800/80 hover:border-neutral-300 dark:border-neutral-700'}"
+		? 'bg-black/20 opacity-70'
+		: 'bg-black/40 hover:bg-black/60 hover:border-sky-500/30'}"
 	transition:slide|local
 >
 	<div class="flex items-center gap-2">
 		{#if todo.sub_tasks && todo.sub_tasks.length > 0}
 			<button
 				onclick={() => (expanded = !expanded)}
-				class="p-1 rounded hover:bg-neutral-700 text-text-dim transition-colors"
+				class="p-1 rounded hover:bg-slate-800 text-slate-500 transition-colors"
 			>
 				{#if expanded}
 					<ChevronDown class="w-3 h-3" />
@@ -158,10 +157,10 @@ import { apiFetch } from "$lib/api";
 
 		<button
 			onclick={() => onToggle(todo)}
-			class="text-text-dim dark:text-text-dim hover:text-success transition-colors shrink-0"
+			class="text-slate-600 hover:text-emerald-400 transition-colors shrink-0"
 		>
 			{#if todo.done}
-				<CheckSquare class="w-5 h-5 text-success" />
+				<CheckSquare class="w-5 h-5 text-emerald-500" />
 			{:else}
 				<Square class="w-5 h-5" />
 			{/if}
@@ -171,21 +170,22 @@ import { apiFetch } from "$lib/api";
 			<div class="flex items-center gap-2">
 				<span
 					class="text-sm font-medium truncate {todo.done
-						? 'line-through text-text-dim'
-						: 'text-neutral-800 dark:text-neutral-200'}"
+						? 'line-through text-slate-600'
+						: 'text-slate-200'}"
 				>
 					{todo.content}
 				</span>
 				{#if !todo.done && todo.in_progress}
 					<span
-																		class="px-1.5 py-0.5 rounded-full bg-rust/20 text-rust-light text-[9px] font-bold uppercase tracking-wider animate-pulse"					>
+						class="px-1.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 text-[9px] font-bold uppercase tracking-wider animate-pulse"
+					>
 						In Progress
 					</span>
 				{/if}
 			</div>
 
 			<div class="flex items-center gap-3 mt-0.5">
-				<div class="flex items-center gap-1 text-[9px] text-text-dim">
+				<div class="flex items-center gap-1 text-[9px] text-slate-500">
 					<Clock class="w-2.5 h-2.5" />
 					<span>{formatTime(todo.created_at)}</span>
 				</div>
@@ -194,8 +194,8 @@ import { apiFetch } from "$lib/api";
 					<div
 						class="flex items-center gap-1 text-[9px] {new Date(todo.deadline) < new Date() &&
 						!todo.done
-							? 'text-danger'
-							: 'text-text-dim'}"
+							? 'text-rose-400'
+							: 'text-slate-500'}"
 					>
 						<Calendar class="w-2.5 h-2.5" />
 						<span>{formatTime(todo.deadline)}</span>
@@ -218,31 +218,31 @@ import { apiFetch } from "$lib/api";
 			{#if !todo.done}
 				<button
 					onclick={() => (showAddSubTask = !showAddSubTask)}
-					class="p-1.5 rounded hover:bg-neutral-700 text-text-dim hover:text-success transition-colors"
+					class="p-1.5 rounded hover:bg-slate-800 text-slate-500 hover:text-emerald-400 transition-colors"
 					title="Add sub-task"
 				>
 					<Plus class="w-3.5 h-3.5" />
 				</button>
 				<button
 					onclick={() => (showComments = !showComments)}
-					class="p-1.5 rounded hover:bg-neutral-700 text-text-dim hover:text-indigo-400 transition-colors"
+					class="p-1.5 rounded hover:bg-slate-800 text-slate-500 hover:text-indigo-400 transition-colors"
 					title="Comments"
 				>
 					<MessageSquare class="w-3.5 h-3.5" />
 				</button>
 				<button
 					onclick={() => onToggleProgress(todo)}
-					class="p-1.5 rounded hover:bg-neutral-700 transition-colors {todo.in_progress
-						? 'text-info'
-						: 'text-text-dim'}"
-					title={todo.in_progress ? 'Pause progress' : 'Start progress'}
+					class="p-1.5 rounded hover:bg-slate-800 transition-colors {todo.in_progress
+						? 'text-sky-400'
+						: 'text-slate-500'}"
+					title={todo.in_progress ? 'Pause' : 'Start'}
 				>
 					<Clock class="w-3.5 h-3.5" />
 				</button>
 			{/if}
 			<button
 				onclick={() => onDelete(todo.id)}
-				class="text-text-dim hover:text-danger p-1.5 rounded hover:bg-neutral-700 transition-colors"
+				class="text-slate-500 hover:text-rose-400 p-1.5 rounded hover:bg-slate-800 transition-colors"
 			>
 				<Trash2 class="w-3.5 h-3.5" />
 			</button>
@@ -263,12 +263,12 @@ import { apiFetch } from "$lib/api";
 					type="text"
 					bind:value={newSubTaskContent}
 					placeholder="New sub-task..."
-					class="flex-1 bg-neutral-900 border border-[var(--border-color)] rounded-lg px-2 py-1 text-xs text-neutral-200 outline-none focus:border-rust transition-all"
+					class="flex-1 bg-black border border-white/5 rounded-lg px-2 py-1 text-xs text-slate-200 outline-none focus:border-sky-500 transition-all"
 				/>
 				<button
 					type="submit"
 					disabled={!newSubTaskContent.trim()}
-					class="p-1 bg-neutral-700 hover:bg-rust text-white rounded transition-colors disabled:opacity-50"
+					class="p-1 bg-sky-500 hover:bg-sky-400 text-white rounded transition-colors disabled:opacity-50"
 				>
 					<Plus class="w-3 h-3" />
 				</button>
@@ -278,15 +278,15 @@ import { apiFetch } from "$lib/api";
 
 	<!-- Comments Section -->
 	{#if showComments}
-		<div class="ml-8 mt-2 space-y-2 pr-2 border-l-2 border-rust/30 pl-3" transition:slide>
+		<div class="ml-8 mt-2 space-y-2 pr-2 border-l-2 border-sky-500/30 pl-3" transition:slide>
 			<div class="space-y-2">
 				{#each todo.comments || [] as comment (comment.id)}
-					<div class="flex flex-col gap-1 p-2 bg-neutral-900/50 rounded-lg group/comment">
+					<div class="flex flex-col gap-1 p-2 bg-black/40 rounded-lg group/comment">
 						<div class="flex justify-between items-center">
-							<div class="flex items-center gap-1.5 text-[10px] font-bold text-rust-light">
+							<div class="flex items-center gap-1.5 text-[10px] font-bold text-sky-400">
 								<User class="w-2.5 h-2.5" />
 								<span>{comment.author || 'User'}</span>
-								<span class="text-neutral-600 font-normal ml-1"
+								<span class="text-slate-600 font-normal ml-1"
 									>{new Date(comment.created_at).toLocaleTimeString([], {
 										hour: '2-digit',
 										minute: '2-digit'
@@ -295,12 +295,12 @@ import { apiFetch } from "$lib/api";
 							</div>
 							<button
 								onclick={() => deleteComment(comment.id)}
-								class="opacity-0 group-hover/comment:opacity-100 text-neutral-600 hover:text-danger transition-all"
+								class="opacity-0 group-hover/comment:opacity-100 text-slate-600 hover:text-rose-400 transition-all"
 							>
 								<Trash2 class="w-2.5 h-2.5" />
 							</button>
 						</div>
-						<p class="text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed">
+						<p class="text-xs text-slate-300 leading-relaxed">
 							{comment.content}
 						</p>
 					</div>
@@ -318,12 +318,12 @@ import { apiFetch } from "$lib/api";
 					type="text"
 					bind:value={newCommentContent}
 					placeholder="Write a comment..."
-					class="flex-1 bg-neutral-900 border border-[var(--border-color)] rounded-lg px-2 py-1.5 text-xs text-neutral-200 outline-none focus:border-rust transition-all"
+					class="flex-1 bg-black border border-white/5 rounded-lg px-2 py-1.5 text-xs text-slate-200 outline-none focus:border-sky-500 transition-all"
 				/>
 				<button
 					type="submit"
 					disabled={!newCommentContent.trim()}
-					class="p-1.5 bg-rust hover:bg-rust-light text-white rounded-lg transition-colors disabled:opacity-50"
+					class="p-1.5 bg-sky-500 hover:bg-sky-400 text-white rounded-lg transition-colors disabled:opacity-50"
 				>
 					<Send class="w-3 h-3" />
 				</button>
@@ -334,7 +334,7 @@ import { apiFetch } from "$lib/api";
 	<!-- Recursive Sub-tasks -->
 	{#if expanded && todo.sub_tasks && todo.sub_tasks.length > 0}
 		<div
-			class="ml-4 mt-1 flex flex-col gap-1 border-l border-neutral-300/50 dark:border-neutral-700/50 pl-2"
+			class="ml-4 mt-1 flex flex-col gap-1 border-l border-white/5 pl-2"
 			transition:slide
 		>
 			{#each todo.sub_tasks as sub (sub.id)}

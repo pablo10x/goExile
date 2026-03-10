@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { Play, RefreshCw, Terminal, Download, Copy, Check, Database } from 'lucide-svelte';
 	import { notifications } from '$lib/stores.svelte';
 	import { slide } from 'svelte/transition';
@@ -545,18 +545,28 @@ import { apiFetch } from "$lib/api";
 				<Terminal class="w-5 h-5 text-indigo-400" />
 			</div>
 			<div>
-				<h2 class="text-lg font-heading font-black text-white uppercase tracking-tighter italic">SQL_Terminal_v4</h2>
-				<p class="font-jetbrains text-[10px] text-neutral-500 uppercase tracking-widest mt-1 italic">Execute raw neural queries against the sector</p>
+				<h2 class="text-lg font-heading font-black text-white uppercase tracking-tighter italic">
+					SQL_Terminal_v4
+				</h2>
+				<p
+					class="font-jetbrains text-[10px] text-neutral-500 uppercase tracking-widest mt-1 italic"
+				>
+					Execute raw neural queries against the sector
+				</p>
 			</div>
 		</div>
 		<div class="flex gap-4 items-center">
 			{#if loadingMetadata}
-				<span class="font-jetbrains text-[10px] text-neutral-500 flex items-center gap-2 uppercase tracking-widest italic font-bold">
+				<span
+					class="font-jetbrains text-[10px] text-neutral-500 flex items-center gap-2 uppercase tracking-widest italic font-bold"
+				>
 					<RefreshCw class="w-3.5 h-3.5 animate-spin" />
 					Syncing_Schema...
 				</span>
 			{:else if tables.length > 0}
-				<span class="font-jetbrains text-[10px] text-neutral-500 flex items-center gap-2 uppercase tracking-widest italic font-bold">
+				<span
+					class="font-jetbrains text-[10px] text-neutral-500 flex items-center gap-2 uppercase tracking-widest italic font-bold"
+				>
 					<Database class="w-3.5 h-3.5 text-indigo-400/60" />
 					{tables.length} Sectors_Mapped
 				</span>
@@ -578,9 +588,7 @@ import { apiFetch } from "$lib/api";
 	<!-- Editor & Results Split -->
 	<div class="flex-1 flex flex-col overflow-hidden bg-transparent">
 		<!-- Editor Area -->
-		<div
-			class="h-1/3 min-h-[200px] p-6 border-b border-neutral-800 bg-transparent relative"
-		>
+		<div class="h-1/3 min-h-[200px] p-6 border-b border-neutral-800 bg-transparent relative">
 			<div class="relative w-full h-full">
 				<textarea
 					bind:this={textareaEl}
@@ -630,23 +638,34 @@ import { apiFetch } from "$lib/api";
 							<span
 								><kbd class="px-1 bg-neutral-900 border border-neutral-800 rounded text-neutral-500"
 									>↑↓</kbd
-								> NAV</span>
+								> NAV</span
+							>
 							<span
 								><kbd class="px-1 bg-neutral-900 border border-neutral-800 rounded text-neutral-500"
 									>TAB</kbd
-								> SELECT</span>
+								> SELECT</span
+							>
 							<span
 								><kbd class="px-1 bg-neutral-900 border border-neutral-800 rounded text-neutral-500"
 									>ESC</kbd
-								> EXIT</span>
+								> EXIT</span
+							>
 						</div>
 					</div>
 				{/if}
 			</div>
-			<div class="font-jetbrains text-[9px] font-bold text-neutral-600 mt-3 flex justify-between uppercase tracking-[0.2em] italic">
+			<div
+				class="font-jetbrains text-[9px] font-bold text-neutral-600 mt-3 flex justify-between uppercase tracking-[0.2em] italic"
+			>
 				<div class="flex gap-6">
-					<span class="flex items-center gap-2"><div class="w-1 h-1 bg-neutral-800"></div> Ctrl + Enter_OP</span>
-					<span class="flex items-center gap-2"><div class="w-1 h-1 bg-neutral-800"></div> Tab_Autocomplete</span>
+					<span class="flex items-center gap-2"
+						><div class="w-1 h-1 bg-neutral-800"></div>
+						 Ctrl + Enter_OP</span
+					>
+					<span class="flex items-center gap-2"
+						><div class="w-1 h-1 bg-neutral-800"></div>
+						 Tab_Autocomplete</span
+					>
 				</div>
 				{#if executionTime > 0}
 					<span class="text-indigo-400">RT_Execution: {executionTime.toFixed(2)}ms</span>
@@ -662,7 +681,8 @@ import { apiFetch } from "$lib/api";
 				>
 					<span
 						class="font-jetbrains text-[10px] font-bold text-neutral-500 uppercase tracking-[0.3em] italic"
-						>{results.length} Entities_Mapped</span>
+						>{results.length} Entities_Mapped</span
+					>
 					<div class="flex gap-3">
 						<button
 							onclick={copyToClipboard}
@@ -682,9 +702,7 @@ import { apiFetch } from "$lib/api";
 				</div>
 				<div class="flex-1 overflow-auto custom-scrollbar">
 					<table class="w-full text-left font-jetbrains text-[11px] border-collapse">
-						<thead
-							class="bg-neutral-950 sticky top-0 z-10 border-b border-neutral-800"
-						>
+						<thead class="bg-neutral-950 sticky top-0 z-10 border-b border-neutral-800">
 							<tr>
 								{#each Object.keys(results[0]) as key}
 									<th
@@ -712,21 +730,35 @@ import { apiFetch } from "$lib/api";
 				</div>
 			{:else if error}
 				<div class="flex-1 flex items-center justify-center p-10">
-					<div class="bg-red-500/5 border border-red-500/20 p-8 max-w-3xl rounded-xl shadow-2xl shadow-red-900/10">
-						<div class="font-jetbrains text-[10px] text-red-500 uppercase tracking-[0.4em] font-black mb-4 flex items-center gap-4 italic">
+					<div
+						class="bg-red-500/5 border border-red-500/20 p-8 max-w-3xl rounded-xl shadow-2xl shadow-red-900/10"
+					>
+						<div
+							class="font-jetbrains text-[10px] text-red-500 uppercase tracking-[0.4em] font-black mb-4 flex items-center gap-4 italic"
+						>
 							<div class="w-2 h-2 bg-red-500 animate-pulse"></div>
 							Execution_Fault_Detected
 						</div>
-						<div class="text-neutral-400 font-jetbrains text-[11px] whitespace-pre-wrap leading-relaxed uppercase tracking-widest">{error}</div>
+						<div
+							class="text-neutral-400 font-jetbrains text-[11px] whitespace-pre-wrap leading-relaxed uppercase tracking-widest"
+						>
+							{error}
+						</div>
 					</div>
 				</div>
 			{:else if !loading}
 				<div class="flex-1 flex flex-col items-center justify-center text-neutral-700">
-					<div class="p-8 bg-neutral-900/40 border border-neutral-800 rounded-2xl mb-6 shadow-inner">
+					<div
+						class="p-8 bg-neutral-900/40 border border-neutral-800 rounded-2xl mb-6 shadow-inner"
+					>
 						<Terminal class="w-16 h-16 opacity-10" />
 					</div>
-					<p class="font-heading font-black text-xs tracking-[0.4em] uppercase italic">Awaiting_Neural_Sequence</p>
-					<p class="font-jetbrains text-[9px] mt-3 uppercase tracking-widest opacity-40 font-bold">Input query parameters to initiate sector analysis</p>
+					<p class="font-heading font-black text-xs tracking-[0.4em] uppercase italic">
+						Awaiting_Neural_Sequence
+					</p>
+					<p class="font-jetbrains text-[9px] mt-3 uppercase tracking-widest opacity-40 font-bold">
+						Input query parameters to initiate sector analysis
+					</p>
 				</div>
 			{/if}
 
@@ -738,7 +770,10 @@ import { apiFetch } from "$lib/api";
 						<div
 							class="w-12 h-12 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin shadow-[0_0_20px_rgba(99,102,241,0.4)]"
 						></div>
-						<span class="font-heading font-black text-[11px] text-indigo-400 uppercase tracking-[0.4em] animate-pulse italic">Processing_Neural_Array...</span>
+						<span
+							class="font-heading font-black text-[11px] text-indigo-400 uppercase tracking-[0.4em] animate-pulse italic"
+							>Processing_Neural_Array...</span
+						>
 					</div>
 				</div>
 			{/if}

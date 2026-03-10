@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { onMount, tick, createEventDispatcher } from 'svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -7,19 +7,14 @@ import { apiFetch } from "$lib/api";
 	import Button from './Button.svelte';
 	import { formatBytes } from '$lib/utils';
 	import IconComponent from '$lib/components/theme/Icon.svelte';
-	import {
-		BarChart3,
-		AlertTriangle,
-		Info,
-		XCircle
-	} from 'lucide-svelte';
+	import { BarChart3, AlertTriangle, Info, XCircle } from 'lucide-svelte';
 
 	const {
 		nodeId,
 		isOpen = false,
 		onClose = () => {},
 		embedded = false
-	} = $props<{ 
+	} = $props<{
 		nodeId: number;
 		isOpen?: boolean;
 		onClose?: () => void;
@@ -89,10 +84,10 @@ import { apiFetch } from "$lib/api";
 	let confirmAction = handleClearLogs;
 
 	const tabs: TabDef[] = [
-		{ id: 'all', label: 'All', icon: BarChart3, color: 'text-stone-500' },
-		{ id: 'info', label: 'Info', icon: Info, color: 'text-rust-light' },
-		{ id: 'warn', label: 'Warn', icon: AlertTriangle, color: 'text-yellow-400' },
-		{ id: 'error', label: 'Error', icon: XCircle, color: 'text-red-400' }
+		{ id: 'all', label: 'All', icon: BarChart3, color: 'text-slate-500' },
+		{ id: 'info', label: 'Info', icon: Info, color: 'text-sky-400' },
+		{ id: 'warn', label: 'Warn', icon: AlertTriangle, color: 'text-amber-400' },
+		{ id: 'error', label: 'Error', icon: XCircle, color: 'text-rose-400' }
 	];
 
 	function parseLogLine(line: string, index: number): ParsedLogEntry {
@@ -112,8 +107,7 @@ import { apiFetch } from "$lib/api";
 			return {
 				id: index,
 				time:
-					date.toLocaleTimeString([], { hour12: false })
-					+
+					date.toLocaleTimeString([], { hour12: false }) +
 					'.' +
 					date.getMilliseconds().toString().padStart(3, '0'),
 				level: level,
@@ -172,13 +166,20 @@ import { apiFetch } from "$lib/api";
 
 	function getLevelClass(level: LogLevel) {
 		switch (level) {
-			case 'DBG': return 'text-stone-500';
-			case 'INF': return 'text-rust-light';
-			case 'WRN': return 'text-yellow-400';
-			case 'ERR': return 'text-red-500 font-bold';
-			case 'FTL': return 'text-purple-500 font-bold';
-			case 'PANIC': return 'text-purple-600 font-bold bg-purple-950/30';
-			default: return 'text-stone-500';
+			case 'DBG':
+				return 'text-slate-500';
+			case 'INF':
+				return 'text-sky-400';
+			case 'WRN':
+				return 'text-amber-400';
+			case 'ERR':
+				return 'text-rose-500 font-bold';
+			case 'FTL':
+				return 'text-purple-500 font-bold';
+			case 'PANIC':
+				return 'text-purple-600 font-bold bg-purple-950/30';
+			default:
+				return 'text-slate-500';
 		}
 	}
 
@@ -253,7 +254,7 @@ import { apiFetch } from "$lib/api";
 {#if isOpen}
 	{#if !embedded}
 		<div
-			class="fixed inset-0 z-[150] flex items-center justify-center sm:p-4 bg-black/80 backdrop-blur-md"
+			class="fixed inset-0 z-[150] flex items-center justify-center sm:p-4 bg-slate-950/80 backdrop-blur-md"
 			transition:fade={{ duration: 200 }}
 		>
 			<div
@@ -266,209 +267,226 @@ import { apiFetch } from "$lib/api";
 			></div>
 
 			<div
-				class="relative w-full h-full sm:h-[90vh] sm:max-w-7xl bg-[#050505] border border-stone-800 shadow-2xl flex flex-col overflow-hidden industrial-sharp"
+				class="relative w-full h-full sm:h-[90vh] sm:max-w-7xl bg-slate-900/90 border border-white/10 shadow-2xl flex flex-col overflow-hidden rounded-3xl backdrop-blur-2xl"
 				transition:scale={{ start: 0.98, duration: 300, easing: cubicOut }}
 			>
-				<div class="absolute inset-0 pointer-events-none z-50 opacity-[0.02] bg-[linear-gradient(rgba(18, 16, 16, 0)_50%,rgba(0, 0, 0, 0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%]"></div>
 				<div class="contents">
 					{@render content()}
 				</div>
 			</div>
 		</div>
 	{:else}
-		<div class="h-full flex flex-col bg-[#050505] overflow-hidden border border-stone-800 relative industrial-sharp">
-			<div class="absolute inset-0 pointer-events-none z-50 opacity-[0.01] bg-[linear-gradient(rgba(18, 16, 16, 0)_50%,rgba(0, 0, 0, 0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%]"></div>
+		<div
+			class="h-full flex flex-col bg-slate-950/20 overflow-hidden border border-white/5 relative rounded-2xl"
+		>
 			{@render content()}
 		</div>
 	{/if}
 {/if}
 
 {#snippet content()}
-	<div
-		class="px-6 py-5 border-b border-stone-800 flex justify-between items-center bg-black/40"
-	>
+	<div class="px-6 py-5 border-b border-white/5 flex justify-between items-center bg-black/20">
 		<div class="flex items-center gap-5 overflow-hidden">
-			<div class="p-2.5 bg-rust/10 border border-rust/30 rounded-none industrial-sharp shadow-lg">
-				<IconComponent name="activity" size="1.25rem" class="text-rust-light" />
+			<div class="p-2.5 bg-sky-500/10 border border-sky-500/20 rounded-xl shadow-lg">
+				<IconComponent name="ph:activity-bold" size="1.25rem" class="text-sky-400" />
 			</div>
 			<div class="flex flex-col">
-				<h2 class="text-white font-heading font-black text-xl tracking-tighter uppercase leading-none">
-					LOG_ARCHIVE : <span class="text-rust">NODE_{nodeId}</span>
+				<h2 class="text-white font-bold text-xl tracking-tight leading-none uppercase italic font-heading">
+					Node Logs : <span class="text-sky-400">ID {nodeId}</span>
 				</h2>
 				<div class="flex items-center gap-4 mt-1.5">
 					<div class="flex items-center gap-2">
-						<div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-emerald-500/50 shadow-lg"></div>
-						<span class="font-jetbrains text-[9px] font-black tracking-[0.2em] uppercase text-stone-500">STATUS: STREAMING</span>
+						<div
+							class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+						></div>
+						<span class="text-[10px] font-bold tracking-wider uppercase text-slate-500 font-sans"
+							>Live Stream</span
+						>
 					</div>
 					{#if fileSize > 0}
-						<div class="w-px h-3 bg-stone-800"></div>
-						<span class="font-jetbrains text-[9px] font-black uppercase tracking-widest text-stone-500"
-							>{formatBytes(fileSize)} BUFFER_ACTIVE</span>
+						<div class="w-px h-3 bg-white/10"></div>
+						<span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 font-sans"
+							>{formatBytes(fileSize)} Buffer</span
+						>
 					{/if}
 				</div>
 			</div>
 			{#if loading && parsedLogs.length > 0}
-				<IconComponent name="ph:arrows-clockwise-bold" size="1rem" class="text-rust animate-spin ml-2" />
+				<IconComponent
+					name="ph:arrows-clockwise-bold"
+					size="1rem"
+					class="text-sky-400 animate-spin ml-2"
+				/>
 			{/if}
 		</div>
 
 		<div class="flex items-center gap-4">
-			<div class="hidden sm:flex items-center gap-6 mr-6 font-jetbrains text-[9px] font-black text-stone-500">
+			<div class="hidden sm:flex items-center gap-6 mr-6 text-[10px] font-bold text-slate-500">
 				<label class="flex items-center gap-3 cursor-pointer group">
-					<input
-						type="checkbox"
-						bind:checked={shouldAutoScroll}
-						class="sr-only peer"
-					/>
-					<div class="w-3.5 h-3.5 bg-stone-950 border border-stone-800 peer-checked:bg-rust peer-checked:border-rust transition-all shadow-inner"></div>
-					<span class="group-hover:text-stone-300 transition-colors uppercase tracking-widest">AUTO_SCROLL</span>
+					<input type="checkbox" bind:checked={shouldAutoScroll} class="sr-only peer" />
+					<div
+						class="w-3.5 h-3.5 bg-black border border-white/10 rounded peer-checked:bg-sky-500 peer-checked:border-sky-500 transition-all shadow-inner"
+					></div>
+					<span class="group-hover:text-slate-300 transition-colors uppercase tracking-widest font-sans"
+						>Auto Scroll</span
+					>
 				</label>
 				<label class="flex items-center gap-3 cursor-pointer group">
-					<input
-						type="checkbox"
-						bind:checked={isAutoRefreshing}
-						class="sr-only peer"
-					/>
-					<div class="w-3.5 h-3.5 bg-stone-950 border border-stone-800 peer-checked:bg-rust peer-checked:border-rust transition-all shadow-inner"></div>
-					<span class="group-hover:text-stone-300 transition-colors uppercase tracking-widest">LIVE_SYNC</span>
+					<input type="checkbox" bind:checked={isAutoRefreshing} class="sr-only peer" />
+					<div
+						class="w-3.5 h-3.5 bg-black border border-white/10 rounded peer-checked:bg-sky-500 peer-checked:border-sky-500 transition-all shadow-inner"
+					></div>
+					<span class="group-hover:text-slate-300 transition-colors uppercase tracking-widest font-sans"
+						>Live Sync</span
+					>
 				</label>
 			</div>
 
 			<Button
 				onclick={fetchLogs}
 				variant="secondary"
-				size="xs"
+				size="sm"
 				icon="ph:arrows-clockwise-bold"
-				loading={loading}
-				title="Manual_Refresh"
+				{loading}
+				class="!rounded-xl"
 			/>
 
 			<Button
 				onclick={() => (isConfirmOpen = true)}
 				variant="secondary"
-				size="xs"
+				size="sm"
 				icon="ph:trash-bold"
-				title="Clear_Registry"
-				class="!text-stone-500 hover:!text-red-500 hover:!border-red-900/50"
+				class="!text-slate-500 hover:!text-rose-500 !rounded-xl"
 			/>
 
 			{#if !embedded}
-				<div class="h-10 w-px bg-stone-800 mx-2"></div>
-				<Button
-					onclick={onClose}
-					variant="danger"
-					size="md"
-					icon="ph:x-bold"
-				/>
+				<div class="h-10 w-px bg-white/10 mx-2"></div>
+				<Button onclick={onClose} variant="danger" size="md" icon="ph:x-bold" class="!rounded-xl" />
 			{/if}
 		</div>
 	</div>
 
 	<div
-		class="px-6 py-5 bg-black/40 border-b border-stone-800 flex flex-col md:flex-row gap-8 md:items-center"
+		class="px-6 py-5 bg-black/40 border-b border-white/5 flex flex-col md:flex-row gap-8 md:items-center"
 	>
-		<div class="flex gap-1.5 bg-stone-950 p-1 border border-stone-800 shadow-inner industrial-sharp">
-			{#each [
-				{ id: 'all', label: 'All', iconName: 'ph:chart-bar-bold' },
-				{ id: 'info', label: 'Info', iconName: 'ph:info-bold' },
-				{ id: 'warn', label: 'Warn', iconName: 'ph:warning-bold' },
-				{ id: 'error', label: 'Error', iconName: 'ph:x-circle-bold' }
-			] as tab}
+		<div class="flex gap-1 bg-black p-1 border border-white/5 rounded-xl shadow-inner">
+			{#each [{ id: 'all', label: 'All', iconName: 'ph:chart-bar-bold' }, { id: 'info', label: 'Info', iconName: 'ph:info-bold' }, { id: 'warn', label: 'Warn', iconName: 'ph:warning-bold' }, { id: 'error', label: 'Error', iconName: 'ph:x-circle-bold' }] as tab}
 				<Button
 					onclick={() => (selectedTab = tab.id as TabId)}
 					variant={selectedTab === tab.id ? 'primary' : 'ghost'}
 					size="xs"
 					icon={tab.iconName}
-					class="px-5"
+					class="!rounded-lg px-4"
 				>
-					<span class="hidden sm:inline">{tab.label}</span>
-					<span class="ml-1 opacity-40">[{stats[tab.id as TabId]}]</span>
+					<span class="hidden sm:inline uppercase font-bold tracking-tight text-[10px]">{tab.label}</span>
+					<span class="ml-1 opacity-40 text-[9px]">[{stats[tab.id as TabId]}]</span>
 				</Button>
 			{/each}
 		</div>
 
 		<div class="flex-1 relative group">
-			<IconComponent name="ph:magnifying-glass-bold" size="1rem" class="absolute left-4 top-1/2 -tranneutral-y-1/2 text-stone-700 group-focus-within:text-rust transition-colors" />
+			<IconComponent
+				name="ph:magnifying-glass-bold"
+				size="1rem"
+				class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-sky-400 transition-colors"
+			/>
 			<input
 				type="text"
-				placeholder="FILTER_BUFFER_BY_IDENTIFIER..."
+				placeholder="Search log messages..."
 				bind:value={searchTerm}
-				class="w-full pl-12 pr-4 py-3 bg-stone-950 border border-stone-800 focus:border-rust text-white font-jetbrains text-[10px] font-bold uppercase tracking-[0.2em] outline-none transition-all placeholder:text-stone-800 shadow-inner"
+				class="w-full pl-12 pr-4 py-3 bg-black border border-white/10 focus:border-sky-500/50 rounded-xl text-white text-xs font-medium outline-none transition-all placeholder:text-slate-800 shadow-inner"
 			/>
 		</div>
 	</div>
 
-	<div class="flex-1 relative bg-[#050505] min-h-0">
-		<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
-		
+	<div class="flex-1 relative bg-black min-h-0">
 		{#if loading && parsedLogs.length === 0}
-			<div class="absolute inset-0 flex flex-col items-center justify-center gap-6 text-stone-500">
-				<div class="w-16 h-16 border-2 border-rust border-t-transparent rounded-none animate-spin shadow-lg shadow-rust/20"></div>
-				<span class="font-heading font-black text-[11px] uppercase tracking-[0.5em] animate-pulse text-rust">Initializing_Buffer_Link...</span>
+			<div class="absolute inset-0 flex flex-col items-center justify-center gap-6 text-slate-500">
+				<div
+					class="w-16 h-16 border-4 border-sky-500/20 border-t-sky-500 rounded-full animate-spin"
+				></div>
+				<span class="text-xs font-bold uppercase tracking-widest animate-pulse text-sky-500 font-sans"
+					>Connecting to log stream...</span
+				>
 			</div>
 		{:else if error}
-			<div class="absolute inset-0 flex flex-col items-center justify-center text-red-500 gap-8 p-10 text-center">
-				<div class="p-6 bg-red-950/10 border border-red-900/30 industrial-sharp shadow-2xl">
-					<IconComponent name="ph:warning-bold" size="4rem" class="opacity-80 animate-pulse" />
+			<div
+				class="absolute inset-0 flex flex-col items-center justify-center text-rose-500 gap-8 p-10 text-center"
+			>
+				<div class="p-6 bg-rose-500/5 border border-rose-500/20 rounded-3xl shadow-2xl">
+					<IconComponent name="ph:warning-bold" size="4rem" class="opacity-80" />
 				</div>
 				<div class="space-y-3">
-					<span class="font-heading font-black text-lg uppercase tracking-[0.3em] block">FATAL_CONNECTION_FAULT</span>
-					<p class="font-jetbrains text-[11px] font-bold opacity-60 uppercase tracking-widest max-w-md mx-auto leading-relaxed">{error}</p>
+					<span class="text-lg font-bold uppercase tracking-widest block font-heading italic">Connection Failed</span>
+					<p class="text-xs font-medium opacity-60 max-w-md mx-auto leading-relaxed font-sans">{error}</p>
 				</div>
-				<Button 
+				<Button
 					onclick={fetchLogs}
 					variant="danger"
 					size="lg"
 					icon="ph:arrows-clockwise-bold"
+					class="!rounded-xl">Retry Connection</Button
 				>
-					Retry_Protocol
-				</Button>
 			</div>
 		{:else if filteredLogs.length === 0}
-			<div class="absolute inset-0 flex flex-col items-center justify-center gap-6 text-stone-500">
-				<div class="p-8 bg-stone-900/40 border border-stone-800 industrial-sharp shadow-inner">
-					<IconComponent name="ph:magnifying-glass-bold" size="4rem" class="opacity-20" />
+			<div class="absolute inset-0 flex flex-col items-center justify-center gap-6 text-slate-600">
+				<div
+					class="p-8 border-2 border-dashed border-white/5 rounded-3xl opacity-20 bg-white/[0.02]"
+				>
+					<IconComponent name="ph:magnifying-glass-bold" size="4rem" />
 				</div>
-				<span class="font-jetbrains text-[11px] font-black uppercase tracking-[0.4em]">Null_Records_Located_In_Buffer</span>
+				<span class="text-xs font-bold uppercase tracking-widest font-sans"
+					>No logs found matching criteria</span
+				>
 			</div>
 		{:else}
 			<div
 				bind:this={logContainer}
 				onscroll={handleScroll}
-				class="absolute inset-0 overflow-y-auto overflow-x-auto p-6 font-jetbrains text-[11px] space-y-1.5 custom-scrollbar"
+				class="absolute inset-0 overflow-y-auto overflow-x-auto p-6 font-mono text-[11px] space-y-1 custom-scrollbar bg-black"
 			>
 				{#each filteredLogs as l (l.id)}
 					<div
-						class="flex items-start gap-6 hover:bg-rust/5 px-4 py-2 border-l-2 border-transparent hover:border-rust/60 transition-all select-text group relative"
+						class="flex items-start gap-6 hover:bg-white/[0.02] px-4 py-1.5 border-l-2 border-transparent hover:border-sky-500/50 transition-all select-text group relative rounded-r-md"
 					>
-						<span class="font-jetbrains font-black shrink-0 w-28 tabular-nums select-none opacity-50 text-stone-500"
+						<span
+							class="shrink-0 w-28 tabular-nums select-none opacity-40 text-slate-500 font-medium"
 							>{l.time}</span
 						>
 
-						<span class="shrink-0 w-14 font-black select-none text-[10px] {getLevelClass(l.level)} uppercase tracking-tighter">
-							[{l.level}]
+						<span
+							class="shrink-0 w-14 font-bold select-none text-[10px] {getLevelClass(
+								l.level
+							)} uppercase tracking-tighter text-center border border-current/20 rounded px-1 py-0.5 leading-none mt-0.5 bg-black/40"
+						>
+							{l.level}
 						</span>
 
-						<div class="flex-1 min-w-0 break-all sm:break-words text-stone-300 leading-relaxed font-bold uppercase tracking-tight">
-							<span>{l.message}</span>
+						<div
+							class="flex-1 min-w-0 break-all sm:break-words text-slate-300 leading-relaxed font-medium"
+						>
+							<span class="font-sans">{l.message}</span>
 
 							{#if l.raw && Object.keys(l.raw).length > 3}
 								<div
-									class="mt-3 ml-4 space-y-2 border-l border-stone-800 bg-stone-900/40 p-4 opacity-60 group-hover:opacity-100 transition-opacity industrial-sharp shadow-inner"
+									class="mt-2 ml-4 space-y-1.5 border-l border-white/5 bg-black/40 p-4 opacity-60 group-hover:opacity-100 transition-opacity rounded-xl shadow-inner"
 								>
 									{#each Object.entries(l.raw) as [k, v]}
 										{#if !['time', 'level', 'msg', 'message'].includes(k)}
 											<div class="flex gap-4 flex-wrap">
-												<span class="text-rust-light/60 font-black uppercase text-[9px] tracking-widest">{k}:</span>
+												<span class="text-sky-500/50 font-bold uppercase text-[9px] tracking-widest font-sans"
+													>{k}:</span
+												>
 												<span
-													class="text-stone-400 font-jetbrains font-bold text-[10px] whitespace-pre-wrap break-all"
-													>{JSON.stringify(v)}</span>
+													class="text-slate-400 font-bold text-[10px] whitespace-pre-wrap break-all font-mono"
+													>{JSON.stringify(v)}</span
+												>
 											</div>
 										{/if}
 									{/each}
 								</div>
 							{/if}
-							</div>
+						</div>
 					</div>
 				{/each}
 
@@ -488,36 +506,18 @@ import { apiFetch } from "$lib/api";
 />
 
 <style>
-	/* Custom Scrollbar for industrial terminal */
 	.custom-scrollbar::-webkit-scrollbar {
 		width: 6px;
 		height: 6px;
 	}
 	.custom-scrollbar::-webkit-scrollbar-track {
-		background: #050505;
+		background: transparent;
 	}
 	.custom-scrollbar::-webkit-scrollbar-thumb {
-		background: #222;
-		border: 1px solid #111;
+		background: #1e293b;
+		border-radius: 99px;
 	}
 	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-		background: #c2410c;
-	}
-
-	/* Hide scrollbar for tab nav */
-	.no-scrollbar::-webkit-scrollbar {
-		display: none;
-	}
-	.no-scrollbar {
-		-ms-overflow-style: none;
-		scrollbar-width: none;
-	}
-
-	@keyframes flicker {
-		0%, 100% { opacity: 1; }
-		50% { opacity: 0.4; }
-	}
-	.animate-flicker {
-		animation: flicker 0.2s infinite;
+		background: #334155;
 	}
 </style>

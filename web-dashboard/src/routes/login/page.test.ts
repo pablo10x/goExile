@@ -1,4 +1,4 @@
-import { apiFetch } from "$lib/api";
+import { apiFetch } from '$lib/api';
 import { render, screen, waitFor } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { describe, it, expect } from 'vitest';
@@ -9,8 +9,8 @@ describe('Login Page', () => {
 		render(Page);
 		// Wait for the component to mount and animations to start
 		await tick();
-		await new Promise(r => setTimeout(r, 100)); // Allow time for {#if mounted}
-		
+		await new Promise((r) => setTimeout(r, 100)); // Allow time for {#if mounted}
+
 		await waitFor(() => {
 			// Check for the main heading
 			const heading = screen.getByRole('heading', { name: /Asset Registry/i, level: 1 });

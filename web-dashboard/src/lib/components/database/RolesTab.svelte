@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { Users, UserPlus, Trash2, Key, Shield, Check, X } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { notifications } from '$lib/stores.svelte';
@@ -97,8 +97,14 @@ import { apiFetch } from "$lib/api";
 				<Shield class="w-6 h-6 text-indigo-400" />
 			</div>
 			<div>
-				<h2 class="text-xl font-heading font-black text-white uppercase tracking-tighter italic">SEC_IDENTITY_MANAGER</h2>
-				<p class="font-jetbrains text-[10px] text-neutral-500 uppercase tracking-widest mt-1 italic font-bold">Manage database users and privileges</p>
+				<h2 class="text-xl font-heading font-black text-white uppercase tracking-tighter italic">
+					SEC_IDENTITY_MANAGER
+				</h2>
+				<p
+					class="font-jetbrains text-[10px] text-neutral-500 uppercase tracking-widest mt-1 italic font-bold"
+				>
+					Manage database users and privileges
+				</p>
 			</div>
 		</div>
 		<button
@@ -121,7 +127,7 @@ import { apiFetch } from "$lib/api";
 				<h3
 					class="font-heading font-black text-xs text-indigo-400 mb-6 flex items-center gap-3 uppercase tracking-[0.2em]"
 				>
-					<UserPlus class="w-5 h-5" /> New_Identity_Definition
+					<UserPlus class="w-5 h-5" /> New Role Definition
 				</h3>
 
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
@@ -130,21 +136,21 @@ import { apiFetch } from "$lib/api";
 							<label
 								for="newRoleName"
 								class="block font-jetbrains text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2"
-								>Subject_ID</label
+								>Role Name</label
 							>
 							<input
 								id="newRoleName"
 								type="text"
 								bind:value={newRoleName}
 								class="w-full bg-neutral-950/40 border border-neutral-800 py-3 px-4 text-stone-200 font-jetbrains text-xs focus:border-indigo-500 outline-none uppercase tracking-widest transition-all rounded-lg"
-								placeholder="e.g. ALPHA_USER"
+								placeholder="e.g. standard_user"
 							/>
 						</div>
 						<div>
 							<label
 								for="newRolePass"
 								class="block font-jetbrains text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2"
-								>Access_Key</label
+								>Password</label
 							>
 							<input
 								id="newRolePass"
@@ -157,8 +163,10 @@ import { apiFetch } from "$lib/api";
 					</div>
 
 					<div class="space-y-4">
-						<div class="block font-jetbrains text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2 italic">
-							Auth_Permissions
+						<div
+							class="block font-jetbrains text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2 italic"
+						>
+							Permissions
 						</div>
 						<div class="grid grid-cols-2 gap-3">
 							<label
@@ -169,7 +177,10 @@ import { apiFetch } from "$lib/api";
 									bind:checked={roleOptions.login}
 									class="w-4 h-4 bg-neutral-900 border-neutral-700 text-indigo-500 focus:ring-indigo-500"
 								/>
-								<span class="font-heading text-[10px] font-bold text-neutral-500 uppercase group-hover:text-neutral-200 tracking-widest">Can_Login</span>
+								<span
+									class="font-heading text-[10px] font-bold text-neutral-500 uppercase group-hover:text-neutral-200 tracking-widest"
+									>Can_Login</span
+								>
 							</label>
 							<label
 								class="flex items-center gap-3 p-3 bg-neutral-950/40 border border-neutral-800 cursor-pointer hover:border-indigo-500/40 transition-colors group rounded-xl"
@@ -179,7 +190,10 @@ import { apiFetch } from "$lib/api";
 									bind:checked={roleOptions.createdb}
 									class="w-4 h-4 bg-neutral-900 border-neutral-700 text-indigo-500 focus:ring-indigo-500"
 								/>
-								<span class="font-heading text-[10px] font-bold text-neutral-500 uppercase group-hover:text-neutral-200 tracking-widest">Create_DB</span>
+								<span
+									class="font-heading text-[10px] font-bold text-neutral-500 uppercase group-hover:text-neutral-200 tracking-widest"
+									>Create_DB</span
+								>
 							</label>
 							<label
 								class="flex items-center gap-3 p-3 bg-neutral-950/40 border border-neutral-800 cursor-pointer hover:border-indigo-500/40 transition-colors group rounded-xl"
@@ -189,7 +203,10 @@ import { apiFetch } from "$lib/api";
 									bind:checked={roleOptions.createrole}
 									class="w-4 h-4 bg-neutral-900 border-neutral-700 text-indigo-500 focus:ring-indigo-500"
 								/>
-								<span class="font-heading text-[10px] font-bold text-neutral-500 uppercase group-hover:text-neutral-200 tracking-widest">Create_Role</span>
+								<span
+									class="font-heading text-[10px] font-bold text-neutral-500 uppercase group-hover:text-neutral-200 tracking-widest"
+									>Create_Role</span
+								>
 							</label>
 							<label
 								class="flex items-center gap-3 p-3 bg-neutral-950/40 border border-neutral-800 cursor-pointer hover:border-amber-500/40 transition-colors group rounded-xl"
@@ -199,7 +216,10 @@ import { apiFetch } from "$lib/api";
 									bind:checked={roleOptions.superuser}
 									class="w-4 h-4 bg-neutral-900 border-neutral-700 text-amber-500 focus:ring-amber-500"
 								/>
-								<span class="font-heading text-[10px] font-bold text-amber-500 uppercase tracking-widest">Superuser</span>
+								<span
+									class="font-heading text-[10px] font-bold text-amber-500 uppercase tracking-widest"
+									>Superuser</span
+								>
 							</label>
 						</div>
 					</div>
@@ -241,8 +261,16 @@ import { apiFetch } from "$lib/api";
 									{/if}
 								</div>
 								<div>
-									<h3 class="font-heading font-black text-white text-base tracking-tight uppercase italic">{role.name}</h3>
-									<div class="font-jetbrains text-[9px] text-neutral-500 font-bold uppercase tracking-widest">ID: {role.oid || 'N/A'}</div>
+									<h3
+										class="font-heading font-black text-white text-base tracking-tight uppercase italic"
+									>
+										{role.name}
+									</h3>
+									<div
+										class="font-jetbrains text-[9px] text-neutral-500 font-bold uppercase tracking-widest"
+									>
+										ID: {role.oid || 'N/A'}
+									</div>
 								</div>
 							</div>
 							<button

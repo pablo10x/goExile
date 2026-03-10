@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { onMount, tick } from 'svelte';
 	import { fade, fly, scale, slide } from 'svelte/transition';
 	import {
@@ -39,19 +39,7 @@ import { apiFetch } from "$lib/api";
 	import Icon from '$lib/components/theme/Icon.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import { notifications, siteSettings } from '$lib/stores.svelte';
-
-	interface Player {
-		id: number;
-		uid: string;
-		name: string;
-		device_id: string;
-		xp: number;
-		banned: boolean;
-		last_joined_server: string;
-		created_at: string;
-		updated_at: string;
-		online: boolean;
-	}
+	import type { Player } from '$lib/stores.svelte';
 
 	interface Report {
 		id: number;
@@ -59,7 +47,7 @@ import { apiFetch } from "$lib/api";
 		reported_user_id: number;
 		reason: string;
 		game_server_instance_id: string;
-		timestamp: string;
+		created_at: string;
 		reporter_name?: string;
 		reported_user_name?: string;
 	}
@@ -72,8 +60,8 @@ import { apiFetch } from "$lib/api";
 
 	// Summary Derived
 	let totalXP = $derived(players.reduce((sum, p) => sum + p.xp, 0));
-	let onlineCount = $derived(players.filter(p => p.online).length);
-	let bannedCount = $derived(players.filter(p => p.banned).length);
+	let onlineCount = $derived(players.filter((p) => p.online).length);
+	let bannedCount = $derived(players.filter((p) => p.banned).length);
 
 	let playersLoading = $state(true);
 	let playerSearchQuery = $state('');
@@ -102,7 +90,8 @@ import { apiFetch } from "$lib/api";
 
 		return [...result].sort((a, b) => {
 			if (playerSortBy === 'xp') return b.xp - a.xp;
-			if (playerSortBy === 'updated_at') return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+			if (playerSortBy === 'updated_at')
+				return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
 			if (playerSortBy === 'name') return a.name.localeCompare(b.name);
 			return b.id - a.id;
 		});
@@ -202,14 +191,14 @@ import { apiFetch } from "$lib/api";
 			});
 			if (res.ok) {
 				const updated = await res.json();
-				players = players.map(p => p.id === updated.id ? { ...p, ...updated } : p);
-				notifications.add({ 
-					type: newStatus ? 'error' : 'success', 
-					message: newStatus ? 'SUBJECT_BANNED' : 'SUBJECT_RESTORED' 
+				players = players.map((p) => (p.id === updated.id ? { ...p, ...updated } : p));
+				notifications.add({
+					type: newStatus ? 'error' : 'success',
+					message: newStatus ? 'User banned' : 'User restored'
 				});
 			}
 		} catch (e) {
-			notifications.add({ type: 'error', message: 'UPLINK_FAILURE' });
+			notifications.add({ type: 'error', message: 'Connection error' });
 		}
 	}
 
@@ -223,44 +212,46 @@ import { apiFetch } from "$lib/api";
 	});
 </script>
 
-<div class="w-full min-h-[calc(100vh-140px)] md:min-h-[calc(100vh-160px)] flex flex-col overflow-hidden relative font-sans">
-	
-	<!-- Main Content Chassis -->
+<div
+	class="w-full min-h-[calc(100vh-140px)] md:min-h-[calc(100vh-160px)] flex flex-col overflow-hidden relative font-sans"
+>
+	<!-- Main Content Layout -->
 	<div class="w-full h-full flex flex-col gap-6 relative z-10 pb-32 md:pb-12">
-		
 		<!-- Header -->
-		<div class="flex flex-col xl:flex-row xl:items-end justify-between gap-6 p-6 bg-slate-800/40 border border-white/5 rounded-2xl shadow-lg backdrop-blur-md">
+		<div
+			class="flex flex-col xl:flex-row xl:items-end justify-between gap-6 p-6 bg-slate-800/40 border border-white/5 rounded-2xl shadow-lg backdrop-blur-md"
+		>
 			<div class="space-y-2 relative z-10">
 				<div class="flex items-center gap-3 text-slate-400">
 					<div class="flex items-center gap-2">
 						<Users class="w-4 h-4 text-indigo-400" />
-						<span class="text-xs font-bold uppercase tracking-wider">User Registry</span>
+						<span class="text-xs font-bold uppercase tracking-wider">User Management</span>
 					</div>
 				</div>
 				<h1 class="text-3xl font-bold text-white tracking-tight">
-					User <span class="text-indigo-400">Management</span>
+					User <span class="text-indigo-400">Registry</span>
 				</h1>
 			</div>
 
 			<div class="flex flex-wrap items-center gap-4 relative z-10">
 				<!-- Tab Switcher -->
-				<div class="flex gap-1 bg-slate-900/50 p-1 rounded-xl border border-white/5">
-					<Button
+				<div class="flex gap-1.5 bg-black/20 p-1.5 rounded-2xl border border-white/5 backdrop-blur-md">
+					<button
 						onclick={() => (activeTab = 'players')}
-						variant={activeTab === 'players' ? 'primary' : 'ghost'}
-						size="sm"
-						class="!rounded-lg"
+						class="px-6 py-2.5 rounded-xl text-[13px] font-bold uppercase tracking-tight transition-all duration-300 {activeTab === 'players'
+							? 'bg-sky-500/10 text-sky-400 shadow-lg shadow-black/20 border border-sky-500/20'
+							: 'text-slate-500 hover:text-slate-200 hover:bg-white/5 border border-transparent'}"
 					>
 						Users
-					</Button>
-					<Button
+					</button>
+					<button
 						onclick={() => (activeTab = 'reports')}
-						variant={activeTab === 'reports' ? 'danger' : 'ghost'}
-						size="sm"
-						class="!rounded-lg"
+						class="px-6 py-2.5 rounded-xl text-[13px] font-bold uppercase tracking-tight transition-all duration-300 {activeTab === 'reports'
+							? 'bg-rose-500/10 text-rose-400 shadow-lg shadow-black/20 border border-rose-500/20'
+							: 'text-slate-500 hover:text-slate-200 hover:bg-white/5 border border-transparent'}"
 					>
 						Reports
-					</Button>
+					</button>
 				</div>
 
 				<Button
@@ -268,42 +259,42 @@ import { apiFetch } from "$lib/api";
 					disabled={activeTab === 'players' ? playersLoading : reportsLoading}
 					loading={activeTab === 'players' ? playersLoading : reportsLoading}
 					variant="secondary"
-					size="sm"
+					size="md"
 					icon="ph:arrows-clockwise-bold"
-					class="!rounded-lg"
+					class="!rounded-2xl !p-4 shadow-xl"
 				/>
 			</div>
 		</div>
 
 		<!-- Summary Stats -->
 		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-			<StatsCard 
-				title="Total Users" 
-				value={players.length} 
-				iconName="ph:users-bold" 
+			<StatsCard
+				title="Total Users"
+				value={players.length}
+				iconName="ph:users-bold"
 				color="rust"
 				subValue="Registered Accounts"
 			/>
-			<StatsCard 
-				title="Online" 
-				value={onlineCount} 
-				iconName="activity" 
+			<StatsCard
+				title="Active Sessions"
+				value={onlineCount}
+				iconName="activity"
 				color="emerald"
-				subValue={`${((onlineCount / (players.length || 1)) * 100).toFixed(1)}% Active`}
+				subValue={`${((onlineCount / (players.length || 1)) * 100).toFixed(1)}% Online`}
 			/>
-			<StatsCard 
-				title="Total XP" 
-				value={totalXP.toLocaleString()} 
-				iconName="ph:dna-bold" 
+			<StatsCard
+				title="Total XP"
+				value={totalXP.toLocaleString()}
+				iconName="ph:dna-bold"
 				color="orange"
-				subValue="Cumulative Progress"
+				subValue="Player Experience"
 			/>
-			<StatsCard 
-				title="Reports" 
-				value={reports.length} 
-				iconName="ph:shield-warning-bold" 
+			<StatsCard
+				title="Active Bans"
+				value={reports.length}
+				iconName="ph:shield-warning-bold"
 				color="red"
-				subValue={`${bannedCount} Banned`}
+				subValue={`${bannedCount} Suspended`}
 			/>
 		</div>
 
@@ -329,18 +320,17 @@ import { apiFetch } from "$lib/api";
 					/>
 				{/if}
 			</div>
-			
-			<div class="xl:col-span-4 flex items-center gap-3 bg-slate-900/50 p-2 rounded-xl border border-white/5 overflow-x-auto">
-				<span class="text-xs font-bold text-slate-500 uppercase tracking-wider pl-2 shrink-0">Sort By:</span>
+
+			<div
+				class="xl:col-span-4 flex items-center gap-3 bg-slate-900/50 p-2 rounded-xl border border-white/5 overflow-x-auto"
+			>
+				<span class="text-xs font-bold text-slate-500 uppercase tracking-wider pl-2 shrink-0"
+					>Sort By:</span
+				>
 				<div class="flex gap-1 flex-1">
-					{#each [
-						{ id: 'id', label: 'ID' },
-						{ id: 'name', label: 'Name' },
-						{ id: 'xp', label: 'XP' },
-						{ id: 'updated_at', label: 'Recent' }
-					] as sort}
-						<Button 
-							onclick={() => playerSortBy = sort.id as any}
+					{#each [{ id: 'id', label: 'ID' }, { id: 'name', label: 'Name' }, { id: 'xp', label: 'XP' }, { id: 'updated_at', label: 'Recent' }] as sort}
+						<Button
+							onclick={() => (playerSortBy = sort.id as any)}
 							variant={playerSortBy === sort.id ? 'primary' : 'ghost'}
 							size="xs"
 							class="flex-1 !rounded-lg !text-xs"
@@ -357,8 +347,12 @@ import { apiFetch } from "$lib/api";
 			{#if activeTab === 'players'}
 				{#if playersLoading && players.length === 0}
 					<div class="py-20 flex flex-col items-center gap-4">
-						<div class="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-						<span class="text-xs font-medium text-slate-500 uppercase tracking-wide">Loading Registry...</span>
+						<div
+							class="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"
+						></div>
+						<span class="text-xs font-medium text-slate-500 uppercase tracking-wide"
+							>Loading users...</span
+						>
 					</div>
 				{:else if filteredPlayers.length === 0}
 					<div class="py-20 flex flex-col items-center gap-4 opacity-60">
@@ -371,19 +365,21 @@ import { apiFetch } from "$lib/api";
 					<div class="grid grid-cols-1 xl:grid-cols-2 gap-6 pb-20">
 						{#each filteredPlayers as player (player.id)}
 							{@const isExpanded = expandedPlayerId === player.id}
-							<div 
+							<div
 								class="modern-card bg-slate-900/50 border border-white/5 rounded-2xl hover:border-sky-500/20 transition-all duration-300 relative group overflow-visible"
 								in:fade={{ duration: 200 }}
 							>
 								<!-- Status Line -->
-								<div class={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-2xl ${player.banned ? 'bg-rose-500' : (player.online ? 'bg-emerald-500' : 'bg-slate-700')}`}></div>
+								<div
+									class={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-2xl ${player.banned ? 'bg-rose-500' : player.online ? 'bg-emerald-500' : 'bg-slate-700'}`}
+								></div>
 
 								<div class="p-6 pl-8 flex flex-col gap-6">
 									<!-- Header -->
 									<div class="flex items-start justify-between gap-4">
 										<div class="flex items-center gap-5">
 											<!-- Avatar -->
-											<div 
+											<div
 												class="w-14 h-14 bg-slate-800 rounded-xl border border-white/5 flex items-center justify-center text-xl font-bold text-slate-200 cursor-pointer hover:bg-slate-700 transition-colors shadow-sm"
 												onclick={() => toggleExpand(player.id)}
 												role="button"
@@ -394,7 +390,9 @@ import { apiFetch } from "$lib/api";
 													<Ban class="w-6 h-6 text-rose-500/50" />
 												{:else if player.online}
 													<span class="relative z-10">{player.name.charAt(0).toUpperCase()}</span>
-													<div class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-slate-900 shadow-sm"></div>
+													<div
+														class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-slate-900 shadow-sm"
+													></div>
 												{:else}
 													{player.name.charAt(0).toUpperCase()}
 												{/if}
@@ -402,20 +400,28 @@ import { apiFetch } from "$lib/api";
 
 											<div>
 												<div class="flex items-center gap-3 flex-wrap">
-													<button 
+													<button
 														class="text-xl font-bold text-white hover:text-sky-400 transition-colors text-left tracking-tight"
 														onclick={() => toggleExpand(player.id)}
 													>
 														{player.name}
 													</button>
 													{#if player.banned}
-														<span class="px-2 py-0.5 rounded-lg bg-rose-500/10 text-rose-400 text-[10px] font-bold uppercase tracking-wide border border-rose-500/20">Banned</span>
+														<span
+															class="px-2 py-0.5 rounded-lg bg-rose-500/10 text-rose-400 text-[10px] font-bold uppercase tracking-wide border border-rose-500/20"
+															>Banned</span
+														>
 													{/if}
 													{#if player.online}
-														<span class="px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-wide border border-emerald-500/20">Active</span>
+														<span
+															class="px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-wide border border-emerald-500/20"
+															>Active</span
+														>
 													{/if}
 												</div>
-												<div class="flex items-center gap-4 mt-1.5 text-xs text-slate-500 font-semibold">
+												<div
+													class="flex items-center gap-4 mt-1.5 text-xs text-slate-500 font-semibold"
+												>
 													<span>ID: {player.id}</span>
 													<span class="w-1 h-1 rounded-full bg-slate-700"></span>
 													<span>{player.online ? 'Online Now' : 'Offline'}</span>
@@ -424,32 +430,44 @@ import { apiFetch } from "$lib/api";
 										</div>
 
 										<div class="flex gap-2">
-											<Button 
+											<Button
 												onclick={() => openEditModal(player)}
 												variant="ghost"
 												size="sm"
 												icon="ph:pencil-bold"
 												class="!p-2.5 !rounded-xl text-slate-400 hover:text-sky-400 hover:bg-white/5"
 											/>
-											<Button 
+											<Button
 												onclick={() => toggleExpand(player.id)}
 												variant="ghost"
 												size="sm"
 												icon="ph:caret-down-bold"
-												class="{isExpanded ? 'rotate-180' : ''} transition-transform duration-300 !p-2.5 !rounded-xl text-slate-400 hover:bg-white/5"
+												class="{isExpanded
+													? 'rotate-180'
+													: ''} transition-transform duration-300 !p-2.5 !rounded-xl text-slate-400 hover:bg-white/5"
 											/>
 										</div>
 									</div>
 
 									<!-- Metrics -->
-									<div class="grid grid-cols-2 gap-6 bg-slate-950/40 rounded-xl p-4 border border-white/5 shadow-inner">
+									<div
+										class="grid grid-cols-2 gap-6 bg-slate-950/40 rounded-xl p-4 border border-white/5 shadow-inner"
+									>
 										<div class="flex flex-col gap-1">
-											<span class="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Growth Yield</span>
-											<span class="text-lg font-bold text-amber-400 tabular-nums">{player.xp.toLocaleString()}</span>
+											<span class="text-[10px] uppercase font-bold text-slate-500 tracking-widest"
+												>Experience Points</span
+											>
+											<span class="text-lg font-bold text-amber-400 tabular-nums"
+												>{player.xp.toLocaleString()}</span
+											>
 										</div>
 										<div class="flex flex-col text-right gap-1">
-											<span class="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Clearance</span>
-											<span class="text-lg font-bold text-sky-400">LV {Math.floor(player.xp / 1000) + 1}</span>
+											<span class="text-[10px] uppercase font-bold text-slate-500 tracking-widest"
+												>Account Level</span
+											>
+											<span class="text-lg font-bold text-sky-400"
+												>LV {Math.floor(player.xp / 1000) + 1}</span
+											>
 										</div>
 									</div>
 
@@ -458,31 +476,67 @@ import { apiFetch } from "$lib/api";
 										<div class="space-y-5 pt-2 border-t border-white/5" transition:slide>
 											<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 												<div class="space-y-2">
-													<span class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Account UUID</span>
-													<div class="bg-slate-950/60 p-3 rounded-xl border border-white/5 text-xs font-mono text-slate-400 break-all shadow-inner">
+													<span
+														class="text-[10px] uppercase font-bold text-slate-500 tracking-wider"
+														>Account UUID</span
+													>
+													<div
+														class="bg-slate-950/60 p-3 rounded-xl border border-white/5 text-xs font-mono text-slate-400 break-all shadow-inner"
+													>
 														{player.uid || 'N/A'}
 													</div>
 												</div>
 												<div class="space-y-2">
-													<span class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Device ID</span>
-													<div class="bg-slate-950/60 p-3 rounded-xl border border-white/5 text-xs font-mono text-slate-400 break-all shadow-inner">
-														{player.device_id || 'Simulation'}
+													<span
+														class="text-[10px] uppercase font-bold text-slate-500 tracking-wider"
+														>Hardware ID</span
+													>
+													<div
+														class="bg-slate-950/60 p-3 rounded-xl border border-white/5 text-xs font-mono text-slate-400 break-all shadow-inner"
+													>
+														{player.device_id || 'Virtual'}
 													</div>
 												</div>
 											</div>
 
 											<div class="grid grid-cols-3 gap-3">
-												<div class="bg-slate-800/30 p-3.5 rounded-xl border border-white/5 flex flex-col gap-1 shadow-sm">
-													<div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Last Sync</div>
-													<div class="text-xs text-slate-200 font-semibold truncate">{player.last_joined_server?.split('-').pop() || 'Unknown'}</div>
+												<div
+													class="bg-slate-800/30 p-3.5 rounded-xl border border-white/5 flex flex-col gap-1 shadow-sm"
+												>
+													<div
+														class="text-[10px] text-slate-500 font-bold uppercase tracking-wider"
+													>
+														Last Sync
+													</div>
+													<div class="text-xs text-slate-200 font-semibold truncate">
+														{player.last_joined_server?.split('-').pop() || 'Unknown'}
+													</div>
 												</div>
-												<div class="bg-slate-800/30 p-3.5 rounded-xl border border-white/5 flex flex-col gap-1 shadow-sm">
-													<div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Enlisted</div>
-													<div class="text-xs text-slate-200 font-semibold">{new Date(player.created_at).toLocaleDateString()}</div>
+												<div
+													class="bg-slate-800/30 p-3.5 rounded-xl border border-white/5 flex flex-col gap-1 shadow-sm"
+												>
+													<div
+														class="text-[10px] text-slate-500 font-bold uppercase tracking-wider"
+													>
+														Registered
+													</div>
+													<div class="text-xs text-slate-200 font-semibold">
+														{new Date(player.created_at).toLocaleDateString()}
+													</div>
 												</div>
-												<div class="bg-slate-800/30 p-3.5 rounded-xl border border-white/5 flex flex-col gap-1 shadow-sm">
-													<div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Status</div>
-													<div class={`text-xs font-bold uppercase tracking-wide ${player.banned ? 'text-rose-400' : 'text-emerald-400'}`}>{player.banned ? 'Terminated' : 'Verified'}</div>
+												<div
+													class="bg-slate-800/30 p-3.5 rounded-xl border border-white/5 flex flex-col gap-1 shadow-sm"
+												>
+													<div
+														class="text-[10px] text-slate-500 font-bold uppercase tracking-wider"
+													>
+														Status
+													</div>
+													<div
+														class={`text-xs font-bold uppercase tracking-wide ${player.banned ? 'text-rose-400' : 'text-emerald-400'}`}
+													>
+														{player.banned ? 'Suspended' : 'Active'}
+													</div>
 												</div>
 											</div>
 										</div>
@@ -490,24 +544,28 @@ import { apiFetch } from "$lib/api";
 
 									<!-- Footer Actions -->
 									<div class="flex items-center justify-between pt-2">
-										<span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Last Active: {new Date(player.updated_at).toLocaleTimeString([], { hour12: false })}</span>
-										
+										<span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider"
+											>Last Active: {new Date(player.updated_at).toLocaleTimeString([], {
+												hour12: false
+											})}</span
+										>
+
 										<div class="flex gap-2">
-											<Button 
+											<Button
 												onclick={() => toggleBan(player)}
 												variant={player.banned ? 'success' : 'danger'}
 												size="xs"
 												class="!rounded-lg !px-4"
 											>
-												{player.banned ? 'Restore Access' : 'Terminate Link'}
+												{player.banned ? 'Restore Account' : 'Suspend Account'}
 											</Button>
-											<Button 
+											<Button
 												onclick={() => confirmDelete(player)}
 												variant="ghost"
 												size="xs"
 												class="!text-rose-400 hover:!bg-rose-500/10 !rounded-lg !px-4"
 											>
-												Purge
+												Delete
 											</Button>
 										</div>
 									</div>
@@ -520,8 +578,12 @@ import { apiFetch } from "$lib/api";
 				<!-- Reports List -->
 				{#if reportsLoading && reports.length === 0}
 					<div class="py-20 flex flex-col items-center gap-4">
-						<div class="w-8 h-8 border-2 border-rose-500 border-t-transparent rounded-full animate-spin"></div>
-						<span class="text-xs font-medium text-slate-500 uppercase tracking-wide">Syncing Reports...</span>
+						<div
+							class="w-8 h-8 border-2 border-rose-500 border-t-transparent rounded-full animate-spin"
+						></div>
+						<span class="text-xs font-medium text-slate-500 uppercase tracking-wide"
+							>Syncing Reports...</span
+						>
 					</div>
 				{:else if filteredReports.length === 0}
 					<div class="py-20 flex flex-col items-center gap-4 opacity-60">
@@ -533,27 +595,37 @@ import { apiFetch } from "$lib/api";
 				{:else}
 					<div class="grid grid-cols-1 gap-6 pb-20">
 						{#each filteredReports as report (report.id)}
-							<div 
+							<div
 								class="modern-card bg-slate-900/50 border border-white/5 rounded-2xl overflow-hidden hover:border-rose-500/30 transition-all duration-300 shadow-xl group"
 								in:fade={{ duration: 200 }}
 							>
 								<div class="flex flex-col md:flex-row">
 									<!-- Sidebar Indicator -->
-									<div class="w-full md:w-1.5 bg-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.3)]"></div>
+									<div
+										class="w-full md:w-1.5 bg-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.3)]"
+									></div>
 
 									<div class="flex-1 p-8 grid grid-cols-1 md:grid-cols-12 gap-10 items-start">
 										<!-- Main Info -->
 										<div class="md:col-span-5 space-y-4">
 											<div class="flex items-center gap-4">
-												<div class="p-3 bg-rose-500/10 rounded-xl text-rose-500 border border-rose-500/20">
+												<div
+													class="p-3 bg-rose-500/10 rounded-xl text-rose-500 border border-rose-500/20"
+												>
 													<ShieldAlert size={24} />
 												</div>
 												<div>
-													<h3 class="text-xl font-bold text-white tracking-tight">Report #{report.id}</h3>
-													<span class="text-xs font-bold text-rose-400 uppercase tracking-widest">High Severity</span>
+													<h3 class="text-xl font-bold text-white tracking-tight">
+														Report #{report.id}
+													</h3>
+													<span class="text-xs font-bold text-rose-400 uppercase tracking-widest"
+														>High Severity</span
+													>
 												</div>
 											</div>
-											<div class="p-4 bg-rose-500/5 border border-rose-500/10 rounded-xl text-sm font-medium text-rose-200 leading-relaxed shadow-inner">
+											<div
+												class="p-4 bg-rose-500/5 border border-rose-500/10 rounded-xl text-sm font-medium text-rose-200 leading-relaxed shadow-inner"
+											>
 												"{report.reason}"
 											</div>
 										</div>
@@ -561,21 +633,33 @@ import { apiFetch } from "$lib/api";
 										<!-- Actors -->
 										<div class="md:col-span-4 grid grid-cols-2 gap-6 border-l border-white/5 pl-10">
 											<div class="space-y-2">
-												<span class="text-[10px] font-bold uppercase text-slate-500 tracking-widest">Reporter</span>
+												<span class="text-[10px] font-bold uppercase text-slate-500 tracking-widest"
+													>Reporter</span
+												>
 												<div class="flex items-center gap-3">
-													<div class="w-8 h-8 rounded-lg bg-slate-800 border border-white/5 flex items-center justify-center text-sm font-bold text-slate-300">
+													<div
+														class="w-8 h-8 rounded-lg bg-slate-800 border border-white/5 flex items-center justify-center text-sm font-bold text-slate-300"
+													>
 														{(report.reporter_name || 'U').charAt(0)}
 													</div>
-													<div class="text-sm font-bold text-slate-100 truncate">{report.reporter_name || 'Anon'}</div>
+													<div class="text-sm font-bold text-slate-100 truncate">
+														{report.reporter_name || 'Anon'}
+													</div>
 												</div>
 											</div>
 											<div class="space-y-2">
-												<span class="text-[10px] font-bold uppercase text-slate-500 tracking-widest">Reported</span>
+												<span class="text-[10px] font-bold uppercase text-slate-500 tracking-widest"
+													>Reported</span
+												>
 												<div class="flex items-center gap-3">
-													<div class="w-8 h-8 rounded-lg bg-rose-900/30 border border-rose-500/20 flex items-center justify-center text-sm font-bold text-rose-400">
+													<div
+														class="w-8 h-8 rounded-lg bg-rose-900/30 border border-rose-500/20 flex items-center justify-center text-sm font-bold text-rose-400"
+													>
 														{(report.reported_user_name || 'U').charAt(0)}
 													</div>
-													<div class="text-sm font-bold text-rose-200 truncate">{report.reported_user_name || 'Unknown'}</div>
+													<div class="text-sm font-bold text-rose-200 truncate">
+														{report.reported_user_name || 'Unknown'}
+													</div>
 												</div>
 											</div>
 										</div>
@@ -583,19 +667,29 @@ import { apiFetch } from "$lib/api";
 										<!-- Metadata -->
 										<div class="md:col-span-3 space-y-6 border-l border-white/5 pl-10">
 											<div>
-												<span class="text-[10px] font-bold uppercase text-slate-500 tracking-widest block mb-2">Source Server</span>
+												<span
+													class="text-[10px] font-bold uppercase text-slate-500 tracking-widest block mb-2"
+													>Source Server</span
+												>
 												{#if report.game_server_instance_id}
-													<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-950 border border-white/5 text-xs font-mono text-sky-400 shadow-inner">
+													<div
+														class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-950 border border-white/5 text-xs font-mono text-sky-400 shadow-inner"
+													>
 														<Server size={14} />
 														<span>{report.game_server_instance_id.slice(0, 12)}</span>
 													</div>
 												{:else}
-													<span class="text-xs text-slate-600 font-medium italic">Unknown Node</span>
+													<span class="text-xs text-slate-600 font-medium italic">Unknown Node</span
+													>
 												{/if}
 											</div>
 											<div>
-												<div class="text-sm font-bold text-slate-200">{new Date(report.timestamp).toLocaleDateString()}</div>
-												<div class="text-xs font-medium text-slate-500 mt-0.5">{new Date(report.timestamp).toLocaleTimeString()}</div>
+												<div class="text-sm font-bold text-slate-200">
+													{new Date(report.created_at).toLocaleDateString()}
+												</div>
+												<div class="text-xs font-medium text-slate-500 mt-0.5">
+													{new Date(report.created_at).toLocaleTimeString()}
+												</div>
 											</div>
 										</div>
 									</div>
@@ -608,18 +702,20 @@ import { apiFetch } from "$lib/api";
 		</div>
 
 		<!-- Footer Status -->
-		<div class="bg-slate-900/80 border-t border-white/5 p-4 flex justify-between items-center text-xs font-medium text-slate-500 rounded-2xl mx-2">
+		<div
+			class="bg-slate-900/80 border-t border-white/5 p-4 flex justify-between items-center text-xs font-medium text-slate-500 rounded-2xl mx-2"
+		>
 			<div class="flex gap-6">
 				<div class="flex items-center gap-2">
 					<Activity class="w-3.5 h-3.5 text-emerald-500" />
-					<span>System Optimal</span>
+					<span>System Stable</span>
 				</div>
 				<div class="flex items-center gap-2">
 					<Shield class="w-3.5 h-3.5 text-indigo-500" />
-					<span>Registry Secure</span>
+					<span>Database Online</span>
 				</div>
 			</div>
-			<div>Exile OS v0.9.4</div>
+			<div>Exile Dashboard v0.9.4</div>
 		</div>
 	</div>
 
@@ -643,7 +739,7 @@ import { apiFetch } from "$lib/api";
 <style>
 	/* Cinematic Intelligence Interface Styles */
 	.bg-vignette {
-		background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.8) 100%);
+		background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.8) 100%);
 	}
 
 	/* Elegant Scrollbar */

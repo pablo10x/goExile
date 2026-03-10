@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { Bell, CheckCircle, Info, XCircle, AlertCircle } from 'lucide-svelte';
 	import { slide } from 'svelte/transition';
 	import { notifications } from '$lib/stores.svelte';
@@ -49,16 +49,20 @@ import { apiFetch } from "$lib/api";
 			<div
 				class="px-5 py-4 border-b border-neutral-700 flex justify-between items-center bg-neutral-800/40"
 			>
-				<span class="font-heading font-black text-white text-[10px] uppercase tracking-[0.2em]">Recent_Activity_Buffer</span>
+				<span class="font-heading font-black text-white text-[10px] uppercase tracking-[0.2em]"
+					>Recent_Activity_Buffer</span
+				>
 				<button
 					onclick={requestPurge}
 					class="text-[9px] font-black uppercase tracking-widest text-blue-400 hover:text-white transition-all bg-blue-500/10 hover:bg-blue-500 px-3 py-1 border border-blue-500/30 rounded-lg"
-				>PURGE_LOGS</button
+					>PURGE_LOGS</button
 				>
 			</div>
 			<div class="max-h-80 overflow-y-auto p-3 space-y-2 custom-scrollbar bg-neutral-950 relative">
-				<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.03] pointer-events-none"></div>
-				
+				<div
+					class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.03] pointer-events-none"
+				></div>
+
 				{#if $history && $history.length > 0}
 					{#each $history as note (note.id)}
 						<div
@@ -84,13 +88,21 @@ import { apiFetch } from "$lib/api";
 								{/if}
 							</div>
 							<div class="flex-1 min-w-0">
-								<p class="text-[10px] font-bold text-stone-300 leading-tight uppercase tracking-tight group-hover:text-white transition-colors">
+								<p
+									class="text-[10px] font-bold text-stone-300 leading-tight uppercase tracking-tight group-hover:text-white transition-colors"
+								>
 									{note.message}
 								</p>
 								{#if note.details}
-									<p class="text-[9px] text-stone-500 mt-1.5 font-jetbrains font-medium leading-relaxed opacity-70 break-all">{note.details}</p>
+									<p
+										class="text-[9px] text-stone-500 mt-1.5 font-jetbrains font-medium leading-relaxed opacity-70 break-all"
+									>
+										{note.details}
+									</p>
 								{/if}
-								<span class="text-[8px] font-mono text-stone-600 mt-2 block uppercase tracking-wider">
+								<span
+									class="text-[8px] font-mono text-stone-600 mt-2 block uppercase tracking-wider"
+								>
 									{new Date(note.timestamp || Date.now()).toLocaleTimeString([], { hour12: false })}
 								</span>
 							</div>
@@ -101,7 +113,11 @@ import { apiFetch } from "$lib/api";
 						<div class="p-4 bg-stone-900/50 border border-stone-800 mb-3 rounded-full">
 							<Bell class="w-6 h-6 text-stone-600" />
 						</div>
-						<p class="text-stone-500 text-[9px] font-jetbrains font-bold uppercase tracking-[0.2em]">Buffer Empty</p>
+						<p
+							class="text-stone-500 text-[9px] font-jetbrains font-bold uppercase tracking-[0.2em]"
+						>
+							Buffer Empty
+						</p>
 					</div>
 				{/if}
 			</div>

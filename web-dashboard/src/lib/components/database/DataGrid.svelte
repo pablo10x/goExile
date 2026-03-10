@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import {
 		ArrowUp,
 		ArrowDown,
@@ -261,126 +261,124 @@ import { apiFetch } from "$lib/api";
 </script>
 
 <div class="flex flex-col h-full bg-transparent">
-		<!-- Enhanced Toolbar -->
-		<div
-			class="border-b border-neutral-800 bg-neutral-900/40 backdrop-blur-md sticky top-0 z-20"
-		>
-			<div class="px-4 py-3 flex items-center justify-between gap-4">
-				<!-- Left Actions -->
-				<div class="flex items-center gap-2">
-					<!-- Pending Changes Indicator -->
-					{#if pendingChangeCount > 0}
-						<div
-							class="flex items-center gap-3 px-3 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl"
-							transition:slide={{ axis: 'x', duration: 150 }}
-						>
-							<div class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
-							<span class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">
-								{pendingChangeCount} Staged
-							</span>
-							<button
-								onclick={discardChanges}
-								class="p-0.5 hover:bg-indigo-500/20 text-indigo-400 transition-colors rounded"
-								title="Discard all changes"
-							>
-								<X class="w-3.5 h-3.5" />
-							</button>
-						</div>
-	
-						<!-- Apply Changes Button -->
+	<!-- Enhanced Toolbar -->
+	<div class="border-b border-neutral-800 bg-neutral-900/40 backdrop-blur-md sticky top-0 z-20">
+		<div class="px-4 py-3 flex items-center justify-between gap-4">
+			<!-- Left Actions -->
+			<div class="flex items-center gap-2">
+				<!-- Pending Changes Indicator -->
+				{#if pendingChangeCount > 0}
+					<div
+						class="flex items-center gap-3 px-3 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl"
+						transition:slide={{ axis: 'x', duration: 150 }}
+					>
+						<div class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
+						<span class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">
+							{pendingChangeCount} Staged
+						</span>
 						<button
-							onclick={applyChanges}
-							disabled={applyingChanges}
-							class="flex items-center gap-3 px-5 py-2 bg-indigo-500 hover:bg-indigo-400 text-white font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-500/20 transition-all disabled:opacity-50 rounded-xl"
+							onclick={discardChanges}
+							class="p-0.5 hover:bg-indigo-500/20 text-indigo-400 transition-colors rounded"
+							title="Discard all changes"
 						>
-							{#if applyingChanges}
-								<RefreshCw class="w-3.5 h-3.5 animate-spin" />
-								<span>COMMITTING...</span>
-							{:else}
-								<Save class="w-3.5 h-3.5" />
-								<span>Push Changes</span>
-							{/if}
+							<X class="w-3.5 h-3.5" />
 						</button>
-	
-						<div class="h-6 w-px bg-neutral-800 mx-1"></div>
-					{/if}
-	
-					<!-- Selection Info -->
-					{#if selectedIds.size > 0}
-						<div
-							class="flex items-center gap-3 px-3 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl"
-							transition:slide={{ axis: 'x', duration: 150 }}
-						>
-							<span class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">
-								{selectedIds.size} Selected
-							</span>
-							<button
-								onclick={() => (selectedIds = new Set())}
-								class="p-0.5 hover:bg-indigo-500/20 text-indigo-400 transition-colors rounded"
-							>
-								<X class="w-3.5 h-3.5" />
-							</button>
-						</div>
-					{/if}
-	
-					<!-- Delete Button -->
+					</div>
+
+					<!-- Apply Changes Button -->
 					<button
-						disabled={selectedIds.size === 0}
-						onclick={requestDelete}
-						class="flex items-center gap-2 px-3 py-2 transition-all rounded-xl {selectedIds.size >
-						0
-							? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20'
-							: 'text-neutral-600 cursor-not-allowed border border-transparent'}"
+						onclick={applyChanges}
+						disabled={applyingChanges}
+						class="flex items-center gap-3 px-5 py-2 bg-indigo-500 hover:bg-indigo-400 text-white font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-500/20 transition-all disabled:opacity-50 rounded-xl"
 					>
-						<Trash2 class="w-4 h-4" />
-						<span class="text-[10px] font-bold uppercase tracking-widest hidden sm:inline">Purge</span>
+						{#if applyingChanges}
+							<RefreshCw class="w-3.5 h-3.5 animate-spin" />
+							<span>COMMITTING...</span>
+						{:else}
+							<Save class="w-3.5 h-3.5" />
+							<span>Push Changes</span>
+						{/if}
 					</button>
-	
-					<div class="h-6 w-px bg-neutral-800 mx-1 hidden sm:block"></div>
-	
-					<!-- Search Toggle -->
-					<button
-						onclick={() => {
-							showSearch = !showSearch;
-							if (!showSearch) searchQuery = '';
-						}}
-						class="p-2 transition-colors rounded-xl {showSearch
-							? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
-							: 'text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800'}"
+
+					<div class="h-6 w-px bg-neutral-800 mx-1"></div>
+				{/if}
+
+				<!-- Selection Info -->
+				{#if selectedIds.size > 0}
+					<div
+						class="flex items-center gap-3 px-3 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl"
+						transition:slide={{ axis: 'x', duration: 150 }}
 					>
-						<Search class="w-4 h-4" />
-					</button>
-	
-					<!-- Filter Button (placeholder) -->
-					<button
-						class="p-2 text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800 transition-colors rounded-xl"
-					>
-						<Filter class="w-4 h-4" />
-					</button>
-				</div>
-	
-				<!-- Right Actions -->
-				<div class="flex items-center gap-2">
-					{#if onRefresh}
+						<span class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">
+							{selectedIds.size} Selected
+						</span>
 						<button
-							onclick={onRefresh}
-							disabled={isLoading}
-							class="p-2 text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800 transition-colors disabled:opacity-20 rounded-xl"
-							title="Refresh"
+							onclick={() => (selectedIds = new Set())}
+							class="p-0.5 hover:bg-indigo-500/20 text-indigo-400 transition-colors rounded"
 						>
-							<RefreshCw class="w-4 h-4 {isLoading ? 'animate-spin' : ''}" />
+							<X class="w-3.5 h-3.5" />
 						</button>
-					{/if}
-	
-					<button
-						onclick={onAddRow}
-						class="flex items-center gap-3 px-5 py-2 bg-neutral-800 text-white hover:bg-neutral-700 font-bold text-[10px] uppercase tracking-widest shadow-lg transition-all active:tranneutral-y-px rounded-xl border border-neutral-700"
+					</div>
+				{/if}
+
+				<!-- Delete Button -->
+				<button
+					disabled={selectedIds.size === 0}
+					onclick={requestDelete}
+					class="flex items-center gap-2 px-3 py-2 transition-all rounded-xl {selectedIds.size > 0
+						? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20'
+						: 'text-neutral-600 cursor-not-allowed border border-transparent'}"
+				>
+					<Trash2 class="w-4 h-4" />
+					<span class="text-[10px] font-bold uppercase tracking-widest hidden sm:inline">Purge</span
 					>
-						<Plus class="w-4 h-4" />
-						<span>Initialize Row</span>
-					</button>
-				</div>
+				</button>
+
+				<div class="h-6 w-px bg-neutral-800 mx-1 hidden sm:block"></div>
+
+				<!-- Search Toggle -->
+				<button
+					onclick={() => {
+						showSearch = !showSearch;
+						if (!showSearch) searchQuery = '';
+					}}
+					class="p-2 transition-colors rounded-xl {showSearch
+						? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+						: 'text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800'}"
+				>
+					<Search class="w-4 h-4" />
+				</button>
+
+				<!-- Filter Button (placeholder) -->
+				<button
+					class="p-2 text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800 transition-colors rounded-xl"
+				>
+					<Filter class="w-4 h-4" />
+				</button>
 			</div>
+
+			<!-- Right Actions -->
+			<div class="flex items-center gap-2">
+				{#if onRefresh}
+					<button
+						onclick={onRefresh}
+						disabled={isLoading}
+						class="p-2 text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800 transition-colors disabled:opacity-20 rounded-xl"
+						title="Refresh"
+					>
+						<RefreshCw class="w-4 h-4 {isLoading ? 'animate-spin' : ''}" />
+					</button>
+				{/if}
+
+				<button
+					onclick={onAddRow}
+					class="flex items-center gap-3 px-5 py-2 bg-neutral-800 text-white hover:bg-neutral-700 font-bold text-[10px] uppercase tracking-widest shadow-lg transition-all active:tranneutral-y-px rounded-xl border border-neutral-700"
+				>
+					<Plus class="w-4 h-4" />
+					<span>Initialize Row</span>
+				</button>
+			</div>
+		</div>
 
 		<!-- Search Bar -->
 		{#if showSearch}
@@ -405,7 +403,9 @@ import { apiFetch } from "$lib/api";
 					{/if}
 				</div>
 				{#if searchQuery && filteredData.length !== data.length}
-					<p class="text-[9px] text-neutral-500 mt-2 px-1 font-bold uppercase tracking-widest italic">
+					<p
+						class="text-[9px] text-neutral-500 mt-2 px-1 font-bold uppercase tracking-widest italic"
+					>
 						Filtered: {filteredData.length} / {data.length} records mapped
 					</p>
 				{/if}
@@ -424,15 +424,16 @@ import { apiFetch } from "$lib/api";
 					<div
 						class="w-10 h-10 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin shadow-[0_0_15px_rgba(99,102,241,0.4)]"
 					></div>
-					<span class="text-[10px] font-bold text-neutral-400 uppercase tracking-[0.3em] animate-pulse">Syncing_Data_Stream...</span>
+					<span
+						class="text-[10px] font-bold text-neutral-400 uppercase tracking-[0.3em] animate-pulse"
+						>Syncing_Data_Stream...</span
+					>
 				</div>
 			</div>
 		{/if}
 
 		<table class="w-full text-left text-xs border-collapse font-jetbrains">
-			<thead
-				class="bg-neutral-900 sticky top-0 z-10 border-b border-neutral-800 backdrop-blur-md"
-			>
+			<thead class="bg-neutral-900 sticky top-0 z-10 border-b border-neutral-800 backdrop-blur-md">
 				<tr>
 					<!-- Checkbox Column -->
 					<th class="px-4 py-3 w-12 text-center">
@@ -468,7 +469,9 @@ import { apiFetch } from "$lib/api";
 									</span>
 								{/if}
 
-								<span class="text-neutral-400 group-hover:text-indigo-400 transition-colors">{col.name}</span>
+								<span class="text-neutral-400 group-hover:text-indigo-400 transition-colors"
+									>{col.name}</span
+								>
 
 								<!-- Sort Indicator -->
 								<div class="flex items-center">
@@ -479,15 +482,15 @@ import { apiFetch } from "$lib/api";
 											<ArrowDown class="w-3 h-3 text-indigo-400" />
 										{/if}
 									{:else}
-										<ArrowUp
-											class="w-3 h-3 opacity-0 group-hover:opacity-30 transition-opacity"
-										/>
+										<ArrowUp class="w-3 h-3 opacity-0 group-hover:opacity-30 transition-opacity" />
 									{/if}
 								</div>
 							</div>
 
 							<!-- Column Type -->
-							<div class="text-[8px] text-neutral-600 font-medium mt-1 uppercase tracking-tighter italic">
+							<div
+								class="text-[8px] text-neutral-600 font-medium mt-1 uppercase tracking-tighter italic"
+							>
 								{col.type || 'UNKNOWN_TYPE'}
 							</div>
 						</th>
@@ -626,8 +629,12 @@ import { apiFetch } from "$lib/api";
 							<div class="flex flex-col items-center justify-center text-neutral-700">
 								{#if searchQuery}
 									<Search class="w-16 h-16 mb-4 opacity-20" />
-									<p class="font-bold text-[11px] uppercase tracking-widest">No matching records identified</p>
-									<p class="text-[9px] mt-2 font-medium uppercase tracking-widest opacity-50">Adjust query parameters or sector filter</p>
+									<p class="font-bold text-[11px] uppercase tracking-widest">
+										No matching records identified
+									</p>
+									<p class="text-[9px] mt-2 font-medium uppercase tracking-widest opacity-50">
+										Adjust query parameters or sector filter
+									</p>
 									<button
 										onclick={() => (searchQuery = '')}
 										class="mt-8 px-6 py-2.5 bg-neutral-900 border border-neutral-800 hover:border-indigo-500/50 hover:text-indigo-400 text-[10px] font-bold uppercase tracking-[0.2em] transition-all rounded-xl"
@@ -640,8 +647,12 @@ import { apiFetch } from "$lib/api";
 									>
 										<Plus class="w-8 h-8 opacity-30" />
 									</div>
-									<p class="font-bold text-[11px] uppercase tracking-widest">Sector buffer is empty</p>
-									<p class="text-[9px] mt-2 font-medium uppercase tracking-widest opacity-50">No persistent entities recorded</p>
+									<p class="font-bold text-[11px] uppercase tracking-widest">
+										Sector buffer is empty
+									</p>
+									<p class="text-[9px] mt-2 font-medium uppercase tracking-widest opacity-50">
+										No persistent entities recorded
+									</p>
 									<button
 										onclick={onAddRow}
 										class="mt-8 px-8 py-3 bg-indigo-500 hover:bg-indigo-400 text-white text-[10px] font-bold uppercase tracking-[0.2em] transition-all shadow-xl shadow-indigo-900/20 rounded-xl"
@@ -663,7 +674,9 @@ import { apiFetch } from "$lib/api";
 	>
 		<div class="flex items-center gap-8 text-[9px] font-bold uppercase tracking-widest">
 			<span class="flex items-center gap-3">
-				<div class="w-1.5 h-1.5 bg-indigo-500 rounded-full shadow-[0_0_8px_rgba(99,102,241,0.6)]"></div>
+				<div
+					class="w-1.5 h-1.5 bg-indigo-500 rounded-full shadow-[0_0_8px_rgba(99,102,241,0.6)]"
+				></div>
 				<span class="text-neutral-500">{filteredData.length} ENTITIES_MAPPED</span>
 				{#if searchQuery}
 					<span class="text-indigo-400 italic">[FILTERED_MODE]</span>
@@ -671,20 +684,28 @@ import { apiFetch } from "$lib/api";
 			</span>
 
 			{#if selectedIds.size > 0}
-				<span class="text-indigo-400 bg-indigo-500/5 px-3 py-1 border border-indigo-500/20 rounded-lg">
+				<span
+					class="text-indigo-400 bg-indigo-500/5 px-3 py-1 border border-indigo-500/20 rounded-lg"
+				>
 					{selectedIds.size} TARGETS_LOCKED
 				</span>
 			{/if}
 
 			{#if pendingChangeCount > 0}
-				<span class="text-indigo-400 flex items-center gap-3 bg-indigo-500/5 px-3 py-1 border border-indigo-500/20 rounded-lg">
-					<div class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(99,102,241,0.6)]"></div>
+				<span
+					class="text-indigo-400 flex items-center gap-3 bg-indigo-500/5 px-3 py-1 border border-indigo-500/20 rounded-lg"
+				>
+					<div
+						class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(99,102,241,0.6)]"
+					></div>
 					{pendingChangeCount} STAGED_MUTATIONS
 				</span>
 			{/if}
 		</div>
 
-		<div class="flex items-center gap-6 text-[8px] font-bold text-neutral-600 uppercase tracking-[0.3em] hidden lg:flex italic">
+		<div
+			class="flex items-center gap-6 text-[8px] font-bold text-neutral-600 uppercase tracking-[0.3em] hidden lg:flex italic"
+		>
 			<span>Click_Edit</span>
 			<span class="w-1 h-1 bg-neutral-800 rounded-full"></span>
 			<span>Ctrl+Enter_Commit</span>
@@ -696,7 +717,9 @@ import { apiFetch } from "$lib/api";
 
 <ConfirmModal
 	bind:isOpen={showDeleteConfirm}
-	title={pendingDeleteIds.length === 1 ? 'Delete Record' : `Delete ${pendingDeleteIds.length} Records`}
+	title={pendingDeleteIds.length === 1
+		? 'Delete Record'
+		: `Delete ${pendingDeleteIds.length} Records`}
 	message={pendingDeleteIds.length === 1
 		? 'Are you sure you want to delete this record? This action cannot be undone.'
 		: `Are you sure you want to delete these ${pendingDeleteIds.length} records? This action cannot be undone.`}

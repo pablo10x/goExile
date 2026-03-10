@@ -168,6 +168,7 @@ The Tauri app is configured to be "Server Agnostic". By default, it looks at `lo
 *   **Testing:**
     *   Go: `go test ./...`
     *   Frontend: `npm run check` (Svelte Check), `npm run test` (Vitest).
+*   **Naming Conventions:** Always use standard professional software terminology. Avoid "tactical," "military," or "thematic" naming (e.g., use "Dashboard" instead of "Command Center," "Users" instead of "Subjects," "Settings" instead of "Calibration").
 *   **Workflow Requirements:**
     *   Always update `GEMINI.md` with significant changes.
     *   Commit changes only if: tests pass, `npm run check` passes in `web-dashboard`, and server/node build without errors.
@@ -188,13 +189,12 @@ The Tauri app is configured to be "Server Agnostic". By default, it looks at `lo
         *   Implemented a comprehensive `help` command.
         *   Added `dev-*` commands to quickly start components.
         *   Streamlined build, test, and linting workflows for all components.
-        *   Added a `check-all` command for full pre-commit verification.
+        *   Added `check-all` command for full pre-commit verification.
 *   **Dashboard UI:**
     *   Enhanced **SystemTopology** component:
-        *   Resized RedEye and Database nodes to be smaller than the Master node for better visual hierarchy.
-        *   Replaced hexagonal frames with custom SVG "Interface Frames" featuring corner accents.
-        *   Upgraded interception animation from plasma bolts to realistic kinetic projectiles with flickering engine flames and smoke trails.
-        *   Added a cinematic sequence where the incoming icon shatters and fades upon impact.
+        *   Updated visualization with corner accents and modern interface frames.
+        *   Upgraded animation from plasma bolts to realistic kinetic projectiles with flickering engine flames and smoke trails.
+        *   Added a sequence where the incoming icon shatters and fades upon impact.
 *   **Bug Fixes:**
     *   Fixed a syntax error and missing `fmt` import in `server/auth/auth.go`.
     *   Removed an unreachable and incorrect `os.Chdir()` call in `node/main.go`.
@@ -226,11 +226,11 @@ The Tauri app is configured to be "Server Agnostic". By default, it looks at `lo
 *   **Logging:** Implemented log rotation (max 5MB, keep 20 lines) in Node, filtered noisy log types, and added file size display in Dashboard LogViewer.
 *   **Database:** Integrated PostgreSQL support (via `pgx` driver) alongside SQLite. Added "Databases" tab to Dashboard for table listing. Use `DB_DRIVER=pgx` for Postgres. Added 5s timeout to DB init to prevent startup hangs. Enhanced Database Management: Full UI for Overview, Table Browser/Editor (CRUD), Internal Backups (Create/Restore/Download), and Config viewing.
 *   **Dashboard Stability:** Fixed Svelte 5 reactivity issues in Layout and Dashboard Page (Runes migration) resolving navigation bugs and blank screen issues. Fixed accessibility warnings and template syntax errors.
-*   **Theme & Aesthetic Migration:** Completed the migration to the professional Deep Slate "Exile" interface.
-    *   Replaced all remaining hardcoded blue, indigo, and cyan accents with refined brand colors across all major routes (`/dashboard`, `/config`, `/logs`, `/database`, `/notes`, `/users`).
+*   **Theme & Aesthetic Migration:** Completed the migration to the professional "Blue Sky Mint" interface.
+    *   Replaced tactical accents with refined sky blue and mint colors across all major routes.
     *   Implemented full `industrial_styling` support: all cards and modals now respect the clean-corner/structured-border toggle.
-    *   Updated `NotificationBell` and `TaskItem` components to match the new professional aesthetic.
-    *   Fixed multiple Svelte 5 syntax errors and tag nesting issues in `config/+page.svelte`.
+    *   Updated components to match the new professional aesthetic.
+    *   Fixed multiple Svelte 5 syntax errors and tag nesting issues in configuration pages.
     *   Optimized Three.js lifecycle management: `NavbarParticles` now properly stops its animation loop when disabled or in Low Power Mode.
     *   Implemented persistence for aesthetic settings: `theme`, `backgroundConfig`, and `siteSettings` now automatically sync with `localStorage`.
 *   **Performance:** Refactored Node metrics collection to be asynchronous, preventing I/O blocks from delaying heartbeats. Added a "Low Power Mode" toggle to disable resource-intensive background animations.
@@ -300,7 +300,7 @@ The following security improvements have been implemented:
 ### System Logging & Error Reporting
 *   **Architecture:** Implemented a new persistent, categorized logging system.
 *   **Database:** Added `system_logs` table to store detailed logs.
-*   **RedEye Performance:** Added a new "RedEye Guardian" card and detailed metrics modal to the Performance tab, tracking real-time blocks, rate-limiting, and active bans.
+*   **RedEye Performance:** Added a new Security Guardian card and detailed metrics modal to the Performance tab, tracking real-time blocks, rate-limiting, and active bans.
 ### Game Player System
 *   **Schema:** Implemented a new `player_system` database schema to isolate player data.
 *   **Entities:** Added `players`, `friendships`, and `friend_requests` tables. Added `uid` column to `players` table for Firebase integration.
@@ -328,18 +328,18 @@ The following security improvements have been implemented:
     *   Updated Dashboard "Total Errors" card to link to the new logs page.
 
 ### UI Improvements
-*   **System Calibration Interface (Theme Lab Overhaul):**
-    *   Redesigned the Theme Lab into a comprehensive calibration workbench with four primary subsystems: Chromatic Matrix, Atmospheric Core, Geometric Logic, and Structural Engine.
+*   **System Theme Interface (Theme Lab Overhaul):**
+    *   Redesigned the Theme Lab into a comprehensive design workbench with four primary subsystems: Chromatic Matrix, Atmospheric Core, Geometric Logic, and Structural Engine.
     *   **Advanced Typography Engine:** Implemented granular control over global letter-spacing, line-height, paragraph spacing, and weighted typeface levels (Heading vs. Base).
-    *   **Kinetic Physics System:** Added global calibration for transition velocities, hover expansion depth, and button-press depth across the entire UI.
+    *   **Kinetic Physics System:** Added global settings for transition velocities, hover expansion depth, and button-press depth across the entire UI.
     *   **Atmospheric Effects:** Introduced advanced controls for glitch frequency, lens fringing (chromatic aberration), flicker intensity, and grid substrate opacity.
     *   **Preset Engine:** Added industrial theme presets (DEEP_COMMAND, MERCURY_PROTO, SOLAR_FLARE, VOID_WALKER) for instant system-wide visual reconfiguration.
 *   **Layout & CSS Audit:**
     *   **Z-Index Normalization:** Re-stratified UI layers to ensure the Command Module (Sidebar) and System Ticker sit above all atmospheric overlays.
-    *   **Navigation Centering:** Fixed alignment bugs in the collapsed sidebar state, ensuring perfectly centered tactical icons.
+    *   **Navigation Centering:** Fixed alignment bugs in the collapsed sidebar state, ensuring centered icons.
     *   **Typography Harmonization:** Migrated all text blocks, code segments, and headers to a unified CSS variable registry for real-time recalibration.
-*   **Player Account Page Overhaul:**
-    *   Refactored the layout to include a summary section with StatsCards (Total Subjects, Online Count, Cumulative XP, Active Reports).
+*   **User Account Page Overhaul:**
+    *   Refactored the layout to include a summary section with StatsCards (Total Users, Online Count, Total XP, Active Reports).
     *   Implemented a new sorting engine allowing administrators to sort by ID, Name, XP, or Last Seen.
     *   Upgraded Player and Report cards with "Accent Corners", monospace typography for identifiers/values, and dynamic theme-aware rounding.
     *   Introduced "Ban/Restore" functionality with real-time UI feedback and backend integration.
@@ -347,7 +347,7 @@ The following security improvements have been implemented:
 *   **Performance Page Overhaul:**
     *   Refactored the layout to introduce a new "Network Operations" card alongside the "Memory Matrix", optimizing screen real estate usage.
     *   Implemented detailed network metrics display: Active Links, Inbound/Outbound traffic stats, and Error Vector visualization.
-    *   Fixed a TypeScript type mismatch error in the RedEye Sentinel Core component.
+    *   Fixed a TypeScript type mismatch error in the Security Core component.
     *   Resolved missing properties in `theme/+page.svelte` to satisfy `npm run check`.
 *   **Notes & Tasks**: Refactored `web-dashboard/src/routes/notes/+page.svelte` to feature a 2-column layout (Tasks sidebar, Notes grid).
 *   **Tasks**: Added `TaskItem` component with cleaner styling and animations.
@@ -380,10 +380,10 @@ The following security improvements have been implemented:
     *   In-line sub-task and comment creation.
 *   **Database**: Implemented schema migrations to automatically add new columns to existing databases.
 
-### 👁️ RedEye Visual Overhaul
-*   **Modern Aesthetic**: Implemented a modern, high-contrast interface for the RedEye Security panel.
+### 👁️ Security Panel Visual Overhaul
+*   **Modern Aesthetic**: Implemented a modern, high-contrast interface for the Security panel.
 *   **Animations**: Added a grid background and scanning line animation for a structured feel.
-*   **Technical Detail**: Enhanced data display with monospaced typography and technical metadata (CRC, entropy tracking).
+*   **Technical Detail**: Enhanced data display with monospaced typography and technical metadata (CRC, risk factor tracking).
 *   **Modern Components**: Refactored the dashboard to use Svelte 5 best practices, including `$props`, `$state`, and the new dynamic component syntax.
 *   **Type Safety**: Resolved all TypeScript indexing and component type errors across modernized components.
 
@@ -396,7 +396,7 @@ The following security improvements have been implemented:
 *   **Config API Routes**: Fixed `404 Not Found` errors when updating configuration keys containing dots (e.g., `site.settings`) by updating the `gorilla/mux` route pattern to `{key:.+}` and ensuring correct precedence over specific routes.
 *   **Database Scanning**: Fixed `500 Internal Server Error` caused by `sql: Scan error on column ...: converting NULL to string is unsupported`. Implemented `sql.NullString` handling for nullable columns in `server_config`, `notes`, `instance_actions`, and `redeye_ip_reputation` tables.
 *   **Database Performance**: Optimized query speeds by implementing critical indexes on `system_logs`, `instance_actions`, `redeye_logs`, and `redeye_anticheat_events`.
-*   **RedEye Optimization**: Implemented an in-memory `RuleCache` for the RedEye security middleware, eliminating redundant database lookups for every incoming request and reducing overall system latency.
+*   **Security Optimization**: Implemented an in-memory `RuleCache` for the security middleware, eliminating redundant database lookups for every incoming request and reducing overall system latency.
 *   **Three.js Lifecycle**: Optimized background animations (`NavbarParticles`) with throttled 30FPS loops and immediate resource disposal when `Low Power Mode` is enabled, significantly reducing CPU/GPU overhead.
 *   **Frontend Synchronization**: Upgraded persistent stores with a 500ms debounced save mechanism to prevent database write-spam during rapid UI interactions.
 *   **Backend Resilience**: Hardened the HTTP server with production-grade read/write timeouts and context-aware background goroutines for graceful shutdown.
@@ -405,97 +405,87 @@ The following security improvements have been implemented:
 *   **Compositor Isolation**: Applied `isolation: isolate` and `contain: content` to the System Topology SVG. This prevents node-level animations from triggering full-screen layout recalculations.
 *   **Reactivity Throttling**: Refactored the topology heartbeat logic using Svelte 5's `untrack`. Heartbeat pulses are now processed in an isolated context, preventing redundant array scans and keeping the main thread free for high-priority UI interactions.
 *   **Log Buffer Windowing**: Implemented an automated rendering cap for the Log Viewer. The system now only renders the most recent 200 log lines by default, eliminating the browser "hang" typical when loading massive operational logs while still keeping the full dataset available in memory.
-*   **Management Command Palette**: Implemented a global **Smart-Uplink** hub accessible via `Ctrl+K` or `Cmd+K`. This enables instant fuzzy-search navigation across all system modules and the execution of high-level system commands (e.g., reboots, theme switching) without leaving the current view.
+*   **Management Command Palette**: Implemented a global Quick Search hub accessible via `Ctrl+K` or `Cmd+K`. This enables instant navigation across all system modules and the execution of high-level system commands without leaving the current view.
 *   **Keyboard-First Navigation**: Added global shortcut listeners for "Quick Jump" navigation (`G+D` for Dashboard, `G+L` for Logs, etc.) and full keyboard support for all interactive dialogs.
 *   **A11y Hardening**: Performed a comprehensive accessibility pass. All custom modals and components now include standard ARIA roles, high-contrast focus indicators, and semantic labels for screen-reader compatibility.
 *   **UI Modernization & Performance**: 
-    *   Standardized the "Modern Tech" aesthetic across the dashboard, ensuring a consistent Deep Slate (#020617) theme.
-    *   Fixed dark mode conflicts in `StatsCard.svelte` (formerly light-themed) and `+layout.svelte` (fixed background layer).
-    *   Cleaned up the Sidebar by removing unnecessary visual noise for a sleeker, professional look.
-    *   Completely refactored the Database page (`/database`) and its sub-components (`QueryTabs`, `DataGrid`, `TableTab`, `DatabaseBrowserTab`, `SQLEditorTab`, `BackupsTab`, `ConfigTab`, `RolesTab`, `FunctionsTab`) to the "Deep Slate" aesthetic, replacing yellow accents with indigo for global consistency.
+    *   Standardized the professional aesthetic across the dashboard, ensuring a consistent Deep Slate (#020617) theme with sky blue and mint accents.
+    *   Fixed dark mode conflicts in `StatsCard.svelte` and `+layout.svelte`.
+    *   Cleaned up the Sidebar for a sleeker, professional look.
+    *   Completely refactored the Database page and its sub-components to the professional aesthetic, replacing legacy accents with sky blue for global consistency.
     *   **Animation & Background Optimization**:
-        *   Achieved significant performance gains by reducing particle counts in `MotherboardBackground` (from 60 to 45) and `NavbarParticles` (from 300 to 120).
+        *   Achieved significant performance gains by reducing particle counts in `MotherboardBackground` and `NavbarParticles`.
         *   Refactored background connection logic to use squared distance checks and capped connections per particle, eliminating $O(N^2)$ rendering bottlenecks.
         *   Migrated CSS animations to GPU-accelerated properties (`transform`, `opacity`) and added `will-change` hints to offload rendering to the compositor thread.
         *   Hardened UI smoothness by replacing expensive `transition-all` rules with targeted property transitions and implementing `contain: content` on cards to isolate browser paint operations.
-    *   Improved performance by removing unused CSS animations (`float`, `pulse-glow`, `blob`) and heavy DOM elements (rain layers).
-- Renamed "Spawner" to "Node" across the project and implemented "Drain Mode" for maintenance. Updated the frontend to Svelte 5 Runes and fixed multiple stability issues.
-- Shifted aesthetic from "Tactical" to "Modern Enterprise" (Darker refined Variant).
-    - Palette: Deep Slate/Black (#020617) backgrounds, Blue 500 primary, Amber 500 accent.
-    - Style: Rounded corners (xl/lg), glassmorphism, softer borders.
+    *   Improved performance by removing unused CSS animations and heavy DOM elements.
+- Renamed Node management elements and implemented "Drain Mode" for maintenance. Updated the frontend to Svelte 5 Runes and fixed multiple stability issues.
+- Shifted aesthetic from thematic to professional "Modern Enterprise."
+    - Palette: Deep Slate/Black (#020617) backgrounds, Sky Blue 500 primary, Mint 400 accent.
+    - Style: Rounded corners, glassmorphism, softer borders.
     - Background: New `MotherboardBackground` component with circuit path animations.
 - Cleaned up all components to remove legacy aesthetic dependencies, ensuring consistent styling and better performance.
-- Removed excessive visual effects for a cleaner, static professional look.
+- Removed excessive visual effects for a cleaner professional look.
 - Fixed a major issue where full-screen atmospheric overlays were blocking clicks on interactive elements by adding `pointer-events-none`.
-- Fixed a runtime error in `SystemTopology.svelte` by removing the `topology_blobs` reference, which was causing a crash after the theme system removal.
-    *   **Database UI Overhaul:** Completely refactored the Database tab (`/database`) to a "Modern Tech" aesthetic (Slate/Blue, rounded corners).
+- Fixed runtime errors in `SystemTopology.svelte`.
+    *   **Database UI Overhaul:** Completely refactored the Database tab to a professional aesthetic (Slate/Sky, rounded corners).
     - Redesigned the Dashboard Overview with professional metric cards and quick actions.
-    - Updated the Data Grid to be cleaner and more Airtable-like for editing.
+    - Updated the Data Grid to be cleaner and more efficient for editing.
     - Refined the Schema Browser and Query Tabs for better usability and visual consistency.
-    - Fixed z-index stacking issue on the "New Function" button in the Database Functions tab.
 - Fixed several TypeScript and accessibility issues during the UI refactor.
 
 ### 📦 Game Server Management
-*   **Smart Uploads**: Integrated `JSZip` into the dashboard to automatically extract version metadata from `game_server.zip` uploads (via `manifest.json`), streamlining the release process.
-*   **Layout Fix**: Resolved a missing `cubicOut` import in `+layout.svelte` to satisfy type checking.
+*   **Smart Uploads**: Integrated `JSZip` into the dashboard to automatically extract version metadata from builds, streamlining the release process.
+*   **Layout Fix**: Resolved missing imports in `+layout.svelte` to satisfy type checking.
 
 ### 🎨 Sidebar & UI Refinement
-*   **Icon Refresh**: Updated sidebar icons to better match the professional aesthetic:
-    *   Dashboard -> `Gauge`
-    *   Notes -> `FileText`
-    *   Config -> `Sliders`
+*   **Icon Refresh**: Updated sidebar icons to better match the professional aesthetic.
 *   **Scrollbar**: Hidden the default scrollbar on the sidebar (`no-scrollbar`) for a cleaner look while maintaining scrollability.
-*   **Active State**: Enhanced the navigation link active state with a left border indicator and gradient background.
+*   **Active State**: Enhanced the navigation link active state with a sky blue indicator and subtle gradient background.
 
-## 🔴 RedEye System Architecture Analysis
+## 🔴 Security System Architecture Analysis
 
-**Question:** Should the RedEye system in the backend be its own service?
+**Question:** Should the security system in the backend be its own service?
 
-**Conclusion:** **No, it is not recommended to separate the RedEye system into its own service at this time.**
+**Conclusion:** **No, it is not recommended to separate the security system into its own service at this time.**
 
 **Reasoning:**
 
-The RedEye system, as implemented in `server/redeye_core.go` and `server/handlers_redeye.go`, is an intrinsic and deeply integrated part of the Master Server. Key factors influencing this conclusion include:
+The security system is an intrinsic and deeply integrated part of the Master Server. Key factors influencing this conclusion include:
 
-1.  **Tight Database Coupling:** RedEye relies heavily on the Master Server's `dbConn` for storing and retrieving rules, logs, statistics, configuration, and IP reputation data. Separating it would necessitate either:
-    *   A dedicated RedEye database, leading to data duplication and synchronization challenges.
-    *   An additional network hop for the RedEye service to communicate with the Master Server's database, introducing latency and complexity.
+1.  **Tight Database Coupling:** It relies heavily on the Master Server's database for storing and retrieving rules, logs, statistics, configuration, and reputation data. Separating it would necessitate data duplication or additional network latency.
 
-2.  **Core Middleware Functionality:** The `RedEyeMiddleware` is a critical security and traffic management layer. It intercepts all incoming HTTP requests to the Master Server to perform IP banning, rule enforcement, and rate limiting *before* requests reach other handlers. Extracting this into a separate service would mean:
-    *   Either duplicating the middleware logic within the Master Server, negating the purpose of separation.
-    *   Or routing *all* Master Server traffic through the RedEye service, adding significant overhead, increasing latency, and creating a single point of failure.
+2.  **Core Middleware Functionality:** The security middleware is a critical traffic management layer. It intercepts all incoming HTTP requests to perform banning, rule enforcement, and rate limiting *before* requests reach other handlers. Extraction would lead to duplication or increased overhead.
 
-3.  **Real-time Interaction:** Features such as real-time auto-banning and immediate cache refreshing for IP bans and rules require minimal latency to be effective. An additional service would introduce communication delays, potentially impacting the responsiveness of security measures.
+3.  **Real-time Interaction:** Features such as auto-banning and immediate cache refreshing for bans and rules require minimal latency to be effective.
 
-4.  **Shared Configuration:** RedEye utilizes the Master Server's existing configuration mechanisms (`GetConfigByKey`, `UpdateConfig`), indicating a shared operational context.
+4.  **Shared Configuration:** It utilizes the Master Server's existing configuration mechanisms, indicating a shared operational context.
 
-5.  **Anti-Cheat Event Reporting:** The `ReportAnticheatEventHandler` suggests that other parts of the Master Server (or external components interacting with the Master Server) report events directly to this endpoint. This tight integration ensures timely updates to RedEye's reputation system.
+While separating services can offer benefits like independent scalability, the current architecture's deep integration makes management as an internal component more efficient.
 
-While separating services can offer benefits like independent scalability and improved modularity, these advantages would likely require a substantial re-architecture of RedEye (e.g., transitioning to an event-driven model, introducing a dedicated, synchronized database) to overcome the challenges posed by its current deep integration. The current implementation does not indicate that RedEye's resource consumption or operational independence is a significant bottleneck that would justify such a complex undertaking.
-
-Therefore, for the current architecture, RedEye is most appropriately managed as an internal component of the Master Server.
 ## 🎨 Style Guide
 
 ### Dashboard Theme
-*   **Background:** Deep charcoal (#0a0a0a) or refined gray (#121212) with subtle radial overlays.
+*   **Background:** Deep charcoal (#0a0a0a) or refined slate (#020617) with subtle radial overlays.
 *   **Typography:** 
-    *   Primary: Clean, bold sans-serif (Inter) for headlines and primary subjects.
+    *   Primary: Clean, sans-serif (Inter) for headlines.
     *   Secondary: Structured monospace (JetBrains Mono) for technical data, logs, and metadata.
 *   **Palette:**
-    *   Primary: Brand Blue/Sky (#0ea5e9).
-    *   Secondary: Alert Red (#ef4444) for faults and critical actions.
-    *   Neutral: Slate Gray (#a0a0a0) and Deep Steel (#1a1a1a).
-*   **UI Structure:** Horizontally aligned data cards resembling professional analytics reports. Minimal 1px borders and low-opacity separators.
+    *   Primary: Sky Blue (#0ea5e9).
+    *   Accent: Mint/Teal (#2dd4bf).
+    *   Secondary: Rose/Red (#f43f5e) for critical actions.
+    *   Neutral: Slate Gray (#a0a0a0).
+*   **UI Structure:** Horizontally aligned data cards resembling professional analytics reports. Rounded corners (2xl) and glassmorphism.
 *   **Atmosphere:** Subtle visual structure, soft radial gradients, and smooth transition animations. Clean, high-performance professional aesthetic.
 
-## 🚀 2026 UI Overhaul (Enterprise Management HUD)
+## 🚀 2026 UI Overhaul (Enterprise Management Dashboard)
 The dashboard has been upgraded to a high-density architecture to eliminate navigation bottlenecks.
 
 ### **Unified Infrastructure Management**
-*   **SystemCommander:** A flattened, high-performance view of all instances across the entire infrastructure.
-    *   **Unified API:** New `GET /api/instances` endpoint for concurrent cross-node instance fetching.
-    *   **One-Tap Actions:** Direct Stop/Start/Restart buttons on every instance in the management stream.
+*   **Node System Management:** A flattened, high-performance view of all instances across the entire infrastructure.
+    *   **Unified API:** New endpoints for concurrent cross-node instance fetching.
+    *   **One-Tap Actions:** Direct Stop/Start/Restart buttons on every instance.
     *   **Status Indicators:** Real-time visual indicators of instance health.
-    *   **Flexible View Toggle:** Switch instantly between Node-Centric (Clusters) and Instance-Centric (Stream) views.
+    *   **Flexible View Toggle:** Switch instantly between Node-Centric and Instance-Centric views.
 *   **Keyboard-First Workflow:** Integrated global search and action triggers to reduce manual menu navigation.
 *   **Resource Visualization:** Clean progress-style bars for CPU/RAM metrics per instance.

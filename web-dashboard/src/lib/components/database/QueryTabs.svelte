@@ -1,6 +1,16 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
-	import { X, Database, Table, FileCode, Layers, Shield, HardDrive, Settings, Code2 } from 'lucide-svelte';
+	import { apiFetch } from '$lib/api';
+	import {
+		X,
+		Database,
+		Table,
+		FileCode,
+		Layers,
+		Shield,
+		HardDrive,
+		Settings,
+		Code2
+	} from 'lucide-svelte';
 	import { flip } from 'svelte/animate';
 	import { fade, slide } from 'svelte/transition';
 
@@ -23,14 +33,22 @@ import { apiFetch } from "$lib/api";
 
 	function getIcon(type: string) {
 		switch (type) {
-			case 'table': return Table;
-			case 'sql': return FileCode;
-			case 'browser': return Layers;
-			case 'roles': return Shield;
-			case 'backups': return HardDrive;
-			case 'config': return Settings;
-			case 'functions': return Code2;
-			default: return Database;
+			case 'table':
+				return Table;
+			case 'sql':
+				return FileCode;
+			case 'browser':
+				return Layers;
+			case 'roles':
+				return Shield;
+			case 'backups':
+				return HardDrive;
+			case 'config':
+				return Settings;
+			case 'functions':
+				return Code2;
+			default:
+				return Database;
 		}
 	}
 </script>
@@ -52,9 +70,15 @@ import { apiFetch } from "$lib/api";
 			tabindex="0"
 			onkeydown={(e) => e.key === 'Enter' && onSelect(tab.id)}
 		>
-			<TabIcon class="w-4 h-4 shrink-0 {activeTabId === tab.id ? 'text-indigo-400' : 'text-neutral-600 group-hover:text-neutral-400'}" />
+			<TabIcon
+				class="w-4 h-4 shrink-0 {activeTabId === tab.id
+					? 'text-indigo-400'
+					: 'text-neutral-600 group-hover:text-neutral-400'}"
+			/>
 
-			<span class="truncate text-[10px] font-bold uppercase tracking-widest flex-1">{tab.label}</span>
+			<span class="truncate text-[10px] font-bold uppercase tracking-widest flex-1"
+				>{tab.label}</span
+			>
 
 			{#if tabs.length > 1}
 				<button

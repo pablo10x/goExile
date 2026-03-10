@@ -36,7 +36,7 @@ func GetRedEyeStatsHandler(w http.ResponseWriter, r *http.Request) {
 		"events_24h":       stats.Events24h,
 		"logs_24h":         stats.Logs24h,
 		"reputation_count": stats.ReputationCount,
-		"entropy":          stats.Entropy,
+		"risk_factor":      stats.RiskFactor,
 		"threat_level":     stats.ThreatLevel,
 		"uptime":           stats.Uptime,
 		"system_active":    RedEyeActive,

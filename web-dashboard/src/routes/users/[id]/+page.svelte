@@ -1,378 +1,324 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
-	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
+	import { apiFetch } from '$lib/api';
 	import {
-		Users,
-		ArrowLeft,
-		RefreshCw,
 		User,
-		Smartphone,
-		Calendar,
-		Trophy,
-		Globe,
-		UserCheck,
-		UserPlus,
+		Activity,
+		Shield,
 		Clock,
-		AlertOctagon,
-		Lock,
-		ChevronRight
+		MapPin,
+		Smartphone,
+		Hash,
+		Trophy,
+		Calendar,
+		ArrowLeft,
+		MoreVertical,
+		Ban,
+		RefreshCw,
+		CheckCircle,
+		XCircle,
+		Send,
+		MessageSquare,
+		ExternalLink
 	} from 'lucide-svelte';
-	import { fade, slide } from 'svelte/transition';
-
-	interface Player {
-		id: number;
-		uid: string;
-		name: string;
-		device_id: string;
-		xp: number;
-		last_joined_server: string;
-		created_at: string;
-		updated_at: string;
-		online: boolean;
-		friends: Player[];
-		incoming_friend_requests: Player[];
-		outgoing_friend_requests: Player[];
-	}
+	import { fade, scale } from 'svelte/transition';
+	import PageHeader from '$lib/components/theme/PageHeader.svelte';
+	import Button from '$lib/components/Button.svelte';
+	import Card from '$lib/components/theme/Card.svelte';
+	import StatsCard from '$lib/components/StatsCard.svelte';
+	import { notifications } from '$lib/stores.svelte';
+	import type { Player } from '$lib/stores.svelte';
 
 	let player = $state<Player | null>(null);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 
-	const playerId = page.params.id;
-
-	async function fetchPlayerDetails() {
+	async function fetchPlayer() {
 		loading = true;
-		error = null;
 		try {
-			const res = await apiFetch(`/api/admin/players/${playerId}`);
+			const id = page.params.id;
+			const res = await apiFetch(`/api/game/players/${id}`);
 			if (res.ok) {
 				player = await res.json();
 			} else {
-				error = 'Player not found or server error.';
+				error = 'User not found';
 			}
 		} catch (e: any) {
-			console.error('Failed to fetch player details', e);
-			error = e.message || 'Failed to fetch player details.';
+			error = e.message;
 		} finally {
 			loading = false;
 		}
 	}
 
-	onMount(() => {
-		fetchPlayerDetails();
-	});
+	async function toggleBan() {
+		if (!player) return;
+		const newStatus = !player.banned;
+		try {
+			const res = await apiFetch(`/api/admin/players/${player.id}/ban`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ banned: newStatus })
+			});
+			if (res.ok) {
+				const updated = await res.json();
+				player = { ...player, ...updated };
+				notifications.add({
+					type: newStatus ? 'error' : 'success',
+					message: newStatus ? 'User banned' : 'User restored'
+				});
+			}
+		} catch (e) {
+			notifications.add({ type: 'error', message: 'Failed to update user status' });
+		}
+	}
+
+	onMount(fetchPlayer);
+
+	function formatDate(dateStr: string | undefined) {
+		if (!dateStr) return 'N/A';
+		return new Date(dateStr).toLocaleString();
+	}
 </script>
 
-<div class="w-full space-y-10 pb-32 md:pb-12">
-	<!-- Header -->
-	<div class="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
-		<div class="flex items-center gap-6">
-			<button
-				onclick={() => goto('/users')}
-				class="p-4 bg-stone-900 border border-stone-800 text-stone-500 hover:text-white hover:border-rust transition-all industrial-frame shadow-xl group"
+<div class="w-full h-full space-y-8 pb-32 md:pb-12 font-sans">
+	<!-- Top Navigation -->
+	<div class="flex items-center justify-between relative z-10">
+		<Button variant="ghost" size="sm" href="/users" icon="ph:arrow-left-bold">
+			Back to Users
+		</Button>
+		<div class="flex gap-3">
+			<Button variant="secondary" size="sm" onclick={fetchPlayer} icon="ph:arrows-clockwise-bold" />
+			<Button
+				variant={player?.banned ? 'success' : 'danger'}
+				size="sm"
+				onclick={toggleBan}
+				icon={player?.banned ? 'ph:check-circle-bold' : 'ph:prohibit-bold'}
 			>
-				<ArrowLeft class="w-6 h-6 group-hover:-tranneutral-x-1 transition-transform" />
-			</button>
-			<div>
-				<div class="flex items-center gap-3 mb-1">
-					<div class="h-0.5 w-8 bg-rust"></div>
-					<span class="font-jetbrains text-[10px] font-black text-rust uppercase tracking-[0.3em]">Identity_Vault // Deep_Scan</span>
-				</div>
-				<h1 class="text-4xl sm:text-5xl font-heading font-black text-white uppercase tracking-tighter flex items-center gap-4">
-					Subject_<span class="text-rust">{player?.name || 'NULL'}</span>
-				</h1>
-				<p class="font-jetbrains text-[10px] text-stone-500 uppercase tracking-widest font-black mt-2">
-					Detailed analysis of subject profile and synchronization graph
-				</p>
-			</div>
+				{player?.banned ? 'Unban User' : 'Ban User'}
+			</Button>
 		</div>
-
-		<button
-			onclick={fetchPlayerDetails}
-			disabled={loading}
-			class="p-4 bg-stone-900 border border-stone-800 hover:border-rust text-stone-500 hover:text-rust transition-all industrial-frame shadow-xl active:tranneutral-y-px disabled:opacity-20"
-		>
-			<RefreshCw class="w-6 h-6 {loading ? 'animate-spin' : ''}" />
-		</button>
 	</div>
 
 	{#if loading}
-		<div class="flex flex-col items-center justify-center py-40 gap-6">
-			<div class="w-16 h-16 border-2 border-rust border-t-transparent rounded-none animate-spin shadow-lg shadow-rust/20"></div>
-			<p class="font-heading font-black text-[12px] text-rust animate-pulse uppercase tracking-[0.5em]">Synchronizing_Identity_Buffer...</p>
+		<div class="flex flex-col items-center justify-center py-20 gap-4">
+			<RefreshCw class="w-10 h-10 text-indigo-500 animate-spin" />
+			<p class="text-xs font-bold text-slate-500 uppercase tracking-widest">Loading User Profile...</p>
 		</div>
-	{:else if error}
+	{:else if error || !player}
 		<div
-			class="p-12 text-center bg-red-950/10 border border-red-900/30 industrial-frame shadow-2xl"
+			class="flex flex-col items-center justify-center py-20 bg-slate-900/40 border border-white/5 rounded-3xl"
 		>
-			<AlertOctagon class="w-16 h-16 text-red-600 mx-auto mb-6 animate-pulse" />
-			<h3 class="text-2xl font-heading font-black text-red-500 mb-3 uppercase tracking-widest">Identity_Extraction_Fault</h3>
-			<p class="font-jetbrains text-stone-500 font-bold uppercase tracking-tight">{error}</p>
-			<button class="mt-10 px-10 py-3 bg-red-600 hover:bg-red-500 text-white font-heading font-black text-[11px] uppercase tracking-widest transition-all shadow-lg" onclick={fetchPlayerDetails}>Retry_Protocol</button>
+			<XCircle class="w-16 h-16 text-rose-500 mb-6" />
+			<h2 class="text-2xl font-bold text-white mb-2">Error Loading Profile</h2>
+			<p class="text-slate-400">{error || 'Unknown Error'}</p>
 		</div>
-	{:else if player}
-		<div class="grid grid-cols-1 lg:grid-cols-12 gap-10" transition:fade>
-			<!-- Main Profile Card -->
-			<div class="lg:col-span-8 space-y-10">
-				<!-- Identity Card -->
+	{:else}
+		<!-- Profile Header -->
+		<div class="relative group">
+			<div
+				class="p-8 bg-slate-800/40 border border-white/5 rounded-[2.5rem] shadow-2xl backdrop-blur-xl flex flex-col md:flex-row items-center gap-10 relative overflow-hidden"
+			>
 				<div
-					class="modern-industrial-card glass-panel p-10 relative overflow-hidden shadow-2xl !rounded-none"
-				>
-					<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
-					
-					<div class="absolute top-0 right-0 p-10 opacity-[0.03] pointer-events-none">
-						<User class="w-64 h-64" />
-					</div>
+					class="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-[80px] -mr-32 -mt-32"
+				></div>
 
-					<div class="relative z-10 flex flex-col sm:flex-row gap-10 items-center sm:items-start text-center sm:text-left">
+				<!-- Avatar -->
+				<div class="relative shrink-0">
+					<div
+						class="w-32 h-32 md:w-40 md:h-40 bg-slate-900 rounded-[2.5rem] border-2 border-white/5 flex items-center justify-center shadow-inner relative z-10 overflow-hidden"
+					>
+						{#if player.banned}
+							<div class="absolute inset-0 bg-rose-500/20 backdrop-blur-[2px] z-20"></div>
+						{/if}
+						<User
+							class="w-16 h-16 md:w-20 md:h-20 {player.banned ? 'text-rose-500' : 'text-indigo-400'}"
+						/>
+					</div>
+					{#if player.online}
 						<div
-							class="w-28 h-28 bg-stone-950 border-2 border-rust flex items-center justify-center text-5xl font-heading font-black italic text-white shadow-2xl shadow-rust/20 industrial-frame"
+							class="absolute -bottom-2 -right-2 w-10 h-10 bg-emerald-500 border-4 border-slate-800 rounded-2xl flex items-center justify-center shadow-lg z-30"
 						>
-							{player.name.charAt(0).toUpperCase()}
+							<Activity class="w-5 h-5 text-white" />
 						</div>
-
-						<div class="flex-1 space-y-6">
-							<div>
-								<div class="flex flex-col sm:flex-row sm:items-center gap-4 mb-3">
-									<h2 class="text-4xl font-heading font-black text-white uppercase tracking-tighter">{player.name}</h2>
-									{#if player.online}
-										<div
-											class="w-fit px-4 py-1.5 bg-emerald-500/5 border border-emerald-500/20 text-emerald-400 text-[10px] font-black font-jetbrains rounded-none flex items-center gap-2.5 uppercase tracking-widest shadow-inner"
-										>
-											<div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_#10b981]"></div>
-											SIGNAL_LOCKED
-										</div>
-									{:else}
-										<div
-											class="w-fit px-4 py-1.5 bg-stone-900 border border-stone-800 text-stone-600 text-[10px] font-black font-jetbrains rounded-none uppercase tracking-widest"
-										>
-											SIGNAL_LOST
-										</div>
-									{/if}
-								</div>
-								<div class="text-stone-500 font-jetbrains font-black text-[11px] uppercase tracking-[0.4em] italic">
-									REGISTRY_SIGNATURE: 0x{player.id.toString(16).toUpperCase()}
-								</div>
-							</div>
-
-							<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-								<div
-									class="p-5 bg-stone-950/60 border border-stone-800 industrial-frame shadow-inner"
-								>
-									<div
-										class="text-[9px] text-stone-600 uppercase font-black tracking-[0.2em] mb-3 flex items-center gap-3"
-									>
-										<Smartphone class="w-3.5 h-3.5 text-rust" /> Terminal_ID
-									</div>
-									<code class="text-xs text-stone-300 font-jetbrains font-bold break-all opacity-80"
-										>{player.device_id}</code
-									>
-								</div>
-								<div
-									class="p-5 bg-stone-950/60 border border-stone-800 industrial-frame shadow-inner"
-								>
-									<div
-										class="text-[9px] text-stone-600 uppercase font-black tracking-[0.2em] mb-3 flex items-center gap-3"
-									>
-										<Lock class="w-3.5 h-3.5 text-rust" /> Registry_UID
-									</div>
-									<code class="text-xs text-stone-300 font-jetbrains font-bold break-all opacity-80"
-										>{player.uid || 'NULL_PTR'}</code
-									>
-								</div>
-							</div>
-						</div>
-					</div>
+					{/if}
 				</div>
 
-				<!-- Stats Grid -->
-				<div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-					<div
-						class="modern-industrial-card glass-panel p-8 flex flex-col items-center justify-center text-center group hover:border-rust/30 transition-all !rounded-none"
-					>
-						<div class="mb-4 p-3 bg-amber-500/5 border border-amber-500/20 industrial-frame text-amber-500 group-hover:bg-amber-500 group-hover:text-black transition-all">
-							<Trophy class="w-6 h-6" />
-						</div>
-						<div class="text-3xl font-heading font-black text-white tabular-nums tracking-tighter mb-1">
-							{player.xp.toLocaleString()}
-						</div>
-						<div
-							class="text-[9px] font-jetbrains font-black text-stone-600 uppercase tracking-[0.3em]"
-						>
-							XP_ACCUMULATION
-						</div>
+				<div class="flex-1 text-center md:text-left relative z-10">
+					<div class="flex flex-wrap items-center justify-center md:justify-start gap-4 mb-4">
+						<h1 class="text-4xl md:text-5xl font-bold text-white tracking-tight">
+							{player.name || 'Anonymous User'}
+						</h1>
+						{#if player.banned}
+							<span
+								class="px-4 py-1 bg-rose-500 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-rose-500/20"
+								>Banned</span
+							>
+						{:else if player.online}
+							<span
+								class="px-4 py-1 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-emerald-500/20"
+								>Online</span
+							>
+						{/if}
 					</div>
+					<p class="text-sm text-slate-400 max-w-2xl leading-relaxed">
+						User profile and system activity analysis for account 
+						<span class="text-white font-mono">#{player.id}</span>
+					</p>
 
 					<div
-						class="modern-industrial-card glass-panel p-8 flex flex-col items-center justify-center text-center group hover:border-rust/30 transition-all !rounded-none"
+						class="flex flex-wrap items-center justify-center md:justify-start gap-6 mt-8 text-xs font-bold text-slate-500 uppercase tracking-widest"
 					>
-						<div class="mb-4 p-3 bg-rust/5 border border-rust/20 industrial-frame text-rust group-hover:bg-rust group-hover:text-white transition-all">
-							<Globe class="w-6 h-6" />
+						<div class="flex items-center gap-2">
+							<Clock class="w-4 h-4" /> Joined: {formatDate(player.created_at)}
 						</div>
-						<div
-							class="text-sm font-heading font-black text-white uppercase tracking-widest truncate w-full mb-1"
-							title={player.last_joined_server}
-						>
-							{player.last_joined_server || 'VOID_MAP'}
+						<div class="flex items-center gap-2">
+							<Activity class="w-4 h-4" /> Last Active: {formatDate(player.updated_at)}
 						</div>
-						<div
-							class="text-[9px] font-jetbrains font-black text-stone-600 uppercase tracking-[0.3em]"
-						>
-							LAST_KNOWN_VECTOR
-						</div>
-					</div>
-
-					<div
-						class="modern-industrial-card glass-panel p-8 flex flex-col items-center justify-center text-center group hover:border-rust/30 transition-all !rounded-none"
-					>
-						<div class="mb-4 p-3 bg-stone-800 border border-stone-700 industrial-frame text-stone-400 group-hover:bg-white group-hover:text-black transition-all">
-							<Calendar class="w-6 h-6" />
-						</div>
-						<div class="text-xl font-heading font-black text-white uppercase tracking-tighter mb-1">
-							{new Date(player.created_at).toLocaleDateString()}
-						</div>
-						<div
-							class="text-[9px] font-jetbrains font-black text-stone-600 uppercase tracking-[0.3em]"
-						>
-							UPLINK_INITIATED
-						</div>
-					</div>
-				</div>
-
-				<!-- Synchronization Audit -->
-				<div
-					class="p-6 bg-stone-950/40 border border-stone-800 industrial-frame flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-inner"
-				>
-					<div class="flex items-center gap-4 text-stone-600">
-						<Clock class="w-5 h-5 text-rust" />
-						<span class="font-jetbrains text-[10px] font-black uppercase tracking-widest">Last_Identity_Synchronization:</span>
-					</div>
-					<div class="font-jetbrains font-black text-xs text-stone-400 uppercase tracking-tighter flex items-center gap-4">
-						<span class="text-white">{new Date(player.updated_at).toLocaleDateString()}</span>
-						<span class="w-px h-3 bg-stone-800"></span>
-						<span class="text-rust-light">{new Date(player.updated_at).toLocaleTimeString([], { hour12: false })}</span>
 					</div>
 				</div>
 			</div>
+		</div>
 
-			<!-- Sidebar / Social Graph -->
-			<div class="lg:col-span-4 space-y-10">
-				<!-- Friends List -->
-				<div
-					class="modern-industrial-card glass-panel flex flex-col max-h-[600px] !rounded-none shadow-2xl"
-				>
-					<div
-						class="p-6 border-b border-stone-800 bg-[#0a0a0a] flex items-center justify-between"
-					>
-						<h3 class="font-heading font-black text-xs text-white flex items-center gap-4 uppercase tracking-widest">
-							<UserCheck class="w-5 h-5 text-emerald-500" />
-							Synchronization_Grid
-						</h3>
-						<span
-							class="px-3 py-1 bg-stone-900 border border-stone-800 text-[10px] font-black font-jetbrains text-rust tabular-nums shadow-inner"
-						>
-							{player.friends?.length || 0}
-						</span>
-					</div>
+		<!-- Stats Grid -->
+		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+			<StatsCard
+				title="Account Rank"
+				value="LVL {Math.floor((player.xp || 0) / 1000) + 1}"
+				iconName="ph:crown-bold"
+				color="indigo"
+				subValue="System Level"
+			/>
+			<StatsCard
+				title="Total XP"
+				value={player.xp?.toLocaleString() || '0'}
+				iconName="ph:dna-bold"
+				color="orange"
+				subValue="Account Points"
+			/>
+			<StatsCard
+				title="Session Time"
+				value="12.4h"
+				iconName="ph:timer-bold"
+				color="sky"
+				subValue="Total Activity"
+			/>
+			<StatsCard
+				title="Device Count"
+				value="1"
+				iconName="ph:smartphone-bold"
+				color="emerald"
+				subValue="Linked Hardware"
+			/>
+		</div>
 
-					<div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar bg-black/20">
-						{#if player.friends && player.friends.length > 0}
-							{#each player.friends as friend}
-								<a
-									href={`/users/${friend.id}`}
-									class="flex items-center gap-5 p-4 bg-stone-900/40 border border-stone-800 hover:border-rust/40 transition-all group industrial-frame"
+		<div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+			<!-- Identity Details -->
+			<div class="xl:col-span-5 space-y-8">
+				<Card title="Account Metadata" subtitle="System identification data" icon="ph:identification-card-bold">
+					<div class="p-8 space-y-8">
+						<div class="grid grid-cols-1 gap-6">
+							<div class="space-y-2">
+								<span class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]"
+									>Account Identifier</span
 								>
-									<div
-										class="w-10 h-10 bg-stone-950 border border-stone-800 flex items-center justify-center font-heading font-black italic text-stone-500 group-hover:text-rust transition-colors"
-									>
-										{friend.name.charAt(0).toUpperCase()}
+								<div
+									class="flex items-center justify-between p-4 bg-black/40 border border-white/5 rounded-2xl group hover:border-indigo-500/20 transition-all"
+								>
+									<span class="text-sm font-mono text-indigo-400">ID_{player.id}</span>
+									<div class="flex gap-2">
+										<span class="text-[9px] font-bold text-slate-600 uppercase">Registered</span>
+										<CheckCircle class="w-3 h-3 text-emerald-500" />
 									</div>
-									<div class="flex-1 min-w-0">
-										<div
-											class="text-xs font-black text-stone-200 uppercase tracking-widest truncate group-hover:text-white transition-colors"
-										>
-											{friend.name}
-										</div>
-										<div class="text-[9px] text-stone-600 font-jetbrains font-bold uppercase tracking-widest mt-1 italic">SIG: 0x{friend.id.toString(16).toUpperCase()}</div>
-									</div>
-									<ChevronRight class="w-4 h-4 text-stone-800 group-hover:text-rust group-hover:tranneutral-x-1 transition-all" />
-								</a>
-							{/each}
-						{:else}
-							<div class="py-20 text-center opacity-30">
-								<Users class="w-12 h-12 text-stone-800 mx-auto mb-4" />
-								<p class="text-stone-600 font-jetbrains font-black text-[10px] uppercase tracking-widest">No_Connections_Mapped</p>
+								</div>
 							</div>
-						{/if}
+
+							<div class="space-y-2">
+								<span class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]"
+									>User UID</span
+								>
+								<div
+									class="p-4 bg-black/40 border border-white/5 rounded-2xl font-mono text-xs text-slate-400 break-all"
+								>
+									{player.uid || 'NONE'}
+								</div>
+							</div>
+
+							<div class="space-y-2">
+								<span class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]"
+									>Device ID</span
+								>
+								<div
+									class="p-4 bg-black/40 border border-white/5 rounded-2xl flex items-center gap-4"
+								>
+									<Smartphone class="w-5 h-5 text-slate-600" />
+									<span class="text-sm font-mono text-slate-300"
+										>{player.device_id || 'UNKNOWN'}</span
+									>
+								</div>
+							</div>
+						</div>
 					</div>
+				</Card>
+
+				<Card title="Account History" subtitle="System access logs" icon="ph:clock-counter-clockwise-bold">
+					<div class="p-0">
+						<div class="divide-y divide-white/5">
+							{#each [
+								{ type: 'LOGIN', time: player.updated_at, loc: '127.0.0.1' },
+								{ type: 'UPDATE', time: player.created_at, loc: 'ADMIN_CONSOLE' }
+							] as log}
+								<div class="p-6 flex items-center justify-between hover:bg-white/5 transition-all">
+									<div class="flex items-center gap-4">
+										<div class="p-2 bg-slate-900 rounded-lg">
+											<Clock class="w-4 h-4 text-slate-500" />
+										</div>
+										<div>
+											<div class="text-xs font-bold text-white uppercase tracking-wider">{log.type}</div>
+											<div class="text-[10px] text-slate-500 font-mono mt-0.5">{log.loc}</div>
+										</div>
+									</div>
+									<div class="text-[10px] font-bold text-slate-600">{formatDate(log.time)}</div>
+								</div>
+							{/each}
+						</div>
+					</div>
+				</Card>
+			</div>
+
+			<!-- Activity Graph & More -->
+			<div class="xl:col-span-7 space-y-8">
+				<Card title="Activity Analysis" subtitle="Performance over time" icon="ph:chart-line-up-bold">
+					<div class="p-8">
+						<div
+							class="h-80 w-full bg-black/40 border border-white/5 rounded-3xl flex items-center justify-center text-slate-700 font-bold uppercase tracking-[0.3em] text-[10px] relative overflow-hidden"
+						>
+							<Activity class="w-12 h-12 opacity-5 mb-4" />
+							<div class="absolute inset-0 flex items-center justify-center">
+								Activity visualization placeholder
+							</div>
+						</div>
+					</div>
+				</Card>
+
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+					<Card title="Communications" subtitle="Recent messages" icon="ph:chat-circle-dots-bold">
+						<div class="p-8 text-center py-12">
+							<MessageSquare class="w-10 h-10 text-slate-800 mx-auto mb-4" />
+							<p class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+								No message logs available
+							</p>
+						</div>
+					</Card>
+					<Card title="Linked Items" subtitle="Inventory data" icon="ph:package-bold">
+						<div class="p-8 text-center py-12">
+							<Send class="w-10 h-10 text-slate-800 mx-auto mb-4" />
+							<p class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+								No inventory items found
+							</p>
+						</div>
+					</Card>
 				</div>
-
-				<!-- Pending Requests -->
-				{#if (player.incoming_friend_requests && player.incoming_friend_requests.length > 0) || (player.outgoing_friend_requests && player.outgoing_friend_requests.length > 0)}
-					<div
-						class="modern-industrial-card glass-panel !rounded-none shadow-2xl"
-					>
-						<div class="p-6 border-b border-stone-800 bg-[#0a0a0a]">
-							<h3 class="font-heading font-black text-xs text-white flex items-center gap-4 uppercase tracking-widest">
-								<UserPlus class="w-5 h-5 text-amber-500 animate-pulse" />
-								Pending_Protocols
-							</h3>
-						</div>
-						<div class="p-4 space-y-6 bg-black/20">
-							{#if player.incoming_friend_requests && player.incoming_friend_requests.length > 0}
-								<div class="space-y-3">
-									<div class="px-2 text-[9px] font-black text-stone-600 uppercase tracking-[0.3em] italic border-l border-stone-800">
-										Incoming_Signals
-									</div>
-									{#each player.incoming_friend_requests as req}
-										<div
-											class="flex items-center gap-4 p-3 bg-stone-900/60 border border-stone-800 industrial-frame"
-										>
-											<div
-												class="w-8 h-8 bg-stone-950 border border-stone-800 flex items-center justify-center font-heading font-black italic text-stone-600 text-xs"
-											>
-												{req.name.charAt(0).toUpperCase()}
-											</div>
-											<div class="min-w-0">
-												<div class="text-[10px] font-black text-stone-300 uppercase tracking-widest truncate">
-													{req.name}
-												</div>
-												<div class="text-[8px] text-stone-700 font-jetbrains font-bold uppercase tracking-tight">SRC: 0x{req.id.toString(16).toUpperCase()}</div>
-											</div>
-										</div>
-									{/each}
-								</div>
-							{/if}
-
-							{#if player.outgoing_friend_requests && player.outgoing_friend_requests.length > 0}
-								<div class="space-y-3">
-									<div class="px-2 text-[9px] font-black text-stone-600 uppercase tracking-[0.3em] italic border-l border-stone-800">
-										Outgoing_Transmissions
-									</div>
-									{#each player.outgoing_friend_requests as req}
-										<div
-											class="flex items-center gap-4 p-3 bg-stone-900/20 border border-stone-800 opacity-60 industrial-frame"
-										>
-											<div
-												class="w-8 h-8 bg-stone-950 border border-stone-800 flex items-center justify-center font-heading font-black italic text-stone-700 text-xs"
-											>
-												{req.name.charAt(0).toUpperCase()}
-											</div>
-											<div class="min-w-0">
-												<div class="text-[10px] font-black text-stone-500 uppercase tracking-widest truncate">
-													{req.name}
-												</div>
-												<div class="text-[8px] text-stone-800 font-jetbrains font-bold uppercase tracking-tight">DST: 0x{req.id.toString(16).toUpperCase()}</div>
-											</div>
-										</div>
-									{/each}
-								</div>
-							{/if}
-						</div>
-					</div>
-				{/if}
 			</div>
 		</div>
 	{/if}

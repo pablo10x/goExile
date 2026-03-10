@@ -1,16 +1,11 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { fade, fly } from 'svelte/transition';
 	import type { ResourceMetricsPanelProps } from '$lib/types/resource-metrics';
 	import { useResourceMetrics } from '$lib/composables/useResourceMetrics';
 	import ResourceStatsCard from '$lib/components/ResourceStatsCard.svelte';
 	import ResourceHistoryChart from '$lib/components/ResourceHistoryChart.svelte';
-	import {
-		RefreshCw,
-		AlertTriangle,
-		Activity,
-		ChevronRight
-	} from 'lucide-svelte';
+	import { RefreshCw, AlertTriangle, Activity, ChevronRight } from 'lucide-svelte';
 
 	let {
 		nodeId,
@@ -24,7 +19,7 @@ import { apiFetch } from "$lib/api";
 	}: ResourceMetricsPanelProps = $props();
 
 	let metrics = $derived(useResourceMetrics(nodeId, instanceId));
-	
+
 	let stats = $derived(metrics.stats);
 	let history = $derived(metrics.history);
 	let peakStats = $derived(metrics.peakStats);
@@ -73,7 +68,9 @@ import { apiFetch } from "$lib/api";
 </script>
 
 <div class="space-y-10 relative font-jetbrains">
-	<div class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"></div>
+	<div
+		class="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.02] pointer-events-none"
+	></div>
 
 	{#if showTitle}
 		<div class="relative" in:fly={{ y: -10, duration: 400 }}>
@@ -98,15 +95,14 @@ import { apiFetch } from "$lib/api";
 						<div class="flex items-center gap-3 mt-1.5">
 							<ChevronRight class="w-3 h-3 text-rust" />
 							<span class="text-[9px] font-black text-stone-500 uppercase tracking-[0.3em]">
-								VECTOR: NODE_{nodeId} // INSTANCE_{instanceId}
+								ID: NODE_{nodeId} // INSTANCE_{instanceId}
 							</span>
 						</div>
 					</div>
 				</div>
 
 				<div class="flex items-center gap-4">
-					<div class="flex bg-stone-950 p-1 border border-stone-800 shadow-inner industrial-sharp"
-					>
+					<div class="flex bg-stone-950 p-1 border border-stone-800 shadow-inner industrial-sharp">
 						{#each timeRanges as range}
 							<button
 								class="px-4 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all
@@ -124,9 +120,7 @@ import { apiFetch } from "$lib/api";
 						class="p-2.5 bg-stone-900 border border-stone-800 text-stone-500 hover:text-rust hover:border-rust transition-all active:tranneutral-y-px shadow-lg"
 						title="Refresh metrics"
 					>
-						<RefreshCw
-							class="w-4 h-4 {$loading ? 'animate-spin' : ''}"
-						/>
+						<RefreshCw class="w-4 h-4 {$loading ? 'animate-spin' : ''}" />
 					</button>
 				</div>
 			</div>
@@ -134,12 +128,17 @@ import { apiFetch } from "$lib/api";
 	{/if}
 
 	{#if $error}
-		<div class="p-6 bg-red-950/10 border border-red-900/30 rounded-none shadow-2xl flex items-start gap-5 industrial-sharp" in:fade>
+		<div
+			class="p-6 bg-red-950/10 border border-red-900/30 rounded-none shadow-2xl flex items-start gap-5 industrial-sharp"
+			in:fade
+		>
 			<div class="p-2 bg-red-900/20 border border-red-500/30">
 				<AlertTriangle class="w-6 h-6 text-red-500" />
 			</div>
 			<div>
-				<h4 class="text-[11px] font-heading font-black text-red-500 uppercase tracking-widest mb-1">BUFFER_READ_FAULT</h4>
+				<h4 class="text-[11px] font-heading font-black text-red-500 uppercase tracking-widest mb-1">
+					BUFFER_READ_FAULT
+				</h4>
 				<p class="text-[10px] text-stone-500 uppercase font-bold">{$error}</p>
 			</div>
 		</div>
@@ -179,7 +178,9 @@ import { apiFetch } from "$lib/api";
 		{:else if $loading}
 			<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 				{#each [0, 1, 2] as i}
-					<div class="h-32 bg-stone-900/40 border border-stone-800 border-dashed industrial-sharp animate-pulse"></div>
+					<div
+						class="h-32 bg-stone-900/40 border border-stone-800 border-dashed industrial-sharp animate-pulse"
+					></div>
 				{/each}
 			</div>
 		{/if}
@@ -188,28 +189,40 @@ import { apiFetch } from "$lib/api";
 			<div class="space-y-6" in:fade={{ delay: 200 }}>
 				<div class="flex justify-between items-end px-2">
 					<div class="space-y-2">
-						<div class="flex items-center gap-3 font-jetbrains text-[9px] font-black text-stone-600 uppercase tracking-[0.4em] italic">
+						<div
+							class="flex items-center gap-3 font-jetbrains text-[9px] font-black text-stone-600 uppercase tracking-[0.4em] italic"
+						>
 							<Activity class="w-3.5 h-3.5 text-rust" />
 							TEMPORAL_METRIC_BUFFER
 						</div>
-						<h3 class="text-[11px] font-heading font-black text-stone-300 uppercase tracking-widest">
+						<h3
+							class="text-[11px] font-heading font-black text-stone-300 uppercase tracking-widest"
+						>
 							Stream_Analysis_{timeRange}
 						</h3>
 					</div>
 					<div class="flex gap-6">
 						<div class="flex items-center gap-3">
 							<div class="w-2 h-2 bg-rust shadow-[0_0_8px_rgba(249,115,22,0.4)]"></div>
-							<span class="text-[9px] font-black text-stone-500 uppercase tracking-widest">CORE</span>
+							<span class="text-[9px] font-black text-stone-500 uppercase tracking-widest"
+								>CORE</span
+							>
 						</div>
 						<div class="flex items-center gap-3">
 							<div class="w-2 h-2 bg-rust-dark shadow-[0_0_8px_rgba(124,45,18,0.4)]"></div>
-							<span class="text-[9px] font-black text-stone-500 uppercase tracking-widest">MEMORY</span>
+							<span class="text-[9px] font-black text-stone-500 uppercase tracking-widest"
+								>MEMORY</span
+							>
 						</div>
 					</div>
 				</div>
-				
-				<div class="bg-stone-950 border border-stone-800 industrial-sharp overflow-hidden relative shadow-inner p-8">
-					<div class="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.02] pointer-events-none"></div>
+
+				<div
+					class="bg-stone-950 border border-stone-800 industrial-sharp overflow-hidden relative shadow-inner p-8"
+				>
+					<div
+						class="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.02] pointer-events-none"
+					></div>
 					<ResourceHistoryChart data={filteredHistory} {height} />
 				</div>
 			</div>

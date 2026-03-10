@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { onMount } from 'svelte';
 	import JSZip from 'jszip';
 	import { serverVersions, nodes, notifications, stats } from '$lib/stores.svelte';
@@ -8,16 +8,33 @@ import { apiFetch } from "$lib/api";
 	import LogViewer from '$lib/components/LogViewer.svelte';
 	import InstanceManagerModal from '$lib/components/InstanceManagerModal.svelte';
 	import AddNodeModal from '$lib/components/AddNodeModal.svelte';
-	import FleetCommander from '$lib/components/server/FleetCommander.svelte';
-	import { History, Package, Upload, Trash2, CheckCircle, Clock, RefreshCw, ArrowDown, ArrowUp, AlertCircle, HardDrive, Activity, Search, Server, LayoutGrid, LayoutList } from 'lucide-svelte';
+	import NodeRegistry from '$lib/components/server/NodeRegistry.svelte';
+	import {
+		History,
+		Package,
+		Upload,
+		Trash2,
+		CheckCircle,
+		Clock,
+		RefreshCw,
+		ArrowDown,
+		ArrowUp,
+		AlertCircle,
+		HardDrive,
+		Activity,
+		Search,
+		Server,
+		LayoutGrid,
+		LayoutList
+	} from 'lucide-svelte';
 	import Icon from '$lib/components/theme/Icon.svelte';
 	import { fade, slide } from 'svelte/transition';
-    import PageHeader from '$lib/components/theme/PageHeader.svelte';
-    import Button from '$lib/components/Button.svelte';
-    import Card from '$lib/components/theme/Card.svelte';
+	import PageHeader from '$lib/components/theme/PageHeader.svelte';
+	import Button from '$lib/components/Button.svelte';
+	import Card from '$lib/components/theme/Card.svelte';
 
-	let activeTab = $state('fleet');
-	let viewMode = $state<'nodes' | 'fleet'>('fleet');
+	let activeTab = $state('nodes');
+	let viewMode = $state<'nodes' | 'clusters'>('nodes');
 	let isDragging = $state(false);
 	let dragCounter = 0;
 
@@ -76,7 +93,9 @@ import { apiFetch } from "$lib/api";
 		try {
 			const res = await apiFetch('/api/versions');
 			if (res.ok) serverVersions.set(await res.json());
-		} catch (e) { console.error('Failed to load versions', e); }
+		} catch (e) {
+			console.error('Failed to load versions', e);
+		}
 	}
 
 	async function analyzeFile(file: File) {
@@ -91,9 +110,12 @@ import { apiFetch } from "$lib/api";
 				const manifest = JSON.parse(content);
 				if (manifest.version) version = manifest.version;
 			}
-		} catch (e) { console.warn('Failed to read manifest:', e); }
+		} catch (e) {
+			console.warn('Failed to read manifest:', e);
+		}
 		await new Promise((resolve) => setTimeout(resolve, 1000));
-		const isUnity = file.name.toLowerCase().includes('unity') || file.name.toLowerCase().includes('server');
+		const isUnity =
+			file.name.toLowerCase().includes('unity') || file.name.toLowerCase().includes('server');
 		fileAnalysis = {
 			isUnity,
 			size: formatFileSize(file.size),
@@ -105,14 +127,29 @@ import { apiFetch } from "$lib/api";
 		return fileAnalysis;
 	}
 
-	function handleDragEnter(e: DragEvent) { e.preventDefault(); dragCounter++; isDragging = true; }
-	function handleDragLeave(e: DragEvent) { e.preventDefault(); dragCounter--; if (dragCounter === 0) isDragging = false; }
-	function handleDragOver(e: DragEvent) { e.preventDefault(); }
+	function handleDragEnter(e: DragEvent) {
+		e.preventDefault();
+		dragCounter++;
+		isDragging = true;
+	}
+	function handleDragLeave(e: DragEvent) {
+		e.preventDefault();
+		dragCounter--;
+		if (dragCounter === 0) isDragging = false;
+	}
+	function handleDragOver(e: DragEvent) {
+		e.preventDefault();
+	}
 	async function handleDrop(e: DragEvent) {
-		e.preventDefault(); isDragging = false; dragCounter = 0;
+		e.preventDefault();
+		isDragging = false;
+		dragCounter = 0;
 		if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
 			const file = e.dataTransfer.files[0];
-			if (file.name.endsWith('.zip')) { selectedFile = file; await analyzeFile(file); }
+			if (file.name.endsWith('.zip')) {
+				selectedFile = file;
+				await analyzeFile(file);
+			}
 		}
 	}
 
@@ -126,19 +163,30 @@ import { apiFetch } from "$lib/api";
 
 	function getFilteredVersions() {
 		let filtered = $serverVersions;
-		if (searchQuery) filtered = filtered.filter(v => v.filename.toLowerCase().includes(searchQuery.toLowerCase()) || v.version.includes(searchQuery));
-		if (filterStatus !== 'all') filtered = filtered.filter(v => (filterStatus === 'active' ? v.is_active : !v.is_active));
-		return filtered.sort((a, b) => sortOrder === 'asc' ? 1 : -1);
+		if (searchQuery)
+			filtered = filtered.filter(
+				(v) =>
+					v.filename.toLowerCase().includes(searchQuery.toLowerCase()) ||
+					v.version.includes(searchQuery)
+			);
+		if (filterStatus !== 'all')
+			filtered = filtered.filter((v) => (filterStatus === 'active' ? v.is_active : !v.is_active));
+		return filtered.sort((a, b) => (sortOrder === 'asc' ? 1 : -1));
 	}
 
 	async function handleFileSelect(e: Event) {
 		const target = e.target as HTMLInputElement;
-		if (target.files?.length) { selectedFile = target.files[0]; await analyzeFile(selectedFile); }
+		if (target.files?.length) {
+			selectedFile = target.files[0];
+			await analyzeFile(selectedFile);
+		}
 	}
 
 	async function handleUpload() {
 		if (!selectedFile || !version) return;
-		uploading = true; uploadProgress = 0; uploadStatus = 'Uploading package...';
+		uploading = true;
+		uploadProgress = 0;
+		uploadStatus = 'Uploading package...';
 		const formData = new FormData();
 		formData.append('file', selectedFile);
 		formData.append('comment', comment);
@@ -147,31 +195,63 @@ import { apiFetch } from "$lib/api";
 			const response = await apiFetch('/api/upload', { method: 'POST', body: formData });
 			if (response.ok) {
 				uploadStatus = 'Deployment successful';
-				selectedFile = null; version = ''; comment = ''; await loadVersions();
-				setTimeout(() => { uploadStatus = ''; activeTab = 'history'; }, 1500);
-			} else { uploadStatus = 'Deployment failed'; uploadError = true; }
-		} catch (e) { uploadStatus = 'Network error'; uploadError = true; } finally { uploading = false; }
+				selectedFile = null;
+				version = '';
+				comment = '';
+				await loadVersions();
+				setTimeout(() => {
+					uploadStatus = '';
+					activeTab = 'history';
+				}, 1500);
+			} else {
+				uploadStatus = 'Deployment failed';
+				uploadError = true;
+			}
+		} catch (e) {
+			uploadStatus = 'Network error';
+			uploadError = true;
+		} finally {
+			uploading = false;
+		}
 	}
 
 	function requestActivate(id: number) {
-		confirmTitle = 'Activate Version'; confirmMessage = 'Activate this build across the fleet?';
-		confirmButtonText = 'Activate'; confirmIsCritical = false;
-		confirmAction = async () => { await apiFetch(`/api/versions/${id}/active`, { method: 'POST' }); await loadVersions(); };
+		confirmTitle = 'Activate Version';
+		confirmMessage = 'Activate this build across all nodes?';
+		confirmButtonText = 'Activate';
+		confirmIsCritical = false;
+		confirmAction = async () => {
+			await apiFetch(`/api/versions/${id}/active`, { method: 'POST' });
+			await loadVersions();
+		};
 		isConfirmOpen = true;
 	}
 
 	function requestDelete(id: number) {
-		confirmTitle = 'Delete Version'; confirmMessage = 'Permanently remove this build from registry?';
-		confirmButtonText = 'Delete'; confirmIsCritical = true;
-		confirmAction = async () => { await apiFetch(`/api/versions/${id}`, { method: 'DELETE' }); await loadVersions(); };
+		confirmTitle = 'Delete Version';
+		confirmMessage = 'Permanently remove this build from registry?';
+		confirmButtonText = 'Delete';
+		confirmIsCritical = true;
+		confirmAction = async () => {
+			await apiFetch(`/api/versions/${id}`, { method: 'DELETE' });
+			await loadVersions();
+		};
 		isConfirmOpen = true;
 	}
 
-	function handleSpawn(event: CustomEvent<number>) { spawnTargetNodeId = event.detail; isSpawnDialogOpen = true; }
+	function handleSpawn(event: any) {
+		spawnTargetNodeId = event.detail;
+		isSpawnDialogOpen = true;
+	}
 	async function executeSpawn() {
 		if (!spawnTargetNodeId) return;
 		const res = await apiFetch(`/api/nodes/${spawnTargetNodeId}/spawn`, { method: 'POST' });
-		if (res.ok) { const inst = await res.json(); consoleNodeId = spawnTargetNodeId; consoleInstanceId = inst.id; isConsoleOpen = true; }
+		if (res.ok) {
+			const inst = await res.json();
+			consoleNodeId = spawnTargetNodeId;
+			consoleInstanceId = inst.id;
+			isConsoleOpen = true;
+		}
 		isSpawnDialogOpen = false;
 	}
 
@@ -182,9 +262,27 @@ import { apiFetch } from "$lib/api";
 		isInstanceActionDialogOpen = false;
 	}
 
-	function openInstanceActionDialog(type: string, nodeId: number, instanceId: string, title: string, msg: string, confirm: string) {
-		instanceActionType = type; instanceActionNodeId = nodeId; instanceActionInstanceId = instanceId;
-		instanceActionDialogTitle = title; instanceActionDialogMessage = msg; instanceActionConfirmText = confirm;
+	function handleTail(event: any) {
+		const { nodeId, instanceId } = event.detail;
+		consoleNodeId = nodeId;
+		consoleInstanceId = instanceId;
+		isConsoleOpen = true;
+	}
+
+	function openInstanceActionDialog(
+		type: string,
+		nodeId: number,
+		instanceId: string,
+		title: string,
+		msg: string,
+		confirm: string
+	) {
+		instanceActionType = type;
+		instanceActionNodeId = nodeId;
+		instanceActionInstanceId = instanceId;
+		instanceActionDialogTitle = title;
+		instanceActionDialogMessage = msg;
+		instanceActionConfirmText = confirm;
 		isInstanceActionDialogOpen = true;
 	}
 
@@ -192,66 +290,153 @@ import { apiFetch } from "$lib/api";
 </script>
 
 <div class="w-full h-full space-y-8 pb-32 md:pb-12 font-sans">
-    <PageHeader title="Fleet Operations" subtitle="Infrastructure & Builds" icon="ph:cpu-bold">
-        {#snippet actions()}
-            <Button variant="primary" size="lg" onclick={() => (showAddNodeModal = true)} icon="ph:plus-bold">
-                Deploy Node
-            </Button>
-        {/snippet}
-    </PageHeader>
+	<PageHeader
+		title="Node Management"
+		subtitle="System Nodes & Build History"
+		icon="ph:cpu-bold"
+	>
+		{#snippet actions()}
+			<Button
+				variant="primary"
+				size="lg"
+				onclick={() => (showAddNodeModal = true)}
+				icon="ph:plus-bold"
+			>
+				Add Node
+			</Button>
+		{/snippet}
+	</PageHeader>
 
-	<!-- Tabs -->
-	<div class="flex gap-1 p-1 bg-slate-900/50 border border-white/5 backdrop-blur-xl rounded-2xl shadow-lg">
-		{#each [['fleet', 'Fleet Status'], ['upload', 'Upload Build'], ['history', 'Version Logs']] as [id, label]}
+	<div
+		class="flex gap-2 p-1.5 bg-black/20 border border-white/5 backdrop-blur-xl rounded-2xl shadow-lg"
+	>
+		{#each [['nodes', 'Overview'], ['upload', 'Deploy Build'], ['history', 'Build History']] as [id, label]}
 			<button
 				onclick={() => (activeTab = id)}
-				class="flex-1 py-3 transition-all rounded-xl text-sm font-bold uppercase tracking-wide {activeTab === id ? 'bg-sky-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}"
+				class="flex-1 py-3.5 transition-all duration-300 rounded-xl text-[13px] font-bold uppercase tracking-tight {activeTab ===
+				id
+					? 'bg-sky-500/10 text-sky-400 shadow-lg shadow-black/20 border border-sky-500/20'
+					: 'text-slate-500 hover:text-slate-200 hover:bg-white/5 border border-transparent'}"
 			>
 				{label}
 			</button>
 		{/each}
 	</div>
 
-	{#if activeTab === 'fleet'}
+	{#if activeTab === 'nodes'}
 		<div in:fade={{ duration: 200 }} class="space-y-8">
 			<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-slate-800/40 border border-white/5 p-6 rounded-2xl shadow-lg backdrop-blur-md">
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Nodes Online</span>
-                        <div class="p-2 bg-sky-500/10 rounded-lg"><Server class="w-4 h-4 text-sky-400" /></div>
-                    </div>
-                    <div class="text-3xl font-bold text-white tracking-tight">{$stats.active_nodes}</div>
-                </div>
-                <div class="bg-slate-800/40 border border-white/5 p-6 rounded-2xl shadow-lg backdrop-blur-md">
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Active Instances</span>
-                        <div class="p-2 bg-emerald-500/10 rounded-lg"><Activity class="w-4 h-4 text-emerald-400" /></div>
-                    </div>
-                    <div class="text-3xl font-bold text-white tracking-tight">{$nodes.reduce((acc, s) => acc + s.current_instances, 0)}</div>
-                </div>
-                <div class="bg-slate-800/40 border border-white/5 p-6 rounded-2xl shadow-lg backdrop-blur-md">
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Capacity</span>
-                        <div class="p-2 bg-amber-500/10 rounded-lg"><HardDrive class="w-4 h-4 text-amber-400" /></div>
-                    </div>
-                    <div class="text-3xl font-bold text-white tracking-tight">
-                        {Math.round(($nodes.reduce((acc, s) => acc + s.current_instances, 0) / ($nodes.reduce((acc, s) => acc + s.max_instances, 0) || 1)) * 100)}%
-                    </div>
-                </div>
+				<div
+					class="bg-slate-800/40 border border-white/5 p-6 rounded-2xl shadow-lg backdrop-blur-md"
+				>
+					<div class="flex justify-between items-center mb-4">
+						<span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider"
+							>Nodes Online</span
+						>
+						<div class="p-2 bg-sky-500/10 rounded-lg"><Server class="w-4 h-4 text-sky-400" /></div>
+					</div>
+					<div class="text-3xl font-bold text-white tracking-tight">{$stats.active_nodes}</div>
+				</div>
+				<div
+					class="bg-slate-800/40 border border-white/5 p-6 rounded-2xl shadow-lg backdrop-blur-md"
+				>
+					<div class="flex justify-between items-center mb-4">
+						<span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider"
+							>Active Instances</span
+						>
+						<div class="p-2 bg-emerald-500/10 rounded-lg">
+							<Activity class="w-4 h-4 text-emerald-400" />
+						</div>
+					</div>
+					<div class="text-3xl font-bold text-white tracking-tight">
+						{$nodes.reduce((acc, s) => acc + s.current_instances, 0)}
+					</div>
+				</div>
+				<div
+					class="bg-slate-800/40 border border-white/5 p-6 rounded-2xl shadow-lg backdrop-blur-md"
+				>
+					<div class="flex justify-between items-center mb-4">
+						<span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider"
+							>Resource Load</span
+						>
+						<div class="p-2 bg-amber-500/10 rounded-lg">
+							<HardDrive class="w-4 h-4 text-amber-400" />
+						</div>
+					</div>
+					<div class="text-3xl font-bold text-white tracking-tight">
+						{Math.round(
+							($nodes.reduce((acc, s) => acc + s.current_instances, 0) /
+								($nodes.reduce((acc, s) => acc + s.max_instances, 0) || 1)) *
+								100
+						)}%
+					</div>
+				</div>
 			</div>
 
-			<Card title="Infrastructure Control" subtitle="Active fleet nodes and logic clusters" icon="ph:list-bold">
-                {#snippet actions()}
-                    <div class="flex bg-slate-950/50 p-1 rounded-xl border border-white/5 shadow-inner">
-                        <button onclick={() => viewMode = 'fleet'} class="px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all {viewMode === 'fleet' ? 'bg-sky-500 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'}">Stream</button>
-                        <button onclick={() => viewMode = 'nodes'} class="px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all {viewMode === 'nodes' ? 'bg-sky-500 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'}">Clusters</button>
-                    </div>
-                {/snippet}
+			<Card
+				title="Infrastructure Status"
+				subtitle="Monitor and manage node resources"
+				icon="ph:list-bold"
+			>
+				{#snippet actions()}
+					<div class="flex bg-slate-950/50 p-1 rounded-xl border border-white/5 shadow-inner">
+						<button
+							onclick={() => (viewMode = 'nodes')}
+							class="px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all {viewMode ===
+							'nodes'
+								? 'bg-sky-500 text-white shadow-md'
+								: 'text-slate-500 hover:text-slate-300'}">List View</button
+						>
+						<button
+							onclick={() => (viewMode = 'clusters')}
+							class="px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all {viewMode ===
+							'clusters'
+								? 'bg-sky-500 text-white shadow-md'
+								: 'text-slate-500 hover:text-slate-300'}">Group View</button
+						>
+					</div>
+				{/snippet}
 				<div class="p-0">
-					{#if viewMode === 'fleet'}
-						<FleetCommander on:tail={handleTail} />
+					{#if viewMode === 'nodes'}
+						<NodeRegistry on:tail={handleTail} />
 					{:else}
-						<NodeTable bind:this={nodeTableComponent} nodes={$nodes} on:spawn={handleSpawn} on:viewLogs={(e) => { selectedNodeId = e.detail; isLogViewerOpen = true; }} on:tail={handleTail} />
+						<NodeTable
+							bind:this={nodeTableComponent}
+							nodes={$nodes}
+							on:spawn={handleSpawn}
+							on:viewLogs={(e: any) => {
+								selectedNodeId = e.detail;
+								isLogViewerOpen = true;
+							}}
+							on:tail={handleTail}
+							on:stopInstanceRequest={(e: any) =>
+								openInstanceActionDialog(
+									'stop',
+									e.detail.nodeId,
+									e.detail.instanceId,
+									'Stop Instance',
+									'Are you sure?',
+									'Stop'
+								)}
+							on:restartInstanceRequest={(e: any) =>
+								openInstanceActionDialog(
+									'restart',
+									e.detail.nodeId,
+									e.detail.instanceId,
+									'Restart Instance',
+									'Are you sure?',
+									'Restart'
+								)}
+							on:deleteInstanceRequest={(e: any) =>
+								openInstanceActionDialog(
+									'delete',
+									e.detail.nodeId,
+									e.detail.instanceId,
+									'Delete Instance',
+									'Are you sure? This cannot be undone.',
+									'Delete'
+								)}
+						/>
 					{/if}
 				</div>
 			</Card>
@@ -259,78 +444,182 @@ import { apiFetch } from "$lib/api";
 	{:else if activeTab === 'upload'}
 		<div in:fade class="grid xl:grid-cols-12 gap-8">
 			<div class="xl:col-span-8">
-				<Card title="Build Deployment" subtitle="Push new binary to fleet" icon="ph:upload-bold">
+				<Card
+					title="Build Deployment"
+					subtitle="Upload new binary to infrastructure"
+					icon="ph:upload-bold"
+				>
 					<div class="p-8">
-                        <div 
-                            class="relative border-2 border-dashed border-slate-700 bg-slate-950/20 p-20 rounded-3xl text-center group transition-all {isDragging ? 'border-sky-500 bg-sky-500/5' : 'hover:border-slate-500 hover:bg-white/5'}"
-                            ondragenter={handleDragEnter} ondragleave={handleDragLeave} ondragover={handleDragOver} ondrop={handleDrop}
-                        >
-                            <input type="file" class="absolute inset-0 opacity-0 cursor-pointer" accept=".zip" onchange={handleFileSelect} />
-                            <div class="space-y-4">
-                                <div class="w-20 h-20 bg-slate-800 rounded-3xl mx-auto flex items-center justify-center border border-white/5 group-hover:scale-110 transition-all"><Upload class="w-8 h-8 text-slate-400 group-hover:text-sky-400" /></div>
-                                <p class="text-lg font-bold text-white">{selectedFile ? selectedFile.name : 'Drop archive here or click to browse'}</p>
-                                <p class="text-xs font-bold text-slate-500 uppercase tracking-widest">{selectedFile ? formatFileSize(selectedFile.size) : 'MAX: 1GB • .ZIP ONLY'}</p>
-                            </div>
-                        </div>
-                        {#if fileAnalysis}
-                            <div class="mt-8 grid grid-cols-4 gap-6 p-6 bg-slate-950/40 rounded-2xl border border-white/5 shadow-inner">
-                                {#each [['Type', fileAnalysis.isUnity ? 'Unity' : 'Binary'], ['Size', fileAnalysis.size], ['Files', fileAnalysis.fileCount], ['Sync', fileAnalysis.estimatedTime]] as [l, v]}
-                                    <div><p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{l}</p><p class="text-sm font-bold text-slate-200">{v}</p></div>
-                                {/each}
-                            </div>
-                        {/if}
+						<div
+							class="relative border-2 border-dashed border-slate-700 bg-slate-950/20 p-20 rounded-3xl text-center group transition-all {isDragging
+								? 'border-sky-500 bg-sky-500/5'
+								: 'hover:border-slate-500 hover:bg-white/5'}"
+							ondragenter={handleDragEnter}
+							ondragleave={handleDragLeave}
+							ondragover={handleDragOver}
+							ondrop={handleDrop}
+						>
+							<input
+								type="file"
+								class="absolute inset-0 opacity-0 cursor-pointer"
+								accept=".zip"
+								onchange={handleFileSelect}
+							/>
+							<div class="space-y-4">
+								<div
+									class="w-20 h-20 bg-slate-800 rounded-3xl mx-auto flex items-center justify-center border border-white/5 group-hover:scale-110 transition-all"
+								>
+									<Upload class="w-8 h-8 text-slate-400 group-hover:text-sky-400" />
+								</div>
+								<p class="text-lg font-bold text-white">
+									{selectedFile ? selectedFile.name : 'Drop archive here or click to browse'}
+								</p>
+								<p class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+									{selectedFile ? formatFileSize(selectedFile.size) : 'MAX: 1GB • .ZIP ONLY'}
+								</p>
+							</div>
+						</div>
+						{#if fileAnalysis}
+							<div
+								class="mt-8 grid grid-cols-4 gap-6 p-6 bg-slate-950/40 rounded-2xl border border-white/5 shadow-inner"
+							>
+								{#each [['Type', fileAnalysis.isUnity ? 'Unity' : 'Binary'], ['Size', fileAnalysis.size], ['Files', fileAnalysis.fileCount], ['Sync', fileAnalysis.estimatedTime]] as [l, v]}
+									<div>
+										<p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{l}</p>
+										<p class="text-sm font-bold text-slate-200">{v}</p>
+									</div>
+								{/each}
+							</div>
+						{/if}
 					</div>
 				</Card>
 			</div>
 			<div class="xl:col-span-4 space-y-6">
-                <Card title="Metadata" subtitle="Version details" icon="ph:info-bold">
-                    <div class="p-6 space-y-6">
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Version Tag</label>
-                            <input type="text" bind:value={version} class="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-sky-500 outline-none transition-all font-mono" placeholder="1.0.0" />
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Changelog</label>
-                            <textarea bind:value={comment} rows="4" class="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-sky-500 outline-none transition-all resize-none" placeholder="What changed?"></textarea>
-                        </div>
-                    </div>
-                </Card>
-                <Button variant="primary" size="lg" block onclick={handleUpload} disabled={uploading || !selectedFile || !version} loading={uploading}>Authorize Deployment</Button>
+				<Card title="Build Metadata" subtitle="Version details" icon="ph:info-bold">
+					<div class="p-6 space-y-6">
+						<div class="space-y-2">
+							<label for="version-tag" class="text-[10px] font-bold text-slate-500 uppercase ml-1"
+								>Version Tag</label
+							>
+							<input
+								id="version-tag"
+								type="text"
+								bind:value={version}
+								class="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-sky-500 outline-none transition-all font-mono"
+								placeholder="1.0.0"
+							/>
+						</div>
+						<div class="space-y-2">
+							<label for="changelog" class="text-[10px] font-bold text-slate-500 uppercase ml-1"
+								>Changelog</label
+							>
+							<textarea
+								id="changelog"
+								bind:value={comment}
+								rows="4"
+								class="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-sky-500 outline-none transition-all resize-none"
+								placeholder="What changed?"
+							></textarea>
+						</div>
+					</div>
+				</Card>
+				<Button
+					variant="primary"
+					size="lg"
+					block
+					onclick={handleUpload}
+					disabled={uploading || !selectedFile || !version}
+					loading={uploading}>Confirm Deployment</Button
+				>
 			</div>
 		</div>
 	{:else}
 		<div in:fade class="space-y-6">
-			<Card title="Registry Archive" subtitle="Historical build versions" icon="ph:history-bold">
-                <div class="p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {#each getFilteredVersions() as v (v.id)}
-                        <div class="bg-slate-800/30 border border-white/5 rounded-2xl p-6 space-y-6 hover:border-sky-500/20 transition-all group">
-                            <div class="flex justify-between items-start">
-                                <div class="p-2.5 bg-sky-500/10 rounded-xl border border-sky-500/20"><Package class="w-5 h-5 text-sky-400" /></div>
-                                <span class="px-2 py-0.5 text-[10px] font-bold rounded-md uppercase tracking-wider {v.is_active ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-700/50 text-slate-500'}">{v.is_active ? 'Active' : 'Standby'}</span>
-                            </div>
-                            <div>
-                                <h4 class="text-xl font-bold text-white tracking-tight group-hover:text-sky-400 transition-colors">v{v.version || '0.0.0'}</h4>
-                                <p class="text-xs font-medium text-slate-500 truncate">{v.filename}</p>
-                            </div>
-                            <div class="flex gap-2 pt-2 border-t border-white/5">
-                                {#if !v.is_active}
-                                    <Button variant="outline" size="xs" onclick={() => requestActivate(v.id)} class="flex-1">Activate</Button>
-                                    <Button variant="ghost" size="xs" onclick={() => requestDelete(v.id)} class="text-rose-400 hover:bg-rose-500/10">Delete</Button>
-                                {:else}
-                                    <div class="flex-1 text-center py-1 text-[10px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/5 rounded-lg border border-emerald-500/10">Primary Kernel</div>
-                                {/if}
-                            </div>
-                        </div>
-                    {/each}
-                </div>
-            </Card>
+			<Card title="Build Archive" subtitle="Historical version registry" icon="ph:history-bold">
+				<div class="p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+					{#each getFilteredVersions() as v (v.id)}
+						<div
+							class="bg-slate-800/30 border border-white/5 rounded-2xl p-6 space-y-6 hover:border-sky-500/20 transition-all group"
+						>
+							<div class="flex justify-between items-start">
+								<div class="p-2.5 bg-sky-500/10 rounded-xl border border-sky-500/20">
+									<Package class="w-5 h-5 text-sky-400" />
+								</div>
+								<span
+									class="px-2 py-0.5 text-[10px] font-bold rounded-md uppercase tracking-wider {v.is_active
+										? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+										: 'bg-slate-700/50 text-slate-500'}">{v.is_active ? 'Active' : 'Standby'}</span
+								>
+							</div>
+							<div>
+								<h4
+									class="text-xl font-bold text-white tracking-tight group-hover:text-sky-400 transition-colors"
+								>
+									v{v.version || '0.0.0'}
+								</h4>
+								<p class="text-xs font-medium text-slate-500 truncate">{v.filename}</p>
+							</div>
+							<div class="flex gap-2 pt-2 border-t border-white/5">
+								{#if !v.is_active}
+									<Button
+										variant="outline"
+										size="xs"
+										onclick={() => requestActivate(v.id)}
+										class="flex-1">Activate</Button
+									>
+									<Button
+										variant="ghost"
+										size="xs"
+										onclick={() => requestDelete(v.id)}
+										class="text-rose-400 hover:bg-rose-500/10">Delete</Button
+									>
+								{:else}
+									<div
+										class="flex-1 text-center py-1 text-[10px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/5 rounded-lg border border-emerald-500/10"
+									>
+										Active Build
+									</div>
+								{/if}
+							</div>
+						</div>
+					{/each}
+				</div>
+			</Card>
 		</div>
 	{/if}
 
-	<ConfirmDialog bind:isOpen={isConfirmOpen} title={confirmTitle} message={confirmMessage} confirmText={confirmButtonText} isCritical={confirmIsCritical} onConfirm={confirmAction} />
-	<ConfirmDialog bind:isOpen={isSpawnDialogOpen} title="Spawn New Instance" message={`Spawn instance on Node #${spawnTargetNodeId}?`} confirmText="Spawn Server" onConfirm={executeSpawn} />
-	<ConfirmDialog bind:isOpen={isInstanceActionDialogOpen} title={instanceActionDialogTitle} message={instanceActionDialogMessage} confirmText={instanceActionConfirmText} onConfirm={executeInstanceAction} />
-	{#if selectedNodeId}<LogViewer nodeId={selectedNodeId} isOpen={isLogViewerOpen} onClose={() => (isLogViewerOpen = false)} />{/if}
-	<InstanceManagerModal bind:isOpen={isConsoleOpen} nodeId={consoleNodeId} instanceId={consoleInstanceId} onClose={() => (isConsoleOpen = false)} />
+	<ConfirmDialog
+		bind:isOpen={isConfirmOpen}
+		title={confirmTitle}
+		message={confirmMessage}
+		confirmText={confirmButtonText}
+		isCritical={confirmIsCritical}
+		onConfirm={confirmAction}
+	/>
+	<ConfirmDialog
+		bind:isOpen={isSpawnDialogOpen}
+		title="Spawn New Instance"
+		message={`Spawn instance on Node #${spawnTargetNodeId}?`}
+		confirmText="Spawn Server"
+		onConfirm={executeSpawn}
+	/>
+	<ConfirmDialog
+		bind:isOpen={isInstanceActionDialogOpen}
+		title={instanceActionDialogTitle}
+		message={instanceActionDialogMessage}
+		confirmText={instanceActionConfirmText}
+		onConfirm={executeInstanceAction}
+	/>
+	{#if selectedNodeId}<LogViewer
+			nodeId={selectedNodeId}
+			isOpen={isLogViewerOpen}
+			onClose={() => (isLogViewerOpen = false)}
+		/>{/if}
+	<InstanceManagerModal
+		bind:isOpen={isConsoleOpen}
+		nodeId={consoleNodeId}
+		instanceId={consoleInstanceId}
+		onClose={() => (isConsoleOpen = false)}
+	/>
 	<AddNodeModal bind:isOpen={showAddNodeModal} />
 </div>

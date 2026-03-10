@@ -1,5 +1,5 @@
 <script lang="ts">
-import { apiFetch } from "$lib/api";
+	import { apiFetch } from '$lib/api';
 	import { Plus, Trash2, Save, X, Key, Type, Settings } from 'lucide-svelte';
 	import { slide } from 'svelte/transition';
 	import { notifications } from '$lib/stores.svelte';
@@ -112,10 +112,14 @@ import { apiFetch } from "$lib/api";
 				<Settings class="w-5 h-5 text-yellow-400" />
 			</div>
 			<div>
-				<h2 class="text-base font-heading font-black text-neutral-100 flex items-center gap-3 tracking-widest uppercase italic">
+				<h2
+					class="text-base font-heading font-black text-neutral-100 flex items-center gap-3 tracking-widest uppercase italic"
+				>
 					Logic_Schema: <span class="text-yellow-500 font-mono text-xs">{schema}.{table}</span>
 				</h2>
-				<p class="text-[9px] text-stone-600 font-bold uppercase tracking-widest italic">Manage sectors, types, and primary constraints</p>
+				<p class="text-[9px] text-stone-600 font-bold uppercase tracking-widest italic">
+					Manage sectors, types, and primary constraints
+				</p>
 			</div>
 		</div>
 		<button
@@ -137,13 +141,9 @@ import { apiFetch } from "$lib/api";
 					<tr>
 						<th class="px-8 py-4 border-b border-stone-800">Field_Identity</th>
 						<th class="px-8 py-4 border-b border-stone-800">Type_Protocol</th>
-						<th class="px-8 py-4 border-b border-stone-800 text-center"
-							>Nullable_State</th
-						>
+						<th class="px-8 py-4 border-b border-stone-800 text-center">Nullable_State</th>
 						<th class="px-8 py-4 border-b border-stone-800">Default_Buffer</th>
-						<th class="px-8 py-4 border-b border-stone-800 text-right"
-							>Purge_Op</th
-						>
+						<th class="px-8 py-4 border-b border-stone-800 text-right">Purge_Op</th>
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-stone-800/50">
@@ -179,9 +179,7 @@ import { apiFetch } from "$lib/api";
 										class="bg-transparent border-none text-emerald-500 font-black text-[10px] cursor-pointer outline-none appearance-none hover:text-emerald-300 w-full tracking-widest"
 									>
 										{#each dataTypes as t}
-											<option value={t} class="bg-stone-900 text-stone-300"
-												>{t}</option
-											>
+											<option value={t} class="bg-stone-900 text-stone-300">{t}</option>
 										{/each}
 										<!-- Keep original if not in list -->
 										{#if !dataTypes.includes(col.type.toUpperCase())}

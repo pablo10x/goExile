@@ -1,4 +1,4 @@
-import { apiFetch } from "$lib/api";
+import { apiFetch } from '$lib/api';
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
