@@ -106,7 +106,7 @@ export interface SystemLog {
 	method: string;
 }
 
-export interface RedEyeRule {
+export interface SecurityRule {
 	id: number;
 	name: string;
 	cidr: string;
@@ -120,7 +120,7 @@ export interface RedEyeRule {
 	created_at: string;
 }
 
-export interface RedEyeLog {
+export interface SecurityLog {
 	id: number;
 	rule_id?: number;
 	source_ip: string;
@@ -134,7 +134,7 @@ export interface RedEyeLog {
 	created_at: string; // Compatibility
 }
 
-export interface RedEyeAnticheatEvent {
+export interface SecurityEvent {
 	id: number;
 	player_id: string;
 	game_server_id: number;
@@ -148,7 +148,7 @@ export interface RedEyeAnticheatEvent {
 	created_at: string; // Compatibility
 }
 
-export interface RedEyeIPReputation {
+export interface IPReputation {
 	ip: string;
 	reputation_score: number;
 	total_events: number;

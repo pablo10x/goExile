@@ -44,25 +44,20 @@
 				const data = await response.json();
 				messages = [...messages, { role: 'ai', text: data.response }];
 
-				// If AI suggested a todo, add it automatically or prompt (for now auto-add logic mock)
 				if (data.suggested_todo) {
-					// In a real app, maybe ask user first or show a special UI element
 					messages = [
 						...messages,
-						{ role: 'ai', text: `I've suggested a new task: "${data.suggested_todo}"` }
+						{ role: 'ai', text: `Suggested task: "${data.suggested_todo}"` }
 					];
-					// Trigger todo creation via event or store?
-					// For simplicity in this component, we'll just dispatch an event or rely on the user to add it.
-					// Let's dispatch custom event if needed, but for now just chat.
 				}
 			} else {
 				messages = [
 					...messages,
-					{ role: 'ai', text: 'Sorry, I encountered an error connecting to the neural network.' }
+					{ role: 'ai', text: 'Service currently unavailable. Please try again later.' }
 				];
 			}
 		} catch (e) {
-			messages = [...messages, { role: 'ai', text: 'Connection failed.' }];
+			messages = [...messages, { role: 'ai', text: 'Network connection failed.' }];
 		} finally {
 			isLoading = false;
 		}
@@ -72,20 +67,20 @@
 <div class="fixed bottom-24 right-6 z-50 flex flex-col items-end gap-4 pointer-events-none">
 	{#if isOpen}
 		<div
-			class="pointer-events-auto w-80 sm:w-96 bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[600px]"
+			class="pointer-events-auto w-80 sm:w-96 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[600px] backdrop-blur-xl"
 			transition:scale={{ duration: 300 }}
 		>
 			<!-- Header -->
 			<div
-				class="p-4 bg-gradient-to-r from-violet-600 to-indigo-600 flex items-center justify-between"
+				class="p-4 bg-gradient-to-r from-sky-600 to-teal-600 flex items-center justify-between"
 			>
-				<div class="flex items-center gap-2 text-neutral-900 dark:text-white font-semibold">
+				<div class="flex items-center gap-2 text-white font-semibold">
 					<Bot class="w-5 h-5" />
-					<span>AI Assistant</span>
+					<span class="text-sm uppercase tracking-wider">System Assistant</span>
 				</div>
 				<button
 					onclick={toggle}
-					class="text-neutral-900/80 dark:text-white/80 hover:text-neutral-900 dark:text-white transition-colors"
+					class="text-white/80 hover:text-white transition-colors"
 				>
 					<X class="w-5 h-5" />
 				</button>
@@ -93,14 +88,14 @@
 
 			<!-- Chat Area -->
 			<div
-				class="flex-1 p-4 overflow-y-auto space-y-4 bg-white/95 dark:bg-neutral-950/95 min-h-[300px]"
+				class="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-950/50 min-h-[300px]"
 			>
 				{#each messages as msg}
 					<div class="flex {msg.role === 'user' ? 'justify-end' : 'justify-start'}">
 						<div
 							class="max-w-[80%] rounded-2xl px-4 py-2 text-sm {msg.role === 'user'
-								? 'bg-blue-600 text-neutral-900 dark:text-white rounded-br-none'
-								: 'bg-neutral-800 text-neutral-800 dark:text-neutral-200 rounded-bl-none'}"
+								? 'bg-sky-600 text-white rounded-br-none'
+								: 'bg-slate-800 text-slate-200 rounded-bl-none border border-white/5'}"
 						>
 							{msg.text}
 						</div>
@@ -109,17 +104,17 @@
 				{#if isLoading}
 					<div class="flex justify-start">
 						<div
-							class="bg-neutral-800 rounded-2xl rounded-bl-none px-4 py-2 flex items-center gap-2"
+							class="bg-slate-800 rounded-2xl rounded-bl-none px-4 py-2 flex items-center gap-2 border border-white/5"
 						>
-							<Loader2 class="w-4 h-4 text-violet-400 animate-spin" />
-							<span class="text-xs text-text-dim dark:text-text-dim">Thinking...</span>
+							<Loader2 class="w-4 h-4 text-sky-400 animate-spin" />
+							<span class="text-xs text-slate-400">Processing...</span>
 						</div>
 					</div>
 				{/if}
 			</div>
 
 			<!-- Input -->
-			<div class="p-3 bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800">
+			<div class="p-3 bg-slate-900 border-t border-white/5">
 				<form
 					class="flex items-center gap-2"
 					onsubmit={(e) => {
@@ -130,13 +125,13 @@
 					<input
 						type="text"
 						bind:value={input}
-						placeholder="Ask AI to organize..."
-						class="flex-1 bg-neutral-800 border-none rounded-xl px-4 py-2 text-sm text-neutral-900 dark:text-white focus:ring-2 focus:ring-violet-500 outline-none"
+						placeholder="Search or ask for assistance..."
+						class="flex-1 bg-slate-950 border border-white/5 rounded-xl px-4 py-2 text-sm text-white focus:border-sky-500 outline-none transition-all"
 					/>
 					<button
 						type="submit"
 						disabled={isLoading || !input.trim()}
-						class="p-2 bg-violet-600 text-neutral-900 dark:text-white rounded-xl hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+						class="p-2 bg-sky-600 text-white rounded-xl hover:bg-sky-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg shadow-sky-900/20"
 					>
 						<Send class="w-4 h-4" />
 					</button>
@@ -148,7 +143,7 @@
 	<!-- FAB -->
 	<button
 		onclick={toggle}
-		class="pointer-events-auto w-14 h-14 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-full shadow-lg shadow-violet-900/40 flex items-center justify-center text-neutral-900 dark:text-white hover:scale-110 transition-transform active:scale-95 group"
+		class="pointer-events-auto w-14 h-14 bg-gradient-to-r from-sky-500 to-teal-500 rounded-full shadow-xl shadow-sky-900/40 flex items-center justify-center text-white hover:scale-110 transition-transform active:scale-95 group"
 	>
 		{#if isOpen}
 			<X class="w-6 h-6" />
@@ -157,9 +152,9 @@
 			<div class="absolute -top-1 -right-1">
 				<span class="relative flex h-3 w-3">
 					<span
-						class="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"
+						class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"
 					></span>
-					<span class="relative inline-flex rounded-full h-3 w-3 bg-violet-500"></span>
+					<span class="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
 				</span>
 			</div>
 		{/if}

@@ -65,9 +65,9 @@
 	let consoleNodeId = $state<number | null>(null);
 	let consoleInstanceId = $state<string | null>(null);
 
-	// Spawn Dialog State
-	let isSpawnDialogOpen = $state(false);
-	let spawnTargetId = $state<number | null>(null);
+	// Provisioning Dialog State
+	let isProvisioningDialogOpen = $state(false);
+	let provisioningTargetId = $state<number | null>(null);
 
 	// Instance Action Dialog State (Start/Stop)
 	let isInstanceActionDialogOpen = $state(false);
@@ -146,9 +146,9 @@
 	});
 
 	// ... (Dialog functions)
-	function openSpawnDialog(event: CustomEvent<number>) {
-		spawnTargetId = event.detail;
-		isSpawnDialogOpen = true;
+	function openProvisioningDialog(event: CustomEvent<number>) {
+		provisioningTargetId = event.detail;
+		isProvisioningDialogOpen = true;
 	}
 
 	function openStartInstanceDialog(event: CustomEvent<{ nodeId: number; instanceId: string }>) {
@@ -266,10 +266,10 @@
 		isNodeDeleteDialogOpen = false;
 	}
 
-	async function executeSpawn() {
-		if (!spawnTargetId) return;
+	async function initializeInstance() {
+		if (!provisioningTargetId) return;
 
-		const res = await apiFetch(`/api/nodes/${spawnTargetId}/spawn`, { method: 'POST' });
+		const res = await apiFetch(`/api/nodes/${provisioningTargetId}/spawn`, { method: 'POST' });
 		if (!res.ok) {
 			const err = await res.json();
 			throw new Error(err.error || `Server returned ${res.status}`);
@@ -277,7 +277,7 @@
 
 		// Open console for the new instance
 		const instance = await res.json();
-		consoleNodeId = spawnTargetId;
+		consoleNodeId = provisioningTargetId;
 		consoleInstanceId = instance.id;
 		isConsoleOpen = true;
 	}
@@ -415,6 +415,7 @@
 				size="lg"
 				onclick={() => (showAddNodeModal = true)}
 				icon="ph:plus-bold"
+				class="shadow-xl shadow-sky-500/20"
 			>
 				ADD NODE
 			</Button>
@@ -556,7 +557,7 @@
 					<NodeTable
 						bind:this={nodeTableComponent}
 						nodes={$nodes}
-						on:spawn={openSpawnDialog}
+						on:spawn={openProvisioningDialog}
 						on:viewLogs={handleViewLogs}
 						on:startInstanceRequest={openStartInstanceDialog}
 						on:stopInstanceRequest={openStopInstanceDialog}
@@ -593,13 +594,13 @@
 	onClose={() => (isConsoleOpen = false)}
 />
 
-<!-- Spawn Confirmation Dialog -->
+<!-- Provisioning Confirmation Dialog -->
 <ConfirmDialog
-	bind:isOpen={isSpawnDialogOpen}
-	title="Spawn New Instance"
-	message={`Are you sure you want to spawn a new game server instance on Node #${spawnTargetId}?`}
-	confirmText="Spawn Server"
-	onConfirm={executeSpawn}
+	bind:isOpen={isProvisioningDialogOpen}
+	title="Launch New Instance"
+	message={`Are you sure you want to provision a new game server instance on Node #${provisioningTargetId}?`}
+	confirmText="Launch Instance"
+	onConfirm={initializeInstance}
 />
 
 <!-- Node Deletion Confirmation Dialog -->

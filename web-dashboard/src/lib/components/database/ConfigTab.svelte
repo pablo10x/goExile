@@ -76,7 +76,7 @@
 			</div>
 			<div>
 				<h2 class="text-xl font-heading font-black text-white uppercase tracking-tighter italic">
-					KERNEL_TUNING_MODULE
+					Database Configuration
 				</h2>
 				<p
 					class="font-jetbrains text-[10px] text-neutral-500 uppercase tracking-widest mt-1 italic font-bold"
@@ -92,7 +92,7 @@
 					disabled={loading}
 					class="px-6 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-indigo-900/20 animate-pulse transition-all active:tranneutral-y-px rounded-xl"
 				>
-					<Save class="w-4 h-4" /> Commit_Changes
+					<Save class="w-4 h-4" /> Apply Changes
 				</button>
 			{/if}
 		</div>
@@ -134,14 +134,14 @@
 					<tr>
 						<th
 							class="px-6 py-4 font-bold uppercase tracking-widest w-1/3 border-r border-neutral-800/30 italic"
-							>Parameter_Key</th
+							>Parameter Name</th
 						>
 						<th
 							class="px-6 py-4 font-bold uppercase tracking-widest w-1/4 border-r border-neutral-800/30 italic"
-							>Target_Value</th
+							>Current Value</th
 						>
 						<th class="px-6 py-4 font-bold uppercase tracking-widest italic"
-							>Protocol_Description</th
+							>Description</th
 						>
 					</tr>
 				</thead>

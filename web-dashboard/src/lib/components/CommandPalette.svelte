@@ -19,7 +19,7 @@
 		{ id: 'db', label: 'Go to Database', category: 'Navigation', icon: Database, action: () => goto('/database'), shortcut: 'G B' },
 		{ id: 'notes', label: 'Go to Notes', category: 'Navigation', icon: FileText, action: () => goto('/notes'), shortcut: 'G O' },
 		{ id: 'config', label: 'Go to Settings', category: 'Navigation', icon: Sliders, action: () => goto('/config'), shortcut: 'G S' },
-		{ id: 'fw', label: 'Go to Firewall', category: 'Navigation', icon: Shield, action: () => goto('/redeye'), shortcut: 'G F' },
+		{ id: 'security', label: 'Go to Security', category: 'Navigation', icon: Shield, action: () => goto('/security'), shortcut: 'G F' },
 	];
 
 	let filteredActions = $derived(
@@ -78,8 +78,8 @@
 			<!-- Header -->
 			<div class="px-6 py-4 border-b border-neutral-800 bg-neutral-950 flex justify-between items-center">
 				<div class="flex items-center gap-3">
-					<Search class="w-4 h-4 text-indigo-400" />
-					<span id="command-palette-title" class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Quick Search</span>
+					<Search class="w-4 h-4 text-sky-400" />
+					<span id="command-palette-title" class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Global Search Hub</span>
 				</div>
 				<button onclick={close} class="text-neutral-500 hover:text-white transition-all">
 					<X class="w-4 h-4" />
@@ -93,8 +93,8 @@
 					bind:value={query}
 					onkeydown={handleKeydown}
 					type="text"
-					placeholder="Type a command or search..."
-					class="w-full bg-neutral-900 border border-neutral-800 px-4 py-3 text-lg text-white placeholder:text-neutral-600 outline-none focus:border-indigo-500 transition-all rounded-lg"
+					placeholder="Search system resources..."
+					class="w-full bg-neutral-900 border border-neutral-800 px-4 py-3 text-lg text-white placeholder:text-neutral-600 outline-none focus:border-sky-500 transition-all rounded-lg"
 				/>
 			</div>
 

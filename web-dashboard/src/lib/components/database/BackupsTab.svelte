@@ -89,7 +89,7 @@
 			</div>
 			<div>
 				<h2 class="text-xl font-heading font-black text-white uppercase tracking-tighter italic">
-					ARCHIVE_STORAGE_CORE
+					Database Backups
 				</h2>
 				<p
 					class="font-jetbrains text-[10px] text-neutral-500 uppercase tracking-widest mt-1 italic font-bold"
@@ -103,7 +103,7 @@
 			disabled={loading}
 			class="px-6 py-3 bg-indigo-500 hover:bg-indigo-400 text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-lg shadow-indigo-900/20 disabled:opacity-20 transition-all active:tranneutral-y-px rounded-xl"
 		>
-			<Plus class="w-4 h-4" /> Generate_Snapshot
+			<Plus class="w-4 h-4" /> Create Backup
 		</button>
 	</div>
 
@@ -120,10 +120,10 @@
 			>
 				<HardDrive class="w-16 h-16 opacity-10 mb-6" />
 				<p class="font-heading font-black text-xs tracking-[0.2em] uppercase">
-					No archives detected
+					No backups detected
 				</p>
 				<p class="font-jetbrains text-[9px] mt-2 uppercase tracking-widest opacity-60">
-					Generate first snapshot to secure sector data
+					Generate first snapshot to secure schema data
 				</p>
 			</div>
 		{:else}

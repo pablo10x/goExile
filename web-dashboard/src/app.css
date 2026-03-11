@@ -193,6 +193,52 @@ html, body {
 	@apply w-full bg-black/40 border border-white/5 px-4 py-3 text-sm text-white placeholder:text-slate-700 outline-none focus:border-sky-500/50 focus:ring-4 focus:ring-sky-500/5 transition-all rounded-xl shadow-inner;
 }
 
+/* Premium Button System */
+.btn-premium {
+	@apply relative inline-flex items-center justify-center font-bold transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:pointer-events-none overflow-hidden select-none;
+}
+
+.btn-premium-primary {
+	@apply bg-sky-500 text-white shadow-lg shadow-sky-500/20 hover:bg-sky-400 hover:shadow-sky-500/40 border border-sky-400/20;
+}
+
+.btn-premium-primary::after {
+	content: '';
+	@apply absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 transition-opacity duration-300;
+}
+
+.btn-premium-primary:hover::after {
+	@apply opacity-100;
+}
+
+.btn-premium-secondary {
+	@apply bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:text-white hover:border-white/20;
+}
+
+.btn-premium-ghost {
+	@apply bg-transparent text-slate-400 hover:text-slate-100 hover:bg-white/5;
+}
+
+.btn-premium-ghost.active {
+	@apply bg-sky-500 text-white shadow-lg shadow-sky-500/20;
+}
+
+.btn-premium-outline {
+	@apply bg-transparent text-slate-300 border border-white/10 hover:bg-white/5 hover:border-white/20;
+}
+
+.btn-premium-danger {
+	@apply bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500 hover:text-white shadow-lg shadow-rose-500/10;
+}
+
+.btn-premium-success {
+	@apply bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white shadow-lg shadow-emerald-500/10;
+}
+
+.btn-premium-warning {
+	@apply bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500 hover:text-white shadow-lg shadow-amber-500/10;
+}
+
 /* Global Transitions */
 * {
 	@apply transition-colors duration-200;

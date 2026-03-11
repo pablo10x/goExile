@@ -50,7 +50,7 @@
 
 		<div class="hidden sm:block flex-1 mx-8 overflow-hidden relative h-3 opacity-20">
 			<div class="absolute whitespace-nowrap animate-marquee text-slate-400">
-				/// INFRASTRUCTURE OPTIMIZED /// DATABASE REPLICATION ACTIVE /// NETWORK LATENCY: 1.2MS /// ALL SYSTEMS OPERATIONAL ///
+				/// INFRASTRUCTURE OPTIMIZED /// CLUSTER SYNCHRONIZATION ACTIVE /// NETWORK LATENCY: 1.2MS /// ALL SERVICES OPERATIONAL ///
 			</div>
 		</div>
 

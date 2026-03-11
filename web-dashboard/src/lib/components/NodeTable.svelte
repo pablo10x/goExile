@@ -215,7 +215,7 @@
 							icon="ph:plus-bold"
 							class="!rounded-xl shadow-lg shadow-sky-500/10"
 						>
-							Add Instance
+							Provision Instance
 						</Button>
 					{:else}
 						<Button

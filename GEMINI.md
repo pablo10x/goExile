@@ -300,7 +300,7 @@ The following security improvements have been implemented:
 ### System Logging & Error Reporting
 *   **Architecture:** Implemented a new persistent, categorized logging system.
 *   **Database:** Added `system_logs` table to store detailed logs.
-*   **RedEye Performance:** Added a new Security Guardian card and detailed metrics modal to the Performance tab, tracking real-time blocks, rate-limiting, and active bans.
+*   **Security Performance:** Added a new Security Guardian card and detailed metrics modal to the Performance tab, tracking real-time blocks, rate-limiting, and active bans.
 ### Game Player System
 *   **Schema:** Implemented a new `player_system` database schema to isolate player data.
 *   **Entities:** Added `players`, `friendships`, and `friend_requests` tables. Added `uid` column to `players` table for Firebase integration.
@@ -329,15 +329,14 @@ The following security improvements have been implemented:
 
 ### UI Improvements
 *   **System Theme Interface (Theme Lab Overhaul):**
-    *   Redesigned the Theme Lab into a comprehensive design workbench with four primary subsystems: Chromatic Matrix, Atmospheric Core, Geometric Logic, and Structural Engine.
+    *   Redesigned the Theme Lab into a comprehensive design workbench with four primary subsystems: Color System, Ambient Core, Geometric Scaling, and Layout Engine.
     *   **Advanced Typography Engine:** Implemented granular control over global letter-spacing, line-height, paragraph spacing, and weighted typeface levels (Heading vs. Base).
     *   **Kinetic Physics System:** Added global settings for transition velocities, hover expansion depth, and button-press depth across the entire UI.
     *   **Atmospheric Effects:** Introduced advanced controls for glitch frequency, lens fringing (chromatic aberration), flicker intensity, and grid substrate opacity.
-    *   **Preset Engine:** Added industrial theme presets (DEEP_COMMAND, MERCURY_PROTO, SOLAR_FLARE, VOID_WALKER) for instant system-wide visual reconfiguration.
-*   **Layout & CSS Audit:**
+    *   **Preset Engine:** Added industrial theme presets (SLATE_DAWN, MERCURY_PROTO, SOLAR_SYSTEM, VOID_RUNNER) for instant system-wide visual reconfiguration.*   **Layout & CSS Audit:**
     *   **Z-Index Normalization:** Re-stratified UI layers to ensure the Command Module (Sidebar) and System Ticker sit above all atmospheric overlays.
     *   **Navigation Centering:** Fixed alignment bugs in the collapsed sidebar state, ensuring centered icons.
-    *   **Typography Harmonization:** Migrated all text blocks, code segments, and headers to a unified CSS variable registry for real-time recalibration.
+    *   **Typography Optimization:** Migrated all text blocks, code segments, and headers to a unified CSS variable registry for real-time adjustments.
 *   **User Account Page Overhaul:**
     *   Refactored the layout to include a summary section with StatsCards (Total Users, Online Count, Total XP, Active Reports).
     *   Implemented a new sorting engine allowing administrators to sort by ID, Name, XP, or Last Seen.
@@ -345,8 +344,8 @@ The following security improvements have been implemented:
     *   Introduced "Ban/Restore" functionality with real-time UI feedback and backend integration.
     *   Modernized the `EditPlayerModal` to match the professional aesthetic, featuring monospace input fields and theme-calibrated accents.
 *   **Performance Page Overhaul:**
-    *   Refactored the layout to introduce a new "Network Operations" card alongside the "Memory Matrix", optimizing screen real estate usage.
-    *   Implemented detailed network metrics display: Active Links, Inbound/Outbound traffic stats, and Error Vector visualization.
+    *   Refactored the layout to introduce a new "Infrastructure Diagnostics" card alongside the "Memory Diagnostics", optimizing screen real estate usage.
+    *   Implemented detailed network metrics display: Active Links, Inbound/Outbound traffic stats, and Error Analytics visualization.
     *   Fixed a TypeScript type mismatch error in the Security Core component.
     *   Resolved missing properties in `theme/+page.svelte` to satisfy `npm run check`.
 *   **Notes & Tasks**: Refactored `web-dashboard/src/routes/notes/+page.svelte` to feature a 2-column layout (Tasks sidebar, Notes grid).
@@ -363,7 +362,7 @@ The following security improvements have been implemented:
     *   `metrics`: Performance and resource monitoring.
     *   `middleware`: Security and orchestration middleware.
     *   `models`: Shared data structures.
-    *   `redeye`: Security and traffic management.
+    *   `security`: Security and traffic management.
     *   `registry`: Central node and instance registry.
     *   `sse`: Real-time events hub.
     *   `utils`: Shared utility and UI functions.
@@ -394,8 +393,8 @@ The following security improvements have been implemented:
 *   **SQL Repair**: Fixed corrupted SQL queries in the persistence layer.
 *   **JSON Handling**: Ensured API endpoints return empty slices instead of `null` for better frontend compatibility.
 *   **Config API Routes**: Fixed `404 Not Found` errors when updating configuration keys containing dots (e.g., `site.settings`) by updating the `gorilla/mux` route pattern to `{key:.+}` and ensuring correct precedence over specific routes.
-*   **Database Scanning**: Fixed `500 Internal Server Error` caused by `sql: Scan error on column ...: converting NULL to string is unsupported`. Implemented `sql.NullString` handling for nullable columns in `server_config`, `notes`, `instance_actions`, and `redeye_ip_reputation` tables.
-*   **Database Performance**: Optimized query speeds by implementing critical indexes on `system_logs`, `instance_actions`, `redeye_logs`, and `redeye_anticheat_events`.
+*   **Database Scanning**: Fixed `500 Internal Server Error` caused by `sql: Scan error on column ...: converting NULL to string is unsupported`. Implemented `sql.NullString` handling for nullable columns in `server_config`, `notes`, `instance_actions`, and `security_ip_reputation` tables.
+*   **Database Performance**: Optimized query speeds by implementing critical indexes on `system_logs`, `instance_actions`, `security_logs`, and `security_anticheat_events`.
 *   **Security Optimization**: Implemented an in-memory `RuleCache` for the security middleware, eliminating redundant database lookups for every incoming request and reducing overall system latency.
 *   **Three.js Lifecycle**: Optimized background animations (`NavbarParticles`) with throttled 30FPS loops and immediate resource disposal when `Low Power Mode` is enabled, significantly reducing CPU/GPU overhead.
 *   **Frontend Synchronization**: Upgraded persistent stores with a 500ms debounced save mechanism to prevent database write-spam during rapid UI interactions.

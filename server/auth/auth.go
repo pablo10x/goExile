@@ -220,7 +220,7 @@ func comparePassword(stored, provided string) bool {
 func HandleLogin(w http.ResponseWriter, r *http.Request, cfg AuthConfig, ss *SessionStore) {
 	ip := utils.GetClientIP(r)
 	if allowed, _ := LoginRateLimiter.Allow(ip); !allowed {
-		http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
+		utils.WriteError(w, r, http.StatusTooManyRequests, "Rate limit exceeded")
 		return
 	}
 
@@ -264,8 +264,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, cfg AuthConfig, ss *Ses
 			MaxAge:   7 * 24 * 60 * 60, // 7 days
 		})
 
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]string{
+		utils.WriteJSON(w, http.StatusOK, map[string]string{
 			"status":    "ok",
 			"next_step": step,
 			"session":   sid,
@@ -278,32 +277,31 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, cfg AuthConfig, ss *Ses
 	} else {
 		log.Printf("[AUTH] Login FAILED for: %s (Reason: Invalid token)", email)
 	}
-	http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+	utils.WriteError(w, r, http.StatusUnauthorized, "Invalid credentials")
 }
 
 func Handle2FAVerify(w http.ResponseWriter, r *http.Request, cfg AuthConfig, ss *SessionStore) {
 	sessionID := GetSessionID(r)
 	if sessionID == "" {
-		http.Error(w, "No session", http.StatusUnauthorized)
+		utils.WriteError(w, r, http.StatusUnauthorized, "No session")
 		return
 	}
 	valid, step := ss.ValidateSession(sessionID)
 	if !valid || step != AuthStepTOTP {
-		http.Error(w, "Invalid session or step", http.StatusUnauthorized)
+		utils.WriteError(w, r, http.StatusUnauthorized, "Invalid session or step")
 		return
 	}
 	code := r.FormValue("code")
 	if totp.Validate(code, cfg.TOTPSecret) {
 		ss.MarkSessionAuthenticated(sessionID)
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+		utils.WriteJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 		return
 	}
-	http.Error(w, "Invalid code", http.StatusUnauthorized)
+	utils.WriteError(w, r, http.StatusUnauthorized, "Invalid code")
 }
 
 func HandleEmailVerify(w http.ResponseWriter, r *http.Request, cfg AuthConfig, ss *SessionStore) {
-	http.Error(w, "Not implemented", http.StatusNotImplemented)
+	utils.WriteError(w, r, http.StatusNotImplemented, "Not implemented")
 }
 
 func HandleLogout(w http.ResponseWriter, r *http.Request, ss *SessionStore) {
@@ -311,8 +309,7 @@ func HandleLogout(w http.ResponseWriter, r *http.Request, ss *SessionStore) {
 		ss.RevokeSession(sessionID)
 	}
 	http.SetCookie(w, &http.Cookie{Name: "session", Value: "", Path: "/", MaxAge: -1})
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+	utils.WriteJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
 func AuthMiddleware(cfg AuthConfig, ss *SessionStore) func(http.Handler) http.Handler {
@@ -325,7 +322,7 @@ func AuthMiddleware(cfg AuthConfig, ss *SessionStore) func(http.Handler) http.Ha
 				}
 			}
 			if strings.HasPrefix(r.URL.Path, "/api") {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				utils.WriteError(w, r, http.StatusUnauthorized, "Unauthorized")
 				return
 			}
 			if strings.HasPrefix(r.URL.Path, "/api/auth") {

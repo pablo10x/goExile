@@ -252,10 +252,10 @@
 				</div>
 				<div>
 					<h2 class="text-sm font-heading font-black text-white tracking-widest uppercase italic">
-						Schema_Explorer
+						Schema Browser
 					</h2>
 					<p class="text-[9px] text-neutral-500 mt-1 font-bold uppercase tracking-widest italic">
-						Database Topology Mapping
+						Database Structure
 					</p>
 				</div>
 			</div>
@@ -287,7 +287,7 @@
 			>
 				<Layers class="w-3.5 h-3.5 text-indigo-400" />
 				<span class="text-[9px] font-bold text-neutral-400 uppercase tracking-widest italic"
-					>{totalSchemas} Sectors</span
+					>{totalSchemas} Schemas</span
 				>
 			</div>
 			<div

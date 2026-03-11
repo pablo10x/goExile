@@ -37,14 +37,49 @@ func GenerateRandomString(length int) string {
 	return hex.EncodeToString(b)
 }
 
+// sealedResponseWriter prevents any further writes once it has been used.
+type sealedResponseWriter struct {
+	http.ResponseWriter
+	written bool
+}
+
+func (w *sealedResponseWriter) WriteHeader(status int) {
+	if w.written {
+		return
+	}
+	w.ResponseWriter.WriteHeader(status)
+}
+
+func (w *sealedResponseWriter) Write(b []byte) (int, error) {
+	if w.written {
+		return 0, nil
+	}
+	w.written = true
+	return w.ResponseWriter.Write(b)
+}
+
 // WriteJSON encodes data as JSON and writes it to the ResponseWriter with
 // the provided HTTP status code.
 func WriteJSON(w http.ResponseWriter, status int, data interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		log.Printf("error encoding response: %v", err)
+	if data == nil {
+		data = map[string]string{}
 	}
+
+	js, err := json.Marshal(data)
+	if err != nil {
+		log.Printf("error encoding response: %v", err)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte(`{"error":"internal server error"}`))
+		return
+	}
+
+	// Wrap to prevent further writes
+	sw := &sealedResponseWriter{ResponseWriter: w}
+
+	sw.Header().Set("Content-Type", "application/json")
+	sw.WriteHeader(status)
+	_, _ = sw.Write(js)
 }
 
 // WriteError sends a structured error response using ErrorResponse.
@@ -70,7 +105,7 @@ func ParseID(idStr string) (int, error) {
 func DecodeJSON(r *http.Request, v interface{}) error {
 	lr := io.LimitReader(r.Body, maxBodySize)
 	decoder := json.NewDecoder(lr)
-	decoder.DisallowUnknownFields()
+	// decoder.DisallowUnknownFields() // Allow unknown fields for better compatibility
 	if err := decoder.Decode(v); err != nil {
 		return fmt.Errorf("invalid JSON: %w", err)
 	}
@@ -102,6 +137,16 @@ func GetEnvDuration(key string, fallback time.Duration) time.Duration {
 		}
 	}
 	return fallback
+}
+
+// HashString generates a simple numeric hash from a string.
+func HashString(s string) uint32 {
+	var h uint32 = 2166136261
+	for i := 0; i < len(s); i++ {
+		h *= 16777619
+		h ^= uint32(s[i])
+	}
+	return h
 }
 
 // UpdateEnvFile updates or adds a key-value pair in the .env file.

@@ -122,7 +122,7 @@
 					<label
 						class="font-jetbrains text-[10px] font-black text-text-dim uppercase tracking-widest flex items-center gap-2"
 					>
-						<User class="w-3.5 h-3.5 text-rust" /> Sector_Owner
+						<User class="w-3.5 h-3.5 text-rust" /> Schema_Owner
 					</label>
 					<div class="relative">
 						<select
@@ -154,7 +154,7 @@
 						</div>
 					</div>
 					<p class="font-jetbrains text-[9px] text-text-dim uppercase tracking-widest pl-1">
-						Authorized identity that will govern the schema sector.
+						Authorized identity that will govern the schema.
 					</p>
 				</div>
 			</div>

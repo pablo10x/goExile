@@ -52,6 +52,24 @@
 	import AppBackground from '$lib/components/theme/AppBackground.svelte';
 	import { isNative, checkConnection } from '$lib/api';
 
+	// Native Notification Integration
+	async function triggerNativeNotification(title: string, body: string) {
+		if (!isNative()) return;
+		try {
+			const { isPermissionGranted, requestPermission, sendNotification } = await import('@tauri-apps/plugin-notification');
+			let permissionGranted = await isPermissionGranted();
+			if (!permissionGranted) {
+				const permission = await requestPermission();
+				permissionGranted = permission === 'granted';
+			}
+			if (permissionGranted) {
+				sendNotification({ title, body });
+			}
+		} catch (e) {
+			console.error('Failed to send native notification', e);
+		}
+	}
+
 	let { children, data } = $props();
 	let isChecking = $state(true);
 	let isCommandPaletteOpen = $state(false);
@@ -147,6 +165,8 @@
 			};
 
 			eventSource.onmessage = (event) => {
+				if (!event.data || !event.data.trim()) return;
+				
 				try {
 					const data = JSON.parse(event.data);
 					if (data.type === 'stats') stats.set(data.payload);
@@ -156,9 +176,16 @@
 							: Object.values(data.payload);
 						list.sort((a, b) => a.id - b.id);
 						nodes.set(list);
+					} else if (data.type === 'security_alert') {
+						notifications.add({
+							type: 'error',
+							message: data.payload.title,
+							details: data.payload.message
+						});
+						triggerNativeNotification(data.payload.title, data.payload.message);
 					}
 				} catch (e) {
-					console.error('SSE Error', e);
+					console.error('SSE JSON Parse Error at data:', event.data, e);
 				}
 			};
 		} catch (e) {
@@ -251,7 +278,7 @@
 				class="animate-spin h-14 w-14 border-4 border-sky-500/20 border-t-sky-500 rounded-full shadow-[0_0_20px_rgba(14,165,233,0.3)]"
 			></div>
 			<span class="text-slate-400 font-sans text-sm font-bold uppercase tracking-[0.3em] animate-pulse"
-				>Initialising System...</span
+				>Connecting to System...</span
 			>
 		</div>
 	</div>
@@ -301,7 +328,7 @@
 
 					<!-- Navigation -->
 					<nav class="flex-1 space-y-2 overflow-y-auto no-scrollbar py-6">
-						{#each [{ title: 'Overview', items: [{ href: '/dashboard', icon: 'gauge', label: 'Dashboard', sub: 'System Status' }, { href: '/performance', icon: 'activity', label: 'Performance', sub: 'Network Stats' }] }, { title: 'Infrastructure', items: [{ href: '/server', icon: 'cpu', label: 'Nodes', sub: 'Resource Hub' }, { href: '/users', icon: 'users', label: 'Users', sub: 'Accounts' }] }, { title: 'Resources', items: [{ href: '/database', icon: 'database', label: 'Database', sub: 'Schema' }, { href: '/notes', icon: 'file-text', label: 'Notes', sub: 'Memos' }] }, { title: 'Settings', items: [{ href: '/config', icon: 'sliders', label: 'Settings', sub: 'Global' }, { href: '/redeye', icon: 'shield', label: 'Firewall', sub: 'Security' }] }] as section}
+						{#each [{ title: 'Overview', items: [{ href: '/dashboard', icon: 'gauge', label: 'Dashboard', sub: 'System Status' }, { href: '/performance', icon: 'activity', label: 'Performance', sub: 'Network Stats' }] }, { title: 'Infrastructure', items: [{ href: '/server', icon: 'cpu', label: 'Nodes', sub: 'Resource Hub' }, { href: '/users', icon: 'users', label: 'Users', sub: 'Accounts' }] }, { title: 'Resources', items: [{ href: '/database', icon: 'database', label: 'Database', sub: 'Schema' }, { href: '/notes', icon: 'file-text', label: 'Notes', sub: 'Memos' }] }, { title: 'Settings', items: [{ href: '/config', icon: 'sliders', label: 'Settings', sub: 'Global' }, { href: '/security', icon: 'shield', label: 'Security Hub', sub: 'Firewall' }] }] as section}
 							<div class="mb-6">
 								{#if !isSidebarCollapsed}
 									<span class="nav-section-title">{section.title}</span>
@@ -355,8 +382,8 @@
 							</div>
 							{#if !isSidebarCollapsed}
 								<div class="nav-label-container">
-									<span class="nav-label-premium group-hover/logout:text-rose-400">Terminate Session</span>
-									<span class="nav-sublabel-premium">Secure Sign Out</span>
+									<span class="nav-label-premium group-hover/logout:text-rose-400">Sign Out</span>
+									<span class="nav-sublabel-premium">Secure Session End</span>
 								</div>
 							{/if}
 						</button>
@@ -416,7 +443,7 @@
 				<nav
 					class="md:hidden h-16 bg-slate-950/80 backdrop-blur-2xl border-t border-white/5 fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
 				>
-					{#each [['/dashboard', 'gauge'], ['/performance', 'activity'], ['/config', 'sliders'], ['/redeye', 'shield']] as [href, icon]}
+					{#each [['/dashboard', 'gauge'], ['/performance', 'activity'], ['/config', 'sliders'], ['/security', 'shield']] as [href, icon]}
 						<a
 							{href}
 							class="flex flex-col items-center justify-center w-full h-full {isRouteActive(href)

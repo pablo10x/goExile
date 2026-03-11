@@ -163,22 +163,30 @@ func ValidateIP(ip string) error {
 	return nil
 }
 
-func BlockIPSystem(ip string) error {
+func ValidateIPOrCIDR(target string) error {
+	if net.ParseIP(target) != nil {
+		return nil
+	}
+	_, _, err := net.ParseCIDR(target)
+	if err != nil {
+		return fmt.Errorf("invalid IP or CIDR format")
+	}
+	return nil
+}
+
+func BlockIPSystem(target string) error {
 	if runtime.GOOS != "linux" {
 		return fmt.Errorf("ufw is only supported on Linux")
 	}
-	parsedIP := net.ParseIP(ip)
-	if parsedIP == nil {
-		return fmt.Errorf("invalid IP")
-	}
-	ipStr := parsedIP.String()
-	if err := ValidateIP(ipStr); err != nil {
+	
+	if err := ValidateIPOrCIDR(target); err != nil {
 		return err
 	}
-	cmd := exec.Command("ufw", "deny", "from", ipStr, "to", "any")
+
+	cmd := exec.Command("ufw", "deny", "from", target, "to", "any")
 	if output, err := cmd.CombinedOutput(); err != nil {
 		if strings.Contains(string(output), "root") || strings.Contains(string(output), "permission") {
-			cmd = exec.Command("sudo", "ufw", "deny", "from", ipStr, "to", "any")
+			cmd = exec.Command("sudo", "ufw", "deny", "from", target, "to", "any")
 			if _, err := cmd.CombinedOutput(); err != nil {
 				return err
 			}
@@ -189,19 +197,19 @@ func BlockIPSystem(ip string) error {
 	return nil
 }
 
-func UnblockIPSystem(ip string) error {
+func UnblockIPSystem(target string) error {
 	if runtime.GOOS != "linux" {
 		return fmt.Errorf("ufw is only supported on Linux")
 	}
-	parsedIP := net.ParseIP(ip)
-	if parsedIP == nil {
-		return fmt.Errorf("invalid IP")
+	
+	if err := ValidateIPOrCIDR(target); err != nil {
+		return err
 	}
-	ipStr := parsedIP.String()
-	cmd := exec.Command("ufw", "delete", "deny", "from", ipStr, "to", "any")
+
+	cmd := exec.Command("ufw", "delete", "deny", "from", target, "to", "any")
 	if output, err := cmd.CombinedOutput(); err != nil {
 		if strings.Contains(string(output), "root") || strings.Contains(string(output), "permission") {
-			cmd = exec.Command("sudo", "ufw", "delete", "deny", "from", ipStr, "to", "any")
+			cmd = exec.Command("sudo", "ufw", "delete", "deny", "from", target, "to", "any")
 			if _, err := cmd.CombinedOutput(); err != nil {
 				return err
 			}

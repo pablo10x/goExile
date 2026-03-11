@@ -100,11 +100,11 @@
 
 			if (failed.length > 0) throw new Error(`Failed to save ${failed.length} items`);
 
-			notifications.add({ type: 'success', message: 'PROTOCOL_UPDATE_COMMITTED' });
+			notifications.add({ type: 'success', message: 'Changes successfully applied' });
 			pendingChanges = new Map();
 			await loadCategoryConfig();
 		} catch (e: any) {
-			notifications.add({ type: 'error', message: 'Commit Failed', details: e.message });
+			notifications.add({ type: 'error', message: 'Save Failed', details: e.message });
 		} finally {
 			saving = false;
 		}
@@ -112,7 +112,7 @@
 
 	function copyToClipboard(value: string) {
 		navigator.clipboard.writeText(value);
-		notifications.add({ type: 'success', message: 'Value copied to buffer' });
+		notifications.add({ type: 'success', message: 'Value copied to clipboard' });
 	}
 
 	onMount(() => {
@@ -120,33 +120,33 @@
 	});
 </script>
 
-<div class="relative z-10 w-full space-y-10 pb-32 font-jetbrains">
+<div class="relative z-10 w-full space-y-10 pb-32 font-sans">
 	<!-- Header -->
 	<div
-		class="flex flex-col xl:flex-row xl:items-center justify-between gap-8 border-l-4 border-rust pl-6 sm:pl-10 py-4 bg-[var(--header-bg)]/60 backdrop-blur-xl industrial-frame shadow-2xl"
+		class="flex flex-col xl:flex-row xl:items-center justify-between gap-8 border-l-4 border-sky-500 pl-6 sm:pl-10 py-4 bg-slate-900/60 backdrop-blur-xl rounded-2xl border border-white/5 shadow-2xl"
 	>
 		<div class="flex items-center gap-6">
 			<a
 				href="/config"
-				class="p-3 bg-stone-900 border border-stone-800 hover:border-rust transition-all group"
+				class="p-3 bg-slate-950 border border-white/5 hover:border-sky-500 rounded-xl transition-all group"
 			>
-				<ChevronLeft class="w-6 h-6 text-stone-500 group-hover:text-white" />
+				<ChevronLeft class="w-6 h-6 text-slate-500 group-hover:text-white" />
 			</a>
 			<div>
 				<div class="flex items-center gap-3 mb-1">
 					<span
-						class="bg-rust text-white px-2 py-0.5 text-[8px] font-black uppercase tracking-widest"
+						class="bg-sky-500 text-white px-2 py-0.5 text-[8px] font-black uppercase tracking-widest rounded"
 						>Category: {category}</span
 					>
-					<div class="w-px h-3 bg-stone-800"></div>
-					<span class="text-text-dim text-[8px] font-black uppercase tracking-widest"
-						>Sector: Config_Node</span
+					<div class="w-px h-3 bg-white/10"></div>
+					<span class="text-slate-500 text-[8px] font-black uppercase tracking-widest"
+						>Module: System_Config</span
 					>
 				</div>
 				<h1
-					class="text-3xl sm:text-4xl font-heading font-black text-white uppercase tracking-tighter leading-none"
+					class="text-3xl sm:text-4xl font-black text-white uppercase tracking-tighter leading-none"
 				>
-					{categoryTitles[category] || category.toUpperCase() + '_PARAMS'}
+					{categoryTitles[category] || category.toUpperCase() + '_SETTINGS'}
 				</h1>
 			</div>
 		</div>
@@ -154,29 +154,29 @@
 		<div class="flex items-center gap-4">
 			{#if pendingChanges.size > 0}
 				<div
-					class="flex items-center gap-4 px-5 py-3 bg-rust/10 border border-rust/30 industrial-frame"
+					class="flex items-center gap-4 px-5 py-3 bg-sky-500/10 border border-sky-500/30 rounded-xl"
 					transition:scale
 				>
-					<div class="w-2 h-2 bg-rust animate-pulse"></div>
-					<span class="font-black text-[10px] text-rust-light uppercase tracking-widest"
+					<div class="w-2 h-2 bg-sky-500 animate-pulse rounded-full"></div>
+					<span class="font-black text-[10px] text-sky-400 uppercase tracking-widest"
 						>{pendingChanges.size} PENDING</span
 					>
 				</div>
 				<button
 					onclick={saveChanges}
 					disabled={saving}
-					class="px-8 py-3 bg-rust hover:bg-rust-light text-white font-heading font-black text-[11px] uppercase tracking-widest shadow-xl shadow-rust/20 transition-all active:tranneutral-y-px"
+					class="px-8 py-3 bg-sky-500 hover:bg-sky-400 text-white font-black text-[11px] uppercase tracking-widest shadow-xl shadow-sky-500/20 rounded-xl transition-all active:translate-y-px"
 				>
-					{saving ? 'SYNCING...' : 'COMMIT CHANGES'}
+					{saving ? 'SAVING...' : 'APPLY CHANGES'}
 				</button>
 			{:else}
 				<button
 					onclick={loadCategoryConfig}
 					disabled={loading}
-					class="px-8 py-3 bg-stone-950 hover:bg-white hover:text-black text-text-dim font-heading font-black text-[11px] uppercase tracking-widest transition-all border border-stone-800 active:tranneutral-y-px"
+					class="px-8 py-3 bg-slate-950 hover:bg-white hover:text-black text-slate-400 font-black text-[11px] uppercase tracking-widest transition-all border border-white/5 rounded-xl active:translate-y-px"
 				>
 					<RefreshCw class="w-4 h-4 inline mr-3 {loading ? 'animate-spin' : ''}" />
-					Reload_Buffer
+					REFRESH DATA
 				</button>
 			{/if}
 		</div>
@@ -185,32 +185,32 @@
 	<!-- Search & Filters -->
 	<div class="relative group">
 		<Search
-			class="absolute left-5 top-1/2 -tranneutral-y-1/2 w-5 h-5 text-text-dim group-focus-within:text-rust transition-colors"
+			class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-sky-500 transition-colors"
 		/>
 		<input
 			type="text"
 			bind:value={searchQuery}
 			placeholder="FILTER PARAMETERS..."
-			class="w-full pl-14 pr-10 py-4 bg-stone-950 border border-stone-800 text-stone-200 font-jetbrains text-xs focus:border-rust outline-none transition-all uppercase tracking-widest shadow-inner"
+			class="w-full pl-14 pr-10 py-4 bg-slate-950 border border-white/5 text-slate-200 font-sans text-xs focus:border-sky-500 outline-none transition-all uppercase tracking-widest rounded-2xl shadow-inner"
 		/>
 	</div>
 
 	{#if loading}
 		<div class="flex flex-col items-center justify-center py-32 gap-6" transition:fade>
 			<div
-				class="w-16 h-16 border-2 border-rust border-t-transparent rounded-none animate-spin"
+				class="w-16 h-16 border-2 border-sky-500 border-t-transparent rounded-full animate-spin"
 			></div>
-			<span class="text-text-dim font-black uppercase tracking-[0.4em] animate-pulse"
-				>Synchronizing_With_Mainframe...</span
+			<span class="text-slate-500 font-black uppercase tracking-[0.4em] animate-pulse"
+				>Loading Configuration...</span
 			>
 		</div>
 	{:else if filteredConfigs.length === 0}
 		<div
-			class="py-32 text-center modern-industrial-card glass-panel border-dashed border-stone-800 !bg-transparent opacity-40"
+			class="py-32 text-center bg-slate-900/20 border-2 border-dashed border-white/5 rounded-3xl opacity-40"
 		>
-			<Terminal class="w-12 h-12 text-stone-800 mx-auto mb-6" />
-			<p class="text-stone-600 font-black uppercase tracking-widest">
-				No Parameters Located In Buffer
+			<Terminal class="w-12 h-12 text-slate-800 mx-auto mb-6" />
+			<p class="text-slate-600 font-black uppercase tracking-widest">
+				No parameters found
 			</p>
 		</div>
 	{:else}
@@ -218,9 +218,9 @@
 			{#each filteredConfigs as item (item.key)}
 				{@const isPending = pendingChanges.has(item.key)}
 				<div
-					class="modern-industrial-card glass-panel group !rounded-none border-stone-800 {isPending
-						? 'border-rust/40 bg-rust/5'
-						: ''}"
+					class="bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-2xl group {isPending
+						? 'border-sky-500/40 bg-sky-500/5'
+						: 'hover:border-white/10'} transition-all"
 				>
 					<div class="p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-8">
 						<div class="flex-1 space-y-3">
@@ -228,16 +228,16 @@
 								<h3 class="text-lg font-black text-white uppercase tracking-tight">{item.key}</h3>
 								<div class="flex gap-1">
 									{#if item.is_read_only}<span
-											class="px-2 py-0.5 bg-stone-800 text-text-dim text-[7px] font-black border border-stone-700 uppercase"
-											>ReadOnly</span
+											class="px-2 py-0.5 bg-slate-800 text-slate-500 text-[7px] font-black border border-white/5 uppercase rounded"
+											>Read Only</span
 										>{/if}
 									{#if item.requires_restart}<span
-											class="px-2 py-0.5 bg-warning/10 text-warning text-[7px] font-black border border-warning/30 uppercase"
+											class="px-2 py-0.5 bg-amber-500/10 text-amber-500 text-[7px] font-black border border-amber-500/30 uppercase rounded"
 											>Restart Required</span
 										>{/if}
 								</div>
 							</div>
-							<p class="text-[10px] text-text-dim font-bold uppercase leading-relaxed max-w-3xl">
+							<p class="text-[10px] text-slate-400 font-bold uppercase leading-relaxed max-w-3xl">
 								{item.description}
 							</p>
 						</div>
@@ -252,11 +252,11 @@
 											item.value
 										)}
 									disabled={item.is_read_only}
-									class="flex-1 flex items-center justify-between px-6 py-3 border-2 transition-all {(pendingChanges.get(
+									class="flex-1 flex items-center justify-between px-6 py-3 border-2 rounded-xl transition-all {(pendingChanges.get(
 										item.key
 									) ?? item.value) === 'true'
-										? 'bg-success/10 border-success text-success'
-										: 'bg-stone-950 border-stone-800 text-text-dim'}"
+										? 'bg-emerald-500/10 border-emerald-500 text-emerald-500 shadow-lg shadow-emerald-500/10'
+										: 'bg-slate-950 border-white/5 text-slate-500'}"
 								>
 									<span class="font-black text-[10px] uppercase tracking-[0.2em]"
 										>{(pendingChanges.get(item.key) ?? item.value) === 'true'
@@ -264,9 +264,9 @@
 											: 'DISABLED'}</span
 									>
 									<div
-										class="w-2 h-2 {(pendingChanges.get(item.key) ?? item.value) === 'true'
-											? 'bg-success shadow-[0_0_10px_var(--color-success)] animate-pulse'
-											: 'bg-stone-800'}"
+										class="w-2 h-2 rounded-full {(pendingChanges.get(item.key) ?? item.value) === 'true'
+											? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse'
+											: 'bg-slate-800'}"
 									></div>
 								</button>
 							{:else}
@@ -276,11 +276,11 @@
 										value={pendingChanges.get(item.key) ?? item.value}
 										oninput={(e) => handleValueChange(item.key, e.currentTarget.value, item.value)}
 										disabled={item.is_read_only}
-										class="w-full bg-black border border-stone-800 focus:border-rust text-white font-mono text-xs px-4 py-3 transition-all disabled:opacity-30 shadow-inner"
+										class="w-full bg-slate-950 border border-white/5 rounded-xl focus:border-sky-500 text-white font-mono text-xs px-4 py-3 transition-all disabled:opacity-30 shadow-inner outline-none"
 									/>
 									<button
 										onclick={() => copyToClipboard(pendingChanges.get(item.key) ?? item.value)}
-										class="absolute right-3 top-1/2 -tranneutral-y-1/2 text-text-dim hover:text-rust opacity-0 group-hover/input:opacity-100 transition-all"
+										class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-sky-500 opacity-0 group-hover/input:opacity-100 transition-all"
 									>
 										<Copy class="w-4 h-4" />
 									</button>

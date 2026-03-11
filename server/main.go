@@ -28,8 +28,9 @@ import (
 	"exile/server/enrollment"
 	"exile/server/handlers"
 	"exile/server/middleware"
-	"exile/server/redeye"
 	"exile/server/registry"
+	"exile/server/security"
+	"exile/server/sse"
 	"exile/server/utils"
 	"exile/server/ws"
 	"exile/server/ws_player"
@@ -62,8 +63,8 @@ func GzipMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Skip WebSocket and SSE
-		if r.Header.Get("Upgrade") == "websocket" || r.URL.Path == "/events" {
+		// Skip WebSocket, SSE and all API calls for debugging
+		if r.Header.Get("Upgrade") == "websocket" || r.URL.Path == "/events" || strings.HasPrefix(r.URL.Path, "/api") {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -149,7 +150,6 @@ func run() error {
 	// Use GlobalStartup initialized in TUI steps
 	authConfig := GlobalStartup.AuthConfig
 	sessionStore := GlobalStartup.SessionStore
-	sseHub := GlobalStartup.SSEHub
 	router := GlobalStartup.Router
 
 	// Create a root context for the application
@@ -254,7 +254,7 @@ func run() error {
 	// Dashboard & UI endpoints (Protected by AuthMiddleware in dev/prod)
 	statsHandler := http.HandlerFunc(handlers.StatsAPI)
 	errorsAPIHandler := http.HandlerFunc(handlers.ErrorsAPI) // New API handler
-	sseHandler := http.HandlerFunc(sseHub.HandleSSE)
+	sseHandler := http.HandlerFunc(sse.GlobalHub.HandleSSE)
 
 	if authConfig.Enabled {
 		router.Handle("/api/stats", auth.AuthMiddleware(authConfig, sessionStore)(statsHandler))
@@ -373,23 +373,23 @@ func run() error {
 		// Fleet Management
 		router.Handle("/api/instances", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.ListAllInstances))).Methods("GET")
 
-		// RedEye Security System
-		router.Handle("/api/redeye/stats", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.GetRedEyeStatsHandler))).Methods("GET")
-		router.Handle("/api/redeye/config", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.GetRedEyeConfigHandler))).Methods("GET")
-		router.Handle("/api/redeye/config", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.UpdateRedEyeConfigHandler))).Methods("PUT")
-		router.Handle("/api/redeye/rules", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.ListRedEyeRulesHandler))).Methods("GET")
-		router.Handle("/api/redeye/rules", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.CreateRedEyeRuleHandler))).Methods("POST")
-		router.Handle("/api/redeye/rules/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.UpdateRedEyeRuleHandler))).Methods("PUT")
-		router.Handle("/api/redeye/rules/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.DeleteRedEyeRuleHandler))).Methods("DELETE")
-		router.Handle("/api/redeye/logs", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.ListRedEyeLogsHandler))).Methods("GET")
-		router.Handle("/api/redeye/logs", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.ClearRedEyeLogsHandler))).Methods("DELETE")
+		// Security System
+		router.Handle("/api/security/stats", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(security.GetSecurityStatsHandler))).Methods("GET")
+		router.Handle("/api/security/config", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(security.GetSecurityConfigHandler))).Methods("GET")
+		router.Handle("/api/security/config", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(security.UpdateSecurityConfigHandler))).Methods("PUT")
+		router.Handle("/api/security/rules", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(security.ListSecurityRulesHandler))).Methods("GET")
+		router.Handle("/api/security/rules", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(security.CreateSecurityRuleHandler))).Methods("POST")
+		router.Handle("/api/security/rules/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(security.UpdateSecurityRuleHandler))).Methods("PUT")
+		router.Handle("/api/security/rules/{id}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(security.DeleteSecurityRuleHandler))).Methods("DELETE")
+		router.Handle("/api/security/logs", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(security.ListSecurityLogsHandler))).Methods("GET")
+		router.Handle("/api/security/logs", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(security.ClearSecurityLogsHandler))).Methods("DELETE")
 
-		router.Handle("/api/redeye/bans", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.ListBannedIPsHandler))).Methods("GET")
-		router.Handle("/api/redeye/bans/{ip}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.UnbanIPHandler))).Methods("DELETE")
+		router.Handle("/api/security/bans", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(security.ListBannedIPsHandler))).Methods("GET")
+		router.Handle("/api/security/bans/{ip}", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(security.UnbanIPHandler))).Methods("DELETE")
 
-		// RedEye Anti-Cheat
-		router.Handle("/api/redeye/anticheat/report", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.ReportAnticheatEventHandler))).Methods("POST")
-		router.Handle("/api/redeye/anticheat/events", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(redeye.GetAnticheatEventsHandler))).Methods("GET")
+		// Security Integrity (Anti-Cheat)
+		router.Handle("/api/security/integrity/report", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(security.ReportSecurityEventHandler))).Methods("POST")
+		router.Handle("/api/security/integrity/events", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(security.GetSecurityEventsHandler))).Methods("GET")
 
 		// AI Bot API
 		router.Handle("/api/ai/chat", auth.AuthMiddleware(authConfig, sessionStore)(http.HandlerFunc(handlers.AIChatHandler))).Methods("POST")
@@ -449,7 +449,7 @@ func run() error {
 
 	srv := &http.Server{
 		Addr:         fmt.Sprintf("%s:%s", serverHost, port),
-		Handler:      middleware.SecurityHeadersMiddleware(middleware.CORSMiddleware(GzipMiddleware(redeye.RedEyeMiddleware(middleware.GlobalRateLimitMiddleware(middleware.StatsMiddleware(router)))))),
+		Handler:      middleware.SecurityHeadersMiddleware(middleware.CORSMiddleware(security.SecurityMiddleware(middleware.GlobalRateLimitMiddleware(middleware.StatsMiddleware(router))))),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
@@ -479,8 +479,8 @@ func run() error {
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer shutdownCancel()
 
-	// Stop RedEye Engine
-	redeye.StopRedEye()
+	// Stop Security Engine
+	security.StopSecurity()
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		log.Printf("error during server shutdown: %v", err)

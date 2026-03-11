@@ -77,7 +77,7 @@
 				class="p-6 border-b border-stone-800 flex justify-between items-center bg-neutral-950/40"
 			>
 				<h3 class="text-xl font-heading font-black text-neutral-100 uppercase tracking-tighter">
-					Initialize_Sector in <span
+					Initialize_Schema in <span
 						class="text-rust font-jetbrains text-xs ml-3 uppercase tracking-widest">{schema}</span
 					>
 				</h3>

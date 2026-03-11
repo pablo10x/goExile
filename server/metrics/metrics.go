@@ -115,11 +115,11 @@ type CombinedMetrics struct {
 	Nodes    NodeMetrics     `json:"nodes"`
 	Database DatabaseMetrics `json:"database"`
 	Network  NetworkMetrics  `json:"network"`
-	RedEye   RedEyeMetrics   `json:"redeye"`
+	Security SecurityMetrics `json:"security"`
 }
 
-// RedEyeMetrics holds security-related metrics
-type RedEyeMetrics struct {
+// SecurityMetrics holds security-related metrics
+type SecurityMetrics struct {
 	TotalBlocks         int64   `json:"total_blocks"`
 	TotalRateLimits     int64   `json:"total_rate_limits"`
 	ActiveBans          int     `json:"active_bans"`
@@ -160,10 +160,10 @@ type NetworkMetrics struct {
 	AvgResponseTimeMs float64 `json:"avg_response_time_ms"`
 	ActiveConnections int     `json:"active_connections"`
 
-	// RedEye Stats
-	RedEyeTotalBlocks    int64 `json:"redeye_total_blocks"`
-	RedEyeTotalRateLimit int64 `json:"redeye_total_rate_limit"`
-	RedEyeActiveBans     int   `json:"redeye_active_bans"`
+	// Security Stats
+	SecurityTotalBlocks    int64 `json:"security_total_blocks"`
+	SecurityTotalRateLimit int64 `json:"security_total_rate_limit"`
+	SecurityActiveBans     int   `json:"security_active_bans"`
 }
 
 // MetricsCollector manages metrics collection
@@ -430,9 +430,9 @@ func (mc *MetricsCollector) CollectNetworkMetrics() NetworkMetrics {
 	totalErrs := registry.GlobalStats.TotalErrors
 	bytesSent := registry.GlobalStats.BytesSent
 	bytesRecv := registry.GlobalStats.BytesReceived
-	redeyeBlocks := registry.GlobalStats.RedEyeTotalBlocks
-	redeyeRateLimit := registry.GlobalStats.RedEyeTotalRateLimit
-	redeyeActiveBans := registry.GlobalStats.RedEyeActiveBans
+	securityBlocks := registry.GlobalStats.SecurityTotalBlocks
+	securityRateLimit := registry.GlobalStats.SecurityTotalRateLimit
+	securityActiveBans := registry.GlobalStats.SecurityActiveBans
 	registry.GlobalStats.Mu.RUnlock()
 	mc.mu.Lock()
 	// Calculate request rate
@@ -459,26 +459,16 @@ func (mc *MetricsCollector) CollectNetworkMetrics() NetworkMetrics {
 	ws.GlobalWSManager.Mu.RUnlock()
 
 	return NetworkMetrics{
-
-		TotalRequests: totalReqs,
-
-		TotalErrors: totalErrs,
-
-		ErrorRate: errorRate,
-
-		BytesSent: uint64(bytesSent),
-
-		BytesReceived: uint64(bytesRecv),
-
+		TotalRequests:     totalReqs,
+		TotalErrors:       totalErrs,
+		ErrorRate:         errorRate,
+		BytesSent:         uint64(bytesSent),
+		BytesReceived:     uint64(bytesRecv),
 		RequestsPerSecond: requestRate,
-
 		ActiveConnections: activeConnections,
-
-		RedEyeTotalBlocks: redeyeBlocks,
-
-		RedEyeTotalRateLimit: redeyeRateLimit,
-
-		RedEyeActiveBans: redeyeActiveBans,
+		SecurityTotalBlocks:    securityBlocks,
+		SecurityTotalRateLimit: securityRateLimit,
+		SecurityActiveBans:     securityActiveBans,
 	}
 
 }
@@ -490,29 +480,29 @@ func (mc *MetricsCollector) CollectAllMetrics() CombinedMetrics {
 		Nodes:    mc.CollectNodeMetrics(),
 		Database: mc.CollectDatabaseMetrics(),
 		Network:  mc.CollectNetworkMetrics(),
-		RedEye:   mc.CollectRedEyeMetrics(),
+		Security: mc.CollectSecurityMetrics(),
 	}
 }
 
-// CollectRedEyeMetrics gathers security statistics
-func (mc *MetricsCollector) CollectRedEyeMetrics() RedEyeMetrics {
+// CollectSecurityMetrics gathers security statistics
+func (mc *MetricsCollector) CollectSecurityMetrics() SecurityMetrics {
 	registry.GlobalStats.Mu.RLock()
 	defer registry.GlobalStats.Mu.RUnlock()
 
 	threatLevel := "LOW"
-	if registry.GlobalStats.RedEyeActiveBans > 100 || registry.GlobalStats.RedEyeTotalBlocks > 5000 {
+	if registry.GlobalStats.SecurityActiveBans > 100 || registry.GlobalStats.SecurityTotalBlocks > 5000 {
 		threatLevel = "CRITICAL"
-	} else if registry.GlobalStats.RedEyeActiveBans > 20 || registry.GlobalStats.RedEyeTotalBlocks > 1000 {
+	} else if registry.GlobalStats.SecurityActiveBans > 20 || registry.GlobalStats.SecurityTotalBlocks > 1000 {
 		threatLevel = "HIGH"
-	} else if registry.GlobalStats.RedEyeActiveBans > 5 || registry.GlobalStats.RedEyeTotalBlocks > 100 {
+	} else if registry.GlobalStats.SecurityActiveBans > 5 || registry.GlobalStats.SecurityTotalBlocks > 100 {
 		threatLevel = "MODERATE"
 	}
 
-	return RedEyeMetrics{
-		TotalBlocks:         registry.GlobalStats.RedEyeTotalBlocks,
-		TotalRateLimits:     registry.GlobalStats.RedEyeTotalRateLimit,
-		ActiveBans:          registry.GlobalStats.RedEyeActiveBans,
-		TotalRules:          0,    // Would need redeye registry for this
+	return SecurityMetrics{
+		TotalBlocks:         registry.GlobalStats.SecurityTotalBlocks,
+		TotalRateLimits:     registry.GlobalStats.SecurityTotalRateLimit,
+		ActiveBans:          registry.GlobalStats.SecurityActiveBans,
+		TotalRules:          0,    // Would need security registry for this
 		AvgProcessingTimeMs: 0.12, // Placeholder for actual timing
 		ThreatLevel:         threatLevel,
 		LastBlockAt:         time.Now().Format(time.RFC3339), // Placeholder

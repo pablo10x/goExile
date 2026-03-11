@@ -546,12 +546,12 @@
 			</div>
 			<div>
 				<h2 class="text-lg font-heading font-black text-white uppercase tracking-tighter italic">
-					SQL_Terminal_v4
+					SQL Query Console
 				</h2>
 				<p
 					class="font-jetbrains text-[10px] text-neutral-500 uppercase tracking-widest mt-1 italic"
 				>
-					Execute raw neural queries against the sector
+					Execute database queries against the schema
 				</p>
 			</div>
 		</div>
@@ -561,14 +561,14 @@
 					class="font-jetbrains text-[10px] text-neutral-500 flex items-center gap-2 uppercase tracking-widest italic font-bold"
 				>
 					<RefreshCw class="w-3.5 h-3.5 animate-spin" />
-					Syncing_Schema...
+					Synchronizing Schema...
 				</span>
 			{:else if tables.length > 0}
 				<span
 					class="font-jetbrains text-[10px] text-neutral-500 flex items-center gap-2 uppercase tracking-widest italic font-bold"
 				>
 					<Database class="w-3.5 h-3.5 text-indigo-400/60" />
-					{tables.length} Sectors_Mapped
+					{tables.length} Schemas Mapped
 				</span>
 			{/if}
 			<button
@@ -579,7 +579,7 @@
 				{#if loading}
 					<RefreshCw class="w-4 h-4 animate-spin" /> EXECUTING...
 				{:else}
-					<Play class="w-4 h-4 fill-current" /> Run_Op
+					<Play class="w-4 h-4 fill-current" /> Execute
 				{/if}
 			</button>
 		</div>
@@ -594,7 +594,7 @@
 					bind:this={textareaEl}
 					bind:value={query}
 					class="w-full h-full bg-neutral-950/40 border border-neutral-800 p-6 font-jetbrains text-xs text-neutral-200 focus:border-indigo-500 outline-none resize-none shadow-inner uppercase tracking-widest rounded-xl"
-					placeholder="SELECT * FROM sector_registry LIMIT 10;"
+					placeholder="SELECT * FROM registry LIMIT 10;"
 					onkeydown={handleKeydown}
 					oninput={handleInput}
 					onblur={handleBlur}
@@ -660,8 +660,7 @@
 				<div class="flex gap-6">
 					<span class="flex items-center gap-2"
 						><div class="w-1 h-1 bg-neutral-800"></div>
-						 Ctrl + Enter_OP</span
-					>
+						 Ctrl + Enter to Execute</span>
 					<span class="flex items-center gap-2"
 						><div class="w-1 h-1 bg-neutral-800"></div>
 						 Tab_Autocomplete</span
@@ -681,8 +680,7 @@
 				>
 					<span
 						class="font-jetbrains text-[10px] font-bold text-neutral-500 uppercase tracking-[0.3em] italic"
-						>{results.length} Entities_Mapped</span
-					>
+						>{results.length} Rows Returned</span>
 					<div class="flex gap-3">
 						<button
 							onclick={copyToClipboard}
@@ -737,7 +735,7 @@
 							class="font-jetbrains text-[10px] text-red-500 uppercase tracking-[0.4em] font-black mb-4 flex items-center gap-4 italic"
 						>
 							<div class="w-2 h-2 bg-red-500 animate-pulse"></div>
-							Execution_Fault_Detected
+							Query Execution Failed
 						</div>
 						<div
 							class="text-neutral-400 font-jetbrains text-[11px] whitespace-pre-wrap leading-relaxed uppercase tracking-widest"
@@ -754,10 +752,10 @@
 						<Terminal class="w-16 h-16 opacity-10" />
 					</div>
 					<p class="font-heading font-black text-xs tracking-[0.4em] uppercase italic">
-						Awaiting_Neural_Sequence
+						Awaiting Query Input
 					</p>
 					<p class="font-jetbrains text-[9px] mt-3 uppercase tracking-widest opacity-40 font-bold">
-						Input query parameters to initiate sector analysis
+						Input query parameters to initiate schema analysis
 					</p>
 				</div>
 			{/if}
@@ -772,7 +770,7 @@
 						></div>
 						<span
 							class="font-heading font-black text-[11px] text-indigo-400 uppercase tracking-[0.4em] animate-pulse italic"
-							>Processing_Neural_Array...</span
+							>Processing Query...</span
 						>
 					</div>
 				</div>

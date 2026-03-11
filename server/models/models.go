@@ -51,8 +51,9 @@ type ServerConfig struct {
 	ID              int       `json:"id" db:"id"`
 	Key             string    `json:"key" db:"key"`
 	Value           string    `json:"value" db:"value"`
-	Type            string    `json:"type" db:"type"`         // string, int, bool, duration
-	Category        string    `json:"category" db:"category"` // system, node, security
+	DefaultValue    string    `json:"default_value" db:"default_value"`
+	Type            string    `json:"type" db:"type"` // "string", "int", "bool", "duration", "json"
+	Category        string    `json:"category" db:"category"`
 	Description     string    `json:"description" db:"description"`
 	IsReadOnly      bool      `json:"is_read_only" db:"is_read_only"`
 	RequiresRestart bool      `json:"requires_restart" db:"requires_restart"`
@@ -158,8 +159,8 @@ type SystemLog struct {
 	Method    string    `json:"method" db:"method"`
 }
 
-// RedEyeRule represents a rule for the RedEye security system.
-type RedEyeRule struct {
+// SecurityRule represents a rule for the system security engine.
+type SecurityRule struct {
 	ID          int       `json:"id" db:"id"`
 	Name        string    `json:"name" db:"name"`
 	CIDR        string    `json:"cidr" db:"cidr"`                 // IP or CIDR
@@ -173,8 +174,8 @@ type RedEyeRule struct {
 	CreatedAt   time.Time `json:"created_at" db:"created_at"`
 }
 
-// RedEyeLog represents a log entry for a RedEye event.
-type RedEyeLog struct {
+// SecurityLog represents a log entry for a security event.
+type SecurityLog struct {
 	ID        int       `json:"id" db:"id"`
 	RuleID    *int      `json:"rule_id" db:"rule_id"`
 	SourceIP  string    `json:"source_ip" db:"source_ip"`
@@ -185,8 +186,8 @@ type RedEyeLog struct {
 	Timestamp time.Time `json:"timestamp" db:"timestamp"`
 }
 
-// RedEyeAnticheatEvent represents a suspicious activity reported by game servers.
-type RedEyeAnticheatEvent struct {
+// SecurityEvent represents a suspicious activity reported by game servers.
+type SecurityEvent struct {
 	ID           int       `json:"id" db:"id"`
 	PlayerID     string    `json:"player_id" db:"player_id"`
 	GameServerID int       `json:"game_server_id" db:"game_server_id"`
@@ -197,8 +198,8 @@ type RedEyeAnticheatEvent struct {
 	Timestamp    time.Time `json:"timestamp" db:"timestamp"`
 }
 
-// RedEyeIPReputation tracks the reputation of IPs based on events.
-type RedEyeIPReputation struct {
+// IPReputation tracks the reputation of IPs based on events.
+type IPReputation struct {
 	IP              string     `json:"ip" db:"ip"`
 	ReputationScore int        `json:"reputation_score" db:"reputation_score"` // 0=Good, 100=Bad
 	TotalEvents     int        `json:"total_events" db:"total_events"`

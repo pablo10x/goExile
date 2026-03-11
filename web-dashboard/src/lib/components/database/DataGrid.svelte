@@ -633,7 +633,7 @@
 										No matching records identified
 									</p>
 									<p class="text-[9px] mt-2 font-medium uppercase tracking-widest opacity-50">
-										Adjust query parameters or sector filter
+										Adjust query parameters or schema filter
 									</p>
 									<button
 										onclick={() => (searchQuery = '')}
@@ -648,7 +648,7 @@
 										<Plus class="w-8 h-8 opacity-30" />
 									</div>
 									<p class="font-bold text-[11px] uppercase tracking-widest">
-										Sector buffer is empty
+										Schema buffer is empty
 									</p>
 									<p class="text-[9px] mt-2 font-medium uppercase tracking-widest opacity-50">
 										No persistent entities recorded

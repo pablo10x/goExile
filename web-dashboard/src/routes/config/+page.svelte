@@ -55,6 +55,7 @@
 	interface ConfigItem {
 		key: string;
 		value: string;
+		default_value: string;
 		type: 'string' | 'int' | 'bool' | 'duration' | 'secret' | 'json' | 'url';
 		category: string;
 		description: string;
@@ -83,7 +84,7 @@
 	// State
 	let loading = $state(true);
 	let saving = $state(false);
-	let activeTab = $state<'master' | 'nodes' | 'firebase'>('master');
+	let activeTab = $state<'system' | 'nodes' | 'firebase'>('system');
 	let searchQuery = $state('');
 	let showSecrets = $state<Set<string>>(new Set());
 	let pendingChanges = $state<Map<string, string>>(new Map());
@@ -103,69 +104,34 @@
 
 	let masterSections = $state<ConfigSection[]>([
 		{
-			id: 'general',
-			title: 'General Settings',
+			id: 'system',
+			title: 'System Settings',
 			description: 'Core server identification and behavior',
 			icon: SettingsIcon,
 			items: []
 		},
 		{
-			id: 'network',
-			title: 'Network & Connectivity',
-			description: 'Ports, hosts, and connection settings',
-			icon: Network,
-			items: []
-		},
-		{
 			id: 'security',
-			title: 'Security & Authentication',
-			description: 'API keys, tokens, and access control',
+			title: 'Security Configuration',
+			description: 'Access control, auto-ban, and engine modes',
 			icon: Shield,
 			items: []
 		},
 		{
-			id: 'database',
-			title: 'Database Configuration',
-			description: 'Database connections and pooling',
-			icon: Database,
-			items: []
-		},
-		{
-			id: 'performance',
-			title: 'Performance & Limits',
-			description: 'Resource limits and performance tuning',
-			icon: Zap,
+			id: 'aesthetic',
+			title: 'Interface & Aesthetic',
+			description: 'Dashboard theme and visual parameters',
+			icon: Palette,
 			items: []
 		}
 	]);
 
 	let nodeSections = $state<ConfigSection[]>([
 		{
-			id: 'defaults',
-			title: 'Templates',
-			description: 'Default values for new infrastructure',
+			id: 'node',
+			title: 'Infrastructure Defaults',
+			description: 'Default values for new nodes and instances',
 			icon: Cpu,
-			items: []
-		},
-		{
-			id: 'limits',
-			title: 'Resource Allocation',
-			description: 'Instance limits and resource bounds',
-			icon: HardDrive,
-			items: []
-		},
-		{
-			id: 'ports',
-			title: 'Port Ranges',
-			description: 'Game server network port pools',
-			icon: Network,
-			items: []
-		},
-		{
-			id: 'updates',
-			title: 'Software Updates',
-			description: 'Automatic binary update behavior',
-			icon: RefreshCw,
 			items: []
 		}
 	]);
@@ -233,39 +199,36 @@
 	function distributeConfigs(configs: ConfigItem[]) {
 		masterSections = masterSections.map((s) => ({ ...s, items: [] }));
 		nodeSections = nodeSections.map((s) => ({ ...s, items: [] }));
+		
+		// Professional filtering: only show keys that are fully implemented in the backend
+		const supportedKeys = new Set([
+			'server_port', 
+			'session_timeout', 
+			'allowed_origins', 
+			'maintenance_mode',
+			'max_instances_per_node',
+			'security.auto_ban_enabled',
+			'security.auto_ban_threshold',
+			'security.mode',
+			'security.strict_mode',
+			'security.decay_rate',
+			'security.whitelist_ips',
+			'security.geoip_enabled',
+			'security.allowed_countries',
+			'security.alert_enabled',
+			'site.theme',
+			'site.settings'
+		]);
+
 		for (const c of configs) {
-			if (c.category === 'system') {
-				if (c.key.includes('port') || c.key.includes('host') || c.key.includes('url'))
-					masterSections.find((s) => s.id === 'network')?.items.push(c);
-				else if (
-					c.key.includes('key') ||
-					c.key.includes('secret') ||
-					c.key.includes('auth') ||
-					c.key.includes('token')
-				)
-					masterSections.find((s) => s.id === 'security')?.items.push(c);
-				else if (c.key.includes('db') || c.key.includes('database') || c.key.includes('pool'))
-					masterSections.find((s) => s.id === 'database')?.items.push(c);
-				else if (
-					c.key.includes('max') ||
-					c.key.includes('limit') ||
-					c.key.includes('timeout') ||
-					c.key.includes('ttl')
-				)
-					masterSections.find((s) => s.id === 'performance')?.items.push(c);
-				else masterSections.find((s) => s.id === 'general')?.items.push(c);
+			if (!supportedKeys.has(c.key)) continue;
+
+			if (c.category === 'system' || c.category === 'aesthetic' || c.category === 'security') {
+				const section = masterSections.find((s) => s.id === c.category);
+				if (section) section.items.push(c);
 			} else if (c.category === 'node') {
-				if (c.key.includes('port')) nodeSections.find((s) => s.id === 'ports')?.items.push(c);
-				else if (
-					c.key.includes('max') ||
-					c.key.includes('limit') ||
-					c.key.includes('memory') ||
-					c.key.includes('cpu')
-				)
-					nodeSections.find((s) => s.id === 'limits')?.items.push(c);
-				else if (c.key.includes('update') || c.key.includes('auto'))
-					nodeSections.find((s) => s.id === 'updates')?.items.push(c);
-				else nodeSections.find((s) => s.id === 'defaults')?.items.push(c);
+				const section = nodeSections.find((s) => s.id === 'node');
+				if (section) section.items.push(c);
 			}
 		}
 	}
@@ -358,6 +321,25 @@
 		pendingChanges = new Map(pendingChanges);
 	}
 
+	function restoreDefault(item: ConfigItem) {
+		if (item.value !== item.default_value) {
+			pendingChanges.set(item.key, item.default_value);
+			pendingChanges = new Map(pendingChanges);
+			notifications.add({ type: 'info', message: `Restored ${item.key} to baseline value` });
+		}
+	}
+
+	function getRiskLevel(key: string): 'low' | 'medium' | 'high' | 'critical' {
+		const critical = ['server_port', 'allowed_origins', 'security.whitelist_ips'];
+		const high = ['security.mode', 'security.auto_ban_threshold', 'max_instances_per_node'];
+		const medium = ['session_timeout', 'security.decay_rate', 'security.strict_mode'];
+		
+		if (critical.includes(key)) return 'critical';
+		if (high.includes(key)) return 'high';
+		if (medium.includes(key)) return 'medium';
+		return 'low';
+	}
+
 	async function saveChanges() {
 		saving = true;
 		try {
@@ -432,7 +414,7 @@
 	</PageHeader>
 
 	<div class="flex bg-black/20 p-1.5 rounded-2xl border border-white/5 backdrop-blur-md">
-		{#each [{ id: 'master', label: 'Core System', sub: 'Global Settings' }, { id: 'nodes', label: 'Infrastructure', sub: 'Node Defaults' }, { id: 'firebase', label: 'Remote Config', sub: 'Firebase API' }] as tab}
+		{#each [{ id: 'system', label: 'Core System', sub: 'Global Settings' }, { id: 'nodes', label: 'Infrastructure', sub: 'Node Defaults' }, { id: 'firebase', label: 'Remote Config', sub: 'Firebase API' }] as tab}
 			<button
 				onclick={() => (activeTab = tab.id as any)}
 				class="flex-1 flex flex-col items-center py-3.5 rounded-xl transition-all duration-300 {activeTab ===
@@ -470,9 +452,9 @@
 		</div>
 	{:else}
 		<div class="space-y-6">
-			{#if activeTab === 'master' || activeTab === 'nodes'}
+			{#if activeTab === 'system' || activeTab === 'nodes'}
 				<div class="space-y-8">
-					{#each activeTab === 'master' ? filteredMasterSections : filteredNodeSections as section (section.id)}
+					{#each activeTab === 'system' ? filteredMasterSections : filteredNodeSections as section (section.id)}
 						<Card
 							title={section.title}
 							subtitle={section.description}
@@ -500,6 +482,15 @@
 													<span class="text-xs font-bold text-sky-400 uppercase tracking-wide"
 														>{item.key}</span
 													>
+													{@const risk = getRiskLevel(item.key)}
+													<span class="text-[8px] font-black px-2 py-0.5 rounded uppercase border {
+														risk === 'critical' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' :
+														risk === 'high' ? 'bg-orange-500/10 text-orange-500 border-orange-500/20' :
+														risk === 'medium' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
+														'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+													}">
+														{risk} risk
+													</span>
 													{#if item.is_read_only}<span
 															class="text-[9px] font-bold bg-slate-800 text-slate-500 px-2 py-0.5 rounded uppercase border border-white/5"
 															>Read Only</span
@@ -513,7 +504,7 @@
 													{item.description}
 												</p>
 
-												<div class="mt-4">
+												<div class="mt-4 flex flex-col md:flex-row md:items-center gap-4">
 													{#if item.type === 'bool'}
 														<button
 															onclick={() =>
@@ -544,7 +535,7 @@
 															>
 														</button>
 													{:else}
-														<div class="flex items-center gap-2 max-w-xl">
+														<div class="flex items-center gap-2 flex-1 max-w-xl">
 															<div class="relative flex-1">
 																<input
 																	type={isSecret && !showSecrets.has(item.key)
@@ -579,6 +570,18 @@
 																><Copy size={16} /></button
 															>
 														</div>
+													{/if}
+
+													{#if !item.is_read_only && (pendingChanges.get(item.key) ?? item.value) !== item.default_value}
+														<button
+															onclick={() => restoreDefault(item)}
+															transition:scale
+															class="flex items-center gap-2 px-3 py-2 text-[10px] font-bold text-slate-500 hover:text-sky-400 uppercase tracking-widest transition-all bg-white/5 hover:bg-white/10 rounded-xl border border-white/5"
+															title="Restore baseline value"
+														>
+															<RotateCcw size={14} />
+															Restore
+														</button>
 													{/if}
 												</div>
 											</div>

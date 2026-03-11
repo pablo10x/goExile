@@ -62,7 +62,7 @@
 		<div class="flex items-center gap-3">
 			<div class="w-1 h-4 bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.5)] rounded-full"></div>
 			<h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
-				Active Sessions
+				Deployment Overview
 			</h3>
 		</div>
 		<span class="text-[8px] font-bold text-slate-600 uppercase tracking-widest"

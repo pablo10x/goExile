@@ -4,7 +4,7 @@
 	import { cubicOut, elasticOut } from 'svelte/easing';
 	import { formatBytes, formatUptime } from '$lib/utils';
 	import { serverVersions } from '$lib/stores.svelte';
-	import Terminal from './Terminal.svelte';
+	import Console from './Console.svelte';
 	import ResourceMetricsPanel from './ResourceMetricsPanel.svelte';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 	import LogViewer from './LogViewer.svelte';
@@ -41,7 +41,7 @@
 	let activeTab = $state<TabType>('console');
 
 	const tabs: { id: TabType; label: string }[] = [
-		{ id: 'console', label: 'Console' },
+		{ id: 'console', label: 'Access Console' },
 		{ id: 'metrics', label: 'Performance' },
 		{ id: 'backups', label: 'Backups' },
 		{ id: 'history', label: 'Activity' },
@@ -420,7 +420,7 @@
 				<div class="flex-1 relative overflow-hidden flex flex-col bg-black/20">
 					{#if activeTab === 'console'}
 						<div class="flex-1 p-6 min-h-0" in:fade={{ duration: 150 }}>
-							<Terminal {logs} title={`instance@${instanceId}:~`} />
+							<Console {logs} title={`instance@${instanceId}:~`} />
 						</div>
 					{:else if activeTab === 'metrics'}
 						<div class="flex-1 p-10 overflow-y-auto custom-scrollbar" in:fade={{ duration: 150 }}>

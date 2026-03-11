@@ -11,6 +11,7 @@
 		loading?: boolean;
 		icon?: string;
 		block?: boolean;
+		active?: boolean;
 		type?: 'button' | 'submit' | 'reset';
 		href?: string;
 		class?: string;
@@ -26,6 +27,7 @@
 		loading = false,
 		icon = '',
 		block = false,
+		active = false,
 		type = 'button',
 		href = '',
 		class: className = '',
@@ -62,15 +64,11 @@
 	const defaultColors = {
 		primary: 'btn-premium-primary',
 		secondary: 'btn-premium-secondary',
-		danger:
-			'bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500 hover:text-white shadow-lg shadow-rose-500/10',
-		success:
-			'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white shadow-lg shadow-emerald-500/10',
-		warning:
-			'bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500 hover:text-white shadow-lg shadow-amber-500/10',
-		ghost: 'bg-transparent text-slate-400 hover:text-slate-100 hover:bg-white/5',
-		outline:
-			'bg-transparent text-slate-300 border border-white/10 hover:bg-white/5 hover:border-white/20'
+		danger: 'btn-premium-danger',
+		success: 'btn-premium-success',
+		warning: 'btn-premium-warning',
+		ghost: 'btn-premium-ghost',
+		outline: 'btn-premium-outline'
 	};
 
 	// Loading spinner size
@@ -86,7 +84,7 @@
 	<a
 		{href}
 		{title}
-		class="{baseClasses} {sizeClasses[size]} {className} {defaultColors[variant]} rounded-xl"
+		class="{baseClasses} {sizeClasses[size]} {className} {defaultColors[variant]} {active ? 'active' : ''} rounded-xl"
 		onclick={handleClick}
 	>
 		{#if icon}
@@ -99,7 +97,7 @@
 	<button
 		{type}
 		{title}
-		class="{baseClasses} {sizeClasses[size]} {className} {defaultColors[variant]} rounded-xl"
+		class="{baseClasses} {sizeClasses[size]} {className} {defaultColors[variant]} {active ? 'active' : ''} rounded-xl"
 		{disabled}
 		aria-disabled={disabled || loading}
 		onclick={handleClick}

@@ -5,17 +5,27 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
 	"exile/server/registry"
 )
 
+// Event represents a structured SSE event
+type Event struct {
+	Type    string      `json:"type"`
+	Payload interface{} `json:"payload"`
+}
+
 // SSEHub manages Server-Sent Events connections.
 type SSEHub struct {
 	mu      sync.RWMutex
 	clients map[chan string]bool
 }
+
+// GlobalHub is the shared singleton for system-wide event broadcasting.
+var GlobalHub = NewSSEHub()
 
 // NewSSEHub creates a new SSE hub.
 func NewSSEHub() *SSEHub {
@@ -30,6 +40,7 @@ func (h *SSEHub) HandleSSE(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("X-Accel-Buffering", "no") // Disable proxy buffering
 
 	// Create a channel for this client
 	clientChan := make(chan string, 10)
@@ -55,7 +66,9 @@ func (h *SSEHub) HandleSSE(w http.ResponseWriter, r *http.Request) {
 	for {
 		select {
 		case msg := <-clientChan:
-			_, err := fmt.Fprintf(w, "data: %s\n\n", msg)
+			// Ensure msg doesn't contain newlines that break SSE protocol
+			cleanMsg := strings.ReplaceAll(msg, "\n", "")
+			_, err := fmt.Fprintf(w, "data: %s\n\n", cleanMsg)
 			if err != nil {
 				return
 			}
@@ -69,11 +82,8 @@ func (h *SSEHub) HandleSSE(w http.ResponseWriter, r *http.Request) {
 }
 
 // Broadcast sends a message to all connected clients.
-func (h *SSEHub) Broadcast(msgType string, payload interface{}) {
-	data, err := json.Marshal(map[string]interface{}{
-		"type":    msgType,
-		"payload": payload,
-	})
+func (h *SSEHub) Broadcast(event Event) {
+	data, err := json.Marshal(event)
 	if err != nil {
 		log.Printf("SSE Broadcast error: %v", err)
 		return
@@ -102,11 +112,11 @@ func (h *SSEHub) Run() {
 	for {
 		select {
 		case <-statsTicker.C:
-			h.Broadcast("stats", registry.GlobalStats.GetStatsMap())
+			h.Broadcast(Event{Type: "stats", Payload: registry.GlobalStats.GetStatsMap()})
 
 		case <-nodesTicker.C:
 			nodes := registry.GlobalRegistry.List()
-			h.Broadcast("nodes", nodes)
+			h.Broadcast(Event{Type: "nodes", Payload: nodes})
 		}
 	}
 }
@@ -120,10 +130,11 @@ func (h *SSEHub) sendUpdate(client chan string, msgType string) {
 		payload = registry.GlobalRegistry.List()
 	}
 
-	data, _ := json.Marshal(map[string]interface{}{
-		"type":    msgType,
-		"payload": payload,
-	})
+	event := Event{
+		Type:    msgType,
+		Payload: payload,
+	}
+	data, _ := json.Marshal(event)
 
 	select {
 	case client <- string(data):

@@ -382,7 +382,7 @@ func MigrateDB(db *sqlx.DB) error {
                 path TEXT,
                 method TEXT
         )`, pkType),
-		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS redeye_rules (
+		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS security_rules (
                 id %s,
                 name TEXT,
                 cidr TEXT NOT NULL,
@@ -395,7 +395,7 @@ func MigrateDB(db *sqlx.DB) error {
                 enabled INTEGER DEFAULT 1,
                 created_at INTEGER NOT NULL
         )`, pkType),
-		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS redeye_logs (
+		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS security_logs (
                 id %s,
                 rule_id INTEGER,
                 source_ip TEXT NOT NULL,
@@ -404,9 +404,9 @@ func MigrateDB(db *sqlx.DB) error {
                 action TEXT NOT NULL,
                 details TEXT,
                 timestamp INTEGER NOT NULL,
-                FOREIGN KEY(rule_id) REFERENCES redeye_rules(id) ON DELETE SET NULL
+                FOREIGN KEY(rule_id) REFERENCES security_rules(id) ON DELETE SET NULL
         )`, pkType),
-		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS redeye_anticheat_events (
+		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS security_integrity_events (
                 id %s,
                 player_id TEXT,
                 game_server_id INTEGER,
@@ -416,7 +416,7 @@ func MigrateDB(db *sqlx.DB) error {
                 severity INTEGER DEFAULT 0,
                 timestamp INTEGER NOT NULL
         )`, pkType),
-		`CREATE TABLE IF NOT EXISTS redeye_ip_reputation (
+		`CREATE TABLE IF NOT EXISTS security_ip_reputation (
                 ip TEXT PRIMARY KEY,
                 reputation_score INTEGER DEFAULT 0,
                 total_events INTEGER DEFAULT 0,
@@ -440,9 +440,9 @@ func MigrateDB(db *sqlx.DB) error {
 		"CREATE INDEX IF NOT EXISTS idx_system_logs_level ON system_logs(level)",
 		"CREATE INDEX IF NOT EXISTS idx_system_logs_source ON system_logs(source)",
 		"CREATE INDEX IF NOT EXISTS idx_instance_actions_node_instance ON instance_actions(node_id, instance_id, timestamp DESC)",
-		"CREATE INDEX IF NOT EXISTS idx_redeye_logs_timestamp ON redeye_logs(timestamp DESC)",
-		"CREATE INDEX IF NOT EXISTS idx_redeye_anticheat_timestamp ON redeye_anticheat_events(timestamp DESC)",
-		"CREATE INDEX IF NOT EXISTS idx_redeye_rules_active ON redeye_rules(enabled, action)",
+		"CREATE INDEX IF NOT EXISTS idx_security_logs_timestamp ON security_logs(timestamp DESC)",
+		"CREATE INDEX IF NOT EXISTS idx_security_integrity_timestamp ON security_integrity_events(timestamp DESC)",
+		"CREATE INDEX IF NOT EXISTS idx_security_rules_active ON security_rules(enabled, action)",
 		"CREATE INDEX IF NOT EXISTS idx_todos_parent ON todos(parent_id)",
 		"CREATE INDEX IF NOT EXISTS idx_todo_comments_todo ON todo_comments(todo_id)",
 	}
@@ -461,9 +461,11 @@ func MigrateDB(db *sqlx.DB) error {
 	// Add parent_id to todos if missing
 	_, _ = db.Exec("ALTER TABLE todos ADD COLUMN parent_id INTEGER")
 
-	// NODE RENAMING MIGRATION
-	_, _ = db.Exec("ALTER TABLE spawners RENAME TO nodes")
-	_, _ = db.Exec("ALTER TABLE instance_actions RENAME COLUMN spawner_id TO node_id")
+	// Renaming RedEye tables to Security
+	_, _ = db.Exec("ALTER TABLE redeye_rules RENAME TO security_rules")
+	_, _ = db.Exec("ALTER TABLE redeye_logs RENAME TO security_logs")
+	_, _ = db.Exec("ALTER TABLE redeye_anticheat_events RENAME TO security_integrity_events")
+	_, _ = db.Exec("ALTER TABLE redeye_ip_reputation RENAME TO security_ip_reputation")
 
 	// Add is_draining to nodes if missing
 	_, _ = db.Exec("ALTER TABLE nodes ADD COLUMN is_draining INTEGER DEFAULT 0")
@@ -473,8 +475,11 @@ func MigrateDB(db *sqlx.DB) error {
 	_, _ = db.Exec("ALTER TABLE nodes ADD COLUMN resource_limits TEXT")
 	_, _ = db.Exec("ALTER TABLE nodes ADD COLUMN public_ip TEXT")
 
-	// Add details to redeye_logs if missing
-	_, _ = db.Exec("ALTER TABLE redeye_logs ADD COLUMN details TEXT")
+	// Add details to security_logs if missing
+	_, _ = db.Exec("ALTER TABLE security_logs ADD COLUMN details TEXT")
+
+	// Add default_value to server_config if missing
+	_, _ = db.Exec("ALTER TABLE server_config ADD COLUMN default_value TEXT")
 
 	return nil
 }
@@ -1438,30 +1443,90 @@ func SeedDefaultConfig(db *sqlx.DB) error {
 			UpdatedBy:       "system",
 		},
 		{
-			Key:             "redeye.auto_ban_enabled",
+			Key:             "security.auto_ban_enabled",
 			Value:           "true",
 			Type:            "bool",
-			Category:        "redeye",
+			Category:        "security",
 			Description:     "Automatically ban IPs that exceed reputation threshold",
 			IsReadOnly:      false,
 			RequiresRestart: false,
 			UpdatedBy:       "system",
 		},
 		{
-			Key:             "redeye.auto_ban_threshold",
+			Key:             "security.auto_ban_threshold",
 			Value:           "100",
 			Type:            "int",
-			Category:        "redeye",
+			Category:        "security",
 			Description:     "Reputation score threshold for auto-ban",
 			IsReadOnly:      false,
 			RequiresRestart: false,
 			UpdatedBy:       "system",
 		},
 		{
-			Key:             "redeye.alert_enabled",
+			Key:             "security.mode",
+			Value:           "ENFORCEMENT",
+			Type:            "string",
+			Category:        "security",
+			Description:     "System mode: ENFORCEMENT (Active blocking) or SIMULATION (Logging only)",
+			IsReadOnly:      false,
+			RequiresRestart: false,
+			UpdatedBy:       "system",
+		},
+		{
+			Key:             "security.strict_mode",
+			Value:           "false",
+			Type:            "bool",
+			Category:        "security",
+			Description:     "If enabled, reputation penalties are doubled and recovery is slowed",
+			IsReadOnly:      false,
+			RequiresRestart: false,
+			UpdatedBy:       "system",
+		},
+		{
+			Key:             "security.decay_rate",
+			Value:           "10",
+			Type:            "int",
+			Category:        "security",
+			Description:     "Interval in minutes for reputation scores to decay (halve)",
+			IsReadOnly:      false,
+			RequiresRestart: false,
+			UpdatedBy:       "system",
+		},
+		{
+			Key:             "security.whitelist_ips",
+			Value:           "127.0.0.1",
+			Type:            "string",
+			Category:        "security",
+			Description:     "Comma-separated list of trusted IPs that bypass all security checks",
+			IsReadOnly:      false,
+			RequiresRestart: false,
+			UpdatedBy:       "system",
+		},
+		{
+			Key:             "security.geoip_enabled",
+			Value:           "false",
+			Type:            "bool",
+			Category:        "security",
+			Description:     "Enable geographic filtering based on IP origin",
+			IsReadOnly:      false,
+			RequiresRestart: false,
+			UpdatedBy:       "system",
+		},
+		{
+			Key:             "security.allowed_countries",
+			Value:           "ALL",
+			Type:            "string",
+			Category:        "security",
+			Description:     "Comma-separated ISO country codes to allow (e.g. US,GB,DE)",
+			IsReadOnly:      false,
+			RequiresRestart: false,
+			UpdatedBy:       "system",
+		},
+		{
+			Key:             "security.alert_enabled",
 			Value:           "true",
 			Type:            "bool",
-			Category:        "redeye",
+			Category:        "security",
 			Description:     "Enable alerts for high severity events",
 			IsReadOnly:      false,
 			RequiresRestart: false,
@@ -1505,6 +1570,10 @@ func SeedDefaultConfig(db *sqlx.DB) error {
 			return fmt.Errorf("seed default config %s: %w", config.Key, err)
 		}
 	}
+
+	// Migration: Populate default_value for existing rows if NULL or empty
+	_, _ = db.Exec("UPDATE server_config SET default_value = value WHERE default_value IS NULL OR default_value = ''")
+
 	return nil
 }
 
@@ -1513,12 +1582,12 @@ func SaveConfig(db *sqlx.DB, c *models.ServerConfig) error {
 		// Use DO NOTHING to respect existing configuration (user overrides)
 		// This ensures we only seed keys that don't exist yet.
 		query := `INSERT INTO server_config
-                        (key, value, type, category, description, is_read_only, requires_restart, updated_at, updated_by)
-                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                        (key, value, default_value, type, category, description, is_read_only, requires_restart, updated_at, updated_by)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
                         ON CONFLICT(key) DO NOTHING`
 
 		_, err := db.Exec(query,
-			c.Key, c.Value, c.Type, c.Category, c.Description, boolToInt(c.IsReadOnly), boolToInt(c.RequiresRestart), c.UpdatedAt.Unix(), c.UpdatedBy)
+			c.Key, c.Value, c.DefaultValue, c.Type, c.Category, c.Description, boolToInt(c.IsReadOnly), boolToInt(c.RequiresRestart), c.UpdatedAt.Unix(), c.UpdatedBy)
 		if err != nil {
 			return fmt.Errorf("save config: %w", err)
 		}
@@ -1529,7 +1598,7 @@ func SaveConfig(db *sqlx.DB, c *models.ServerConfig) error {
 
 func GetAllConfig(db *sqlx.DB) ([]models.ServerConfig, error) {
 
-	rows, err := db.Queryx(`SELECT id, key, value, type, category, description, is_read_only, requires_restart, updated_at, updated_by FROM server_config ORDER BY category, key`)
+	rows, err := db.Queryx(`SELECT id, key, value, default_value, type, category, description, is_read_only, requires_restart, updated_at, updated_by FROM server_config ORDER BY category, key`)
 	if err != nil {
 		return nil, fmt.Errorf("query config: %w", err)
 	}
@@ -1560,8 +1629,7 @@ func GetAllConfig(db *sqlx.DB) ([]models.ServerConfig, error) {
 }
 
 func GetConfigByCategory(db *sqlx.DB, category string) ([]models.ServerConfig, error) {
-
-	rows, err := db.Queryx(`SELECT id, key, value, type, category, description, is_read_only, requires_restart, updated_at, updated_by FROM server_config WHERE category = $1 ORDER BY key`, category)
+	rows, err := db.Queryx(`SELECT id, key, value, default_value, type, category, description, is_read_only, requires_restart, updated_at, updated_by FROM server_config WHERE category = $1 ORDER BY key`, category)
 	if err != nil {
 		return nil, fmt.Errorf("query config by category: %w", err)
 	}
@@ -1594,38 +1662,31 @@ func GetConfigByCategory(db *sqlx.DB, category string) ([]models.ServerConfig, e
 func GetConfigByKey(db *sqlx.DB, key string) (*models.ServerConfig, error) {
 	var c models.ServerConfig
 	var updatedAtUnix int64
-	var updatedBy sql.NullString
-	var description sql.NullString
-	err := db.QueryRow(`SELECT id, key, value, type, category, description, is_read_only, requires_restart, updated_at, updated_by FROM server_config WHERE key = $1`, key).
-		Scan(&c.ID, &c.Key, &c.Value, &c.Type, &c.Category, &description, &c.IsReadOnly, &c.RequiresRestart, &updatedAtUnix, &updatedBy)
+	var isReadOnly, requiresRestart int
+	err := db.QueryRow(`SELECT id, key, value, default_value, type, category, description, is_read_only, requires_restart, updated_at, updated_by FROM server_config WHERE key = $1`, key).
+		Scan(&c.ID, &c.Key, &c.Value, &c.DefaultValue, &c.Type, &c.Category, &c.Description, &isReadOnly, &requiresRestart, &updatedAtUnix, &c.UpdatedBy)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("get config by key: %w", err)
 	}
+	c.IsReadOnly = isReadOnly == 1
+	c.RequiresRestart = requiresRestart == 1
 	c.UpdatedAt = time.Unix(updatedAtUnix, 0).UTC()
-	if updatedBy.Valid {
-		c.UpdatedBy = updatedBy.String
-	}
-	if description.Valid {
-		c.Description = description.String
-	}
 	return &c, nil
 }
 
 func UpdateConfig(db *sqlx.DB, key, value, updatedBy string) error {
 	do := func() error {
 		query := `
-                        INSERT INTO server_config (key, value, updated_at, updated_by, type, category)
-                        VALUES ($1, $2, $3, $4, 'json', 'aesthetic')
-                        ON CONFLICT(key) DO UPDATE SET
-                        value = excluded.value,
-                        updated_at = excluded.updated_at,
-                        updated_by = excluded.updated_by
-                        WHERE server_config.is_read_only = 0
+                        UPDATE server_config SET
+                        value = $1,
+                        updated_at = $2,
+                        updated_by = $3
+                        WHERE key = $4 AND is_read_only = 0
                 `
-		_, err := db.Exec(query, key, value, time.Now().Unix(), updatedBy)
+		_, err := db.Exec(query, value, time.Now().Unix(), updatedBy, key)
 		if err != nil {
 			return fmt.Errorf("update config: %w", err)
 		}
@@ -2102,13 +2163,13 @@ func isValidName(s string) bool {
 	return len(s) > 0
 }
 
-// -- RedEye Rules --
+// -- Security Rules --
 
-func GetRedEyeRuleByID(db *sqlx.DB, id int) (*models.RedEyeRule, error) {
-	var r models.RedEyeRule
+func GetSecurityRuleByID(db *sqlx.DB, id int) (*models.SecurityRule, error) {
+	var r models.SecurityRule
 	var tsUnix int64
 	var enabledInt int
-	query := `SELECT id, name, cidr, port, COALESCE(path_pattern, '') as path_pattern, protocol, action, rate_limit, burst, enabled, created_at FROM redeye_rules WHERE id = $1`
+	query := `SELECT id, name, cidr, port, COALESCE(path_pattern, '') as path_pattern, protocol, action, rate_limit, burst, enabled, created_at FROM security_rules WHERE id = $1`
 	err := db.QueryRowx(query, id).Scan(&r.ID, &r.Name, &r.CIDR, &r.Port, &r.PathPattern, &r.Protocol, &r.Action, &r.RateLimit, &r.Burst, &enabledInt, &tsUnix)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -2121,37 +2182,41 @@ func GetRedEyeRuleByID(db *sqlx.DB, id int) (*models.RedEyeRule, error) {
 	return &r, nil
 }
 
-func CreateRedEyeRule(db *sqlx.DB, r *models.RedEyeRule) (int, error) {
+func CreateSecurityRule(db *sqlx.DB, r *models.SecurityRule) (*models.SecurityRule, error) {
 	var id int
+	now := time.Now().UTC()
 	do := func() error {
-		query := `INSERT INTO redeye_rules (name, cidr, port, path_pattern, protocol, action, rate_limit, burst, enabled, created_at) 
+		query := `INSERT INTO security_rules (name, cidr, port, path_pattern, protocol, action, rate_limit, burst, enabled, created_at) 
                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`
-		err := db.QueryRow(query, r.Name, r.CIDR, r.Port, r.PathPattern, r.Protocol, r.Action, r.RateLimit, r.Burst, boolToInt(r.Enabled), time.Now().Unix()).Scan(&id)
+		err := db.QueryRow(query, r.Name, r.CIDR, r.Port, r.PathPattern, r.Protocol, r.Action, r.RateLimit, r.Burst, boolToInt(r.Enabled), now.Unix()).Scan(&id)
 		return err
 	}
 	if err := execWithRetry(do); err != nil {
-		return 0, err
+		return nil, err
 	}
+
+	r.ID = id
+	r.CreatedAt = now
 
 	// Apply OS-level block if it's a DENY rule
 	if r.Action == "DENY" {
 		if err := utils.BlockIPSystem(r.CIDR); err != nil {
-			log.Printf("RedEye: Failed to apply OS block for new rule (CIDR: %s): %v", r.CIDR, err)
+			// log.Printf("Security: Failed to apply OS block for new rule (CIDR: %s): %v", r.CIDR, err)
 		}
 	}
-	return id, nil
+	return r, nil
 }
 
-func GetRedEyeRules(db *sqlx.DB) ([]models.RedEyeRule, error) {
-	rows, err := db.Queryx(`SELECT id, name, cidr, port, COALESCE(path_pattern, '') as path_pattern, protocol, action, rate_limit, burst, enabled, created_at FROM redeye_rules ORDER BY created_at DESC`)
+func GetSecurityRules(db *sqlx.DB) ([]models.SecurityRule, error) {
+	rows, err := db.Queryx(`SELECT id, name, cidr, port, COALESCE(path_pattern, '') as path_pattern, protocol, action, rate_limit, burst, enabled, created_at FROM security_rules ORDER BY created_at DESC`)
 	if err != nil {
-		return nil, fmt.Errorf("query redeye rules: %w", err)
+		return nil, fmt.Errorf("query security rules: %w", err)
 	}
 	defer rows.Close()
 
-	out := make([]models.RedEyeRule, 0)
+	out := make([]models.SecurityRule, 0)
 	for rows.Next() {
-		var r models.RedEyeRule
+		var r models.SecurityRule
 		var tsUnix int64
 		var enabledInt int
 		if err := rows.Scan(&r.ID, &r.Name, &r.CIDR, &r.Port, &r.PathPattern, &r.Protocol, &r.Action, &r.RateLimit, &r.Burst, &enabledInt, &tsUnix); err != nil {
@@ -2164,12 +2229,12 @@ func GetRedEyeRules(db *sqlx.DB) ([]models.RedEyeRule, error) {
 	return out, nil
 }
 
-func UpdateRedEyeRule(db *sqlx.DB, r *models.RedEyeRule) error {
-	var oldRule *models.RedEyeRule
+func UpdateSecurityRule(db *sqlx.DB, r *models.SecurityRule) error {
+	var oldRule *models.SecurityRule
 	var err error
 
 	// Retrieve the old rule before updating
-	oldRule, err = GetRedEyeRuleByID(db, r.ID)
+	oldRule, err = GetSecurityRuleByID(db, r.ID)
 	if err != nil {
 		return fmt.Errorf("failed to get old rule for update: %w", err)
 	}
@@ -2178,7 +2243,7 @@ func UpdateRedEyeRule(db *sqlx.DB, r *models.RedEyeRule) error {
 	}
 
 	do := func() error {
-		query := `UPDATE redeye_rules SET name=$1, cidr=$2, port=$3, path_pattern=$4, protocol=$5, action=$6, rate_limit=$7, burst=$8, enabled=$9 WHERE id=$10`
+		query := `UPDATE security_rules SET name=$1, cidr=$2, port=$3, path_pattern=$4, protocol=$5, action=$6, rate_limit=$7, burst=$8, enabled=$9 WHERE id=$10`
 		_, err := db.Exec(query, r.Name, r.CIDR, r.Port, r.PathPattern, r.Protocol, r.Action, r.RateLimit, r.Burst, boolToInt(r.Enabled), r.ID)
 		return err
 	}
@@ -2194,34 +2259,32 @@ func UpdateRedEyeRule(db *sqlx.DB, r *models.RedEyeRule) error {
 	// Case 1: Rule changed from DENY to non-DENY, or CIDR changed
 	if oldWasDeny && (!newIsDeny || oldRule.CIDR != r.CIDR) {
 		if err := utils.UnblockIPSystem(oldRule.CIDR); err != nil {
-			log.Printf("RedEye: Failed to remove old OS block for rule ID %d (CIDR: %s): %v", r.ID, oldRule.CIDR, err)
+			// log.Printf("Security: Failed to remove old OS block for rule ID %d (CIDR: %s): %v", r.ID, oldRule.CIDR, err)
 		}
 	}
 
 	// Case 2: Rule changed to DENY, or CIDR changed for an existing DENY rule
 	if newIsDeny && (!oldWasDeny || oldRule.CIDR != r.CIDR) {
 		if err := utils.BlockIPSystem(r.CIDR); err != nil {
-			log.Printf("RedEye: Failed to apply new OS block for rule ID %d (CIDR: %s): %v", r.ID, r.CIDR, err)
+			// log.Printf("Security: Failed to apply new OS block for rule ID %d (CIDR: %s): %v", r.ID, r.CIDR, err)
 		}
 	}
 
 	return nil
 }
 
-func DeleteRedEyeRule(db *sqlx.DB, id int) error {
-	var ruleToDelete *models.RedEyeRule
+func DeleteSecurityRule(db *sqlx.DB, id int) error {
+	var ruleToDelete *models.SecurityRule
 	var err error
 
 	// Retrieve the rule before deleting
-	ruleToDelete, err = GetRedEyeRuleByID(db, id)
+	ruleToDelete, err = GetSecurityRuleByID(db, id)
 	if err != nil {
 		return fmt.Errorf("failed to get rule for deletion: %w", err)
 	}
-	// If ruleToDelete is nil, it means the rule wasn't found, which is fine for a delete operation,
-	// but we can't unblock what doesn't exist or wasn't a DENY rule.
 
 	do := func() error {
-		_, err := db.Exec(`DELETE FROM redeye_rules WHERE id = $1`, id)
+		_, err := db.Exec(`DELETE FROM security_rules WHERE id = $1`, id)
 		return err
 	}
 
@@ -2232,31 +2295,31 @@ func DeleteRedEyeRule(db *sqlx.DB, id int) error {
 	// If the deleted rule was a DENY rule, unblock the IP at the OS level
 	if ruleToDelete != nil && ruleToDelete.Action == "DENY" {
 		if err := utils.UnblockIPSystem(ruleToDelete.CIDR); err != nil {
-			log.Printf("RedEye: Failed to remove OS block for deleted rule (CIDR: %s): %v", ruleToDelete.CIDR, err)
+			// log.Printf("Security: Failed to remove OS block for deleted rule (CIDR: %s): %v", ruleToDelete.CIDR, err)
 		}
 	}
 	return nil
 }
 
-// -- RedEye Logs --
+// -- Security Logs --
 
-func SaveRedEyeLog(db *sqlx.DB, l *models.RedEyeLog) error {
-	query := `INSERT INTO redeye_logs (rule_id, source_ip, dest_port, protocol, action, details, timestamp) 
+func SaveSecurityLog(db *sqlx.DB, l *models.SecurityLog) error {
+	query := `INSERT INTO security_logs (rule_id, source_ip, dest_port, protocol, action, details, timestamp) 
               VALUES ($1, $2, $3, $4, $5, $6, $7)`
 	_, err := db.Exec(query, l.RuleID, l.SourceIP, l.DestPort, l.Protocol, l.Action, l.Details, l.Timestamp.Unix())
 	return err
 }
 
-func GetRedEyeLogs(db *sqlx.DB, limit, offset int) ([]models.RedEyeLog, int64, error) {
-	var logs []models.RedEyeLog
+func GetSecurityLogs(db *sqlx.DB, limit, offset int) ([]models.SecurityLog, int64, error) {
+	var logs []models.SecurityLog
 	var total int64
 
-	if err := db.Get(&total, "SELECT COUNT(*) FROM redeye_logs"); err != nil {
+	if err := db.Get(&total, "SELECT COUNT(*) FROM security_logs"); err != nil {
 		return nil, 0, err
 	}
 
 	query := fmt.Sprintf(`SELECT id, rule_id, source_ip, dest_port, protocol, action, details, timestamp 
-                          FROM redeye_logs ORDER BY timestamp DESC LIMIT $%d OFFSET $%d`, 1, 2)
+                          FROM security_logs ORDER BY timestamp DESC LIMIT $%d OFFSET $%d`, 1, 2)
 
 	rows, err := db.Queryx(query, limit, offset)
 	if err != nil {
@@ -2265,7 +2328,7 @@ func GetRedEyeLogs(db *sqlx.DB, limit, offset int) ([]models.RedEyeLog, int64, e
 	defer rows.Close()
 
 	for rows.Next() {
-		var l models.RedEyeLog
+		var l models.SecurityLog
 		var tsUnix int64
 		var details sql.NullString
 		if err := rows.Scan(&l.ID, &l.RuleID, &l.SourceIP, &l.DestPort, &l.Protocol, &l.Action, &details, &tsUnix); err != nil {
@@ -2279,22 +2342,31 @@ func GetRedEyeLogs(db *sqlx.DB, limit, offset int) ([]models.RedEyeLog, int64, e
 	}
 
 	if logs == nil {
-		logs = []models.RedEyeLog{}
+		logs = []models.SecurityLog{}
 	}
 
 	return logs, total, nil
 }
 
-func ClearRedEyeLogs(db *sqlx.DB) error {
-	_, err := db.Exec(`DELETE FROM redeye_logs`)
+func ClearSecurityLogs(db *sqlx.DB) error {
+	_, err := db.Exec(`DELETE FROM security_logs`)
 	return err
 }
 
-// -- RedEye Anti-Cheat & Reputation --
+func GetOldestSecurityLogTimestamp(db *sqlx.DB) (int64, error) {
+	var ts int64
+	err := db.Get(&ts, "SELECT MIN(timestamp) FROM security_logs")
+	if err != nil {
+		return 0, err
+	}
+	return ts, nil
+}
 
-func SaveAnticheatEvent(db *sqlx.DB, e *models.RedEyeAnticheatEvent) error {
+// -- Security Integrity & Reputation --
+
+func SaveSecurityEvent(db *sqlx.DB, e *models.SecurityEvent) error {
 	do := func() error {
-		query := `INSERT INTO redeye_anticheat_events (player_id, game_server_id, event_type, details, client_ip, severity, timestamp)
+		query := `INSERT INTO security_integrity_events (player_id, game_server_id, event_type, details, client_ip, severity, timestamp)
                   VALUES ($1, $2, $3, $4, $5, $6, $7)`
 		_, err := db.Exec(query, e.PlayerID, e.GameServerID, e.EventType, e.Details, e.ClientIP, e.Severity, e.Timestamp.Unix())
 		return err
@@ -2302,16 +2374,16 @@ func SaveAnticheatEvent(db *sqlx.DB, e *models.RedEyeAnticheatEvent) error {
 	return execWithRetry(do)
 }
 
-func GetAnticheatEvents(db *sqlx.DB, limit, offset int) ([]models.RedEyeAnticheatEvent, int64, error) {
-	var events []models.RedEyeAnticheatEvent
+func GetSecurityEvents(db *sqlx.DB, limit, offset int) ([]models.SecurityEvent, int64, error) {
+	var events []models.SecurityEvent
 	var total int64
 
-	if err := db.Get(&total, "SELECT COUNT(*) FROM redeye_anticheat_events"); err != nil {
+	if err := db.Get(&total, "SELECT COUNT(*) FROM security_integrity_events"); err != nil {
 		return nil, 0, err
 	}
 
 	query := fmt.Sprintf(`SELECT id, player_id, game_server_id, event_type, details, client_ip, severity, timestamp
-                          FROM redeye_anticheat_events ORDER BY timestamp DESC LIMIT $%d OFFSET $%d`, 1, 2)
+                          FROM security_integrity_events ORDER BY timestamp DESC LIMIT $%d OFFSET $%d`, 1, 2)
 	rows, err := db.Queryx(query, limit, offset)
 	if err != nil {
 		return nil, 0, err
@@ -2319,7 +2391,7 @@ func GetAnticheatEvents(db *sqlx.DB, limit, offset int) ([]models.RedEyeAntichea
 	defer rows.Close()
 
 	for rows.Next() {
-		var e models.RedEyeAnticheatEvent
+		var e models.SecurityEvent
 		var tsUnix int64
 		if err := rows.Scan(&e.ID, &e.PlayerID, &e.GameServerID, &e.EventType, &e.Details, &e.ClientIP, &e.Severity, &tsUnix); err != nil {
 			return nil, 0, err
@@ -2329,24 +2401,24 @@ func GetAnticheatEvents(db *sqlx.DB, limit, offset int) ([]models.RedEyeAntichea
 	}
 
 	if events == nil {
-		events = []models.RedEyeAnticheatEvent{}
+		events = []models.SecurityEvent{}
 	}
 	return events, total, nil
 }
 
-func GetIPReputation(db *sqlx.DB, ip string) (*models.RedEyeIPReputation, error) {
-	var r models.RedEyeIPReputation
+func GetIPReputation(db *sqlx.DB, ip string) (*models.IPReputation, error) {
+	var r models.IPReputation
 	var tsUnix int64
 	var banExpiresUnix sql.NullInt64
 	var isBannedInt int
 	var banReason sql.NullString
 
-	query := `SELECT ip, reputation_score, total_events, last_seen, is_banned, ban_reason, ban_expires_at FROM redeye_ip_reputation WHERE ip = $1`
+	query := `SELECT ip, reputation_score, total_events, last_seen, is_banned, ban_reason, ban_expires_at FROM security_ip_reputation WHERE ip = $1`
 	err := db.QueryRowx(query, ip).Scan(&r.IP, &r.ReputationScore, &r.TotalEvents, &tsUnix, &isBannedInt, &banReason, &banExpiresUnix)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			// Return default reputation for new IP
-			return &models.RedEyeIPReputation{
+			return &models.IPReputation{
 				IP:       ip,
 				LastSeen: time.Now().UTC(),
 			}, nil
@@ -2365,7 +2437,7 @@ func GetIPReputation(db *sqlx.DB, ip string) (*models.RedEyeIPReputation, error)
 	return &r, nil
 }
 
-func UpdateIPReputation(db *sqlx.DB, r *models.RedEyeIPReputation) error {
+func UpdateIPReputation(db *sqlx.DB, r *models.IPReputation) error {
 	do := func() error {
 		var banExpiresUnix *int64
 		if r.BanExpiresAt != nil {
@@ -2373,7 +2445,7 @@ func UpdateIPReputation(db *sqlx.DB, r *models.RedEyeIPReputation) error {
 			banExpiresUnix = &t
 		}
 
-		query := `INSERT INTO redeye_ip_reputation (ip, reputation_score, total_events, last_seen, is_banned, ban_reason, ban_expires_at)
+		query := `INSERT INTO security_ip_reputation (ip, reputation_score, total_events, last_seen, is_banned, ban_reason, ban_expires_at)
                   VALUES ($1, $2, $3, $4, $5, $6, $7)
                   ON CONFLICT(ip) DO UPDATE SET
                   reputation_score=excluded.reputation_score,
@@ -2392,14 +2464,14 @@ func UpdateIPReputation(db *sqlx.DB, r *models.RedEyeIPReputation) error {
 func GetBannedIPList(db *sqlx.DB) ([]string, error) {
 	var ips []string
 	// Select IPs where is_banned=1 AND (ban_expires_at IS NULL OR ban_expires_at > NOW)
-	query := `SELECT ip FROM redeye_ip_reputation WHERE is_banned = 1 AND (ban_expires_at IS NULL OR ban_expires_at > $1)`
+	query := `SELECT ip FROM security_ip_reputation WHERE is_banned = 1 AND (ban_expires_at IS NULL OR ban_expires_at > $1)`
 	err := db.Select(&ips, query, time.Now().Unix())
 	return ips, err
 }
 
-func GetBannedIPsFull(db *sqlx.DB) ([]models.RedEyeIPReputation, error) {
+func GetBannedIPsFull(db *sqlx.DB) ([]models.IPReputation, error) {
 	query := `SELECT ip, reputation_score, total_events, last_seen, is_banned, ban_reason, ban_expires_at 
-              FROM redeye_ip_reputation 
+              FROM security_ip_reputation 
               WHERE is_banned = 1 AND (ban_expires_at IS NULL OR ban_expires_at > $1)
               ORDER BY last_seen DESC`
 
@@ -2409,9 +2481,9 @@ func GetBannedIPsFull(db *sqlx.DB) ([]models.RedEyeIPReputation, error) {
 	}
 	defer rows.Close()
 
-	var out []models.RedEyeIPReputation
+	var out []models.IPReputation
 	for rows.Next() {
-		var r models.RedEyeIPReputation
+		var r models.IPReputation
 		var tsUnix int64
 		var banExpiresUnix sql.NullInt64
 		var isBannedInt int
@@ -2432,26 +2504,26 @@ func GetBannedIPsFull(db *sqlx.DB) ([]models.RedEyeIPReputation, error) {
 	}
 	// Return empty slice instead of nil for JSON consistency
 	if out == nil {
-		out = []models.RedEyeIPReputation{}
+		out = []models.IPReputation{}
 	}
 	return out, nil
 }
 
 func UnbanIP(db *sqlx.DB, ip string) error {
-	_, err := db.Exec(`UPDATE redeye_ip_reputation SET is_banned = 0, ban_expires_at = NULL WHERE ip = $1`, ip)
+	_, err := db.Exec(`UPDATE security_ip_reputation SET is_banned = 0, ban_expires_at = NULL WHERE ip = $1`, ip)
 	if err != nil {
 		return err
 	}
 
 	// Also remove OS-level block
 	if err := utils.UnblockIPSystem(ip); err != nil {
-		log.Printf("RedEye: Failed to remove OS block for unbanned IP (CIDR: %s): %v", ip, err)
+		log.Printf("Security: Failed to remove OS block for unbanned IP (CIDR: %s): %v", ip, err)
 	}
 	return nil
 }
 
-// RedEyeStats holds summary statistics for the dashboard
-type RedEyeStats struct {
+// SecurityStats holds summary statistics for the dashboard
+type SecurityStats struct {
 	TotalRules      int     `json:"total_rules"`
 	ActiveBans      int     `json:"active_bans"`
 	Events24h       int     `json:"events_24h"`
@@ -2462,30 +2534,30 @@ type RedEyeStats struct {
 	Uptime          string  `json:"uptime"`
 }
 
-func GetRedEyeStats(db *sqlx.DB) (*RedEyeStats, error) {
-	stats := &RedEyeStats{}
+func GetSecurityStats(db *sqlx.DB) (*SecurityStats, error) {
+	stats := &SecurityStats{}
 
 	// Run queries in parallel or sequence (sequence is fine for sqlite/low load)
 	// Rules
-	if err := db.Get(&stats.TotalRules, "SELECT COUNT(*) FROM redeye_rules"); err != nil {
+	if err := db.Get(&stats.TotalRules, "SELECT COUNT(*) FROM security_rules"); err != nil {
 		return nil, err
 	}
 	// Bans
-	if err := db.Get(&stats.ActiveBans, "SELECT COUNT(*) FROM redeye_ip_reputation WHERE is_banned = 1"); err != nil {
+	if err := db.Get(&stats.ActiveBans, "SELECT COUNT(*) FROM security_ip_reputation WHERE is_banned = 1"); err != nil {
 		return nil, err
 	}
 	// Reputation entries
-	if err := db.Get(&stats.ReputationCount, "SELECT COUNT(*) FROM redeye_ip_reputation"); err != nil {
+	if err := db.Get(&stats.ReputationCount, "SELECT COUNT(*) FROM security_ip_reputation"); err != nil {
 		return nil, err
 	}
 
 	// Events 24h
 	yesterday := time.Now().Add(-24 * time.Hour).Unix()
-	if err := db.Get(&stats.Events24h, "SELECT COUNT(*) FROM redeye_anticheat_events WHERE timestamp > $1", yesterday); err != nil {
+	if err := db.Get(&stats.Events24h, "SELECT COUNT(*) FROM security_integrity_events WHERE timestamp > $1", yesterday); err != nil {
 		return nil, err
 	}
 	// Logs 24h
-	if err := db.Get(&stats.Logs24h, "SELECT COUNT(*) FROM redeye_logs WHERE timestamp > $1", yesterday); err != nil {
+	if err := db.Get(&stats.Logs24h, "SELECT COUNT(*) FROM security_logs WHERE timestamp > $1", yesterday); err != nil {
 		return nil, err
 	}
 
@@ -2504,8 +2576,19 @@ func GetRedEyeStats(db *sqlx.DB) (*RedEyeStats, error) {
 		stats.ThreatLevel = "High"
 	}
 
-	// Subsystem uptime (hardcoded for now as requested by UI aesthetic)
-	stats.Uptime = "99.99%"
+	// Calculate actual subsystem uptime
+	uptime := time.Since(utils.StartTime)
+	days := int(uptime.Hours()) / 24
+	hours := int(uptime.Hours()) % 24
+	minutes := int(uptime.Minutes()) % 60
+
+	if days > 0 {
+		stats.Uptime = fmt.Sprintf("%dd %dh %dm", days, hours, minutes)
+	} else if hours > 0 {
+		stats.Uptime = fmt.Sprintf("%dh %dm", hours, minutes)
+	} else {
+		stats.Uptime = fmt.Sprintf("%dm", minutes)
+	}
 
 	return stats, nil
 }

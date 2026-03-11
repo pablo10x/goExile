@@ -128,7 +128,7 @@
 		active_connections: number;
 	}
 
-	interface RedEyeMetrics {
+	interface SecurityMetrics {
 		total_blocks: number;
 		total_rate_limits: number;
 		active_bans: number;
@@ -143,7 +143,7 @@
 		nodes: NodeMetrics;
 		database: DatabaseMetrics;
 		network: NetworkMetrics;
-		redeye: RedEyeMetrics;
+		security: SecurityMetrics;
 	}
 
 	// State
@@ -306,7 +306,7 @@
 	<!-- Summary Metrics -->
 	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
 		{#if metrics}
-			{#each [{ label: 'System Uptime', val: formatDuration(metrics.master.uptime_ms), icon: Clock, color: 'text-sky-400' }, { label: 'Active Goroutines', val: metrics.master.num_goroutine, icon: Activity, color: 'text-slate-400' }, { label: 'Heap Allocation', val: formatBytes(metrics.master.heap_alloc), icon: MemoryStick, color: 'text-slate-400' }, { label: 'Ingress Rate', val: `${metrics.network.requests_per_second?.toFixed(1)}/s`, icon: Zap, color: 'text-sky-400' }, { label: 'Threat Blocks', val: formatNumber(metrics.redeye?.total_blocks || 0), icon: ShieldAlert, color: 'text-rose-500' }, { label: 'Error Margin', val: `${metrics.network.error_rate?.toFixed(2)}%`, icon: AlertCircle, color: metrics.network.error_rate > 5 ? 'text-rose-500' : 'text-slate-500' }] as block}
+			{#each [{ label: 'System Uptime', val: formatDuration(metrics.master.uptime_ms), icon: Clock, color: 'text-sky-400' }, { label: 'Active Goroutines', val: metrics.master.num_goroutine, icon: Activity, color: 'text-slate-400' }, { label: 'Heap Allocation', val: formatBytes(metrics.master.heap_alloc), icon: MemoryStick, color: 'text-slate-400' }, { label: 'Ingress Rate', val: `${metrics.network.requests_per_second?.toFixed(1)}/s`, icon: Zap, color: 'text-sky-400' }, { label: 'Threat Blocks', val: formatNumber(metrics.security?.total_blocks || 0), icon: ShieldAlert, color: 'text-rose-500' }, { label: 'Error Margin', val: `${metrics.network.error_rate?.toFixed(2)}%`, icon: AlertCircle, color: metrics.network.error_rate > 5 ? 'text-rose-500' : 'text-slate-500' }] as block}
 				<div
 					class="bg-slate-800/40 border border-white/5 rounded-2xl p-5 shadow-lg backdrop-blur-md hover:border-sky-500/30 transition-all flex flex-col justify-between min-h-[120px] group relative overflow-hidden"
 				>
@@ -456,13 +456,13 @@
 					<div
 						class="px-3 py-1 bg-rose-500/10 text-rose-400 text-[10px] font-bold uppercase rounded-lg border border-rose-500/20"
 					>
-						Status: {metrics?.redeye?.threat_level || 'Normal'}
+						Status: {metrics?.security?.threat_level || 'Normal'}
 					</div>
 				{/snippet}
 
 				<div class="p-6 lg:p-8 space-y-8">
 					<div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-						{#each [{ label: 'Blocked', val: formatNumber(metrics?.redeye?.total_blocks || 0), icon: ShieldAlert, color: 'text-rose-500' }, { label: 'Rate Limited', val: formatNumber(metrics?.redeye?.total_rate_limits || 0), icon: Activity, color: 'text-amber-500' }, { label: 'Active Bans', val: formatNumber(metrics?.redeye?.active_bans || 0), icon: Ban, color: 'text-rose-600' }, { label: 'Avg Latency', val: `${metrics?.redeye?.avg_processing_time_ms.toFixed(2)}ms`, icon: Clock, color: 'text-slate-500' }] as item}
+						{#each [{ label: 'Blocked', val: formatNumber(metrics?.security?.total_blocks || 0), icon: ShieldAlert, color: 'text-rose-500' }, { label: 'Rate Limited', val: formatNumber(metrics?.security?.total_rate_limits || 0), icon: Activity, color: 'text-amber-500' }, { label: 'Active Bans', val: formatNumber(metrics?.security?.active_bans || 0), icon: Ban, color: 'text-rose-600' }, { label: 'Avg Latency', val: `${metrics?.security?.avg_processing_time_ms.toFixed(2)}ms`, icon: Clock, color: 'text-slate-500' }] as item}
 							<div class="flex flex-col items-center text-center space-y-3 group">
 								<div
 									class="p-3 bg-slate-900/50 border border-white/5 rounded-xl group-hover:border-sky-500/30 transition-colors"
@@ -491,8 +491,8 @@
 						</div>
 						<p class="text-xs font-medium text-slate-400 ml-2">
 							Last security event: <span class="text-slate-200"
-								>{metrics?.redeye?.last_block_at
-									? new Date(metrics.redeye.last_block_at).toLocaleTimeString()
+								>{metrics?.security?.last_block_at
+									? new Date(metrics.security.last_block_at).toLocaleTimeString()
 									: 'None'}</span
 							>
 						</p>

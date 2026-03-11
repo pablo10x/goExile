@@ -69,10 +69,10 @@ type DashboardStats struct {
 	ErrorLogs    []ErrorLog
 	SecurityLogs []SecurityLog
 
-	// RedEye Stats
-	RedEyeTotalBlocks    int64
-	RedEyeTotalRateLimit int64
-	RedEyeActiveBans     int
+	// Security Stats
+	SecurityTotalBlocks    int64
+	SecurityTotalRateLimit int64
+	SecurityActiveBans     int
 }
 
 // GlobalStats is the global dashboard stats instance.
@@ -136,25 +136,25 @@ func (ds *DashboardStats) RecordSecurityEvent(event string, details string, clie
 	}
 }
 
-// RecordRedEyeBlock increments the RedEye block counter.
-func (ds *DashboardStats) RecordRedEyeBlock() {
+// RecordSecurityBlock increments the security block counter.
+func (ds *DashboardStats) RecordSecurityBlock() {
 	ds.Mu.Lock()
 	defer ds.Mu.Unlock()
-	ds.RedEyeTotalBlocks++
+	ds.SecurityTotalBlocks++
 }
 
-// RecordRedEyeRateLimit increments the RedEye rate limit counter.
-func (ds *DashboardStats) RecordRedEyeRateLimit() {
+// RecordSecurityRateLimit increments the security rate limit counter.
+func (ds *DashboardStats) RecordSecurityRateLimit() {
 	ds.Mu.Lock()
 	defer ds.Mu.Unlock()
-	ds.RedEyeTotalRateLimit++
+	ds.SecurityTotalRateLimit++
 }
 
-// UpdateRedEyeActiveBans updates the count of active bans.
-func (ds *DashboardStats) UpdateRedEyeActiveBans(count int) {
+// UpdateSecurityActiveBans updates the count of active bans.
+func (ds *DashboardStats) UpdateSecurityActiveBans(count int) {
 	ds.Mu.Lock()
 	defer ds.Mu.Unlock()
-	ds.RedEyeActiveBans = count
+	ds.SecurityActiveBans = count
 }
 
 // UpdateMemoryStats updates the memory usage stat.

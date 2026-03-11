@@ -115,12 +115,11 @@
 				<h2
 					class="text-base font-heading font-black text-neutral-100 flex items-center gap-3 tracking-widest uppercase italic"
 				>
-					Logic_Schema: <span class="text-yellow-500 font-mono text-xs">{schema}.{table}</span>
+					Design View: <span class="text-yellow-500 font-mono text-xs">{schema}.{table}</span>
 				</h2>
 				<p class="text-[9px] text-stone-600 font-bold uppercase tracking-widest italic">
-					Manage sectors, types, and primary constraints
-				</p>
-			</div>
+					Manage columns, types, and primary constraints
+				</p>			</div>
 		</div>
 		<button
 			onclick={onClose}
@@ -139,11 +138,11 @@
 					class="bg-black text-stone-500 uppercase text-[9px] font-black tracking-[0.2em] italic"
 				>
 					<tr>
-						<th class="px-8 py-4 border-b border-stone-800">Field_Identity</th>
-						<th class="px-8 py-4 border-b border-stone-800">Type_Protocol</th>
-						<th class="px-8 py-4 border-b border-stone-800 text-center">Nullable_State</th>
-						<th class="px-8 py-4 border-b border-stone-800">Default_Buffer</th>
-						<th class="px-8 py-4 border-b border-stone-800 text-right">Purge_Op</th>
+						<th class="px-8 py-4 border-b border-stone-800">Column Name</th>
+						<th class="px-8 py-4 border-b border-stone-800">Data Type</th>
+						<th class="px-8 py-4 border-b border-stone-800 text-center">Nullable</th>
+						<th class="px-8 py-4 border-b border-stone-800">Default Value</th>
+						<th class="px-8 py-4 border-b border-stone-800 text-right">Actions</th>
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-stone-800/50">
@@ -222,7 +221,7 @@
 					<tr class="bg-black/40 border-t border-stone-800 border-dashed">
 						<td colspan="5" class="px-8 py-4 text-center">
 							<span class="text-stone-700 text-[9px] font-black uppercase tracking-[0.3em] italic"
-								>Neural_Field_Modification_Buffer_v1.0</span
+								>Schema Modification Buffer</span
 							>
 						</td>
 					</tr>

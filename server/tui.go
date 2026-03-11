@@ -9,8 +9,8 @@ import (
 	"exile/server/auth"
 	"exile/server/database"
 	"exile/server/enrollment"
-	"exile/server/redeye"
 	"exile/server/registry"
+	"exile/server/security"
 	"exile/server/sse"
 	"exile/server/utils"
 	"exile/server/ws"
@@ -28,7 +28,6 @@ import (
 type StartupState struct {
 	AuthConfig   auth.AuthConfig
 	SessionStore *auth.SessionStore
-	SSEHub       *sse.SSEHub
 	Router       *mux.Router
 }
 
@@ -547,8 +546,7 @@ func initAuthStep(m *tuiModel) error {
 
 	enrollment.InitializeEnrollmentManager()
 
-	GlobalStartup.SSEHub = sse.NewSSEHub()
-	go GlobalStartup.SSEHub.Run()
+	go sse.GlobalHub.Run()
 
 	time.Sleep(100 * time.Millisecond)
 	return nil
@@ -691,7 +689,7 @@ func initRegistryStep(m *tuiModel) error {
 
 func startServicesStep(m *tuiModel) error {
 	if database.DBConn != nil {
-		redeye.StartRedEyeBackground(database.DBConn)
+		security.StartSecurityBackground(database.DBConn)
 	}
 
 	_ = auth.InitFirebase()

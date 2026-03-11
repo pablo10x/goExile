@@ -95,6 +95,8 @@ export async function apiFetch(path: string, init?: RequestInit): Promise<Respon
 			}
 		} catch (e) {
 			console.error(`[API] Failed to parse login response:`, e);
+			const text = await cloned.text();
+			console.error(`[API] Raw response body:`, text);
 		}
 	}
 
