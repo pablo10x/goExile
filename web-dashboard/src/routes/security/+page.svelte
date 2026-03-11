@@ -152,7 +152,8 @@
 		savingRule = true;
 		try {
 			const isEdit = editingRule !== null && editingRule.id > 0;
-			const url = isEdit ? `/api/security/rules/${editingRule.id}` : '/api/security/rules';
+			const ruleId = editingRule?.id;
+			const url = isEdit ? `/api/security/rules/${ruleId}` : '/api/security/rules';
 			
 			// Clean up form for JSON transmission
 			const payload = { ...form };

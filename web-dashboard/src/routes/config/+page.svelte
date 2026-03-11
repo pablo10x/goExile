@@ -471,6 +471,7 @@
 								{#each section.items as item (item.key)}
 									{@const isPending = pendingChanges.has(item.key)}
 									{@const isSecret = item.type === 'secret'}
+									{@const risk = getRiskLevel(item.key)}
 									<div
 										class="p-5 bg-slate-900/40 rounded-2xl border {isPending
 											? 'border-sky-500/30 bg-sky-500/5 shadow-inner'
@@ -482,7 +483,6 @@
 													<span class="text-xs font-bold text-sky-400 uppercase tracking-wide"
 														>{item.key}</span
 													>
-													{@const risk = getRiskLevel(item.key)}
 													<span class="text-[8px] font-black px-2 py-0.5 rounded uppercase border {
 														risk === 'critical' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' :
 														risk === 'high' ? 'bg-orange-500/10 text-orange-500 border-orange-500/20' :

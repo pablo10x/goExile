@@ -54,7 +54,7 @@
 
 	// Native Notification Integration
 	async function triggerNativeNotification(title: string, body: string) {
-		if (!isNative()) return;
+		if (!isNative) return;
 		try {
 			const { isPermissionGranted, requestPermission, sendNotification } = await import('@tauri-apps/plugin-notification');
 			let permissionGranted = await isPermissionGranted();
@@ -208,7 +208,7 @@
 			}
 		} catch (e) {
 			isAuthenticated.set(false);
-			if (page.url.pathname !== '/login') {
+			if ((page.url.pathname as string) !== '/login') {
 				goto('/login');
 			}
 		} finally {
